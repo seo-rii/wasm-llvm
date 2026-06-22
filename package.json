@@ -1,0 +1,36 @@
+{
+	"name": "@seo-rii/wasm-llvm",
+	"version": "0.1.0",
+	"description": "Browser-loadable LLVM/Clang toolchain assets for wasm-idle runtimes",
+	"type": "module",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/seo-rii/wasm-llvm.git"
+	},
+	"exports": {
+		".": "./index.mjs",
+		"./runtime-source": "./artifacts/runtime-source/toolchain.json",
+		"./artifacts/runtime-source/*": "./artifacts/runtime-source/*",
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"artifacts/runtime-source",
+		"scripts",
+		"index.mjs",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build:toolchain": "node ./scripts/build-toolchain.mjs",
+		"check": "node --check ./index.mjs && node --check ./scripts/build-toolchain.mjs && node --check ./scripts/package-toolchain.mjs && node --check ./scripts/verify-assets.mjs",
+		"package:toolchain": "node ./scripts/package-toolchain.mjs",
+		"verify:assets": "node ./scripts/verify-assets.mjs"
+	},
+	"dependencies": {
+		"@zip.js/zip.js": "^2.8.23"
+	},
+	"engines": {
+		"node": ">=20"
+	}
+}
