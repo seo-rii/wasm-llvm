@@ -12,11 +12,12 @@ import type {
 } from './types.js';
 import App from './app.js';
 import { installGccCompatibilityHeaders } from '../../core/src/gcc-compat.js';
-import { MemFS, untar } from './memory/index.js';
+import MemFS from '../../core/src/memfs.js';
+import untar from '../../core/src/tar.js';
 import { green, yellow, normal } from '../../core/src/color.js';
 import { createCombinedProgress, type CombinedProgressSlots } from './progress.js';
 import { resolveRuntimeAssetUrls, type RuntimeAssetUrls } from './runtime-assets.js';
-import { compile, readBuffer } from './wasm.js';
+import { compile, readBuffer } from '../../core/src/wasm.js';
 import { clangUrl, DEFAULT_BROWSER_CLANG_RUNTIME_PATH, lldUrl } from './url.js';
 
 if (typeof globalThis.document === 'undefined') {
@@ -222,8 +223,7 @@ class Clang {
 		this.memfs = new MemFS({
 			stdout: this.stdout,
 			stdin: options.stdin || (() => ''),
-			path: this.path,
-			memfsModuleUrl: this.assetUrls.memfs,
+			moduleUrl: this.assetUrls.memfs,
 			progress: this.progress.memfs,
 			trace: (message) => this.trace(message)
 		});

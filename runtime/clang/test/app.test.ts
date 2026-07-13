@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import App from '../src/app.js';
 import { NotImplemented, ProcExit } from '../../core/src/error.js';
 import { evaluateDebugExpression } from '../src/debug/expression.js';
-import Memory from '../src/memory/memory.js';
-import * as wasmModule from '../src/wasm.js';
+import Memory from '../../core/src/memory.js';
+import * as wasmModule from '../../core/src/wasm.js';
 
 describe('App debug tracing', () => {
 	it('binds the WASI host into both legacy and preview1 import tables', async () => {

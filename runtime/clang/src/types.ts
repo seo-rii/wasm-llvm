@@ -1,3 +1,7 @@
+import type { ProgressSink } from '../../core/src/wasm.js';
+
+export type { ProgressSink };
+
 export type DebugCommand = 'continue' | 'stepInto' | 'nextLine' | 'stepOut';
 export type DebugPauseReason = 'breakpoint' | 'entry' | 'step' | 'nextLine' | 'stepOut';
 export type CompilerDiagnosticSeverity = 'error' | 'warning' | 'other';
@@ -8,10 +12,6 @@ export type SupportedClangTarget = 'wasm32-wasi';
 export type BrowserClangArtifactFormat = 'wasi-core-wasm';
 export type BrowserClangCompileStage = 'bootstrap' | 'compile' | 'link' | 'done';
 export type CompilerLogLevel = 'log' | 'warn' | 'error' | 'debug';
-
-export interface ProgressSink {
-	set?: (value: number) => void;
-}
 
 export interface CompilerDiagnostic {
 	fileName?: string | null;

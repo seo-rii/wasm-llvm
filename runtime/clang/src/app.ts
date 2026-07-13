@@ -5,9 +5,9 @@ import type {
 	DebugVariableMetadata
 } from './types.js';
 import { bindNew } from '../../core/src/apply.js';
-import { type MemFS } from './memory/index.js';
-import Memory from './memory/memory.js';
-import { getInstance } from './wasm.js';
+import type MemFS from '../../core/src/memfs.js';
+import Memory from '../../core/src/memory.js';
+import { getInstance } from '../../core/src/wasm.js';
 import { AbortError, NotImplemented, ProcExit } from '../../core/src/error.js';
 import {
 	evaluateDebugExpressionWithResolver,

@@ -20,6 +20,8 @@ import {
 	resolveRuntimeManifestUrl
 } from './runtime-manifest.js';
 import { resolveRuntimeAssetUrls } from './runtime-assets.js';
+import { MemFS, Memory, untar } from './memory/index.js';
+import { compile, getInstance, readBuffer } from './wasm.js';
 import {
 	BrowserClangDebugController,
 	BrowserClangDebugDriver,
@@ -62,6 +64,7 @@ export type {
 } from './browser-execution.js';
 export type { CreateClangCompilerOptions, PreloadBrowserClangRuntimeOptions } from './compiler.js';
 export type { RuntimeAssetUrls } from './runtime-assets.js';
+export type { MemFsOptions, TarFileSystem } from './memory/index.js';
 export type {
 	BrowserClangDebugRunRequest,
 	BrowserClangDebugRuntimeOptions,
@@ -72,18 +75,24 @@ export type {
 export {
 	BrowserClangDebugController,
 	BrowserClangDebugDriver,
+	MemFS,
+	Memory,
 	Runtime as BrowserClangRuntime,
+	compile,
 	compileClang,
 	createBrowserClangDebugController,
 	createBrowserClangDebugDriver,
 	createBrowserWasiHost,
 	createClangCompiler,
 	executeBrowserClangArtifact,
+	getInstance,
 	loadRuntimeManifest,
 	parseRuntimeManifest,
 	preloadBrowserClangRuntime,
+	readBuffer,
 	resolveRuntimeAssetUrls,
-	resolveRuntimeManifestUrl
+	resolveRuntimeManifestUrl,
+	untar
 };
 
 const defaultFactory = createClangCompiler;

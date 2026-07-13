@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import untar from '../src/memory/tar.js';
+import untar from '../src/tar.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -86,7 +86,7 @@ describe('untar', () => {
 					contents: encoder.encode('prefixed-name')
 				})
 			]),
-			{ addFile, addDirectory } as never
+			{ addFile, addDirectory }
 		);
 
 		expect(addDirectory).not.toHaveBeenCalled();

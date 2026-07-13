@@ -11,3 +11,7 @@ export {
 	type GccCompatibilityWriteFs
 } from './gcc-compat.js';
 export { JsonStream } from './json-stream.js';
+export { default as MemFS, type MemFsOptions } from './memfs.js';
+export { default as Memory } from './memory.js';
+export { default as untar, type TarFileSystem } from './tar.js';
+export { compile, getInstance, readBuffer, type ProgressSink } from './wasm.js';
