@@ -1244,11 +1244,21 @@ class Clang {
 	}
 
 	async run(module: WebAssembly.Module, out: boolean, ...args: string[]) {
+		return this.runWithOptions(module, out, args);
+	}
+
+	async runWithOptions(
+		module: WebAssembly.Module,
+		out: boolean,
+		args: string[],
+		environ: Record<string, string> = {}
+	) {
 		this.memfs.out = out;
 		this.hostLog(`${args.join(' ')}\n`);
 		this.trace(`run ${args.join(' ')}`);
 		const start = +new Date();
 		const app = new App(module, this.memfs, args[0], ...args.slice(1));
+		app.environ = { ...app.environ, ...environ };
 		app.trace = (message) => this.trace(message);
 		app.debugSession = {
 			buffer: this.debugBuffer,

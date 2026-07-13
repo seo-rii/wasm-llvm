@@ -164,6 +164,17 @@ describe('App debug tracing', () => {
 		expect(memory.readStr(32 + 'main.wasm'.length + 1, '--flag'.length)).toBe('--flag');
 	});
 
+	it('writes a nanosecond clock value for WASI preview1 callers', () => {
+		const memory = new Memory(new WebAssembly.Memory({ initial: 1 }));
+		const app = Object.assign(Object.create(App.prototype), {
+			mem: memory,
+			trace: vi.fn()
+		}) as App;
+
+		expect(app.clock_time_get(0, 0n, 16)).toBe(0);
+		expect(memory.view.getBigUint64(16, true)).toBeGreaterThan(0n);
+	});
+
 	it('emits current locals when pausing on a debug line', () => {
 		const onPause = vi.fn();
 		const buffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4);

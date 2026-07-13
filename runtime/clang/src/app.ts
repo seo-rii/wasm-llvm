@@ -17,6 +17,7 @@ import {
 import { flushQueuedStdin, readBufferedStdin } from './stdin-buffer.js';
 
 const ESUCCESS = 0;
+const ENOENT = 44;
 const WASI_RIGHT_FD_READ = 1 << 1;
 const WASI_RIGHT_FD_SEEK = 1 << 2;
 const WASI_RIGHT_FD_SYNC = 1 << 4;
@@ -100,7 +101,7 @@ export default class App {
 		this.environ = { USER: 'wasm-clang' };
 		this.memfs = memfs;
 		this.useJsReadOverlay = name === 'wasm-ld' || name === 'ld.lld' || name === 'lld';
-		this.useJsSourceReadOverlay = name === 'clang' || name === 'clang++';
+		this.useJsSourceReadOverlay = name === 'clang' || name === 'clang++' || name === 'cobc';
 
 		const env = bindNew(
 			this,
@@ -133,12 +134,17 @@ export default class App {
 				this,
 				'path_open',
 				'path_filestat_get',
+				'path_readlink',
+				'path_unlink_file',
 				'fd_fdstat_get',
+				'fd_fdstat_set_flags',
 				'fd_filestat_get',
 				'fd_filestat_set_size',
+				'fd_datasync',
 				'fd_read',
 				'fd_pread',
 				'fd_seek',
+				'fd_tell',
 				'fd_write',
 				'fd_close'
 			)
@@ -221,6 +227,7 @@ export default class App {
 			path.replace(/^\/+/, '').replace(/^\.\//, '')
 		];
 		for (const candidate of candidates) {
+			if (!this.memfs.hasFile(candidate)) continue;
 			try {
 				return Uint8Array.from(this.memfs.getFileContents(candidate));
 			} catch {
@@ -328,6 +335,22 @@ export default class App {
 		const rights = this.toNumber(fsRightsBase);
 		const writesFile =
 			(rights & WASI_RIGHT_FD_WRITE) !== 0 || (oflags & (WASI_O_CREAT | WASI_O_TRUNC)) !== 0;
+		this.trace(
+			`path_open_request(path=${JSON.stringify(path)}, rights=${rights}, oflags=${oflags}, write=${writesFile})`
+		);
+		const overlayReadContents =
+			!writesFile && this.shouldUseJsReadForPath(path) && (rights & WASI_RIGHT_FD_READ) !== 0
+				? this.readMemfsFile(path)
+				: null;
+		if (
+			!writesFile &&
+			this.shouldUseJsReadForPath(path) &&
+			(rights & WASI_RIGHT_FD_READ) !== 0 &&
+			!overlayReadContents
+		) {
+			this.trace(`path_open_read_missing(path=${JSON.stringify(path)})`);
+			return ENOENT;
+		}
 		const result = this.memfs.exports.path_open(
 			dirfd,
 			dirflags,
@@ -357,7 +380,6 @@ export default class App {
 			);
 			return result;
 		}
-
 		if (!this.shouldUseJsReadForPath(path) || (rights & WASI_RIGHT_FD_READ) === 0) {
 			return result;
 		}
@@ -502,6 +524,54 @@ export default class App {
 		this.mem.check();
 		this.writeU64(newOffset, handle.position);
 		this.trace(`fd_seek(fd=${fd}, offset=${this.toNumber(offset)}, whence=${whence})`);
+		return ESUCCESS;
+	}
+
+	fd_tell(fd: number, newOffset: number) {
+		const position =
+			this.writeFileHandles.get(fd)?.position ?? this.readFileHandles.get(fd)?.position;
+		if (position == null) {
+			const fallback = this.memfs.exports.fd_tell;
+			return typeof fallback === 'function' ? fallback(fd, newOffset) : ENOENT;
+		}
+		this.mem.check();
+		this.writeU64(newOffset, position);
+		this.trace(`fd_tell(fd=${fd}, offset=${position})`);
+		return ESUCCESS;
+	}
+
+	fd_datasync(fd: number) {
+		if (this.writeFileHandles.has(fd) || this.readFileHandles.has(fd)) return ESUCCESS;
+		const fallback = this.memfs.exports.fd_datasync;
+		return typeof fallback === 'function' ? fallback(fd) : ESUCCESS;
+	}
+
+	fd_fdstat_set_flags(fd: number, flags: number) {
+		if (this.writeFileHandles.has(fd) || this.readFileHandles.has(fd)) return ESUCCESS;
+		const fallback = this.memfs.exports.fd_fdstat_set_flags;
+		return typeof fallback === 'function' ? fallback(fd, flags) : ESUCCESS;
+	}
+
+	path_readlink(
+		_fd: number,
+		pathPointer: number,
+		pathLength: number,
+		_buffer: number,
+		_bufferLength: number,
+		bytesUsed: number
+	) {
+		this.mem.check();
+		this.writeU32(bytesUsed, 0);
+		this.trace(`path_readlink(path=${JSON.stringify(this.mem.readStr(pathPointer, pathLength))})`);
+		return ENOENT;
+	}
+
+	path_unlink_file(_fd: number, pathPointer: number, pathLength: number) {
+		this.mem.check();
+		const path = this.mem.readStr(pathPointer, pathLength);
+		this.trace(`path_unlink_file(path=${JSON.stringify(path)})`);
+		// The in-memory filesystem has no remove primitive. Build directories are unique, so
+		// retaining a compiler temporary is harmless and reporting success preserves cleanup flow.
 		return ESUCCESS;
 	}
 
@@ -1266,8 +1336,14 @@ export default class App {
 		for (let i = 0; i < buf_len; ++i) data[i] = (Math.random() * 256) | 0;
 	}
 
-	clock_time_get() {
-		throw new NotImplemented('wasi_unstable', 'clock_time_get');
+	clock_time_get(clockId: number, _precision: bigint | number, timeOut: number) {
+		this.mem.check();
+		const milliseconds =
+			clockId === 1 && typeof performance !== 'undefined' ? performance.now() : Date.now();
+		const nanoseconds = BigInt(Math.floor(milliseconds * 1_000_000));
+		this.mem.view.setBigUint64(timeOut, nanoseconds, true);
+		this.trace(`clock_time_get(clock=${clockId}, ns=${nanoseconds})`);
+		return ESUCCESS;
 	}
 
 	poll_oneoff() {

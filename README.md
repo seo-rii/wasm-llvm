@@ -13,6 +13,7 @@ package and keeps only its UI, worker messaging, static asset synchronization, a
 - `artifacts/runtime-source/toolchain.json`: versions, resource paths, and asset hashes
 - `runtime/core/`: shared compatibility and serialization helpers
 - `runtime/clang/`: C/C++ compiler, linker, WASI execution, and debug runtime
+- `runtime/cobol/`: GnuCOBOL 3.2 frontend, libcob/GMP assets, and wasm-llvm orchestration
 - `runtime/emscripten-lld/`: canonical LLVM 16.0.4 Emscripten LLD JS/WASM/data validation and manifest rewriting
 - `runtime/nim/`: versioned contract for Nim's browser Clang/LLD bundle
 - `runtime/objective-c/`: libobjc2/GNUstep/libffi build profile and worker runtime
@@ -48,6 +49,7 @@ Browser code imports only the language subpath it needs:
 
 ```js
 const { BrowserClangRuntime } = await import('@seo-rii/wasm-llvm/runtime/clang');
+const { createCobolCompiler } = await import('@seo-rii/wasm-llvm/runtime/cobol');
 const { installObjectiveCWorker } = await import('@seo-rii/wasm-llvm/runtime/objective-c');
 ```
 

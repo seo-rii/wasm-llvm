@@ -30,6 +30,11 @@
 			"import": "./dist/runtime/clang/src/*.js",
 			"default": "./dist/runtime/clang/src/*.js"
 		},
+		"./runtime/cobol": {
+			"types": "./dist/runtime/cobol/src/index.d.ts",
+			"import": "./dist/runtime/cobol/src/index.js",
+			"default": "./dist/runtime/cobol/src/index.js"
+		},
 		"./runtime/objective-c": {
 			"types": "./dist/runtime/objective-c/src/index.d.ts",
 			"import": "./dist/runtime/objective-c/src/index.js",
@@ -57,6 +62,7 @@
 			"default": "./dist/runtime/tinygo/src/index.js"
 		},
 		"./runtime/clang/assets/*": "./dist/runtime/clang/assets/*",
+		"./runtime/cobol/assets/*": "./dist/runtime/cobol/assets/*",
 		"./runtime/objective-c/assets/*": "./dist/runtime/objective-c/assets/*",
 		"./tooling/swift/runtime-build-info": "./runtime/swift/scripts/runtime-build-info.mjs",
 		"./tooling/swift/runtime-manifest": "./runtime/swift/scripts/runtime-manifest.mjs",
@@ -66,25 +72,29 @@
 	},
 	"files": [
 		"artifacts/runtime-source",
+		"artifacts/cobol-runtime-source",
 		"dist",
 		"runtime/clang/scripts",
+		"runtime/cobol/scripts",
 		"runtime/emscripten-lld",
 		"runtime/nim",
 		"runtime/objective-c/scripts",
 		"runtime/rust",
 		"runtime/swift",
 		"runtime/tinygo",
+		"producer/cobol-browser",
 		"scripts",
 		"index.mjs",
 		"README.md",
 		"LICENSE"
 	],
 	"scripts": {
-		"build": "rm -rf dist && tsc -p tsconfig.build.json && node ./runtime/clang/scripts/prepare-runtime.mjs",
+		"build": "rm -rf dist && tsc -p tsconfig.build.json && node ./runtime/clang/scripts/prepare-runtime.mjs && node ./runtime/cobol/scripts/prepare-runtime.mjs",
 		"build:objective-c": "npm run build && node ./runtime/objective-c/scripts/build.mjs",
 		"build:toolchain": "node ./scripts/build-toolchain.mjs",
 		"check": "tsc -p tsconfig.json --noEmit && node --check ./index.mjs && node --check ./scripts/build-toolchain.mjs && node --check ./scripts/package-toolchain.mjs && node --check ./scripts/verify-assets.mjs",
 		"package:toolchain": "node ./scripts/package-toolchain.mjs",
+		"producer:cobol:build": "bash ./producer/cobol-browser/scripts/build.sh",
 		"prepare": "npm run build",
 		"test": "vitest run",
 		"test:objective-c:foundation": "node ./runtime/objective-c/scripts/probe-foundation.mjs",

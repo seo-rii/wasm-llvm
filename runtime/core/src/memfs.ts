@@ -28,6 +28,7 @@ export default class MemFS {
 	instance: WebAssembly.Instance = <any>null;
 	exports: any;
 	out = true;
+	private readonly filePaths = new Set<string>();
 
 	constructor(options: MemFsOptions) {
 		this.stdin = options.stdin;
@@ -82,6 +83,15 @@ export default class MemFS {
 		const addr = this.exports.GetFileNodeAddress(inode);
 		this.mem.check();
 		this.mem.write(addr, contents);
+		this.filePaths.add(this.normalizePath(path));
+	}
+
+	hasFile(path: string) {
+		return this.filePaths.has(this.normalizePath(path));
+	}
+
+	private normalizePath(path: string) {
+		return path.replaceAll('\\', '/').replace(/^\.\//, '').replace(/^\/+/, '');
 	}
 
 	getFileContents(path: string) {
