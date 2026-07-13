@@ -1,0 +1,121 @@
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { Buffer } from 'node:buffer';
+import path from 'node:path';
+
+export const TINYGO_LLVM_PROFILE = Object.freeze({
+	id: 'tinygo-emception-llvm',
+	version: 1,
+	tinygoVersion: '0.40.1',
+	llvmVersion: '16.0.0',
+	llvmCommit: 'd5a963ab8b40fcf7a99acd834e5f10a1a30cc2e5',
+	workerUrl: 'https://jprendes.github.io/emception/emception.worker.bundle.worker.js'
+});
+
+const AUTOMATIC_PUBLIC_PATH_SNIPPET = [
+	'if(!e)throw new Error("Automatic publicPath is not supported in this browser");',
+	'e=e.replace(/#.*$/,""\u0029.replace(/\\?.*$/,""\u0029.replace(/\\/[^\\/]+$/,"/"),',
+	'__webpack_require__.p=e'
+].join('');
+const MODULE_INIT_SNIPPET = 'this.ready=this.#e(e,r,{onrunprocess:t,...a});';
+const MODULE_INIT_PATCHED = 'this.ready=this.#e(e,r,a);';
+const EMCEPTION_EXPOSE_SNIPPET = 'globalThis.emception=Hn,i(Hn)';
+const EMCEPTION_EXPOSE_PATCHED =
+	'Hn.mkdir=async e=>{await Hn.fileSystem.mkdir(e)};globalThis.emception=Hn,i(Hn)';
+
+export function patchEmceptionWorkerSource(source: string) {
+	if (!source.includes(AUTOMATIC_PUBLIC_PATH_SNIPPET)) {
+		throw new Error('emception worker format changed; update the wasm-llvm TinyGo profile');
+	}
+	if (!source.includes(MODULE_INIT_SNIPPET)) {
+		throw new Error('emception worker init format changed; update the wasm-llvm TinyGo profile');
+	}
+	if (!source.includes(EMCEPTION_EXPOSE_SNIPPET)) {
+		throw new Error('emception worker export format changed; update the wasm-llvm TinyGo profile');
+	}
+
+	return source
+		.replace(/e\.exports=t\.p\+"([^"]+)\.br"/g, 'e.exports=t.p+"$1.brotli"')
+		.replace(
+			AUTOMATIC_PUBLIC_PATH_SNIPPET,
+			'__webpack_require__.p=new URL("./",self.location.href).href'
+		)
+		.replace(MODULE_INIT_SNIPPET, MODULE_INIT_PATCHED)
+		.replace(EMCEPTION_EXPOSE_SNIPPET, EMCEPTION_EXPOSE_PATCHED);
+}
+
+export function discoverEmceptionAssetNames(workerSource: string) {
+	const assetNames: string[] = [];
+	const seenAssetNames = new Set<string>();
+	for (const match of workerSource.matchAll(/e\.exports=t\.p\+"([^"]+)"/g)) {
+		const assetName = match[1];
+		if (!assetName || seenAssetNames.has(assetName)) continue;
+		seenAssetNames.add(assetName);
+		assetNames.push(assetName);
+	}
+	return assetNames;
+}
+
+export interface SyncEmceptionRuntimeOptions {
+	workerUrl?: string;
+	outputPath: string;
+	fetchImpl?: typeof fetch;
+}
+
+export async function syncEmceptionRuntime({
+	workerUrl = TINYGO_LLVM_PROFILE.workerUrl,
+	outputPath,
+	fetchImpl = fetch
+}: SyncEmceptionRuntimeOptions) {
+	let sourceText = '';
+	let reusedExistingWorker = false;
+	try {
+		const response = await fetchImpl(workerUrl);
+		if (!response.ok) {
+			throw new Error(
+				`Failed to download emception worker: ${response.status} ${response.statusText}`
+			);
+		}
+		sourceText = await response.text();
+	} catch (error) {
+		try {
+			await access(outputPath);
+			reusedExistingWorker = true;
+			sourceText = await readFile(outputPath, 'utf8');
+		} catch {
+			throw error;
+		}
+	}
+
+	const outputDir = path.dirname(outputPath);
+	let workerSource = sourceText;
+	if (!reusedExistingWorker) {
+		workerSource = patchEmceptionWorkerSource(sourceText);
+		const banner = `/* Generated from ${workerUrl} by @seo-rii/wasm-llvm. */\n`;
+		await mkdir(outputDir, { recursive: true });
+		await writeFile(outputPath, `${banner}${workerSource}`);
+	}
+
+	const assetBaseUrl = new URL('./', workerUrl);
+	const assetNames = discoverEmceptionAssetNames(workerSource);
+	for (const assetName of assetNames) {
+		const assetPath = path.join(outputDir, assetName);
+		try {
+			await access(assetPath);
+			continue;
+		} catch {
+			// Download missing assets below.
+		}
+		const remoteAssetName = assetName.endsWith('.brotli')
+			? `${assetName.slice(0, -'.brotli'.length)}.br`
+			: assetName;
+		const response = await fetchImpl(new URL(remoteAssetName, assetBaseUrl));
+		if (!response.ok) {
+			throw new Error(
+				`Failed to download emception asset ${remoteAssetName}: ${response.status} ${response.statusText}`
+			);
+		}
+		await mkdir(path.dirname(assetPath), { recursive: true });
+		await writeFile(assetPath, Buffer.from(await response.arrayBuffer()));
+	}
+	return { workerUrl, outputPath, assetNames, reusedExistingWorker };
+}

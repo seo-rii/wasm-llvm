@@ -1,7 +1,7 @@
 {
 	"name": "@seo-rii/wasm-llvm",
-	"version": "0.2.0",
-	"description": "Browser LLVM toolchains and reusable Clang, Objective-C, and Swift runtimes",
+	"version": "0.3.0",
+	"description": "Browser LLVM toolchains and reusable language runtime profiles",
 	"type": "module",
 	"license": "MIT",
 	"repository": {
@@ -35,6 +35,27 @@
 			"import": "./dist/runtime/objective-c/src/index.js",
 			"default": "./dist/runtime/objective-c/src/index.js"
 		},
+		"./runtime/emscripten-lld": {
+			"types": "./dist/runtime/emscripten-lld/src/index.d.ts",
+			"import": "./dist/runtime/emscripten-lld/src/index.js",
+			"default": "./dist/runtime/emscripten-lld/src/index.js"
+		},
+		"./runtime/emscripten-lld/assets/*": "./runtime/emscripten-lld/assets/*",
+		"./runtime/nim": {
+			"types": "./dist/runtime/nim/src/index.d.ts",
+			"import": "./dist/runtime/nim/src/index.js",
+			"default": "./dist/runtime/nim/src/index.js"
+		},
+		"./runtime/rust": {
+			"types": "./dist/runtime/rust/src/index.d.ts",
+			"import": "./dist/runtime/rust/src/index.js",
+			"default": "./dist/runtime/rust/src/index.js"
+		},
+		"./runtime/tinygo": {
+			"types": "./dist/runtime/tinygo/src/index.d.ts",
+			"import": "./dist/runtime/tinygo/src/index.js",
+			"default": "./dist/runtime/tinygo/src/index.js"
+		},
 		"./runtime/clang/assets/*": "./dist/runtime/clang/assets/*",
 		"./runtime/objective-c/assets/*": "./dist/runtime/objective-c/assets/*",
 		"./tooling/swift/runtime-build-info": "./runtime/swift/scripts/runtime-build-info.mjs",
@@ -47,8 +68,12 @@
 		"artifacts/runtime-source",
 		"dist",
 		"runtime/clang/scripts",
+		"runtime/emscripten-lld",
+		"runtime/nim",
 		"runtime/objective-c/scripts",
+		"runtime/rust",
 		"runtime/swift",
+		"runtime/tinygo",
 		"scripts",
 		"index.mjs",
 		"README.md",

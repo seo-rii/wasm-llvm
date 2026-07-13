@@ -13,8 +13,12 @@ package and keeps only its UI, worker messaging, static asset synchronization, a
 - `artifacts/runtime-source/toolchain.json`: versions, resource paths, and asset hashes
 - `runtime/core/`: shared compatibility and serialization helpers
 - `runtime/clang/`: C/C++ compiler, linker, WASI execution, and debug runtime
+- `runtime/emscripten-lld/`: canonical Emscripten LLD asset validation and manifest rewriting
+- `runtime/nim/`: versioned contract for Nim's browser Clang/LLD bundle
 - `runtime/objective-c/`: libobjc2/GNUstep/libffi build profile and worker runtime
+- `runtime/rust/`: Rust-specific LLVM worker and optional shared LLD contract
 - `runtime/swift/`: full Swift browser compiler source build, packaging, and verification pipeline
+- `runtime/tinygo/`: pinned emception LLVM download, patching, and asset discovery
 
 Current packaged versions:
 
@@ -52,6 +56,21 @@ Swift asset synchronization can reuse the published validators without importing
 ```js
 import { validateSwiftRuntimeManifest } from '@seo-rii/wasm-llvm/tooling/swift/runtime-manifest';
 ```
+
+Language repositories retain their compiler frontends and consume only the matching LLVM profile:
+
+```js
+import {
+  rewriteSharedEmscriptenLldAssets,
+  validateSharedEmscriptenLldAssets
+} from '@seo-rii/wasm-llvm/runtime/emscripten-lld';
+import { validateNimLlvmProfile } from '@seo-rii/wasm-llvm/runtime/nim';
+import { validateRustLlvmProfile } from '@seo-rii/wasm-llvm/runtime/rust';
+import { syncEmceptionRuntime } from '@seo-rii/wasm-llvm/runtime/tinygo';
+```
+
+These are independent, versioned profiles. Clang WASI, Emscripten LLD, Rust's LLVM worker, Swift's
+pinned LLVM checkout, and emception are not assumed to be binary-compatible.
 
 For package-manager installs that enforce package exports, asset files are available under:
 
