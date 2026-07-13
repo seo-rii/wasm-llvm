@@ -37,6 +37,8 @@ export namespace EXPECTED_BUILD_FILES {
 }
 export const BUILD_PLAN_SNAPSHOT_FILE: "build-plan.snapshot.json";
 export const WORKFLOW_PREFLIGHT_RECEIPT_SNAPSHOT_FILE: "workflow-preflight.snapshot.json";
+export const SOURCE_BOOTSTRAP_RECEIPT_SNAPSHOT_FILE: "source-bootstrap.snapshot.json";
+export const BROWSER_BUILD_LOG_SNAPSHOT_FILE: "browser-build.snapshot.log";
 export namespace EXPECTED_RUNTIME_CONTRACT {
     export { SWIFT_RUNTIME_CONTRACT_FORMAT as format };
     export { SWIFT_RUNTIME_CONTRACT_VERSION as version };
