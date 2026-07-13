@@ -16,4 +16,24 @@ describe('Nim LLVM profile', () => {
 			profile: { id: 'nim-llvm8', version: 1, llvmVersion: '8.0.1' }
 		});
 	});
+
+	it('accepts gzip storage without changing the LLVM 8 profile contract', async () => {
+		const root = await createTemporaryDirectory('wasm-llvm-nim-gzip-');
+		for (const relativePath of NIM_LLVM_PROFILE.requiredAssets) {
+			const storedPath =
+				relativePath.endsWith('.wasm') || relativePath.endsWith('.tar')
+					? `${relativePath}.gz`
+					: relativePath;
+			const filePath = path.join(root, storedPath);
+			await mkdir(path.dirname(filePath), { recursive: true });
+			await writeFile(filePath, storedPath);
+		}
+		await expect(validateNimLlvmProfile(root)).resolves.toMatchObject({
+			assets: {
+				'clang/clang.wasm': 'clang/clang.wasm.gz',
+				'clang/lld.wasm': 'clang/lld.wasm.gz',
+				'clang/sysroot.tar': 'clang/sysroot.tar.gz'
+			}
+		});
+	});
 });

@@ -18,15 +18,29 @@ export const NIM_LLVM_PROFILE = Object.freeze({
 
 export async function validateNimLlvmProfile(sourceDir: string) {
 	const missing: string[] = [];
+	const assets: Record<string, string> = {};
 	for (const relativePath of NIM_LLVM_PROFILE.requiredAssets) {
-		const fileStats = await stat(path.join(sourceDir, relativePath)).catch(() => null);
-		if (!fileStats?.isFile()) missing.push(relativePath);
+		const candidates: string[] = [relativePath];
+		if (relativePath.endsWith('.wasm') || relativePath.endsWith('.tar')) {
+			candidates.push(`${relativePath}.gz`);
+		}
+		let resolvedPath = '';
+		for (const candidate of candidates) {
+			const fileStats = await stat(path.join(sourceDir, candidate)).catch(() => null);
+			if (fileStats?.isFile()) {
+				resolvedPath = candidate;
+				break;
+			}
+		}
+		if (resolvedPath) assets[relativePath] = resolvedPath;
+		else missing.push(relativePath);
 	}
 	if (missing.length > 0) {
 		throw new Error(`Nim LLVM profile is incomplete: ${missing.join(', ')}`);
 	}
 	return {
 		profile: NIM_LLVM_PROFILE,
-		assetRoot: path.resolve(sourceDir)
+		assetRoot: path.resolve(sourceDir),
+		assets
 	};
 }
