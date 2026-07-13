@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const emptyWasm = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
 const calls = vi.hoisted(() => ({
 	run: [] as string[][],
-	runWithOptions: [] as Array<{ args: string[]; env: Record<string, string> }>,
+	runWithOptions: [] as Array<{
+		args: string[];
+		env: Record<string, string>;
+		source: string;
+	}>,
 	compile: [] as Array<Record<string, unknown>>,
 	runtimeOptions: [] as Array<Record<string, unknown>>
 }));
@@ -55,7 +59,12 @@ vi.mock('../../clang/src/index.js', () => {
 			args: string[],
 			env: Record<string, string>
 		) {
-			calls.runWithOptions.push({ args, env });
+			const input = args.at(-1) || '';
+			calls.runWithOptions.push({
+				args,
+				env,
+				source: new TextDecoder().decode(this.memfs.getFileContents(input))
+			});
 			const output = args[args.indexOf('-o') + 1];
 			this.memfs.addFile(
 				output,
@@ -180,5 +189,22 @@ describe('GnuCOBOL wasm-llvm runtime', () => {
 		expect(calls.run.at(-1)).toEqual(
 			expect.arrayContaining(['lib/libcob.a', 'lib/libgmp.a', 'lib/libsetjmp.a'])
 		);
+	});
+
+	it('avoids the GnuCOBOL C symbol collision for a top-level PROGRAM-ID named main', async () => {
+		const compiler = await createCobolCompiler({
+			manifest,
+			clangManifest: {
+				compiler: { sysroot: { asset: 'sysroot.tar.zip' } }
+			} as never
+		});
+
+		const result = await compiler.compile({
+			code: 'identification division. program-id. main. procedure division. stop run. end program main.'
+		});
+
+		expect(result.success).toBe(true);
+		expect(calls.runWithOptions[0]?.source).toContain('program-id. WASM-IDLE-MAIN.');
+		expect(calls.runWithOptions[0]?.source).toContain('end program WASM-IDLE-MAIN.');
 	});
 });

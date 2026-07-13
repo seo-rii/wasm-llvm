@@ -267,6 +267,14 @@ function inputName(fileName?: string) {
 	return /\.[A-Za-z0-9_-]+$/.test(normalized) ? normalized : `${normalized}.cob`;
 }
 
+function normalizeTopLevelMainProgramId(code: string) {
+	const programId = /(\bPROGRAM-ID\s*\.\s*)(?:(["'])MAIN\2|MAIN)(?=[\s.]|$)/i;
+	if (!programId.test(code)) return code;
+	return code
+		.replace(programId, '$1WASM-IDLE-MAIN')
+		.replace(/(\bEND\s+PROGRAM\s+)(?:(["'])MAIN\2|MAIN)(?=[\s.]|$)/gi, '$1WASM-IDLE-MAIN');
+}
+
 class CobolCompiler implements BrowserCobolCompiler {
 	private readonly runtime: BrowserClangRuntime;
 	private readonly frontend: WebAssembly.Module;
@@ -343,7 +351,7 @@ class CobolCompiler implements BrowserCobolCompiler {
 			const wasmPath = `${linkDirectory}/${stem}.wasm`;
 			addDirectory(runtime, `${prefix}/tmp`);
 			addDirectory(runtime, linkDirectory);
-			addFile(runtime, sourcePath, request.code);
+			addFile(runtime, sourcePath, normalizeTopLevelMainProgramId(request.code));
 			for (const file of request.workspaceFiles || []) {
 				const safePath = normalizeWorkspacePath(file.path);
 				if (!safePath || safePath === requestedInput) continue;
