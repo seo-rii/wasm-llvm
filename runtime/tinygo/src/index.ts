@@ -1,14 +1,16 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { Buffer } from 'node:buffer';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 
 export const TINYGO_LLVM_PROFILE = Object.freeze({
 	id: 'tinygo-emception-llvm',
-	version: 1,
+	version: 2,
 	tinygoVersion: '0.40.1',
 	llvmVersion: '16.0.0',
 	llvmCommit: 'd5a963ab8b40fcf7a99acd834e5f10a1a30cc2e5',
-	workerUrl: 'https://jprendes.github.io/emception/emception.worker.bundle.worker.js'
+	workerUrl: 'https://jprendes.github.io/emception/emception.worker.bundle.worker.js',
+	patchedWorkerSha256: '2c2347f5869d1c08181f46bd1ae10723be242d66cdc233e201cad0d5acb8fcea'
 });
 
 const AUTOMATIC_PUBLIC_PATH_SNIPPET = [
@@ -59,12 +61,17 @@ export interface SyncEmceptionRuntimeOptions {
 	workerUrl?: string;
 	outputPath: string;
 	fetchImpl?: typeof fetch;
+	expectedWorkerSha256?: string | null;
 }
 
 export async function syncEmceptionRuntime({
 	workerUrl = TINYGO_LLVM_PROFILE.workerUrl,
 	outputPath,
-	fetchImpl = fetch
+	fetchImpl = fetch,
+	expectedWorkerSha256 =
+		workerUrl === TINYGO_LLVM_PROFILE.workerUrl
+			? TINYGO_LLVM_PROFILE.patchedWorkerSha256
+			: null
 }: SyncEmceptionRuntimeOptions) {
 	let sourceText = '';
 	let reusedExistingWorker = false;
@@ -90,6 +97,17 @@ export async function syncEmceptionRuntime({
 	let workerSource = sourceText;
 	if (!reusedExistingWorker) {
 		workerSource = patchEmceptionWorkerSource(sourceText);
+	}
+	if (expectedWorkerSha256) {
+		const sourceWithoutBanner = workerSource.replace(/^\/\* Generated[^\n]*\*\/\n/, '');
+		const actualWorkerSha256 = createHash('sha256').update(sourceWithoutBanner).digest('hex');
+		if (actualWorkerSha256 !== expectedWorkerSha256) {
+			throw new Error(
+				`emception worker checksum mismatch: expected ${expectedWorkerSha256}, received ${actualWorkerSha256}`
+			);
+		}
+	}
+	if (!reusedExistingWorker) {
 		const banner = `/* Generated from ${workerUrl} by @seo-rii/wasm-llvm. */\n`;
 		await mkdir(outputDir, { recursive: true });
 		await writeFile(outputPath, `${banner}${workerSource}`);

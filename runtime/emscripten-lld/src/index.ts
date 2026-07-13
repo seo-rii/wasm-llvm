@@ -3,16 +3,18 @@ import path from 'node:path';
 
 export const EMSCRIPTEN_LLD_PROFILE = Object.freeze({
 	id: 'emscripten-lld',
-	version: 1,
+	version: 2,
 	llvmVersion: '16.0.4',
 	llvmCommit: 'ae42196bc493ffe877a7e3dff8be32035dea4d07',
-	assets: ['lld.wasm.gz', 'lld.data.gz'] as const
+	assets: ['lld.js', 'lld.wasm.gz', 'lld.data.gz'] as const
 });
 
+export const SHARED_LLD_JS_ASSET = '../../shared/emscripten-lld/lld.js';
 export const SHARED_LLD_WASM_ASSET = '../../shared/emscripten-lld/lld.wasm.gz';
 export const SHARED_LLD_DATA_ASSET = '../../shared/emscripten-lld/lld.data.gz';
 
 export interface EmscriptenLldAssetReferences {
+	js: string;
 	wasm: string;
 	data: string;
 }
@@ -30,6 +32,7 @@ export interface SyncCanonicalEmscriptenLldAssetsOptions {
 export interface RewriteEmscriptenLldAssetsOptions {
 	targetAssetDir: string;
 	manifestPath: string;
+	localJsAsset: string;
 	localWasmAsset: string;
 	localDataAsset: string;
 	sharedAssetReferences?: EmscriptenLldAssetReferences;
@@ -44,18 +47,23 @@ export async function validateSharedEmscriptenLldAssets({
 			stat(path.join(sourceAssetDir, asset)).catch(() => null)
 		)
 	);
-	if (sourceStats.every((assetStats) => !assetStats)) return false;
+	const binaryStats = sourceStats.slice(1);
+	if (binaryStats.every((assetStats) => !assetStats)) return false;
 	if (sourceStats.some((assetStats) => !assetStats?.isFile())) {
 		throw new Error(`incomplete Emscripten LLD assets in ${sourceAssetDir}`);
 	}
 
 	for (const asset of EMSCRIPTEN_LLD_PROFILE.assets) {
-		const sourceBytes = await readFile(path.join(sourceAssetDir, asset));
-		const sharedBytes = await readFile(path.join(sharedAssetDir, asset)).catch(() => null);
+		let sourceBytes = await readFile(path.join(sourceAssetDir, asset));
+		let sharedBytes = await readFile(path.join(sharedAssetDir, asset)).catch(() => null);
 		if (!sharedBytes) {
 			throw new Error(
 				`shared Emscripten LLD asset was not found at ${path.join(sharedAssetDir, asset)}`
 			);
+		}
+		if (asset === 'lld.js') {
+			sourceBytes = Buffer.from(sourceBytes.toString('utf8').replace(/[ \t]+$/gm, ''));
+			sharedBytes = Buffer.from(sharedBytes.toString('utf8').replace(/[ \t]+$/gm, ''));
 		}
 		if (!sourceBytes.equals(sharedBytes)) {
 			throw new Error(
@@ -85,15 +93,17 @@ export async function syncCanonicalEmscriptenLldAssets({
 export async function rewriteSharedEmscriptenLldAssets({
 	targetAssetDir,
 	manifestPath,
+	localJsAsset,
 	localWasmAsset,
 	localDataAsset,
 	sharedAssetReferences = {
+		js: SHARED_LLD_JS_ASSET,
 		wasm: SHARED_LLD_WASM_ASSET,
 		data: SHARED_LLD_DATA_ASSET
 	}
 }: RewriteEmscriptenLldAssetsOptions) {
 	const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as unknown;
-	let replacements = 0;
+	const replacements = { js: 0, wasm: 0, data: 0 };
 	const replaceReferences = (value: unknown): unknown => {
 		if (Array.isArray(value)) {
 			return value.map(replaceReferences);
@@ -104,19 +114,28 @@ export async function rewriteSharedEmscriptenLldAssets({
 			}
 			return value;
 		}
+		if (value === localJsAsset) {
+			replacements.js += 1;
+			return sharedAssetReferences.js;
+		}
 		if (value === localWasmAsset) {
-			replacements += 1;
+			replacements.wasm += 1;
 			return sharedAssetReferences.wasm;
 		}
 		if (value === localDataAsset) {
-			replacements += 1;
+			replacements.data += 1;
 			return sharedAssetReferences.data;
 		}
 		return value;
 	};
 	const rewrittenManifest = replaceReferences(manifest);
-	if (replacements === 0) {
-		throw new Error(`no Emscripten LLD references were found in ${manifestPath}`);
+	const missingReferences = Object.entries(replacements)
+		.filter(([, count]) => count === 0)
+		.map(([asset]) => asset);
+	if (missingReferences.length > 0) {
+		throw new Error(
+			`Emscripten LLD references were not found in ${manifestPath}: ${missingReferences.join(', ')}`
+		);
 	}
 
 	await writeFile(manifestPath, `${JSON.stringify(rewrittenManifest, null, 2)}\n`, 'utf8');

@@ -15,14 +15,16 @@ describe('Emscripten LLD profile', () => {
 		const sharedDir = path.join(root, 'shared');
 		await mkdir(sourceDir, { recursive: true });
 		await mkdir(sharedDir, { recursive: true });
-		for (const asset of ['lld.wasm.gz', 'lld.data.gz']) {
+		for (const asset of ['lld.js', 'lld.wasm.gz', 'lld.data.gz']) {
 			await writeFile(path.join(sourceDir, asset), asset);
 			await writeFile(path.join(sharedDir, asset), asset);
 		}
 		const manifestPath = path.join(root, 'runtime-manifest.json');
 		await writeFile(
 			manifestPath,
-			JSON.stringify({ linker: { wasm: 'bin/lld.wasm.gz', data: 'bin/lld.data.gz' } })
+			JSON.stringify({
+				linker: { js: 'bin/lld.js', wasm: 'bin/lld.wasm.gz', data: 'bin/lld.data.gz' }
+			})
 		);
 
 		await expect(
@@ -39,13 +41,18 @@ describe('Emscripten LLD profile', () => {
 		await rewriteSharedEmscriptenLldAssets({
 			targetAssetDir: sourceDir,
 			manifestPath,
+			localJsAsset: 'bin/lld.js',
 			localWasmAsset: 'bin/lld.wasm.gz',
 			localDataAsset: 'bin/lld.data.gz'
 		});
 
 		await expect(readFile(manifestPath, 'utf8')).resolves.toContain(
+			'../../shared/emscripten-lld/lld.js'
+		);
+		await expect(readFile(manifestPath, 'utf8')).resolves.toContain(
 			'../../shared/emscripten-lld/lld.wasm.gz'
 		);
+		await expect(readFile(path.join(sourceDir, 'lld.js'))).rejects.toThrow();
 		await expect(readFile(path.join(sourceDir, 'lld.wasm.gz'))).rejects.toThrow();
 	});
 });

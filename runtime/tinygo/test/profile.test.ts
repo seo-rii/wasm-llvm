@@ -1,5 +1,11 @@
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { discoverEmceptionAssetNames, patchEmceptionWorkerSource } from '../src/index.js';
+import {
+	discoverEmceptionAssetNames,
+	patchEmceptionWorkerSource,
+	syncEmceptionRuntime
+} from '../src/index.js';
+import { createTemporaryDirectory } from '../../test-support.js';
 
 const workerSource = [
 	'e.exports=t.p+"cache-package.br"',
@@ -18,5 +24,17 @@ describe('TinyGo LLVM profile', () => {
 		expect(patched).toContain('__webpack_require__.p=new URL("./",self.location.href).href');
 		expect(patched).toContain('cache-package.brotli');
 		expect(discoverEmceptionAssetNames(patched)).toEqual(['cache-package.brotli']);
+	});
+
+	it('rejects a changed worker when a checksum is pinned', async () => {
+		const root = await createTemporaryDirectory('wasm-llvm-tinygo-');
+		await expect(
+			syncEmceptionRuntime({
+				workerUrl: 'https://example.test/emception.worker.js',
+				outputPath: path.join(root, 'emception.worker.js'),
+				expectedWorkerSha256: '0'.repeat(64),
+				fetchImpl: async () => new Response(workerSource)
+			})
+		).rejects.toThrow('checksum mismatch');
 	});
 });
