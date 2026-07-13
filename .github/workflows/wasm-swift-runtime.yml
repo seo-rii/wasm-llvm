@@ -1,0 +1,320 @@
+name: wasm-swift runtime export
+
+on:
+    workflow_dispatch:
+        inputs:
+            swift_ref:
+                description: Swift branch, tag, or commit to clone when bootstrap_source is true
+                required: false
+                default: main
+            swift_clone_depth:
+                description: Optional shallow clone depth for the initial swift.git clone
+                required: false
+            swift_clone_filter:
+                description: Optional partial clone filter for the initial swift.git clone, for example blob:none
+                required: false
+            dependency_scheme:
+                description: swift/utils/update-checkout dependency scheme
+                required: false
+                default: main
+            bootstrap_source:
+                description: Run the large Swift source checkout step
+                required: true
+                type: boolean
+                default: false
+            allow_existing_checkout:
+                description: Reuse an existing source checkout in the runner workspace
+                required: true
+                type: boolean
+                default: true
+            min_free_gib:
+                description: Minimum free GiB required for large Swift checkout and build steps
+                required: true
+                default: "80"
+            checkout_root:
+                description: Optional existing Swift source checkout root; required when bootstrap_source is false
+                required: false
+            source_bootstrap_receipt:
+                description: Passed source bootstrap receipt for checkout_root when bootstrap_source is false
+                required: false
+            browser_build_command:
+                description: Required shell command that produces runner-worker.js, swiftc.wasm, and swiftpm.wasm before verification
+                required: true
+            runner_worker:
+                description: Optional path to runner-worker.js produced by an external browser compiler build
+                required: false
+            swiftc_wasm:
+                description: Optional path to swiftc.wasm produced by an external browser compiler build
+                required: false
+            swiftpm_wasm:
+                description: Optional path to swiftpm.wasm produced by an external browser compiler build
+                required: false
+            sdk_archive:
+                description: Optional path to sdk.tar.gz; leave empty to use the documented official SDK artifact
+                required: false
+            swift_version:
+                description: Swift version recorded in runtime-build.json
+                required: true
+                default: 6.3.3
+            wasm_sdk_id:
+                description: Wasm SDK id recorded in runtime-build.json
+                required: true
+                default: swift-6.3.3-RELEASE_wasm
+            published_url:
+                description: Optional final URL where the exported archive will be published
+                required: false
+
+jobs:
+    export-runtime:
+        runs-on: ubuntu-latest
+        timeout-minutes: 720
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 10.30.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+
+            - run: pnpm exec playwright-core install --with-deps chromium
+
+            - name: Prepare workflow paths
+              run: |
+                  SOURCE_ROOT="${{ inputs.checkout_root }}"
+                  if [ -z "$SOURCE_ROOT" ]; then
+                    SOURCE_ROOT="$RUNNER_TEMP/wasm-swift-source"
+                  fi
+                  BOOTSTRAP_RECEIPT="${{ inputs.source_bootstrap_receipt }}"
+                  if [ -z "$BOOTSTRAP_RECEIPT" ]; then
+                    BOOTSTRAP_RECEIPT="$RUNNER_TEMP/wasm-swift-source-bootstrap-receipt.json"
+                  fi
+                  echo "WASM_SWIFT_SOURCE_ROOT=$SOURCE_ROOT" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_BUILD_DIR=$RUNNER_TEMP/wasm-swift-build" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_RAW_RUNTIME_DIR=$RUNNER_TEMP/wasm-swift-raw-runtime" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_BUILD_PLAN=$RUNNER_TEMP/wasm-idle-swift-browser-build-plan.json" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_WORKFLOW_PREFLIGHT_RECEIPT=$RUNNER_TEMP/wasm-swift-workflow-preflight.json" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_BROWSER_BUILD_LOG=$RUNNER_TEMP/wasm-swift-browser-build.log" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_RUNNER_WORKER=$RUNNER_TEMP/wasm-swift-build/runner-worker.js" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_SWIFTC_WASM=$RUNNER_TEMP/wasm-swift-build/swiftc.wasm" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_SWIFTPM_WASM=$RUNNER_TEMP/wasm-swift-build/swiftpm.wasm" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_SDK_ARCHIVE=$RUNNER_TEMP/wasm-swift-build/sdk.tar.gz" >> "$GITHUB_ENV"
+                  echo "WASM_SWIFT_BOOTSTRAP_RECEIPT=$BOOTSTRAP_RECEIPT" >> "$GITHUB_ENV"
+
+            - name: Preflight workflow inputs
+              run: |
+                  pnpm --dir runtime/swift run workflow:preflight -- \
+                    --bootstrap-source "${{ inputs.bootstrap_source }}" \
+                    --source-root "$WASM_SWIFT_SOURCE_ROOT" \
+                    --source-bootstrap-receipt "$WASM_SWIFT_BOOTSTRAP_RECEIPT" \
+                    --build-dir "$WASM_SWIFT_BUILD_DIR" \
+                    --min-free-gib "${{ inputs.min_free_gib }}" \
+                    --swift-clone-depth "${{ inputs.swift_clone_depth }}" \
+                    --swift-clone-filter "${{ inputs.swift_clone_filter }}" \
+                    --runner-worker "${{ inputs.runner_worker }}" \
+                    --swiftc-wasm "${{ inputs.swiftc_wasm }}" \
+                    --swiftpm-wasm "${{ inputs.swiftpm_wasm }}" \
+                    --sdk-archive "${{ inputs.sdk_archive }}" \
+                    --browser-build-command "${{ inputs.browser_build_command }}" \
+                    --swift-version "${{ inputs.swift_version }}" \
+                    --wasm-sdk-id "${{ inputs.wasm_sdk_id }}" \
+                    --published-url "${{ inputs.published_url }}" \
+                    --receipt "$WASM_SWIFT_WORKFLOW_PREFLIGHT_RECEIPT"
+
+            - name: Probe native Swift/Wasm baseline
+              run: |
+                  pnpm --dir runtime/swift run probe:toolchain -- \
+                    --run-wasm \
+                    --receipt "$RUNNER_TEMP/wasm-swift-toolchain-probe.json"
+
+            - name: Bootstrap Swift source checkout
+              if: ${{ inputs.bootstrap_source }}
+              run: |
+                  ARGS=(
+                    --source-root "$WASM_SWIFT_SOURCE_ROOT"
+                    --swift-ref "${{ inputs.swift_ref }}"
+                    --dependency-scheme "${{ inputs.dependency_scheme }}"
+                    --min-free-gib "${{ inputs.min_free_gib }}"
+                    --receipt "$WASM_SWIFT_BOOTSTRAP_RECEIPT"
+                    --execute
+                  )
+                  if [ -n "${{ inputs.swift_clone_depth }}" ]; then
+                    ARGS+=(--swift-clone-depth "${{ inputs.swift_clone_depth }}")
+                  fi
+                  if [ -n "${{ inputs.swift_clone_filter }}" ]; then
+                    ARGS+=(--swift-clone-filter "${{ inputs.swift_clone_filter }}")
+                  fi
+                  if [ "${{ inputs.allow_existing_checkout }}" = "true" ]; then
+                    ARGS+=(--allow-existing)
+                  fi
+                  pnpm --dir runtime/swift run bootstrap:source -- "${ARGS[@]}"
+
+            - name: Write browser compiler build plan and run build command
+              run: |
+                  ARGS=(
+                    --checkout-root "$WASM_SWIFT_SOURCE_ROOT"
+                    --build-dir "$WASM_SWIFT_BUILD_DIR"
+                    --raw-runtime-dir "$WASM_SWIFT_RAW_RUNTIME_DIR"
+                    --plan-path "$WASM_SWIFT_BUILD_PLAN"
+                    --browser-build-log "$WASM_SWIFT_BROWSER_BUILD_LOG"
+                    --allow-missing-tools
+                  )
+                  if [ -f "$WASM_SWIFT_BOOTSTRAP_RECEIPT" ]; then
+                    ARGS+=(--source-bootstrap-receipt "$WASM_SWIFT_BOOTSTRAP_RECEIPT")
+                  fi
+                  if [ -n "${{ inputs.browser_build_command }}" ]; then
+                    ARGS+=(--browser-build-command "${{ inputs.browser_build_command }}")
+                    ARGS+=(--execute-browser-build-command)
+                    if [ -z "${{ inputs.runner_worker }}" ] && [ -z "${{ inputs.swiftc_wasm }}" ] && [ -z "${{ inputs.swiftpm_wasm }}" ] && [ -z "${{ inputs.sdk_archive }}" ]; then
+                      ARGS+=(--discover-build-outputs)
+                    fi
+                  fi
+                  if [ -n "${{ inputs.runner_worker }}" ]; then
+                    ARGS+=(--runner-worker "${{ inputs.runner_worker }}")
+                  fi
+                  if [ -n "${{ inputs.swiftc_wasm }}" ]; then
+                    ARGS+=(--swiftc-wasm "${{ inputs.swiftc_wasm }}")
+                  fi
+                  if [ -n "${{ inputs.swiftpm_wasm }}" ]; then
+                    ARGS+=(--swiftpm-wasm "${{ inputs.swiftpm_wasm }}")
+                  fi
+                  if [ -n "${{ inputs.sdk_archive }}" ]; then
+                    ARGS+=(--sdk-archive "${{ inputs.sdk_archive }}")
+                  else
+                    ARGS+=(--fetch-official-sdk)
+                  fi
+                  pnpm --dir runtime/swift run build:browser-compiler -- "${ARGS[@]}"
+
+            - name: Print browser compiler output contract
+              run: |
+                  {
+                    echo "browser_build_command must produce the browser-hosted Swift runtime outputs below unless explicit workflow inputs override them:"
+                    echo "runner-worker.js: ${WASM_SWIFT_RUNNER_WORKER}"
+                    echo "swiftc.wasm: ${WASM_SWIFT_SWIFTC_WASM}"
+                    echo "swiftpm.wasm: ${WASM_SWIFT_SWIFTPM_WASM}"
+                    echo "sdk.tar.gz: ${WASM_SWIFT_SDK_ARCHIVE}"
+                    echo "build plan: ${WASM_SWIFT_BUILD_PLAN}"
+                  } | tee "$RUNNER_TEMP/wasm-swift-output-contract.txt"
+
+            - name: Summarize browser compiler outputs
+              run: |
+                  {
+                    for entry in \
+                      "runner-worker.js:${WASM_SWIFT_RUNNER_WORKER}" \
+                      "swiftc.wasm:${WASM_SWIFT_SWIFTC_WASM}" \
+                      "swiftpm.wasm:${WASM_SWIFT_SWIFTPM_WASM}" \
+                      "sdk.tar.gz:${WASM_SWIFT_SDK_ARCHIVE}"
+                    do
+                      name="${entry%%:*}"
+                      file="${entry#*:}"
+                      if [ -f "$file" ]; then
+                        bytes="$(wc -c < "$file" | tr -d ' ')"
+                        echo "${name}: present (${bytes} bytes) at ${file}"
+                      else
+                        echo "${name}: missing at ${file}"
+                      fi
+                    done
+                  } | tee "$RUNNER_TEMP/wasm-swift-output-summary.txt"
+
+            - name: Discover browser compiler outputs
+              if: ${{ inputs.runner_worker == '' && inputs.swiftc_wasm == '' && inputs.swiftpm_wasm == '' && inputs.sdk_archive == '' }}
+              run: |
+                  pnpm --dir runtime/swift run discover:build-outputs -- \
+                    --build-dir "$WASM_SWIFT_BUILD_DIR" \
+                    --plan "$WASM_SWIFT_BUILD_PLAN" \
+                    --allow-official-sdk-placeholder \
+                    --write-plan
+
+            - name: Run upstream Swift/WASI baseline
+              run: |
+                  pnpm --dir runtime/swift run run:upstream-baseline -- \
+                    --plan "$WASM_SWIFT_BUILD_PLAN" \
+                    --min-free-gib "${{ inputs.min_free_gib }}" \
+                    --preset buildbot_linux_crosscompile_wasm
+
+            - name: Verify browser compiler outputs
+              run: |
+                  VERIFY_ARGS=(
+                    --plan "$WASM_SWIFT_BUILD_PLAN"
+                    --prepare-raw-runtime
+                    --require-browser-compiler-contracts
+                    --require-browser-build-command
+                    --require-browser-build-execution
+                    --require-browser-build-log
+                    --require-source-bootstrap-provenance
+                  )
+                  if [ -z "${{ inputs.sdk_archive }}" ]; then
+                    VERIFY_ARGS+=(--allow-official-sdk-placeholder)
+                  fi
+                  pnpm --dir runtime/swift run verify:build-outputs -- "${VERIFY_ARGS[@]}"
+
+            - name: Package runtime from build plan
+              run: |
+                  PACKAGE_ARGS=(
+                    --plan "$WASM_SWIFT_BUILD_PLAN"
+                    --dist-dir runtime/swift/dist
+                    --swift-version "${{ inputs.swift_version }}"
+                    --wasm-sdk-id "${{ inputs.wasm_sdk_id }}"
+                    --source "GitHub Actions wasm-swift runtime export $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+                    --workflow-preflight-receipt "$WASM_SWIFT_WORKFLOW_PREFLIGHT_RECEIPT"
+                    --require-upstream-baseline-receipt
+                    --require-browser-compiler-contracts
+                    --require-browser-build-command
+                    --require-browser-build-execution
+                    --require-browser-build-log
+                    --require-source-bootstrap-provenance
+                    --browser-contract
+                  )
+                  if [ -z "${{ inputs.sdk_archive }}" ]; then
+                    PACKAGE_ARGS+=(--allow-official-sdk-placeholder)
+                    PACKAGE_ARGS+=(--official-wasm-sdk-provenance)
+                  fi
+                  pnpm --dir runtime/swift run package:from-plan -- "${PACKAGE_ARGS[@]}"
+
+            - name: Export runtime archive
+              run: |
+                  EXPORT_ARGS=(
+                    --bundle-dir runtime/swift/dist
+                    --out-dir runtime/swift/out
+                  )
+                  if [ -n "${{ inputs.published_url }}" ]; then
+                    EXPORT_ARGS+=(--url "${{ inputs.published_url }}")
+                  fi
+                  pnpm --dir runtime/swift run export:runtime -- "${EXPORT_ARGS[@]}"
+
+            - name: Write consumer integration guide
+              run: |
+                  {
+                    echo "Consume the exported descriptor from wasm-idle, then run its Swift asset sync and readiness checks."
+                  } | tee runtime/swift/out/PROMOTE.md
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: wasm-swift-runtime
+                  path: |
+                      runtime/swift/out/*.tar.gz
+                      runtime/swift/out/*.sha256
+                      runtime/swift/out/*.json
+                      runtime/swift/out/PROMOTE.md
+                  if-no-files-found: error
+
+            - uses: actions/upload-artifact@v4
+              if: ${{ always() }}
+              with:
+                  name: wasm-swift-runtime-diagnostics
+                  path: |
+                      ${{ runner.temp }}/wasm-swift-output-contract.txt
+                      ${{ runner.temp }}/wasm-swift-output-summary.txt
+                      ${{ env.WASM_SWIFT_WORKFLOW_PREFLIGHT_RECEIPT }}
+                      ${{ runner.temp }}/wasm-swift-toolchain-probe.json
+                      ${{ env.WASM_SWIFT_BROWSER_BUILD_LOG }}
+                      ${{ env.WASM_SWIFT_BOOTSTRAP_RECEIPT }}
+                      ${{ env.WASM_SWIFT_BUILD_PLAN }}
+                      runtime/swift/dist/runtime-build.json
+                      runtime/swift/dist/runtime-manifest.v1.json
+                  if-no-files-found: ignore

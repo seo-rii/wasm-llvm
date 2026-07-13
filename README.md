@@ -1,9 +1,7 @@
 # wasm-llvm
 
-Browser-loadable LLVM/Clang toolchain assets used by `wasm-idle`.
-
-This package contains the binary toolchain inputs and the rebuild scripts. Runtime integration,
-editor wiring, execution, and debug control stay in `wasm-idle`.
+Browser-loadable LLVM toolchains and reusable language runtime profiles. `wasm-idle` consumes this
+package and keeps only its UI, worker messaging, static asset synchronization, and editor wiring.
 
 ## Contents
 
@@ -13,12 +11,20 @@ editor wiring, execution, and debug control stay in `wasm-idle`.
 - `artifacts/runtime-source/sysroot.tar.zip`: trimmed WASI sysroot
 - `artifacts/runtime-source/clangd/`: Emscripten pthread `clangd` module
 - `artifacts/runtime-source/toolchain.json`: versions, resource paths, and asset hashes
+- `runtime/core/`: shared compatibility and serialization helpers
+- `runtime/clang/`: C/C++ compiler, linker, WASI execution, and debug runtime
+- `runtime/objective-c/`: libobjc2/GNUstep/libffi build profile and worker runtime
+- `runtime/swift/`: full Swift browser compiler source build, packaging, and verification pipeline
 
 Current packaged versions:
 
 - LLVM `22.1.8`
 - WASI SDK `33`
 - Emscripten `6.0.0`
+
+The Clang profile uses the packaged LLVM 22 toolchain. Swift retains its separately pinned upstream
+Swift/LLVM checkout because the Swift frontend requires the matching LLVM revision and libraries;
+the repository boundary is shared, but the compiler builds are not forced onto one LLVM binary.
 
 ## Install
 
@@ -34,6 +40,19 @@ Consumers can resolve the runtime source directory from Node:
 import { runtimeSourceDir, toolchainMetadataPath } from '@seo-rii/wasm-llvm';
 ```
 
+Browser code imports only the language subpath it needs:
+
+```js
+const { BrowserClangRuntime } = await import('@seo-rii/wasm-llvm/runtime/clang');
+const { installObjectiveCWorker } = await import('@seo-rii/wasm-llvm/runtime/objective-c');
+```
+
+Swift asset synchronization can reuse the published validators without importing compiler code:
+
+```js
+import { validateSwiftRuntimeManifest } from '@seo-rii/wasm-llvm/tooling/swift/runtime-manifest';
+```
+
 For package-manager installs that enforce package exports, asset files are available under:
 
 ```js
@@ -46,10 +65,31 @@ import.meta.resolve('@seo-rii/wasm-llvm/artifacts/runtime-source/toolchain.json'
 pnpm install
 pnpm verify:assets
 pnpm check
+pnpm test
+pnpm validate:clang
+pnpm swift:test
 ```
 
 `verify:assets` checks that every required runtime asset exists and matches the hashes in
-`toolchain.json`.
+`toolchain.json`. `validate:clang` also compiles and executes real C and C++ programs in the WASI
+runtime. The Swift suite validates source checkout, build receipts, packaging, browser execution
+contracts, and stdin fixtures.
+
+## Objective-C Profile
+
+The Objective-C profile builds real upstream components rather than a language subset:
+
+- libobjc2 `v2.3`
+- GNUstep Base `base-1_31_1`
+- libffi `v3.6.0`
+
+```bash
+pnpm build:objective-c
+pnpm test:objective-c:libffi
+pnpm test:objective-c:foundation
+```
+
+Set `LLVM_AR` when the host archiver cannot be discovered from the wasm-llvm build directory.
 
 ## Rebuild Toolchain
 

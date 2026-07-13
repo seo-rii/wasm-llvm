@@ -1,0 +1,507 @@
+diff --git a/include/module.modulemap b/include/module.modulemap
+--- a/include/module.modulemap
++++ b/include/module.modulemap
+@@ -1,5 +1,10 @@
++module WASIThreadShim {
++  header "swift/Basic/WASIThreadShim.h"
++  export *
++}
++
+ module BasicBridging {
+   header "swift/Basic/BasicBridging.h"
+   requires cplusplus
+   export *
+ }
+diff --git a/include/swift/Basic/WASIThreadShim.h b/include/swift/Basic/WASIThreadShim.h
+new file mode 100644
+--- /dev/null
++++ b/include/swift/Basic/WASIThreadShim.h
+@@ -0,0 +1,11 @@
++//===- WASIThreadShim.h - no-thread C++ module compatibility -----*- C++ -*-===//
++
++#ifndef SWIFT_BASIC_WASITHREADSHIM_H
++#define SWIFT_BASIC_WASITHREADSHIM_H
++
++#if defined(__wasi__) && defined(__cplusplus) &&                              \
++    !defined(WASM_IDLE_LLVM_WASI_THREAD_SHIM_H)
++#include "llvm-wasi-thread-shim.h"
++#endif
++
++#endif
+diff --git a/include/swift/AST/ASTBridging.h b/include/swift/AST/ASTBridging.h
+--- a/include/swift/AST/ASTBridging.h
++++ b/include/swift/AST/ASTBridging.h
+@@ -13,6 +13,10 @@
+ #ifndef SWIFT_AST_ASTBRIDGING_H
+ #define SWIFT_AST_ASTBRIDGING_H
+ 
++#if defined(__wasi__)
++#include "swift/Basic/WASIThreadShim.h"
++#endif
++
+ /// `ASTBridging.h` is imported into Swift. Be *very* careful with what you
+ /// include here and keep these includes minimal!
+ ///
+diff --git a/SwiftCompilerSources/Sources/SIL/Utilities/SmallProjectionPath.swift b/SwiftCompilerSources/Sources/SIL/Utilities/SmallProjectionPath.swift
+--- a/SwiftCompilerSources/Sources/SIL/Utilities/SmallProjectionPath.swift
++++ b/SwiftCompilerSources/Sources/SIL/Utilities/SmallProjectionPath.swift
+@@ -975,9 +975,14 @@ let smallProjectionPathTest = Test("small_projection_path") {
+     let (k2, _, s2) = p2.pop()
+     assert(k2 == .anything && s2.isEmpty)
+ 
+-    let p3 = SmallProjectionPath(.indexedElement, index: 0xfffffffffffff)
++    #if arch(wasm32)
++    let largeIndex = 0x0fffffff
++    #else
++    let largeIndex = 0xfffffffffffff
++    #endif
++    let p3 = SmallProjectionPath(.indexedElement, index: largeIndex)
+     let (k3, i3, s3) = p3.pop()
+-    assert(k3 == .indexedElement && i3 == 0xfffffffffffff && s3.isEmpty)
++    assert(k3 == .indexedElement && i3 == largeIndex && s3.isEmpty)
+ 
+     let p4 = p3.push(.indexedElement, index: Int.max)
+     let (k4, _, s4) = p4.pop()
+diff --git a/cmake/modules/AddSwift.cmake b/cmake/modules/AddSwift.cmake
+--- a/cmake/modules/AddSwift.cmake
++++ b/cmake/modules/AddSwift.cmake
+@@ -601,6 +601,20 @@ function(_add_swift_runtime_link_flags target relpath_to_lib_dir bootstrapping)
+     else()
+       message(FATAL_ERROR "Unknown BOOTSTRAPPING_MODE '${ASRLF_BOOTSTRAPPING_MODE}'")
+     endif()
++  elseif(SWIFT_HOST_VARIANT_SDK STREQUAL "WASI")
++    if(NOT SWIFT_WASI_HOST_LIBRARIES_PATH OR NOT SWIFT_WASI_HOST_SWIFTRT_PATH)
++      message(FATAL_ERROR
++        "SWIFT_WASI_HOST_LIBRARIES_PATH and SWIFT_WASI_HOST_SWIFTRT_PATH "
++        "are required for a Swift-in-Swift WASI host build")
++    endif()
++    set(host_lib_dir "${SWIFT_WASI_HOST_LIBRARIES_PATH}")
++    set(host_lib_arch_dir "${host_lib_dir}/${SWIFT_HOST_VARIANT_ARCH}")
++    target_link_libraries(${target} PRIVATE
++      "${SWIFT_WASI_HOST_SWIFTRT_PATH}"
++      swiftCore)
++    target_link_directories(${target} PRIVATE
++      "${host_lib_dir}"
++      "${host_lib_arch_dir}")
+   else()
+     target_link_directories(${target} PRIVATE
+       ${SWIFT_PATH_TO_SWIFT_SDK}/usr/lib/swift/${SWIFT_SDK_${SWIFT_HOST_VARIANT_SDK}_LIB_SUBDIR}/${SWIFT_HOST_VARIANT_ARCH})
+diff --git a/lib/Basic/CMakeLists.txt b/lib/Basic/CMakeLists.txt
+--- a/lib/Basic/CMakeLists.txt
++++ b/lib/Basic/CMakeLists.txt
+@@ -1,6 +1,6 @@
+ 
+ # On non-Darwin require UUID.
+-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
++if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "WASI")
+   set(UUID_INCLUDE "")
+   set(UUID_LIBRARIES "")
+ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+diff --git a/lib/Basic/UUID.cpp b/lib/Basic/UUID.cpp
+--- a/lib/Basic/UUID.cpp
++++ b/lib/Basic/UUID.cpp
+@@ -19,6 +19,8 @@
+ #include "swift/Basic/UUID.h"
+ #include "llvm/ADT/STLExtras.h"
+ #include "llvm/ADT/SmallString.h"
++#include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/RandomNumberGenerator.h"
+ 
+ // WIN32 doesn't natively support <uuid/uuid.h>. Instead, we use Win32 APIs.
+ #if defined(_WIN32)
+@@ -27,7 +29,7 @@
+ #include <objbase.h>
+ #include <string>
+ #include <algorithm>
+-#else
++#elif !defined(__wasi__)
+ #include <uuid/uuid.h>
+ #endif
+ 
+@@ -39,6 +41,11 @@ swift::UUID::UUID(FromRandom_t) {
+   ::CoCreateGuid(&uuid);
+ 
+   memcpy(Value, &uuid, Size);
++#elif defined(__wasi__)
++  if (auto error = llvm::getRandomBytes(Value, Size))
++    llvm::report_fatal_error("failed to generate a UUID: " + error.message());
++  Value[6] = (Value[6] & 0x0f) | 0x40;
++  Value[8] = (Value[8] & 0x3f) | 0x80;
+ #else
+   uuid_generate_random(Value);
+ #endif
+@@ -50,6 +57,11 @@ swift::UUID::UUID(FromTime_t) {
+   ::CoCreateGuid(&uuid);
+ 
+   memcpy(Value, &uuid, Size);
++#elif defined(__wasi__)
++  if (auto error = llvm::getRandomBytes(Value, Size))
++    llvm::report_fatal_error("failed to generate a UUID: " + error.message());
++  Value[6] = (Value[6] & 0x0f) | 0x40;
++  Value[8] = (Value[8] & 0x3f) | 0x80;
+ #else
+   uuid_generate_time(Value);
+ #endif
+@@ -61,11 +73,25 @@ swift::UUID::UUID() {
+   UuidCreateNil(&uuid);
+ 
+   memcpy(Value, &uuid, Size);
++#elif defined(__wasi__)
++  memset(Value, 0, Size);
+ #else
+   uuid_clear(Value);
+ #endif
+ }
+ 
++#if defined(__wasi__)
++static int hexValue(char value) {
++  if (value >= '0' && value <= '9')
++    return value - '0';
++  if (value >= 'a' && value <= 'f')
++    return value - 'a' + 10;
++  if (value >= 'A' && value <= 'F')
++    return value - 'A' + 10;
++  return -1;
++}
++#endif
++
+ std::optional<swift::UUID> swift::UUID::fromString(const char *s) {
+ #if defined(_WIN32)
+   RPC_CSTR t = const_cast<RPC_CSTR>(reinterpret_cast<const unsigned char*>(s));
+@@ -79,6 +105,25 @@ std::optional<swift::UUID> swift::UUID::fromString(const char *s) {
+   swift::UUID result = UUID();
+   memcpy(result.Value, &uuid, Size);
+   return result;
++#elif defined(__wasi__)
++  if (strlen(s) != UUID::StringSize)
++    return std::nullopt;
++
++  swift::UUID result;
++  size_t inputIndex = 0;
++  for (size_t outputIndex = 0; outputIndex < UUID::Size; ++outputIndex) {
++    if (inputIndex == 8 || inputIndex == 13 || inputIndex == 18 ||
++        inputIndex == 23) {
++      if (s[inputIndex++] != '-')
++        return std::nullopt;
++    }
++    int high = hexValue(s[inputIndex++]);
++    int low = hexValue(s[inputIndex++]);
++    if (high < 0 || low < 0)
++      return std::nullopt;
++    result.Value[outputIndex] = (high << 4) | low;
++  }
++  return result;
+ #else
+   swift::UUID result;
+   if (uuid_parse(s, result.Value))
+@@ -99,6 +144,17 @@ void swift::UUID::toString(llvm::SmallVectorImpl<char> &out) const {
+   char* signedStr = reinterpret_cast<char*>(str);
+   memcpy(out.data(), signedStr, StringBufferSize);
+   llvm::transform(out, std::begin(out), toupper);
++#elif defined(__wasi__)
++  static constexpr char HexDigits[] = "0123456789ABCDEF";
++  size_t outputIndex = 0;
++  for (size_t inputIndex = 0; inputIndex < UUID::Size; ++inputIndex) {
++    if (outputIndex == 8 || outputIndex == 13 || outputIndex == 18 ||
++        outputIndex == 23)
++      out[outputIndex++] = '-';
++    out[outputIndex++] = HexDigits[Value[inputIndex] >> 4];
++    out[outputIndex++] = HexDigits[Value[inputIndex] & 0x0f];
++  }
++  out[outputIndex] = '\0';
+ #else
+   uuid_unparse_upper(Value, out.data());
+ #endif
+@@ -117,6 +173,8 @@ int swift::UUID::compare(UUID y) const {
+   memcpy(&uuid2, y.Value, Size);
+ 
+   return UuidCompare(&uuid1, &uuid2, &s);
++#elif defined(__wasi__)
++  return memcmp(Value, y.Value, Size);
+ #else
+   return uuid_compare(Value, y.Value);
+ #endif
+diff --git a/lib/CompilerSwiftSyntax/CMakeLists.txt b/lib/CompilerSwiftSyntax/CMakeLists.txt
+--- a/lib/CompilerSwiftSyntax/CMakeLists.txt
++++ b/lib/CompilerSwiftSyntax/CMakeLists.txt
+@@ -9,11 +9,15 @@ endif()
+ # Build swift-syntax libraries with FetchContent.
+ function(includeSwiftSyntax)
+   set(CMAKE_SYSTEM_PROCESSOR ${SWIFT_HOST_VARIANT_ARCH})
+   set(CMAKE_OSX_ARCHITECTURES ${SWIFT_HOST_VARIANT_ARCH})
+   set(CMAKE_C_COMPILER_TARGET ${SWIFT_HOST_TRIPLE})
+   set(CMAKE_CXX_COMPILER_TARGET ${SWIFT_HOST_TRIPLE})
+   set(CMAKE_Swift_COMPILER_TARGET ${SWIFT_HOST_TRIPLE})
+-  set(BUILD_SHARED_LIBS ON)
++  if(SWIFT_HOST_VARIANT_SDK STREQUAL "WASI")
++    set(BUILD_SHARED_LIBS OFF)
++  else()
++    set(BUILD_SHARED_LIBS ON)
++  endif()
+   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${SWIFT_HOST_LIBRARIES_DEST_DIR}/compiler")
+   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${SWIFT_HOST_LIBRARIES_DEST_DIR}/compiler")
+   if(SWIFT_HOST_VARIANT_SDK MATCHES "LINUX|ANDROID|OPENBSD|FREEBSD")
+diff --git a/lib/SwiftSyntax/CMakeLists.txt b/lib/SwiftSyntax/CMakeLists.txt
+--- a/lib/SwiftSyntax/CMakeLists.txt
++++ b/lib/SwiftSyntax/CMakeLists.txt
+@@ -9,8 +9,12 @@ endif()
+ set(CMAKE_OSX_ARCHITECTURES ${SWIFT_HOST_VARIANT_ARCH})
+ set(CMAKE_C_COMPILER_TARGET ${SWIFT_HOST_TRIPLE})
+ set(CMAKE_CXX_COMPILER_TARGET ${SWIFT_HOST_TRIPLE})
+ set(CMAKE_Swift_COMPILER_TARGET ${SWIFT_HOST_TRIPLE})
+-set(BUILD_SHARED_LIBS ON)
++if(SWIFT_HOST_VARIANT_SDK STREQUAL "WASI")
++  set(BUILD_SHARED_LIBS OFF)
++else()
++  set(BUILD_SHARED_LIBS ON)
++endif()
+ # All libraries in 'swift-syntax' goes to 'lib/swift/host'.
+ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${SWIFT_HOST_LIBRARIES_DEST_DIR}")
+ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${SWIFT_HOST_LIBRARIES_DEST_DIR}")
+diff --git a/lib/Macros/CMakeLists.txt b/lib/Macros/CMakeLists.txt
+--- a/lib/Macros/CMakeLists.txt
++++ b/lib/Macros/CMakeLists.txt
+@@ -29,7 +29,12 @@ function(add_swift_macro_library name)
+   set(ASML_SOURCES ${ARGN})
+ 
+   # Add the library.
+-  add_pure_swift_host_library(${name} SHARED
++  if(SWIFT_HOST_VARIANT_SDK STREQUAL "WASI")
++    set(library_type STATIC)
++  else()
++    set(library_type SHARED)
++  endif()
++  add_pure_swift_host_library(${name} ${library_type}
+     PACKAGE_NAME Toolchain
+     ${ASML_SOURCES})
+ 
+diff --git a/tools/driver/CMakeLists.txt b/tools/driver/CMakeLists.txt
+--- a/tools/driver/CMakeLists.txt
++++ b/tools/driver/CMakeLists.txt
+@@ -12,7 +12,9 @@ function(add_swift_parser_link_libraries target)
+     foreach(macrolib ${SWIFT_MACRO_PLUGINS})
+       add_dependencies(${target} ${macrolib})
+     endforeach()
+-    add_dependencies(${target} SwiftInProcPluginServer)
++    if(NOT SWIFT_HOST_VARIANT_SDK STREQUAL "WASI")
++      add_dependencies(${target} SwiftInProcPluginServer)
++    endif()
+   endif()
+ endfunction()
+ 
+diff --git a/tools/swift-plugin-server/CMakeLists.txt b/tools/swift-plugin-server/CMakeLists.txt
+--- a/tools/swift-plugin-server/CMakeLists.txt
++++ b/tools/swift-plugin-server/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-if (SWIFT_BUILD_SWIFT_SYNTAX)
++if (SWIFT_BUILD_SWIFT_SYNTAX AND NOT SWIFT_HOST_VARIANT_SDK STREQUAL "WASI")
+   add_pure_swift_host_tool(swift-plugin-server
+     Sources/swift-plugin-server/swift-plugin-server.swift
+     SWIFT_COMPONENT
+diff --git a/lib/Basic/Program.cpp b/lib/Basic/Program.cpp
+--- a/lib/Basic/Program.cpp
++++ b/lib/Basic/Program.cpp
+@@ -43,7 +43,10 @@ using namespace swift;
+ 
+ int swift::ExecuteInPlace(const char *Program, const char **args,
+                           const char **env) {
+-#if LLVM_ON_UNIX
++#if defined(__wasi__)
++  errno = ENOTSUP;
++  return -1;
++#elif LLVM_ON_UNIX
+   int result;
+   if (env)
+     result = execve(Program, const_cast<char **>(args),
+@@ -64,6 +67,7 @@ int swift::ExecuteInPlace(const char *Program, const char **args,
+ #endif
+ }
+ 
++#if HAVE_UNISTD_H && !defined(__wasi__)
+ static const char **
+ toNullTerminatedCStringArray(ArrayRef<StringRef> array,
+                              llvm::BumpPtrAllocator &Alloc) {
+@@ -75,8 +79,9 @@ toNullTerminatedCStringArray(ArrayRef<StringRef> array,
+   result[size] = nullptr;
+   return result;
+ }
++#endif
+ 
+-#if HAVE_UNISTD_H
++#if HAVE_UNISTD_H && !defined(__wasi__)
+ 
+ namespace {
+ struct Pipe {
+@@ -291,7 +296,7 @@ swift::ExecuteWithPipe(llvm::StringRef program,
+   return ChildProcessInfo(proc, ifd, ofd);
+ }
+ 
+-#else // HAVE_UNISTD_H
++#else // HAVE_UNISTD_H && !defined(__wasi__)
+ 
+ llvm::ErrorOr<swift::ChildProcessInfo>
+ swift::ExecuteWithPipe(llvm::StringRef program,
+diff --git a/lib/Basic/Statistic.cpp b/lib/Basic/Statistic.cpp
+--- a/lib/Basic/Statistic.cpp
++++ b/lib/Basic/Statistic.cpp
+@@ -380,7 +380,7 @@ void UnifiedStatsReporter::recordJobMaxRSS(long rss) {
+ }
+ 
+ int64_t UnifiedStatsReporter::getChildrenMaxResidentSetSize() {
+-#if HAVE_GETRUSAGE && !defined(__HAIKU__)
++#if HAVE_GETRUSAGE && !defined(__HAIKU__) && !defined(__wasi__)
+   struct rusage RU;
+   ::getrusage(RUSAGE_CHILDREN, &RU);
+   int64_t M = static_cast<int64_t>(RU.ru_maxrss);
+diff --git a/lib/Basic/Default/TaskQueue.inc b/lib/Basic/Default/TaskQueue.inc
+--- a/lib/Basic/Default/TaskQueue.inc
++++ b/lib/Basic/Default/TaskQueue.inc
+@@ -55,7 +55,7 @@ unsigned TaskQueue::getNumberOfParallelTasks() const {
+ void TaskQueue::addTask(const char *ExecPath, ArrayRef<const char *> Args,
+                         ArrayRef<const char *> Env, void *Context,
+                         bool SeparateErrors) {
+-  auto T = make_unique<Task>(ExecPath, Args, Env, Context, SeparateErrors);
++  auto T = std::make_unique<Task>(ExecPath, Args, Env, Context, SeparateErrors);
+   QueuedTasks.push(std::move(T));
+ }
+ 
+@@ -81,7 +81,7 @@ bool TaskQueue::execute(TaskBeganCallback Began, TaskFinishedCallback Finished,
+     }
+ 
+     std::string ErrMsg;
+-    T->PI = Wait(T->PI, 0, true, &ErrMsg);
++    T->PI = Wait(T->PI, 0, &ErrMsg);
+     int ReturnCode = T->PI.ReturnCode;
+ 
+     auto StdoutBuffer = llvm::MemoryBuffer::getFile(T->StdoutPath);
+diff --git a/lib/Basic/TaskQueue.cpp b/lib/Basic/TaskQueue.cpp
+--- a/lib/Basic/TaskQueue.cpp
++++ b/lib/Basic/TaskQueue.cpp
+@@ -23,7 +23,8 @@ using namespace swift;
+ using namespace swift::sys;
+ 
+ // Include the correct TaskQueue implementation.
+-#if LLVM_ON_UNIX && !defined(__CYGWIN__) && !defined(__HAIKU__)
++#if LLVM_ON_UNIX && !defined(__CYGWIN__) && !defined(__HAIKU__) &&             \
++    !defined(__wasi__)
+ #include "Unix/TaskQueue.inc"
+ #elif defined(_WIN32)
+ #include "Windows/TaskQueue.inc"
+diff --git a/lib/AST/PluginRegistry.cpp b/lib/AST/PluginRegistry.cpp
+--- a/lib/AST/PluginRegistry.cpp
++++ b/lib/AST/PluginRegistry.cpp
+@@ -220,6 +220,8 @@ LoadedExecutablePlugin::PluginProcess::~PluginProcess() {
+ #if defined(_WIN32)
+   _close(input);
+   _close(output);
++#elif defined(__wasi__)
++  // WASI has no child processes; executable plugin creation always fails.
+ #else
+   close(input);
+   close(output);
+@@ -231,7 +233,9 @@ LoadedExecutablePlugin::PluginProcess::~PluginProcess() {
+   // the stdin and exits immediately, so this usually doesn't wait for the
+   // timeout. Note that we can't use '0' because it performs a non-blocking
+   // wait, which make the plugin a zombie if it hasn't exited.
++#if !defined(__wasi__)
+   llvm::sys::Wait(process, /*SecondsToWait=*/1);
++#endif
+ }
+ 
+ ssize_t LoadedExecutablePlugin::PluginProcess::read(void *buf,
+diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -1544,8 +1544,10 @@ void ToolChain::addLinkRuntimeLib(const ArgList &Args, ArgStringList &Arguments,
+   Arguments.push_back(Args.MakeArgString(P));
+ }
+ 
+-static void appendInProcPluginServerPath(StringRef PluginPathRoot,
+-                                         llvm::SmallVectorImpl<char> &InProcPluginServerPath) {
++#if !defined(__wasi__)
++static void appendInProcPluginServerPath(
++    StringRef PluginPathRoot,
++    llvm::SmallVectorImpl<char> &InProcPluginServerPath) {
+   InProcPluginServerPath.append(PluginPathRoot.begin(), PluginPathRoot.end());
+ #if defined(_WIN32)
+   llvm::sys::path::append(InProcPluginServerPath, "bin", "SwiftInProcPluginServer.dll");
+@@ -1557,13 +1559,14 @@ static void appendInProcPluginServerPath(StringRef PluginPathRoot,
+ #error Unknown compiler host
+ #endif
+ }
++#endif
+ 
+ static void appendPluginsPath(StringRef PluginPathRoot,
+                               llvm::SmallVectorImpl<char> &PluginsPath) {
+   PluginsPath.append(PluginPathRoot.begin(), PluginPathRoot.end());
+ #if defined(_WIN32)
+   llvm::sys::path::append(PluginsPath, "bin");
+-#elif defined(__APPLE__) || defined(__unix__)
++#elif defined(__APPLE__) || defined(__unix__) || defined(__wasi__)
+   llvm::sys::path::append(PluginsPath, "lib", "swift", "host", "plugins");
+ #else
+ #error Unknown compiler host
+@@ -1585,11 +1588,13 @@ void ToolChain::addPluginArguments(const ArgList &Args,
+   llvm::sys::path::remove_filename(pluginPathRoot); // Remove `swift`
+   llvm::sys::path::remove_filename(pluginPathRoot); // Remove `bin`
+ 
++#if !defined(__wasi__)
+   // In-process plugin server path.
+   SmallString<261> inProcPluginServerPath;
+   appendInProcPluginServerPath(pluginPathRoot, inProcPluginServerPath);
+   Arguments.push_back("-in-process-plugin-server-path");
+   Arguments.push_back(Args.MakeArgString(inProcPluginServerPath));
++#endif
+ 
+   // Default plugin path.
+   SmallString<261> defaultPluginPath;
+diff --git a/include/swift/Basic/BridgedSwiftObject.h b/include/swift/Basic/BridgedSwiftObject.h
+--- a/include/swift/Basic/BridgedSwiftObject.h
++++ b/include/swift/Basic/BridgedSwiftObject.h
+@@ -40,7 +40,7 @@ typedef const void * _Nonnull SwiftMetatype;
+ /// It must be layout compatible with the Swift object header.
+ struct BridgedSwiftObject {
+   SwiftMetatype metatype;
+-  int64_t refCounts;
++  uintptr_t refCounts;
+ };
+ 
+ typedef struct BridgedSwiftObject * _Nonnull SwiftObject;
+diff --git a/include/swift/Basic/SwiftObjectHeader.h b/include/swift/Basic/SwiftObjectHeader.h
+--- a/include/swift/Basic/SwiftObjectHeader.h
++++ b/include/swift/Basic/SwiftObjectHeader.h
+@@ -25,7 +25,7 @@
+ struct SwiftObjectHeader : BridgedSwiftObject {
+   SwiftObjectHeader(SwiftMetatype metatype) {
+     this->metatype = metatype;
+-    this->refCounts = ~(uint64_t)0;
++    this->refCounts = ~(uintptr_t)0;
+   }
+ 
+   bool isBridged() const { return metatype != nullptr; }
+diff --git a/lib/AST/AbstractConformance.h b/lib/AST/AbstractConformance.h
+--- a/lib/AST/AbstractConformance.h
++++ b/lib/AST/AbstractConformance.h
+@@ -22,7 +22,8 @@
+ #include "llvm/ADT/FoldingSet.h"
+ 
+ namespace swift {
+-class AbstractConformance final : public llvm::FoldingSetNode {
++class alignas(1 << TypeAlignInBits) AbstractConformance final
++    : public llvm::FoldingSetNode {
+   Type conformingType;
+   ProtocolDecl *requirement;
+ 
+diff --git a/include/swift/AST/Identifier.h b/include/swift/AST/Identifier.h
+--- a/include/swift/AST/Identifier.h
++++ b/include/swift/AST/Identifier.h
+@@ -506,7 +506,8 @@ class DeclName {
+   friend class ASTContext;
+ 
+   /// Represents a compound declaration name.
+-  struct alignas(Identifier) CompoundDeclName final : llvm::FoldingSetNode,
++  struct alignas(Identifier::RequiredAlignment) CompoundDeclName final
++      : llvm::FoldingSetNode,
+       private llvm::TrailingObjects<CompoundDeclName, Identifier> {
+     friend TrailingObjects;
+     friend class DeclName;

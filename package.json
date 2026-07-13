@@ -1,7 +1,7 @@
 {
 	"name": "@seo-rii/wasm-llvm",
-	"version": "0.1.0",
-	"description": "Browser-loadable LLVM/Clang toolchain assets for wasm-idle runtimes",
+	"version": "0.2.0",
+	"description": "Browser LLVM toolchains and reusable Clang, Objective-C, and Swift runtimes",
 	"type": "module",
 	"license": "MIT",
 	"repository": {
@@ -10,25 +10,74 @@
 	},
 	"exports": {
 		".": "./index.mjs",
+		"./runtime/core": {
+			"types": "./dist/runtime/core/src/index.d.ts",
+			"import": "./dist/runtime/core/src/index.js",
+			"default": "./dist/runtime/core/src/index.js"
+		},
+		"./runtime/core/*": {
+			"types": "./dist/runtime/core/src/*.d.ts",
+			"import": "./dist/runtime/core/src/*.js",
+			"default": "./dist/runtime/core/src/*.js"
+		},
+		"./runtime/clang": {
+			"types": "./dist/runtime/clang/src/index.d.ts",
+			"import": "./dist/runtime/clang/src/index.js",
+			"default": "./dist/runtime/clang/src/index.js"
+		},
+		"./runtime/clang/internal/*": {
+			"types": "./dist/runtime/clang/src/*.d.ts",
+			"import": "./dist/runtime/clang/src/*.js",
+			"default": "./dist/runtime/clang/src/*.js"
+		},
+		"./runtime/objective-c": {
+			"types": "./dist/runtime/objective-c/src/index.d.ts",
+			"import": "./dist/runtime/objective-c/src/index.js",
+			"default": "./dist/runtime/objective-c/src/index.js"
+		},
+		"./runtime/clang/assets/*": "./dist/runtime/clang/assets/*",
+		"./runtime/objective-c/assets/*": "./dist/runtime/objective-c/assets/*",
+		"./tooling/swift/runtime-build-info": "./runtime/swift/scripts/runtime-build-info.mjs",
+		"./tooling/swift/runtime-manifest": "./runtime/swift/scripts/runtime-manifest.mjs",
 		"./runtime-source": "./artifacts/runtime-source/toolchain.json",
 		"./artifacts/runtime-source/*": "./artifacts/runtime-source/*",
 		"./package.json": "./package.json"
 	},
 	"files": [
 		"artifacts/runtime-source",
+		"dist",
+		"runtime/clang/scripts",
+		"runtime/objective-c/scripts",
+		"runtime/swift",
 		"scripts",
 		"index.mjs",
 		"README.md",
 		"LICENSE"
 	],
 	"scripts": {
+		"build": "rm -rf dist && tsc -p tsconfig.build.json && node ./runtime/clang/scripts/prepare-runtime.mjs",
+		"build:objective-c": "npm run build && node ./runtime/objective-c/scripts/build.mjs",
 		"build:toolchain": "node ./scripts/build-toolchain.mjs",
-		"check": "node --check ./index.mjs && node --check ./scripts/build-toolchain.mjs && node --check ./scripts/package-toolchain.mjs && node --check ./scripts/verify-assets.mjs",
+		"check": "tsc -p tsconfig.json --noEmit && node --check ./index.mjs && node --check ./scripts/build-toolchain.mjs && node --check ./scripts/package-toolchain.mjs && node --check ./scripts/verify-assets.mjs",
 		"package:toolchain": "node ./scripts/package-toolchain.mjs",
-		"verify:assets": "node ./scripts/verify-assets.mjs"
+		"prepare": "npm run build",
+		"test": "vitest run",
+		"test:objective-c:foundation": "node ./runtime/objective-c/scripts/probe-foundation.mjs",
+		"test:objective-c:libffi": "node ./runtime/objective-c/scripts/probe-libffi.mjs --strict-wasm-backend",
+		"verify:assets": "node ./scripts/verify-assets.mjs",
+		"validate:clang": "npm run build && node ./runtime/clang/scripts/smoke-runtime.mjs",
+		"swift:doctor": "node ./runtime/swift/scripts/doctor.mjs",
+		"swift:test": "npm --prefix ./runtime/swift test"
 	},
 	"dependencies": {
+		"@bjorn3/browser_wasi_shim": "^0.4.2",
 		"@zip.js/zip.js": "^2.8.23"
+	},
+	"devDependencies": {
+		"@types/node": "^24.6.1",
+		"playwright-core": "^1.59.1",
+		"typescript": "^6.0.2",
+		"vitest": "^4.1.4"
 	},
 	"engines": {
 		"node": ">=20"
