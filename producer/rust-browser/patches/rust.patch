@@ -1,0 +1,2997 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 96dc56ab189b0063bf6ddcbb36496f139960f3e1..388423854cb3aa1551c0dce8c73ed1b3dc169786 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2365,8 +2365,6 @@ dependencies = [
+ [[package]]
+ name = "libloading"
+ version = "0.8.9"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55"
+ dependencies = [
+  "cfg-if",
+  "windows-link 0.2.1",
+@@ -2382,6 +2380,10 @@ dependencies = [
+  "windows-link 0.2.1",
+ ]
+ 
++[[package]]
++name = "libloading-wasi"
++version = "0.9.0"
++
+ [[package]]
+ name = "libm"
+ version = "0.2.15"
+@@ -3840,6 +3842,7 @@ dependencies = [
+  "itertools 0.15.0",
+  "libc",
+  "libloading 0.9.0",
++ "libloading-wasi",
+  "measureme",
+  "object 0.37.3",
+  "rustc-demangle",
+diff --git a/Cargo.toml b/Cargo.toml
+index 67c7a9d67edc88c2ee19bb2bc2358e69e43c860a..e2bd29d445eec45ff0dd88ae060e994ef73d6897 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -93,3 +93,5 @@ codegen-units = 1
+ # For git dependencies, also add your source to ALLOWED_SOURCES in src/tools/tidy/src/extdeps.rs.
+ #[patch.crates-io]
+ 
++[patch.crates-io]
++libloading = { path = "libloading_shim" }
+diff --git a/compiler/rustc_codegen_llvm/Cargo.toml b/compiler/rustc_codegen_llvm/Cargo.toml
+index ec850cf7ab3d292fd7fb20676ccd96294290e520..b5f09f08b97a271d126cef1326ae5db29dc2ecc3 100644
+--- a/compiler/rustc_codegen_llvm/Cargo.toml
++++ b/compiler/rustc_codegen_llvm/Cargo.toml
+@@ -14,7 +14,6 @@ bitflags = "2.4.1"
+ gimli = "0.31"
+ itertools = "0.15"
+ libc = "0.2"
+-libloading = { version = "0.9.0" }
+ measureme = "12.0.1"
+ object = { version = "0.37.0", default-features = false, features = ["std", "read"] }
+ rustc-demangle = "0.1.21"
+@@ -40,10 +39,15 @@ smallvec = { version = "1.8.1", features = ["union", "may_dangle"] }
+ tracing = "0.1"
+ # tidy-alphabetical-end
+ 
++[target.'cfg(not(target_os = "wasi"))'.dependencies]
++libloading = { version = "0.9.0" }
++
++[target.'cfg(target_os = "wasi")'.dependencies]
++libloading_wasi = { package = "libloading-wasi", path = "../../libloading_wasi_0_9" }
++
+ [features]
+ # tidy-alphabetical-start
+ check_only = ["rustc_llvm/check_only"]
+ llvm_enzyme = []
+ llvm_offload = []
+ # tidy-alphabetical-end
+-
+diff --git a/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs b/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs
+index 68ec7870811d28130bd1b880606b715cccfeb15e..dc62c8f7ba47cbf11b5fc74fffdaf7b9386c9d5c 100644
+--- a/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs
++++ b/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs
+@@ -96,6 +96,9 @@ pub(crate) mod Enzyme_AD {
+     use rustc_session::config::{Sysroot, host_tuple};
+     use rustc_session::filesearch;
+ 
++    #[cfg(target_os = "wasi")]
++    use libloading_wasi as libloading;
++
+     use super::{CConcreteType, CTypeTreeRef, Context};
+     use crate::llvm::{EnzymeTypeTree, LLVMRustVersionMajor};
+ 
+diff --git a/compiler/rustc_codegen_ssa/src/back/link.rs b/compiler/rustc_codegen_ssa/src/back/link.rs
+index 45c9495570ed21932687a408782c55385dffd4a6..51eb3d8fa927b020450e6fe206013973a346c795 100644
+--- a/compiler/rustc_codegen_ssa/src/back/link.rs
++++ b/compiler/rustc_codegen_ssa/src/back/link.rs
+@@ -1100,6 +1100,28 @@ fn link_natively(
+ 
+     // Invoke the system linker
+     info!("{cmd:?}");
++
++    #[cfg(target_os = "wasi")]
++    if matches!(flavor, LinkerFlavor::Gnu(Cc::No, Lld::Yes) | LinkerFlavor::WasmLld(Cc::No)) {
++        unsafe extern "C" {
++            fn RustRunLld(
++                argc: std::ffi::c_int,
++                argv: *const *const std::ffi::c_char,
++            ) -> std::ffi::c_int;
++        }
++
++        let cmd = cmd.command();
++        let mut args = cmd
++            .get_args()
++            .map(|arg| std::ffi::CString::new(arg.as_encoded_bytes()).unwrap())
++            .collect::<Vec<_>>();
++        args.insert(0, std::ffi::CString::new(cmd.get_program().as_encoded_bytes()).unwrap());
++        let argv = args.iter().map(|arg| arg.as_ptr()).collect::<Vec<_>>();
++
++        let ret = unsafe { RustRunLld(args.len() as std::ffi::c_int, argv.as_ptr()) };
++        std::process::exit(ret);
++    }
++
+     let unknown_arg_regex =
+         Regex::new(r"(unknown|unrecognized) (command line )?(option|argument)").unwrap();
+     let mut prog;
+diff --git a/compiler/rustc_codegen_ssa/src/back/linker.rs b/compiler/rustc_codegen_ssa/src/back/linker.rs
+index e24e7bad2b9455c10f8229218f473bbf44797fe4..aa5f7911facdac6f7954ac41e517b11edbd75daa 100644
+--- a/compiler/rustc_codegen_ssa/src/back/linker.rs
++++ b/compiler/rustc_codegen_ssa/src/back/linker.rs
+@@ -131,7 +131,9 @@ pub(crate) fn get_linker<'a>(
+     if !msvc_changed_path && let Some(path) = env::var_os("PATH") {
+         new_path.extend(env::split_paths(&path));
+     }
+-    cmd.env("PATH", env::join_paths(new_path).unwrap());
++    if cfg!(not(target_family = "wasm")) {
++        cmd.env("PATH", env::join_paths(new_path).unwrap());
++    }
+ 
+     // FIXME: Move `/LIBPATH` addition for uwp targets from the linker construction
+     // to the linker args construction.
+diff --git a/compiler/rustc_driver/Cargo.toml b/compiler/rustc_driver/Cargo.toml
+index 51909719827638536129b3e31aa500b56f0ef648..a7cc7cbdfb3c92c19abbb12eef06eb9343972ebb 100644
+--- a/compiler/rustc_driver/Cargo.toml
++++ b/compiler/rustc_driver/Cargo.toml
+@@ -4,7 +4,7 @@ version = "0.0.0"
+ edition = "2024"
+ 
+ [lib]
+-crate-type = ["dylib"]
++crate-type = ["rlib"]
+ 
+ [dependencies]
+ # tidy-alphabetical-start
+diff --git a/compiler/rustc_driver_impl/src/lib.rs b/compiler/rustc_driver_impl/src/lib.rs
+index b4a6cd33a60f45d24d062b18a825b4fbdf2249ba..326db954133369ac6e9392a98dc8361028806d02 100644
+--- a/compiler/rustc_driver_impl/src/lib.rs
++++ b/compiler/rustc_driver_impl/src/lib.rs
+@@ -30,6 +30,8 @@
+ use rustc_ast as ast;
+ use rustc_codegen_ssa::traits::CodegenBackend;
+ use rustc_codegen_ssa::{CodegenError, CompiledModules};
++#[cfg(target_family = "wasm")]
++use rustc_const_eval as _;
+ use rustc_data_structures::profiling::{
+     TimePassesFormat, get_resident_set_size, print_time_passes_entry,
+ };
+@@ -1434,7 +1436,7 @@ fn ice_path_with_config(config: Option<&UnstableOptions>) -> &'static Option<Pat
+         };
+         // Don't use a standard datetime format because Windows doesn't support `:` in paths
+         let file_now = jiff::Zoned::now().strftime("%Y-%m-%dT%H_%M_%S");
+-        let pid = std::process::id();
++        let pid = if cfg!(target_family = "wasm") { 1 } else { std::process::id() };
+         path.push(format!("rustc-ice-{file_now}-{pid}.txt"));
+         Some(path)
+     })
+diff --git a/compiler/rustc_interface/src/util.rs b/compiler/rustc_interface/src/util.rs
+index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56a167860e 100644
+--- a/compiler/rustc_interface/src/util.rs
++++ b/compiler/rustc_interface/src/util.rs
+@@ -103,7 +103,7 @@ pub(crate) fn check_abi_required_features(sess: &Session) {
+ }
+ 
+ pub static STACK_SIZE: OnceLock<usize> = OnceLock::new();
+-pub const DEFAULT_STACK_SIZE: usize = 8 * 1024 * 1024;
++pub const DEFAULT_STACK_SIZE: usize = 32 * 1024 * 1024;
+ 
+ fn init_stack_size(early_dcx: &EarlyDiagCtxt) -> usize {
+     // Obey the environment setting or default
+@@ -134,7 +134,7 @@ fn init_stack_size(early_dcx: &EarlyDiagCtxt) -> usize {
+ }
+ 
+ fn run_in_thread_with_globals<F: FnOnce(CurrentGcx, Arc<Proxy>) -> R + Send, R: Send>(
+-    thread_stack_size: usize,
++    #[cfg_attr(target_family = "wasm", allow(unused_variables))] thread_stack_size: usize,
+     edition: Edition,
+     sm_inputs: SourceMapInputs,
+     extra_symbols: &[&'static str],
+@@ -146,30 +146,44 @@ fn run_in_thread_with_globals<F: FnOnce(CurrentGcx, Arc<Proxy>) -> R + Send, R:
+     // the parallel compiler, in particular to ensure there is no accidental
+     // sharing of data between the main thread and the compilation thread
+     // (which might cause problems for the parallel compiler).
+-    let builder = thread::Builder::new().name("rustc".to_string()).stack_size(thread_stack_size);
+-
+-    // We build the session globals and run `f` on the spawned thread, because
+-    // `SessionGlobals` does not impl `Send` in the non-parallel compiler.
+-    thread::scope(|s| {
+-        // `unwrap` is ok here because `spawn_scoped` only panics if the thread
+-        // name contains null bytes.
+-        let r = builder
+-            .spawn_scoped(s, move || {
+-                rustc_span::create_session_globals_then(
+-                    edition,
+-                    extra_symbols,
+-                    Some(sm_inputs),
+-                    || f(CurrentGcx::new(), Proxy::new()),
+-                )
+-            })
+-            .unwrap()
+-            .join();
++    #[cfg(target_family = "wasm")]
++    {
++        return rustc_span::create_session_globals_then(
++            edition,
++            extra_symbols,
++            Some(sm_inputs),
++            || f(CurrentGcx::new(), Proxy::new()),
++        );
++    }
+ 
+-        match r {
+-            Ok(v) => v,
+-            Err(e) => std::panic::resume_unwind(e),
+-        }
+-    })
++    #[cfg(not(target_family = "wasm"))]
++    {
++        let builder =
++            thread::Builder::new().name("rustc".to_string()).stack_size(thread_stack_size);
++
++        // We build the session globals and run `f` on the spawned thread, because
++        // `SessionGlobals` does not impl `Send` in the non-parallel compiler.
++        thread::scope(|s| {
++            // `unwrap` is ok here because `spawn_scoped` only panics if the thread
++            // name contains null bytes.
++            let r = builder
++                .spawn_scoped(s, move || {
++                    rustc_span::create_session_globals_then(
++                        edition,
++                        extra_symbols,
++                        Some(sm_inputs),
++                        || f(CurrentGcx::new(), Proxy::new()),
++                    )
++                })
++                .unwrap()
++                .join();
++
++            match r {
++                Ok(v) => v,
++                Err(e) => std::panic::resume_unwind(e),
++            }
++        })
++    }
+ }
+ 
+ pub(crate) fn run_in_thread_pool_with_globals<
+diff --git a/compiler/rustc_llvm/build.rs b/compiler/rustc_llvm/build.rs
+index 5be8bd466f8546c39d2cd066b467a82c981fe855..9068c579b311323a28b167001e3443684c12e021 100644
+--- a/compiler/rustc_llvm/build.rs
++++ b/compiler/rustc_llvm/build.rs
+@@ -30,8 +30,17 @@
+     "bpf",
+ ];
+ 
+-const REQUIRED_COMPONENTS: &[&str] =
+-    &["ipo", "bitreader", "bitwriter", "linker", "asmparser", "lto", "coverage", "instrumentation"];
++const REQUIRED_COMPONENTS: &[&str] = &[
++    "ipo",
++    "bitreader",
++    "bitwriter",
++    "linker",
++    "asmparser",
++    "lto",
++    "dtlto",
++    "coverage",
++    "instrumentation",
++];
+ 
+ fn detect_llvm_link() -> (&'static str, &'static str) {
+     // Force the link mode we want, preferring static by default, but
+@@ -304,12 +313,17 @@ fn main() {
+         cfg.define("NDEBUG", None);
+     }
+ 
++    if let Some(lld_include_dir) = tracked_env_var_os("LLD_INCLUDE_DIR") {
++        cfg.include(PathBuf::from(lld_include_dir));
++    }
++
+     rerun_if_changed_anything_in_dir(Path::new("llvm-wrapper"));
+     cfg.file("llvm-wrapper/PassWrapper.cpp")
+         .file("llvm-wrapper/RustWrapper.cpp")
+         .file("llvm-wrapper/CoverageMappingWrapper.cpp")
+         .file("llvm-wrapper/SymbolWrapper.cpp")
+         .file("llvm-wrapper/Linker.cpp")
++        .file("llvm-wrapper/LLD.cpp")
+         .cpp(true)
+         .cpp_link_stdlib(None) // we handle this below
+         .compile("llvm-wrapper");
+@@ -431,6 +445,11 @@ fn main() {
+         println!("cargo:rustc-link-lib={kind}={name}");
+     }
+ 
++    println!("cargo:rustc-link-lib=static=LLVMOption");
++    println!("cargo:rustc-link-lib=static=lldCommon");
++    println!("cargo:rustc-link-lib=static=lldELF");
++    println!("cargo:rustc-link-lib=static=lldWasm");
++
+     // LLVM ldflags
+     //
+     // If we're a cross-compile of LLVM then unfortunately we can't trust these
+diff --git a/compiler/rustc_llvm/llvm-wrapper/LLD.cpp b/compiler/rustc_llvm/llvm-wrapper/LLD.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..cb40da6b99fa0e6692a2af3b9687f78925fc972a
+--- /dev/null
++++ b/compiler/rustc_llvm/llvm-wrapper/LLD.cpp
+@@ -0,0 +1,12 @@
++#include "lld/Common/Driver.h"
++
++LLD_HAS_DRIVER(elf)
++LLD_HAS_DRIVER(wasm)
++
++extern "C" int RustRunLld(int argc, char **argv) {
++  llvm::ArrayRef<const char *> args(argv, argv + argc);
++  auto r = lld::lldMain(
++      args, llvm::outs(), llvm::errs(),
++      {{lld::Gnu, &lld::elf::link}, {lld::Wasm, &lld::wasm::link}});
++  return r.retCode;
++}
+diff --git a/compiler/rustc_session/src/filesearch.rs b/compiler/rustc_session/src/filesearch.rs
+index bf1e1f5f128113fdd6286be45bb07fab010b6c2e..d8f97e0fd498e17981c548e7707536f5217b9f0f 100644
+--- a/compiler/rustc_session/src/filesearch.rs
++++ b/compiler/rustc_session/src/filesearch.rs
+@@ -3,6 +3,7 @@
+ use std::path::{Path, PathBuf};
+ use std::{env, fs};
+ 
++#[allow(unused)]
+ use rustc_fs_util::try_canonicalize;
+ use rustc_target::spec::Target;
+ 
+@@ -181,7 +182,8 @@ fn current_dll_path() -> Result<PathBuf, String> {
+ 
+ #[cfg(target_os = "wasi")]
+ fn current_dll_path() -> Result<PathBuf, String> {
+-    Err("current_dll_path is not supported on WASI".to_string())
++    // Matches the execution environment we will use.
++    Ok(PathBuf::from("/sysroot/lib/x.wasm"))
+ }
+ 
+ /// This function checks if sysroot is found using env::args().next(), and if it
+diff --git a/compiler/rustc_session/src/output.rs b/compiler/rustc_session/src/output.rs
+index 9224368f90d6e4b7e71499cc20bdb032f5c25db1..0816a74e3dbb696fba4cb7b4dffb300c4ad58c1b 100644
+--- a/compiler/rustc_session/src/output.rs
++++ b/compiler/rustc_session/src/output.rs
+@@ -39,6 +39,11 @@ pub fn check_file_is_writeable(file: &Path, sess: &Session) {
+ }
+ 
+ fn is_writeable(p: &Path) -> bool {
++    // WASI filestat has no POSIX mode bits. The subsequent path_open still
++    // enforces the directory capability and requested write rights.
++    if cfg!(target_os = "wasi") {
++        return true;
++    }
+     match p.metadata() {
+         Err(..) => true,
+         Ok(m) => !m.permissions().readonly(),
+diff --git a/libloading_shim/Cargo.toml b/libloading_shim/Cargo.toml
+new file mode 100644
+index 0000000000000000000000000000000000000000..8637f34bba1a5366dba8ebb1a3c9cd24aac9494d
+--- /dev/null
++++ b/libloading_shim/Cargo.toml
+@@ -0,0 +1,18 @@
++[package]
++name = "libloading"
++version = "0.8.9"
++edition = "2021"
++license = "ISC"
++repository = "https://github.com/nagisa/rust_libloading"
++
++[target.'cfg(unix)'.dependencies.cfg-if]
++version = "1"
++
++[target.'cfg(windows)'.dependencies.windows-link]
++version = "0.2"
++
++[lints.rust]
++unexpected_cfgs = { level = "warn", check-cfg = [
++    'cfg(libloading_docs)',
++    'cfg(target_os, values("cygwin"))',
++] }
+diff --git a/libloading_shim/src/lib.rs b/libloading_shim/src/lib.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..05e936e2fb33dfba9f65099dd1824c8e79c4e056
+--- /dev/null
++++ b/libloading_shim/src/lib.rs
+@@ -0,0 +1,69 @@
++#[cfg(not(target_os = "wasi"))]
++mod real;
++
++#[cfg(not(target_os = "wasi"))]
++pub use real::*;
++
++#[cfg(target_os = "wasi")]
++mod wasi {
++    pub struct Library;
++
++    pub struct Symbol<T>(std::marker::PhantomData<T>);
++
++    // 1. Forge the os::raw::Symbol module that into_raw() expects to return
++    pub mod os {
++        pub mod raw {
++            pub struct Symbol<T>(pub std::marker::PhantomData<T>);
++            impl<T> std::ops::Deref for Symbol<T> {
++                type Target = T;
++                fn deref(&self) -> &T {
++                    unimplemented!("WASM dummy raw symbol")
++                }
++            }
++        }
++    }
++
++    // 2. Implement the missing method
++    impl<T> Symbol<T> {
++        pub unsafe fn into_raw(self) -> os::raw::Symbol<T> {
++            os::raw::Symbol(std::marker::PhantomData)
++        }
++    }
++
++    // 3. Forge the exact Error enum instead of a basic struct
++    #[derive(Debug)]
++    pub enum Error {
++        // This perfectly matches the pattern: libloading::Error::LoadLibraryExW { .. }
++        LoadLibraryExW { dummy: () },
++        WasiUnsupported,
++    }
++
++    impl std::fmt::Display for Error {
++        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++            write!(f, "WASI does not support dynamic libraries")
++        }
++    }
++    impl std::error::Error for Error {}
++
++    impl Library {
++        pub unsafe fn new<P: AsRef<std::ffi::OsStr>>(_path: P) -> Result<Library, Error> {
++            Err(Error::WasiUnsupported)
++        }
++        pub unsafe fn get<T>(&self, _symbol: &[u8]) -> Result<Symbol<T>, Error> {
++            Err(Error::WasiUnsupported)
++        }
++        pub fn close(self) -> Result<(), Error> {
++            Ok(())
++        }
++    }
++
++    impl<T> std::ops::Deref for Symbol<T> {
++        type Target = T;
++        fn deref(&self) -> &T {
++            unimplemented!("WASM dummy symbol")
++        }
++    }
++}
++
++#[cfg(target_os = "wasi")]
++pub use wasi::*;
+diff --git a/libloading_shim/src/real/changelog.rs b/libloading_shim/src/real/changelog.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..181915e985dceb9a8b2cbb3451b0384ced93c160
+--- /dev/null
++++ b/libloading_shim/src/real/changelog.rs
+@@ -0,0 +1,405 @@
++//! The change log.
++
++/// Release 0.8.9 (2025-09-17)
++///
++/// ## Non-breaking changes
++///
++/// Migrate from windows-targets to windows-link for linking Windows API functions.
++pub mod r0_8_9 {}
++
++/// Release 0.8.8 (2025-05-27)
++///
++/// ## Non-breaking changes
++///
++/// Add `os::window::Library::pin`.
++pub mod r0_8_8 {}
++
++/// Release 0.8.7 (2025-04-26)
++///
++/// ## Non-breaking changes
++///
++/// Add support for the `*-pc-cygwin` target.
++pub mod r0_8_7 {}
++
++/// Release 0.8.4 (2024-06-23)
++///
++/// ## Non-breaking changes
++///
++/// Compilation when targeting Apple's visionos, watchos and tvos targets has been fixed.
++pub mod r0_8_4 {}
++
++/// Release 0.8.3 (2024-03-05)
++///
++/// ## Non-breaking changes
++///
++/// A `dev-dependency` on `windows-sys` that was unconditionally introduced in
++/// [0.8.2](r0_8_2) has been made conditional.
++pub mod r0_8_3 {}
++
++/// Release 0.8.2 (2024-03-01)
++///
++/// ## (Potentially) breaking changes
++///
++/// MSRV has been increased to 1.56.0. Since both rustc versions are ancient, this has been deemed
++/// to not be breaking enough to warrant a semver-breaking release of libloading. If you're stick
++/// with a version of rustc older than 1.56.0, lock `libloading` dependency to `0.8.1`.
++///
++/// ## Non-breaking changes
++///
++/// * The crate switches the dependency on `windows-sys` to a `windows-target` one for Windows
++///   bindings. In order to enable this `libloading` defines any bindings necessary for its operation
++///   internally, just like has been done for `unix` targets. This should result in leaner dependency
++///   trees.
++/// * `os::unix::with_dlerror` has been exposed for the users who need to invoke `dl*` family of
++///   functions manually.
++pub mod r0_8_2 {}
++
++/// Release 0.8.1 (2023-09-30)
++///
++/// ## Non-breaking changes
++///
++/// * Support for GNU Hurd.
++pub mod r0_8_1 {}
++
++/// Release 0.8.0 (2023-04-11)
++///
++/// ## (Potentially) breaking changes
++///
++/// * `winapi` dependency has been replaced with `windows-sys`.
++/// * As a result the MSRV has been increased to 1.48.
++///
++/// ## Non-breaking changes
++///
++/// * Support for the QNX Neutrino target has been added.
++pub mod r0_8_0 {}
++
++/// Release 0.7.4 (2022-11-07)
++///
++/// This release has no functional changes.
++///
++/// `RTLD_LAZY`, `RTLD_GLOBAL` and `RTLD_LOCAL` constants have been implemented for AIX platforms.
++pub mod r0_7_4 {}
++
++/// Release 0.7.3 (2022-01-15)
++///
++/// This release has no functional changes.
++///
++/// In this release the `docsrs` `cfg` has been renamed to `libloading_docs` to better reflect that
++/// this `cfg` is intended to be only used by `libloading` and only specifically for the invocation
++/// of `rustdoc` when documenting `libloading`. Setting this `cfg` in any other situation is
++/// unsupported and will not work.
++pub mod r0_7_3 {}
++
++/// Release 0.7.2 (2021-11-14)
++///
++/// Cargo.toml now specifies the MSRV bounds, which enables tooling to report an early failure when
++/// the version of the toolchain is insufficient. Refer to the [min-rust-version RFC] and its
++/// [tracking issue].
++///
++/// [min-rust-version RFC]: https://rust-lang.github.io/rfcs/2495-min-rust-version.html
++/// [tracking issue]: https://github.com/rust-lang/rust/issues/65262
++///
++/// Additionally, on platforms `libloading` has no support (today: `not(any(unix, windows))`), we
++/// will no longer attempt to implement the cross-platform `Library` and `Symbol` types. This makes
++/// `libloading` compile on targets such as `wasm32-unknown-unknown` and gives ability to the
++/// downstream consumers of this library to decide how they want to handle the absence of the
++/// library loading implementation in their code. One of such approaches could be depending on
++/// `libloading` itself optionally as such:
++///
++/// ```toml
++/// [target.'cfg(any(unix, windows))'.dependencies.libloading]
++/// version = "0.7"
++/// ```
++pub mod r0_7_2 {}
++
++/// Release 0.7.1 (2021-10-09)
++///
++/// Significantly improved the consistency and style of the documentation.
++pub mod r0_7_1 {}
++
++/// Release 0.7.0 (2021-02-06)
++///
++/// ## Breaking changes
++///
++/// ### Loading functions are now `unsafe`
++///
++/// A number of associated methods involved in loading a library were changed to
++/// be `unsafe`. The affected functions are: [`Library::new`], [`os::unix::Library::new`],
++/// [`os::unix::Library::open`], [`os::windows::Library::new`],
++/// [`os::windows::Library::load_with_flags`]. This is the most prominent breaking change in this
++/// release and affects majority of the users of `libloading`.
++///
++/// In order to see why it was necessary, consider the following snippet of C++ code:
++///
++/// ```c++
++/// #include <vector>
++/// #include <iostream>
++///
++/// static std::vector<unsigned int> UNSHUU = { 1, 2, 3 };
++///
++/// int main() {
++///     std::cout << UNSHUU[0] << UNSHUU[1] << UNSHUU[2] << std::endl; // Prints 123
++///     return 0;
++/// }
++/// ```
++///
++/// The `std::vector` type, much like in Rust's `Vec`, stores its contents in a buffer allocated on
++/// the heap. In this example the vector object itself is stored and initialized as a static
++/// variable – a compile time construct. The heap, on the other hand, is a runtime construct. And
++/// yet the code works exactly as you'd expect – the vector contains numbers 1, 2 and 3 stored in
++/// a buffer on heap. So, _what_ makes it work out, exactly?
++///
++/// Various executable and shared library formats define conventions and machinery to execute
++/// arbitrary code when a program or a shared library is loaded. On systems using the PE format
++/// (e.g. Windows) this is available via the optional `DllMain` initializer. Various systems
++/// utilizing the ELF format take a slightly different approach of maintaining an array of function
++/// pointers in the `.init_array` section. A very similar mechanism exists on systems that utilize
++/// the Mach-O format.
++///
++/// For the C++ program above, the object stored in the `UNSHUU` global variable is constructed
++/// by code run as part of such an initializer routine. This initializer is run before the entry
++/// point (the `main` function) is executed, allowing for this magical behaviour to be possible.
++/// Were the C++ code built as a shared library instead, the initialization routines would run as
++/// the resulting shared library is loaded. In case of `libloading` – during the call to
++/// `Library::new` and other methods affected by this change.
++///
++/// These initialization (and very closely related termination) routines can be utilized outside of
++/// C++ too. Anybody can build a shared library in variety of different programming languages and
++/// set up the initializers to execute arbitrary code. Potentially code that does all sorts of
++/// wildly unsound stuff.
++///
++/// The routines are executed by components that are an integral part of the operating system.
++/// Changing or controlling the operation of these components is infeasible. With that in
++/// mind, the initializer and termination routines are something anybody loading a library must
++/// carefully evaluate the libraries loaded for soundness.
++///
++/// In practice, a vast majority of the libraries can be considered a good citizen and their
++/// initialization and termination routines, if they have any at all, can be trusted to be sound.
++///
++/// Also see: [issue #86].
++///
++/// ### Better & more consistent default behaviour on UNIX systems
++///
++/// On UNIX systems the [`Library::new`], [`os::unix::Library::new`] and
++/// [`os::unix::Library::this`] methods have been changed to use
++/// <code>[RTLD_LAZY] | [RTLD_LOCAL]</code> as the default set of loader options (previously:
++/// [`RTLD_NOW`]). This has a couple benefits. Namely:
++///
++/// * Lazy binding is generally quicker to execute when only a subset of symbols from a library are
++///   used and is typically the default when neither `RTLD_LAZY` nor `RTLD_NOW` are specified when
++///   calling the underlying `dlopen` API;
++/// * On most UNIX systems (macOS being a notable exception) `RTLD_LOCAL` is the default when
++///   neither `RTLD_LOCAL` nor [`RTLD_GLOBAL`] are specified. The explicit setting of the
++///   `RTLD_LOCAL` flag makes this behaviour consistent across platforms.
++///
++/// ### Dropped support for Windows XP/Vista
++///
++/// The (broken) support for Windows XP and Windows Vista environments was removed. This was
++/// prompted primarily by a similar policy change in the [Rust
++/// project](https://github.com/rust-lang/compiler-team/issues/378) but also as an acknowledgement
++/// to the fact that `libloading` never worked in these environments anyway.
++///
++/// ### More accurate error variant names
++///
++/// Finally, the `Error::LoadLibraryW` renamed to [`Error::LoadLibraryExW`] to more accurately
++/// represent the underlying API that's failing. No functional changes as part of this rename
++/// intended.
++///
++/// [issue #86]: https://github.com/nagisa/rust_libloading/issues/86
++/// [`Library::new`]: crate::Library::new
++/// [`Error::LoadLibraryExW`]: crate::Error::LoadLibraryExW
++/// [`os::unix::Library::this`]: crate::os::unix::Library::this
++/// [`os::unix::Library::new`]: crate::os::unix::Library::new
++/// [`os::unix::Library::open`]: crate::os::unix::Library::new
++/// [`os::windows::Library::new`]: crate::os::windows::Library::new
++/// [`os::windows::Library::load_with_flags`]: crate::os::windows::Library::load_with_flags
++/// [`RTLD_NOW`]: crate::os::unix::RTLD_NOW
++/// [RTLD_LAZY]: crate::os::unix::RTLD_LAZY
++/// [RTLD_LOCAL]: crate::os::unix::RTLD_LOCAL
++/// [`RTLD_GLOBAL`]: crate::os::unix::RTLD_GLOBAL
++pub mod r0_7_0 {}
++
++/// Release 0.6.7 (2021-01-14)
++///
++/// * Added a [`os::windows::Library::open_already_loaded`] to obtain a handle to a library that
++///   must already be loaded. There is no portable equivalent for all UNIX targets. Users who do
++///   not care about portability across UNIX platforms may use [`os::unix::Library::open`] with
++///   `libc::RTLD_NOLOAD`;
++///
++/// [`os::windows::Library::open_already_loaded`]: crate::os::windows::Library::open_already_loaded
++/// [`os::unix::Library::open`]: crate::os::unix::Library::open
++pub mod r0_6_7 {}
++
++/// Release 0.6.6 (2020-12-03)
++///
++/// * Fix a double-release of resources when [`Library::close`] or [`os::windows::Library::close`]
++///   is used on Windows.
++///
++/// [`Library::close`]: crate::Library::close
++/// [`os::windows::Library::close`]: crate::os::windows::Library::close
++pub mod r0_6_6 {}
++
++/// Release 0.6.5 (2020-10-23)
++///
++/// * Upgrade cfg-if 0.1 to 1.0
++pub mod r0_6_5 {}
++
++/// Release 0.6.4 (2020-10-10)
++///
++/// * Remove use of `build.rs` making it easier to build `libloading` without cargo. It also
++///   almost halves the build time of this crate.
++pub mod r0_6_4 {}
++
++/// Release 0.6.3 (2020-08-22)
++///
++/// * Improve documentation, allowing to view all of the os-specific functionality from
++///   documentation generated for any target;
++/// * Add [`os::windows::Library::this`];
++/// * Added constants to use with OS-specific `Library::open`;
++/// * Add [`library_filename`].
++///
++/// [`os::windows::Library::this`]: crate::os::windows::Library::this
++/// [`library_filename`]: crate::library_filename
++pub mod r0_6_3 {}
++
++/// Release 0.6.2 (2020-05-06)
++///
++/// * Fixed building of this library on Illumos.
++pub mod r0_6_2 {}
++
++/// Release 0.6.1 (2020-04-15)
++///
++/// * Introduced a new method [`os::windows::Library::load_with_flags`];
++/// * Added support for the Illumos triple.
++///
++/// [`os::windows::Library::load_with_flags`]: crate::os::windows::Library::load_with_flags
++pub mod r0_6_1 {}
++
++/// Release 0.6.0 (2020-04-05)
++///
++/// * Introduced a new method [`os::unix::Library::get_singlethreaded`];
++/// * Added (untested) support for building when targeting Redox and Fuchsia;
++/// * The APIs exposed by this library no longer panic and instead return an `Err` when it used
++///   to panic.
++///
++/// ## Breaking changes
++///
++/// * Minimum required (stable) version of Rust to build this library is now 1.40.0;
++/// * This crate now implements a custom [`Error`] type and all APIs now return this type rather
++///   than returning the `std::io::Error`;
++/// * `libloading::Result` has been removed;
++/// * Removed the dependency on the C compiler to build this library on UNIX-like platforms.
++///   `libloading` used to utilize a snippet written in C to work-around the unlikely possibility
++///   of the target having a thread-unsafe implementation of the `dlerror` function. The effect of
++///   the work-around was very opportunistic: it would not work if the function was called by
++///   forgoing `libloading`.
++///
++///   Starting with 0.6.0, [`Library::get`] on platforms where `dlerror` is not MT-safe (such as
++///   FreeBSD, DragonflyBSD or NetBSD) will unconditionally return an error when the underlying
++///   `dlsym` returns a null pointer. For the use-cases where loading null pointers is necessary
++///   consider using [`os::unix::Library::get_singlethreaded`] instead.
++///
++/// [`Library::get`]: crate::Library::get
++/// [`os::unix::Library::get_singlethreaded`]: crate::os::unix::Library::get_singlethreaded
++/// [`Error`]: crate::Error
++pub mod r0_6_0 {}
++
++/// Release 0.5.2 (2019-07-07)
++///
++/// * Added API to convert OS-specific `Library` and `Symbol` conversion to underlying resources.
++pub mod r0_5_2 {}
++
++/// Release 0.5.1 (2019-06-01)
++///
++/// * Build on Haiku targets.
++pub mod r0_5_1 {}
++
++/// Release 0.5.0 (2018-01-11)
++///
++/// * Update to `winapi = ^0.3`;
++///
++/// ## Breaking changes
++///
++/// * libloading now requires a C compiler to build on UNIX;
++///   * This is a temporary measure until the [`linkage`] attribute is stabilised;
++///   * Necessary to resolve [#32].
++///
++/// [`linkage`]: https://github.com/rust-lang/rust/issues/29603
++/// [#32]: https://github.com/nagisa/rust_libloading/issues/32
++pub mod r0_5_0 {}
++
++/// Release 0.4.3 (2017-12-07)
++///
++/// * Bump lazy-static dependency to `^1.0`;
++/// * `cargo test --release` now works when testing libloading.
++pub mod r0_4_3 {}
++
++/// Release 0.4.2 (2017-09-24)
++///
++/// * Improved error and race-condition handling on Windows;
++/// * Improved documentation about thread-safety of Library;
++/// * Added `Symbol::<Option<T>::lift_option() -> Option<Symbol<T>>` convenience method.
++pub mod r0_4_2 {}
++
++/// Release 0.4.1 (2017-08-29)
++///
++/// * Solaris support
++pub mod r0_4_1 {}
++
++/// Release 0.4.0 (2017-05-01)
++///
++/// * Remove build-time dependency on target_build_utils (and by extension serde/phf);
++/// * Require at least version 1.14.0 of rustc to build;
++///   * Actually, it is cargo which has to be more recent here. The one shipped with rustc 1.14.0
++///     is what’s being required from now on.
++pub mod r0_4_0 {}
++
++/// Release 0.3.4 (2017-03-25)
++///
++/// * Remove rogue println!
++pub mod r0_3_4 {}
++
++/// Release 0.3.3 (2017-03-25)
++///
++/// * Panics when `Library::get` is called for incompatibly sized type such as named function
++///   types (which are zero-sized).
++pub mod r0_3_3 {}
++
++/// Release 0.3.2 (2017-02-10)
++///
++/// * Minimum version required is now rustc 1.12.0;
++/// * Updated dependency versions (most notably target_build_utils to 0.3.0)
++pub mod r0_3_2 {}
++
++/// Release 0.3.1 (2016-10-01)
++///
++/// * `Symbol<T>` and `os::*::Symbol<T>` now implement `Send` where `T: Send`;
++/// * `Symbol<T>` and `os::*::Symbol<T>` now implement `Sync` where `T: Sync`;
++/// * `Library` and `os::*::Library` now implement `Sync` (they were `Send` in 0.3.0 already).
++pub mod r0_3_1 {}
++
++/// Release 0.3.0 (2016-07-27)
++///
++/// * Greatly improved documentation, especially around platform-specific behaviours;
++/// * Improved test suite by building our own library to test against;
++/// * All `Library`-ies now implement `Send`.
++/// * Added `impl From<os::platform::Library> for Library` and `impl From<Library> for
++///   os::platform::Library` allowing wrapping and extracting the platform-specific library handle;
++/// * Added methods to wrap (`Symbol::from_raw`) and unwrap (`Symbol::into_raw`) the safe `Symbol`
++///   wrapper into unsafe `os::platform::Symbol`.
++///
++/// The last two additions focus on not restricting potential usecases of this library, allowing
++/// users of the library to circumvent safety checks if need be.
++///
++/// ## Breaking Changes
++///
++/// `Library::new` defaults to `RTLD_NOW` instead of `RTLD_LAZY` on UNIX for more consistent
++/// cross-platform behaviour. If a library loaded with `Library::new` had any linking errors, but
++/// unresolved references weren’t forced to be resolved, the library would’ve “just worked”,
++/// whereas now the call to `Library::new` will return an error signifying presence of such error.
++///
++/// ## os::platform
++/// * Added `os::unix::Library::open` which allows specifying arbitrary flags (e.g. `RTLD_LAZY`);
++/// * Added `os::windows::Library::get_ordinal` which allows finding a function or variable by its
++///   ordinal number;
++pub mod r0_3_0 {}
+diff --git a/libloading_shim/src/real/error.rs b/libloading_shim/src/real/error.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..43cf320b1bcc634c999ceb9ee636340eaf6eda7b
+--- /dev/null
++++ b/libloading_shim/src/real/error.rs
+@@ -0,0 +1,146 @@
++use std::ffi::{CStr, CString};
++
++/// A `dlerror` error.
++pub struct DlDescription(pub(crate) CString);
++
++impl std::fmt::Debug for DlDescription {
++    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
++        std::fmt::Debug::fmt(&self.0, f)
++    }
++}
++
++impl From<&CStr> for DlDescription {
++    fn from(value: &CStr) -> Self {
++        Self(value.into())
++    }
++}
++
++/// A Windows API error.
++pub struct WindowsError(pub(crate) std::io::Error);
++
++impl std::fmt::Debug for WindowsError {
++    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
++        std::fmt::Debug::fmt(&self.0, f)
++    }
++}
++
++/// Errors.
++#[derive(Debug)]
++#[non_exhaustive]
++pub enum Error {
++    /// The `dlopen` call failed.
++    DlOpen {
++        /// The source error.
++        desc: DlDescription,
++    },
++    /// The `dlopen` call failed and system did not report an error.
++    DlOpenUnknown,
++    /// The `dlsym` call failed.
++    DlSym {
++        /// The source error.
++        desc: DlDescription,
++    },
++    /// The `dlsym` call failed and system did not report an error.
++    DlSymUnknown,
++    /// The `dlclose` call failed.
++    DlClose {
++        /// The source error.
++        desc: DlDescription,
++    },
++    /// The `dlclose` call failed and system did not report an error.
++    DlCloseUnknown,
++    /// The `LoadLibraryW` call failed.
++    LoadLibraryExW {
++        /// The source error.
++        source: WindowsError,
++    },
++    /// The `LoadLibraryW` call failed and system did not report an error.
++    LoadLibraryExWUnknown,
++    /// The `GetModuleHandleExW` call failed.
++    GetModuleHandleExW {
++        /// The source error.
++        source: WindowsError,
++    },
++    /// The `GetModuleHandleExW` call failed and system did not report an error.
++    GetModuleHandleExWUnknown,
++    /// The `GetProcAddress` call failed.
++    GetProcAddress {
++        /// The source error.
++        source: WindowsError,
++    },
++    /// The `GetProcAddressUnknown` call failed and system did not report an error.
++    GetProcAddressUnknown,
++    /// The `FreeLibrary` call failed.
++    FreeLibrary {
++        /// The source error.
++        source: WindowsError,
++    },
++    /// The `FreeLibrary` call failed and system did not report an error.
++    FreeLibraryUnknown,
++    /// The requested type cannot possibly work.
++    IncompatibleSize,
++    /// Could not create a new CString.
++    CreateCString {
++        /// The source error.
++        source: std::ffi::NulError,
++    },
++    /// Could not create a new CString from bytes with trailing null.
++    CreateCStringWithTrailing {
++        /// The source error.
++        source: std::ffi::FromBytesWithNulError,
++    },
++}
++
++impl std::error::Error for Error {
++    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
++        use Error::*;
++        match *self {
++            CreateCString { ref source } => Some(source),
++            CreateCStringWithTrailing { ref source } => Some(source),
++            LoadLibraryExW { ref source } => Some(&source.0),
++            GetModuleHandleExW { ref source } => Some(&source.0),
++            GetProcAddress { ref source } => Some(&source.0),
++            FreeLibrary { ref source } => Some(&source.0),
++            _ => None,
++        }
++    }
++}
++
++impl std::fmt::Display for Error {
++    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
++        use Error::*;
++        match *self {
++            DlOpen { ref desc } => write!(f, "{}", desc.0.to_string_lossy()),
++            DlOpenUnknown => write!(f, "dlopen failed, but system did not report the error"),
++            DlSym { ref desc } => write!(f, "{}", desc.0.to_string_lossy()),
++            DlSymUnknown => write!(f, "dlsym failed, but system did not report the error"),
++            DlClose { ref desc } => write!(f, "{}", desc.0.to_string_lossy()),
++            DlCloseUnknown => write!(f, "dlclose failed, but system did not report the error"),
++            LoadLibraryExW { .. } => write!(f, "LoadLibraryExW failed"),
++            LoadLibraryExWUnknown => write!(
++                f,
++                "LoadLibraryExW failed, but system did not report the error"
++            ),
++            GetModuleHandleExW { .. } => write!(f, "GetModuleHandleExW failed"),
++            GetModuleHandleExWUnknown => write!(
++                f,
++                "GetModuleHandleExWUnknown failed, but system did not report the error"
++            ),
++            GetProcAddress { .. } => write!(f, "GetProcAddress failed"),
++            GetProcAddressUnknown => write!(
++                f,
++                "GetProcAddress failed, but system did not report the error"
++            ),
++            FreeLibrary { .. } => write!(f, "FreeLibrary failed"),
++            FreeLibraryUnknown => {
++                write!(f, "FreeLibrary failed, but system did not report the error")
++            }
++            CreateCString { .. } => write!(f, "could not create a C string from bytes"),
++            CreateCStringWithTrailing { .. } => write!(
++                f,
++                "could not create a C string from bytes with trailing null"
++            ),
++            IncompatibleSize => write!(f, "requested type cannot possibly work"),
++        }
++    }
++}
+diff --git a/libloading_shim/src/real/mod.rs b/libloading_shim/src/real/mod.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..f378ce1b922c386b2758ee5022e59bfeea73a562
+--- /dev/null
++++ b/libloading_shim/src/real/mod.rs
+@@ -0,0 +1,84 @@
++//! Bindings around the platform's dynamic library loading primitives with greatly improved memory safety.
++//!
++//! Using this library allows the loading of [dynamic libraries](struct.Library.html), also known as
++//! shared libraries, and the use of the functions and static variables they contain.
++//!
++//! The `libloading` crate exposes a cross-platform interface to load a library and make use of its
++//! contents, but little is done to hide the differences in behaviour between platforms.
++//! The API documentation strives to document such differences as much as possible.
++//!
++//! Platform-specific APIs are also available in the [`os`](crate::os) module. These APIs are more
++//! flexible, but less safe.
++//!
++//! # Installation
++//!
++//! Add the `libloading` library to your dependencies in `Cargo.toml`:
++//!
++//! ```toml
++//! [dependencies]
++//! libloading = "0.8"
++//! ```
++//!
++//! # Usage
++//!
++//! In your code, run the following:
++//!
++//! ```no_run
++//! fn call_dynamic() -> Result<u32, Box<dyn std::error::Error>> {
++//!     unsafe {
++//!         let lib = libloading::Library::new("/path/to/liblibrary.so")?;
++//!         let func: libloading::Symbol<unsafe extern fn() -> u32> = lib.get(b"my_func")?;
++//!         Ok(func())
++//!     }
++//! }
++//! ```
++//!
++//! The compiler will ensure that the loaded function will not outlive the `Library` from which it comes,
++//! preventing the most common memory-safety issues.
++#![cfg_attr(any(unix, windows), deny(missing_docs, clippy::all, unreachable_pub, unused))]
++#![cfg_attr(libloading_docs, feature(doc_cfg))]
++#![allow(
++    elided_lifetimes_in_paths,
++    unused_extern_crates,
++    unsafe_op_in_unsafe_fn,
++    explicit_outlives_requirements
++)]
++
++pub mod changelog;
++mod error;
++pub mod os;
++#[cfg(any(unix, windows, libloading_docs))]
++mod safe;
++mod util;
++
++pub use self::error::Error;
++#[cfg(any(unix, windows, libloading_docs))]
++pub use self::safe::{Library, Symbol};
++use std::env::consts::{DLL_PREFIX, DLL_SUFFIX};
++use std::ffi::{OsStr, OsString};
++
++/// Converts a library name to a filename generally appropriate for use on the system.
++///
++/// This function will prepend prefixes (such as `lib`) and suffixes (such as `.so`) to the library
++/// `name` to construct the filename.
++///
++/// # Examples
++///
++/// It can be used to load global libraries in a platform independent manner:
++///
++/// ```
++/// use libloading::{Library, library_filename};
++/// // Will attempt to load `libLLVM.so` on Linux, `libLLVM.dylib` on macOS and `LLVM.dll` on
++/// // Windows.
++/// let library = unsafe {
++///     Library::new(library_filename("LLVM"))
++/// };
++/// ```
++pub fn library_filename<S: AsRef<OsStr>>(name: S) -> OsString {
++    let name = name.as_ref();
++    let mut string = OsString::with_capacity(name.len() + DLL_PREFIX.len() + DLL_SUFFIX.len());
++    string.push(DLL_PREFIX);
++    string.push(name);
++    string.push(DLL_SUFFIX);
++    string
++}
+diff --git a/libloading_shim/src/real/os/mod.rs b/libloading_shim/src/real/os/mod.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..710353f5ef385206815df65eeabfddab71010513
+--- /dev/null
++++ b/libloading_shim/src/real/os/mod.rs
+@@ -0,0 +1,27 @@
++//! Unsafe but flexible platform-specific bindings to dynamic library loading facilities.
++//!
++//! These modules expose more extensive and powerful bindings to the dynamic
++//! library loading facilities. Use of these bindings come at the cost of less (in most cases,
++//! none at all) safety guarantees, which are provided by the top-level bindings.
++//!
++//! # Examples
++//!
++//! Using these modules will likely involve conditional compilation:
++//!
++//! ```ignore
++//! # extern crate libloading;
++//! #[cfg(unix)]
++//! use libloading::os::unix::*;
++//! #[cfg(windows)]
++//! use libloading::os::windows::*;
++//! ```
++
++/// UNIX implementation of dynamic library loading.
++#[cfg(any(unix, libloading_docs))]
++#[cfg_attr(libloading_docs, doc(cfg(unix)))]
++pub mod unix;
++
++/// Windows implementation of dynamic library loading.
++#[cfg(any(windows, libloading_docs))]
++#[cfg_attr(libloading_docs, doc(cfg(windows)))]
++pub mod windows;
+diff --git a/libloading_shim/src/real/os/unix/consts.rs b/libloading_shim/src/real/os/unix/consts.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..4ae00592dad5a1d68c441e05e9670e70fdd9e02e
+--- /dev/null
++++ b/libloading_shim/src/real/os/unix/consts.rs
+@@ -0,0 +1,265 @@
++use std::os::raw::c_int;
++
++/// Perform lazy binding.
++///
++/// Relocations shall be performed at an implementation-defined time, ranging from the time
++/// of the [`Library::open`] call until the first reference to a given symbol occurs.
++/// Specifying `RTLD_LAZY` should improve performance on implementations supporting dynamic
++/// symbol binding since a process might not reference all of the symbols in an executable
++/// object file. And, for systems supporting dynamic symbol resolution for normal process
++/// execution, this behaviour mimics the normal handling of process execution.
++///
++/// Conflicts with [`RTLD_NOW`].
++///
++/// [`Library::open`]: crate::os::unix::Library::open
++pub const RTLD_LAZY: c_int = posix::RTLD_LAZY;
++
++/// Perform eager binding.
++///
++/// All necessary relocations shall be performed when the executable object file is first
++/// loaded. This may waste some processing if relocations are performed for symbols
++/// that are never referenced. This behaviour may be useful for applications that need to
++/// know that all symbols referenced during execution will be available before
++/// [`Library::open`] returns.
++///
++/// Conflicts with [`RTLD_LAZY`].
++///
++/// [`Library::open`]: crate::os::unix::Library::open
++pub const RTLD_NOW: c_int = posix::RTLD_NOW;
++
++/// Make loaded symbols available for resolution globally.
++///
++/// The executable object file's symbols shall be made available for relocation processing of any
++/// other executable object file. In addition, calls to [`Library::get`] on `Library` obtained from
++/// [`Library::this`] allows executable object files loaded with this mode to be searched.
++///
++/// [`Library::this`]: crate::os::unix::Library::this
++/// [`Library::get`]: crate::os::unix::Library::get
++pub const RTLD_GLOBAL: c_int = posix::RTLD_GLOBAL;
++
++/// Load symbols into an isolated namespace.
++///
++/// The executable object file's symbols shall not be made available for relocation processing of
++/// any other executable object file. This mode of operation is most appropriate for e.g. plugins.
++pub const RTLD_LOCAL: c_int = posix::RTLD_LOCAL;
++
++#[cfg(all(libloading_docs, not(unix)))]
++mod posix {
++    use super::c_int;
++    pub(super) const RTLD_LAZY: c_int = !0;
++    pub(super) const RTLD_NOW: c_int = !0;
++    pub(super) const RTLD_GLOBAL: c_int = !0;
++    pub(super) const RTLD_LOCAL: c_int = !0;
++}
++
++#[cfg(any(not(libloading_docs), unix))]
++mod posix {
++    extern crate cfg_if;
++    use self::cfg_if::cfg_if;
++    use super::c_int;
++    cfg_if! {
++        if #[cfg(target_os = "haiku")] {
++            pub(super) const RTLD_LAZY: c_int = 0;
++        } else if #[cfg(target_os = "aix")] {
++            pub(super) const RTLD_LAZY: c_int = 4;
++        } else if #[cfg(any(
++            target_os = "linux",
++            target_os = "android",
++            target_os = "emscripten",
++
++            target_os = "macos",
++            target_os = "ios",
++            target_os = "tvos",
++            target_os = "visionos",
++            target_os = "watchos",
++
++            target_os = "freebsd",
++            target_os = "dragonfly",
++            target_os = "openbsd",
++            target_os = "netbsd",
++
++            target_os = "solaris",
++            target_os = "illumos",
++
++            target_env = "uclibc",
++            target_env = "newlib",
++
++            target_os = "fuchsia",
++            target_os = "redox",
++            target_os = "nto",
++            target_os = "hurd",
++            target_os = "cygwin",
++        ))] {
++            pub(super) const RTLD_LAZY: c_int = 1;
++        } else {
++            compile_error!(
++                "Target has no known `RTLD_LAZY` value. Please submit an issue or PR adding it."
++            );
++        }
++    }
++
++    cfg_if! {
++        if #[cfg(target_os = "haiku")] {
++            pub(super) const RTLD_NOW: c_int = 1;
++        } else if #[cfg(any(
++            target_os = "linux",
++            all(target_os = "android", target_pointer_width = "64"),
++            target_os = "emscripten",
++
++            target_os = "macos",
++            target_os = "ios",
++            target_os = "tvos",
++            target_os = "visionos",
++            target_os = "watchos",
++
++            target_os = "freebsd",
++            target_os = "dragonfly",
++            target_os = "openbsd",
++            target_os = "netbsd",
++
++            target_os = "aix",
++            target_os = "solaris",
++            target_os = "illumos",
++
++            target_env = "uclibc",
++            target_env = "newlib",
++
++            target_os = "fuchsia",
++            target_os = "redox",
++            target_os = "nto",
++            target_os = "hurd",
++            target_os = "cygwin",
++        ))] {
++            pub(super) const RTLD_NOW: c_int = 2;
++        } else if #[cfg(all(target_os = "android",target_pointer_width = "32"))] {
++            pub(super) const RTLD_NOW: c_int = 0;
++        } else {
++            compile_error!(
++                "Target has no known `RTLD_NOW` value. Please submit an issue or PR adding it."
++            );
++        }
++    }
++
++    cfg_if! {
++        if #[cfg(any(
++            target_os = "haiku",
++            all(target_os = "android",target_pointer_width = "32"),
++        ))] {
++            pub(super) const RTLD_GLOBAL: c_int = 2;
++        } else if #[cfg(target_os = "aix")] {
++            pub(super) const RTLD_GLOBAL: c_int = 0x10000;
++        } else if #[cfg(any(
++            target_env = "uclibc",
++            all(target_os = "linux", target_arch = "mips"),
++            all(target_os = "linux", target_arch = "mips64"),
++            target_os = "cygwin",
++        ))] {
++            pub(super) const RTLD_GLOBAL: c_int = 4;
++        } else if #[cfg(any(
++            target_os = "macos",
++            target_os = "ios",
++            target_os = "tvos",
++            target_os = "visionos",
++            target_os = "watchos",
++        ))] {
++            pub(super) const RTLD_GLOBAL: c_int = 8;
++        } else if #[cfg(any(
++            target_os = "linux",
++            all(target_os = "android", target_pointer_width = "64"),
++            target_os = "emscripten",
++
++            target_os = "freebsd",
++            target_os = "dragonfly",
++            target_os = "openbsd",
++            target_os = "netbsd",
++
++            target_os = "solaris",
++            target_os = "illumos",
++
++            target_env = "newlib",
++
++            target_os = "fuchsia",
++            target_os = "redox",
++            target_os = "nto",
++            target_os = "hurd",
++        ))] {
++            pub(super) const RTLD_GLOBAL: c_int = 0x100;
++        } else {
++            compile_error!(
++                "Target has no known `RTLD_GLOBAL` value. Please submit an issue or PR adding it."
++            );
++        }
++    }
++
++    cfg_if! {
++        if #[cfg(any(
++           target_os = "netbsd",
++           target_os = "nto",
++        ))] {
++            pub(super) const RTLD_LOCAL: c_int = 0x200;
++        } else if #[cfg(target_os = "aix")] {
++            pub(super) const RTLD_LOCAL: c_int = 0x80000;
++        } else if #[cfg(any(
++            target_os = "macos",
++            target_os = "ios",
++            target_os = "tvos",
++            target_os = "visionos",
++            target_os = "watchos",
++        ))] {
++            pub(super) const RTLD_LOCAL: c_int = 4;
++        } else if #[cfg(any(
++            target_os = "linux",
++            target_os = "android",
++            target_os = "emscripten",
++
++            target_os = "freebsd",
++            target_os = "dragonfly",
++            target_os = "openbsd",
++
++            target_os = "haiku",
++
++            target_os = "solaris",
++            target_os = "illumos",
++
++            target_env = "uclibc",
++            target_env = "newlib",
++
++            target_os = "fuchsia",
++            target_os = "redox",
++            target_os = "hurd",
++            target_os = "cygwin",
++        ))] {
++            pub(super) const RTLD_LOCAL: c_int = 0;
++        } else {
++            compile_error!(
++                "Target has no known `RTLD_LOCAL` value. Please submit an issue or PR adding it."
++            );
++        }
++    }
++}
++
++// Other constants that exist but are not bound because they are platform-specific (non-posix)
++// extensions. Some of these constants are only relevant to `dlsym` or `dlmopen` calls.
++//
++// RTLD_CONFGEN
++// RTLD_DEFAULT
++// RTLD_DI_CONFIGADDR
++// RTLD_DI_LINKMAP
++// RTLD_DI_LMID
++// RTLD_DI_ORIGIN
++// RTLD_DI_PROFILENAME
++// RTLD_DI_PROFILEOUT
++// RTLD_DI_SERINFO
++// RTLD_DI_SERINFOSIZE
++// RTLD_DI_TLS_DATA
++// RTLD_DI_TLS_MODID
++// RTLD_FIRST
++// RTLD_GROUP
++// RTLD_NEXT
++// RTLD_PARENT
++// RTLD_PROBE
++// RTLD_SELF
++// RTLD_WORLD
++// RTLD_NODELETE
++// RTLD_NOLOAD
++// RTLD_DEEPBIND
+diff --git a/libloading_shim/src/real/os/unix/mod.rs b/libloading_shim/src/real/os/unix/mod.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..16030656255762cd4f0c38c5f6a19986918b591c
+--- /dev/null
++++ b/libloading_shim/src/real/os/unix/mod.rs
+@@ -0,0 +1,466 @@
++// A hack for docs.rs to build documentation that has both windows and linux documentation in the
++// same rustdoc build visible.
++#[cfg(all(libloading_docs, not(unix)))]
++mod unix_imports {}
++#[cfg(any(not(libloading_docs), unix))]
++mod unix_imports {
++    pub(super) use std::os::unix::ffi::OsStrExt;
++}
++
++pub use self::consts::*;
++use self::unix_imports::*;
++use crate::real::util::{cstr_cow_from_bytes, ensure_compatible_types};
++use std::ffi::{CStr, OsStr};
++use std::os::raw;
++use std::{fmt, marker, mem, ptr};
++
++mod consts;
++
++/// Run code and handle errors reported by `dlerror`.
++///
++/// This function first executes the `closure` function containing calls to the functions that
++/// report their errors via `dlerror`. This closure may return either `None` or `Some(*)` to
++/// further affect operation of this function.
++///
++/// In case the `closure` returns `None`, `with_dlerror` inspects the `dlerror`. `dlerror` may
++/// decide to not provide any error description, in which case `Err(None)` is returned to the
++/// caller. Otherwise the `error` callback is invoked to allow inspection and conversion of the
++/// error message. The conversion result is returned as `Err(Some(Error))`.
++///
++/// If the operations that report their errors via `dlerror` were all successful, `closure` should
++/// return `Some(T)` instead. In this case `dlerror` is not inspected at all.
++///
++/// # Notes
++///
++/// The whole `dlerror` handling scheme is done via setting and querying some global state. For
++/// that reason it is not safe to use dynamic library loading in MT-capable environment at all.
++/// Only in POSIX 2008+TC1 a thread-local state was allowed for `dlerror`, making the dl* family of
++/// functions possibly MT-safe, depending on the implementation of `dlerror`.
++///
++/// In practice (as of 2020-04-01) most of the widely used targets use a thread-local for error
++/// state and have been doing so for a long time.
++pub fn with_dlerror<T, F, Error>(closure: F, error: fn(&CStr) -> Error) -> Result<T, Option<Error>>
++where
++    F: FnOnce() -> Option<T>,
++{
++    // We used to guard all uses of dl* functions with our own mutex. This made them safe to use in
++    // MT programs provided the only way a program used dl* was via this library. However, it also
++    // had a number of downsides or cases where it failed to handle the problems. For instance,
++    // if any other library called `dlerror` internally concurrently with `libloading` things would
++    // still go awry.
++    //
++    // On platforms where `dlerror` is still MT-unsafe, `dlsym` (`Library::get`) can spuriously
++    // succeed and return a null pointer for a symbol when the actual symbol look-up operation
++    // fails. Instances where the actual symbol _could_ be `NULL` are platform specific. For
++    // instance on GNU glibc based-systems (an excerpt from dlsym(3)):
++    //
++    // > The value of a symbol returned by dlsym() will never be NULL if the shared object is the
++    // > result of normal compilation,  since  a  global  symbol is never placed at the NULL
++    // > address. There are nevertheless cases where a lookup using dlsym() may return NULL as the
++    // > value of a symbol. For example, the symbol value may be  the  result of a GNU indirect
++    // > function (IFUNC) resolver function that returns NULL as the resolved value.
++
++    // While we could could call `dlerror` here to clear the previous error value, only the `dlsym`
++    // call depends on it being cleared beforehand and only in some cases too. We will instead
++    // clear the error inside the dlsym binding instead.
++    //
++    // In all the other cases, clearing the error here will only be hiding misuse of these bindings
++    // or a bug in implementation of dl* family of functions.
++    closure().ok_or_else(|| unsafe {
++        // This code will only get executed if the `closure` returns `None`.
++        let dlerror_str = dlerror();
++        if dlerror_str.is_null() {
++            // In non-dlsym case this may happen when there’re bugs in our bindings or there’s
++            // non-libloading user of libdl; possibly in another thread.
++            None
++        } else {
++            // You can’t even rely on error string being static here; call to subsequent dlerror
++            // may invalidate or overwrite the error message. Why couldn’t they simply give up the
++            // ownership over the message?
++            // TODO: should do locale-aware conversion here. OTOH Rust doesn’t seem to work well in
++            // any system that uses non-utf8 locale, so I doubt there’s a problem here.
++            Some(error(CStr::from_ptr(dlerror_str)))
++            // Since we do a copy of the error string above, maybe we should call dlerror again to
++            // let libdl know it may free its copy of the string now?
++        }
++    })
++}
++
++/// A platform-specific counterpart of the cross-platform [`Library`](crate::Library).
++pub struct Library {
++    handle: *mut raw::c_void,
++}
++
++unsafe impl Send for Library {}
++
++// That being said... this section in the volume 2 of POSIX.1-2008 states:
++//
++// > All functions defined by this volume of POSIX.1-2008 shall be thread-safe, except that the
++// > following functions need not be thread-safe.
++//
++// With notable absence of any dl* function other than dlerror in the list. By “this volume”
++// I suppose they refer precisely to the “volume 2”. dl* family of functions are specified
++// by this same volume, so the conclusion is indeed that dl* functions are required by POSIX
++// to be thread-safe. Great!
++//
++// See for more details:
++//
++//  * https://github.com/nagisa/rust_libloading/pull/17
++//  * http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_09_01
++unsafe impl Sync for Library {}
++
++impl Library {
++    /// Find and eagerly load a shared library (module).
++    ///
++    /// If the `filename` contains a [path separator], the `filename` is interpreted as a `path` to
++    /// a file. Otherwise, platform-specific algorithms are employed to find a library with a
++    /// matching file name.
++    ///
++    /// This is equivalent to <code>[Library::open](filename, [RTLD_LAZY] | [RTLD_LOCAL])</code>.
++    ///
++    /// [path separator]: std::path::MAIN_SEPARATOR
++    ///
++    /// # Safety
++    ///
++    /// When a library is loaded, initialisation routines contained within the library are executed.
++    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
++    /// unknown foreign function and may impose arbitrary requirements on the caller for the call
++    /// to be sound.
++    ///
++    /// Additionally, the callers of this function must also ensure that execution of the
++    /// termination routines contained within the library is safe as well. These routines may be
++    /// executed when the library is unloaded.
++    #[inline]
++    pub unsafe fn new<P: AsRef<OsStr>>(filename: P) -> Result<Library, crate::Error> {
++        Library::open(Some(filename), RTLD_LAZY | RTLD_LOCAL)
++    }
++
++    /// Load the `Library` representing the current executable.
++    ///
++    /// [`Library::get`] calls of the returned `Library` will look for symbols in following
++    /// locations in order:
++    ///
++    /// 1. The original program image;
++    /// 2. Any executable object files (e.g. shared libraries) loaded at program startup;
++    /// 3. Any executable object files loaded at runtime (e.g. via other `Library::new` calls or via
++    ///    calls to the `dlopen` function).
++    ///
++    /// Note that the behaviour of a `Library` loaded with this method is different from that of
++    /// Libraries loaded with [`os::windows::Library::this`].
++    ///
++    /// This is equivalent to <code>[Library::open](None, [RTLD_LAZY] | [RTLD_LOCAL])</code>.
++    ///
++    /// [`os::windows::Library::this`]: crate::os::windows::Library::this
++    #[inline]
++    pub fn this() -> Library {
++        unsafe {
++            // SAFE: this does not load any new shared library images, no danger in it executing
++            // initialiser routines.
++            Library::open(None::<&OsStr>, RTLD_LAZY | RTLD_LOCAL).expect("this should never fail")
++        }
++    }
++
++    /// Find and load an executable object file (shared library).
++    ///
++    /// See documentation for [`Library::this`] for further description of the behaviour
++    /// when the `filename` is `None`. Otherwise see [`Library::new`].
++    ///
++    /// Corresponds to `dlopen(filename, flags)`.
++    ///
++    /// # Safety
++    ///
++    /// When a library is loaded, initialisation routines contained within the library are executed.
++    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
++    /// unknown foreign function and may impose arbitrary requirements on the caller for the call
++    /// to be sound.
++    ///
++    /// Additionally, the callers of this function must also ensure that execution of the
++    /// termination routines contained within the library is safe as well. These routines may be
++    /// executed when the library is unloaded.
++    pub unsafe fn open<P>(filename: Option<P>, flags: raw::c_int) -> Result<Library, crate::Error>
++    where
++        P: AsRef<OsStr>,
++    {
++        let filename = match filename {
++            None => None,
++            Some(ref f) => Some(cstr_cow_from_bytes(f.as_ref().as_bytes())?),
++        };
++        with_dlerror(
++            move || {
++                let result = dlopen(
++                    match filename {
++                        None => ptr::null(),
++                        Some(ref f) => f.as_ptr(),
++                    },
++                    flags,
++                );
++                // ensure filename lives until dlopen completes
++                drop(filename);
++                if result.is_null() { None } else { Some(Library { handle: result }) }
++            },
++            |desc| crate::Error::DlOpen { desc: desc.into() },
++        )
++        .map_err(|e| e.unwrap_or(crate::Error::DlOpenUnknown))
++    }
++
++    unsafe fn get_impl<T, F>(&self, symbol: &[u8], on_null: F) -> Result<Symbol<T>, crate::Error>
++    where
++        F: FnOnce() -> Result<Symbol<T>, crate::Error>,
++    {
++        ensure_compatible_types::<T, *mut raw::c_void>()?;
++        let symbol = cstr_cow_from_bytes(symbol)?;
++        // `dlsym` may return nullptr in two cases: when a symbol genuinely points to a null
++        // pointer or the symbol cannot be found. In order to detect this case a double dlerror
++        // pattern must be used, which is, sadly, a little bit racy.
++        //
++        // We try to leave as little space as possible for this to occur, but we can’t exactly
++        // fully prevent it.
++        let result = with_dlerror(
++            || {
++                dlerror();
++                let symbol = dlsym(self.handle, symbol.as_ptr());
++                if symbol.is_null() {
++                    None
++                } else {
++                    Some(Symbol { pointer: symbol, pd: marker::PhantomData })
++                }
++            },
++            |desc| crate::Error::DlSym { desc: desc.into() },
++        );
++        match result {
++            Err(None) => on_null(),
++            Err(Some(e)) => Err(e),
++            Ok(x) => Ok(x),
++        }
++    }
++
++    /// Get a pointer to a function or static variable by symbol name.
++    ///
++    /// The `symbol` may not contain any null bytes, with the exception of the last byte. Providing a
++    /// null terminated `symbol` may help to avoid an allocation.
++    ///
++    /// Symbol is interpreted as-is; no mangling is done. This means that symbols like `x::y` are
++    /// most likely invalid.
++    ///
++    /// # Safety
++    ///
++    /// Users of this API must specify the correct type of the function or variable loaded. Using a
++    /// `Symbol` with a wrong type is undefined.
++    ///
++    /// # Platform-specific behaviour
++    ///
++    /// Implementation of thread local variables is extremely platform specific and uses of such
++    /// variables that work on e.g. Linux may have unintended behaviour on other targets.
++    ///
++    /// On POSIX implementations where the `dlerror` function is not confirmed to be MT-safe (such
++    /// as FreeBSD), this function will unconditionally return an error when the underlying `dlsym`
++    /// call returns a null pointer. There are rare situations where `dlsym` returns a genuine null
++    /// pointer without it being an error. If loading a null pointer is something you care about,
++    /// consider using the [`Library::get_singlethreaded`] call.
++    #[inline(always)]
++    pub unsafe fn get<T>(&self, symbol: &[u8]) -> Result<Symbol<T>, crate::Error> {
++        extern crate cfg_if;
++        cfg_if::cfg_if! {
++            // These targets are known to have MT-safe `dlerror`.
++            if #[cfg(any(
++                target_os = "linux",
++                target_os = "android",
++                target_os = "openbsd",
++                target_os = "macos",
++                target_os = "ios",
++                target_os = "solaris",
++                target_os = "illumos",
++                target_os = "redox",
++                target_os = "fuchsia",
++                target_os = "cygwin",
++            ))] {
++                self.get_singlethreaded(symbol)
++            } else {
++                self.get_impl(symbol, || Err(crate::Error::DlSymUnknown))
++            }
++        }
++    }
++
++    /// Get a pointer to function or static variable by symbol name.
++    ///
++    /// The `symbol` may not contain any null bytes, with the exception of the last byte. Providing a
++    /// null terminated `symbol` may help to avoid an allocation.
++    ///
++    /// Symbol is interpreted as-is; no mangling is done. This means that symbols like `x::y` are
++    /// most likely invalid.
++    ///
++    /// # Safety
++    ///
++    /// Users of this API must specify the correct type of the function or variable loaded.
++    ///
++    /// It is up to the user of this library to ensure that no other calls to an MT-unsafe
++    /// implementation of `dlerror` occur during the execution of this function. Failing that, the
++    /// behaviour of this function is not defined.
++    ///
++    /// # Platform-specific behaviour
++    ///
++    /// The implementation of thread-local variables is extremely platform specific and uses of such
++    /// variables that work on e.g. Linux may have unintended behaviour on other targets.
++    #[inline(always)]
++    pub unsafe fn get_singlethreaded<T>(&self, symbol: &[u8]) -> Result<Symbol<T>, crate::Error> {
++        self.get_impl(symbol, || Ok(Symbol { pointer: ptr::null_mut(), pd: marker::PhantomData }))
++    }
++
++    /// Convert the `Library` to a raw handle.
++    ///
++    /// The handle returned by this function shall be usable with APIs which accept handles
++    /// as returned by `dlopen`.
++    pub fn into_raw(self) -> *mut raw::c_void {
++        let handle = self.handle;
++        mem::forget(self);
++        handle
++    }
++
++    /// Convert a raw handle returned by `dlopen`-family of calls to a `Library`.
++    ///
++    /// # Safety
++    ///
++    /// The pointer shall be a result of a successful call of the `dlopen`-family of functions or a
++    /// pointer previously returned by `Library::into_raw` call. It must be valid to call `dlclose`
++    /// with this pointer as an argument.
++    pub unsafe fn from_raw(handle: *mut raw::c_void) -> Library {
++        Library { handle }
++    }
++
++    /// Unload the library.
++    ///
++    /// This method might be a no-op, depending on the flags with which the `Library` was opened,
++    /// what library was opened or other platform specifics.
++    ///
++    /// You only need to call this if you are interested in handling any errors that may arise when
++    /// library is unloaded. Otherwise the implementation of `Drop` for `Library` will close the
++    /// library and ignore the errors were they arise.
++    ///
++    /// The underlying data structures may still get leaked if an error does occur.
++    pub fn close(self) -> Result<(), crate::Error> {
++        let result = with_dlerror(
++            || {
++                if unsafe { dlclose(self.handle) } == 0 { Some(()) } else { None }
++            },
++            |desc| crate::Error::DlClose { desc: desc.into() },
++        )
++        .map_err(|e| e.unwrap_or(crate::Error::DlCloseUnknown));
++        // While the library is not free'd yet in case of an error, there is no reason to try
++        // dropping it again, because all that will do is try calling `dlclose` again. only
++        // this time it would ignore the return result, which we already seen failing…
++        std::mem::forget(self);
++        result
++    }
++}
++
++impl Drop for Library {
++    fn drop(&mut self) {
++        unsafe {
++            dlclose(self.handle);
++        }
++    }
++}
++
++impl fmt::Debug for Library {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        f.write_str(&format!("Library@{:p}", self.handle))
++    }
++}
++
++/// Symbol from a library.
++///
++/// A major difference compared to the cross-platform `Symbol` is that this does not ensure that the
++/// `Symbol` does not outlive the `Library` it comes from.
++pub struct Symbol<T> {
++    pointer: *mut raw::c_void,
++    pd: marker::PhantomData<T>,
++}
++
++impl<T> Symbol<T> {
++    /// Convert the loaded `Symbol` into a raw pointer.
++    pub fn into_raw(self) -> *mut raw::c_void {
++        self.pointer
++    }
++
++    /// Convert the loaded `Symbol` into a raw pointer.
++    /// For unix this does the same as into_raw.
++    pub fn as_raw_ptr(self) -> *mut raw::c_void {
++        self.pointer
++    }
++}
++
++impl<T> Symbol<Option<T>> {
++    /// Lift Option out of the symbol.
++    pub fn lift_option(self) -> Option<Symbol<T>> {
++        if self.pointer.is_null() {
++            None
++        } else {
++            Some(Symbol { pointer: self.pointer, pd: marker::PhantomData })
++        }
++    }
++}
++
++unsafe impl<T: Send> Send for Symbol<T> {}
++unsafe impl<T: Sync> Sync for Symbol<T> {}
++
++impl<T> Clone for Symbol<T> {
++    fn clone(&self) -> Symbol<T> {
++        Symbol { ..*self }
++    }
++}
++
++impl<T> ::std::ops::Deref for Symbol<T> {
++    type Target = T;
++    fn deref(&self) -> &T {
++        unsafe {
++            // Additional reference level for a dereference on `deref` return value.
++            &*(&self.pointer as *const *mut _ as *const T)
++        }
++    }
++}
++
++impl<T> fmt::Debug for Symbol<T> {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        unsafe {
++            let mut info = mem::MaybeUninit::<DlInfo>::uninit();
++            if dladdr(self.pointer, info.as_mut_ptr()) != 0 {
++                let info = info.assume_init();
++                if info.dli_sname.is_null() {
++                    f.write_str(&format!(
++                        "Symbol@{:p} from {:?}",
++                        self.pointer,
++                        CStr::from_ptr(info.dli_fname)
++                    ))
++                } else {
++                    f.write_str(&format!(
++                        "Symbol {:?}@{:p} from {:?}",
++                        CStr::from_ptr(info.dli_sname),
++                        self.pointer,
++                        CStr::from_ptr(info.dli_fname)
++                    ))
++                }
++            } else {
++                f.write_str(&format!("Symbol@{:p}", self.pointer))
++            }
++        }
++    }
++}
++
++// Platform specific things
++#[cfg_attr(any(target_os = "linux", target_os = "android"), link(name = "dl"))]
++#[cfg_attr(any(target_os = "freebsd", target_os = "dragonfly"), link(name = "c"))]
++extern "C" {
++    fn dlopen(filename: *const raw::c_char, flags: raw::c_int) -> *mut raw::c_void;
++    fn dlclose(handle: *mut raw::c_void) -> raw::c_int;
++    fn dlsym(handle: *mut raw::c_void, symbol: *const raw::c_char) -> *mut raw::c_void;
++    fn dlerror() -> *mut raw::c_char;
++    fn dladdr(addr: *mut raw::c_void, info: *mut DlInfo) -> raw::c_int;
++}
++
++#[repr(C)]
++struct DlInfo {
++    dli_fname: *const raw::c_char,
++    dli_fbase: *mut raw::c_void,
++    dli_sname: *const raw::c_char,
++    dli_saddr: *mut raw::c_void,
++}
+diff --git a/libloading_shim/src/real/os/windows/mod.rs b/libloading_shim/src/real/os/windows/mod.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..fa6713138690a6fe29d04645c3395d816e919299
+--- /dev/null
++++ b/libloading_shim/src/real/os/windows/mod.rs
+@@ -0,0 +1,590 @@
++// A hack for docs.rs to build documentation that has both windows and linux documentation in the
++// same rustdoc build visible.
++#[cfg(all(libloading_docs, not(windows)))]
++mod windows_imports {}
++#[cfg(any(not(libloading_docs), windows))]
++mod windows_imports {
++    use super::{BOOL, DWORD, FARPROC, HANDLE, HMODULE};
++    pub(super) use std::os::windows::ffi::{OsStrExt, OsStringExt};
++    windows_link::link!("kernel32.dll" "system" fn GetLastError() -> DWORD);
++    windows_link::link!("kernel32.dll" "system" fn SetThreadErrorMode(new_mode: DWORD, old_mode: *mut DWORD) -> BOOL);
++    windows_link::link!("kernel32.dll" "system" fn GetModuleHandleExW(flags: u32, module_name: *const u16, module: *mut HMODULE) -> BOOL);
++    windows_link::link!("kernel32.dll" "system" fn FreeLibrary(module: HMODULE) -> BOOL);
++    windows_link::link!("kernel32.dll" "system" fn LoadLibraryExW(filename: *const u16, file: HANDLE, flags: DWORD) -> HMODULE);
++    windows_link::link!("kernel32.dll" "system" fn GetModuleFileNameW(module: HMODULE, filename: *mut u16, size: DWORD) -> DWORD);
++    windows_link::link!("kernel32.dll" "system" fn GetProcAddress(module: HMODULE, procname: *const u8) -> FARPROC);
++}
++
++use self::windows_imports::*;
++use std::ffi::{OsStr, OsString};
++use std::os::raw;
++use std::{fmt, io, marker, mem, ptr};
++use util::{cstr_cow_from_bytes, ensure_compatible_types};
++
++/// The platform-specific counterpart of the cross-platform [`Library`](crate::Library).
++pub struct Library(HMODULE);
++
++unsafe impl Send for Library {}
++// Now, this is sort-of-tricky. MSDN documentation does not really make any claims as to safety of
++// the Win32 APIs. Sadly, whomever I asked, even current and former Microsoft employees, couldn’t
++// say for sure whether the Win32 APIs used to implement `Library` are thread-safe or not.
++//
++// My investigation ended up with a question about thread-safety properties of the API involved
++// being sent to an internal (to MS) general question mailing-list. The conclusion of the mail is
++// as such:
++//
++// * Nobody inside MS (at least out of all of the people who have seen the question) knows for
++//   sure either;
++// * However, the general consensus between MS developers is that one can rely on the API being
++//   thread-safe. In case it is not thread-safe it should be considered a bug on the Windows
++//   part. (NB: bugs filed at https://connect.microsoft.com/ against Windows Server)
++unsafe impl Sync for Library {}
++
++impl Library {
++    /// Find and load a module.
++    ///
++    /// If the `filename` specifies a full path, the function only searches that path for the
++    /// module. Otherwise, if the `filename` specifies a relative path or a module name without a
++    /// path, the function uses a Windows-specific search strategy to find the module. For more
++    /// information, see the [Remarks on MSDN][msdn].
++    ///
++    /// If the `filename` specifies a library filename without a path and with the extension omitted,
++    /// the `.dll` extension is implicitly added. This behaviour may be suppressed by appending a
++    /// trailing `.` to the `filename`.
++    ///
++    /// This is equivalent to <code>[Library::load_with_flags](filename, 0)</code>.
++    ///
++    /// [msdn]: https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw#remarks
++    ///
++    /// # Safety
++    ///
++    /// When a library is loaded, initialisation routines contained within the library are executed.
++    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
++    /// unknown foreign function and may impose arbitrary requirements on the caller for the call
++    /// to be sound.
++    ///
++    /// Additionally, the callers of this function must also ensure that execution of the
++    /// termination routines contained within the library is safe as well. These routines may be
++    /// executed when the library is unloaded.
++    #[inline]
++    pub unsafe fn new<P: AsRef<OsStr>>(filename: P) -> Result<Library, crate::Error> {
++        Library::load_with_flags(filename, 0)
++    }
++
++    /// Get the `Library` representing the original program executable.
++    ///
++    /// Note that the behaviour of the `Library` loaded with this method is different from
++    /// Libraries loaded with [`os::unix::Library::this`]. For more information refer to [MSDN].
++    ///
++    /// Corresponds to `GetModuleHandleExW(0, NULL, _)`.
++    ///
++    /// [`os::unix::Library::this`]: crate::os::unix::Library::this
++    /// [MSDN]: https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexw
++    pub fn this() -> Result<Library, crate::Error> {
++        unsafe {
++            let mut handle: HMODULE = 0;
++            with_get_last_error(
++                |source| crate::Error::GetModuleHandleExW { source },
++                || {
++                    let result = GetModuleHandleExW(0, std::ptr::null_mut(), &mut handle);
++                    if result == 0 {
++                        None
++                    } else {
++                        Some(Library(handle))
++                    }
++                },
++            )
++            .map_err(|e| e.unwrap_or(crate::Error::GetModuleHandleExWUnknown))
++        }
++    }
++
++    /// Get a module that is already loaded by the program.
++    ///
++    /// This function returns a `Library` corresponding to a module with the given name that is
++    /// already mapped into the address space of the process. If the module isn't found, an error is
++    /// returned.
++    ///
++    /// If the `filename` does not include a full path and there are multiple different loaded
++    /// modules corresponding to the `filename`, it is impossible to predict which module handle
++    /// will be returned. For more information refer to [MSDN].
++    ///
++    /// If the `filename` specifies a library filename without a path and with the extension omitted,
++    /// the `.dll` extension is implicitly added. This behaviour may be suppressed by appending a
++    /// trailing `.` to the `filename`.
++    ///
++    /// This is equivalent to `GetModuleHandleExW(0, filename, _)`.
++    ///
++    /// [MSDN]: https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexw
++    pub fn open_already_loaded<P: AsRef<OsStr>>(filename: P) -> Result<Library, crate::Error> {
++        let wide_filename: Vec<u16> = filename.as_ref().encode_wide().chain(Some(0)).collect();
++
++        let ret = unsafe {
++            let mut handle: HMODULE = 0;
++            with_get_last_error(
++                |source| crate::Error::GetModuleHandleExW { source },
++                || {
++                    // Make sure no winapi calls as a result of drop happen inside this closure, because
++                    // otherwise that might change the return value of the GetLastError.
++                    let result = GetModuleHandleExW(0, wide_filename.as_ptr(), &mut handle);
++                    if result == 0 {
++                        None
++                    } else {
++                        Some(Library(handle))
++                    }
++                },
++            )
++            .map_err(|e| e.unwrap_or(crate::Error::GetModuleHandleExWUnknown))
++        };
++
++        drop(wide_filename); // Drop wide_filename here to ensure it doesn’t get moved and dropped
++                             // inside the closure by mistake. See comment inside the closure.
++        ret
++    }
++
++    /// Find and load a module, additionally adjusting behaviour with flags.
++    ///
++    /// See [`Library::new`] for documentation on the handling of the `filename` argument. See the
++    /// [flag table on MSDN][flags] for information on applicable values for the `flags` argument.
++    ///
++    /// Corresponds to `LoadLibraryExW(filename, reserved: NULL, flags)`.
++    ///
++    /// [flags]: https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters
++    ///
++    /// # Safety
++    ///
++    /// When a library is loaded, initialisation routines contained within the library are executed.
++    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
++    /// unknown foreign function and may impose arbitrary requirements on the caller for the call
++    /// to be sound.
++    ///
++    /// Additionally, the callers of this function must also ensure that execution of the
++    /// termination routines contained within the library is safe as well. These routines may be
++    /// executed when the library is unloaded.
++    pub unsafe fn load_with_flags<P: AsRef<OsStr>>(
++        filename: P,
++        flags: LOAD_LIBRARY_FLAGS,
++    ) -> Result<Library, crate::Error> {
++        let wide_filename: Vec<u16> = filename.as_ref().encode_wide().chain(Some(0)).collect();
++        let _guard = ErrorModeGuard::new();
++
++        let ret = with_get_last_error(
++            |source| crate::Error::LoadLibraryExW { source },
++            || {
++                // Make sure no winapi calls as a result of drop happen inside this closure, because
++                // otherwise that might change the return value of the GetLastError.
++                let handle = LoadLibraryExW(wide_filename.as_ptr(), 0, flags);
++                if handle == 0 {
++                    None
++                } else {
++                    Some(Library(handle))
++                }
++            },
++        )
++        .map_err(|e| e.unwrap_or(crate::Error::LoadLibraryExWUnknown));
++        drop(wide_filename); // Drop wide_filename here to ensure it doesn’t get moved and dropped
++                             // inside the closure by mistake. See comment inside the closure.
++        ret
++    }
++
++    /// Attempts to pin the module represented by the current `Library` into memory.
++    ///
++    /// Calls `GetModuleHandleExW` with the flag `GET_MODULE_HANDLE_EX_FLAG_PIN` to pin the module.
++    /// See the [MSDN documentation][msdn] for more information.
++    ///
++    /// [msdn]: https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexw
++    ///
++    /// If successful, the module will remain in memory regardless of the refcount for this `Library`
++    pub fn pin(&self) -> Result<(), crate::Error> {
++        const GET_MODULE_HANDLE_EX_FLAG_PIN: u32 = 0x1;
++        const GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS: u32 = 0x4;
++        unsafe {
++            let mut handle: HMODULE = 0;
++            with_get_last_error(
++                |source| crate::Error::GetModuleHandleExW { source },
++                || {
++                    // Make sure no winapi calls as a result of drop happen inside this closure, because
++                    // otherwise that might change the return value of the GetLastError.
++
++                    // We use our cached module handle of this `Library` instead of the module name. This works
++                    // if we also pass the flag `GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS` because on Windows, module handles
++                    // are the loaded base address of the module.
++                    let result = GetModuleHandleExW(
++                        GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
++                        self.0 as *const u16,
++                        &mut handle,
++                    );
++                    if result == 0 {
++                        None
++                    } else {
++                        Some(())
++                    }
++                },
++            )
++            .map_err(|e| e.unwrap_or(crate::Error::GetModuleHandleExWUnknown))
++        }
++    }
++
++    /// Get a pointer to a function or static variable by symbol name.
++    ///
++    /// The `symbol` may not contain any null bytes, with the exception of the last byte. A null
++    /// terminated `symbol` may avoid a string allocation in some cases.
++    ///
++    /// Symbol is interpreted as-is; no mangling is done. This means that symbols like `x::y` are
++    /// most likely invalid.
++    ///
++    /// # Safety
++    ///
++    /// Users of this API must specify the correct type of the function or variable loaded.
++    pub unsafe fn get<T>(&self, symbol: &[u8]) -> Result<Symbol<T>, crate::Error> {
++        ensure_compatible_types::<T, FARPROC>()?;
++        let symbol = cstr_cow_from_bytes(symbol)?;
++        with_get_last_error(
++            |source| crate::Error::GetProcAddress { source },
++            || {
++                let symbol = GetProcAddress(self.0, symbol.as_ptr().cast());
++                if symbol.is_none() {
++                    None
++                } else {
++                    Some(Symbol {
++                        pointer: symbol,
++                        pd: marker::PhantomData,
++                    })
++                }
++            },
++        )
++        .map_err(|e| e.unwrap_or(crate::Error::GetProcAddressUnknown))
++    }
++
++    /// Get a pointer to a function or static variable by ordinal number.
++    ///
++    /// # Safety
++    ///
++    /// Users of this API must specify the correct type of the function or variable loaded.
++    pub unsafe fn get_ordinal<T>(&self, ordinal: u16) -> Result<Symbol<T>, crate::Error> {
++        ensure_compatible_types::<T, FARPROC>()?;
++        with_get_last_error(
++            |source| crate::Error::GetProcAddress { source },
++            || {
++                let ordinal = ordinal as usize as *const _;
++                let symbol = GetProcAddress(self.0, ordinal);
++                if symbol.is_none() {
++                    None
++                } else {
++                    Some(Symbol {
++                        pointer: symbol,
++                        pd: marker::PhantomData,
++                    })
++                }
++            },
++        )
++        .map_err(|e| e.unwrap_or(crate::Error::GetProcAddressUnknown))
++    }
++
++    /// Convert the `Library` to a raw handle.
++    pub fn into_raw(self) -> HMODULE {
++        let handle = self.0;
++        mem::forget(self);
++        handle
++    }
++
++    /// Convert a raw handle to a `Library`.
++    ///
++    /// # Safety
++    ///
++    /// The handle must be the result of a successful call of `LoadLibraryA`, `LoadLibraryW`,
++    /// `LoadLibraryExW`, or `LoadLibraryExA`, or a handle previously returned by the
++    /// `Library::into_raw` call.
++    pub unsafe fn from_raw(handle: HMODULE) -> Library {
++        Library(handle)
++    }
++
++    /// Unload the library.
++    ///
++    /// You only need to call this if you are interested in handling any errors that may arise when
++    /// library is unloaded. Otherwise this will be done when `Library` is dropped.
++    ///
++    /// The underlying data structures may still get leaked if an error does occur.
++    pub fn close(self) -> Result<(), crate::Error> {
++        let result = with_get_last_error(
++            |source| crate::Error::FreeLibrary { source },
++            || {
++                if unsafe { FreeLibrary(self.0) == 0 } {
++                    None
++                } else {
++                    Some(())
++                }
++            },
++        )
++        .map_err(|e| e.unwrap_or(crate::Error::FreeLibraryUnknown));
++        // While the library is not free'd yet in case of an error, there is no reason to try
++        // dropping it again, because all that will do is try calling `FreeLibrary` again. only
++        // this time it would ignore the return result, which we already seen failing...
++        std::mem::forget(self);
++        result
++    }
++}
++
++impl Drop for Library {
++    fn drop(&mut self) {
++        unsafe {
++            FreeLibrary(self.0);
++        }
++    }
++}
++
++impl fmt::Debug for Library {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        unsafe {
++            // FIXME: use Maybeuninit::uninit_array when stable
++            let mut buf = mem::MaybeUninit::<[mem::MaybeUninit<u16>; 1024]>::uninit().assume_init();
++            let len = GetModuleFileNameW(self.0, buf[..].as_mut_ptr().cast(), 1024) as usize;
++            if len == 0 {
++                f.write_str(&format!("Library@{:#x}", self.0))
++            } else {
++                let string: OsString = OsString::from_wide(
++                    // FIXME: use Maybeuninit::slice_get_ref when stable
++                    &*(&buf[..len] as *const [_] as *const [u16]),
++                );
++                f.write_str(&format!("Library@{:#x} from {:?}", self.0, string))
++            }
++        }
++    }
++}
++
++/// A symbol from a library.
++///
++/// A major difference compared to the cross-platform `Symbol` is that this does not ensure that the
++/// `Symbol` does not outlive the `Library` that it comes from.
++pub struct Symbol<T> {
++    pointer: FARPROC,
++    pd: marker::PhantomData<T>,
++}
++
++impl<T> Symbol<T> {
++    /// Convert the loaded `Symbol` into a handle.
++    pub fn into_raw(self) -> FARPROC {
++        self.pointer
++    }
++
++    /// Convert the loaded `Symbol` into a raw pointer.
++    pub fn as_raw_ptr(self) -> *mut raw::c_void {
++        self.pointer
++            .map(|raw| raw as *mut raw::c_void)
++            .unwrap_or(std::ptr::null_mut())
++    }
++}
++
++impl<T> Symbol<Option<T>> {
++    /// Lift Option out of the symbol.
++    pub fn lift_option(self) -> Option<Symbol<T>> {
++        if self.pointer.is_none() {
++            None
++        } else {
++            Some(Symbol {
++                pointer: self.pointer,
++                pd: marker::PhantomData,
++            })
++        }
++    }
++}
++
++unsafe impl<T: Send> Send for Symbol<T> {}
++unsafe impl<T: Sync> Sync for Symbol<T> {}
++
++impl<T> Clone for Symbol<T> {
++    fn clone(&self) -> Symbol<T> {
++        Symbol { ..*self }
++    }
++}
++
++impl<T> ::std::ops::Deref for Symbol<T> {
++    type Target = T;
++    fn deref(&self) -> &T {
++        unsafe { &*((&self.pointer) as *const FARPROC as *const T) }
++    }
++}
++
++impl<T> fmt::Debug for Symbol<T> {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        match self.pointer {
++            None => f.write_str("Symbol@0x0"),
++            Some(ptr) => f.write_str(&format!("Symbol@{:p}", ptr as *const ())),
++        }
++    }
++}
++
++struct ErrorModeGuard(DWORD);
++
++impl ErrorModeGuard {
++    #[allow(clippy::if_same_then_else)]
++    fn new() -> Option<ErrorModeGuard> {
++        unsafe {
++            let mut previous_mode = 0;
++            if SetThreadErrorMode(SEM_FAILCRITICALERRORS, &mut previous_mode) == 0 {
++                // How in the world is it possible for what is essentially a simple variable swap
++                // to fail?  For now we just ignore the error -- the worst that can happen here is
++                // the previous mode staying on and user seeing a dialog error on older Windows
++                // machines.
++                None
++            } else if previous_mode == SEM_FAILCRITICALERRORS {
++                None
++            } else {
++                Some(ErrorModeGuard(previous_mode))
++            }
++        }
++    }
++}
++
++impl Drop for ErrorModeGuard {
++    fn drop(&mut self) {
++        unsafe {
++            SetThreadErrorMode(self.0, ptr::null_mut());
++        }
++    }
++}
++
++fn with_get_last_error<T, F>(
++    wrap: fn(crate::error::WindowsError) -> crate::Error,
++    closure: F,
++) -> Result<T, Option<crate::Error>>
++where
++    F: FnOnce() -> Option<T>,
++{
++    closure().ok_or_else(|| {
++        let error = unsafe { GetLastError() };
++        if error == 0 {
++            None
++        } else {
++            Some(wrap(crate::error::WindowsError(
++                io::Error::from_raw_os_error(error as i32),
++            )))
++        }
++    })
++}
++
++#[allow(clippy::upper_case_acronyms)]
++type BOOL = i32;
++#[allow(clippy::upper_case_acronyms)]
++type DWORD = u32;
++#[allow(clippy::upper_case_acronyms)]
++type HANDLE = isize;
++#[allow(clippy::upper_case_acronyms)]
++type HMODULE = isize;
++#[allow(clippy::upper_case_acronyms)]
++type FARPROC = Option<unsafe extern "system" fn() -> isize>;
++#[allow(non_camel_case_types)]
++type LOAD_LIBRARY_FLAGS = DWORD;
++
++const SEM_FAILCRITICALERRORS: DWORD = 1;
++
++/// Do not check AppLocker rules or apply Software Restriction Policies for the DLL.
++///
++/// This action applies only to the DLL being loaded and not to its dependencies. This value is
++/// recommended for use in setup programs that must run extracted DLLs during installation.
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_IGNORE_CODE_AUTHZ_LEVEL: LOAD_LIBRARY_FLAGS = 0x00000010;
++
++/// Map the file into the calling process’ virtual address space as if it were a data file.
++///
++/// Nothing is done to execute or prepare to execute the mapped file. Therefore, you cannot call
++/// functions like [`Library::get`] with this DLL. Using this value causes writes to read-only
++/// memory to raise an access violation. Use this flag when you want to load a DLL only to extract
++/// messages or resources from it.
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_AS_DATAFILE: LOAD_LIBRARY_FLAGS = 0x00000002;
++
++/// Map the file into the calling process’ virtual address space as if it were a data file.
++///
++/// Similar to [`LOAD_LIBRARY_AS_DATAFILE`], except that the DLL file is opened with exclusive
++/// write access for the calling process. Other processes cannot open the DLL file for write access
++/// while it is in use. However, the DLL can still be opened by other processes.
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE: LOAD_LIBRARY_FLAGS = 0x00000040;
++
++/// Map the file into the process’ virtual address space as an image file.
++///
++/// The loader does not load the static imports or perform the other usual initialisation steps.
++/// Use this flag when you want to load a DLL only to extract messages or resources from it.
++///
++/// Unless the application depends on the file having the in-memory layout of an image, this value
++/// should be used with either [`LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE`] or
++/// [`LOAD_LIBRARY_AS_DATAFILE`].
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_AS_IMAGE_RESOURCE: LOAD_LIBRARY_FLAGS = 0x00000020;
++
++/// Search the application's installation directory for the DLL and its dependencies.
++///
++/// Directories in the standard search path are not searched. This value cannot be combined with
++/// [`LOAD_WITH_ALTERED_SEARCH_PATH`].
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_SEARCH_APPLICATION_DIR: LOAD_LIBRARY_FLAGS = 0x00000200;
++
++/// Search default directories when looking for the DLL and its dependencies.
++///
++/// This value is a combination of [`LOAD_LIBRARY_SEARCH_APPLICATION_DIR`],
++/// [`LOAD_LIBRARY_SEARCH_SYSTEM32`], and [`LOAD_LIBRARY_SEARCH_USER_DIRS`]. Directories in the
++/// standard search path are not searched. This value cannot be combined with
++/// [`LOAD_WITH_ALTERED_SEARCH_PATH`].
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_SEARCH_DEFAULT_DIRS: LOAD_LIBRARY_FLAGS = 0x00001000;
++
++/// Directory that contains the DLL is temporarily added to the beginning of the list of
++/// directories that are searched for the DLL’s dependencies.
++///
++/// Directories in the standard search path are not searched.
++///
++/// The `filename` parameter must specify a fully qualified path. This value cannot be combined
++/// with [`LOAD_WITH_ALTERED_SEARCH_PATH`].
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR: LOAD_LIBRARY_FLAGS = 0x00000100;
++
++/// Search `%windows%\system32` for the DLL and its dependencies.
++///
++/// Directories in the standard search path are not searched. This value cannot be combined with
++/// [`LOAD_WITH_ALTERED_SEARCH_PATH`].
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_SEARCH_SYSTEM32: LOAD_LIBRARY_FLAGS = 0x00000800;
++
++///  Directories added using the `AddDllDirectory` or the `SetDllDirectory` function are searched
++///  for the DLL and its dependencies.
++///
++///  If more than one directory has been added, the order in which the directories are searched is
++///  unspecified. Directories in the standard search path are not searched. This value cannot be
++///  combined with [`LOAD_WITH_ALTERED_SEARCH_PATH`].
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_SEARCH_USER_DIRS: LOAD_LIBRARY_FLAGS = 0x00000400;
++
++/// If `filename` specifies an absolute path, the system uses the alternate file search strategy
++/// discussed in the [Remarks section] to find associated executable modules that the specified
++/// module causes to be loaded.
++///
++/// If this value is used and `filename` specifies a relative path, the behaviour is undefined.
++///
++/// If this value is not used, or if `filename` does not specify a path, the system uses the
++/// standard search strategy discussed in the [Remarks section] to find associated executable
++/// modules that the specified module causes to be loaded.
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++///
++/// [Remarks]: https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#remarks
++pub const LOAD_WITH_ALTERED_SEARCH_PATH: LOAD_LIBRARY_FLAGS = 0x00000008;
++
++/// Specifies that the digital signature of the binary image must be checked at load time.
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_REQUIRE_SIGNED_TARGET: LOAD_LIBRARY_FLAGS = 0x00000080;
++
++/// Allow loading a DLL for execution from the current directory only if it is under a directory in
++/// the Safe load list.
++///
++/// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
++pub const LOAD_LIBRARY_SAFE_CURRENT_DIRS: LOAD_LIBRARY_FLAGS = 0x00002000;
+diff --git a/libloading_shim/src/real/safe.rs b/libloading_shim/src/real/safe.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..e217ee394646c13799d13239a6b19447272b2d68
+--- /dev/null
++++ b/libloading_shim/src/real/safe.rs
+@@ -0,0 +1,318 @@
++#[cfg(libloading_docs)]
++use super::os::unix as imp; // the implementation used here doesn't matter particularly much...
++#[cfg(all(not(libloading_docs), unix))]
++use super::os::unix as imp;
++#[cfg(all(not(libloading_docs), windows))]
++use super::os::windows as imp;
++use super::Error;
++use std::ffi::OsStr;
++use std::fmt;
++use std::marker;
++use std::ops;
++use std::os::raw;
++
++/// A loaded dynamic library.
++#[cfg_attr(libloading_docs, doc(cfg(any(unix, windows))))]
++pub struct Library(imp::Library);
++
++impl Library {
++    /// Find and load a dynamic library.
++    ///
++    /// The `filename` argument may be either:
++    ///
++    /// * A library filename;
++    /// * The absolute path to the library;
++    /// * A relative (to the current working directory) path to the library.
++    ///
++    /// # Safety
++    ///
++    /// When a library is loaded, initialisation routines contained within it are executed.
++    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
++    /// unknown foreign function and may impose arbitrary requirements on the caller for the call
++    /// to be sound.
++    ///
++    /// Additionally, the callers of this function must also ensure that execution of the
++    /// termination routines contained within the library is safe as well. These routines may be
++    /// executed when the library is unloaded.
++    ///
++    /// # Thread-safety
++    ///
++    /// The implementation strives to be as MT-safe as sanely possible, however on certain
++    /// platforms the underlying error-handling related APIs not always MT-safe. This library
++    /// shares these limitations on those platforms. In particular, on certain UNIX targets
++    /// `dlerror` is not MT-safe, resulting in garbage error messages in certain MT-scenarios.
++    ///
++    /// Calling this function from multiple threads is not MT-safe if used in conjunction with
++    /// library filenames and the library search path is modified (`SetDllDirectory` function on
++    /// Windows, `{DY,}LD_LIBRARY_PATH` environment variable on UNIX).
++    ///
++    /// # Platform-specific behaviour
++    ///
++    /// When a plain library filename is supplied, the locations in which the library is searched are
++    /// platform specific and cannot be adjusted in a portable manner. See the documentation for
++    /// the platform specific [`os::unix::Library::new`] and [`os::windows::Library::new`] methods
++    /// for further information on library lookup behaviour.
++    ///
++    /// If the `filename` specifies a library filename without a path and with the extension omitted,
++    /// the `.dll` extension is implicitly added on Windows.
++    ///
++    /// [`os::unix::Library::new`]: crate::os::unix::Library::new
++    /// [`os::windows::Library::new`]: crate::os::windows::Library::new
++    ///
++    /// # Tips
++    ///
++    /// Distributing your dynamic libraries under a filename common to all platforms (e.g.
++    /// `awesome.module`) allows you to avoid code which has to account for platform’s conventional
++    /// library filenames.
++    ///
++    /// Strive to specify an absolute or at least a relative path to your library, unless
++    /// system-wide libraries are being loaded. Platform-dependent library search locations
++    /// combined with various quirks related to path-less filenames may cause flakiness in
++    /// programs.
++    ///
++    /// # Examples
++    ///
++    /// ```no_run
++    /// # use ::libloading::Library;
++    /// // Any of the following are valid.
++    /// unsafe {
++    ///     let _ = Library::new("/path/to/awesome.module").unwrap();
++    ///     let _ = Library::new("../awesome.module").unwrap();
++    ///     let _ = Library::new("libsomelib.so.1").unwrap();
++    /// }
++    /// ```
++    pub unsafe fn new<P: AsRef<OsStr>>(filename: P) -> Result<Library, Error> {
++        imp::Library::new(filename).map(From::from)
++    }
++
++    /// Get a pointer to a function or static variable by symbol name.
++    ///
++    /// The `symbol` may not contain any null bytes, with the exception of the last byte. Providing a
++    /// null-terminated `symbol` may help to avoid an allocation.
++    ///
++    /// The symbol is interpreted as-is; no mangling is done. This means that symbols like `x::y` are
++    /// most likely invalid.
++    ///
++    /// # Safety
++    ///
++    /// Users of this API must specify the correct type of the function or variable loaded.
++    ///
++    /// # Platform-specific behaviour
++    ///
++    /// The implementation of thread-local variables is extremely platform specific and uses of such
++    /// variables that work on e.g. Linux may have unintended behaviour on other targets.
++    ///
++    /// On POSIX implementations where the `dlerror` function is not confirmed to be MT-safe (such
++    /// as FreeBSD), this function will unconditionally return an error when the underlying `dlsym`
++    /// call returns a null pointer. There are rare situations where `dlsym` returns a genuine null
++    /// pointer without it being an error. If loading a null pointer is something you care about,
++    /// consider using the [`os::unix::Library::get_singlethreaded`] call.
++    ///
++    /// [`os::unix::Library::get_singlethreaded`]: crate::os::unix::Library::get_singlethreaded
++    ///
++    /// # Examples
++    ///
++    /// Given a loaded library:
++    ///
++    /// ```no_run
++    /// # use ::libloading::Library;
++    /// let lib = unsafe {
++    ///     Library::new("/path/to/awesome.module").unwrap()
++    /// };
++    /// ```
++    ///
++    /// Loading and using a function looks like this:
++    ///
++    /// ```no_run
++    /// # use ::libloading::{Library, Symbol};
++    /// # let lib = unsafe {
++    /// #     Library::new("/path/to/awesome.module").unwrap()
++    /// # };
++    /// unsafe {
++    ///     let awesome_function: Symbol<unsafe extern fn(f64) -> f64> =
++    ///         lib.get(b"awesome_function\0").unwrap();
++    ///     awesome_function(0.42);
++    /// }
++    /// ```
++    ///
++    /// A static variable may also be loaded and inspected:
++    ///
++    /// ```no_run
++    /// # use ::libloading::{Library, Symbol};
++    /// # let lib = unsafe { Library::new("/path/to/awesome.module").unwrap() };
++    /// unsafe {
++    ///     let awesome_variable: Symbol<*mut f64> = lib.get(b"awesome_variable\0").unwrap();
++    ///     **awesome_variable = 42.0;
++    /// };
++    /// ```
++    pub unsafe fn get<T>(&self, symbol: &[u8]) -> Result<Symbol<'_, T>, Error> {
++        self.0.get(symbol).map(|from| Symbol::from_raw(from, self))
++    }
++
++    /// Unload the library.
++    ///
++    /// This method might be a no-op, depending on the flags with which the `Library` was opened,
++    /// what library was opened or other platform specifics.
++    ///
++    /// You only need to call this if you are interested in handling any errors that may arise when
++    /// library is unloaded. Otherwise the implementation of `Drop` for `Library` will close the
++    /// library and ignore the errors were they arise.
++    ///
++    /// The underlying data structures may still get leaked if an error does occur.
++    pub fn close(self) -> Result<(), Error> {
++        self.0.close()
++    }
++}
++
++impl fmt::Debug for Library {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        self.0.fmt(f)
++    }
++}
++
++impl From<imp::Library> for Library {
++    fn from(lib: imp::Library) -> Library {
++        Library(lib)
++    }
++}
++
++impl From<Library> for imp::Library {
++    fn from(lib: Library) -> imp::Library {
++        lib.0
++    }
++}
++
++unsafe impl Send for Library {}
++unsafe impl Sync for Library {}
++
++/// Symbol from a library.
++///
++/// This type is a safeguard against using dynamically loaded symbols after a `Library` is
++/// unloaded. The primary method to create an instance of a `Symbol` is via [`Library::get`].
++///
++/// The `Deref` trait implementation allows the use of `Symbol` as if it was a function or variable
++/// itself, without taking care to “extract” the function or variable manually most of the time.
++///
++/// [`Library::get`]: Library::get
++#[cfg_attr(libloading_docs, doc(cfg(any(unix, windows))))]
++pub struct Symbol<'lib, T: 'lib> {
++    inner: imp::Symbol<T>,
++    pd: marker::PhantomData<&'lib T>,
++}
++
++impl<'lib, T> Symbol<'lib, T> {
++    /// Extract the wrapped `os::platform::Symbol`.
++    ///
++    /// # Safety
++    ///
++    /// Using this function relinquishes all the lifetime guarantees. It is up to the developer to
++    /// ensure the resulting `Symbol` is not used past the lifetime of the `Library` this symbol
++    /// was loaded from.
++    ///
++    /// # Examples
++    ///
++    /// ```no_run
++    /// # use ::libloading::{Library, Symbol};
++    /// unsafe {
++    ///     let lib = Library::new("/path/to/awesome.module").unwrap();
++    ///     let symbol: Symbol<*mut u32> = lib.get(b"symbol\0").unwrap();
++    ///     let symbol = symbol.into_raw();
++    /// }
++    /// ```
++    pub unsafe fn into_raw(self) -> imp::Symbol<T> {
++        self.inner
++    }
++
++    /// Wrap the `os::platform::Symbol` into this safe wrapper.
++    ///
++    /// Note that, in order to create association between the symbol and the library this symbol
++    /// came from, this function requires a reference to the library.
++    ///
++    /// # Safety
++    ///
++    /// The `library` reference must be exactly the library `sym` was loaded from.
++    ///
++    /// # Examples
++    ///
++    /// ```no_run
++    /// # use ::libloading::{Library, Symbol};
++    /// unsafe {
++    ///     let lib = Library::new("/path/to/awesome.module").unwrap();
++    ///     let symbol: Symbol<*mut u32> = lib.get(b"symbol\0").unwrap();
++    ///     let symbol = symbol.into_raw();
++    ///     let symbol = Symbol::from_raw(symbol, &lib);
++    /// }
++    /// ```
++    pub unsafe fn from_raw<L>(sym: imp::Symbol<T>, library: &'lib L) -> Symbol<'lib, T> {
++        let _ = library; // ignore here for documentation purposes.
++        Symbol {
++            inner: sym,
++            pd: marker::PhantomData,
++        }
++    }
++
++    /// Try to convert the symbol into a raw pointer.
++    /// Success depends on the platform. Currently, this fn always succeeds and returns some.
++    ///
++    /// # Safety
++    ///
++    /// Using this function relinquishes all the lifetime guarantees. It is up to the developer to
++    /// ensure the resulting `Symbol` is not used past the lifetime of the `Library` this symbol
++    /// was loaded from.
++    pub unsafe fn try_as_raw_ptr(self) -> Option<*mut raw::c_void> {
++        Some(
++            unsafe {
++                // SAFE: the calling function has the same soundness invariants as this callee.
++                self.into_raw()
++            }
++            .as_raw_ptr(),
++        )
++    }
++}
++
++impl<'lib, T> Symbol<'lib, Option<T>> {
++    /// Lift Option out of the symbol.
++    ///
++    /// # Examples
++    ///
++    /// ```no_run
++    /// # use ::libloading::{Library, Symbol};
++    /// unsafe {
++    ///     let lib = Library::new("/path/to/awesome.module").unwrap();
++    ///     let symbol: Symbol<Option<*mut u32>> = lib.get(b"symbol\0").unwrap();
++    ///     let symbol: Symbol<*mut u32> = symbol.lift_option().expect("static is not null");
++    /// }
++    /// ```
++    pub fn lift_option(self) -> Option<Symbol<'lib, T>> {
++        self.inner.lift_option().map(|is| Symbol {
++            inner: is,
++            pd: marker::PhantomData,
++        })
++    }
++}
++
++impl<'lib, T> Clone for Symbol<'lib, T> {
++    fn clone(&self) -> Symbol<'lib, T> {
++        Symbol {
++            inner: self.inner.clone(),
++            pd: marker::PhantomData,
++        }
++    }
++}
++
++// FIXME: implement FnOnce for callable stuff instead.
++impl<T> ops::Deref for Symbol<'_, T> {
++    type Target = T;
++    fn deref(&self) -> &T {
++        ops::Deref::deref(&self.inner)
++    }
++}
++
++impl<T> fmt::Debug for Symbol<'_, T> {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        self.inner.fmt(f)
++    }
++}
++
++unsafe impl<T: Send> Send for Symbol<'_, T> {}
++unsafe impl<T: Sync> Sync for Symbol<'_, T> {}
+diff --git a/libloading_shim/src/real/test_helpers.rs b/libloading_shim/src/real/test_helpers.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..9e3e9924ff86b0a85eda77ab51bda720a63d4113
+--- /dev/null
++++ b/libloading_shim/src/real/test_helpers.rs
+@@ -0,0 +1,37 @@
++//! This is a separate file containing helpers for tests of this library. It is built into a
++//! dynamic library by the build.rs script.
++#![crate_type="cdylib"]
++
++#[no_mangle]
++pub static mut TEST_STATIC_U32: u32 = 0;
++
++#[no_mangle]
++pub static mut TEST_STATIC_PTR: *mut () = 0 as *mut _;
++
++#[no_mangle]
++pub extern "C" fn test_identity_u32(x: u32) -> u32 {
++    x
++}
++
++#[repr(C)]
++pub struct S {
++    a: u64,
++    b: u32,
++    c: u16,
++    d: u8
++}
++
++#[no_mangle]
++pub extern "C" fn test_identity_struct(x: S) -> S {
++    x
++}
++
++#[no_mangle]
++pub unsafe extern "C" fn test_get_static_u32() -> u32 {
++    TEST_STATIC_U32
++}
++
++#[no_mangle]
++pub unsafe extern "C" fn test_check_static_ptr() -> bool {
++    TEST_STATIC_PTR == (&mut TEST_STATIC_PTR as *mut *mut _ as *mut _)
++}
+diff --git a/libloading_shim/src/real/util.rs b/libloading_shim/src/real/util.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..599e6c254eaa8ccdc1d2fc18811d722a12c01ee0
+--- /dev/null
++++ b/libloading_shim/src/real/util.rs
+@@ -0,0 +1,34 @@
++use std::borrow::Cow;
++use std::ffi::{CStr, CString};
++use std::os::raw;
++
++use crate::Error;
++
++/// Checks for the last byte and avoids allocating if it is zero.
++///
++/// Non-last null bytes still result in an error.
++pub(crate) fn cstr_cow_from_bytes(slice: &[u8]) -> Result<Cow<'_, CStr>, Error> {
++    static ZERO: raw::c_char = 0;
++    Ok(match slice.last() {
++        // Slice out of 0 elements
++        None => unsafe { Cow::Borrowed(CStr::from_ptr(&ZERO)) },
++        // Slice with trailing 0
++        Some(&0) => Cow::Borrowed(
++            CStr::from_bytes_with_nul(slice)
++                .map_err(|source| Error::CreateCStringWithTrailing { source })?,
++        ),
++        // Slice with no trailing 0
++        Some(_) => {
++            Cow::Owned(CString::new(slice).map_err(|source| Error::CreateCString { source })?)
++        }
++    })
++}
++
++#[inline]
++pub(crate) fn ensure_compatible_types<T, E>() -> Result<(), Error> {
++    if ::std::mem::size_of::<T>() != ::std::mem::size_of::<E>() {
++        Err(Error::IncompatibleSize)
++    } else {
++        Ok(())
++    }
++}
+diff --git a/libloading_wasi_0_9/Cargo.toml b/libloading_wasi_0_9/Cargo.toml
+new file mode 100644
+index 0000000000000000000000000000000000000000..5e93a191b85cfe199d96bc07cebe56f8a9780bb4
+--- /dev/null
++++ b/libloading_wasi_0_9/Cargo.toml
+@@ -0,0 +1,8 @@
++[package]
++name = "libloading-wasi"
++version = "0.9.0"
++edition = "2024"
++license = "MIT"
++
++[lib]
++name = "libloading"
+diff --git a/libloading_wasi_0_9/src/lib.rs b/libloading_wasi_0_9/src/lib.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..2f19d29ff61d503cbf5a09b5d3fcf0800dfc6977
+--- /dev/null
++++ b/libloading_wasi_0_9/src/lib.rs
+@@ -0,0 +1,44 @@
++use std::ffi::OsStr;
++use std::marker::PhantomData;
++use std::ops::Deref;
++
++pub struct Library;
++
++pub struct Symbol<'library, T> {
++    marker: PhantomData<&'library T>,
++}
++
++#[derive(Debug)]
++pub struct Error;
++
++impl std::fmt::Display for Error {
++    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        formatter.write_str("WASI does not support dynamic libraries")
++    }
++}
++
++impl std::error::Error for Error {}
++
++impl Library {
++    pub unsafe fn new<P: AsRef<OsStr>>(_path: P) -> Result<Self, Error> {
++        Err(Error)
++    }
++
++    pub unsafe fn get<T>(&self, _symbol: &[u8]) -> Result<Symbol<'_, T>, Error> {
++        Err(Error)
++    }
++}
++
++impl<T> Symbol<'_, T> {
++    pub unsafe fn try_as_raw_ptr(self) -> Option<*mut std::ffi::c_void> {
++        None
++    }
++}
++
++impl<T> Deref for Symbol<'_, T> {
++    type Target = T;
++
++    fn deref(&self) -> &Self::Target {
++        unreachable!("WASI cannot load dynamic symbols")
++    }
++}
+diff --git a/library/std/src/os/mod.rs b/library/std/src/os/mod.rs
+index a7ffd87d84d936b6a097562d061528cdf086ce79..8068f92bcc93cbcbc56d1e3758314f466006371b 100644
+--- a/library/std/src/os/mod.rs
++++ b/library/std/src/os/mod.rs
+@@ -54,7 +54,7 @@ pub mod windows {}
+         pub mod linux;
+     }
+     target_family = "wasm" => {
+-        #[cfg(any(target_env = "p1", target_env = "p2"))]
++        #[cfg(any(target_env = "p1", target_env = "p2", target_env = "p3"))]
+         pub mod wasi;
+         #[cfg(target_env = "p2")]
+         pub mod wasip2;
+diff --git a/library/std/src/os/wasi/mod.rs b/library/std/src/os/wasi/mod.rs
+index 2ee6aa4660094c23d1b0591ef4e787544f7c0841..2d383ce36449abce3304f35bb809fe569c87f8d6 100644
+--- a/library/std/src/os/wasi/mod.rs
++++ b/library/std/src/os/wasi/mod.rs
+@@ -28,8 +28,14 @@
+ //! [`OsStr`]: crate::ffi::OsStr
+ //! [`OsString`]: crate::ffi::OsString
+ 
+-#![cfg_attr(not(target_env = "p2"), stable(feature = "rust1", since = "1.0.0"))]
+-#![cfg_attr(target_env = "p2", unstable(feature = "wasip2", issue = "none"))]
++#![cfg_attr(
++    not(any(target_env = "p2", target_env = "p3")),
++    stable(feature = "rust1", since = "1.0.0")
++)]
++#![cfg_attr(
++    any(target_env = "p2", target_env = "p3"),
++    unstable(feature = "wasip2", issue = "none")
++)]
+ #![forbid(unsafe_op_in_unsafe_fn)]
+ #![doc(cfg(target_os = "wasi"))]
+ 

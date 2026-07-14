@@ -1,0 +1,518 @@
+diff --git a/libgcc/gthr-posix.h b/libgcc/gthr-posix.h
+index 82e8f9ffcf6..211050e075e 100644
+--- a/libgcc/gthr-posix.h
++++ b/libgcc/gthr-posix.h
+@@ -114,7 +114,7 @@ __gthrw(pthread_join)
+ __gthrw(pthread_equal)
+ __gthrw(pthread_self)
+ __gthrw(pthread_detach)
+-#ifndef __BIONIC__
++#if not defined(__BIONIC__) && not defined(__wasi__)
+ __gthrw(pthread_cancel)
+ #endif
+ __gthrw(sched_yield)
+@@ -251,7 +251,7 @@ __gthrw2(__gthrw_(__pthread_key_create),
+ 	 __pthread_key_create,
+ 	 pthread_key_create)
+ # define GTHR_ACTIVE_PROXY	__gthrw_(__pthread_key_create)
+-#elif defined (__BIONIC__)
++#elif defined (__BIONIC__) || defined (__wasi__)
+ # define GTHR_ACTIVE_PROXY	__gthrw_(pthread_create)
+ #else
+ # define GTHR_ACTIVE_PROXY	__gthrw_(pthread_cancel)
+diff --git a/libgcc/gthr.h b/libgcc/gthr.h
+index 33c2d8ff630..7779fb7b4cf 100644
+--- a/libgcc/gthr.h
++++ b/libgcc/gthr.h
+@@ -154,7 +154,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #define GTHREAD_USE_WEAK 1
+ #endif
+ #endif
+-#include "gthr-default.h"
++#include "gthr-posix.h"
+ 
+ #ifndef HIDE_EXPORTS
+ #pragma GCC visibility pop
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 5645e991af7..eced293ccdc 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -38829,7 +38829,7 @@ $as_echo "#define HAVE_TLS 1" >>confdefs.h
+ 
+   fi
+     ;;
+-  *-linux* | *-uclinux* | *-gnu* | *-kfreebsd*-gnu | *-cygwin* | *-solaris*)
++  *-linux* | *-uclinux* | *-gnu* | *-kfreebsd*-gnu | *-cygwin* | *-solaris* | *-wasip1)
+ 
+   # All these tests are for C++; save the language and the compiler flags.
+   # The CXXFLAGS thing is suspicious, but based on similar bits previously
+diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
+index b3269cb88e0..4cee360e8bc 100644
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -174,7 +174,7 @@ case "${host}" in
+ 
+     GCC_CHECK_TLS
+     ;;
+-  *-linux* | *-uclinux* | *-gnu* | *-kfreebsd*-gnu | *-cygwin* | *-solaris*)
++  *-linux* | *-uclinux* | *-gnu* | *-kfreebsd*-gnu | *-cygwin* | *-solaris* | *-wasip1)
+     GLIBCXX_CHECK_COMPILER_FEATURES
+     GLIBCXX_CHECK_LINKER_FEATURES
+     GLIBCXX_CHECK_MATH_SUPPORT
+diff --git a/libstdc++-v3/include/bits/atomic_base.h b/libstdc++-v3/include/bits/atomic_base.h
+index 20901b7fc06..4fc74a3e97b 100644
+--- a/libstdc++-v3/include/bits/atomic_base.h
++++ b/libstdc++-v3/include/bits/atomic_base.h
+@@ -30,6 +30,46 @@
+ #ifndef _GLIBCXX_ATOMIC_BASE_H
+ #define _GLIBCXX_ATOMIC_BASE_H 1
+ 
++
++#ifndef __GCC_ATOMIC_TEST_AND_SET_TRUEVAL
++#define __GCC_ATOMIC_TEST_AND_SET_TRUEVAL 1
++#endif
++
++#ifndef __GCC_ATOMIC_BOOL_LOCK_FREE
++#define __GCC_ATOMIC_BOOL_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_CHAR8_T_LOCK_FREE
++#define __GCC_ATOMIC_CHAR8_T_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_CHAR16_T_LOCK_FREE
++#define __GCC_ATOMIC_CHAR16_T_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_CHAR32_T_LOCK_FREE
++#define __GCC_ATOMIC_CHAR32_T_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_CHAR_LOCK_FREE
++#define __GCC_ATOMIC_CHAR_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_INT_LOCK_FREE
++#define __GCC_ATOMIC_INT_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_LLONG_LOCK_FREE
++#define __GCC_ATOMIC_LLONG_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_LONG_LOCK_FREE
++#define __GCC_ATOMIC_LONG_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_POINTER_LOCK_FREE
++#define __GCC_ATOMIC_POINTER_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_SHORT_LOCK_FREE
++#define __GCC_ATOMIC_SHORT_LOCK_FREE 2
++#endif
++#ifndef __GCC_ATOMIC_WCHAR_T_LOCK_FREE
++#define __GCC_ATOMIC_WCHAR_T_LOCK_FREE 2
++#endif
++
++
+ #pragma GCC system_header
+ 
+ #include <bits/c++config.h>
+diff --git a/libstdc++-v3/include/bits/chrono.h b/libstdc++-v3/include/bits/chrono.h
+index 0773867da71..b868ec95847 100644
+--- a/libstdc++-v3/include/bits/chrono.h
++++ b/libstdc++-v3/include/bits/chrono.h
+@@ -1284,7 +1284,7 @@ _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(_V2)
+      *  become feasible.
+      *  @ingroup chrono
+     */
+-    using high_resolution_clock = system_clock;
++    using high_resolution_clock = steady_clock;
+ 
+ _GLIBCXX_END_INLINE_ABI_NAMESPACE(_V2)
+ 
+diff --git a/libstdc++-v3/include/bits/stl_tempbuf.h b/libstdc++-v3/include/bits/stl_tempbuf.h
+index fa03fd27704..0afa7f499f9 100644
+--- a/libstdc++-v3/include/bits/stl_tempbuf.h
++++ b/libstdc++-v3/include/bits/stl_tempbuf.h
+@@ -138,7 +138,6 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+    * Provides the nothrow exception guarantee.
+    */
+   template<typename _Tp>
+-    _GLIBCXX17_DEPRECATED
+     pair<_Tp*, ptrdiff_t>
+     get_temporary_buffer(ptrdiff_t __len) _GLIBCXX_NOEXCEPT
+     {
+diff --git a/libstdc++-v3/include/c/csetjmp b/libstdc++-v3/include/c/csetjmp
+index 4a5b0334590..4b28c8ccd9e 100644
+--- a/libstdc++-v3/include/c/csetjmp
++++ b/libstdc++-v3/include/c/csetjmp
+@@ -31,14 +31,4 @@
+ 
+ #pragma GCC system_header
+ 
+-#include_next <setjmp.h>
+-
+-// Get rid of those macros defined in <setjmp.h> in lieu of real functions.
+-#undef longjmp
+-
+-// Adhere to section 17.4.1.2 clause 5 of ISO 14882:1998
+-#ifndef setjmp
+-#define setjmp(env) std::setjmp (env)
+-#endif
+-
+ #endif
+diff --git a/libstdc++-v3/include/c/csignal b/libstdc++-v3/include/c/csignal
+index 040b48368f9..04f9b72186a 100644
+--- a/libstdc++-v3/include/c/csignal
++++ b/libstdc++-v3/include/c/csignal
+@@ -31,6 +31,4 @@
+ 
+ #pragma GCC system_header
+ 
+-#include_next <signal.h>
+-
+ #endif
+diff --git a/libstdc++-v3/include/c_compatibility/fenv.h b/libstdc++-v3/include/c_compatibility/fenv.h
+index 6800814bca5..772568a1afb 100644
+--- a/libstdc++-v3/include/c_compatibility/fenv.h
++++ b/libstdc++-v3/include/c_compatibility/fenv.h
+@@ -33,49 +33,11 @@
+ 
+ #include <bits/c++config.h>
+ #if _GLIBCXX_HAVE_FENV_H
+-# include_next <fenv.h>
++#include_next <fenv.h>
+ #endif
+ 
+ #if __cplusplus >= 201103L
+ 
+-#if _GLIBCXX_USE_C99_FENV
+-
+-#undef feclearexcept
+-#undef fegetexceptflag
+-#undef feraiseexcept
+-#undef fesetexceptflag
+-#undef fetestexcept
+-#undef fegetround
+-#undef fesetround
+-#undef fegetenv
+-#undef feholdexcept
+-#undef fesetenv
+-#undef feupdateenv
+-
+-namespace std
+-{
+-  // types
+-  using ::fenv_t;
+-  using ::fexcept_t;
+-
+-  // functions
+-  using ::feclearexcept;
+-  using ::fegetexceptflag;
+-  using ::feraiseexcept;
+-  using ::fesetexceptflag;
+-  using ::fetestexcept;
+-
+-  using ::fegetround;
+-  using ::fesetround;
+-
+-  using ::fegetenv;
+-  using ::feholdexcept;
+-  using ::fesetenv;
+-  using ::feupdateenv;
+-} // namespace
+-
+-#endif // _GLIBCXX_USE_C99_FENV
+-
+ #endif // C++11
+ 
+ #endif // _GLIBCXX_FENV_H
+diff --git a/libstdc++-v3/include/c_global/cfenv b/libstdc++-v3/include/c_global/cfenv
+index fd32daa8d2d..17e0741efcd 100644
+--- a/libstdc++-v3/include/c_global/cfenv
++++ b/libstdc++-v3/include/c_global/cfenv
+@@ -32,53 +32,15 @@
+ #pragma GCC system_header
+ 
+ #if __cplusplus < 201103L
+-# include <bits/c++0x_warning.h>
++#include <bits/c++0x_warning.h>
+ #else
+ 
+ #include <bits/c++config.h>
+ 
+ #if _GLIBCXX_HAVE_FENV_H
+-# include <fenv.h>
++#include <fenv.h>
+ #endif
+ 
+-#ifdef _GLIBCXX_USE_C99_FENV
+-
+-#undef feclearexcept
+-#undef fegetexceptflag
+-#undef feraiseexcept
+-#undef fesetexceptflag
+-#undef fetestexcept
+-#undef fegetround
+-#undef fesetround
+-#undef fegetenv
+-#undef feholdexcept
+-#undef fesetenv
+-#undef feupdateenv
+-
+-namespace std
+-{
+-  // types
+-  using ::fenv_t;
+-  using ::fexcept_t;
+-
+-  // functions
+-  using ::feclearexcept;
+-  using ::fegetexceptflag;
+-  using ::feraiseexcept;
+-  using ::fesetexceptflag;
+-  using ::fetestexcept;
+-
+-  using ::fegetround;
+-  using ::fesetround;
+-
+-  using ::fegetenv;
+-  using ::feholdexcept;
+-  using ::fesetenv;
+-  using ::feupdateenv;
+-} // namespace std
+-
+-#endif // _GLIBCXX_USE_C99_FENV
+-
+ #endif // C++11
+ 
+ #endif // _GLIBCXX_CFENV
+diff --git a/libstdc++-v3/include/c_global/csetjmp b/libstdc++-v3/include/c_global/csetjmp
+index c378dfaa54c..7988114381f 100644
+--- a/libstdc++-v3/include/c_global/csetjmp
++++ b/libstdc++-v3/include/c_global/csetjmp
+@@ -37,25 +37,3 @@
+ //
+ 
+ #pragma GCC system_header
+-
+-#include <bits/c++config.h>
+-#include <setjmp.h>
+-
+-#ifndef _GLIBCXX_CSETJMP
+-#define _GLIBCXX_CSETJMP 1
+-
+-// Get rid of those macros defined in <setjmp.h> in lieu of real functions.
+-#undef longjmp
+-
+-// Adhere to section 17.4.1.2 clause 5 of ISO 14882:1998
+-#ifndef setjmp
+-#define setjmp(env) setjmp (env)
+-#endif
+-
+-namespace std
+-{
+-  using ::jmp_buf;
+-  using ::longjmp;
+-} // namespace std
+-
+-#endif
+diff --git a/libstdc++-v3/include/c_global/csignal b/libstdc++-v3/include/c_global/csignal
+index 4a6f25e86ea..5075be572c5 100644
+--- a/libstdc++-v3/include/c_global/csignal
++++ b/libstdc++-v3/include/c_global/csignal
+@@ -37,21 +37,3 @@
+ //
+ 
+ #pragma GCC system_header
+-
+-#include <bits/c++config.h>
+-#include <signal.h>
+-
+-#ifndef _GLIBCXX_CSIGNAL
+-#define _GLIBCXX_CSIGNAL 1
+-
+-// Get rid of those macros defined in <signal.h> in lieu of real functions.
+-#undef raise
+-
+-namespace std
+-{
+-  using ::sig_atomic_t;
+-  using ::signal;
+-  using ::raise;
+-} // namespace std
+-
+-#endif
+diff --git a/libstdc++-v3/include/c_std/csetjmp b/libstdc++-v3/include/c_std/csetjmp
+index 49cea5575bc..c445b28e7cf 100644
+--- a/libstdc++-v3/include/c_std/csetjmp
++++ b/libstdc++-v3/include/c_std/csetjmp
+@@ -36,26 +36,4 @@
+ // ISO C++ 14882: 20.4.6  C library
+ //
+ 
+-#ifndef _GLIBCXX_CSETJMP
+-#define _GLIBCXX_CSETJMP 1
+-
+ #pragma GCC system_header
+-
+-#include <bits/c++config.h>
+-#include <setjmp.h>
+-
+-// Get rid of those macros defined in <setjmp.h> in lieu of real functions.
+-#undef longjmp
+-
+-// Adhere to section 17.4.1.2 clause 5 of ISO 14882:1998
+-#ifndef setjmp
+-#define setjmp(env) setjmp (env)
+-#endif
+-
+-namespace std
+-{
+-  using ::jmp_buf;
+-  using ::longjmp;
+-} // namespace std
+-
+-#endif
+diff --git a/libstdc++-v3/include/c_std/csignal b/libstdc++-v3/include/c_std/csignal
+index 08ce9a1a4f7..0248a8ab14b 100644
+--- a/libstdc++-v3/include/c_std/csignal
++++ b/libstdc++-v3/include/c_std/csignal
+@@ -36,22 +36,4 @@
+ // ISO C++ 14882: 20.4.6  C library
+ //
+ 
+-#ifndef _GLIBCXX_CSIGNAL
+-#define _GLIBCXX_CSIGNAL 1
+-
+ #pragma GCC system_header
+-
+-#include <bits/c++config.h>
+-#include <signal.h>
+-
+-// Get rid of those macros defined in <signal.h> in lieu of real functions.
+-#undef raise
+-
+-namespace std
+-{
+-  using ::sig_atomic_t;
+-  using ::signal;
+-  using ::raise;
+-} // namespace std
+-
+-#endif
+diff --git a/libstdc++-v3/include/tr1/cfenv b/libstdc++-v3/include/tr1/cfenv
+index 2d161d88f77..017dc28c599 100644
+--- a/libstdc++-v3/include/tr1/cfenv
++++ b/libstdc++-v3/include/tr1/cfenv
+@@ -23,7 +23,7 @@
+ // <http://www.gnu.org/licenses/>.
+ 
+ /** @file tr1/cfenv
+- *  This is a TR1 C++ Library header. 
++ *  This is a TR1 C++ Library header.
+  */
+ 
+ #ifndef _GLIBCXX_TR1_CFENV
+@@ -36,52 +36,7 @@
+ #include <bits/c++config.h>
+ 
+ #if _GLIBCXX_HAVE_FENV_H
+-# include <fenv.h>
++#include <fenv.h>
+ #endif
+ 
+-#ifdef _GLIBCXX_USE_C99_FENV_TR1
+-
+-#undef feclearexcept
+-#undef fegetexceptflag
+-#undef feraiseexcept
+-#undef fesetexceptflag
+-#undef fetestexcept
+-#undef fegetround
+-#undef fesetround
+-#undef fegetenv
+-#undef feholdexcept
+-#undef fesetenv
+-#undef feupdateenv
+-
+-namespace std _GLIBCXX_VISIBILITY(default)
+-{
+-_GLIBCXX_BEGIN_NAMESPACE_VERSION
+-
+-namespace tr1
+-{
+-  // types
+-  using ::fenv_t;
+-  using ::fexcept_t;
+-
+-  // functions
+-  using ::feclearexcept;
+-  using ::fegetexceptflag;
+-  using ::feraiseexcept;
+-  using ::fesetexceptflag;
+-  using ::fetestexcept;
+-
+-  using ::fegetround;
+-  using ::fesetround;
+-
+-  using ::fegetenv;
+-  using ::feholdexcept;
+-  using ::fesetenv;
+-  using ::feupdateenv;
+-}
+-
+-_GLIBCXX_END_NAMESPACE_VERSION
+-}
+-
+-#endif // _GLIBCXX_USE_C99_FENV_TR1
+-
+ #endif // _GLIBCXX_TR1_CFENV
+diff --git a/libstdc++-v3/libsupc++/eh_globals.cc b/libstdc++-v3/libsupc++/eh_globals.cc
+index 6aebf154d35..3d116c9db9e 100644
+--- a/libstdc++-v3/libsupc++/eh_globals.cc
++++ b/libstdc++-v3/libsupc++/eh_globals.cc
+@@ -71,7 +71,7 @@ __cxxabiv1::__cxa_get_globals() _GLIBCXX_NOTHROW
+ namespace
+ {
+   // Single-threaded fallback buffer.
+-  __constinit __cxa_eh_globals eh_globals;
++  __cxa_eh_globals eh_globals;
+ }
+ 
+ #if __GTHREADS
+diff --git a/libstdc++-v3/libsupc++/eh_personality.cc b/libstdc++-v3/libsupc++/eh_personality.cc
+index be8fb7b10e6..5244c2b038f 100644
+--- a/libstdc++-v3/libsupc++/eh_personality.cc
++++ b/libstdc++-v3/libsupc++/eh_personality.cc
+@@ -33,6 +33,11 @@ using namespace __cxxabiv1;
+ 
+ #include "unwind-pe.h"
+ 
++extern "C" void _Unwind_DeleteException(_Unwind_Exception *) {}
++extern "C" _Unwind_Reason_Code _Unwind_RaiseException(_Unwind_Exception *) {
++  return _URC_FATAL_PHASE1_ERROR;
++}
++
+ 
+ struct lsda_header_info
+ {
+diff --git a/libstdc++-v3/src/c++11/assert_fail.cc b/libstdc++-v3/src/c++11/assert_fail.cc
+index 6d99c7958f3..ce568d836ee 100644
+--- a/libstdc++-v3/src/c++11/assert_fail.cc
++++ b/libstdc++-v3/src/c++11/assert_fail.cc
+@@ -28,7 +28,7 @@
+ #ifdef _GLIBCXX_VERBOSE_ASSERT
+ namespace std
+ {
+-  [[__noreturn__]]
++  __attribute__((__noreturn__))
+   void
+   __glibcxx_assert_fail(const char* file, int line,
+ 			const char* function, const char* condition) noexcept
+diff --git a/libstdc++-v3/src/c++23/print.cc b/libstdc++-v3/src/c++23/print.cc
+index 99a19cd4500..b193d569024 100644
+--- a/libstdc++-v3/src/c++23/print.cc
++++ b/libstdc++-v3/src/c++23/print.cc
+@@ -100,7 +100,7 @@ namespace
+ #ifdef _WIN32
+     if (auto fb = dynamic_cast<filebuf*>(sb))
+       return check_for_console(fb->native_handle());
+-#elifdef _GLIBCXX_HAVE_UNISTD_H
++#elif defined(_GLIBCXX_HAVE_UNISTD_H) && not defined(__wasi__)
+     if (auto fb = dynamic_cast<filebuf*>(sb))
+       if (int fd = fb->native_handle(); fd >= 0 && ::isatty(fd))
+ 	return ::fdopen(::dup(fd), "w"); // Caller must call fclose.

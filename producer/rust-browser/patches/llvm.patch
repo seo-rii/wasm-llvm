@@ -1,0 +1,1221 @@
+diff --git a/clang/CMakeLists.txt b/clang/CMakeLists.txt
+index e4cb1a359620d0ed3c632855ad9d6f09e8eb5b1d..ed8e4299b55aa278ebe9a620526a2baa3d2112ce 100644
+--- a/clang/CMakeLists.txt
++++ b/clang/CMakeLists.txt
+@@ -440,7 +440,7 @@ CMAKE_DEPENDENT_OPTION(CLANG_PLUGIN_SUPPORT
+ # If libstdc++ is statically linked, clang-repl needs to statically link libstdc++
+ # itself, which is not possible in many platforms because of current limitations in
+ # JIT stack. (more platforms need to be supported by JITLink)
+-if(NOT LLVM_STATIC_LINK_CXX_STDLIB)
++if(NOT LLVM_STATIC_LINK_CXX_STDLIB AND NOT WASI)
+   set(HAVE_CLANG_REPL_SUPPORT ON)
+ endif()
+ 
+diff --git a/clang/include/clang/Support/Compiler.h b/clang/include/clang/Support/Compiler.h
+index e1ae3eda4ccc245ac6d9f89d1db0da5b600a8d1a..2d26b05714668860f050be122ad57bcbe8a1588c 100644
+--- a/clang/include/clang/Support/Compiler.h
++++ b/clang/include/clang/Support/Compiler.h
+@@ -50,7 +50,7 @@
+ #define CLANG_EXPORT_TEMPLATE
+ #endif
+ #elif defined(__ELF__) || defined(__MINGW32__) || defined(_AIX) ||             \
+-    defined(__MVS__) || defined(__CYGWIN__)
++    defined(__MVS__) || defined(__CYGWIN__) || defined(__wasi__)
+ #define CLANG_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define CLANG_TEMPLATE_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define CLANG_EXPORT_TEMPLATE
+diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
+index eb3f9cbea2845a16d35d463580d16c9f7b790052..1c37da481b1405b9192615da2501db840be321ef 100644
+--- a/clang/lib/Driver/Driver.cpp
++++ b/clang/lib/Driver/Driver.cpp
+@@ -1859,7 +1859,7 @@ bool Driver::getCrashDiagnosticFile(StringRef ReproCrashFilename,
+     CrashDiagDir = "/";
+   path::append(CrashDiagDir, "Library/Logs/DiagnosticReports");
+   int PID =
+-#if LLVM_ON_UNIX
++#if LLVM_ON_UNIX && !defined(__wasi__)
+       getpid();
+ #else
+       0;
+diff --git a/libcxxabi/src/CMakeLists.txt b/libcxxabi/src/CMakeLists.txt
+index 88ae36e8310fd265ec6c4baaf6fcf07c287bb3b8..723bc5a4882e69dc50f9e5cac41a34d6260bb019 100644
+--- a/libcxxabi/src/CMakeLists.txt
++++ b/libcxxabi/src/CMakeLists.txt
+@@ -36,7 +36,7 @@ else()
+   )
+ endif()
+ 
+-if (LIBCXXABI_ENABLE_THREADS AND (UNIX OR FUCHSIA) AND NOT (APPLE OR CYGWIN)
++if (LIBCXXABI_ENABLE_THREADS AND (UNIX OR FUCHSIA OR WASI) AND NOT (APPLE OR CYGWIN)
+     AND NOT ("${CMAKE_SYSTEM_NAME}" MATCHES "AIX"))
+   list(APPEND LIBCXXABI_SOURCES
+     cxa_thread_atexit.cpp
+diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
+index 311123084bf5874ce991dbf000466cb8f1c2bedb..4fba9bf5bdc08860183ce543268efc101e54ea0e 100644
+--- a/llvm/cmake/modules/HandleLLVMOptions.cmake
++++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
+@@ -242,6 +242,10 @@ elseif(FUCHSIA OR UNIX OR CYGWIN)
+   else()
+     set(LLVM_HAVE_LINK_VERSION_SCRIPT 1)
+   endif()
++elseif(WASI)
++  set(LLVM_ON_WIN32 0)
++  set(LLVM_ON_UNIX 1)
++  set(LLVM_HAVE_LINK_VERSION_SCRIPT 0)
+ elseif(CMAKE_SYSTEM_NAME STREQUAL "Generic")
+   set(LLVM_ON_UNIX 0)
+   set(LLVM_HAVE_LINK_VERSION_SCRIPT 0)
+diff --git a/llvm/include/llvm/ADT/bit.h b/llvm/include/llvm/ADT/bit.h
+index 5971b75045b6b5f40b46900b685faf2e475c5a7f..f28943ab3523a04c009bdcf5bfc63cda2544b1e3 100644
+--- a/llvm/include/llvm/ADT/bit.h
++++ b/llvm/include/llvm/ADT/bit.h
+@@ -30,7 +30,8 @@
+ 
+ #if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__) ||            \
+     defined(__Fuchsia__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__) ||  \
+-    defined(__OpenBSD__) || defined(__DragonFly__) || defined(__managarm__)
++    defined(__OpenBSD__) || defined(__DragonFly__) || defined(__managarm__) || \
++    defined(__wasi__)
+ #include <endian.h>
+ #elif defined(_AIX)
+ #include <sys/machine.h>
+diff --git a/llvm/include/llvm/Support/Memory.h b/llvm/include/llvm/Support/Memory.h
+index 3cee770992ebe1f954243307b391e0ad153b6e55..0c0410fc15790d89373b62e0e736a681c67cdb11 100644
+--- a/llvm/include/llvm/Support/Memory.h
++++ b/llvm/include/llvm/Support/Memory.h
+@@ -43,7 +43,9 @@ namespace sys {
+   private:
+     void *Address;    ///< Address of first byte of memory area
+     size_t AllocatedSize; ///< Size, in bytes of the memory area
++#ifndef __wasi__
+     unsigned Flags = 0;
++#endif
+     friend class Memory;
+   };
+ 
+diff --git a/llvm/lib/CMakeLists.txt b/llvm/lib/CMakeLists.txt
+index 9af1854852436fa6984ccf03153065b5668d51bc..2e24f82d5944f64f4078b8fb024b34d2a6425eed 100644
+--- a/llvm/lib/CMakeLists.txt
++++ b/llvm/lib/CMakeLists.txt
+@@ -36,7 +36,9 @@ add_subdirectory(Debuginfod)
+ add_subdirectory(DebugInfo)
+ add_subdirectory(DWARFCFIChecker)
+ add_subdirectory(DWP)
+-add_subdirectory(ExecutionEngine)
++if (NOT WASI)
++  add_subdirectory(ExecutionEngine)
++endif()
+ add_subdirectory(Target)
+ add_subdirectory(SandboxIR)
+ add_subdirectory(AsmParser)
+diff --git a/llvm/lib/Support/CrashRecoveryContext.cpp b/llvm/lib/Support/CrashRecoveryContext.cpp
+index 1ba0c2383daec20163b4deb79fe7cd9c41b1d9de..7245a0f6ddff12047eb6678a6313a86b3263f70e 100644
+--- a/llvm/lib/Support/CrashRecoveryContext.cpp
++++ b/llvm/lib/Support/CrashRecoveryContext.cpp
+@@ -7,6 +7,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "llvm/Support/CrashRecoveryContext.h"
++
+ #include "llvm/Config/llvm-config.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/ExitCodes.h"
+@@ -14,7 +15,9 @@
+ #include "llvm/Support/thread.h"
+ #include <cassert>
+ #include <mutex>
++#ifndef __wasi__
+ #include <setjmp.h>
++#endif
+ 
+ using namespace llvm;
+ 
+@@ -31,7 +34,9 @@ struct CrashRecoveryContextImpl {
+   const CrashRecoveryContextImpl *Next;
+ 
+   CrashRecoveryContext *CRC;
++#ifndef __wasi__
+   ::jmp_buf JumpBuffer;
++#endif
+   volatile unsigned Failed : 1;
+   unsigned SwitchedThread : 1;
+   unsigned ValidJumpBuffer : 1;
+@@ -72,9 +77,11 @@ public:
+ 
+     CRC->RetCode = RetCode;
+ 
++#ifndef __wasi__
+     // Jump back to the RunSafely we were called under.
+     if (ValidJumpBuffer)
+       longjmp(JumpBuffer, 1);
++#endif
+ 
+     // Otherwise let the caller decide of the outcome of the crash. Currently
+     // this occurs when using SEH on Windows with MSVC or clang-cl.
+@@ -118,7 +125,7 @@ CrashRecoveryContext::~CrashRecoveryContext() {
+   }
+   IsRecoveringFromCrash = PC;
+ 
+-  CrashRecoveryContextImpl *CRCI = (CrashRecoveryContextImpl *) Impl;
++  CrashRecoveryContextImpl *CRCI = (CrashRecoveryContextImpl *)Impl;
+   delete CRCI;
+ }
+ 
+@@ -154,8 +161,8 @@ void CrashRecoveryContext::Disable() {
+   uninstallExceptionOrSignalHandlers();
+ }
+ 
+-void CrashRecoveryContext::registerCleanup(CrashRecoveryContextCleanup *cleanup)
+-{
++void CrashRecoveryContext::registerCleanup(
++    CrashRecoveryContextCleanup *cleanup) {
+   if (!cleanup)
+     return;
+   if (head)
+@@ -164,16 +171,15 @@ void CrashRecoveryContext::registerCleanup(CrashRecoveryContextCleanup *cleanup)
+   head = cleanup;
+ }
+ 
+-void
+-CrashRecoveryContext::unregisterCleanup(CrashRecoveryContextCleanup *cleanup) {
++void CrashRecoveryContext::unregisterCleanup(
++    CrashRecoveryContextCleanup *cleanup) {
+   if (!cleanup)
+     return;
+   if (cleanup == head) {
+     head = cleanup->next;
+     if (head)
+       head->prev = nullptr;
+-  }
+-  else {
++  } else {
+     cleanup->prev->next = cleanup->next;
+     if (cleanup->next)
+       cleanup->next->prev = cleanup->prev;
+@@ -263,16 +269,14 @@ bool CrashRecoveryContext::RunSafely(function_ref<void()> Fn) {
+ 
+ #include "llvm/Support/Windows/WindowsSupport.h"
+ 
+-static LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo)
+-{
++static LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo) {
+   // DBG_PRINTEXCEPTION_WIDE_C is not properly defined on all supported
+   // compilers and platforms, so we define it manually.
+   constexpr ULONG DbgPrintExceptionWideC = 0x4001000AL;
+-  switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
+-  {
++  switch (ExceptionInfo->ExceptionRecord->ExceptionCode) {
+   case DBG_PRINTEXCEPTION_C:
+   case DbgPrintExceptionWideC:
+-  case 0x406D1388:  // set debugger thread name
++  case 0x406D1388: // set debugger thread name
+     return EXCEPTION_CONTINUE_EXECUTION;
+   }
+ 
+@@ -307,7 +311,7 @@ static LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo)
+ // CrashRecoveryContext at all.  So we make use of a thread-local
+ // exception table.  The handles contained in here will either be
+ // non-NULL, valid VEH handles, or NULL.
+-static LLVM_THREAD_LOCAL const void* sCurrentExceptionHandle;
++static LLVM_THREAD_LOCAL const void *sCurrentExceptionHandle;
+ 
+ static void installExceptionOrSignalHandlers() {
+   // We can set up vectored exception handling now.  We will install our
+@@ -342,10 +346,11 @@ static void uninstallExceptionOrSignalHandlers() {
+ // reliable fashion -- if we get a signal outside of a crash recovery context we
+ // simply disable crash recovery and raise the signal again.
+ 
++#ifndef __wasi__
+ #include <signal.h>
+ 
+-static const int Signals[] =
+-    { SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGTRAP };
++static const int Signals[] = {SIGABRT, SIGBUS,  SIGFPE,
++                              SIGILL,  SIGSEGV, SIGTRAP};
+ static const unsigned NumSignals = std::size(Signals);
+ static struct sigaction PrevActions[NumSignals];
+ 
+@@ -389,8 +394,10 @@ static void CrashRecoverySignalHandler(int Signal) {
+   if (CRCI)
+     const_cast<CrashRecoveryContextImpl *>(CRCI)->HandleCrash(RetCode, Signal);
+ }
++#endif
+ 
+ static void installExceptionOrSignalHandlers() {
++#ifndef __wasi__
+   // Setup the signal handler.
+   struct sigaction Handler;
+   Handler.sa_handler = CrashRecoverySignalHandler;
+@@ -400,12 +407,15 @@ static void installExceptionOrSignalHandlers() {
+   for (unsigned i = 0; i != NumSignals; ++i) {
+     sigaction(Signals[i], &Handler, &PrevActions[i]);
+   }
++#endif
+ }
+ 
+ static void uninstallExceptionOrSignalHandlers() {
++#ifndef __wasi__
+   // Restore the previous signal handlers.
+   for (unsigned i = 0; i != NumSignals; ++i)
+     sigaction(Signals[i], &PrevActions[i], nullptr);
++#endif
+ }
+ 
+ #endif // !_WIN32
+@@ -418,9 +428,11 @@ bool CrashRecoveryContext::RunSafely(function_ref<void()> Fn) {
+     Impl = CRCI;
+ 
+     CRCI->ValidJumpBuffer = true;
++#ifndef __wasi__
+     if (setjmp(CRCI->JumpBuffer) != 0) {
+       return false;
+     }
++#endif
+   }
+ 
+   Fn();
+@@ -469,7 +481,7 @@ bool CrashRecoveryContext::throwIfCrash(int RetCode) {
+     return false;
+ #if defined(_WIN32)
+   ::RaiseException(RetCode, 0, 0, NULL);
+-#else
++#elif !defined(__wasi__)
+   llvm::sys::unregisterHandlers();
+   raise(RetCode - 128);
+ #endif
+@@ -502,7 +514,7 @@ struct RunSafelyOnThreadInfo {
+ 
+ static void RunSafelyOnThread_Dispatch(void *UserData) {
+   RunSafelyOnThreadInfo *Info =
+-    reinterpret_cast<RunSafelyOnThreadInfo*>(UserData);
++      reinterpret_cast<RunSafelyOnThreadInfo *>(UserData);
+ 
+   if (Info->UseBackgroundPriority)
+     setThreadBackgroundPriority();
+@@ -512,7 +524,7 @@ static void RunSafelyOnThread_Dispatch(void *UserData) {
+ bool CrashRecoveryContext::RunSafelyOnThread(function_ref<void()> Fn,
+                                              unsigned RequestedStackSize) {
+   bool UseBackgroundPriority = hasThreadBackgroundPriority();
+-  RunSafelyOnThreadInfo Info = { Fn, this, UseBackgroundPriority, false };
++  RunSafelyOnThreadInfo Info = {Fn, this, UseBackgroundPriority, false};
+   llvm::thread Thread(RequestedStackSize == 0
+                           ? std::nullopt
+                           : std::optional<unsigned>(RequestedStackSize),
+diff --git a/llvm/lib/Support/Jobserver.cpp b/llvm/lib/Support/Jobserver.cpp
+index 9f726eb37506f75d383827bd9a3ec6899f024aa6..fa900a0b26ac7f7cc44fb47b8cac63ce22c2d61e 100644
+--- a/llvm/lib/Support/Jobserver.cpp
++++ b/llvm/lib/Support/Jobserver.cpp
+@@ -160,7 +160,7 @@ public:
+   bool isValid() const { return IsInitialized; }
+ 
+ private:
+-#if defined(LLVM_ON_UNIX)
++#if defined(LLVM_ON_UNIX) && !defined(__wasi__)
+   int ReadFD = -1;
+   int WriteFD = -1;
+   std::string FifoPath;
+@@ -171,7 +171,7 @@ private:
+ } // namespace llvm
+ 
+ // Include the platform-specific parts of the class.
+-#if defined(LLVM_ON_UNIX)
++#if defined(LLVM_ON_UNIX) && !defined(__wasi__)
+ #include "Unix/Jobserver.inc"
+ #elif defined(_WIN32)
+ #include "Windows/Jobserver.inc"
+@@ -227,7 +227,7 @@ JobserverClient *JobserverClient::getInstance() {
+     }
+ 
+     if (Config.TheMode == JobserverConfig::PosixPipe) {
+-#if defined(LLVM_ON_UNIX)
++#if defined(LLVM_ON_UNIX) && !defined(__wasi__)
+       if (!areFdsValid(Config.PipeFDs.Read, Config.PipeFDs.Write)) {
+         errs() << "Warning: failed to create jobserver client due to invalid "
+                   "Pipe FDs in MAKEFLAGS environment variable\n";
+diff --git a/llvm/lib/Support/LockFileManager.cpp b/llvm/lib/Support/LockFileManager.cpp
+index 0891ef980668b74b216bf854836872d62fad7f77..f1cecb6a3d6d9152c48a6004240fce0d7ba76ff2 100644
+--- a/llvm/lib/Support/LockFileManager.cpp
++++ b/llvm/lib/Support/LockFileManager.cpp
+@@ -33,7 +33,9 @@
+ #include <unistd.h>
+ #endif
+ 
+-#if defined(__APPLE__) && defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ > 1050)
++#if defined(__APPLE__) &&                                                      \
++    defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) &&                  \
++    (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ > 1050)
+ #define USE_OSX_GETHOSTUUID 1
+ #else
+ #define USE_OSX_GETHOSTUUID 0
+@@ -95,7 +97,7 @@ static std::error_code getHostID(SmallVectorImpl<char> &HostID) {
+   StringRef UUIDRef(UUIDStr);
+   HostID.append(UUIDRef.begin(), UUIDRef.end());
+ 
+-#elif LLVM_ON_UNIX
++#elif LLVM_ON_UNIX && !defined(__wasi__)
+   char HostName[256];
+   HostName[255] = 0;
+   HostName[0] = 0;
+@@ -117,9 +119,11 @@ bool LockFileManager::processStillExecuting(StringRef HostID, int PID) {
+   if (getHostID(StoredHostID))
+     return true; // Conservatively assume it's executing on error.
+ 
+-  // Check whether the process is dead. If so, we're done.
++    // Check whether the process is dead. If so, we're done.
++#ifndef __wasi__ // no other processes anyway
+   if (StoredHostID == HostID && getsid(PID) == -1 && errno == ESRCH)
+     return false;
++#endif
+ #endif
+ 
+   return true;
+@@ -137,9 +141,10 @@ namespace {
+ class RemoveUniqueLockFileOnSignal {
+   StringRef Filename;
+   bool RemoveImmediately;
++
+ public:
+   RemoveUniqueLockFileOnSignal(StringRef Name)
+-  : Filename(Name), RemoveImmediately(true) {
++      : Filename(Name), RemoveImmediately(true) {
+     sys::RemoveFileOnSignal(Filename, nullptr);
+   }
+ 
+diff --git a/llvm/lib/Support/ProgramStack.cpp b/llvm/lib/Support/ProgramStack.cpp
+index 66f74ff660b2026eedafa9f6bd3f5f6e1d47d06e..a9e295e128be778aed05ff627ef24a74b4787dba 100644
+--- a/llvm/lib/Support/ProgramStack.cpp
++++ b/llvm/lib/Support/ProgramStack.cpp
+@@ -10,7 +10,7 @@
+ #include "llvm/Config/config.h"
+ #include "llvm/Support/Compiler.h"
+ 
+-#ifdef LLVM_ON_UNIX
++#if defined(LLVM_ON_UNIX) && !defined(__wasi__)
+ # include <sys/resource.h> // for getrlimit
+ #endif
+ 
+@@ -42,7 +42,7 @@ uintptr_t llvm::getStackPointer() {
+ }
+ 
+ unsigned llvm::getDefaultStackSize() {
+-#ifdef LLVM_ON_UNIX
++#if defined(LLVM_ON_UNIX) && !defined(__wasi__)
+   rlimit RL;
+   getrlimit(RLIMIT_STACK, &RL);
+   return RL.rlim_cur;
+diff --git a/llvm/lib/Support/RandomNumberGenerator.cpp b/llvm/lib/Support/RandomNumberGenerator.cpp
+index 2959fc2bfed17cd7fdaad1eefbbd29bd2b8751b5..aeb4157be041867ed80d58de396bccfdbc289df9 100644
+--- a/llvm/lib/Support/RandomNumberGenerator.cpp
++++ b/llvm/lib/Support/RandomNumberGenerator.cpp
+@@ -21,7 +21,9 @@
+ #include "llvm/Support/Error.h"
+ #include "llvm/Support/ManagedStatic.h"
+ #include "llvm/Support/raw_ostream.h"
+-#ifdef _WIN32
++#ifdef __wasi__
++#include <string.h>
++#elif defined(_WIN32)
+ #include "llvm/Support/Windows/WindowsSupport.h"
+ #else
+ #include "Unix/Unix.h"
+@@ -68,10 +70,14 @@ RandomNumberGenerator::result_type RandomNumberGenerator::operator()() {
+ 
+ // Get random vector of specified size
+ std::error_code llvm::getRandomBytes(void *Buffer, size_t Size) {
+-#ifdef _WIN32
++#ifdef __wasi__
++  // TODO(veluca): maybe use __wasi_random_get or something else.
++  memset(Buffer, 0, Size);
++  return std::error_code();
++#elif defined(_WIN32)
+   HCRYPTPROV hProvider;
+   if (CryptAcquireContext(&hProvider, 0, 0, PROV_RSA_FULL,
+-                           CRYPT_VERIFYCONTEXT | CRYPT_SILENT)) {
++                          CRYPT_VERIFYCONTEXT | CRYPT_SILENT)) {
+     ScopedCryptContext ScopedHandle(hProvider);
+     if (CryptGenRandom(hProvider, Size, static_cast<BYTE *>(Buffer)))
+       return std::error_code();
+diff --git a/llvm/lib/Support/Unix/Memory.inc b/llvm/lib/Support/Unix/Memory.inc
+index bac208a7d543ca39d5e8368853cfa741bea826b2..4172886e66f82cd23e00aae337fa76be03888408 100644
+--- a/llvm/lib/Support/Unix/Memory.inc
++++ b/llvm/lib/Support/Unix/Memory.inc
+@@ -36,6 +36,7 @@ extern "C" void sys_icache_invalidate(const void *Addr, size_t len);
+ extern "C" void __clear_cache(void *, void *);
+ #endif
+ 
++#ifndef __wasi__
+ static int getPosixProtectionFlags(unsigned Flags) {
+   switch (Flags & llvm::sys::Memory::MF_RWE_MASK) {
+   case llvm::sys::Memory::MF_READ:
+@@ -66,6 +67,7 @@ static int getPosixProtectionFlags(unsigned Flags) {
+   // Provide a default return value as required by some compilers.
+   return PROT_NONE;
+ }
++#endif
+ 
+ namespace llvm {
+ namespace sys {
+@@ -77,6 +79,17 @@ MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
+   if (NumBytes == 0)
+     return MemoryBlock();
+ 
++#ifdef __wasi__
++  MemoryBlock Result;
++  Result.Address = malloc(NumBytes);
++  if (!Result.Address) {
++    EC = errnoAsErrorCode();
++    Result.AllocatedSize = 0;
++  } else {
++    Result.AllocatedSize = NumBytes;
++  }
++  return Result;
++#else
+   // On platforms that have it, we can use MAP_ANON to get a memory-mapped
+   // page without file backing, but we need a fallback of opening /dev/zero
+   // for strictly POSIX platforms instead.
+@@ -146,14 +159,19 @@ MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
+   }
+ 
+   return Result;
++#endif
+ }
+ 
+ std::error_code Memory::releaseMappedMemory(MemoryBlock &M) {
++#ifdef __wasi__
++  free(M.Address);
++#else
+   if (M.Address == nullptr || M.AllocatedSize == 0)
+     return std::error_code();
+ 
+   if (0 != ::munmap(M.Address, M.AllocatedSize))
+     return errnoAsErrorCode();
++#endif
+ 
+   M.Address = nullptr;
+   M.AllocatedSize = 0;
+@@ -163,6 +181,7 @@ std::error_code Memory::releaseMappedMemory(MemoryBlock &M) {
+ 
+ std::error_code Memory::protectMappedMemory(const MemoryBlock &M,
+                                             unsigned Flags) {
++#ifndef __wasi__
+   static const Align PageSize = Align(Process::getPageSizeEstimate());
+   if (M.Address == nullptr || M.AllocatedSize == 0)
+     return std::error_code();
+@@ -200,6 +219,7 @@ std::error_code Memory::protectMappedMemory(const MemoryBlock &M,
+ 
+   if (InvalidateCache)
+     Memory::InvalidateInstructionCache(M.Address, M.AllocatedSize);
++#endif
+ 
+   return std::error_code();
+ }
+diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
+index fc71ca46d823a512925262f786bcdc6a3598d575..16b6894e83aedbdb34c2fa2fdce44b1eaa4dac6a 100644
+--- a/llvm/lib/Support/Unix/Path.inc
++++ b/llvm/lib/Support/Unix/Path.inc
+@@ -31,7 +31,10 @@
+ #endif
+ 
+ #include <dirent.h>
++#ifndef __wasi__
+ #include <pwd.h>
++#endif
++#include <sys/file.h>
+ 
+ #ifdef __APPLE__
+ #include <copyfile.h>
+@@ -194,7 +197,9 @@ static char *getprogpath(char ret[PATH_MAX], const char *bin) {
+ std::string getMainExecutable(const char *argv0, void *MainAddr) {
+   auto BypassSandbox = sandbox::scopedDisable();
+ 
+-#if defined(__APPLE__)
++#if defined(__wasi__)
++  return argv0;
++#elif defined(__APPLE__)
+   // On OS X the executable path is saved to the stack by dyld. Reading it
+   // from there is much faster than calling dladdr, especially for large
+   // binaries with symbols.
+@@ -514,7 +519,7 @@ static bool is_local_impl(struct STATVFS &Vfs) {
+ #elif defined(__Fuchsia__)
+   // Fuchsia doesn't yet support remote filesystem mounts.
+   return true;
+-#elif defined(__EMSCRIPTEN__)
++#elif defined(__EMSCRIPTEN__) || defined(__wasi__)
+   // Emscripten doesn't currently support remote filesystem mounts.
+   return true;
+ #elif defined(__HAIKU__)
+@@ -675,6 +680,7 @@ std::error_code equivalent(const Twine &A, const Twine &B, bool &result) {
+ }
+ 
+ static void expandTildeExpr(SmallVectorImpl<char> &Path) {
++#ifndef __wasi__
+   StringRef PathStr(Path.begin(), Path.size());
+   if (PathStr.empty() || !PathStr.starts_with("~"))
+     return;
+@@ -718,6 +724,7 @@ static void expandTildeExpr(SmallVectorImpl<char> &Path) {
+   Path.clear();
+   Path.append(Entry->pw_dir, Entry->pw_dir + strlen(Entry->pw_dir));
+   llvm::sys::path::append(Path, Storage);
++#endif
+ }
+ 
+ void expand_tilde(const Twine &path, SmallVectorImpl<char> &dest) {
+@@ -798,11 +805,15 @@ std::error_code status(int FD, file_status &Result) {
+ }
+ 
+ unsigned getUmask() {
++#ifdef __wasi__
++  return 0644;
++#else
+   // Chose arbitary new mask and reset the umask to the old mask.
+   // umask(2) never fails so ignore the return of the second call.
+   unsigned Mask = ::umask(0);
+   (void)::umask(Mask);
+   return Mask;
++#endif
+ }
+ 
+ std::error_code setPermissions(const Twine &Path, perms Permissions) {
+@@ -857,6 +868,9 @@ std::error_code setLastAccessAndModificationTime(int FD, TimePoint<> AccessTime,
+ 
+ std::error_code mapped_file_region::init(int FD, uint64_t Offset,
+                                          mapmode Mode) {
++#ifdef __wasi__
++  return std::error_code(ENOTSUP, std::generic_category());
++#else
+   assert(Size != 0);
+ 
+   int flags = (Mode == readwrite) ? MAP_SHARED : MAP_PRIVATE;
+@@ -888,6 +902,7 @@ std::error_code mapped_file_region::init(int FD, uint64_t Offset,
+   if (Mapping == MAP_FAILED)
+     return errnoAsErrorCode();
+   return std::error_code();
++#endif
+ }
+ 
+ mapped_file_region::mapped_file_region(int fd, mapmode mode, size_t length,
+@@ -902,17 +917,24 @@ mapped_file_region::mapped_file_region(int fd, mapmode mode, size_t length,
+ }
+ 
+ void mapped_file_region::unmapImpl() {
++#ifndef __wasi__
+   if (Mapping)
+     ::munmap(Mapping, Size);
++#endif
+ }
+ 
+ std::error_code mapped_file_region::sync() const {
++#ifdef __wasi__
++  return std::error_code();
++#else
+   if (int Res = ::msync(Mapping, Size, MS_SYNC))
+     return std::error_code(Res, std::generic_category());
+   return std::error_code();
++#endif
+ }
+ 
+ void mapped_file_region::dontNeedImpl() {
++#ifndef __wasi__
+   assert(Mode == mapped_file_region::readonly);
+   if (!Mapping)
+     return;
+@@ -923,9 +945,11 @@ void mapped_file_region::dontNeedImpl() {
+ #else
+   ::madvise(Mapping, Size, MADV_DONTNEED);
+ #endif
++#endif
+ }
+ 
+ void mapped_file_region::willNeedImpl() {
++#ifndef __wasi__
+   assert(Mode == mapped_file_region::readonly);
+   if (!Mapping)
+     return;
+@@ -936,6 +960,7 @@ void mapped_file_region::willNeedImpl() {
+ #else
+   ::madvise(Mapping, Size, MADV_WILLNEED);
+ #endif
++#endif
+ }
+ 
+ int mapped_file_region::alignment() { return Process::getPageSizeEstimate(); }
+@@ -971,7 +996,7 @@ static file_type direntType(dirent *Entry) {
+   // Note that while glibc provides a macro to see if this is supported,
+   // _DIRENT_HAVE_D_TYPE, it's not defined on BSD/Mac, so we test for the
+   // d_type-to-mode_t conversion macro instead.
+-#if defined(DTTOIF)
++#if defined(DTTOIF) && !defined(__wasi__)
+   return typeForMode(DTTOIF(Entry->d_type));
+ #else
+   // Other platforms such as Solaris require a stat() to get the type.
+@@ -1292,6 +1317,9 @@ Expected<size_t> readNativeFileSlice(file_t FD, MutableArrayRef<char> Buf,
+ 
+ std::error_code tryLockFile(int FD, std::chrono::milliseconds Timeout,
+                             LockKind Kind) {
++#if defined(__wasi__)
++  return std::error_code();
++#else
+   auto Start = std::chrono::steady_clock::now();
+   auto End = Start + Timeout;
+   do {
+@@ -1318,9 +1346,13 @@ std::error_code tryLockFile(int FD, std::chrono::milliseconds Timeout,
+     usleep(1000);
+   } while (std::chrono::steady_clock::now() < End);
+   return make_error_code(errc::no_lock_available);
++#endif
+ }
+ 
+ std::error_code lockFile(int FD, LockKind Kind) {
++#if defined(__wasi__)
++  return std::error_code();
++#else
+   struct flock Lock;
+   memset(&Lock, 0, sizeof(Lock));
+   switch (Kind) {
+@@ -1337,9 +1369,13 @@ std::error_code lockFile(int FD, LockKind Kind) {
+   if (::fcntl(FD, F_SETLKW, &Lock) != -1)
+     return std::error_code();
+   return errnoAsErrorCode();
++#endif
+ }
+ 
+ std::error_code unlockFile(int FD) {
++#if defined(__wasi__)
++  return std::error_code();
++#else
+   struct flock Lock;
+   Lock.l_type = F_UNLCK;
+   Lock.l_whence = SEEK_SET;
+@@ -1348,6 +1384,7 @@ std::error_code unlockFile(int FD) {
+   if (::fcntl(FD, F_SETLK, &Lock) != -1)
+     return std::error_code();
+   return errnoAsErrorCode();
++#endif
+ }
+ 
+ std::error_code closeFile(file_t &F) {
+@@ -1423,11 +1460,15 @@ std::error_code real_path(const Twine &path, SmallVectorImpl<char> &dest,
+ }
+ 
+ std::error_code changeFileOwnership(int FD, uint32_t Owner, uint32_t Group) {
++#ifdef __wasi__
++  return std::error_code(ENOTSUP, std::generic_category());
++#else
+   auto FChown = [&]() { return ::fchown(FD, Owner, Group); };
+   // Retry if fchown call fails due to interruption.
+   if ((sys::RetryAfterSignal(-1, FChown)) < 0)
+     return errnoAsErrorCode();
+   return std::error_code();
++#endif
+ }
+ 
+ } // end namespace fs
+@@ -1435,6 +1476,9 @@ std::error_code changeFileOwnership(int FD, uint32_t Owner, uint32_t Group) {
+ namespace path {
+ 
+ bool home_directory(SmallVectorImpl<char> &result) {
++#ifdef __wasi__
++  return false;
++#else
+   std::unique_ptr<char[]> Buf;
+   char *RequestedDir = getenv("HOME");
+   if (!RequestedDir) {
+@@ -1454,6 +1498,7 @@ bool home_directory(SmallVectorImpl<char> &result) {
+   result.clear();
+   result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
+   return true;
++#endif
+ }
+ 
+ static bool getDarwinConfDir(bool TempDir, SmallVectorImpl<char> &Result) {
+diff --git a/llvm/lib/Support/Unix/Process.inc b/llvm/lib/Support/Unix/Process.inc
+index c6e79af44b9b457de1579b92ecec8386418f8a67..a54370e96792864fc945cc563a0aa2054c6c5596 100644
+--- a/llvm/lib/Support/Unix/Process.inc
++++ b/llvm/lib/Support/Unix/Process.inc
+@@ -19,9 +19,11 @@
+ #include <optional>
+ #include <fcntl.h>
+ #include <sys/time.h>
++#ifndef __wasi__
+ #include <sys/resource.h>
+-#include <sys/stat.h>
+ #include <signal.h>
++#endif
++#include <sys/stat.h>
+ #if defined(HAVE_MALLINFO) || defined(HAVE_MALLINFO2)
+ #include <malloc.h>
+ #endif
+@@ -53,7 +55,8 @@ getRUsageTimes() {
+   ::getrusage(RUSAGE_SELF, &RU);
+   return {toDuration(RU.ru_utime), toDuration(RU.ru_stime)};
+ #else
+-#ifndef __MVS__ // Exclude for MVS in case -pedantic is used
++// Exclude for MVS/WASI in case -pedantic is used
++#if !(defined(__MVS__) || defined(__wasi__))
+ #warning Cannot get usage times on this platform
+ #endif
+   return {std::chrono::microseconds::zero(), std::chrono::microseconds::zero()};
+@@ -63,7 +66,11 @@ getRUsageTimes() {
+ Process::Pid Process::getProcessId() {
+   static_assert(sizeof(Pid) >= sizeof(pid_t),
+                 "Process::Pid should be big enough to store pid_t");
++#ifdef __wasi__
++  return Pid(2);
++#else
+   return Pid(::getpid());
++#endif
+ }
+ 
+ // On Cygwin, getpagesize() returns 64k(AllocationGranularity) and
+@@ -136,6 +143,7 @@ void Process::GetTimeUsage(TimePoint<> &elapsed,
+ // their operation. To prevent the disk from filling up, this function
+ // does what's necessary to prevent their generation.
+ void Process::PreventCoreFiles() {
++#ifndef __wasi__
+   struct rlimit rlim;
+   getrlimit(RLIMIT_CORE, &rlim);
+ #ifdef __linux__
+@@ -187,6 +195,7 @@ void Process::PreventCoreFiles() {
+   signal(SIGBUS, _exit);
+ #endif
+ 
++#endif
+   coreFilesPrevented = true;
+ }
+ 
+@@ -245,13 +254,18 @@ std::error_code Process::FixupStandardFileDescriptors() {
+ 
+     if (NullFD == StandardFD)
+       FDC.keepOpen();
++#ifndef __wasi__
+     else if (dup2(NullFD, StandardFD) < 0)
+       return errnoAsErrorCode();
++#else
++    return std::error_code(ENOTSUP, std::generic_category());
++#endif
+   }
+   return std::error_code();
+ }
+ 
+ std::error_code Process::SafelyCloseFileDescriptor(int FD) {
++#ifndef __wasi__
+   // Create a signal set filled with *all* signals.
+   sigset_t FullSet, SavedSet;
+   if (sigfillset(&FullSet) < 0 || sigfillset(&SavedSet) < 0)
+@@ -264,6 +278,7 @@ std::error_code Process::SafelyCloseFileDescriptor(int FD) {
+ #else
+   if (sigprocmask(SIG_SETMASK, &FullSet, &SavedSet) < 0)
+     return errnoAsErrorCode();
++#endif
+ #endif
+   // Attempt to close the file descriptor.
+   // We need to save the error, if one occurs, because our subsequent call to
+@@ -273,11 +288,13 @@ std::error_code Process::SafelyCloseFileDescriptor(int FD) {
+     ErrnoFromClose = errno;
+   // Restore the signal mask back to what we saved earlier.
+   int EC = 0;
++#ifndef __wasi__
+ #if LLVM_ENABLE_THREADS
+   EC = pthread_sigmask(SIG_SETMASK, &SavedSet, nullptr);
+ #else
+   if (sigprocmask(SIG_SETMASK, &SavedSet, nullptr) < 0)
+     EC = errno;
++#endif
+ #endif
+   // The error code from close takes precedence over the one from
+   // pthread_sigmask.
+@@ -320,7 +337,7 @@ static unsigned getColumns(int FileID) {
+   // instead if it isn't available.
+   unsigned Columns = 0;
+ 
+-#if defined(HAVE_SYS_IOCTL_H) && !defined(__sun__)
++#if defined(HAVE_SYS_IOCTL_H) && !defined(__sun__) && !defined(__wasi__)
+   struct winsize ws;
+   if (ioctl(FileID, TIOCGWINSZ, &ws) == 0)
+     Columns = ws.ws_col;
+diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
+index 489ca03b3067069e527a4416758e1a215aadda9e..db4851d6bf37ab032c00e4992646fa56efd455a3 100644
+--- a/llvm/lib/Support/Unix/Program.inc
++++ b/llvm/lib/Support/Unix/Program.inc
+@@ -28,8 +28,10 @@
+ #include "llvm/Support/StringSaver.h"
+ #include "llvm/Support/raw_ostream.h"
+ #include <fcntl.h>
++#ifndef __wasi__
+ #include <signal.h>
+ #include <sys/resource.h>
++#endif
+ #include <sys/stat.h>
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+@@ -87,6 +89,7 @@ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
+   return errc::no_such_file_or_directory;
+ }
+ 
++#ifndef __wasi__
+ static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMsg) {
+   if (!Path) // Noop
+     return false;
+@@ -114,6 +117,7 @@ static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMs
+   close(InFD); // Close the original FD
+   return false;
+ }
++#endif
+ 
+ #ifdef HAVE_POSIX_SPAWN
+ static bool RedirectIO_PS(const std::string *Path, int FD, std::string *ErrMsg,
+@@ -134,6 +138,7 @@ static bool RedirectIO_PS(const std::string *Path, int FD, std::string *ErrMsg,
+ }
+ #endif
+ 
++#ifndef __wasi__
+ static void TimeOutHandler(int Sig) {}
+ 
+ static void SetMemoryLimits(unsigned size) {
+@@ -160,6 +165,7 @@ toNullTerminatedCStringArray(ArrayRef<StringRef> Strings, StringSaver &Saver) {
+   Result.push_back(nullptr);
+   return Result;
+ }
++#endif
+ 
+ static bool Execute(ProcessInfo &PI, StringRef Program,
+                     ArrayRef<StringRef> Args,
+@@ -167,6 +173,11 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+                     ArrayRef<std::optional<StringRef>> Redirects,
+                     unsigned MemoryLimit, std::string *ErrMsg,
+                     BitVector *AffinityMask, bool DetachProcess) {
++#ifdef __wasi__
++  if (ErrMsg)
++    *ErrMsg = std::string("Spawning processes on WASI is not supported");
++  return false;
++#else
+   assert(!AffinityMask && "Starting a process with an affinity mask is "
+                           "currently not supported on Unix!");
+ 
+@@ -329,6 +340,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+   PI.Process = child;
+ 
+   return true;
++#endif
+ }
+ 
+ namespace llvm {
+@@ -336,7 +348,7 @@ namespace sys {
+ 
+ #if defined(_AIX)
+ static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
+-#elif !defined(__Fuchsia__)
++#elif !defined(__Fuchsia__) && !defined(__wasi__)
+ using ::wait4;
+ #endif
+ 
+@@ -382,6 +394,7 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+                             std::string *ErrMsg,
+                             std::optional<ProcessStatistics> *ProcStat,
+                             bool Polling) {
++#ifndef __wasi__
+   struct sigaction Act, Old;
+   assert(PI.Pid && "invalid pid to wait on, process not started?");
+ 
+@@ -498,6 +511,11 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+     // signal during execution as opposed to failing to execute.
+     WaitResult.ReturnCode = -2;
+   }
++#else
++  ProcessInfo WaitResult;
++  WaitResult.Pid = 3;
++  WaitResult.ReturnCode = -1;
++#endif
+   return WaitResult;
+ }
+ 
+diff --git a/llvm/lib/Support/Unix/Signals.inc b/llvm/lib/Support/Unix/Signals.inc
+index 56ad4fc504153e9e4d7b37813aeaeb8ad15524e4..d1afade095c70ccd094ca28525d592d7075518eb 100644
+--- a/llvm/lib/Support/Unix/Signals.inc
++++ b/llvm/lib/Support/Unix/Signals.inc
+@@ -50,7 +50,9 @@
+ #ifdef HAVE_BACKTRACE
+ #include BACKTRACE_HEADER // For backtrace().
+ #endif
++#ifndef __wasi__
+ #include <signal.h>
++#endif
+ #include <sys/stat.h>
+ #include <dlfcn.h>
+ #if HAVE_MACH_MACH_H
+@@ -84,8 +86,10 @@
+ 
+ using namespace llvm;
+ 
++#ifndef __wasi__
+ static void SignalHandler(int Sig, siginfo_t *Info, void *);
+ static void InfoSignalHandler(int Sig); // defined below.
++#endif
+ 
+ using SignalHandlerFunctionType = void (*)();
+ /// The function to call if ctrl-c is pressed.
+@@ -212,6 +216,7 @@ struct FilesToRemoveCleanup {
+ 
+ static StringRef Argv0;
+ 
++#ifndef __wasi__
+ /// Signals that represent requested termination. There's no bug or failure, or
+ /// if there is, it's not our direct responsibility. For whatever reason, our
+ /// continued execution is no longer desirable.
+@@ -260,6 +265,7 @@ static struct {
+   struct sigaction SA;
+   int SigNo;
+ } RegisteredSignalInfo[NumSigs];
++#endif
+ 
+ #if defined(HAVE_SIGALTSTACK)
+ // Hold onto both the old and new alternate signal stack so that it's not
+@@ -289,10 +295,13 @@ static void CreateSigAltStack() {
+     free(AltStack.ss_sp);
+ }
+ #else
++#ifndef __wasi__
+ static void CreateSigAltStack() {}
+ #endif
++#endif
+ 
+ static void RegisterHandlers() { // Not signal-safe.
++#ifndef __wasi__
+   // The mutex prevents other threads from registering handlers while we're
+   // doing it. We also have to protect the handlers and their count because
+   // a signal handler could fire while we're registering handlers.
+@@ -341,15 +350,18 @@ static void RegisterHandlers() { // Not signal-safe.
+     registerHandler(SIGPIPE, SignalKind::IsKill);
+   for (auto S : InfoSigs)
+     registerHandler(S, SignalKind::IsInfo);
++#endif
+ }
+ 
+ void sys::unregisterHandlers() {
++#ifndef __wasi__
+   // Restore all of the signal handlers to how they were before we showed up.
+   for (unsigned i = 0, e = NumRegisteredSignals.load(); i != e; ++i) {
+     sigaction(RegisteredSignalInfo[i].SigNo, &RegisteredSignalInfo[i].SA,
+               nullptr);
+     --NumRegisteredSignals;
+   }
++#endif
+ }
+ 
+ /// Process the FilesToRemove list.
+@@ -361,6 +373,7 @@ void sys::CleanupOnSignal(uintptr_t Context) {
+   // Let's not interfere with stack trace symbolication and friends.
+   auto BypassSandbox = sandbox::scopedDisable();
+ 
++#ifndef __wasi__
+   int Sig = (int)Context;
+ 
+   if (llvm::is_contained(InfoSigs, Sig)) {
+@@ -374,8 +387,10 @@ void sys::CleanupOnSignal(uintptr_t Context) {
+     return;
+ 
+   llvm::sys::RunSignalHandlers();
++#endif
+ }
+ 
++#ifndef __wasi__
+ // The signal handler that runs.
+ static void SignalHandler(int Sig, siginfo_t *Info, void *) {
+   // Restore the signal behavior to default, so that the program actually
+@@ -442,6 +457,7 @@ static void InfoSignalHandler(int Sig) {
+   if (SignalHandlerFunctionType CurrentInfoFunction = InfoSignalFunction)
+     CurrentInfoFunction();
+ }
++#endif
+ 
+ void sys::RunInterruptHandlers() {
+   // Let's not interfere with stack trace symbolication and friends.
+@@ -830,7 +846,7 @@ static void zosbacktrace(raw_ostream &OS) {
+ // On glibc systems we have the 'backtrace' function, which works nicely, but
+ // doesn't demangle symbols.
+ void llvm::sys::PrintStackTrace(raw_ostream &OS, int Depth) {
+-#if ENABLE_BACKTRACES
++#if ENABLE_BACKTRACES && !defined(__wasi__)
+ #ifdef __MVS__
+   zosbacktrace(OS);
+ #else
+diff --git a/llvm/lib/Support/Unix/Unix.h b/llvm/lib/Support/Unix/Unix.h
+index f24d524982b237c2c25208f5d564d65e32aec4e9..faa4880a5084993ee9574596a7e7ca4a5c623437 100644
+--- a/llvm/lib/Support/Unix/Unix.h
++++ b/llvm/lib/Support/Unix/Unix.h
+@@ -29,7 +29,9 @@
+ #include <cstring>
+ #include <string>
+ #include <sys/types.h>
++#ifndef __wasi__
+ #include <sys/wait.h>
++#endif
+ 
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+diff --git a/llvm/lib/Support/Unix/Watchdog.inc b/llvm/lib/Support/Unix/Watchdog.inc
+index b33e52d88500d5c2a3369e59eccca28e385210ef..b18f0a40c8b6210105ec41c53e480a91e4f73790 100644
+--- a/llvm/lib/Support/Unix/Watchdog.inc
++++ b/llvm/lib/Support/Unix/Watchdog.inc
+@@ -19,13 +19,13 @@
+ namespace llvm {
+ namespace sys {
+ Watchdog::Watchdog(unsigned int seconds) {
+-#ifdef HAVE_UNISTD_H
++#if defined(HAVE_UNISTD_H) && !defined(__wasi__)
+   alarm(seconds);
+ #endif
+ }
+ 
+ Watchdog::~Watchdog() {
+-#ifdef HAVE_UNISTD_H
++#if defined(HAVE_UNISTD_H) && !defined(__wasi__)
+   alarm(0);
+ #endif
+ }
+diff --git a/llvm/lib/Support/raw_socket_stream.cpp b/llvm/lib/Support/raw_socket_stream.cpp
+index f71631730d0721e21d1ddf18b9dd13c115305564..b2b98e7b91b6caede42417c272576eb26891ee1f 100644
+--- a/llvm/lib/Support/raw_socket_stream.cpp
++++ b/llvm/lib/Support/raw_socket_stream.cpp
+@@ -21,9 +21,11 @@
+ #include <functional>
+ 
+ #ifndef _WIN32
++#ifndef __wasi__
+ #include <poll.h>
+ #include <sys/socket.h>
+ #include <sys/un.h>
++#endif
+ #else
+ #include "llvm/Support/Windows/WindowsSupport.h"
+ // winsock2.h must be included before afunix.h. Briefly turn off clang-format to
+@@ -54,13 +56,16 @@ WSABalancer::~WSABalancer() { WSACleanup(); }
+ #endif // _WIN32
+ 
+ static std::error_code getLastSocketErrorCode() {
+-#ifdef _WIN32
++#ifdef __wasi__
++  return std::error_code(ENOTSUP, std::generic_category());
++#elif defined(_WIN32)
+   return std::error_code(::WSAGetLastError(), std::system_category());
+ #else
+   return errnoAsErrorCode();
+ #endif
+ }
+ 
++#ifndef __wasi__
+ static sockaddr_un setSocketAddr(StringRef SocketPath) {
+   struct sockaddr_un Addr;
+   memset(&Addr, 0, sizeof(Addr));
+@@ -68,8 +73,13 @@ static sockaddr_un setSocketAddr(StringRef SocketPath) {
+   strncpy(Addr.sun_path, SocketPath.str().c_str(), sizeof(Addr.sun_path) - 1);
+   return Addr;
+ }
++#endif
+ 
+ static Expected<int> getSocketFD(StringRef SocketPath) {
++#ifdef __wasi__
++  return llvm::make_error<StringError>(getLastSocketErrorCode(),
++                                       "Connect socket failed");
++#else
+ #ifdef _WIN32
+   SOCKET Socket = socket(AF_UNIX, SOCK_STREAM, 0);
+   if (Socket == INVALID_SOCKET) {
+@@ -100,6 +110,7 @@ static Expected<int> getSocketFD(StringRef SocketPath) {
+ #else
+   return Socket;
+ #endif // _WIN32
++#endif // __wasi__
+ }
+ 
+ ListeningSocket::ListeningSocket(int SocketFD, StringRef SocketPath,
+@@ -118,6 +129,10 @@ ListeningSocket::ListeningSocket(ListeningSocket &&LS)
+ 
+ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
+                                                       int MaxBacklog) {
++#ifdef __wasi__
++  return llvm::make_error<StringError>(getLastSocketErrorCode(),
++                                       "socket create failed");
++#else
+ 
+   // Handle instances where the target socket address already exists and
+   // differentiate between a preexisting file with and without a bound socket
+@@ -193,6 +208,7 @@ Expected<ListeningSocket> ListeningSocket::createUnix(StringRef SocketPath,
+ #else
+   return ListeningSocket{Socket, SocketPath, PipeFD};
+ #endif // _WIN32
++#endif
+ }
+ 
+ // If a file descriptor being monitored by ::poll is closed by another thread,
+@@ -208,6 +224,9 @@ static std::error_code
+ manageTimeout(const std::chrono::milliseconds &Timeout,
+               const std::function<int()> &getActiveFD,
+               const std::optional<int> &CancelFD = std::nullopt) {
++#ifdef __wasi__
++  return std::make_error_code(std::errc::operation_canceled);
++#else
+   struct pollfd FD[2];
+   FD[0].events = POLLIN;
+ #ifdef _WIN32
+@@ -266,10 +285,16 @@ manageTimeout(const std::chrono::milliseconds &Timeout,
+   if (FD[0].revents & POLLNVAL)
+     return std::make_error_code(std::errc::bad_file_descriptor);
+   return std::error_code();
++#endif
+ }
+ 
+ Expected<std::unique_ptr<raw_socket_stream>>
+ ListeningSocket::accept(const std::chrono::milliseconds &Timeout) {
++#ifdef __wasi__
++  return llvm::make_error<StringError>(getLastSocketErrorCode(),
++                                       "Socket accept failed");
++#else
++
+   auto getActiveFD = [this]() -> int { return FD; };
+   std::error_code TimeoutErr = manageTimeout(Timeout, getActiveFD, PipeFD[0]);
+   if (TimeoutErr)
+@@ -287,6 +312,7 @@ ListeningSocket::accept(const std::chrono::milliseconds &Timeout) {
+     return llvm::make_error<StringError>(getLastSocketErrorCode(),
+                                          "Socket accept failed");
+   return std::make_unique<raw_socket_stream>(AcceptFD);
++#endif
+ }
+ 
+ void ListeningSocket::shutdown() {
+diff --git a/llvm/tools/CMakeLists.txt b/llvm/tools/CMakeLists.txt
+index 729797aa43f0b2f2c3a10bdf8d7aa0d2cae6e0fa..3b7a4b80683dbb83805c8eb4f5a3d8c65ddd8eba 100644
+--- a/llvm/tools/CMakeLists.txt
++++ b/llvm/tools/CMakeLists.txt
+@@ -32,6 +32,7 @@ endif()
+ # Add LTO, llvm-ar, llvm-config, and llvm-profdata before clang, ExternalProject
+ # requires targets specified in DEPENDS to exist before the call to
+ # ExternalProject_Add.
++if (NOT WASI)
+ add_llvm_tool_subdirectory(lto)
+ add_llvm_tool_subdirectory(gold)
+ add_llvm_tool_subdirectory(llvm-ar)
+@@ -39,6 +40,7 @@ add_llvm_tool_subdirectory(llvm-config)
+ add_llvm_tool_subdirectory(llvm-ctxprof-util)
+ add_llvm_tool_subdirectory(llvm-lto)
+ add_llvm_tool_subdirectory(llvm-profdata)
++endif ()
+ 
+ # Projects supported via LLVM_EXTERNAL_*_SOURCE_DIR need to be explicitly
+ # specified.
+@@ -48,6 +50,7 @@ add_llvm_external_project(mlir)
+ # accordingly so place them afterwards
+ add_llvm_external_project(clang)
+ add_llvm_external_project(flang)
++if (NOT WASI)
+ add_llvm_external_project(lldb)
+ add_llvm_external_project(bolt)
+ 
+@@ -59,6 +62,7 @@ add_llvm_external_project(polly)
+ 
+ # libclc depends on clang
+ add_llvm_external_project(libclc)
++endif ()
+ 
+ # Add subprojects specified using LLVM_EXTERNAL_PROJECTS
+ foreach(p ${LLVM_EXTERNAL_PROJECTS})

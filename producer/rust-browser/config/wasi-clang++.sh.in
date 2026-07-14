@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+clang_cxx="@BUILD_ROOT@/llvm-host-build/bin/clang++"
+sysroot="@BUILD_ROOT@/sysroot"
+args=()
+
+for arg in "$@"; do
+  if [[ "$arg" == "--target=wasm32-wasi" ]]; then
+    args+=("--target=wasm32-wasip1-threads")
+  else
+    args+=("$arg")
+  fi
+done
+
+exec "$clang_cxx" \
+  -stdlib=libstdc++ \
+  "--sysroot=$sysroot" \
+  "-I$sysroot/include/c++/15.0.0/wasm32-wasip1" \
+  "-I$sysroot/include/c++/15.0.0" \
+  -matomics -mbulk-memory -mmutable-globals \
+  "${args[@]}"

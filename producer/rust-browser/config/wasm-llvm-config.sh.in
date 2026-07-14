@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+native_llvm_config="@BUILD_ROOT@/llvm-host-build/bin/llvm-config"
+cross_llvm_build="@BUILD_ROOT@/llvm-build"
+native_prefix="$($native_llvm_config --prefix)"
+
+if [[ "$*" == *"--bindir"* ]]; then
+  exec "$native_llvm_config" --bindir
+fi
+
+if [[ "$*" == *"--system-libs"* ]]; then
+  printf '\n'
+  exit 0
+fi
+
+if [[ "$*" == *"--components"* ]]; then
+  read -r -a components <<< "$($native_llvm_config --components)"
+  filtered=()
+  for component in "${components[@]}"; do
+    if [[ "$component" != "x86" ]]; then
+      filtered+=("$component")
+    fi
+  done
+  printf '%s\n' "${filtered[*]}"
+  exit 0
+fi
+
+output="$($native_llvm_config "$@")"
+printf '%s\n' "${output//$native_prefix/$cross_llvm_build}"

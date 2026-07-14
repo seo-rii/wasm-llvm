@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "producerId": "@seo-rii/wasm-llvm/rust-browser",
+  "sourceDateEpoch": 1783912447,
+  "environment": {
+    "platform": "linux/amd64",
+    "baseImage": "debian:bookworm-slim@sha256:1def178129dfb5f24db43afbf2fcac04530012e3264ba4ff81c71184e17a9ee4",
+    "debianSnapshot": "20260623T000000Z",
+    "cmake": {
+      "version": "4.0.3",
+      "sha256": "585ae9e013107bc8e7c7c9ce872cbdcbdff569e675b07ef57aacfb88c886faac"
+    },
+    "node": {
+      "version": "24.1.0",
+      "sha256": "76b77c43f97a7c4cf60917e24c5e212faaf8ca664e433759ef98d12f268b6b49"
+    }
+  },
+  "upstreamPatchOrigin": {
+    "repository": "https://github.com/olimpiadi-informatica/wasm-compilers.git",
+    "commit": "8a37216d7529e8e7cb5aeac1610f0e654af86850",
+    "license": "Apache-2.0",
+    "note": "The base Rust and LLVM browser-host patches were ported to the pinned 2026 Rust and matching rust-lang/llvm-project revisions."
+  },
+  "sources": {
+    "rust": {
+      "repository": "https://github.com/rust-lang/rust.git",
+      "commit": "48c2cee70232ecc3a6a8e285b2e15620b39f82a7",
+      "tree": "719276ca1fd84c6493b80aeb9de8dc8be7b369c6",
+      "patchedTree": "e3f2e1b2a38e4a34c2296c6d4c1f90575b6c5625",
+      "version": "1.99.0",
+      "patch": "patches/rust.patch",
+      "patchSha256": "6d42704d70505fcf806fcbfc163d313b24851f1b094c5728cd4bc24470542937",
+      "requiredNewFiles": [
+        "compiler/rustc_llvm/llvm-wrapper/LLD.cpp",
+        "libloading_shim/Cargo.toml",
+        "libloading_shim/src/lib.rs",
+        "libloading_shim/src/real/changelog.rs",
+        "libloading_shim/src/real/error.rs",
+        "libloading_shim/src/real/mod.rs",
+        "libloading_shim/src/real/os/mod.rs",
+        "libloading_shim/src/real/os/unix/consts.rs",
+        "libloading_shim/src/real/os/unix/mod.rs",
+        "libloading_shim/src/real/os/windows/mod.rs",
+        "libloading_shim/src/real/safe.rs",
+        "libloading_shim/src/real/test_helpers.rs",
+        "libloading_shim/src/real/util.rs",
+        "libloading_wasi_0_9/Cargo.toml",
+        "libloading_wasi_0_9/src/lib.rs"
+      ],
+      "submodules": [
+        {
+          "path": "library/backtrace",
+          "repository": "https://github.com/rust-lang/backtrace-rs.git",
+          "commit": "d902726a1dcdc1e1c66f73d1162181b5423c645b",
+          "tree": "7f55c64f163ee354275bc92f21496620737401eb"
+        }
+      ]
+    },
+    "llvm": {
+      "repository": "https://github.com/rust-lang/llvm-project.git",
+      "commit": "52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
+      "tree": "65bd4bfb3d72ef2b38735fb667fabe129aa1a422",
+      "patchedTree": "1e6e38a99d610309b558f2498f017b135b97f0f9",
+      "version": "22.1.8",
+      "patch": "patches/llvm.patch",
+      "patchSha256": "29f9a340415928eab8dd6647eb518f86fdf7706fdd3184ceef4d92d802b98ce8"
+    },
+    "gcc": {
+      "repository": "https://github.com/gcc-mirror/gcc.git",
+      "commit": "ae91b5dd14920ff9671db8ff80c0d763d25f977f",
+      "tree": "f5687c013f8dd061ea3de9c71537578ba4fdf727",
+      "patchedTree": "7399d99d53c2bacf61ac77a1d68938d4fecfc1eb",
+      "libstdcxxVersion": "15.0.0",
+      "patch": "patches/gcc.patch",
+      "patchSha256": "aabd4a44cbfc0b5bcf907be0112aa3211315611116c48ca201cb706206f6862e"
+    },
+    "wasiLibc": {
+      "repository": "https://github.com/WebAssembly/wasi-libc.git",
+      "commit": "08799da37ae52955427ebec1336b49d6a8eb5051",
+      "tree": "4cebd20feab168e1e5a3b88060e8825fbdf921cf",
+      "patchedTree": "bcd12db43aaaed7e71f71bda01da78c71444b420",
+      "patch": "patches/wasi-libc.patch",
+      "patchSha256": "ca188f20d2224f13bc6f9c6dd0fe9e566969cdfba5a84d96eff75da08eabcd3f"
+    }
+  },
+  "downloads": {
+    "bootstrapBuiltins": {
+      "url": "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-25/libclang_rt.builtins-wasm32-wasi-25.0.tar.gz",
+      "sha256": "13aca55665321200b9659b292615adf5110ace9e891ab94511badd970553ca18",
+      "size": 128688,
+      "archiveEntry": "libclang_rt.builtins-wasm32-wasi-25.0/libclang_rt.builtins-wasm32.a",
+      "entrySha256": "e58ec303724c3d9a5b1ef101ed1d5ea7c3879c45e6218e68d4239237c23620c6",
+      "entrySize": 442508
+    },
+    "stage0Cargo": {
+      "url": "https://static.rust-lang.org/dist/2026-05-31/cargo-beta-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "53a486f2e75ac6a05497181ef7a2c2c58ace6e5be401f1be0c1e8c9d3c9d306a",
+      "size": 11147312,
+      "archiveOnly": true
+    },
+    "stage0RustStd": {
+      "url": "https://static.rust-lang.org/dist/2026-05-31/rust-std-beta-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "ebe326c6bcdd77399cc451dcb999dc61c0175ede55ec1153c9693bdbdabfb7db",
+      "size": 30114636,
+      "archiveOnly": true
+    },
+    "stage0Rustc": {
+      "url": "https://static.rust-lang.org/dist/2026-05-31/rustc-beta-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "660b1974618b830ea396379b8adc3ce77fc8632510bbd60caddffb0b0173d130",
+      "size": 80740620,
+      "archiveOnly": true
+    },
+    "stage0RustfmtRustc": {
+      "url": "https://static.rust-lang.org/dist/2026-05-31/rustc-nightly-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "9e6ac5e346606f4245930ff868e187d339a1ad5c2e60557bfacdd25a51689bf4",
+      "size": 81021664,
+      "archiveOnly": true
+    },
+    "stage0Rustfmt": {
+      "url": "https://static.rust-lang.org/dist/2026-05-31/rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "adf8b6f2dd54c37fa8567b2e51aaac4a2b05d0f707f6a49166326478a4fd3cc2",
+      "size": 2159472,
+      "archiveOnly": true
+    }
+  },
+  "configurationFiles": [
+    {
+      "path": "Containerfile",
+      "sha256": "8dd8dad8e4838ac87a175d9c2d08a123bc47900f0a5842d7361933cdc71bb8dc"
+    },
+    {
+      "path": "config/rust-config.toml.in",
+      "sha256": "1e45bbcc14c2152d43867a15c74c7797651ee5f23e42b3a7eb9cb154763650fb"
+    },
+    {
+      "path": "config/toolchain.cmake",
+      "sha256": "97c49e3ce50466cb64622c8a2e1138cba479df9d1730edf458f9e91fc27aa5eb"
+    },
+    {
+      "path": "config/wasi-clang++.sh.in",
+      "sha256": "c762bd63b0ee09648fa783ccf14510e3a8ea6e93284bd6ba54d7ce92b71ef62f"
+    },
+    {
+      "path": "config/wasi-ld.sh.in",
+      "sha256": "140354081740bcfdc8238276fed0a2c9b7684ddd1fb6d8bdc7cfd14018f357ae"
+    },
+    {
+      "path": "config/wasm-llvm-config.sh.in",
+      "sha256": "2f50717a11dc00e63e594143bac4b38a878d7ba9546fb8f6de01518e7ae8fcac"
+    },
+    {
+      "path": "scripts/build.sh",
+      "sha256": "90fdccbb8c32539dc93162cf93f27cb945a4070910fafaeffcf91d3846aaba6b"
+    },
+    {
+      "path": "scripts/container-rebuild.sh",
+      "sha256": "4a0e04cac936b787ae8a04da41afe3c3d5d7e47bf71d2b83c09489a4ac7ec4a8"
+    },
+    {
+      "path": "scripts/producer.mjs",
+      "sha256": "771dc14e1a7620a80cb979538bd25300a3173905cf45e41b3fee65b8dd6ed83d"
+    },
+    {
+      "path": "scripts/rebuild.sh",
+      "sha256": "4399df86bf788ac2d6108f723452745262d1bbca479b3e9208e0f637f6f7fdc1"
+    }
+  ],
+  "hostTools": [
+    {
+      "command": "cmake",
+      "args": ["--version"],
+      "firstLine": "cmake version 4.0.3"
+    },
+    { "command": "ninja", "args": ["--version"], "firstLine": "1.11.1" },
+    { "command": "make", "args": ["--version"], "firstLine": "GNU Make 4.3" },
+    {
+      "command": "cc",
+      "args": ["--version"],
+      "firstLine": "cc (Debian 12.2.0-14+deb12u1) 12.2.0"
+    },
+    {
+      "command": "c++",
+      "args": ["--version"],
+      "firstLine": "c++ (Debian 12.2.0-14+deb12u1) 12.2.0"
+    },
+    {
+      "command": "python3",
+      "args": ["--version"],
+      "firstLine": "Python 3.11.2"
+    },
+    { "command": "node", "args": ["--version"], "firstLine": "v24.1.0" },
+    {
+      "command": "git",
+      "args": ["--version"],
+      "firstLine": "git version 2.39.5"
+    },
+    {
+      "command": "tar",
+      "args": ["--version"],
+      "firstLine": "tar (GNU tar) 1.34"
+    }
+  ],
+  "build": {
+    "buildTriple": "x86_64-unknown-linux-gnu",
+    "compilerHost": "wasm32-wasip1-threads",
+    "targets": ["wasm32-wasip1", "wasm32-wasip2", "wasm32-wasip3"],
+    "hostLlvmTargets": ["WebAssembly", "X86"],
+    "compilerLlvmTargets": ["WebAssembly"],
+    "initialMemory": 419430400,
+    "maximumMemory": 4294967296,
+    "stackSize": 33554432
+  },
+  "outputs": [
+    "rust/bin/rustc.wasm",
+    "rust/lib/rustlib/wasm32-wasip1/lib",
+    "rust/lib/rustlib/wasm32-wasip2/lib",
+    "rust/lib/rustlib/wasm32-wasip3/lib",
+    "producer-receipt.json"
+  ]
+}

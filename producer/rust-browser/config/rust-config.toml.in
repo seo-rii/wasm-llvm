@@ -1,0 +1,49 @@
+profile = "compiler"
+change-id = "ignore"
+
+[build]
+build = "x86_64-unknown-linux-gnu"
+build-dir = "@BUILD_ROOT@/rust-build"
+submodules = false
+host = ["x86_64-unknown-linux-gnu", "wasm32-wasip1-threads"]
+target = [
+  "x86_64-unknown-linux-gnu",
+  "wasm32-wasip1-threads",
+  "wasm32-wasip1",
+  "wasm32-wasip2",
+  "wasm32-wasip3",
+]
+
+[llvm]
+download-ci-llvm = false
+
+[rust]
+optimize = "z"
+debuginfo-level = 0
+backtrace = false
+strip = true
+llvm-tools = false
+
+[target.x86_64-unknown-linux-gnu]
+llvm-config = "@BUILD_ROOT@/llvm-host-build/bin/llvm-config"
+
+[target.wasm32-wasip1-threads]
+llvm-config = "@BUILD_ROOT@/wrappers/wasm-llvm-config.sh"
+ar = "@BUILD_ROOT@/llvm-host-build/bin/llvm-ar"
+ranlib = "@BUILD_ROOT@/llvm-host-build/bin/llvm-ranlib"
+linker = "@BUILD_ROOT@/wrappers/wasi-ld.sh"
+cc = "@BUILD_ROOT@/llvm-host-build/bin/clang"
+cxx = "@BUILD_ROOT@/wrappers/wasi-clang++.sh"
+wasi-root = "@BUILD_ROOT@/sysroot"
+
+[target.wasm32-wasip1]
+wasi-root = "@BUILD_ROOT@/sysroot"
+linker = "@BUILD_ROOT@/wrappers/wasi-ld.sh"
+
+[target.wasm32-wasip2]
+wasi-root = "@BUILD_ROOT@/sysroot"
+linker = "@BUILD_ROOT@/wrappers/wasi-ld.sh"
+
+[target.wasm32-wasip3]
+wasi-root = "@BUILD_ROOT@/sysroot"
+linker = "@BUILD_ROOT@/wrappers/wasi-ld.sh"

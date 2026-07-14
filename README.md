@@ -18,6 +18,8 @@ package and keeps only its UI, worker messaging, static asset synchronization, a
 - `runtime/nim/`: versioned contract for Nim's browser Clang/LLD bundle
 - `runtime/objective-c/`: libobjc2/GNUstep/libffi build profile and worker runtime
 - `runtime/rust/`: Rust LLVM 18.1.3 compiler and browser LLVM 16.0.4 cross-version contract
+- `producer/rust-browser/`: pinned source, patches, build, packaging, and receipts for the full
+  Rust 1.99.0 browser compiler with matching LLVM 22 and in-process LLD
 - `runtime/swift/`: full Swift browser compiler source build, packaging, and verification pipeline
 - `runtime/tinygo/`: checksum-pinned TinyGo 0.40.1 emception LLVM 16.0.0 download and patching
 
@@ -73,6 +75,10 @@ import { syncEmceptionRuntime } from '@seo-rii/wasm-llvm/runtime/tinygo';
 
 These are independent, versioned profiles. Clang WASI, Emscripten LLD, Rust's LLVM worker, Swift's
 pinned LLVM checkout, and emception are not assumed to be binary-compatible.
+
+The new Rust producer replaces that historical split-backend contract for future Rust assets. See
+[`producer/rust-browser/README.md`](producer/rust-browser/README.md) for clean source build and
+attestation commands.
 
 For package-manager installs that enforce package exports, asset files are available under:
 

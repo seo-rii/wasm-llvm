@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+wasm_ld="@BUILD_ROOT@/llvm-host-build/bin/wasm-ld"
+sysroot="@BUILD_ROOT@/sysroot"
+args=()
+skip_next=0
+
+for arg in "$@"; do
+  if [[ "$skip_next" == 1 ]]; then
+    skip_next=0
+    continue
+  fi
+  if [[ "$arg" == "-flavor" ]]; then
+    skip_next=1
+  else
+    args+=("$arg")
+  fi
+done
+
+exec "$wasm_ld" \
+  "-L$sysroot/lib/wasm32-wasip1-threads" \
+  "-L$sysroot/lib" \
+  "${args[@]}"
