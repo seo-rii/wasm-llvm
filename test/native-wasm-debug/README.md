@@ -152,19 +152,17 @@ values, printed `rust-total=15`, and exited with status zero.
 
 LLVM 22.1.8 reports that it has no Rust language plugin, so richer Rust type
 inspection and expression evaluation remain unsupported. Generic DWARF
-line/stack/basic-local handling works, but the recursive parent-frame defect
-below affects Rust as well. At the first line 11 stop, frame 0 correctly
-reported `n=2`, while its recursive parent should have reported `n=3` but the
-backtrace rendered `n=2`.
+line/stack/basic-local handling works. The original LLVM 22.1.8 baseline also
+exhibited the recursive parent-frame defect below for Rust: at the first line
+11 stop, frame 0 correctly reported `n=2`, while its recursive parent should
+have reported `n=3` but the backtrace rendered `n=2`.
 
-## Known baseline defect
+## Recursive parent-frame fix
 
 Selecting a non-top recursive frame does not fetch that frame's values with
-LLVM 22.1.8. Packet logging shows only `qWasmLocal:0;...`; LLDB consequently
-displays the top frame's argument and locals in parent frames. Stack PCs and
-source lines are otherwise distinct. Parent-frame locals must therefore be an
-explicit acceptance test for the browser runtime and cannot yet be advertised
-as working based on this baseline.
+unpatched LLVM 22.1.8. Packet logging shows only `qWasmLocal:0;...`; LLDB
+consequently displays the top frame's argument and locals in parent frames.
+Stack PCs and source lines are otherwise distinct.
 
 Reproduce it with
 `lldb -b -s lldb-parent-frame-bug.commands /path/to/program.wasm`, which sets
@@ -214,14 +212,18 @@ At the pinned upstream revision:
   `ProcessWasm.cpp:136-153`. Explicit packets prove that `ProcessWasm` and WAMR
   accept non-zero frame indices.
 
-The smallest candidate correction is therefore the one-line change
+The producer now carries the smallest correction as
+`producer/lldb-browser/patches/0007-wasm-recursive-frame-cfa.patch`: the
+one-line change
 `cfa = frame_idx` in `UnwindWasm::DoGetFrameInfoAtIndex`. LLDB's
 `HistoryUnwind::DoGetFrameInfoAtIndex` already uses the same synthetic-CFA
-scheme at `lldb/source/Plugins/Process/Utility/HistoryUnwind.cpp:66-78`. This
-candidate has not yet been applied or rebuilt.
+scheme at `lldb/source/Plugins/Process/Utility/HistoryUnwind.cpp:66-78`.
 
-A regression test must stop in three recursive invocations of the same
-function, inspect each frame through the normal variable API, assert values
-`1`, `2`, and `3`, and assert that the packet transcript contains
-`qWasmLocal:0`, `qWasmLocal:1`, and `qWasmLocal:2`. It should also step and
-resume once to catch stale frame-identity caching.
+The checked-in patch includes an upstream-style `TestWasm.py` regression that
+creates two recursive `add` frames, inspects each through LLDB's normal
+variable API, asserts different local values, and checks for both
+`qWasmLocal:0;2` and `qWasmLocal:1;2`. The patch was verified against a clean
+checkout of the pinned LLVM commit, and the browser `lldb-web-dap` target was
+rebuilt and packaged successfully. A live WAMR/browser session must still
+re-run this fixture before parent-frame locals are advertised as a released
+runtime capability.

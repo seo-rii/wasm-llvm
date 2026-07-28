@@ -1,0 +1,120 @@
+diff --git a/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp b/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp
+index 319c5e262..2e97a04cb 100644
+--- a/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp
++++ b/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp
+@@ -65,7 +65,9 @@ bool UnwindWasm::DoGetFrameInfoAtIndex(uint32_t frame_idx, lldb::addr_t &cfa,
+     return false;
+ 
+   behaves_like_zeroth_frame = (frame_idx == 0);
+-  cfa = 0;
++  // Recursive Wasm frames need distinct StackIDs even when their symbol
++  // scopes are identical.
++  cfa = frame_idx;
+   pc = m_frames[frame_idx];
+   return true;
+ }
+diff --git a/lldb/test/API/functionalities/gdb_remote_client/TestWasm.py b/lldb/test/API/functionalities/gdb_remote_client/TestWasm.py
+index 73c81efb7..26304998e 100644
+--- a/lldb/test/API/functionalities/gdb_remote_client/TestWasm.py
++++ b/lldb/test/API/functionalities/gdb_remote_client/TestWasm.py
+@@ -9,6 +9,7 @@ from lldbsuite.test.lldbgdbclient import GDBRemoteTestBase
+ MODULE_ID = 4
+ LOAD_ADDRESS = MODULE_ID << 32
+ WASM_LOCAL_ADDR = 0x103E0
++WASM_PARENT_LOCAL_ADDR = WASM_LOCAL_ADDR + 0x40
+ 
+ 
+ def format_register_value(val):
+@@ -73,12 +74,23 @@ class FakeMemory:
+ class MyResponder(MockGDBServerResponder):
+     current_pc = LOAD_ADDRESS | 0x01AD
+ 
+-    def __init__(self, obj_path, module_name="", wasm_call_stacks=[], memory=None):
++    def __init__(
++        self,
++        obj_path,
++        module_name="",
++        wasm_call_stacks=[],
++        memory=None,
++        wasm_local_addresses=None,
++    ):
+         self._obj_path = obj_path
+         self._module_name = module_name or obj_path
+         self._wasm_call_stacks = wasm_call_stacks
+         self._call_stack_request_count = 0
+         self._memory = memory
++        self._wasm_local_addresses = wasm_local_addresses or {
++            ("0", "2"): WASM_LOCAL_ADDR
++        }
++        self.wasm_local_requests = []
+         MockGDBServerResponder.__init__(self)
+ 
+     def respond(self, packet):
+@@ -175,8 +187,10 @@ class MyResponder(MockGDBServerResponder):
+         data = packet.split(":")
+         data = data[1].split(";")
+         frame_index, local_index = data
+-        if frame_index == "0" and local_index == "2":
+-            return format_register_value(WASM_LOCAL_ADDR)
++        self.wasm_local_requests.append(packet)
++        address = self._wasm_local_addresses.get((frame_index, local_index))
++        if address is not None:
++            return format_register_value(address)
+         return "E03"
+ 
+ 
+@@ -379,3 +393,54 @@ class TestWasm(GDBRemoteTestBase):
+         b = frame0.FindVariable("b")
+         self.assertTrue(b.IsValid())
+         self.assertEqual(b.GetValueAsUnsigned(), 2)
++
++    @skipIfAsan
++    @skipIfXmlSupportMissing
++    def test_recursive_wasm_frames_use_distinct_cfas(self):
++        yaml_path = "simple.yaml"
++        yaml_base, _ = os.path.splitext(yaml_path)
++        obj_path = self.getBuildArtifact(yaml_base)
++        self.yaml2obj(yaml_path, obj_path)
++
++        call_stacks = [
++            WasmCallStack([WasmStackFrame(0x019C), WasmStackFrame(0x01AD)]),
++        ]
++        memory = FakeMemory(0x10000, 0x20000)
++        memory.store_bytes(
++            WASM_LOCAL_ADDR,
++            bytes.fromhex(
++                "0000000000000000020000000100000000000000020000000100000000000000"
++            ),
++        )
++        memory.store_bytes(
++            WASM_PARENT_LOCAL_ADDR,
++            bytes.fromhex(
++                "0000000000000000040000000300000000000000040000000300000000000000"
++            ),
++        )
++        self.server.responder = MyResponder(
++            obj_path,
++            "test_wasm",
++            call_stacks,
++            memory,
++            {
++                ("0", "2"): WASM_LOCAL_ADDR,
++                ("1", "2"): WASM_PARENT_LOCAL_ADDR,
++            },
++        )
++
++        target = self.dbg.CreateTarget("")
++        process = self.connect(target, "wasm")
++        lldbutil.expect_state_changes(
++            self, self.dbg.GetListener(), process, [lldb.eStateStopped]
++        )
++
++        thread = process.GetThreadAtIndex(0)
++        frame0 = thread.GetFrameAtIndex(0)
++        frame1 = thread.GetFrameAtIndex(1)
++        self.assertIn("add", frame0.GetFunctionName())
++        self.assertIn("add", frame1.GetFunctionName())
++        self.assertEqual(frame0.FindVariable("a").GetValueAsUnsigned(), 1)
++        self.assertEqual(frame1.FindVariable("a").GetValueAsUnsigned(), 3)
++        self.assertIn("qWasmLocal:0;2", self.server.responder.wasm_local_requests)
++        self.assertIn("qWasmLocal:1;2", self.server.responder.wasm_local_requests)

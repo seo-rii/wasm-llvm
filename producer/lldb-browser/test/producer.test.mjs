@@ -204,6 +204,28 @@ test("ProcessWasm reads its single-module library list without libxml2", async (
   assert.doesNotMatch(patch, /XMLDocument/);
 });
 
+test("Wasm unwind patch gives recursive frames distinct synthetic CFAs", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const patchPath = "patches/0007-wasm-recursive-frame-cfa.patch";
+  assert.ok(
+    sourcesLock.patches.some((entry) => entry.path === patchPath),
+    `${patchPath} must be pinned by sources.lock.json`,
+  );
+
+  const patch = await fs.readFile(path.join(PRODUCER_ROOT, patchPath), "utf8");
+  assert.match(
+    patch,
+    /UnwindWasm::DoGetFrameInfoAtIndex[\s\S]*-\s+cfa = 0;[\s\S]*\+\s+cfa = frame_idx;/,
+  );
+  assert.match(patch, /recursive Wasm frames need distinct StackIDs/i);
+  assert.match(
+    patch,
+    /diff --git a\/lldb\/test\/API\/functionalities\/gdb_remote_client\/TestWasm\.py/,
+  );
+  assert.match(patch, /test_recursive_wasm_frames_use_distinct_cfas/);
+  assert.match(patch, /qWasmLocal:1;2/);
+});
+
 test("browser DAP entry point selects the DAP logger unambiguously", async () => {
   const source = await fs.readFile(
     path.join(

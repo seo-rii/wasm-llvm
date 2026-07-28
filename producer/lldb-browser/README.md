@@ -83,6 +83,15 @@ implemented by Wasm debug stubs. The parser extracts only the module path and
 absolute section base needed by `DynamicLoaderWasmDYLD`; the generic GDB remote
 implementation and non-Wasm targets are unchanged.
 
+LLVM 22.1.8 also assigns every synthetic Wasm unwind frame a CFA of zero.
+Recursive calls share the same symbol scope, so LLDB can otherwise collapse
+their `StackID`s and evaluate a selected parent frame through frame zero.
+`0007-wasm-recursive-frame-cfa.patch` uses the concrete Wasm frame index as
+the synthetic CFA. Its upstream-style GDB remote regression selects two
+recursive frames through the normal variable API, verifies distinct values,
+and requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The
+producer contract test additionally pins the patch content and hash.
+
 The Emscripten build uses pthreads and enables `PROXY_TO_PTHREAD`. LLDB's
 blocking native `main` therefore runs on a pool worker while the LLDB module
 worker remains available for Emscripten's proxied filesystem and runtime
