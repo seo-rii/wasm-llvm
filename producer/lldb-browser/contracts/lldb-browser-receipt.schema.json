@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasm-llvm.invalid/contracts/lldb-browser/lldb-browser-receipt.schema.json",
+  "title": "wasm-llvm LLDB browser build receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "producer",
+    "source",
+    "toolchain",
+    "build",
+    "assets"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "producer": {
+      "type": "object",
+      "required": ["id", "manifestSha256", "sourcesLockSha256"]
+    },
+    "source": {
+      "type": "object",
+      "required": ["llvmVersion", "llvmTag", "llvmRevision", "patchesSha256"]
+    },
+    "toolchain": {
+      "type": "object",
+      "required": ["emscriptenVersion", "emscriptenRevision"]
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "target",
+        "pthreads",
+        "proxyToPthread",
+        "pthreadWorker",
+        "registeredPlugins",
+        "excludedFeatures"
+      ],
+      "properties": {
+        "pthreads": { "const": true },
+        "proxyToPthread": { "const": true },
+        "pthreadWorker": { "const": "lldb-web-dap.pthread.mjs" }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "required": [
+        "lldb-web-dap.js",
+        "lldb-web-dap.wasm",
+        "lldb-web-dap.pthread.mjs"
+      ]
+    }
+  }
+}

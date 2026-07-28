@@ -1,0 +1,96 @@
+diff --git a/lldb/source/Plugins/Process/wasm/ProcessWasm.cpp b/lldb/source/Plugins/Process/wasm/ProcessWasm.cpp
+index 62bcf442d..167791539 100644
+--- a/lldb/source/Plugins/Process/wasm/ProcessWasm.cpp
++++ b/lldb/source/Plugins/Process/wasm/ProcessWasm.cpp
+@@ -8,10 +8,12 @@
+ 
+ #include "ProcessWasm.h"
+ #include "ThreadWasm.h"
++#include "lldb/Core/LoadedModuleInfoList.h"
+ #include "lldb/Core/Module.h"
+ #include "lldb/Core/PluginManager.h"
+ #include "lldb/Core/Value.h"
+ #include "lldb/Utility/DataBufferHeap.h"
++#include "llvm/ADT/StringExtras.h"
+ 
+ #include "lldb/Target/UnixSignals.h"
+ 
+@@ -101,6 +103,65 @@ size_t ProcessWasm::ReadMemory(lldb::addr_t vm_addr, void *buf, size_t size,
+   llvm_unreachable("Fully covered switch above");
+ }
+ 
++llvm::Expected<LoadedModuleInfoList> ProcessWasm::GetLoadedModuleList() {
++  if (!GetGDBRemote().GetQXferLibrariesReadSupported())
++    return llvm::createStringError("remote Wasm libraries are not supported");
++
++  llvm::Expected<std::string> response =
++      GetGDBRemote().ReadExtFeature("libraries", "");
++  if (!response)
++    return response.takeError();
++
++  llvm::StringRef xml = *response;
++  const size_t library_begin = xml.find("<library ");
++  const size_t library_end =
++      library_begin == llvm::StringRef::npos ? llvm::StringRef::npos
++                                             : xml.find('>', library_begin);
++  const size_t section_begin = xml.find("<section ", library_end);
++  const size_t section_end =
++      section_begin == llvm::StringRef::npos ? llvm::StringRef::npos
++                                             : xml.find('>', section_begin);
++  if (library_end == llvm::StringRef::npos ||
++      section_end == llvm::StringRef::npos)
++    return llvm::createStringError("invalid Wasm library-list response");
++
++  auto get_attribute = [](llvm::StringRef element, llvm::StringRef name)
++      -> llvm::Expected<llvm::StringRef> {
++    std::string marker = (name + "=\"").str();
++    const size_t value_begin = element.find(marker);
++    if (value_begin == llvm::StringRef::npos)
++      return llvm::createStringError("missing Wasm library-list attribute");
++    const size_t content_begin = value_begin + marker.size();
++    const size_t content_end = element.find('"', content_begin);
++    if (content_end == llvm::StringRef::npos)
++      return llvm::createStringError("invalid Wasm library-list attribute");
++    return element.slice(content_begin, content_end);
++  };
++
++  llvm::Expected<llvm::StringRef> name =
++      get_attribute(xml.slice(library_begin, library_end + 1), "name");
++  if (!name)
++    return name.takeError();
++  llvm::Expected<llvm::StringRef> address =
++      get_attribute(xml.slice(section_begin, section_end + 1), "address");
++  if (!address)
++    return address.takeError();
++
++  llvm::StringRef address_value = *address;
++  address_value.consume_front("0x");
++  uint64_t base = LLDB_INVALID_ADDRESS;
++  if (address_value.empty() || !llvm::to_integer(address_value, base, 16))
++    return llvm::createStringError("invalid Wasm library load address");
++
++  LoadedModuleInfoList modules;
++  LoadedModuleInfoList::LoadedModuleInfo module;
++  module.set_name(name->str());
++  module.set_base(base);
++  module.set_base_is_offset(false);
++  modules.add(module);
++  return modules;
++}
++
+ llvm::Expected<std::vector<lldb::addr_t>>
+ ProcessWasm::GetWasmCallStack(lldb::tid_t tid) {
+   StreamString packet;
+diff --git a/lldb/source/Plugins/Process/wasm/ProcessWasm.h b/lldb/source/Plugins/Process/wasm/ProcessWasm.h
+index 22effe734..d94b76321 100644
+--- a/lldb/source/Plugins/Process/wasm/ProcessWasm.h
++++ b/lldb/source/Plugins/Process/wasm/ProcessWasm.h
+@@ -66,6 +66,8 @@ public:
+   size_t ReadMemory(lldb::addr_t vm_addr, void *buf, size_t size,
+                     Status &error) override;
+ 
++  llvm::Expected<LoadedModuleInfoList> GetLoadedModuleList() override;
++
+   bool CanDebug(lldb::TargetSP target_sp,
+                 bool plugin_specified_by_name) override;
+ 

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/lldb-browser",
+  "target": "wasm32-unknown-emscripten",
+  "sourcesLock": "sources.lock.json",
+  "protocols": {
+    "dap": 1,
+    "gdbRemote": "lldb-gdb-remote",
+    "connectionScheme": "wasm-messageport",
+    "transport": "shared-ring-v1"
+  },
+  "build": {
+    "executable": "lldb-web-dap",
+    "llvmProjects": ["clang", "lldb"],
+    "llvmTargets": ["WebAssembly"],
+    "pthreads": true,
+    "proxyToPthread": true,
+    "pthreadWorker": "lldb-web-dap.pthread.mjs",
+    "staticPlugins": true,
+    "registeredPlugins": [
+      "lldbPluginProcessWasm",
+      "lldbPluginProcessGDBRemote",
+      "lldbPluginDynamicLoaderWasmDYLD",
+      "lldbPluginObjectFileWasm",
+      "lldbPluginSymbolVendorWasm",
+      "lldbPluginSymbolFileDWARF",
+      "lldbPluginTypeSystemClang",
+      "lldbPluginCPlusPlusLanguage"
+    ],
+    "excludedFeatures": [
+      "python",
+      "lua",
+      "libedit",
+      "curses",
+      "interactive-lldb-cli",
+      "dynamic-plugin-loader",
+      "native-platform-launchers",
+      "protocol-servers",
+      "tests",
+      "examples",
+      "arbitrary-expression-evaluation"
+    ]
+  },
+  "capabilities": {
+    "breakpoints": true,
+    "stepping": true,
+    "stackTrace": true,
+    "locals": true,
+    "globals": true,
+    "readMemory": true,
+    "evaluateExpressions": false,
+    "dataBreakpoints": false,
+    "wasmThreads": false
+  },
+  "contracts": {
+    "sharedRing": "contracts/shared-ring-v1.md",
+    "artifactManifest": "contracts/debug-manifest.schema.json",
+    "receipt": "contracts/lldb-browser-receipt.schema.json"
+  },
+  "outputs": [
+    "lldb-web-dap.js",
+    "lldb-web-dap.wasm",
+    "lldb-web-dap.pthread.mjs",
+    "debug-manifest.json",
+    "lldb-browser.receipt.json"
+  ]
+}

@@ -1,0 +1,13 @@
+diff --git a/lldb/tools/CMakeLists.txt b/lldb/tools/CMakeLists.txt
+--- a/lldb/tools/CMakeLists.txt
++++ b/lldb/tools/CMakeLists.txt
+@@ -10,6 +10,9 @@ add_subdirectory(lldb-fuzzer EXCLUDE_FROM_ALL)
+ 
+ add_lldb_tool_subdirectory(lldb-instr)
+ add_lldb_tool_subdirectory(lldb-dap)
++if(EMSCRIPTEN)
++  add_lldb_tool_subdirectory(lldb-web-dap)
++endif()
+ add_lldb_tool_subdirectory(lldb-mcp)
+ if (LLDB_BUILD_LLDBRPC)
+   add_lldb_tool_subdirectory(lldb-rpc-gen)

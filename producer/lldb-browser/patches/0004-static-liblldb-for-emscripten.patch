@@ -1,0 +1,28 @@
+diff --git a/lldb/source/API/CMakeLists.txt b/lldb/source/API/CMakeLists.txt
+--- a/lldb/source/API/CMakeLists.txt
++++ b/lldb/source/API/CMakeLists.txt
+@@ -40,7 +40,13 @@ add_custom_target(lldb-sbapi-dwarf-enums
+   DEPENDS ${sb_languages_file})
+ set_target_properties(lldb-sbapi-dwarf-enums PROPERTIES FOLDER "LLDB/Tablegenning")
+ 
+-add_lldb_library(liblldb SHARED ${option_framework}
++if(EMSCRIPTEN)
++  set(LLDB_API_LIBRARY_KIND STATIC)
++else()
++  set(LLDB_API_LIBRARY_KIND SHARED)
++endif()
++
++add_lldb_library(liblldb ${LLDB_API_LIBRARY_KIND} ${option_framework}
+   SBAddress.cpp
+   SBAddressRange.cpp
+   SBAddressRangeList.cpp
+@@ -204,6 +210,8 @@ set_target_properties(liblldb
+   VERSION ${LLDB_VERSION}
+ )
+ 
+ target_compile_definitions(liblldb PRIVATE LLDB_IN_LIBLLDB)
+-if (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
++if(EMSCRIPTEN)
++  # A static archive has no exported-symbol surface.
++elseif (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
+   if (NOT LLDB_EXPORT_ALL_SYMBOLS)

@@ -1,0 +1,30 @@
+diff --git a/lldb/source/Plugins/CMakeLists.txt b/lldb/source/Plugins/CMakeLists.txt
+--- a/lldb/source/Plugins/CMakeLists.txt
++++ b/lldb/source/Plugins/CMakeLists.txt
+@@ -35,6 +35,26 @@ endif()
+ set(LLDB_STRIPPED_PLUGINS)
+ get_property(LLDB_ALL_PLUGINS GLOBAL PROPERTY LLDB_PLUGINS)
+ 
++# Browser builds cannot afford to register and retain every native LLDB
++# plugin. Keep normal builds unchanged and let the browser producer provide a
++# semicolon-separated list of exact CMake target names.
++if(EMSCRIPTEN AND LLDB_WEB_PLUGIN_ALLOWLIST)
++  set(LLDB_WEB_SELECTED_PLUGINS)
++  foreach(plugin ${LLDB_ALL_PLUGINS})
++    if(plugin IN_LIST LLDB_WEB_PLUGIN_ALLOWLIST)
++      list(APPEND LLDB_WEB_SELECTED_PLUGINS ${plugin})
++    endif()
++  endforeach()
++  foreach(required_plugin ${LLDB_WEB_PLUGIN_ALLOWLIST})
++    if(NOT required_plugin IN_LIST LLDB_WEB_SELECTED_PLUGINS)
++      message(FATAL_ERROR
++        "Unknown LLDB_WEB_PLUGIN_ALLOWLIST entry: ${required_plugin}")
++    endif()
++  endforeach()
++  set(LLDB_ALL_PLUGINS ${LLDB_WEB_SELECTED_PLUGINS})
++  set_property(GLOBAL PROPERTY LLDB_PLUGINS "${LLDB_ALL_PLUGINS}")
++endif()
++
+ set(LLDB_ENUM_PLUGINS "")
+ 
+ # FIXME: ProcessWindowsCommon needs to be initialized after all other process

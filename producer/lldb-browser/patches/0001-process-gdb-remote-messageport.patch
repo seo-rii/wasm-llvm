@@ -1,0 +1,41 @@
+diff --git a/lldb/source/Plugins/Process/gdb-remote/CMakeLists.txt b/lldb/source/Plugins/Process/gdb-remote/CMakeLists.txt
+--- a/lldb/source/Plugins/Process/gdb-remote/CMakeLists.txt
++++ b/lldb/source/Plugins/Process/gdb-remote/CMakeLists.txt
+@@ -23,6 +23,7 @@ add_lldb_library(lldbPluginProcessGDBRemote PLUGIN
+   GDBRemoteClientBase.cpp
+   GDBRemoteCommunication.cpp
+   GDBRemoteCommunicationClient.cpp
++  ConnectionMessagePort.cpp
+   GDBRemoteCommunicationHistory.cpp
+   GDBRemoteCommunicationServer.cpp
+   GDBRemoteCommunicationServerCommon.cpp
+diff --git a/lldb/source/Plugins/Process/gdb-remote/ProcessGDBRemote.cpp b/lldb/source/Plugins/Process/gdb-remote/ProcessGDBRemote.cpp
+--- a/lldb/source/Plugins/Process/gdb-remote/ProcessGDBRemote.cpp
++++ b/lldb/source/Plugins/Process/gdb-remote/ProcessGDBRemote.cpp
+@@ -81,6 +81,9 @@
+ #include "Plugins/Process/Utility/InferiorCallPOSIX.h"
+ #include "Plugins/Process/Utility/StopInfoMachException.h"
+ #include "ProcessGDBRemote.h"
++#if defined(__EMSCRIPTEN__)
++#include "ConnectionMessagePort.h"
++#endif
+ #include "ProcessGDBRemoteLog.h"
+ #include "ThreadGDBRemote.h"
+ #include "lldb/Host/Host.h"
+@@ -881,8 +884,14 @@ Status ProcessGDBRemote::ConnectToDebugserver(llvm::StringRef connect_url) {
+   if (!connect_url.empty()) {
+     LLDB_LOGF(log, "ProcessGDBRemote::%s Connecting to %s", __FUNCTION__,
+               connect_url.str().c_str());
+-    std::unique_ptr<ConnectionFileDescriptor> conn_up(
+-        new ConnectionFileDescriptor());
++    std::unique_ptr<Connection> conn_up;
++#if defined(__EMSCRIPTEN__)
++    if (ConnectionMessagePort::Supports(connect_url))
++      conn_up = std::make_unique<ConnectionMessagePort>();
++    else
++#endif
++      conn_up = std::make_unique<ConnectionFileDescriptor>();
++
+     if (conn_up) {
+       const uint32_t max_retry_count = 50;
+       uint32_t retry_count = 0;

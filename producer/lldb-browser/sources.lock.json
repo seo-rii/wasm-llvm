@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "llvm": {
+    "repository": "https://github.com/llvm/llvm-project.git",
+    "version": "22.1.8",
+    "tag": "llvmorg-22.1.8",
+    "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1"
+  },
+  "emscripten": {
+    "repository": "https://github.com/emscripten-core/emsdk.git",
+    "version": "6.0.0",
+    "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+  },
+  "patches": [
+    {
+      "path": "patches/0001-process-gdb-remote-messageport.patch",
+      "sha256": "bd90701a17bba0545ec655493b4170064614268eeda35eede28fe1c6f8c83def"
+    },
+    {
+      "path": "patches/0002-web-plugin-allowlist.patch",
+      "sha256": "8220c236d7c278c5037953d56af88d5253af291bcc18c7929a6c944640844497"
+    },
+    {
+      "path": "patches/0003-lldb-web-dap-tool.patch",
+      "sha256": "0177d00afafe2c91f36f2d0a8f64af6540952de15f97715e52f9199597f1b6e0"
+    },
+    {
+      "path": "patches/0004-static-liblldb-for-emscripten.patch",
+      "sha256": "f8b38e17a247b9a464f87e0538cf2bafc8659c77688e332227f7e3be313a9fe1"
+    },
+    {
+      "path": "patches/0005-browser-host-no-process-launch.patch",
+      "sha256": "86fd13cc56fafe1bb585ffd9f2af7fd8b55bf75378b7ee5f39f8dd6235d7e1a5"
+    },
+    {
+      "path": "patches/0006-process-wasm-library-list.patch",
+      "sha256": "89d3339a73970b8ef282e1b3c1c4ff376adcc69e2c86cc56958105116780abeb"
+    }
+  ],
+  "overlays": [
+    {
+      "source": "overlays/lldb/source/Host/emscripten/HostEmscripten.cpp",
+      "destination": "lldb/source/Host/emscripten/HostEmscripten.cpp",
+      "sha256": "ba2646b4f20dd0bc55fbda866185e72a15768e40e03aa10136b525fbe2facd8d"
+    },
+    {
+      "source": "overlays/lldb/source/Host/emscripten/HostInfoEmscripten.cpp",
+      "destination": "lldb/source/Host/emscripten/HostInfoEmscripten.cpp",
+      "sha256": "6ce972bf182ddb103cffe33aca06cbe9b21ca167d12327e21aa634db2c67c77c"
+    },
+    {
+      "source": "overlays/lldb/source/Plugins/Process/gdb-remote/ConnectionMessagePort.cpp",
+      "destination": "lldb/source/Plugins/Process/gdb-remote/ConnectionMessagePort.cpp",
+      "sha256": "a0b4637c7f37ace0d7de31f08a1acea30c024fda419596365b86ddca14cf65fc"
+    },
+    {
+      "source": "overlays/lldb/source/Plugins/Process/gdb-remote/ConnectionMessagePort.h",
+      "destination": "lldb/source/Plugins/Process/gdb-remote/ConnectionMessagePort.h",
+      "sha256": "b9efc6df7348b325deec5f040b78aff34dc1eda9698083b320ddba895931f168"
+    },
+    {
+      "source": "overlays/lldb/tools/lldb-web-dap/CMakeLists.txt",
+      "destination": "lldb/tools/lldb-web-dap/CMakeLists.txt",
+      "sha256": "bc585143852d7dd8092a3e71b157060dc80a2f6c0c4a3acb3213da6b6265ad33"
+    },
+    {
+      "source": "overlays/lldb/tools/lldb-web-dap/SharedRingIO.cpp",
+      "destination": "lldb/tools/lldb-web-dap/SharedRingIO.cpp",
+      "sha256": "2efb371fc1a40d977abc3194ab7ee565b180604d92d0f1d3db32190a3ee49177"
+    },
+    {
+      "source": "overlays/lldb/tools/lldb-web-dap/SharedRingIO.h",
+      "destination": "lldb/tools/lldb-web-dap/SharedRingIO.h",
+      "sha256": "0f420f5ba889b5e5c8adcf1205fa7386b6d374b33f280bb06f9dc20871098093"
+    },
+    {
+      "source": "overlays/lldb/tools/lldb-web-dap/library_lldb_shared_ring.js",
+      "destination": "lldb/tools/lldb-web-dap/library_lldb_shared_ring.js",
+      "sha256": "e8be7576c1d44e0083bb05193b5db476d74e03a4c37e8efa78cf9cf63831f7b1"
+    },
+    {
+      "source": "overlays/lldb/tools/lldb-web-dap/lldb-web-dap.pthread.mjs",
+      "destination": "lldb/tools/lldb-web-dap/lldb-web-dap.pthread.mjs",
+      "sha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d"
+    },
+    {
+      "source": "overlays/lldb/tools/lldb-web-dap/lldb-web-dap.cpp",
+      "destination": "lldb/tools/lldb-web-dap/lldb-web-dap.cpp",
+      "sha256": "d885832ccfb48aeb5d041c6da4f0667a7d611b78fafec880106023c52fff373e"
+    }
+  ]
+}

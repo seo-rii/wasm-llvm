@@ -1,0 +1,179 @@
+# LLDB browser producer
+
+This producer builds the browser-only LLDB debug adapter used by `wasm-llvm`.
+It does not launch a WebAssembly program itself. The resulting worker controls
+a separate interpreter/runtime GDB stub through LLDB's `ProcessWasm` plugin.
+
+The source baseline is intentionally fixed to LLVM 22.1.8:
+
+```text
+tag:    llvmorg-22.1.8
+commit: ca7933e47d3a3451d81e72ac174dcb5aa28b59d1
+```
+
+`sources.lock.json` is the machine-readable source/overlay lock. `manifest.json`
+describes the build and artifact contracts. A packaged build contains:
+
+```text
+lldb-web-dap.js
+lldb-web-dap.wasm          # uncompressed; runtime fetches these exact bytes
+lldb-web-dap.pthread.mjs   # registry bootstrap for LLDB-created pthreads
+debug-manifest.json
+lldb-browser.receipt.json
+```
+
+## Architecture
+
+The worker keeps DAP and target traffic separate:
+
+```text
+wasm-idle UI
+  ↕ DAP (shared-ring-v1 channel "dap")
+lldb-web-dap
+  ↕ GDB RSP (wasm-messageport://SESSION, shared-ring-v1 channel "rsp")
+WAMR target worker
+```
+
+`ConnectionMessagePort` implements `lldb_private::Connection`. The small
+`0001-process-gdb-remote-messageport.patch` changes only the connection factory
+inside `ProcessGDBRemote::ConnectToDebugserver()` (plus its CMake source list):
+`wasm-messageport://` selects the browser connection while every existing URL
+continues to use `ConnectionFileDescriptor`.
+
+The shared-memory wire contract is documented in
+`contracts/shared-ring-v1.md`. It is a byte stream, not a packet transport:
+RSP framing, escaping, partial reads/writes, ACK mode, and interrupt bytes stay
+inside the existing LLDB/WAMR protocol implementations. DAP uses its standard
+`Content-Length` framing over a different ring pair.
+
+## Build scope
+
+The product link is static and starts from these LLDB plugins:
+
+- `ProcessWasm`
+- `ProcessGDBRemote`
+- `DynamicLoaderWasmDYLD`
+- `ObjectFileWasm`
+- `SymbolVendorWasm`
+- `SymbolFileDWARF`
+- `TypeSystemClang`
+- C and C++ language support
+
+LLVM 22.1.8 has static-library dependencies between some of these components,
+so the linker may retain a small transitive closure. Only the roots above are
+registered as product capabilities. The producer explicitly disables Python,
+Lua, libedit, curses, protocol servers, tests, examples, native platform
+launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
+General Clang expression evaluation is not an advertised capability of this
+artifact.
+
+`DynamicLoaderWasmDYLD` is required even though the program is already mounted
+in LLDB's MEMFS before attach. Its attach hook asks the GDB remote stub for the
+loaded Wasm module and assigns the runtime module id to the object sections.
+Without those section load addresses, source breakpoints remain pending and
+stopped PCs cannot be resolved back to DWARF lines. `SymbolVendorWasm` preserves
+LLVM's Wasm symbol-loading path for modules that use external debug sections;
+embedded DWARF continues to be handled directly by `SymbolFileDWARF`.
+
+The browser build intentionally omits libxml2. Upstream
+`ProcessGDBRemote::GetLoadedModuleList()` refuses to read
+`qXfer:libraries:read` when no XML parser is linked, so the producer patches
+`ProcessWasm` to parse the constrained single-module `<library>` response
+implemented by Wasm debug stubs. The parser extracts only the module path and
+absolute section base needed by `DynamicLoaderWasmDYLD`; the generic GDB remote
+implementation and non-Wasm targets are unchanged.
+
+The Emscripten build uses pthreads and enables `PROXY_TO_PTHREAD`. LLDB's
+blocking native `main` therefore runs on a pool worker while the LLDB module
+worker remains available for Emscripten's proxied filesystem and runtime
+operations. The UI and target still run in separate workers, and LLDB's own
+C++ threads continue to use the same pool.
+
+Emscripten 6.0.0 does not propagate arbitrary modularized `Module` properties
+to those pthread realms. The producer therefore packages
+`lldb-web-dap.pthread.mjs`. The host provides its URL through the supported
+`mainScriptUrlOrBlob` module option. The shared-ring library bootstraps each
+allocated worker before Emscripten sends that worker its load message, and the
+sidecar installs the registry before importing the generated module. This
+design follows the pinned Emscripten 6.0.0 `libpthread.js`, `modularize.js`, and
+`runtime_pthread.js` startup order; changing the Emscripten revision requires
+revalidating that contract.
+
+The generated module requires `SharedArrayBuffer` and a cross-origin-isolated
+browser context. Debug assets must be lazy-loaded; they are not intended for
+the normal `WebAssembly.instantiate()` execution path.
+
+## Commands
+
+The scripts are deliberately split so source mutation, compilation, and
+packaging remain auditable:
+
+```sh
+node producer/lldb-browser/scripts/prepare.mjs
+node producer/lldb-browser/scripts/build.mjs
+node producer/lldb-browser/scripts/package.mjs \
+  --js /path/to/lldb-web-dap.js \
+  --wasm /path/to/lldb-web-dap.wasm \
+  --worker /path/to/lldb-web-dap.pthread.mjs
+node producer/lldb-browser/scripts/verify.mjs
+```
+
+Preparation checks out the exact locked revision, verifies every checked-in
+patch/overlay hash, copies the browser overlays, and applies the patches.
+Building expects the locked Emscripten SDK to be active (or `EMSDK` to point at
+it), creates native TableGen tools first, and then configures the Emscripten
+build. Packaging writes hash-addressed receipt and runtime manifest metadata.
+
+For a network- and disk-free review of the producer:
+
+```sh
+node producer/lldb-browser/scripts/prepare.mjs --plan
+node producer/lldb-browser/scripts/build.mjs --plan
+node --test producer/lldb-browser/test/producer.test.mjs
+```
+
+The plan modes never clone, patch, configure, or build LLVM.
+
+Useful overrides:
+
+- `WASM_LLVM_LLDB_WORK_DIR`: checkout/build workspace
+- `WASM_LLVM_LLDB_OUT_DIR`: packaged artifact directory
+- `LLVM_SOURCE_DIR`: already checked-out LLVM monorepo
+- `EMSDK`: locked Emscripten SDK checkout
+- `NINJA_JOBS`: build parallelism
+
+## Host startup contract
+
+Create the LLDB module with `noInitialRun: true`, install the
+`shared-ring-v1` registry and pthread sidecar URL before the factory resolves,
+mount the program and sources under `/workspace`, then pass the session id as
+the only argument:
+
+```js
+let exitCode;
+let abortReason;
+const lldb = await createLldbWebDapModule({
+  noInitialRun: true,
+  wasmLldbSharedRingV1: registry,
+  mainScriptUrlOrBlob: new URL("lldb-web-dap.pthread.mjs", import.meta.url)
+    .href,
+  onExit(code) {
+    exitCode = code;
+  },
+  onAbort(reason) {
+    abortReason = reason;
+  },
+});
+
+lldb.FS.mkdirTree("/workspace");
+lldb.FS.writeFile("/workspace/program.wasm", programBytes);
+lldb.callMain([sessionId]);
+```
+
+Invoke `callMain` only inside the dedicated LLDB Worker because DAP processing
+blocks until disconnect. Treat `onExit` and `onAbort` as the adapter lifecycle
+signals; do not treat returning from a host wrapper around `callMain` as a
+target-process exit. The registry must be present in the initial factory
+argument, not assigned afterward. The producer propagates it to all Emscripten
+pthread realms, and connection ids remain realm-independent because LLDB can
+open on one thread and read or interrupt on another.
