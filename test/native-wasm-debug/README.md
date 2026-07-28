@@ -214,16 +214,18 @@ At the pinned upstream revision:
 
 The producer now carries the smallest correction as
 `producer/lldb-browser/patches/0007-wasm-recursive-frame-cfa.patch`: the
-one-line change
-`cfa = frame_idx` in `UnwindWasm::DoGetFrameInfoAtIndex`. LLDB's
-`HistoryUnwind::DoGetFrameInfoAtIndex` already uses the same synthetic-CFA
-scheme at `lldb/source/Plugins/Process/Utility/HistoryUnwind.cpp:66-78`.
+synthetic CFA is derived from `call_stack_size - frame_idx` and placed below a
+fixed 32-bit ceiling. Frames at different depths are therefore distinct and
+ordered as a downward-growing stack. A caller also keeps the same CFA when a
+callee is pushed; using the concrete frame index instead would renumber that
+caller and make LLDB's step-over plan stop inside the callee.
 
 The checked-in patch includes an upstream-style `TestWasm.py` regression that
 creates two recursive `add` frames, inspects each through LLDB's normal
-variable API, asserts different local values, and checks for both
-`qWasmLocal:0;2` and `qWasmLocal:1;2`. The patch was verified against a clean
-checkout of the pinned LLVM commit, and the browser `lldb-web-dap` target was
-rebuilt and packaged successfully. A live WAMR/browser session must still
-re-run this fixture before parent-frame locals are advertised as a released
+variable API, asserts ordered CFAs and different local values, and checks for
+both `qWasmLocal:0;2` and `qWasmLocal:1;2`. The patch was verified against the
+pinned LLVM commit, and the packaged browser `lldb-web-dap` now passes a C++
+DAP `next` across a real function call plus C, C++, and Rust lazy-variable and
+memory checks. A live recursive WAMR/browser fixture must still verify parent
+frame locals before arbitrary-frame locals are advertised as a released
 runtime capability.
