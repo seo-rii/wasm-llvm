@@ -99,6 +99,13 @@ Emscripten ES-module pthread sidecar as `wamr-debug.worker.mjs`.
 runtime-facing uncompressed Wasm asset, its reproducible gzip copy, Wasm
 validity, and the compressed asset-size budget.
 
+Pull requests and `main` pushes run the WAMR and LLDB producer contract suites
+together in the `LLDB browser producer contracts` workflow. This lightweight
+gate validates the pinned source and patch hashes, browser transport contracts,
+pthread sidecar, and package receipt without requiring a full Emscripten
+rebuild. Product-binary Chromium acceptance remains in the consuming
+`wasm-idle` repository.
+
 The prepare step also installs a forced-include compatibility header. It keeps
 Emscripten's host-side `<wasi/api.h>` declarations from colliding with WAMR's
 guest WASI ABI declarations while preserving the preview1 errno values used by

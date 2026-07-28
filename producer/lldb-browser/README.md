@@ -142,6 +142,11 @@ node --test producer/lldb-browser/test/producer.test.mjs
 ```
 
 The plan modes never clone, patch, configure, or build LLVM.
+Pull requests and `main` pushes run this producer contract together with the
+paired WAMR producer contract in the `LLDB browser producer contracts`
+workflow. The gate verifies locked hashes, patch structure, transport
+overlays, pthread sidecars, and receipt/manifest behavior without downloading
+or rebuilding the full LLVM and WAMR binaries.
 
 Useful overrides:
 
