@@ -24,6 +24,7 @@ import {
   verifyLockedInputs,
 } from "../scripts/contracts.mjs";
 import { EMSCRIPTEN_LINK_FLAGS, createBuildPlan } from "../scripts/build.mjs";
+import { parsePackageArgs } from "../scripts/package.mjs";
 import { createPreparePlan } from "../scripts/prepare.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -224,6 +225,38 @@ test("Wasm unwind patch gives recursive frames distinct synthetic CFAs", async (
   );
   assert.match(patch, /test_recursive_wasm_frames_use_distinct_cfas/);
   assert.match(patch, /qWasmLocal:1;2/);
+});
+
+test("browser plugin lookup avoids std::function callback dispatch", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const patchPath = "patches/0008-plugin-predicate-template.patch";
+  assert.ok(
+    sourcesLock.patches.some((entry) => entry.path === patchPath),
+    `${patchPath} must be pinned by sources.lock.json`,
+  );
+
+  const patch = await fs.readFile(path.join(PRODUCER_ROOT, patchPath), "utf8");
+  assert.match(
+    patch,
+    /diff --git a\/lldb\/source\/Core\/PluginManager\.cpp b\/lldb\/source\/Core\/PluginManager\.cpp/,
+  );
+  assert.match(patch, /template <typename Predicate>/);
+  assert.match(
+    patch,
+    /FindEnabledInstance\(Predicate &&predicate\) const/,
+  );
+  assert.match(patch, /^\s+if \(predicate\(instance\)\)/m);
+  assert.match(
+    patch,
+    /^-.*FindEnabledInstance\(std::function<bool\(const Instance &\)>\s+predicate\) const/m,
+  );
+});
+
+test("patched LLDB browser artifacts use a new product version", () => {
+  assert.equal(
+    parsePackageArgs([]).version,
+    `llvmorg-${LLVM_VERSION}-lldb-web-2`,
+  );
 });
 
 test("browser DAP entry point selects the DAP logger unambiguously", async () => {

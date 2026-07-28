@@ -92,6 +92,14 @@ recursive frames through the normal variable API, verifies distinct values,
 and requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The
 producer contract test additionally pins the patch content and hash.
 
+LLVM's generic plugin lookup accepts its predicate as `std::function`.
+In the Emscripten pthread build, the first LLDB DAP `variables` request reached
+that erased callback through a null indirect-function-table entry and
+terminated the adapter before returning the `Locals` scope.
+`0008-plugin-predicate-template.patch` keeps the predicate concrete so the
+compiler emits a direct/inlined call. The change is isolated to the browser
+patch queue; native LLVM remains at the exact 22.1.8 source revision.
+
 The Emscripten build uses pthreads and enables `PROXY_TO_PTHREAD`. LLDB's
 blocking native `main` therefore runs on a pool worker while the LLDB module
 worker remains available for Emscripten's proxied filesystem and runtime

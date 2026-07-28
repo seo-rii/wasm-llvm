@@ -1,0 +1,15 @@
+diff --git a/lldb/source/Core/PluginManager.cpp b/lldb/source/Core/PluginManager.cpp
+index 4e3563cf4..74685ddf6 100644
+--- a/lldb/source/Core/PluginManager.cpp
++++ b/lldb/source/Core/PluginManager.cpp
+@@ -504,8 +504,8 @@ public:
+-  const Instance *
+-  FindEnabledInstance(std::function<bool(const Instance &)> predicate) const {
++  template <typename Predicate>
++  const Instance *FindEnabledInstance(Predicate &&predicate) const {
+     for (const auto &instance : m_instances) {
+       if (!instance.enabled)
+         continue;
+       if (predicate(instance))
+         return &instance;
+     }
