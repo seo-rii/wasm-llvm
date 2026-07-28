@@ -6,6 +6,12 @@ on:
     push:
         branches: [main]
     workflow_dispatch:
+        inputs:
+            build_product:
+                description: Build and upload the pinned LLDB browser product
+                required: true
+                type: boolean
+                default: false
 
 permissions:
     contents: read
@@ -24,3 +30,27 @@ jobs:
               with:
                   node-version: 24
             - run: node --test producer/lldb-browser/test/producer.test.mjs producer/wamr-browser/test/producer.test.mjs test/debug-runtime-source.test.mjs test/lldb-browser-ci.test.mjs
+
+    build-product:
+        if: github.event_name == 'workflow_dispatch' && inputs.build_product
+        runs-on: ubuntu-latest
+        timeout-minutes: 360
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - name: Report available disk
+              run: df -h .
+            - name: Prepare pinned LLVM and Emscripten sources
+              run: node producer/lldb-browser/scripts/prepare.mjs
+            - name: Build and package LLDB browser assets
+              env:
+                  NINJA_JOBS: 2
+              run: node producer/lldb-browser/scripts/build.mjs
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: lldb-browser-${{ github.sha }}
+                  path: artifacts/lldb-browser
+                  if-no-files-found: error
+                  retention-days: 7

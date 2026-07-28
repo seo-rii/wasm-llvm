@@ -158,6 +158,13 @@ or rebuilding the full LLVM and WAMR binaries. It also verifies the published
 product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
 
+Maintainers can request the full pinned rebuild and a seven-day downloadable
+artifact without making the ordinary contract gate expensive:
+
+```sh
+gh workflow run lldb-browser.yml -f build_product=true
+```
+
 The product bundle is generated from verified producer outputs:
 
 ```sh
