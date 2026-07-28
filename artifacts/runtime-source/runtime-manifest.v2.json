@@ -1,0 +1,77 @@
+{
+  "manifestVersion": 2,
+  "version": "llvmorg-22.1.8",
+  "defaultTarget": "wasm32-wasi",
+  "compiler": {
+    "memfs": {
+      "asset": "bin/memfs.zip",
+      "argv0": "memfs"
+    },
+    "clang": {
+      "asset": "bin/clang.zip",
+      "argv0": "clang"
+    },
+    "lld": {
+      "asset": "bin/lld.zip",
+      "argv0": "wasm-ld"
+    },
+    "sysroot": {
+      "asset": "bin/sysroot.tar.zip"
+    },
+    "provenance": {
+      "name": "clang",
+      "version": "22.1.8",
+      "revision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1"
+    },
+    "resourceDir": "/lib/clang/22",
+    "compilerRuntimeLibDir": "lib/clang/22/lib/wasi"
+  },
+  "clangd": {
+    "js": "clangd/clangd.js",
+    "wasm": "clangd/clangd.wasm.gz"
+  },
+  "targets": {
+    "wasm32-wasi": {
+      "artifactFormat": "wasi-core-wasm",
+      "execution": {
+        "kind": "wasi-preview1"
+      }
+    }
+  },
+  "debugger": {
+    "protocolVersion": 1,
+    "transport": "shared-ring-v1",
+    "lldb": {
+      "js": "debug/lldb-web-dap.js",
+      "wasm": "debug/lldb-web-dap.wasm",
+      "worker": "debug/lldb-web-dap.pthread.mjs",
+      "jsSha256": "6b0e5f45487e004d27a90fa267da5fd041ca451ff7f513048456b76888515b6c",
+      "wasmSha256": "0e34b5a62404efd5d8525faf8b4c6a3fb582b13d6e50fc0e99a21c5748437e23",
+      "workerSha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d",
+      "llvmVersion": "22.1.8",
+      "llvmRevision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+      "patchesSha256": "28db2a7db133762ce8f8d3874240ed9b778eb051ab93b82b6df1fc058149d558"
+    },
+    "targetRuntime": {
+      "name": "wamr",
+      "js": "debug/wamr-debug.js",
+      "wasm": "debug/wamr-debug.wasm",
+      "worker": "debug/wamr-debug.worker.mjs",
+      "jsSha256": "084183134678e0ebbe1852fd6481bcb78222eaf06eae6bc5996003e66b050b2a",
+      "wasmSha256": "e3c848b676cbc65b9014d19a3b36f480f7989309ce2e2385fcbeafa75240d338",
+      "workerSha256": "9d804f26275dcb13dd0427e4b2406576d950d685738f0d0e1add34394ab5622f",
+      "revision": "25bd7eb63e828e4bd242cc9b38d260b4b31c6605"
+    },
+    "capabilities": {
+      "breakpoints": true,
+      "stepping": true,
+      "stackTrace": true,
+      "locals": true,
+      "globals": true,
+      "readMemory": true,
+      "evaluateExpressions": false,
+      "dataBreakpoints": false,
+      "wasmThreads": false
+    }
+  }
+}

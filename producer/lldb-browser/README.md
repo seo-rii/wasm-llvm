@@ -146,7 +146,23 @@ Pull requests and `main` pushes run this producer contract together with the
 paired WAMR producer contract in the `LLDB browser producer contracts`
 workflow. The gate verifies locked hashes, patch structure, transport
 overlays, pthread sidecars, and receipt/manifest behavior without downloading
-or rebuilding the full LLVM and WAMR binaries.
+or rebuilding the full LLVM and WAMR binaries. It also verifies the published
+product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
+`runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
+
+The product bundle is generated from verified producer outputs:
+
+```sh
+WASM_LLVM_LLDB_ARTIFACT_DIR=/path/to/lldb/artifacts \
+WASM_LLVM_WAMR_ARTIFACT_DIR=/path/to/wamr/artifacts \
+node producer/clang-browser/scripts/prepare-release.mjs /path/to/release
+```
+
+Only the V2 manifest and its `debug/` subtree are needed by a consumer that
+already provisions the Clang assets separately. Consumers should pin a
+`wasm-llvm` commit and verify the six manifest hashes before launching either
+worker. The uncompressed Wasm files are intentional: the runtime must mount
+the exact bytes whose hashes were checked.
 
 Useful overrides:
 
