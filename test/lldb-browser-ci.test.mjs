@@ -27,3 +27,16 @@ test('manual CI can rebuild and upload the pinned LLDB browser product', async (
 	assert.match(workflow, /uses: actions\/upload-artifact@v4/);
 	assert.match(workflow, /artifacts\/lldb-browser/);
 });
+
+test('contract pushes cannot cancel an in-flight manual LLDB product build', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+
+	assert.match(
+		workflow,
+		/build-product:\s+if:.*?\s+concurrency:\s+group: lldb-browser-product-\$\{\{ github\.ref \}\}\s+cancel-in-progress: false/su
+	);
+	assert.match(
+		workflow,
+		/producer-contracts:\s+concurrency:\s+group: lldb-browser-contracts-\$\{\{ github\.ref \}\}\s+cancel-in-progress: true/su
+	);
+});

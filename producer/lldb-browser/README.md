@@ -168,6 +168,11 @@ artifact without making the ordinary contract gate expensive:
 gh workflow run lldb-browser.yml -f build_product=true
 ```
 
+Contract runs and product runs use separate concurrency groups. A later
+pull-request or `main` contract push may replace an older contract run, but it
+cannot cancel an in-flight product build; product rebuilds queue behind one
+another for the same ref.
+
 The product bundle is generated from verified producer outputs:
 
 ```sh

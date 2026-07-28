@@ -16,12 +16,11 @@ on:
 permissions:
     contents: read
 
-concurrency:
-    group: lldb-browser-producers-${{ github.ref }}
-    cancel-in-progress: true
-
 jobs:
     producer-contracts:
+        concurrency:
+            group: lldb-browser-contracts-${{ github.ref }}
+            cancel-in-progress: true
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
@@ -33,6 +32,9 @@ jobs:
 
     build-product:
         if: github.event_name == 'workflow_dispatch' && inputs.build_product
+        concurrency:
+            group: lldb-browser-product-${{ github.ref }}
+            cancel-in-progress: false
         runs-on: ubuntu-latest
         timeout-minutes: 360
         steps:
