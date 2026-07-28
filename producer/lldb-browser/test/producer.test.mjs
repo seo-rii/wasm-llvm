@@ -410,6 +410,13 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
   assert.equal(receipt.build.proxyToPthread, true);
   assert.equal(receipt.build.pthreadWorker, PTHREAD_WORKER_ASSET);
   assert.equal(artifactManifest.debugger.lldb.worker, PTHREAD_WORKER_ASSET);
+
+  const oversizedReceipt = structuredClone(receipt);
+  oversizedReceipt.assets["lldb-web-dap.wasm"].size = 48 * 1024 * 1024 + 1;
+  assert.throws(
+    () => validateBuildReceipt(oversizedReceipt),
+    /48 MiB uncompressed size budget/,
+  );
 });
 
 test("Emscripten shared-ring library is syntactically valid and exposes all imports", async () => {

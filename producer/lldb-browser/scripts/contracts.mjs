@@ -15,6 +15,7 @@ export const EMSCRIPTEN_REVISION = "d223ae73c6998296e3ab27cf81dc2c2c9fd383de";
 export const TRANSPORT_CONTRACT = "shared-ring-v1";
 export const CONNECTION_SCHEME = "wasm-messageport";
 export const PTHREAD_WORKER_ASSET = "lldb-web-dap.pthread.mjs";
+export const LLDB_WASM_SIZE_BUDGET_BYTES = 48 * 1024 * 1024;
 export const REQUIRED_ASSETS = [
   "lldb-web-dap.js",
   "lldb-web-dap.wasm",
@@ -381,6 +382,14 @@ export function validateBuildReceipt(receipt) {
       throw new Error(`receipt has invalid size for ${asset}`);
     }
     assertSha256(metadata.sha256, `receipt ${asset} hash`);
+  }
+  if (
+    receipt.assets["lldb-web-dap.wasm"].size >
+    LLDB_WASM_SIZE_BUDGET_BYTES
+  ) {
+    throw new Error(
+      "lldb-web-dap.wasm exceeds its 48 MiB uncompressed size budget",
+    );
   }
 }
 

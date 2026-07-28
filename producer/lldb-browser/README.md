@@ -140,6 +140,9 @@ patch/overlay hash, copies the browser overlays, and applies the patches.
 Building expects the locked Emscripten SDK to be active (or `EMSDK` to point at
 it), creates native TableGen tools first, and then configures the Emscripten
 build. Packaging writes hash-addressed receipt and runtime manifest metadata.
+Receipt verification enforces a 48 MiB uncompressed budget for
+`lldb-web-dap.wasm`; the current product remains below that ceiling, and a
+larger binary requires an explicit reviewed budget change.
 
 For a network- and disk-free review of the producer:
 
