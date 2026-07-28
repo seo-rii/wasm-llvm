@@ -1,0 +1,124 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://wasm-idle.dev/schemas/wamr-browser-receipt-v1.json",
+	"title": "WAMR browser debugger producer receipt",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"format",
+		"protocolVersion",
+		"transport",
+		"pthreadTransport",
+		"wamrRevision",
+		"emscriptenVersion",
+		"emsdkRevision",
+		"assets"
+	],
+	"properties": {
+		"format": {
+			"const": "wasm-idle-wamr-debug-v1"
+		},
+		"protocolVersion": {
+			"const": 1
+		},
+		"transport": {
+			"const": "shared-ring-v1"
+		},
+		"pthreadTransport": {
+			"const": "pthread-transport-v1"
+		},
+		"wamrRevision": {
+			"type": "string",
+			"pattern": "^[0-9a-f]{40}$"
+		},
+		"emscriptenVersion": {
+			"const": "6.0.0"
+		},
+		"emsdkRevision": {
+			"type": "string",
+			"pattern": "^[0-9a-f]{40}$"
+		},
+		"assets": {
+			"type": "array",
+			"minItems": 4,
+			"items": {
+				"$ref": "#/$defs/asset"
+			},
+			"allOf": [
+				{
+					"contains": {
+						"type": "object",
+						"required": ["path"],
+						"properties": {
+							"path": {
+								"const": "wamr-debug.js"
+							}
+						}
+					}
+				},
+				{
+					"contains": {
+						"type": "object",
+						"required": ["path"],
+						"properties": {
+							"path": {
+								"const": "wamr-debug.wasm"
+							}
+						}
+					}
+				},
+				{
+					"contains": {
+						"type": "object",
+						"required": ["path"],
+						"properties": {
+							"path": {
+								"const": "wamr-debug.worker.mjs"
+							}
+						}
+					}
+				},
+				{
+					"contains": {
+						"type": "object",
+						"required": ["path"],
+						"properties": {
+							"path": {
+								"const": "wamr-debug.wasm.gz"
+							}
+						}
+					}
+				}
+			]
+		}
+	},
+	"$defs": {
+		"asset": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["path", "bytes", "sha256"],
+			"properties": {
+				"path": {
+					"type": "string",
+					"minLength": 1
+				},
+				"bytes": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"sha256": {
+					"type": "string",
+					"pattern": "^[0-9a-f]{64}$"
+				},
+				"uncompressedBytes": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"uncompressedSha256": {
+					"type": "string",
+					"pattern": "^[0-9a-f]{64}$"
+				}
+			}
+		}
+	}
+}

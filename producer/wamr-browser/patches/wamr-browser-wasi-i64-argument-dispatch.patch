@@ -1,0 +1,116 @@
+diff --git a/core/iwasm/common/arch/invokeNative_general.c b/core/iwasm/common/arch/invokeNative_general.c
+index ee0584e4..914e1ef2 100644
+--- a/core/iwasm/common/arch/invokeNative_general.c
++++ b/core/iwasm/common/arch/invokeNative_general.c
+@@ -132,6 +132,77 @@ invokeNative(void (*native_code)(), uint32 argv[], uint32 argc)
+ #endif
+ }
+ 
++#if defined(__EMSCRIPTEN__)
++static uint64
++read_uint64(const uint32 argv[], uint32 index)
++{
++    return ((uint64)argv[index + 1] << 32) | argv[index];
++}
++
++bool
++invokeNative_browser_i64(void (*native_code)(), uint32 argv[], uint32 argc,
++                         const char *signature, uint32 *result)
++{
++    if (strcmp(signature, "(iI*)i") == 0 && argc == 5) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint64, uint32);
++        *result = ((NativeFunc)native_code)(argv[0], argv[1],
++                                           read_uint64(argv, 2), argv[4]);
++    }
++    else if (strcmp(signature, "(i*iI*)i") == 0 && argc == 7) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint32, uint32, uint64,
++                                     uint32);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], argv[2], argv[3], read_uint64(argv, 4), argv[6]);
++    }
++    else if (strcmp(signature, "(iIi*)i") == 0 && argc == 6) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint64, uint32, uint32);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], read_uint64(argv, 2), argv[4], argv[5]);
++    }
++    else if (strcmp(signature, "(iII)i") == 0 && argc == 6) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint64, uint64);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], read_uint64(argv, 2), read_uint64(argv, 4));
++    }
++    else if (strcmp(signature, "(iIIi)i") == 0 && argc == 7) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint64, uint64, uint32);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], read_uint64(argv, 2), read_uint64(argv, 4),
++            argv[6]);
++    }
++    else if (strcmp(signature, "(ii*~iIIi*)i") == 0 && argc == 12) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint32, uint32, uint32,
++                                     uint32, uint64, uint64, uint32, uint32);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], argv[2], argv[3], argv[4], argv[5],
++            read_uint64(argv, 6), read_uint64(argv, 8), argv[10], argv[11]);
++    }
++    else if (strcmp(signature, "(i*~I*)i") == 0 && argc == 7) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint32, uint32, uint64,
++                                     uint32);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], argv[2], argv[3], read_uint64(argv, 4), argv[6]);
++    }
++    else if (strcmp(signature, "(iI)i") == 0 && argc == 4) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint64);
++        *result = ((NativeFunc)native_code)(argv[0], argv[1],
++                                           read_uint64(argv, 2));
++    }
++    else if (strcmp(signature, "(ii*~IIi)i") == 0 && argc == 10) {
++        typedef uint32 (*NativeFunc)(uint32, uint32, uint32, uint32, uint32,
++                                     uint64, uint64, uint32);
++        *result = ((NativeFunc)native_code)(
++            argv[0], argv[1], argv[2], argv[3], argv[4],
++            read_uint64(argv, 5), read_uint64(argv, 7), argv[9]);
++    }
++    else {
++        return false;
++    }
++
++    return true;
++}
++#endif
++
+ #if defined(__clang__)
+ #pragma clang diagnostic pop
+ #endif
+diff --git a/core/iwasm/common/wasm_runtime_common.c b/core/iwasm/common/wasm_runtime_common.c
+index f49fbf3e..d41a3f02 100644
+--- a/core/iwasm/common/wasm_runtime_common.c
++++ b/core/iwasm/common/wasm_runtime_common.c
+@@ -5562,6 +5562,11 @@ uint32
+ void
+ #endif
+ invokeNative(GenericFunctionPointer f, uint32 *args, uint32 sz);
++#if defined(__EMSCRIPTEN__)
++bool
++invokeNative_browser_i64(GenericFunctionPointer f, uint32 *args, uint32 sz,
++                         const char *signature, uint32 *result);
++#endif
+ 
+ typedef float64 (*Float64FuncPtr)(GenericFunctionPointer f, uint32 *, uint32);
+ typedef float32 (*Float32FuncPtr)(GenericFunctionPointer f, uint32 *, uint32);
+@@ -5755,8 +5760,15 @@ wasm_runtime_invoke_native(WASMExecEnv *exec_env, void *func_ptr,
+ #if WASM_ENABLE_GC == 0 && WASM_ENABLE_REF_TYPES != 0
+             case VALUE_TYPE_FUNCREF:
+ #endif
+-                argv_ret[0] =
+-                    (uint32)invokeNative_Int32(func_ptr, argv1, argc1);
++#if defined(__EMSCRIPTEN__)
++                if (!(signature
++                      && invokeNative_browser_i64(func_ptr, argv1, argc1,
++                                                  signature, argv_ret)))
++#endif
++                {
++                    argv_ret[0] =
++                        (uint32)invokeNative_Int32(func_ptr, argv1, argc1);
++                }
+                 break;
+             case VALUE_TYPE_I64:
+                 PUT_I64_TO_ADDR(argv_ret,

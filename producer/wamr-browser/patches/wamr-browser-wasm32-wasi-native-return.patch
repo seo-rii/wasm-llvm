@@ -1,0 +1,54 @@
+diff --git a/core/iwasm/common/arch/invokeNative_general.c b/core/iwasm/common/arch/invokeNative_general.c
+index 52ffee5a..ee0584e4 100644
+--- a/core/iwasm/common/arch/invokeNative_general.c
++++ b/core/iwasm/common/arch/invokeNative_general.c
+@@ -11,9 +11,16 @@
+ #pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+ #endif
+ 
++#if defined(__EMSCRIPTEN__)
++uint32
++#else
+ void
++#endif
+ invokeNative(void (*native_code)(), uint32 argv[], uint32 argc)
+ {
++#if defined(__EMSCRIPTEN__)
++#define native_code(...) return ((uint32 (*)())native_code)(__VA_ARGS__)
++#endif
+     bh_assert(argc >= sizeof(WASMExecEnv *) / sizeof(uint32));
+ 
+     switch (argc) {
+@@ -113,9 +120,16 @@ invokeNative(void (*native_code)(), uint32 argv[], uint32 argc)
+             wasm_runtime_set_exception(
+                 module_inst,
+                 "the argument number of native function exceeds maximum");
++#if defined(__EMSCRIPTEN__)
++            return 0;
++#else
+             return;
++#endif
+         }
+     }
++#if defined(__EMSCRIPTEN__)
++#undef native_code
++#endif
+ }
+ 
+ #if defined(__clang__)
+diff --git a/core/iwasm/common/wasm_runtime_common.c b/core/iwasm/common/wasm_runtime_common.c
+index 943b46fc..f49fbf3e 100644
+--- a/core/iwasm/common/wasm_runtime_common.c
++++ b/core/iwasm/common/wasm_runtime_common.c
+@@ -5556,7 +5556,11 @@ fail:
+     || defined(BUILD_TARGET_THUMB) || defined(BUILD_TARGET_MIPS) \
+     || defined(BUILD_TARGET_XTENSA)
+ typedef void (*GenericFunctionPointer)(void);
++#if defined(__EMSCRIPTEN__)
++uint32
++#else
+ void
++#endif
+ invokeNative(GenericFunctionPointer f, uint32 *args, uint32 sz);
+ 
+ typedef float64 (*Float64FuncPtr)(GenericFunctionPointer f, uint32 *, uint32);
