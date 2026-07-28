@@ -30,6 +30,7 @@ export const REGISTERED_PLUGINS = [
   "lldbPluginSymbolFileDWARF",
   "lldbPluginTypeSystemClang",
   "lldbPluginCPlusPlusLanguage",
+  "lldbPluginScriptInterpreterNone",
 ];
 export const EXCLUDED_FEATURES = [
   "python",

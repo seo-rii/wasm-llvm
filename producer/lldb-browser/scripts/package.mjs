@@ -25,7 +25,7 @@ const defaultTargetDir = path.resolve(
 export function parsePackageArgs(argv) {
 	const options = {
 		targetDir: defaultTargetDir,
-		version: `llvmorg-${LLVM_VERSION}-lldb-web-2`
+		version: `llvmorg-${LLVM_VERSION}-lldb-web-3`
 	};
 	for (let index = 0; index < argv.length; ++index) {
 		const argument = argv[index];

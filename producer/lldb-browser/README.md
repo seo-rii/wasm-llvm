@@ -58,6 +58,7 @@ The product link is static and starts from these LLDB plugins:
 - `SymbolFileDWARF`
 - `TypeSystemClang`
 - C and C++ language support
+- the `ScriptInterpreterNone` fallback
 
 LLVM 22.1.8 has static-library dependencies between some of these components,
 so the linker may retain a small transitive closure. Only the roots above are
@@ -74,6 +75,15 @@ Without those section load addresses, source breakpoints remain pending and
 stopped PCs cannot be resolved back to DWARF lines. `SymbolVendorWasm` preserves
 LLVM's Wasm symbol-loading path for modules that use external debug sections;
 embedded DWARF continues to be handled directly by `SymbolFileDWARF`.
+
+`ScriptInterpreterNone` is a required non-scripting fallback even though
+Python and Lua are disabled. LLDB's formatter matching always asks the
+`Debugger` for a script interpreter before it builds native C/C++ formatter
+candidates. A release build compiles out the upstream assertion that the
+fallback plugin exists, so omitting this static root turns the first DAP
+`variables` request into a null indirect call. The browser producer registers
+only the inert `None` implementation; this does not enable expression
+evaluation or an embedded scripting language.
 
 The browser build intentionally omits libxml2. Upstream
 `ProcessGDBRemote::GetLoadedModuleList()` refuses to read
@@ -93,12 +103,12 @@ and requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The
 producer contract test additionally pins the patch content and hash.
 
 LLVM's generic plugin lookup accepts its predicate as `std::function`.
-In the Emscripten pthread build, the first LLDB DAP `variables` request reached
-that erased callback through a null indirect-function-table entry and
-terminated the adapter before returning the `Locals` scope.
-`0008-plugin-predicate-template.patch` keeps the predicate concrete so the
-compiler emits a direct/inlined call. The change is isolated to the browser
-patch queue; native LLVM remains at the exact 22.1.8 source revision.
+`0008-plugin-predicate-template.patch` keeps that short-lived lookup predicate
+concrete so the Emscripten compiler can emit a direct or inlined call across
+pthread entry paths. The product `variables` regression was separately traced
+to the missing `ScriptInterpreterNone` registration above. The template
+hardening remains isolated to the browser patch queue; native LLVM stays at the
+exact 22.1.8 source revision.
 
 The Emscripten build uses pthreads and enables `PROXY_TO_PTHREAD`. LLDB's
 blocking native `main` therefore runs on a pool worker while the LLDB module

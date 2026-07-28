@@ -79,6 +79,10 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
     buildPlan.registeredPlugins.includes("lldbPluginDynamicLoaderWasmDYLD"),
   );
   assert.ok(buildPlan.registeredPlugins.includes("lldbPluginSymbolVendorWasm"));
+  assert.ok(
+    buildPlan.registeredPlugins.includes("lldbPluginScriptInterpreterNone"),
+    "variable format matching requires the non-scripting interpreter fallback",
+  );
   for (const flag of [
     "-pthread",
     "-sPTHREAD_POOL_SIZE=8",
@@ -255,7 +259,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-2`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-3`,
   );
 });
 
