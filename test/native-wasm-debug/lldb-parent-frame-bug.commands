@@ -1,0 +1,17 @@
+log enable -f rsp.log gdb-remote packets
+process connect -p wasm connect://127.0.0.1:1234
+breakpoint set --file main.c --line 8
+continue
+thread backtrace
+frame select 0
+frame variable n doubled
+frame select 1
+frame variable n doubled
+frame select 2
+frame variable n doubled
+process plugin packet send qWasmLocal:0;1
+process plugin packet send qWasmLocal:1;1
+process plugin packet send qWasmLocal:2;1
+frame select 0
+continue
+quit

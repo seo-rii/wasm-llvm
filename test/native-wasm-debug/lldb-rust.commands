@@ -1,0 +1,18 @@
+settings set target.source-map /workspace .
+process connect -p wasm connect://127.0.0.1:1234
+breakpoint set --file main.rs --line 16
+breakpoint set --file main.rs --line 11
+continue
+thread backtrace
+frame variable seed
+next
+frame variable seed
+continue
+thread backtrace
+frame variable n doubled child
+next
+frame variable n doubled child result
+continue
+frame variable n doubled child
+continue
+quit

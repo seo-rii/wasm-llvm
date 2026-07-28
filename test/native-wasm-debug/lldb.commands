@@ -1,0 +1,12 @@
+process connect -p wasm connect://127.0.0.1:1234
+breakpoint set --file main.c --line 13
+continue
+thread backtrace
+frame variable
+continue
+thread backtrace
+frame variable
+memory read --format x --size 4 --count 1 0x10960
+target variable global_bias
+continue
+quit
