@@ -12,6 +12,7 @@
 		"wamrRevision",
 		"emscriptenVersion",
 		"emsdkRevision",
+		"provenance",
 		"assets"
 	],
 	"properties": {
@@ -37,6 +38,30 @@
 		"emsdkRevision": {
 			"type": "string",
 			"pattern": "^[0-9a-f]{40}$"
+		},
+		"provenance": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"sourcesLockSha256",
+				"producerManifestSha256",
+				"patchesSha256",
+				"overlaysSha256"
+			],
+			"properties": {
+				"sourcesLockSha256": {
+					"$ref": "#/$defs/sha256"
+				},
+				"producerManifestSha256": {
+					"$ref": "#/$defs/sha256"
+				},
+				"patchesSha256": {
+					"$ref": "#/$defs/sha256"
+				},
+				"overlaysSha256": {
+					"$ref": "#/$defs/sha256"
+				}
+			}
 		},
 		"assets": {
 			"type": "array",
@@ -93,6 +118,10 @@
 		}
 	},
 	"$defs": {
+		"sha256": {
+			"type": "string",
+			"pattern": "^[0-9a-f]{64}$"
+		},
 		"asset": {
 			"type": "object",
 			"additionalProperties": false,
@@ -107,16 +136,14 @@
 					"minimum": 0
 				},
 				"sha256": {
-					"type": "string",
-					"pattern": "^[0-9a-f]{64}$"
+					"$ref": "#/$defs/sha256"
 				},
 				"uncompressedBytes": {
 					"type": "integer",
 					"minimum": 0
 				},
 				"uncompressedSha256": {
-					"type": "string",
-					"pattern": "^[0-9a-f]{64}$"
+					"$ref": "#/$defs/sha256"
 				}
 			}
 		}

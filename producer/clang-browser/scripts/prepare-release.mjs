@@ -3,7 +3,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { validateArtifactManifest as validateLldbArtifactManifest } from '../../lldb-browser/scripts/contracts.mjs';
+import {
+	validateArtifactManifest as validateLldbArtifactManifest,
+	validateBuildReceipt as validateLldbBuildReceipt
+} from '../../lldb-browser/scripts/contracts.mjs';
 import { verifyWamrBrowser } from '../../wamr-browser/scripts/verify.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -114,12 +117,16 @@ async function prepareDebugRuntimeManifest() {
 		throw new Error('The Clang toolchain must record llvmCommit for an LLDB runtime bundle');
 	}
 
-	const [lldbManifest, wamrReceipt] = await Promise.all([
+	const [lldbManifest, lldbReceipt, wamrReceipt] = await Promise.all([
 		fs.readFile(path.join(LLDB_ARTIFACT_DIR, 'debug-manifest.json'), 'utf8').then(JSON.parse),
+		fs
+			.readFile(path.join(LLDB_ARTIFACT_DIR, 'lldb-browser.receipt.json'), 'utf8')
+			.then(JSON.parse),
 		fs.readFile(path.join(WAMR_ARTIFACT_DIR, 'producer-receipt.json'), 'utf8').then(JSON.parse)
 	]);
 	try {
 		validateLldbArtifactManifest(lldbManifest);
+		validateLldbBuildReceipt(lldbReceipt);
 		if (
 			typeof lldbManifest.version !== 'string' ||
 			lldbManifest.version.length === 0 ||
@@ -150,6 +157,14 @@ async function prepareDebugRuntimeManifest() {
 	}
 	const lldb = lldbManifest.debugger?.lldb;
 	if (
+		lldbReceipt.source?.patchesSha256 !== lldb?.patchesSha256 ||
+		lldbReceipt.assets?.['lldb-web-dap.js']?.sha256 !== lldb?.jsSha256 ||
+		lldbReceipt.assets?.['lldb-web-dap.wasm']?.sha256 !== lldb?.wasmSha256 ||
+		lldbReceipt.assets?.[lldb?.worker]?.sha256 !== lldb?.workerSha256
+	) {
+		throw new Error('The LLDB manifest does not match its producer receipt');
+	}
+	if (
 		lldbManifest.debugger?.transport?.contract !== 'shared-ring-v1' ||
 		lldb?.llvmRevision !== toolchain.llvmCommit
 	) {
@@ -171,6 +186,19 @@ async function prepareDebugRuntimeManifest() {
 		wamrReceipt.pthreadTransport !== 'pthread-transport-v1'
 	) {
 		throw new Error('The WAMR artifact receipt has an incompatible protocol contract');
+	}
+	for (const provenance of [
+		'sourcesLockSha256',
+		'producerManifestSha256',
+		'patchesSha256',
+		'overlaysSha256'
+	]) {
+		if (
+			typeof wamrReceipt.provenance?.[provenance] !== 'string' ||
+			!/^[\da-f]{64}$/u.test(wamrReceipt.provenance[provenance])
+		) {
+			throw new Error(`The WAMR artifact receipt has invalid ${provenance} provenance`);
+		}
 	}
 	if (
 		wamrReceipt.wamrRevision !== wamrSourceLock.wamr?.commit ||
@@ -288,7 +316,8 @@ async function prepareDebugRuntimeManifest() {
 				workerSha256: lldb.workerSha256,
 				llvmVersion: lldb.llvmVersion,
 				llvmRevision: lldb.llvmRevision,
-				patchesSha256: lldb.patchesSha256
+				patchesSha256: lldb.patchesSha256,
+				sourcesLockSha256: lldbReceipt.producer.sourcesLockSha256
 			},
 			targetRuntime: {
 				name: 'wamr',
@@ -298,7 +327,8 @@ async function prepareDebugRuntimeManifest() {
 				jsSha256: wamrJs.sha256,
 				wasmSha256: wamrWasm.sha256,
 				workerSha256: wamrWorker.sha256,
-				revision: wamrReceipt.wamrRevision
+				revision: wamrReceipt.wamrRevision,
+				provenance: { ...wamrReceipt.provenance }
 			},
 			capabilities: {
 				...lldbManifest.debugger.capabilities,

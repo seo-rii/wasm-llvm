@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { gzip } from 'node:zlib';
 
 import { PACKAGED_PTHREAD_WORKER } from './build.mjs';
-import { isMain, parseArguments, readSourceLock } from './shared.mjs';
+import { isMain, parseArguments, producerRoot } from './shared.mjs';
 
 const gzipAsync = promisify(gzip);
 
@@ -34,7 +34,12 @@ export async function packageWamrBrowser({ build, output }) {
 	);
 	await writeFile(path.join(output, 'wamr-debug.wasm.gz'), compressedWasm);
 
-	const lock = await readSourceLock();
+	const [sourcesLockBytes, producerManifestBytes] = await Promise.all([
+		readFile(path.join(producerRoot, 'sources.lock.json')),
+		readFile(path.join(producerRoot, 'manifest.json'))
+	]);
+	const lock = JSON.parse(sourcesLockBytes);
+	const producerManifest = JSON.parse(producerManifestBytes);
 	const receipt = {
 		format: 'wasm-idle-wamr-debug-v1',
 		protocolVersion: 1,
@@ -43,6 +48,20 @@ export async function packageWamrBrowser({ build, output }) {
 		wamrRevision: lock.wamr.commit,
 		emscriptenVersion: lock.emscripten.version,
 		emsdkRevision: lock.emscripten.commit,
+		provenance: {
+			sourcesLockSha256: sha256(sourcesLockBytes),
+			producerManifestSha256: sha256(producerManifestBytes),
+			patchesSha256: sha256(
+				Object.values(producerManifest.patches)
+					.map((entry) => entry.sha256)
+					.join('\n')
+			),
+			overlaysSha256: sha256(
+				Object.values(producerManifest.overlays)
+					.map((entry) => entry.sha256)
+					.join('\n')
+			)
+		},
 		assets: [
 			{ path: 'wamr-debug.js', bytes: js.byteLength, sha256: sha256(js) },
 			{ path: 'wamr-debug.wasm', bytes: wasm.byteLength, sha256: sha256(wasm) },

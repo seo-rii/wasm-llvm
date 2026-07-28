@@ -98,6 +98,11 @@ Emscripten ES-module pthread sidecar as `wamr-debug.worker.mjs`.
 `verify.mjs` checks all asset hashes, the sidecar/transport markers, the
 runtime-facing uncompressed Wasm asset, its reproducible gzip copy, Wasm
 validity, and the compressed asset-size budget.
+The package receipt's provenance hashes the raw `sources.lock.json`, producer
+manifest, ordered patch digest set, and ordered overlay digest set.
+`verify.mjs` recomputes all four values, and the Clang release assembler carries
+them into `RuntimeManifestV2` so a consumer can bind runtime bytes to the exact
+WAMR producer inputs.
 
 Pull requests and `main` pushes run the WAMR and LLDB producer contract suites
 together in the `LLDB browser producer contracts` workflow. This lightweight

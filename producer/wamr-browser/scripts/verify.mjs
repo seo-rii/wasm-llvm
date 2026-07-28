@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { gunzip } from 'node:zlib';
 
 import { PACKAGED_PTHREAD_WORKER } from './build.mjs';
-import { isMain, parseArguments } from './shared.mjs';
+import { isMain, parseArguments, producerRoot } from './shared.mjs';
 
 const gunzipAsync = promisify(gunzip);
 const DEFAULT_COMPRESSED_SIZE_BUDGET = 20 * 1024 * 1024;
@@ -30,6 +30,30 @@ export async function verifyWamrBrowser({ artifacts, sizeBudget }) {
 	}
 	if (receipt.pthreadTransport !== 'pthread-transport-v1') {
 		throw new Error('WAMR debugger receipt has an unsupported pthread transport');
+	}
+	const [sourcesLockBytes, producerManifestBytes] = await Promise.all([
+		readFile(path.join(producerRoot, 'sources.lock.json')),
+		readFile(path.join(producerRoot, 'manifest.json'))
+	]);
+	const producerManifest = JSON.parse(producerManifestBytes);
+	const expectedProvenance = {
+		sourcesLockSha256: sha256(sourcesLockBytes),
+		producerManifestSha256: sha256(producerManifestBytes),
+		patchesSha256: sha256(
+			Object.values(producerManifest.patches)
+				.map((entry) => entry.sha256)
+				.join('\n')
+		),
+		overlaysSha256: sha256(
+			Object.values(producerManifest.overlays)
+				.map((entry) => entry.sha256)
+				.join('\n')
+		)
+	};
+	for (const [name, expected] of Object.entries(expectedProvenance)) {
+		if (receipt.provenance?.[name] !== expected) {
+			throw new Error(`WAMR debugger receipt has stale ${name} provenance`);
+		}
 	}
 	for (const asset of receipt.assets) {
 		const bytes = await readFile(path.join(artifacts, asset.path));

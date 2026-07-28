@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
+import { createBuildReceipt } from '../producer/lldb-browser/scripts/contracts.mjs';
+
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const llvmRevision = 'ca7933e47d3a3451d81e72ac174dcb5aa28b59d1';
@@ -104,6 +106,21 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 			path.join(lldb, 'debug-manifest.json'),
 			`${JSON.stringify(validLldbManifest)}\n`
 		);
+		await writeFile(
+			path.join(lldb, 'lldb-browser.receipt.json'),
+			`${JSON.stringify(
+				createBuildReceipt({
+					version: validLldbManifest.version,
+					manifestSha256: 'c'.repeat(64),
+					sourcesLockSha256: 'd'.repeat(64),
+					jsBytes: lldbJs,
+					wasmBytes: lldbWasm,
+					workerBytes: lldbWorker,
+					patchesSha256: validLldbManifest.debugger.lldb.patchesSha256,
+					buildFlags: []
+				})
+			)}\n`
+		);
 
 		const wamrJs = Buffer.from(
 			[
@@ -122,6 +139,13 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		await writeFile(path.join(wamr, 'wamr-debug.wasm'), wamrWasm);
 		await writeFile(path.join(wamr, 'wamr-debug.worker.mjs'), wamrWorker);
 		await writeFile(path.join(wamr, 'wamr-debug.wasm.gz'), wamrCompressedWasm);
+		const wamrSourcesLockBytes = await readFile(
+			path.join(repoRoot, 'producer/wamr-browser/sources.lock.json')
+		);
+		const wamrProducerManifestBytes = await readFile(
+			path.join(repoRoot, 'producer/wamr-browser/manifest.json')
+		);
+		const wamrProducerManifest = JSON.parse(wamrProducerManifestBytes);
 		const validWamrReceipt = {
 			format: 'wasm-idle-wamr-debug-v1',
 			protocolVersion: 1,
@@ -130,6 +154,20 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 			wamrRevision,
 			emscriptenVersion: '6.0.0',
 			emsdkRevision,
+			provenance: {
+				sourcesLockSha256: sha256(wamrSourcesLockBytes),
+				producerManifestSha256: sha256(wamrProducerManifestBytes),
+				patchesSha256: sha256(
+					Object.values(wamrProducerManifest.patches)
+						.map((entry) => entry.sha256)
+						.join('\n')
+				),
+				overlaysSha256: sha256(
+					Object.values(wamrProducerManifest.overlays)
+						.map((entry) => entry.sha256)
+						.join('\n')
+				)
+			},
 			assets: [
 				{
 					path: 'wamr-debug.js',
@@ -183,7 +221,9 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		assert.equal(manifest.manifestVersion, 2);
 		assert.equal(manifest.compiler.provenance.revision, llvmRevision);
 		assert.equal(manifest.debugger.lldb.llvmRevision, llvmRevision);
+		assert.equal(manifest.debugger.lldb.sourcesLockSha256, 'd'.repeat(64));
 		assert.equal(manifest.debugger.targetRuntime.revision, wamrRevision);
+		assert.deepEqual(manifest.debugger.targetRuntime.provenance, validWamrReceipt.provenance);
 		assert.equal(manifest.debugger.transport, 'shared-ring-v1');
 		assert.equal(manifest.debugger.lldb.worker, 'debug/lldb-web-dap.pthread.mjs');
 		assert.equal(manifest.debugger.targetRuntime.worker, 'debug/wamr-debug.worker.mjs');

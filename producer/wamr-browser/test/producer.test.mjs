@@ -505,10 +505,20 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 		);
 		assert.equal(receipt.pthreadTransport, 'pthread-transport-v1');
 		assert.equal(receipt.emsdkRevision.length, 40);
+		const sourcesLockBytes = await readFile(path.join(producerRoot, 'sources.lock.json'));
+		const manifestBytes = await readFile(path.join(producerRoot, 'manifest.json'));
+		const manifest = JSON.parse(manifestBytes);
+		assert.deepEqual(receipt.provenance, {
+			sourcesLockSha256: createHash('sha256').update(sourcesLockBytes).digest('hex'),
+			producerManifestSha256: createHash('sha256').update(manifestBytes).digest('hex'),
+			patchesSha256: createHash('sha256')
+				.update(Object.values(manifest.patches).map((entry) => entry.sha256).join('\n'))
+				.digest('hex'),
+			overlaysSha256: createHash('sha256')
+				.update(Object.values(manifest.overlays).map((entry) => entry.sha256).join('\n'))
+				.digest('hex')
+		});
 		assert.ok(receipt.assets.some((asset) => asset.path === PACKAGED_PTHREAD_WORKER));
-		const manifest = JSON.parse(
-			await readFile(path.join(producerRoot, 'manifest.json'), 'utf8')
-		);
 		assert.ok(manifest.outputs.includes(PACKAGED_PTHREAD_WORKER));
 	} finally {
 		await rm(temporaryRoot, { recursive: true, force: true });
@@ -533,4 +543,5 @@ test('documents separated output and the pinned host-platform caveat', async () 
 	assert.match(readme, /byte=w/u);
 	assert.match(readme, /123 bytes/u);
 	assert.match(readme, /RSP `\$W00`/u);
+	assert.match(readme, /provenance.*sources\.lock\.json.*patch.*overlay/su);
 });
