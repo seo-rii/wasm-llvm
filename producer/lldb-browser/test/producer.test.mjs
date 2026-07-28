@@ -220,14 +220,16 @@ test("Wasm unwind patch gives recursive frames distinct synthetic CFAs", async (
   const patch = await fs.readFile(path.join(PRODUCER_ROOT, patchPath), "utf8");
   assert.match(
     patch,
-    /UnwindWasm::DoGetFrameInfoAtIndex[\s\S]*-\s+cfa = 0;[\s\S]*\+\s+cfa = frame_idx;/,
+    /UnwindWasm::DoGetFrameInfoAtIndex[\s\S]*\+\s+const uint64_t call_depth = m_frames\.size\(\) - frame_idx;[\s\S]*\+\s+cfa = 0xffffffffULL - call_depth;/,
   );
-  assert.match(patch, /recursive Wasm frames need distinct StackIDs/i);
+  assert.match(patch, /Wasm frame identity stable as callees are pushed/i);
   assert.match(
     patch,
     /diff --git a\/lldb\/test\/API\/functionalities\/gdb_remote_client\/TestWasm\.py/,
   );
   assert.match(patch, /test_recursive_wasm_frames_use_distinct_cfas/);
+  assert.match(patch, /self\.assertLess\(frame0\.GetCFA\(\), frame1\.GetCFA\(\)\)/);
+  assert.match(patch, /self\.assertEqual\(frame1\.GetCFA\(\), 0xFFFFFFFE\)/);
   assert.match(patch, /qWasmLocal:1;2/);
 });
 
@@ -259,7 +261,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-3`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-4`,
   );
 });
 

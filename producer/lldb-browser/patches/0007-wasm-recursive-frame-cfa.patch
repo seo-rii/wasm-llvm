@@ -1,15 +1,16 @@
 diff --git a/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp b/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp
-index 319c5e262..2e97a04cb 100644
+index 319c5e262..60dc28024 100644
 --- a/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp
 +++ b/lldb/source/Plugins/Process/wasm/UnwindWasm.cpp
-@@ -65,7 +65,9 @@ bool UnwindWasm::DoGetFrameInfoAtIndex(uint32_t frame_idx, lldb::addr_t &cfa,
+@@ -65,7 +65,10 @@ bool UnwindWasm::DoGetFrameInfoAtIndex(uint32_t frame_idx, lldb::addr_t &cfa,
      return false;
  
    behaves_like_zeroth_frame = (frame_idx == 0);
 -  cfa = 0;
-+  // Recursive Wasm frames need distinct StackIDs even when their symbol
-+  // scopes are identical.
-+  cfa = frame_idx;
++  // Call-depth CFAs keep Wasm frame identity stable as callees are pushed
++  // while preserving LLDB's downward-growing stack order.
++  const uint64_t call_depth = m_frames.size() - frame_idx;
++  cfa = 0xffffffffULL - call_depth;
    pc = m_frames[frame_idx];
    return true;
  }
@@ -114,6 +115,9 @@ index 73c81efb7..26304998e 100644
 +        frame1 = thread.GetFrameAtIndex(1)
 +        self.assertIn("add", frame0.GetFunctionName())
 +        self.assertIn("add", frame1.GetFunctionName())
++        self.assertLess(frame0.GetCFA(), frame1.GetCFA())
++        self.assertEqual(frame0.GetCFA(), 0xFFFFFFFD)
++        self.assertEqual(frame1.GetCFA(), 0xFFFFFFFE)
 +        self.assertEqual(frame0.FindVariable("a").GetValueAsUnsigned(), 1)
 +        self.assertEqual(frame1.FindVariable("a").GetValueAsUnsigned(), 3)
 +        self.assertIn("qWasmLocal:0;2", self.server.responder.wasm_local_requests)

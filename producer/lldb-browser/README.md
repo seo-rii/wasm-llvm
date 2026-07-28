@@ -96,11 +96,14 @@ implementation and non-Wasm targets are unchanged.
 LLVM 22.1.8 also assigns every synthetic Wasm unwind frame a CFA of zero.
 Recursive calls share the same symbol scope, so LLDB can otherwise collapse
 their `StackID`s and evaluate a selected parent frame through frame zero.
-`0007-wasm-recursive-frame-cfa.patch` uses the concrete Wasm frame index as
-the synthetic CFA. Its upstream-style GDB remote regression selects two
-recursive frames through the normal variable API, verifies distinct values,
-and requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The
-producer contract test additionally pins the patch content and hash.
+`0007-wasm-recursive-frame-cfa.patch` derives the synthetic CFA from call
+depth. Unlike the concrete frame index, call depth keeps a caller's identity
+stable when a callee is pushed and orders deeper frames as younger, which is
+required for LLDB's step-over plan to continue through a C++ function call.
+Its upstream-style GDB remote regression selects two recursive frames through
+the normal variable API, verifies ordered and distinct CFAs and values, and
+requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The producer
+contract test additionally pins the patch content and hash.
 
 LLVM's generic plugin lookup accepts its predicate as `std::function`.
 `0008-plugin-predicate-template.patch` keeps that short-lived lookup predicate
