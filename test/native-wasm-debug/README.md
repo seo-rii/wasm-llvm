@@ -120,6 +120,23 @@ without native toolchain dependencies:
 node --test test/native-wasm-debug.test.mjs
 ```
 
+The same runner selects `lldb-rust.commands` and Rust-specific transcript
+checks with `--language rust`:
+
+```sh
+node run-native-baseline.mjs \
+  --language rust \
+  --iwasm /path/to/iwasm \
+  --lldb /path/to/llvm-22.1.8/bin/lldb \
+  --program /path/to/rust-program.wasm
+```
+
+This verifies both `main.rs` breakpoints, step-over from the initialized
+`seed`, recursive `n`, `doubled`, `child`, and `result` values, LLDB's zero
+exit, and the guest's `rust-total=15` stdout. These checks deliberately use
+generic DWARF inspection and do not imply that LLVM 22.1.8 has a Rust language
+plugin.
+
 ## DAP attach baseline
 
 The official LLVM archive contains `lldb-dap`. A native smoke client verified

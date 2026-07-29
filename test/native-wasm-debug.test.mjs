@@ -6,7 +6,8 @@ import { test } from 'node:test';
 
 import {
 	runNativeBaseline,
-	verifyNativeCBaseline
+	verifyNativeCBaseline,
+	verifyNativeRustBaseline
 } from './native-wasm-debug/run-native-baseline.mjs';
 
 async function createExecutable(directory, name, source) {
@@ -188,5 +189,43 @@ test('rejects an incomplete native C transcript', () => {
 				targetStdout: 'total=15'
 			}),
 		/native C baseline did not verify breakpoint resolution/
+	);
+});
+
+test('verifies recursive Rust DWARF values and target output', () => {
+	assert.doesNotThrow(() =>
+		verifyNativeRustBaseline({
+			lldbStderr: '',
+			lldbStdout: `
+Breakpoint 1: main.rs:16
+Breakpoint 2: main.rs:11
+(int) seed = 3
+(int) n = 2
+(int) doubled = 4
+(int) child = 5
+(int) result = 9
+(int) n = 3
+(int) doubled = 6
+(int) child = 9
+Process 1 exited with status = 0
+`,
+			port: 1234,
+			targetStderr: '',
+			targetStdout: 'rust-total=15\n'
+		})
+	);
+});
+
+test('rejects an incomplete native Rust transcript', () => {
+	assert.throws(
+		() =>
+			verifyNativeRustBaseline({
+				lldbStderr: '',
+				lldbStdout: 'Process 1 exited with status = 0',
+				port: 1234,
+				targetStderr: '',
+				targetStdout: 'rust-total=15\n'
+			}),
+		/native Rust baseline did not verify the main breakpoint/
 	);
 });

@@ -223,8 +223,14 @@ export async function runNativeBaseline(options) {
 	}
 }
 
+function verifyTranscriptChecks(transcript, checks) {
+	for (const [pattern, message] of checks) {
+		if (!pattern.test(transcript)) throw new Error(message);
+	}
+}
+
 export function verifyNativeCBaseline(result) {
-	const checks = [
+	verifyTranscriptChecks(result.lldbStdout, [
 		[
 			/breakpoint 1:.*main\.c:13/is,
 			'native C baseline did not verify breakpoint resolution'
@@ -243,12 +249,38 @@ export function verifyNativeCBaseline(result) {
 			/Process 1 exited with status = 0/,
 			'native C baseline did not report a clean LLDB exit'
 		]
-	];
-	for (const [pattern, message] of checks) {
-		if (!pattern.test(result.lldbStdout)) throw new Error(message);
-	}
+	]);
 	if (!/(?:^|\n)total=15(?:\n|$)/.test(result.targetStdout)) {
 		throw new Error('native C baseline did not preserve target stdout');
+	}
+}
+
+export function verifyNativeRustBaseline(result) {
+	verifyTranscriptChecks(result.lldbStdout, [
+		[
+			/breakpoint 1:.*main\.rs:16/is,
+			'native Rust baseline did not verify the main breakpoint'
+		],
+		[
+			/breakpoint 2:.*main\.rs:11/is,
+			'native Rust baseline did not verify the recursive breakpoint'
+		],
+		[/\(int\) seed = 3/, 'native Rust baseline did not expose the initialized seed'],
+		[
+			/\(int\) n = 2[\s\S]*?\(int\) doubled = 4[\s\S]*?\(int\) child = 5[\s\S]*?\(int\) result = 9/,
+			'native Rust baseline did not expose the first recursive result'
+		],
+		[
+			/\(int\) n = 3[\s\S]*?\(int\) doubled = 6[\s\S]*?\(int\) child = 9/,
+			'native Rust baseline did not expose the caller recursive values'
+		],
+		[
+			/Process 1 exited with status = 0/,
+			'native Rust baseline did not report a clean LLDB exit'
+		]
+	]);
+	if (!/(?:^|\n)rust-total=15(?:\n|$)/.test(result.targetStdout)) {
+		throw new Error('native Rust baseline did not preserve target stdout');
 	}
 }
 
@@ -259,7 +291,7 @@ function parseCliArguments(argv) {
 		const value = argv[index + 1];
 		if (!name?.startsWith('--') || value === undefined) {
 			throw new Error(
-				'usage: run-native-baseline.mjs --iwasm PATH --lldb PATH --program PATH [--commands PATH] [--timeout-ms NUMBER]'
+				'usage: run-native-baseline.mjs --iwasm PATH --lldb PATH --program PATH [--language c|rust] [--commands PATH] [--timeout-ms NUMBER]'
 			);
 		}
 		values.set(name, value);
@@ -268,11 +300,20 @@ function parseCliArguments(argv) {
 		if (!values.has(required)) throw new Error(`missing required argument ${required}`);
 	}
 	const fixtureDirectory = path.dirname(fileURLToPath(import.meta.url));
+	const language = values.get('--language') ?? 'c';
+	if (language !== 'c' && language !== 'rust') {
+		throw new Error(`unsupported native baseline language: ${language}`);
+	}
 	return {
 		commandsPath:
-			values.get('--commands') ?? path.join(fixtureDirectory, 'lldb.commands'),
+			values.get('--commands') ??
+			path.join(
+				fixtureDirectory,
+				language === 'rust' ? 'lldb-rust.commands' : 'lldb.commands'
+			),
 		cwd: fixtureDirectory,
 		iwasmPath: values.get('--iwasm'),
+		language,
 		lldbPath: values.get('--lldb'),
 		programPath: values.get('--program'),
 		timeoutMs: Number(values.get('--timeout-ms') ?? DEFAULT_TIMEOUT_MS)
@@ -280,8 +321,10 @@ function parseCliArguments(argv) {
 }
 
 async function main() {
-	const result = await runNativeBaseline(parseCliArguments(process.argv.slice(2)));
-	verifyNativeCBaseline(result);
+	const options = parseCliArguments(process.argv.slice(2));
+	const result = await runNativeBaseline(options);
+	if (options.language === 'rust') verifyNativeRustBaseline(result);
+	else verifyNativeCBaseline(result);
 	process.stdout.write(`${result.lldbStdout}\n${result.targetStdout}`);
 	process.stderr.write(`${result.lldbStderr}${result.targetStderr}`);
 }
