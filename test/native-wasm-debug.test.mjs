@@ -192,6 +192,19 @@ test('rejects an incomplete native C transcript', () => {
 	);
 });
 
+test('reads native C memory through a symbol instead of a linked address', async () => {
+	const commands = await readFile(
+		'test/native-wasm-debug/lldb.commands',
+		'utf8'
+	);
+
+	assert.match(
+		commands,
+		/memory read --format x --size 4 --count 1 &global_bias/
+	);
+	assert.doesNotMatch(commands, /memory read[^\n]*0x[0-9a-f]+/i);
+});
+
 test('verifies recursive Rust DWARF values and target output', () => {
 	assert.doesNotThrow(() =>
 		verifyNativeRustBaseline({

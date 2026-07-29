@@ -120,6 +120,11 @@ without native toolchain dependencies:
 node --test test/native-wasm-debug.test.mjs
 ```
 
+The memory command resolves `&global_bias` through DWARF instead of pinning a
+numeric linear-memory address. Relinking the fixture with the same pinned
+compiler can move `.data`, so a literal address would make the baseline depend
+on one historical Wasm binary rather than the source-debug contract.
+
 The same runner selects `lldb-rust.commands` and Rust-specific transcript
 checks with `--language rust`:
 
