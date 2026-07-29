@@ -184,24 +184,25 @@ or rebuilding the full LLVM and WAMR binaries. It also verifies the published
 product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
 
-The weekly schedule also performs the full clean LLDB product build and keeps
-its package as a seven-day workflow artifact after the standalone verifier
-recomputes asset hashes, the deterministic gzip receipt, and both Wasm size
-budgets. This catches producer and Emscripten reproducibility or size
-regressions even when no maintainer has requested a release build. The same
-schedule runs the real native C command
-and LLDB-DAP attach baselines; either job can still be selected independently
-with `build_product=true` or `native_baseline=true` in a manual dispatch. The
-native job verifies the official LLVM and WASI SDK archive digests, builds the
-exact WAMR commit, recompiles the DWARF fixture, runs
+The weekly schedule also performs full clean LLDB and WAMR product builds. It
+checks out the exact pinned WAMR revision, reuses the LLDB producer's pinned
+Emscripten SDK, runs both standalone package verifiers, and keeps the combined
+packages as a seven-day workflow artifact. The verifiers recompute asset
+hashes, deterministic gzip receipts, and Wasm size budgets. This catches
+producer, Emscripten, reproducibility, and size regressions even when no
+maintainer has requested a release build. The same schedule runs the real
+native C command and LLDB-DAP attach baselines; either job can still be selected
+independently with `build_product=true` or `native_baseline=true` in a manual
+dispatch. The native job verifies the official LLVM and WASI SDK archive
+digests, builds the exact WAMR commit, recompiles the DWARF fixture, runs
 `llvm-dwarfdump --verify`, and then executes both native baseline runners. It
 uses a digest-pinned Debian container because the official LLDB binary has
 fixed Python 3.11 and ICU 72 shared-library dependencies. See
 `test/native-wasm-debug/README.md` for the command transcript contract and
 manual invocation.
 
-Maintainers can request the full pinned rebuild and a seven-day downloadable
-artifact without making the ordinary contract gate expensive:
+Maintainers can request the full pinned LLDB/WAMR rebuild and a seven-day
+downloadable artifact without making the ordinary contract gate expensive:
 
 ```sh
 gh workflow run lldb-browser.yml \

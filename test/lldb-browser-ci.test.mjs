@@ -14,7 +14,7 @@ test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
 	assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
 });
 
-test('scheduled and manual CI rebuild and upload the pinned LLDB browser product', async () => {
+test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browser products', async () => {
 	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
 
 	assert.match(workflow, /build_product:/);
@@ -28,8 +28,31 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB browser product
 		workflow,
 		/node producer\/lldb-browser\/scripts\/verify\.mjs artifacts\/lldb-browser/
 	);
+	assert.match(
+		workflow,
+		/WAMR_PRODUCT_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605/
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/prepare\.mjs --source "\$WAMR_PRODUCT_SOURCE"/
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/build\.mjs[\s\S]*?--emsdk artifacts\/lldb-browser-build\/emsdk/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/package\.mjs[\s\S]*?--output artifacts\/wamr-browser/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/verify\.mjs --artifacts artifacts\/wamr-browser/
+	);
 	assert.match(workflow, /uses: actions\/upload-artifact@v4/);
-	assert.match(workflow, /artifacts\/lldb-browser/);
+	assert.match(
+		workflow,
+		/path: \|\s+artifacts\/lldb-browser\s+artifacts\/wamr-browser/su
+	);
 });
 
 test('contract pushes cannot cancel an in-flight manual LLDB product build', async () => {

@@ -112,8 +112,11 @@ Pull requests and `main` pushes run the WAMR and LLDB producer contract suites
 together in the `LLDB browser producer contracts` workflow. This lightweight
 gate validates the pinned source and patch hashes, browser transport contracts,
 pthread sidecar, and package receipt without requiring a full Emscripten
-rebuild. Product-binary Chromium acceptance remains in the consuming
-`wasm-idle` repository.
+rebuild. The weekly schedule and `build_product=true` manual dispatch also
+clone the exact WAMR revision, reuse the LLDB producer's pinned Emscripten SDK,
+build and package the browser interpreter, run the standalone verifier, and
+upload its package beside the LLDB package. Product-binary Chromium acceptance
+remains in the consuming `wasm-idle` repository.
 
 The prepare step also installs a forced-include compatibility header. It keeps
 Emscripten's host-side `<wasi/api.h>` declarations from colliding with WAMR's

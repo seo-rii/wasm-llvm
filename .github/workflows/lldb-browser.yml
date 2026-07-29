@@ -10,7 +10,7 @@ on:
     workflow_dispatch:
         inputs:
             build_product:
-                description: Build and upload the pinned LLDB browser product
+                description: Build and upload the pinned LLDB and WAMR browser products
                 required: true
                 type: boolean
                 default: false
@@ -44,6 +44,11 @@ jobs:
             cancel-in-progress: false
         runs-on: ubuntu-latest
         timeout-minutes: 360
+        env:
+            WAMR_PRODUCT_REPOSITORY: https://github.com/bytecodealliance/wasm-micro-runtime.git
+            WAMR_PRODUCT_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
+            WAMR_PRODUCT_SOURCE: artifacts/wamr-browser-build/wasm-micro-runtime
+            WAMR_PRODUCT_BUILD: artifacts/wamr-browser-build/build
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
@@ -53,16 +58,38 @@ jobs:
               run: df -h .
             - name: Prepare pinned LLVM and Emscripten sources
               run: node producer/lldb-browser/scripts/prepare.mjs
+            - name: Prepare pinned WAMR browser source
+              run: |
+                  mkdir -p artifacts/wamr-browser-build
+                  git init "$WAMR_PRODUCT_SOURCE"
+                  git -C "$WAMR_PRODUCT_SOURCE" remote add origin "$WAMR_PRODUCT_REPOSITORY"
+                  git -C "$WAMR_PRODUCT_SOURCE" fetch --depth 1 origin "$WAMR_PRODUCT_COMMIT"
+                  git -C "$WAMR_PRODUCT_SOURCE" checkout --detach FETCH_HEAD
+                  test "$(git -C "$WAMR_PRODUCT_SOURCE" rev-parse HEAD)" = "$WAMR_PRODUCT_COMMIT"
+                  node producer/wamr-browser/scripts/prepare.mjs --source "$WAMR_PRODUCT_SOURCE"
             - name: Build and package LLDB browser assets
               env:
                   NINJA_JOBS: 2
               run: node producer/lldb-browser/scripts/build.mjs
             - name: Verify packaged LLDB browser assets
               run: node producer/lldb-browser/scripts/verify.mjs artifacts/lldb-browser
+            - name: Build and package WAMR browser assets
+              run: |
+                  node producer/wamr-browser/scripts/build.mjs \
+                    --source "$WAMR_PRODUCT_SOURCE" \
+                    --build "$WAMR_PRODUCT_BUILD" \
+                    --emsdk artifacts/lldb-browser-build/emsdk
+                  node producer/wamr-browser/scripts/package.mjs \
+                    --build "$WAMR_PRODUCT_BUILD" \
+                    --output artifacts/wamr-browser
+            - name: Verify packaged WAMR browser assets
+              run: node producer/wamr-browser/scripts/verify.mjs --artifacts artifacts/wamr-browser
             - uses: actions/upload-artifact@v4
               with:
-                  name: lldb-browser-${{ github.sha }}
-                  path: artifacts/lldb-browser
+                  name: lldb-wamr-browser-${{ github.sha }}
+                  path: |
+                      artifacts/lldb-browser
+                      artifacts/wamr-browser
                   if-no-files-found: error
                   retention-days: 7
 
