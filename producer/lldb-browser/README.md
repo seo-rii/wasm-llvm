@@ -133,6 +133,13 @@ The generated module requires `SharedArrayBuffer` and a cross-origin-isolated
 browser context. Debug assets must be lazy-loaded; they are not intended for
 the normal `WebAssembly.instantiate()` execution path.
 
+The module exports Emscripten's canonical `HEAPU8` view in addition to `FS`
+and `callMain`. The browser worker uses only its backing buffer length to
+report monotonic linear-memory growth; debugger memory contents never cross
+the worker boundary through this telemetry path. Because Emscripten refreshes
+the canonical view after memory growth, consumers must read `module.HEAPU8`
+for every sample rather than retain an older typed array.
+
 ## Commands
 
 The scripts are deliberately split so source mutation, compilation, and

@@ -41,6 +41,11 @@ test('pins WAMR, emsdk, and the classic source-debug interpreter', async () => {
 	assert.equal(manifest.configuration.maximumFunctionParameters, 21);
 	assert.equal(manifest.configuration.nativeReturnAbi, 'wasm32-wasi-i32-or-void');
 	assert.equal(manifest.configuration.nativeDispatchScope, 'emscripten-wasm32-wasi');
+	assert.deepEqual(manifest.configuration.exportedRuntimeMethods, [
+		'FS',
+		'callMain',
+		'HEAPU8'
+	]);
 	assert.deepEqual(manifest.configuration.wasiI64ArgumentSignatures, [
 		'(iI*)i',
 		'(i*iI*)i',
@@ -72,6 +77,11 @@ test('uses a strict pthread pool without proxying the WAMR main lifetime', () =>
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sPTHREAD_POOL_SIZE=2'));
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sPTHREAD_POOL_SIZE_STRICT=2'));
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sENVIRONMENT=worker'));
+	assert.ok(
+		EMSCRIPTEN_LINK_OPTIONS.includes(
+			"-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']"
+		)
+	);
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sEMULATE_FUNCTION_POINTER_CASTS=1'));
 	assert.ok(
 		EMSCRIPTEN_LINK_OPTIONS.includes(

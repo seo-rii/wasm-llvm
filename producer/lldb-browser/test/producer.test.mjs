@@ -42,6 +42,11 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   assert.equal(sourcesLock.emscripten.commit, EMSCRIPTEN_REVISION);
   assert.equal(manifest.protocols.connectionScheme, CONNECTION_SCHEME);
   assert.equal(manifest.protocols.transport, TRANSPORT_CONTRACT);
+  assert.deepEqual(manifest.build.exportedRuntimeMethods, [
+    "FS",
+    "callMain",
+    "HEAPU8",
+  ]);
   await verifyLockedInputs(sourcesLock);
 
   const destinations = sourcesLock.overlays.map((entry) => entry.destination);
@@ -96,6 +101,11 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
   ]) {
     assert.ok(buildPlan.executableLinkFlags.includes(flag));
   }
+  assert.ok(
+    buildPlan.executableLinkFlags.includes(
+      "-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
+    ),
+  );
   assert.ok(buildPlan.executableLinkFlags.includes("-sASSERTIONS=1"));
   assert.ok(!buildPlan.executableLinkFlags.includes("-sMINIFY_WASM_IMPORTS=0"));
   const incomingModuleApi = buildPlan.executableLinkFlags.find((flag) =>
@@ -266,7 +276,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-4`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-5`,
   );
 });
 

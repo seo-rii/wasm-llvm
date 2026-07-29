@@ -98,6 +98,10 @@ Emscripten ES-module pthread sidecar as `wamr-debug.worker.mjs`.
 `verify.mjs` checks all asset hashes, the sidecar/transport markers, the
 runtime-facing uncompressed Wasm asset, its reproducible gzip copy, Wasm
 validity, and the compressed asset-size budget.
+The generated module also exports Emscripten's canonical `HEAPU8` view. The
+target worker samples only the current backing buffer length so it can report
+linear-memory growth without exposing guest bytes; callers must not retain an
+older view across memory growth.
 The package receipt's provenance hashes the raw `sources.lock.json`, producer
 manifest, ordered patch digest set, and ordered overlay digest set.
 `verify.mjs` recomputes all four values, and the Clang release assembler carries

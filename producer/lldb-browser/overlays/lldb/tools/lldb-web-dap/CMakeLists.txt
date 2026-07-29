@@ -21,7 +21,7 @@ target_link_options(lldb-web-dap PRIVATE
   "SHELL:-sENVIRONMENT=worker"
   "SHELL:-sINVOKE_RUN=0"
   "SHELL:-sINCOMING_MODULE_JS_API=['locateFile','mainScriptUrlOrBlob','noInitialRun','onAbort','onExit','stdout','stderr','print','printErr']"
-  "SHELL:-sEXPORTED_RUNTIME_METHODS=['FS','callMain']"
+  "SHELL:-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']"
   "SHELL:-sFILESYSTEM=1"
   "SHELL:-sALLOW_MEMORY_GROWTH=1"
   "SHELL:-sINITIAL_MEMORY=536870912"

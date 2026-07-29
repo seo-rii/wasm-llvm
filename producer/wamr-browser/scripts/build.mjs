@@ -52,7 +52,7 @@ export const EMSCRIPTEN_LINK_OPTIONS = [
 	'-sEMULATE_FUNCTION_POINTER_CASTS=1',
 	'-sBINARYEN_EXTRA_PASSES=--pass-arg=max-func-params@21',
 	'-sEXIT_RUNTIME=1',
-	"-sEXPORTED_RUNTIME_METHODS=['FS','callMain']",
+	"-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
 	"-sINCOMING_MODULE_JS_API=['noInitialRun','locateFile','stdin','stdout','stderr','onExit','onAbort','mainScriptUrlOrBlob']"
 ];
 

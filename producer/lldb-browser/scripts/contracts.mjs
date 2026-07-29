@@ -108,6 +108,14 @@ export function validateProducerManifest(manifest) {
     throw new Error(`manifest pthread worker must be ${PTHREAD_WORKER_ASSET}`);
   }
   if (
+    JSON.stringify(manifest.build?.exportedRuntimeMethods) !==
+    JSON.stringify(["FS", "callMain", "HEAPU8"])
+  ) {
+    throw new Error(
+      "manifest must export FS, callMain, and HEAPU8 for worker telemetry",
+    );
+  }
+  if (
     JSON.stringify(manifest.build.registeredPlugins) !==
     JSON.stringify(REGISTERED_PLUGINS)
   ) {
