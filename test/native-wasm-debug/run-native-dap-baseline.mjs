@@ -201,9 +201,16 @@ function protocolSequence(history) {
 		if (message.type !== 'response' || message.success === false) continue;
 		if (message.command === 'attach') sequence.push('attach-response');
 		else if (
-			['configurationDone', 'threads', 'stackTrace', 'continue', 'disconnect'].includes(
-				message.command
-			)
+			[
+				'configurationDone',
+				'continue',
+				'disconnect',
+				'scopes',
+				'setBreakpoints',
+				'stackTrace',
+				'threads',
+				'variables'
+			].includes(message.command)
 		) {
 			sequence.push(message.command);
 		}
@@ -258,6 +265,16 @@ export async function runNativeDapBaseline(options) {
 						'native lldb-dap attach response arrived before configurationDone'
 					);
 				}
+				const sourcePath = options.sourcePath ?? '/workspace/main.c';
+				const breakpointLine = options.breakpointLine ?? 27;
+				const breakpointResponse = await client.request('setBreakpoints', {
+					source: {
+						name: path.basename(sourcePath),
+						path: sourcePath
+					},
+					breakpoints: [{ line: breakpointLine }],
+					sourceModified: false
+				});
 				await client.request('configurationDone');
 				await attach;
 				const stopped = await client.waitForEvent('stopped');
@@ -272,10 +289,73 @@ export async function runNativeDapBaseline(options) {
 					startFrame: 0,
 					levels: 20
 				});
+				const breakpointContinued = client.waitForEvent('continued');
+				const breakpointStopped = client.waitForEvent('stopped');
+				await client.request('continue', { threadId });
+				await breakpointContinued;
+				const breakpointStoppedEvent = await breakpointStopped;
+				const breakpointThreadId = breakpointStoppedEvent.threadId ?? threadId;
+				const breakpointStackResponse = await client.request('stackTrace', {
+					threadId: breakpointThreadId,
+					startFrame: 0,
+					levels: 20
+				});
+				const breakpointStackFrames =
+					breakpointStackResponse.stackFrames ?? [];
+				const breakpointFrameId = breakpointStackFrames[0]?.id;
+				if (!Number.isInteger(breakpointFrameId)) {
+					throw new Error(
+						'native lldb-dap source breakpoint stopped without a frame ID'
+					);
+				}
+				const scopesResponse = await client.request('scopes', {
+					frameId: breakpointFrameId
+				});
+				const scopes = scopesResponse.scopes ?? [];
+				const localScope =
+					scopes.find((scope) => /^locals$/i.test(scope.name)) ??
+					scopes.find(
+						(scope) =>
+							scope.expensive !== true &&
+							Number.isInteger(scope.variablesReference) &&
+							scope.variablesReference > 0
+					);
+				let localVariables = [];
+				if (
+					Number.isInteger(localScope?.variablesReference) &&
+					localScope.variablesReference > 0
+				) {
+					const variablesResponse = await client.request('variables', {
+						variablesReference: localScope.variablesReference
+					});
+					localVariables = variablesResponse.variables ?? [];
+				}
+				const pair = localVariables.find((variable) => variable.name === 'pair');
+				let pairVariables = [];
+				if (
+					Number.isInteger(pair?.variablesReference) &&
+					pair.variablesReference > 0
+				) {
+					const pairResponse = await client.request('variables', {
+						variablesReference: pair.variablesReference
+					});
+					pairVariables = pairResponse.variables ?? [];
+				}
+				const values = localVariables.find((variable) => variable.name === 'values');
+				let valuesVariables = [];
+				if (
+					Number.isInteger(values?.variablesReference) &&
+					values.variablesReference > 0
+				) {
+					const valuesResponse = await client.request('variables', {
+						variablesReference: values.variablesReference
+					});
+					valuesVariables = valuesResponse.variables ?? [];
+				}
 				const continued = client.waitForEvent('continued');
 				const exited = client.waitForEvent('exited');
 				const terminated = client.waitForEvent('terminated');
-				await client.request('continue', { threadId });
+				await client.request('continue', { threadId: breakpointThreadId });
 				await continued;
 				const exitEvent = await exited;
 				await terminated;
@@ -295,11 +375,18 @@ export async function runNativeDapBaseline(options) {
 					);
 				}
 				return {
+					breakpoints: breakpointResponse.breakpoints ?? [],
+					breakpointStackFrames,
+					breakpointStopReason: breakpointStoppedEvent.reason,
 					dapStderr: adapter.stderr(),
 					exitCode: exitEvent.exitCode,
+					localVariables,
+					pairVariables,
+					scopes,
 					sequence: protocolSequence(client.history),
 					stackFrames: stackResponse.stackFrames ?? [],
-					threads
+					threads,
+					valuesVariables
 				};
 			} finally {
 				client.close();
@@ -313,6 +400,63 @@ export async function runNativeDapBaseline(options) {
 export function verifyNativeDapBaseline(result) {
 	if (!result.stackFrames.some((frame) => frame.name === '_start')) {
 		throw new Error('native DAP baseline did not expose the _start frame');
+	}
+	if (
+		!result.breakpoints?.some(
+			(breakpoint) => breakpoint.verified === true && breakpoint.line === 27
+		)
+	) {
+		throw new Error('native DAP baseline did not resolve the source breakpoint');
+	}
+	if (
+		result.breakpointStopReason !== 'breakpoint' ||
+		!result.breakpointStackFrames?.some(
+			(frame) =>
+				frame.name === 'main' &&
+				frame.line === 27 &&
+				frame.source?.path?.endsWith('/main.c')
+		)
+	) {
+		throw new Error('native DAP baseline did not stop in main at the source breakpoint');
+	}
+	const pair = result.localVariables?.find((variable) => variable.name === 'pair');
+	const values = result.localVariables?.find(
+		(variable) => variable.name === 'values'
+	);
+	const middle = result.localVariables?.find(
+		(variable) => variable.name === 'middle'
+	);
+	if (
+		!pair ||
+		!values ||
+		!middle ||
+		pair.variablesReference <= 0 ||
+		values.variablesReference <= 0
+	) {
+		throw new Error('native DAP baseline did not expose the compound locals');
+	}
+	if (
+		!result.pairVariables?.some(
+			(variable) => variable.name === 'left' && variable.value === '2'
+		) ||
+		!result.pairVariables?.some(
+			(variable) => variable.name === 'right' && variable.value === '6'
+		)
+	) {
+		throw new Error('native DAP baseline did not expose the structure children');
+	}
+	for (const [name, value] of [
+		['[0]', '2'],
+		['[1]', '4'],
+		['[2]', '6']
+	]) {
+		if (
+			!result.valuesVariables?.some(
+				(variable) => variable.name === name && variable.value === value
+			)
+		) {
+			throw new Error('native DAP baseline did not expose the array children');
+		}
 	}
 	if (!result.threads.some((thread) => Number.isInteger(thread.id))) {
 		throw new Error('native DAP baseline did not expose a target thread');
@@ -328,12 +472,15 @@ export function verifyNativeDapBaseline(result) {
 		'attach',
 		'initialized',
 		'stopped',
+		'setBreakpoints',
 		'configurationDone',
 		'attach-response',
 		'threads',
 		'stackTrace',
 		'continue',
 		'continued',
+		'scopes',
+		'variables',
 		'exited',
 		'terminated',
 		'disconnect'
@@ -350,6 +497,8 @@ export function verifyNativeDapBaseline(result) {
 		['initialize', 'attach'],
 		['attach', 'initialized'],
 		['initialized', 'stopped'],
+		['initialized', 'setBreakpoints'],
+		['setBreakpoints', 'configurationDone'],
 		['initialized', 'configurationDone'],
 		['configurationDone', 'attach-response'],
 		['stopped', 'threads'],
@@ -367,6 +516,45 @@ export function verifyNativeDapBaseline(result) {
 				`native DAP baseline did not preserve the ${before} before ${after} sequence`
 			);
 		}
+	}
+	const firstStopped = result.sequence.indexOf('stopped');
+	const secondStopped = result.sequence.indexOf('stopped', firstStopped + 1);
+	const firstStackTrace = result.sequence.indexOf('stackTrace');
+	const secondStackTrace = result.sequence.indexOf(
+		'stackTrace',
+		firstStackTrace + 1
+	);
+	const firstContinue = result.sequence.indexOf('continue');
+	const secondContinue = result.sequence.indexOf('continue', firstContinue + 1);
+	const firstContinued = result.sequence.indexOf('continued');
+	const secondContinued = result.sequence.indexOf(
+		'continued',
+		firstContinued + 1
+	);
+	const scopes = result.sequence.indexOf('scopes');
+	const firstVariables = result.sequence.indexOf('variables');
+	const secondVariables = result.sequence.indexOf('variables', firstVariables + 1);
+	const thirdVariables = result.sequence.indexOf(
+		'variables',
+		secondVariables + 1
+	);
+	const exited = result.sequence.indexOf('exited');
+	if (
+		secondStopped <= firstContinue ||
+		secondStopped <= firstContinued ||
+		secondStackTrace <= secondStopped ||
+		scopes <= secondStackTrace ||
+		firstVariables <= scopes ||
+		secondVariables <= firstVariables ||
+		thirdVariables <= secondVariables ||
+		secondContinue <= thirdVariables ||
+		secondContinued <= thirdVariables ||
+		exited <= secondContinue ||
+		exited <= secondContinued
+	) {
+		throw new Error(
+			'native DAP baseline did not preserve the source-breakpoint variable sequence'
+		);
 	}
 }
 
@@ -390,7 +578,7 @@ function parseCliArguments(argv) {
 		const value = argv[index + 1];
 		if (!name?.startsWith('--') || value === undefined) {
 			throw new Error(
-				'usage: run-native-dap-baseline.mjs --iwasm PATH --lldb-dap PATH --program PATH [--repeat NUMBER] [--timeout-ms NUMBER]'
+				'usage: run-native-dap-baseline.mjs --iwasm PATH --lldb-dap PATH --program PATH [--source PATH] [--repeat NUMBER] [--timeout-ms NUMBER]'
 			);
 		}
 		values.set(name, value);
@@ -404,6 +592,7 @@ function parseCliArguments(argv) {
 		lldbDapPath: values.get('--lldb-dap'),
 		programPath: values.get('--program'),
 		repeat: Number(values.get('--repeat') ?? 1),
+		sourcePath: values.get('--source') ?? '/workspace/main.c',
 		timeoutMs: Number(values.get('--timeout-ms') ?? DEFAULT_NATIVE_TIMEOUT_MS)
 	};
 }

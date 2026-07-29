@@ -167,29 +167,46 @@ attach request
     target create /path/to/program.wasm
     process connect -p wasm connect://127.0.0.1:1234
 initialized event
-stopped event
+setBreakpoints request/response for /workspace/main.c:27
+stopped event at entry
 configurationDone request
 configurationDone response
 attach response
 threads request/response
-stackTrace request/response
+stackTrace request/response for _start
+continue request plus continued event
+stopped event at the source breakpoint
+stackTrace request/response for main.c:27
+scopes request/response
+variables request/response for Locals
+variables request/response for pair children
+variables request/response for values children
 continue request plus continued event
 exited event
 terminated event
 disconnect request/response
 ```
 
-The attach uses `stopOnEntry: true`; `threads` and `stackTrace` return the
-stopped `_start` frame, `continue` produces zero-exit `continued`, `exited`,
-and `terminated` events, and `disconnect` succeeds while WAMR preserves
-`total=15`. LLDB-DAP deliberately delays its successful `attach` response
-until after `configurationDone`. The target can emit `stopped` before the
-configuration response, and the `continued` event can race the successful
+The attach uses `stopOnEntry: true`; `threads` and the first `stackTrace`
+return the stopped `_start` frame. Before `configurationDone`, the client
+installs `/workspace/main.c:27` and requires LLDB-DAP to return a verified
+breakpoint on that line. The first continue stops in `main`, then `scopes` and
+`variables` enumerate the `pair`, `values`, and `middle` locals. Separate
+child requests verify `pair.left/right` and all three `values` elements, which
+matches the UI's lazy `variablesReference` model. The second continue produces
+zero-exit `continued`, `exited`, and `terminated` events, and `disconnect`
+succeeds while WAMR preserves `total=15`.
+
+LLDB-DAP deliberately delays its successful `attach` response until after
+`configurationDone`. The target can emit the entry `stopped` event before the
+configuration response, and each `continued` event can race its successful
 `continue` response, so the verifier enforces the required causal edges rather
-than one over-constrained total ordering.
+than one over-constrained total ordering. Pass `--source PATH` when validating
+a fixture whose normalized source path is not `/workspace/main.c`.
 
 The dependency-free test uses a fake adapter to fragment DAP frames, validates
-paths containing spaces, and covers both legal continue orderings:
+paths containing spaces, rejects missing breakpoint or compound-value
+responses, and covers both legal continue orderings:
 
 ```sh
 node --test test/native-wasm-dap.test.mjs
@@ -206,10 +223,11 @@ node run-native-dap-baseline.mjs \
 ```
 
 Each iteration starts fresh WAMR and LLDB-DAP processes, allocates a new
-loopback endpoint, verifies the full transcript, waits for both processes to
-exit, and only then starts the next iteration. A failure stops the sequence at
-that iteration. The JSON output contains every completed result when more than
-one iteration is requested.
+loopback endpoint, verifies entry and source-breakpoint stops, lazily expands
+the structure and array variables, waits for both processes to exit, and only
+then starts the next iteration. A failure stops the sequence at that
+iteration. The JSON output contains every completed result when more than one
+iteration is requested.
 
 ## CI baseline
 
