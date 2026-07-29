@@ -3,16 +3,8 @@
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
-import { PACKAGED_PTHREAD_WORKER } from './build.mjs';
 import { isMain } from './shared.mjs';
-import { verifyWamrBrowser } from './verify.mjs';
-
-export const WAMR_RUNTIME_ASSETS = Object.freeze([
-	'wamr-debug.js',
-	'wamr-debug.wasm',
-	PACKAGED_PTHREAD_WORKER,
-	'wamr-debug.wasm.gz'
-]);
+import { verifyWamrBrowser, WAMR_RUNTIME_ASSETS } from './verify.mjs';
 
 function indexAssets(receipt) {
 	const assets = new Map();

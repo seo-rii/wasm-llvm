@@ -98,9 +98,11 @@ the prepare command is idempotent without partially reversing source files.
 the installed `emcc` version, and invokes
 `emcmake` from that pinned checkout. Packaging preserves and hashes the
 Emscripten ES-module pthread sidecar as `wamr-debug.worker.mjs`.
-`verify.mjs` checks all asset hashes, the sidecar/transport markers, the
-runtime-facing uncompressed Wasm asset, its reproducible gzip copy, Wasm
-validity, and the compressed asset-size budget.
+`verify.mjs` requires the exact four-file runtime asset set in the receipt and
+checks all asset hashes, the sidecar/transport markers, the runtime-facing
+uncompressed Wasm asset, its reproducible gzip copy, Wasm validity, and the
+compressed asset-size budget. Missing, duplicate, and unexpected receipt paths
+are rejected before any runtime asset is read.
 Before publishing a rebuilt interpreter, build it in two distinct clean
 directories and run `verify-reproducibility.mjs` on their packages. The
 comparison first applies the full standalone verifier to both directories,

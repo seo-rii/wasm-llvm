@@ -541,6 +541,49 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 		});
 		assert.ok(receipt.assets.some((asset) => asset.path === PACKAGED_PTHREAD_WORKER));
 		assert.ok(manifest.outputs.includes(PACKAGED_PTHREAD_WORKER));
+		for (const requiredAsset of [
+			'wamr-debug.js',
+			'wamr-debug.wasm',
+			PACKAGED_PTHREAD_WORKER,
+			'wamr-debug.wasm.gz'
+		]) {
+			const incompleteReceipt = structuredClone(receipt);
+			incompleteReceipt.assets = incompleteReceipt.assets.filter(
+				(asset) => asset.path !== requiredAsset
+			);
+			await writeFile(
+				path.join(output, 'producer-receipt.json'),
+				`${JSON.stringify(incompleteReceipt, null, 2)}\n`
+			);
+			await assert.rejects(
+				verifyWamrBrowser({ artifacts: output }),
+				{ message: `WAMR debugger receipt is missing ${requiredAsset}` }
+			);
+		}
+		const duplicateReceipt = structuredClone(receipt);
+		duplicateReceipt.assets.push(structuredClone(duplicateReceipt.assets[0]));
+		await writeFile(
+			path.join(output, 'producer-receipt.json'),
+			`${JSON.stringify(duplicateReceipt, null, 2)}\n`
+		);
+		const unexpectedReceipt = structuredClone(receipt);
+		unexpectedReceipt.assets.push({
+			path: 'unexpected-runtime.bin',
+			bytes: 0,
+			sha256: createHash('sha256').update('').digest('hex')
+		});
+		await writeFile(
+			path.join(secondOutput, 'producer-receipt.json'),
+			`${JSON.stringify(unexpectedReceipt, null, 2)}\n`
+		);
+		await Promise.all([
+			assert.rejects(verifyWamrBrowser({ artifacts: output }), {
+				message: 'WAMR debugger receipt contains duplicate asset metadata'
+			}),
+			assert.rejects(verifyWamrBrowser({ artifacts: secondOutput }), {
+				message: 'WAMR debugger receipt contains unexpected asset metadata'
+			})
+		]);
 	} finally {
 		await rm(temporaryRoot, { recursive: true, force: true });
 	}

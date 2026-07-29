@@ -11,6 +11,12 @@ import { isMain, parseArguments, producerRoot } from './shared.mjs';
 
 const gunzipAsync = promisify(gunzip);
 const DEFAULT_COMPRESSED_SIZE_BUDGET = 20 * 1024 * 1024;
+export const WAMR_RUNTIME_ASSETS = Object.freeze([
+	'wamr-debug.js',
+	'wamr-debug.wasm',
+	PACKAGED_PTHREAD_WORKER,
+	'wamr-debug.wasm.gz'
+]);
 
 function sha256(bytes) {
 	return createHash('sha256').update(bytes).digest('hex');
@@ -54,6 +60,18 @@ export async function verifyWamrBrowser({ artifacts, sizeBudget }) {
 		if (receipt.provenance?.[name] !== expected) {
 			throw new Error(`WAMR debugger receipt has stale ${name} provenance`);
 		}
+	}
+	const receiptAssetPaths = new Set(receipt.assets.map((asset) => asset.path));
+	if (receiptAssetPaths.size !== receipt.assets.length) {
+		throw new Error('WAMR debugger receipt contains duplicate asset metadata');
+	}
+	for (const asset of WAMR_RUNTIME_ASSETS) {
+		if (!receiptAssetPaths.has(asset)) {
+			throw new Error(`WAMR debugger receipt is missing ${asset}`);
+		}
+	}
+	if (receiptAssetPaths.size !== WAMR_RUNTIME_ASSETS.length) {
+		throw new Error('WAMR debugger receipt contains unexpected asset metadata');
 	}
 	for (const asset of receipt.assets) {
 		const bytes = await readFile(path.join(artifacts, asset.path));
