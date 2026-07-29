@@ -10,7 +10,8 @@ import { PACKAGED_PTHREAD_WORKER } from './build.mjs';
 import { isMain, parseArguments, producerRoot } from './shared.mjs';
 
 const gunzipAsync = promisify(gunzip);
-const DEFAULT_COMPRESSED_SIZE_BUDGET = 20 * 1024 * 1024;
+export const DEFAULT_RAW_SIZE_BUDGET = 1024 * 1024;
+export const DEFAULT_COMPRESSED_SIZE_BUDGET = 512 * 1024;
 export const WAMR_RUNTIME_ASSETS = Object.freeze([
 	'wamr-debug.js',
 	'wamr-debug.wasm',
@@ -22,7 +23,7 @@ function sha256(bytes) {
 	return createHash('sha256').update(bytes).digest('hex');
 }
 
-export async function verifyWamrBrowser({ artifacts, sizeBudget }) {
+export async function verifyWamrBrowser({ artifacts, rawSizeBudget, sizeBudget }) {
 	if (!artifacts) throw new Error('--artifacts is required');
 	artifacts = path.resolve(artifacts);
 	const receipt = JSON.parse(
@@ -82,6 +83,14 @@ export async function verifyWamrBrowser({ artifacts, sizeBudget }) {
 
 	const compressed = await readFile(path.join(artifacts, 'wamr-debug.wasm.gz'));
 	const uncompressed = await readFile(path.join(artifacts, 'wamr-debug.wasm'));
+	const rawBudget = rawSizeBudget
+		? Number(rawSizeBudget)
+		: DEFAULT_RAW_SIZE_BUDGET;
+	if (uncompressed.byteLength > rawBudget) {
+		throw new Error(
+			`wamr-debug.wasm exceeds its ${rawBudget}-byte raw size budget`
+		);
+	}
 	const budget = sizeBudget ? Number(sizeBudget) : DEFAULT_COMPRESSED_SIZE_BUDGET;
 	if (compressed.byteLength > budget) {
 		throw new Error(`wamr-debug.wasm.gz exceeds its ${budget}-byte compressed size budget`);

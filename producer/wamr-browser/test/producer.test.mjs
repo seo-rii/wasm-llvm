@@ -20,7 +20,11 @@ import {
 } from '../scripts/build.mjs';
 import { packageWamrBrowser } from '../scripts/package.mjs';
 import { WAMR_PATCH_PATHS, prepareWamrSource } from '../scripts/prepare.mjs';
-import { verifyWamrBrowser } from '../scripts/verify.mjs';
+import {
+	DEFAULT_COMPRESSED_SIZE_BUDGET,
+	DEFAULT_RAW_SIZE_BUDGET,
+	verifyWamrBrowser
+} from '../scripts/verify.mjs';
 import {
 	assertReproducibleWamrBuilds,
 	verifyReproducibleWamrArtifactDirectories
@@ -102,6 +106,11 @@ test('uses a strict pthread pool without proxying the WAMR main lifetime', () =>
 
 test('requires the explicitly pinned emsdk checkout', async () => {
 	await assert.rejects(buildWamrBrowser({ source: '.', build: '.' }), /--emsdk is required/u);
+});
+
+test('pins explicit WAMR raw and compressed Wasm size budgets', () => {
+	assert.equal(DEFAULT_RAW_SIZE_BUDGET, 1024 * 1024);
+	assert.equal(DEFAULT_COMPRESSED_SIZE_BUDGET, 512 * 1024);
 });
 
 test('bridges raw ring descriptors into pthread realms without blocking proxy calls', async () => {
@@ -514,6 +523,10 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 
 		await packageWamrBrowser({ build, output });
 		await verifyWamrBrowser({ artifacts: output });
+		await assert.rejects(
+			verifyWamrBrowser({ artifacts: output, rawSizeBudget: 7 }),
+			/wamr-debug\.wasm exceeds its 7-byte raw size budget/u
+		);
 		await packageWamrBrowser({ build, output: secondOutput });
 		const reproducibleReceipt = await verifyReproducibleWamrArtifactDirectories(
 			output,

@@ -101,8 +101,12 @@ Emscripten ES-module pthread sidecar as `wamr-debug.worker.mjs`.
 `verify.mjs` requires the exact four-file runtime asset set in the receipt and
 checks all asset hashes, the sidecar/transport markers, the runtime-facing
 uncompressed Wasm asset, its reproducible gzip copy, Wasm validity, and the
-compressed asset-size budget. Missing, duplicate, and unexpected receipt paths
-are rejected before any runtime asset is read.
+raw and compressed asset-size budgets. Missing, duplicate, and unexpected
+receipt paths are rejected before any runtime asset is read.
+The product gate caps `wamr-debug.wasm` at 1 MiB raw and 512 KiB as a
+deterministic level-9 gzip. The current pinned product is 277,904 bytes raw and
+100,204 bytes compressed, leaving explicit headroom without allowing accidental
+multi-megabyte growth.
 Before publishing a rebuilt interpreter, build it in two distinct clean
 directories and run `verify-reproducibility.mjs` on their packages. The
 comparison first applies the full standalone verifier to both directories,
