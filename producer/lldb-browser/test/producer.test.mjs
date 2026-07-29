@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import { gzipSync } from "node:zlib";
 import {
   CONNECTION_SCHEME,
   EMSCRIPTEN_REVISION,
@@ -416,12 +417,28 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
   assert.equal(receipt.build.proxyToPthread, true);
   assert.equal(receipt.build.pthreadWorker, PTHREAD_WORKER_ASSET);
   assert.equal(artifactManifest.debugger.lldb.worker, PTHREAD_WORKER_ASSET);
+  const compressedWasm = gzipSync(wasmBytes, { level: 9, mtime: 0 });
+  assert.deepEqual(receipt.assets["lldb-web-dap.wasm"].compressed, {
+    format: "gzip",
+    level: 9,
+    size: compressedWasm.byteLength,
+    sha256: sha256(compressedWasm),
+  });
 
   const oversizedReceipt = structuredClone(receipt);
   oversizedReceipt.assets["lldb-web-dap.wasm"].size = 48 * 1024 * 1024 + 1;
   assert.throws(
     () => validateBuildReceipt(oversizedReceipt),
     /48 MiB uncompressed size budget/,
+  );
+
+  const oversizedCompressedReceipt = structuredClone(receipt);
+  oversizedCompressedReceipt.assets[
+    "lldb-web-dap.wasm"
+  ].compressed.size = 18 * 1024 * 1024 + 1;
+  assert.throws(
+    () => validateBuildReceipt(oversizedCompressedReceipt),
+    /18 MiB gzip size budget/,
   );
 });
 

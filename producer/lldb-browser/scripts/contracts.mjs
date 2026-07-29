@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 export const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const PRODUCER_ROOT = path.resolve(SCRIPT_DIR, "..");
@@ -16,6 +17,7 @@ export const TRANSPORT_CONTRACT = "shared-ring-v1";
 export const CONNECTION_SCHEME = "wasm-messageport";
 export const PTHREAD_WORKER_ASSET = "lldb-web-dap.pthread.mjs";
 export const LLDB_WASM_SIZE_BUDGET_BYTES = 48 * 1024 * 1024;
+export const LLDB_WASM_GZIP_SIZE_BUDGET_BYTES = 18 * 1024 * 1024;
 export const REQUIRED_ASSETS = [
   "lldb-web-dap.js",
   "lldb-web-dap.wasm",
@@ -260,6 +262,7 @@ export function createBuildReceipt({
   assertSha256(manifestSha256, "producer manifest hash");
   assertSha256(sourcesLockSha256, "sources lock hash");
   assertSha256(patchesSha256, "LLDB patch set hash");
+  const compressedWasm = gzipSync(wasmBytes, { level: 9, mtime: 0 });
   return {
     schemaVersion: 1,
     producer: {
@@ -295,6 +298,12 @@ export function createBuildReceipt({
       "lldb-web-dap.wasm": {
         size: wasmBytes.byteLength,
         sha256: sha256(wasmBytes),
+        compressed: {
+          format: "gzip",
+          level: 9,
+          size: compressedWasm.byteLength,
+          sha256: sha256(compressedWasm),
+        },
       },
       [PTHREAD_WORKER_ASSET]: {
         size: workerBytes.byteLength,
@@ -390,6 +399,23 @@ export function validateBuildReceipt(receipt) {
   ) {
     throw new Error(
       "lldb-web-dap.wasm exceeds its 48 MiB uncompressed size budget",
+    );
+  }
+  const compressed = receipt.assets["lldb-web-dap.wasm"].compressed;
+  if (
+    compressed?.format !== "gzip" ||
+    compressed?.level !== 9 ||
+    !Number.isSafeInteger(compressed?.size) ||
+    compressed.size <= 0
+  ) {
+    throw new Error(
+      "lldb-web-dap.wasm receipt has invalid deterministic gzip metadata",
+    );
+  }
+  assertSha256(compressed.sha256, "receipt compressed Wasm hash");
+  if (compressed.size > LLDB_WASM_GZIP_SIZE_BUDGET_BYTES) {
+    throw new Error(
+      "lldb-web-dap.wasm exceeds its 18 MiB gzip size budget",
     );
   }
 }

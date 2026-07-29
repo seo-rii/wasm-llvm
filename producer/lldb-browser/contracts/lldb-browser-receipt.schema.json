@@ -48,7 +48,29 @@
         "lldb-web-dap.js",
         "lldb-web-dap.wasm",
         "lldb-web-dap.pthread.mjs"
-      ]
+      ],
+      "properties": {
+        "lldb-web-dap.wasm": {
+          "type": "object",
+          "required": ["size", "sha256", "compressed"],
+          "properties": {
+            "compressed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["format", "level", "size", "sha256"],
+              "properties": {
+                "format": { "const": "gzip" },
+                "level": { "const": 9 },
+                "size": { "type": "integer", "minimum": 1 },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

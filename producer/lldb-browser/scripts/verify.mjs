@@ -2,6 +2,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { gzipSync } from 'node:zlib';
 import {
 	PRODUCER_ROOT,
 	REPO_ROOT,
@@ -53,6 +54,14 @@ export async function verifyArtifactDirectory(artifactDir) {
 			throw new Error(`SHA-256 mismatch for ${asset}`);
 		}
 		assets[asset] = bytes;
+	}
+	const compressedWasm = gzipSync(assets['lldb-web-dap.wasm'], { level: 9, mtime: 0 });
+	const compressedMetadata = receipt.assets['lldb-web-dap.wasm'].compressed;
+	if (
+		compressedWasm.byteLength !== compressedMetadata.size ||
+		sha256(compressedWasm) !== compressedMetadata.sha256
+	) {
+		throw new Error('deterministic gzip metrics differ for lldb-web-dap.wasm');
 	}
 	if (
 		artifactManifest.debugger.lldb.jsSha256 !== receipt.assets['lldb-web-dap.js'].sha256 ||
