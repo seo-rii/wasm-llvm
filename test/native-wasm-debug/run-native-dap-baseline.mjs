@@ -370,6 +370,19 @@ export function verifyNativeDapBaseline(result) {
 	}
 }
 
+export async function runNativeDapBaselines(options, repeat = 1) {
+	if (!Number.isInteger(repeat) || repeat < 1 || repeat > 100) {
+		throw new Error('native DAP repeat count must be an integer between 1 and 100');
+	}
+	const results = [];
+	for (let iteration = 0; iteration < repeat; iteration += 1) {
+		const result = await runNativeDapBaseline(options);
+		verifyNativeDapBaseline(result);
+		results.push(result);
+	}
+	return results;
+}
+
 function parseCliArguments(argv) {
 	const values = new Map();
 	for (let index = 0; index < argv.length; index += 2) {
@@ -377,7 +390,7 @@ function parseCliArguments(argv) {
 		const value = argv[index + 1];
 		if (!name?.startsWith('--') || value === undefined) {
 			throw new Error(
-				'usage: run-native-dap-baseline.mjs --iwasm PATH --lldb-dap PATH --program PATH [--timeout-ms NUMBER]'
+				'usage: run-native-dap-baseline.mjs --iwasm PATH --lldb-dap PATH --program PATH [--repeat NUMBER] [--timeout-ms NUMBER]'
 			);
 		}
 		values.set(name, value);
@@ -390,14 +403,19 @@ function parseCliArguments(argv) {
 		iwasmPath: values.get('--iwasm'),
 		lldbDapPath: values.get('--lldb-dap'),
 		programPath: values.get('--program'),
+		repeat: Number(values.get('--repeat') ?? 1),
 		timeoutMs: Number(values.get('--timeout-ms') ?? DEFAULT_NATIVE_TIMEOUT_MS)
 	};
 }
 
 async function main() {
-	const result = await runNativeDapBaseline(parseCliArguments(process.argv.slice(2)));
-	verifyNativeDapBaseline(result);
-	process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+	const options = parseCliArguments(process.argv.slice(2));
+	const results = await runNativeDapBaselines(options, options.repeat);
+	let output = results[0];
+	if (results.length > 1) {
+		output = { iterations: results.length, results };
+	}
+	process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

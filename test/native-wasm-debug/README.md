@@ -195,6 +195,22 @@ paths containing spaces, and covers both legal continue orderings:
 node --test test/native-wasm-dap.test.mjs
 ```
 
+Pass `--repeat N` to run between 1 and 100 complete sessions sequentially:
+
+```sh
+node run-native-dap-baseline.mjs \
+  --iwasm /path/to/iwasm \
+  --lldb-dap /path/to/llvm-22.1.8/bin/lldb-dap \
+  --program /path/to/program.wasm \
+  --repeat 10
+```
+
+Each iteration starts fresh WAMR and LLDB-DAP processes, allocates a new
+loopback endpoint, verifies the full transcript, waits for both processes to
+exit, and only then starts the next iteration. A failure stops the sequence at
+that iteration. The JSON output contains every completed result when more than
+one iteration is requested.
+
 ## CI baseline
 
 `.github/workflows/lldb-browser.yml` runs the real C command and DAP attach
@@ -214,7 +230,9 @@ fixture is compiled from source with the official LLVM 22.1.8 Clang while the
 pinned WASI SDK supplies its sysroot and compiler-rt resource directory. CI
 also checks the resulting `program.wasm` SHA-256 before starting either
 debugger baseline, so toolchain or fixture drift fails before protocol output
-is interpreted.
+is interpreted. The scheduled DAP baseline repeats ten complete
+attach/continue/disconnect lifecycles; maintainers can use `--repeat 100`
+locally for a longer soak without making every weekly run that expensive.
 
 Ordinary pull requests keep running the dependency-free orchestration and
 producer contract tests. The real native job is scheduled/manual because its

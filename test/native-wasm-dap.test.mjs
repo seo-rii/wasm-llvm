@@ -5,7 +5,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 
 import {
-	runNativeDapBaseline,
+	runNativeDapBaselines,
 	verifyNativeDapBaseline
 } from './native-wasm-debug/run-native-dap-baseline.mjs';
 
@@ -16,7 +16,7 @@ async function createExecutable(directory, name, source) {
 	return executable;
 }
 
-test('runs the deferred native lldb-dap attach lifecycle over stdio', async (context) => {
+test('repeats the deferred native lldb-dap attach lifecycle over stdio', async (context) => {
 	const directory = await mkdtemp(path.join(tmpdir(), 'wasm-native-dap-test-'));
 	context.after(() => rm(directory, { recursive: true, force: true }));
 	const target = await createExecutable(
@@ -144,30 +144,43 @@ process.stdin.on('data', (chunk) => {
 	const program = path.join(directory, 'program with spaces.wasm');
 	await writeFile(program, 'fixture');
 
-	const result = await runNativeDapBaseline({
-		cwd: directory,
-		iwasmPath: target,
-		lldbDapPath: dap,
-		programPath: program,
-		timeoutMs: 2_000
-	});
+	const results = await runNativeDapBaselines(
+		{
+			cwd: directory,
+			iwasmPath: target,
+			lldbDapPath: dap,
+			programPath: program,
+			timeoutMs: 2_000
+		},
+		3
+	);
 
-	assert.deepEqual(result.sequence, [
-		'initialize',
-		'attach',
-		'initialized',
-		'stopped',
-		'configurationDone',
-		'attach-response',
-		'threads',
-		'stackTrace',
-		'continued',
-		'continue',
-		'exited',
-		'terminated',
-		'disconnect'
-	]);
-	assert.doesNotThrow(() => verifyNativeDapBaseline(result));
+	assert.equal(results.length, 3);
+	for (const result of results) {
+		assert.deepEqual(result.sequence, [
+			'initialize',
+			'attach',
+			'initialized',
+			'stopped',
+			'configurationDone',
+			'attach-response',
+			'threads',
+			'stackTrace',
+			'continued',
+			'continue',
+			'exited',
+			'terminated',
+			'disconnect'
+		]);
+		assert.doesNotThrow(() => verifyNativeDapBaseline(result));
+	}
+});
+
+test('rejects invalid native DAP repeat counts before launching tools', async () => {
+	await assert.rejects(
+		runNativeDapBaselines({}, 0),
+		/native DAP repeat count must be an integer between 1 and 100/
+	);
 });
 
 test('rejects a native DAP transcript without an entry frame', () => {

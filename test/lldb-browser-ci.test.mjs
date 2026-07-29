@@ -81,6 +81,10 @@ test('scheduled and manual CI run the pinned native C and DAP baselines', async 
 	);
 	assert.match(workflow, /run-native-baseline\.mjs/u);
 	assert.match(workflow, /run-native-dap-baseline\.mjs/u);
+	assert.match(
+		workflow,
+		/run-native-dap-baseline\.mjs[\s\S]*?--repeat 10/u
+	);
 	assert.doesNotMatch(
 		workflow,
 		/native-baseline:[\s\S]*?continue-on-error:\s*true/u
