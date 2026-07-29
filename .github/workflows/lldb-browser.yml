@@ -1,6 +1,8 @@
 name: LLDB browser producer contracts
 
 on:
+    schedule:
+        - cron: '17 4 * * 1'
     pull_request:
         branches: [main]
     push:
@@ -9,6 +11,11 @@ on:
         inputs:
             build_product:
                 description: Build and upload the pinned LLDB browser product
+                required: true
+                type: boolean
+                default: false
+            native_baseline:
+                description: Run the pinned native LLVM/WAMR C and DAP baselines
                 required: true
                 type: boolean
                 default: false
@@ -56,3 +63,130 @@ jobs:
                   path: artifacts/lldb-browser
                   if-no-files-found: error
                   retention-days: 7
+
+    native-baseline:
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.native_baseline)
+        concurrency:
+            group: lldb-native-baseline-${{ github.ref }}
+            cancel-in-progress: false
+        runs-on: ubuntu-latest
+        container:
+            image: debian:12.11-slim@sha256:b1a741487078b369e78119849663d7f1a5341ef2768798f7b7406c4240f86aef
+        timeout-minutes: 90
+        env:
+            LLVM_ARCHIVE_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz
+            LLVM_ARCHIVE_SHA256: df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384
+            WASI_SDK_URL: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz
+            WASI_SDK_SHA256: 0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce
+            WAMR_REPOSITORY: https://github.com/bytecodealliance/wasm-micro-runtime.git
+            WAMR_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
+            NATIVE_ROOT: ${{ runner.temp }}/wasm-native-debug
+            LLVM_ROOT: ${{ runner.temp }}/wasm-native-debug/llvm
+            WASI_ROOT: ${{ runner.temp }}/wasm-native-debug/wasi-sdk-33.0-x86_64-linux
+            WAMR_ROOT: ${{ runner.temp }}/wasm-native-debug/wamr
+            PROGRAM_PATH: ${{ runner.temp }}/wasm-native-debug/program.wasm
+        steps:
+            - name: Install native baseline host dependencies
+              run: |
+                  apt-get update
+                  apt-get install --yes --no-install-recommends \
+                    build-essential ca-certificates cmake curl git \
+                    libexpat1 libicu72 libncurses6 libpython3.11 libxml2 \
+                    ninja-build xz-utils zlib1g zstd
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - uses: actions/cache@v4
+              with:
+                  path: ${{ runner.temp }}/wasm-native-debug/downloads
+                  key: lldb-native-baseline-llvm-22.1.8-wasi-sdk-33
+            - name: Download and verify pinned native toolchains
+              run: |
+                  mkdir -p "$NATIVE_ROOT/downloads" "$LLVM_ROOT"
+                  LLVM_ARCHIVE="$NATIVE_ROOT/downloads/LLVM-22.1.8-Linux-X64.tar.xz"
+                  WASI_ARCHIVE="$NATIVE_ROOT/downloads/wasi-sdk-33.0-x86_64-linux.tar.gz"
+                  if ! echo "$LLVM_ARCHIVE_SHA256  $LLVM_ARCHIVE" | sha256sum --check --status; then
+                    rm -f "$LLVM_ARCHIVE"
+                    curl --fail --location --retry 3 "$LLVM_ARCHIVE_URL" --output "$LLVM_ARCHIVE"
+                  fi
+                  echo "$LLVM_ARCHIVE_SHA256  $LLVM_ARCHIVE" | sha256sum --check
+                  if ! echo "$WASI_SDK_SHA256  $WASI_ARCHIVE" | sha256sum --check --status; then
+                    rm -f "$WASI_ARCHIVE"
+                    curl --fail --location --retry 3 "$WASI_SDK_URL" --output "$WASI_ARCHIVE"
+                  fi
+                  echo "$WASI_SDK_SHA256  $WASI_ARCHIVE" | sha256sum --check
+            - name: Extract the pinned native tools
+              run: |
+                  LLVM_ARCHIVE="$NATIVE_ROOT/downloads/LLVM-22.1.8-Linux-X64.tar.xz"
+                  WASI_ARCHIVE="$NATIVE_ROOT/downloads/wasi-sdk-33.0-x86_64-linux.tar.gz"
+                  tar -xJf "$LLVM_ARCHIVE" -C "$LLVM_ROOT" --strip-components=1 \
+                    LLVM-22.1.8-Linux-X64/bin/clang \
+                    LLVM-22.1.8-Linux-X64/bin/clang-22 \
+                    LLVM-22.1.8-Linux-X64/bin/lld \
+                    LLVM-22.1.8-Linux-X64/bin/lldb \
+                    LLVM-22.1.8-Linux-X64/bin/lldb-dap \
+                    LLVM-22.1.8-Linux-X64/bin/llvm-dwarfdump \
+                    LLVM-22.1.8-Linux-X64/bin/wasm-ld \
+                    LLVM-22.1.8-Linux-X64/lib/liblldb.so \
+                    LLVM-22.1.8-Linux-X64/lib/liblldb.so.22.1 \
+                    LLVM-22.1.8-Linux-X64/lib/liblldb.so.22.1.8
+                  tar -xzf "$WASI_ARCHIVE" -C "$NATIVE_ROOT"
+                  "$LLVM_ROOT/bin/clang" --version | grep --fixed-strings "clang version 22.1.8"
+                  "$LLVM_ROOT/bin/lldb" --version | grep --fixed-strings "lldb version 22.1.8"
+                  "$LLVM_ROOT/bin/lldb-dap" --version | grep --fixed-strings "LLVM version 22.1.8"
+            - name: Build pinned WAMR classic debug interpreter
+              run: |
+                  mkdir -p "$WAMR_ROOT"
+                  git -C "$WAMR_ROOT" init
+                  git -C "$WAMR_ROOT" remote add origin "$WAMR_REPOSITORY"
+                  git -C "$WAMR_ROOT" fetch --depth 1 origin "$WAMR_COMMIT"
+                  git -C "$WAMR_ROOT" checkout --detach FETCH_HEAD
+                  test "$(git -C "$WAMR_ROOT" rev-parse HEAD)" = "$WAMR_COMMIT"
+                  cmake \
+                    -S "$WAMR_ROOT/product-mini/platforms/linux" \
+                    -B "$WAMR_ROOT/build" \
+                    -G Ninja \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DWAMR_BUILD_INTERP=1 \
+                    -DWAMR_BUILD_FAST_INTERP=0 \
+                    -DWAMR_BUILD_DEBUG_INTERP=1 \
+                    -DWAMR_BUILD_AOT=0 \
+                    -DWAMR_BUILD_JIT=0 \
+                    -DWAMR_BUILD_FAST_JIT=0 \
+                    -DWAMR_BUILD_LIBC_WASI=1 \
+                    -DWAMR_BUILD_LIBC_BUILTIN=0 \
+                    -DWAMR_BUILD_MULTI_MODULE=0 \
+                    -DWAMR_BUILD_SIMD=0 \
+                    -DWAMR_BUILD_MEMORY64=0 \
+                    -DWAMR_BUILD_SHARED_MEMORY=0
+                  cmake --build "$WAMR_ROOT/build" --parallel 2
+            - name: Compile and verify the C DWARF fixture
+              run: |
+                  FIXTURE_ROOT="$GITHUB_WORKSPACE/test/native-wasm-debug"
+                  "$LLVM_ROOT/bin/clang" \
+                    --target=wasm32-wasi \
+                    --sysroot="$WASI_ROOT/share/wasi-sysroot" \
+                    -resource-dir="$WASI_ROOT/lib/clang/22" \
+                    -g \
+                    -O0 \
+                    -fstandalone-debug \
+                    -fdebug-compilation-dir=/workspace \
+                    -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
+                    "$FIXTURE_ROOT/main.c" \
+                    -o "$PROGRAM_PATH"
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$PROGRAM_PATH"
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --debug-info "$PROGRAM_PATH" |
+                    grep --fixed-strings "/workspace/main.c"
+            - name: Run native LLDB command baseline
+              run: |
+                  node test/native-wasm-debug/run-native-baseline.mjs \
+                    --iwasm "$WAMR_ROOT/build/iwasm" \
+                    --lldb "$LLVM_ROOT/bin/lldb" \
+                    --program "$PROGRAM_PATH"
+            - name: Run native LLDB DAP baseline
+              run: |
+                  node test/native-wasm-debug/run-native-dap-baseline.mjs \
+                    --iwasm "$WAMR_ROOT/build/iwasm" \
+                    --lldb-dap "$LLVM_ROOT/bin/lldb-dap" \
+                    --program "$PROGRAM_PATH"

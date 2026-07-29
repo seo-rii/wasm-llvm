@@ -192,6 +192,31 @@ paths containing spaces, and covers both legal continue orderings:
 node --test test/native-wasm-dap.test.mjs
 ```
 
+## CI baseline
+
+`.github/workflows/lldb-browser.yml` runs the real C command and DAP attach
+baselines every Monday at 04:17 UTC. The job can also be requested manually:
+
+```sh
+gh workflow run lldb-browser.yml \
+  -f build_product=false \
+  -f native_baseline=true
+```
+
+The job verifies the official LLVM 22.1.8 archive and WASI SDK 33 archive by
+SHA-256, checks out the exact WAMR 2.4.5 commit, and builds only WAMR's classic
+debug interpreter. It selectively extracts Clang, LLDB, LLDB-DAP,
+`llvm-dwarfdump`, `wasm-ld`, and `liblldb` from the large LLVM archive. The C
+fixture is compiled from source with the official LLVM 22.1.8 Clang while the
+pinned WASI SDK supplies its sysroot and compiler-rt resource directory.
+
+Ordinary pull requests keep running the dependency-free orchestration and
+producer contract tests. The real native job is scheduled/manual because its
+pinned LLVM download is large. Download archives are cached, but every cache
+hit is still checked against the lock digest before extraction. The Rust
+baseline remains an explicit maintainer check because reproducing it requires
+the pinned stage-2 Rust compiler described below.
+
 ## Rust baseline
 
 `main.rs` was compiled with the exact stage-2 Rust compiler built from

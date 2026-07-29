@@ -40,3 +40,41 @@ test('contract pushes cannot cancel an in-flight manual LLDB product build', asy
 		/producer-contracts:\s+concurrency:\s+group: lldb-browser-contracts-\$\{\{ github\.ref \}\}\s+cancel-in-progress: true/su
 	);
 });
+
+test('scheduled and manual CI run the pinned native C and DAP baselines', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+
+	assert.match(workflow, /schedule:\s+- cron: '17 4 \* \* 1'/u);
+	assert.match(workflow, /native_baseline:/u);
+	assert.match(
+		workflow,
+		/native-baseline:\s+if: github\.event_name == 'schedule' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.native_baseline\)/su
+	);
+	assert.match(
+		workflow,
+		/LLVM_ARCHIVE_SHA256: df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384/u
+	);
+	assert.match(
+		workflow,
+		/WASI_SDK_SHA256: 0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce/u
+	);
+	assert.match(
+		workflow,
+		/WAMR_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605/u
+	);
+	assert.match(workflow, /actions\/cache@v4/u);
+	assert.match(workflow, /bin\/lldb" --version.*22\.1\.8/su);
+	assert.match(workflow, /-fdebug-compilation-dir=\/workspace/u);
+	assert.match(workflow, /-ffile-prefix-map=.*=\/workspace/u);
+	assert.match(workflow, /llvm-dwarfdump" --verify/u);
+	assert.match(
+		workflow,
+		/llvm-dwarfdump" --debug-info.*grep --fixed-strings "\/workspace\/main\.c"/su
+	);
+	assert.match(workflow, /run-native-baseline\.mjs/u);
+	assert.match(workflow, /run-native-dap-baseline\.mjs/u);
+	assert.doesNotMatch(
+		workflow,
+		/native-baseline:[\s\S]*?continue-on-error:\s*true/u
+	);
+});
