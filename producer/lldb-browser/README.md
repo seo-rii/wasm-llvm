@@ -185,9 +185,11 @@ product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
 
 The weekly schedule also performs the full clean LLDB product build and keeps
-its verified package as a seven-day workflow artifact. This catches producer
-and Emscripten reproducibility or size regressions even when no maintainer has
-requested a release build. The same schedule runs the real native C command
+its package as a seven-day workflow artifact after the standalone verifier
+recomputes asset hashes, the deterministic gzip receipt, and both Wasm size
+budgets. This catches producer and Emscripten reproducibility or size
+regressions even when no maintainer has requested a release build. The same
+schedule runs the real native C command
 and LLDB-DAP attach baselines; either job can still be selected independently
 with `build_product=true` or `native_baseline=true` in a manual dispatch. The
 native job verifies the official LLVM and WASI SDK archive digests, builds the

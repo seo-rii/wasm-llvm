@@ -24,6 +24,10 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB browser product
 	);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/prepare\.mjs/);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/build\.mjs/);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/verify\.mjs artifacts\/lldb-browser/
+	);
 	assert.match(workflow, /uses: actions\/upload-artifact@v4/);
 	assert.match(workflow, /artifacts\/lldb-browser/);
 });

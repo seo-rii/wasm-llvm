@@ -57,6 +57,8 @@ jobs:
               env:
                   NINJA_JOBS: 2
               run: node producer/lldb-browser/scripts/build.mjs
+            - name: Verify packaged LLDB browser assets
+              run: node producer/lldb-browser/scripts/verify.mjs artifacts/lldb-browser
             - uses: actions/upload-artifact@v4
               with:
                   name: lldb-browser-${{ github.sha }}
