@@ -182,19 +182,30 @@ export async function runWithNativeWamr(options, runClient) {
 			environment,
 			port
 		});
-		const targetExit = await waitForCapturedProcess(target, 'native WAMR', deadline);
-		const allowedTargetExitCodes = options.allowedTargetExitCodes ?? [0];
-		if (!allowedTargetExitCodes.includes(targetExit.code)) {
-			throw new Error(
-				`native WAMR exited with status ${String(targetExit.code)}\n${target.stderr()}`
-			);
+		let targetExit;
+		let targetTerminatedByRunner = false;
+		if (options.terminateTargetAfterClient === true) {
+			targetTerminatedByRunner =
+				target.child.exitCode === null && target.child.signalCode === null;
+			await stopCapturedProcess(target);
+			targetExit = await target.exit;
+		} else {
+			targetExit = await waitForCapturedProcess(target, 'native WAMR', deadline);
+			const allowedTargetExitCodes = options.allowedTargetExitCodes ?? [0];
+			if (!allowedTargetExitCodes.includes(targetExit.code)) {
+				throw new Error(
+					`native WAMR exited with status ${String(targetExit.code)}\n${target.stderr()}`
+				);
+			}
 		}
 		return {
 			...clientResult,
 			port,
 			targetExitCode: targetExit.code,
+			targetExitSignal: targetExit.signal,
 			targetStderr: target.stderr(),
-			targetStdout: target.stdout()
+			targetStdout: target.stdout(),
+			targetTerminatedByRunner
 		};
 	} finally {
 		await stopCapturedProcess(target);

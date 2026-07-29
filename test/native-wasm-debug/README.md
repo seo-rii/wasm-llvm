@@ -262,6 +262,40 @@ framing, expected target exit, transcript validation, and process cleanup:
 node --test test/native-wasm-dap-trap.test.mjs
 ```
 
+### Interrupt scenario
+
+`interrupt.c` provides a running target whose volatile loop cannot complete on
+its own. Compile it with the same debug and `/workspace` mapping flags, using
+the output name `interrupt.wasm`. The pinned LLVM/WASI SDK pair produces
+SHA-256
+`daa689fe7f83b39bfae4d7e9c0a06943eec05350b72fe95694bf74c135ca9876`.
+
+Run its DAP scenario separately:
+
+```sh
+node run-native-dap-baseline.mjs \
+  --iwasm /path/to/iwasm \
+  --lldb-dap /path/to/llvm-22.1.8/bin/lldb-dap \
+  --program /path/to/interrupt.wasm \
+  --scenario interrupt
+```
+
+The client resolves `/workspace/interrupt.c:2`, stops at `_start`, continues
+to the source breakpoint, steps into the loop, and continues into the running
+state. It then sends DAP `pause`. Pinned LLDB-DAP reports that WAMR interrupt
+as a raw `exception` stop; the browser session layer deliberately normalizes
+that response to the user-requested `pause` reason. The native baseline keeps
+that distinction explicit, verifies a line 3 or 4 `main` frame and a numeric
+`value` local, disconnects LLDB-DAP, and terminates the otherwise infinite
+WAMR process with the runner's bounded process cleanup.
+
+The dependency-free interrupt test verifies the same pause ordering,
+fragmented stop frame, running-target cleanup, and stale-process prevention:
+
+```sh
+node --test test/native-wasm-dap-interrupt.test.mjs
+```
+
 ## CI baseline
 
 `.github/workflows/lldb-browser.yml` runs the real C command and DAP attach
@@ -279,13 +313,15 @@ debug interpreter. It selectively extracts Clang, LLDB, LLDB-DAP,
 `llvm-dwarfdump`, `wasm-ld`, and `liblldb` from the large LLVM archive. The C
 fixture is compiled from source with the official LLVM 22.1.8 Clang while the
 pinned WASI SDK supplies its sysroot and compiler-rt resource directory. CI
-also checks the resulting `program.wasm` and `trap.wasm` SHA-256 values before
-starting any debugger baseline, so toolchain or fixture drift fails before
-protocol output is interpreted. The scheduled normal-exit DAP baseline repeats
-ten complete attach/breakpoint/variable/continue/disconnect lifecycles, then
-the trap scenario verifies its exception stop and expected WAMR status 1.
-Maintainers can use `--repeat 100` locally for a longer normal-exit soak
-without making every weekly run that expensive.
+also checks the resulting `program.wasm`, `trap.wasm`, and `interrupt.wasm`
+SHA-256 values before starting any debugger baseline, so toolchain or fixture
+drift fails before protocol output is interpreted. The scheduled normal-exit
+DAP baseline repeats ten complete
+attach/breakpoint/variable/continue/disconnect lifecycles. The trap scenario
+then verifies its exception stop and expected WAMR status 1, and the interrupt
+scenario verifies pause plus forced cleanup of a running target. Maintainers
+can use `--repeat 100` locally for a longer normal-exit soak without making
+every weekly run that expensive.
 
 Ordinary pull requests keep running the dependency-free orchestration and
 producer contract tests. The real native job is scheduled/manual because its

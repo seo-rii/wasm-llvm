@@ -206,6 +206,7 @@ function protocolSequence(history) {
 				'continue',
 				'disconnect',
 				'next',
+				'pause',
 				'scopes',
 				'setBreakpoints',
 				'stackTrace',
@@ -562,6 +563,171 @@ export async function runNativeDapTrapBaseline(options) {
 	);
 }
 
+export async function runNativeDapInterruptBaseline(options) {
+	return runWithNativeWamr(
+		{
+			...options,
+			terminateTargetAfterClient: true
+		},
+		async ({ deadline, endpoint, environment }) => {
+			const adapter = spawnCapturedProcess(options.lldbDapPath, [], {
+				cwd: options.cwd,
+				env: environment,
+				stdin: 'pipe',
+				stdoutEncoding: null
+			});
+			const client = new NativeDapClient(
+				adapter.child.stdout,
+				adapter.child.stdin,
+				deadline
+			);
+			try {
+				const { attach } = await startNativeDapAttach(
+					client,
+					options,
+					endpoint
+				);
+				const sourcePath = options.sourcePath ?? '/workspace/interrupt.c';
+				const breakpointLine = options.breakpointLine ?? 2;
+				const breakpointResponse = await client.request('setBreakpoints', {
+					source: {
+						name: path.basename(sourcePath),
+						path: sourcePath
+					},
+					breakpoints: [{ line: breakpointLine }],
+					sourceModified: false
+				});
+				await client.request('configurationDone');
+				await attach;
+				const entryStopped = await client.waitForEvent('stopped');
+				const threadsResponse = await client.request('threads');
+				const threads = threadsResponse.threads ?? [];
+				const threadId = entryStopped.threadId ?? threads[0]?.id;
+				if (!Number.isInteger(threadId)) {
+					throw new Error(
+						'native lldb-dap interrupt entry stopped without a thread ID'
+					);
+				}
+				const entryStackResponse = await client.request('stackTrace', {
+					threadId,
+					startFrame: 0,
+					levels: 20
+				});
+
+				const breakpointContinued = client.waitForEvent('continued');
+				const breakpointStopped = client.waitForEvent('stopped');
+				await client.request('continue', { threadId });
+				await breakpointContinued;
+				const breakpointStoppedEvent = await breakpointStopped;
+				const breakpointThreadId = breakpointStoppedEvent.threadId ?? threadId;
+				const breakpointStackResponse = await client.request('stackTrace', {
+					threadId: breakpointThreadId,
+					startFrame: 0,
+					levels: 20
+				});
+
+				const stepContinued = client.waitForEvent('continued');
+				const stepStopped = client.waitForEvent('stopped');
+				await client.request('next', { threadId: breakpointThreadId });
+				await stepContinued;
+				const stepStoppedEvent = await stepStopped;
+				const stepThreadId = stepStoppedEvent.threadId ?? breakpointThreadId;
+				const stepStackResponse = await client.request('stackTrace', {
+					threadId: stepThreadId,
+					startFrame: 0,
+					levels: 20
+				});
+
+				const runningContinued = client.waitForEvent('continued');
+				await client.request('continue', { threadId: stepThreadId });
+				await runningContinued;
+				await new Promise((resolve) => {
+					setTimeout(resolve, options.pauseDelayMs ?? 100);
+				});
+				const interruptStopped = client.waitForEvent('stopped');
+				const pauseRequest = client.request('pause', {
+					threadId: stepThreadId
+				});
+				const interruptStoppedEvent = await interruptStopped;
+				await pauseRequest;
+				const interruptThreadId =
+					interruptStoppedEvent.threadId ?? stepThreadId;
+				const interruptStackResponse = await client.request('stackTrace', {
+					threadId: interruptThreadId,
+					startFrame: 0,
+					levels: 20
+				});
+				const interruptStackFrames =
+					interruptStackResponse.stackFrames ?? [];
+				const interruptFrameId = interruptStackFrames[0]?.id;
+				if (!Number.isInteger(interruptFrameId)) {
+					throw new Error(
+						'native lldb-dap interrupt stopped without a frame ID'
+					);
+				}
+				const scopesResponse = await client.request('scopes', {
+					frameId: interruptFrameId
+				});
+				const scopes = scopesResponse.scopes ?? [];
+				const localScope =
+					scopes.find((scope) => /^locals$/i.test(scope.name)) ??
+					scopes.find(
+						(scope) =>
+							scope.expensive !== true &&
+							Number.isInteger(scope.variablesReference) &&
+							scope.variablesReference > 0
+					);
+				let localVariables = [];
+				if (
+					Number.isInteger(localScope?.variablesReference) &&
+					localScope.variablesReference > 0
+				) {
+					const variablesResponse = await client.request('variables', {
+						variablesReference: localScope.variablesReference
+					});
+					localVariables = variablesResponse.variables ?? [];
+				}
+				await client.request('disconnect', {
+					restart: false,
+					terminateDebuggee: false
+				});
+				adapter.child.stdin.end();
+				const adapterExit = await waitForCapturedProcess(
+					adapter,
+					'native lldb-dap interrupt',
+					deadline
+				);
+				if (adapterExit.code !== 0) {
+					throw new Error(
+						`native lldb-dap interrupt exited with status ${String(adapterExit.code)}\n${adapter.stderr()}`
+					);
+				}
+				return {
+					breakpoints: breakpointResponse.breakpoints ?? [],
+					breakpointStackFrames:
+						breakpointStackResponse.stackFrames ?? [],
+					breakpointStopReason: breakpointStoppedEvent.reason,
+					dapStderr: adapter.stderr(),
+					entryStackFrames: entryStackResponse.stackFrames ?? [],
+					interruptStackFrames,
+					interruptStopReason: interruptStoppedEvent.reason,
+					localVariables,
+					pauseRequested: true,
+					scopes,
+					sequence: protocolSequence(client.history),
+					stepStackFrames: stepStackResponse.stackFrames ?? [],
+					stepStopReason: stepStoppedEvent.reason,
+					threads
+				};
+			} finally {
+				client.close();
+				adapter.child.stdin.end();
+				await stopCapturedProcess(adapter);
+			}
+		}
+	);
+}
+
 export function verifyNativeDapBaseline(result) {
 	if (!result.stackFrames.some((frame) => frame.name === '_start')) {
 		throw new Error('native DAP baseline did not expose the _start frame');
@@ -830,6 +996,122 @@ export function verifyNativeDapTrapBaseline(result) {
 	}
 }
 
+export function verifyNativeDapInterruptBaseline(result) {
+	if (!result.entryStackFrames?.some((frame) => frame.name === '_start')) {
+		throw new Error('native DAP interrupt baseline did not expose the _start frame');
+	}
+	if (
+		!result.breakpoints?.some(
+			(breakpoint) => breakpoint.verified === true && breakpoint.line === 2
+		)
+	) {
+		throw new Error(
+			'native DAP interrupt baseline did not resolve the source breakpoint'
+		);
+	}
+	if (
+		result.breakpointStopReason !== 'breakpoint' ||
+		!result.breakpointStackFrames?.some(
+			(frame) =>
+				frame.name === 'main' &&
+				frame.line === 2 &&
+				frame.source?.path?.endsWith('/interrupt.c')
+		)
+	) {
+		throw new Error('native DAP interrupt baseline did not stop before the loop');
+	}
+	if (
+		!['step', 'breakpoint'].includes(result.stepStopReason) ||
+		!result.stepStackFrames?.some(
+			(frame) =>
+				frame.name === 'main' &&
+				(frame.line === 3 || frame.line === 4) &&
+				frame.source?.path?.endsWith('/interrupt.c')
+		)
+	) {
+		throw new Error('native DAP interrupt baseline did not step into the loop');
+	}
+	if (
+		result.pauseRequested !== true ||
+		result.interruptStopReason !== 'exception'
+	) {
+		throw new Error(
+			'native DAP interrupt baseline did not report the raw exception stop'
+		);
+	}
+	if (
+		!result.interruptStackFrames?.some(
+			(frame) =>
+				frame.name === 'main' &&
+				(frame.line === 3 || frame.line === 4) &&
+				frame.source?.path?.endsWith('/interrupt.c')
+		)
+	) {
+		throw new Error('native DAP interrupt baseline lost the interrupted source frame');
+	}
+	const value = result.localVariables?.find(
+		(variable) => variable.name === 'value'
+	)?.value;
+	if (!/^\d+$/.test(value ?? '')) {
+		throw new Error('native DAP interrupt baseline did not preserve frame locals');
+	}
+	if (!result.threads?.some((thread) => Number.isInteger(thread.id))) {
+		throw new Error('native DAP interrupt baseline did not expose a target thread');
+	}
+	if (result.targetTerminatedByRunner !== true) {
+		throw new Error(
+			'native DAP interrupt baseline did not terminate the running target'
+		);
+	}
+	for (const step of [
+		'initialize',
+		'attach',
+		'initialized',
+		'setBreakpoints',
+		'configurationDone',
+		'attach-response',
+		'threads',
+		'next',
+		'pause',
+		'scopes',
+		'variables',
+		'disconnect'
+	]) {
+		if (!result.sequence.includes(step)) {
+			throw new Error(
+				`native DAP interrupt baseline did not preserve the ${step} sequence`
+			);
+		}
+	}
+	if (
+		result.sequence.filter((step) => step === 'stopped').length < 4 ||
+		result.sequence.filter((step) => step === 'continued').length < 3 ||
+		result.sequence.filter((step) => step === 'stackTrace').length < 4 ||
+		result.sequence.filter((step) => step === 'continue').length < 2
+	) {
+		throw new Error(
+			'native DAP interrupt baseline did not preserve the stop and resume sequence'
+		);
+	}
+	const lastContinued = result.sequence.lastIndexOf('continued');
+	const lastStopped = result.sequence.lastIndexOf('stopped');
+	const lastStackTrace = result.sequence.lastIndexOf('stackTrace');
+	const scopes = result.sequence.indexOf('scopes', lastStackTrace);
+	const variables = result.sequence.indexOf('variables', scopes);
+	const disconnect = result.sequence.indexOf('disconnect', variables);
+	if (
+		lastStopped <= lastContinued ||
+		lastStackTrace <= lastStopped ||
+		scopes <= lastStackTrace ||
+		variables <= scopes ||
+		disconnect <= variables
+	) {
+		throw new Error(
+			'native DAP interrupt baseline did not inspect the pause before disconnect'
+		);
+	}
+}
+
 export async function runNativeDapBaselines(options, repeat = 1) {
 	if (!Number.isInteger(repeat) || repeat < 1 || repeat > 100) {
 		throw new Error('native DAP repeat count must be an integer between 1 and 100');
@@ -850,7 +1132,7 @@ function parseCliArguments(argv) {
 		const value = argv[index + 1];
 		if (!name?.startsWith('--') || value === undefined) {
 			throw new Error(
-				'usage: run-native-dap-baseline.mjs --iwasm PATH --lldb-dap PATH --program PATH [--scenario variables|trap] [--source PATH] [--repeat NUMBER] [--timeout-ms NUMBER]'
+				'usage: run-native-dap-baseline.mjs --iwasm PATH --lldb-dap PATH --program PATH [--scenario variables|trap|interrupt] [--source PATH] [--repeat NUMBER] [--timeout-ms NUMBER]'
 			);
 		}
 		values.set(name, value);
@@ -859,7 +1141,7 @@ function parseCliArguments(argv) {
 		if (!values.has(required)) throw new Error(`missing required argument ${required}`);
 	}
 	const scenario = values.get('--scenario') ?? 'variables';
-	if (!['trap', 'variables'].includes(scenario)) {
+	if (!['interrupt', 'trap', 'variables'].includes(scenario)) {
 		throw new Error(`unsupported native DAP scenario: ${scenario}`);
 	}
 	return {
@@ -871,19 +1153,27 @@ function parseCliArguments(argv) {
 		scenario,
 		sourcePath:
 			values.get('--source') ??
-			(scenario === 'trap' ? '/workspace/trap.c' : '/workspace/main.c'),
+			(scenario === 'trap'
+				? '/workspace/trap.c'
+				: scenario === 'interrupt'
+					? '/workspace/interrupt.c'
+					: '/workspace/main.c'),
 		timeoutMs: Number(values.get('--timeout-ms') ?? DEFAULT_NATIVE_TIMEOUT_MS)
 	};
 }
 
 async function main() {
 	const options = parseCliArguments(process.argv.slice(2));
-	if (options.scenario === 'trap') {
+	if (options.scenario !== 'variables') {
 		if (options.repeat !== 1) {
-			throw new Error('native DAP trap scenario does not support --repeat');
+			throw new Error('native DAP special scenarios do not support --repeat');
 		}
-		const result = await runNativeDapTrapBaseline(options);
-		verifyNativeDapTrapBaseline(result);
+		const result =
+			options.scenario === 'trap'
+				? await runNativeDapTrapBaseline(options)
+				: await runNativeDapInterruptBaseline(options);
+		if (options.scenario === 'trap') verifyNativeDapTrapBaseline(result);
+		else verifyNativeDapInterruptBaseline(result);
 		process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 		return;
 	}
