@@ -66,10 +66,15 @@ test('scheduled and manual CI run the pinned native C and DAP baselines', async 
 		workflow,
 		/C_FIXTURE_SHA256: 226c0c142d2430d107927fef8aadd672bb8ed6b3ae1744c539e792bb8475bec3/u
 	);
+	assert.match(
+		workflow,
+		/TRAP_FIXTURE_SHA256: 6ed12195841585bcbc57ba561f8a2be273cf95ce1f6e564eeb11d2e29e5db126/u
+	);
 	assert.match(workflow, /NATIVE_ROOT: \/tmp\/wasm-native-debug/u);
+	assert.match(workflow, /TRAP_PROGRAM_PATH: \/tmp\/wasm-native-debug\/trap\.wasm/u);
 	assert.doesNotMatch(
 		workflow,
-		/(?:NATIVE_ROOT|LLVM_ROOT|WASI_ROOT|WAMR_ROOT|PROGRAM_PATH): \$\{\{ runner\.temp \}\}/u
+		/(?:NATIVE_ROOT|LLVM_ROOT|WASI_ROOT|WAMR_ROOT|PROGRAM_PATH|TRAP_PROGRAM_PATH): \$\{\{ runner\.temp \}\}/u
 	);
 	assert.match(workflow, /actions\/cache@v4/u);
 	assert.match(workflow, /path: \/tmp\/wasm-native-debug\/downloads/u);
@@ -85,11 +90,19 @@ test('scheduled and manual CI run the pinned native C and DAP baselines', async 
 		workflow,
 		/echo "\$C_FIXTURE_SHA256  \$PROGRAM_PATH" \| sha256sum --check/u
 	);
+	assert.match(
+		workflow,
+		/echo "\$TRAP_FIXTURE_SHA256  \$TRAP_PROGRAM_PATH" \| sha256sum --check/u
+	);
 	assert.match(workflow, /run-native-baseline\.mjs/u);
 	assert.match(workflow, /run-native-dap-baseline\.mjs/u);
 	assert.match(
 		workflow,
 		/run-native-dap-baseline\.mjs[\s\S]*?--repeat 10/u
+	);
+	assert.match(
+		workflow,
+		/run-native-dap-baseline\.mjs[\s\S]*?--program "\$TRAP_PROGRAM_PATH"[\s\S]*?--scenario trap/u
 	);
 	assert.doesNotMatch(
 		workflow,

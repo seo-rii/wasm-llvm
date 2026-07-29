@@ -81,11 +81,13 @@ jobs:
             WAMR_REPOSITORY: https://github.com/bytecodealliance/wasm-micro-runtime.git
             WAMR_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
             C_FIXTURE_SHA256: 226c0c142d2430d107927fef8aadd672bb8ed6b3ae1744c539e792bb8475bec3
+            TRAP_FIXTURE_SHA256: 6ed12195841585bcbc57ba561f8a2be273cf95ce1f6e564eeb11d2e29e5db126
             NATIVE_ROOT: /tmp/wasm-native-debug
             LLVM_ROOT: /tmp/wasm-native-debug/llvm
             WASI_ROOT: /tmp/wasm-native-debug/wasi-sdk-33.0-x86_64-linux
             WAMR_ROOT: /tmp/wasm-native-debug/wamr
             PROGRAM_PATH: /tmp/wasm-native-debug/program.wasm
+            TRAP_PROGRAM_PATH: /tmp/wasm-native-debug/trap.wasm
         steps:
             - name: Install native baseline host dependencies
               run: |
@@ -180,6 +182,21 @@ jobs:
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$PROGRAM_PATH"
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --debug-info "$PROGRAM_PATH" |
                     grep --fixed-strings "/workspace/main.c"
+                  "$LLVM_ROOT/bin/clang" \
+                    --target=wasm32-wasi \
+                    --sysroot="$WASI_ROOT/share/wasi-sysroot" \
+                    -resource-dir="$WASI_ROOT/lib/clang/22" \
+                    -g \
+                    -O0 \
+                    -fstandalone-debug \
+                    -fdebug-compilation-dir=/workspace \
+                    -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
+                    "$FIXTURE_ROOT/trap.c" \
+                    -o "$TRAP_PROGRAM_PATH"
+                  echo "$TRAP_FIXTURE_SHA256  $TRAP_PROGRAM_PATH" | sha256sum --check
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$TRAP_PROGRAM_PATH"
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --debug-info "$TRAP_PROGRAM_PATH" |
+                    grep --fixed-strings "/workspace/trap.c"
             - name: Run native LLDB command baseline
               run: |
                   node test/native-wasm-debug/run-native-baseline.mjs \
@@ -193,3 +210,10 @@ jobs:
                     --lldb-dap "$LLVM_ROOT/bin/lldb-dap" \
                     --program "$PROGRAM_PATH" \
                     --repeat 10
+            - name: Run native LLDB DAP trap baseline
+              run: |
+                  node test/native-wasm-debug/run-native-dap-baseline.mjs \
+                    --iwasm "$WAMR_ROOT/build/iwasm" \
+                    --lldb-dap "$LLVM_ROOT/bin/lldb-dap" \
+                    --program "$TRAP_PROGRAM_PATH" \
+                    --scenario trap

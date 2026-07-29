@@ -229,6 +229,39 @@ then starts the next iteration. A failure stops the sequence at that
 iteration. The JSON output contains every completed result when more than one
 iteration is requested.
 
+### Trap scenario
+
+`trap.c` provides a deterministic `__builtin_trap()` fixture. Compile it with
+the same flags and `/workspace` prefix map as `main.c`, using the output name
+`trap.wasm`. The pinned LLVM/WASI SDK pair produces SHA-256
+`6ed12195841585bcbc57ba561f8a2be273cf95ce1f6e564eeb11d2e29e5db126`.
+
+Run its DAP scenario separately:
+
+```sh
+node run-native-dap-baseline.mjs \
+  --iwasm /path/to/iwasm \
+  --lldb-dap /path/to/llvm-22.1.8/bin/lldb-dap \
+  --program /path/to/trap.wasm \
+  --scenario trap
+```
+
+The client resolves `/workspace/trap.c:2`, stops at `_start`, continues to the
+source breakpoint, steps to line 3, and continues into the trap. LLDB-DAP must
+report an `exception` stop at `/workspace/trap.c:3`; the stopped frame's
+`Locals` scope must still contain `value = 73`. The client then disconnects
+cleanly. WAMR exits with status 1 for the trapped guest, which this scenario
+accepts explicitly while all other native baselines continue to require
+status 0. This distinction prevents an expected guest trap from hiding an
+unexpected debugger or orchestration failure.
+
+The dependency-free trap test covers the same handshake, fragmented DAP
+framing, expected target exit, transcript validation, and process cleanup:
+
+```sh
+node --test test/native-wasm-dap-trap.test.mjs
+```
+
 ## CI baseline
 
 `.github/workflows/lldb-browser.yml` runs the real C command and DAP attach
@@ -246,11 +279,13 @@ debug interpreter. It selectively extracts Clang, LLDB, LLDB-DAP,
 `llvm-dwarfdump`, `wasm-ld`, and `liblldb` from the large LLVM archive. The C
 fixture is compiled from source with the official LLVM 22.1.8 Clang while the
 pinned WASI SDK supplies its sysroot and compiler-rt resource directory. CI
-also checks the resulting `program.wasm` SHA-256 before starting either
-debugger baseline, so toolchain or fixture drift fails before protocol output
-is interpreted. The scheduled DAP baseline repeats ten complete
-attach/continue/disconnect lifecycles; maintainers can use `--repeat 100`
-locally for a longer soak without making every weekly run that expensive.
+also checks the resulting `program.wasm` and `trap.wasm` SHA-256 values before
+starting any debugger baseline, so toolchain or fixture drift fails before
+protocol output is interpreted. The scheduled normal-exit DAP baseline repeats
+ten complete attach/breakpoint/variable/continue/disconnect lifecycles, then
+the trap scenario verifies its exception stop and expected WAMR status 1.
+Maintainers can use `--repeat 100` locally for a longer normal-exit soak
+without making every weekly run that expensive.
 
 Ordinary pull requests keep running the dependency-free orchestration and
 producer contract tests. The real native job is scheduled/manual because its
