@@ -91,6 +91,35 @@ The verified baseline covers source breakpoint resolution, continue,
 step-in/over/out, recursive stack unwinding, top-frame locals, globals, raw
 linear-memory reads, stdout, and normal exit.
 
+### Automated C baseline
+
+Run the pinned native pair without reserving the fixture's historical port:
+
+```sh
+node run-native-baseline.mjs \
+  --iwasm /path/to/iwasm \
+  --lldb /path/to/llvm-22.1.8/bin/lldb \
+  --program /path/to/program.wasm
+```
+
+The runner allocates a loopback port, writes a temporary copy of
+`lldb.commands` with that endpoint, launches WAMR before LLDB, and always
+terminates both processes when either side fails or times out, escalating to
+`SIGKILL` after a bounded shutdown grace period. Native WAMR can buffer its
+readiness diagnostic when stdout is piped, so the runner accepts either the
+diagnostic or a short startup grace period; the LLDB connection remains the
+authoritative readiness check.
+
+A successful run verifies the resolved `main.c:13` breakpoint, recursive
+argument and local values, the `global_bias` value, a raw linear-memory read,
+LLDB's zero exit, and the guest's `total=15` stdout. Process orchestration,
+dynamic-port rewriting, transcript rejection, and failure cleanup are covered
+without native toolchain dependencies:
+
+```sh
+node --test test/native-wasm-debug.test.mjs
+```
+
 ## DAP attach baseline
 
 The official LLVM archive contains `lldb-dap`. A native smoke client verified
