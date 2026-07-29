@@ -27,6 +27,10 @@ import {
 import { EMSCRIPTEN_LINK_FLAGS, createBuildPlan } from "../scripts/build.mjs";
 import { parsePackageArgs } from "../scripts/package.mjs";
 import { createPreparePlan } from "../scripts/prepare.mjs";
+import {
+  assertReproducibleBuilds,
+  verifyReproducibleArtifactDirectories,
+} from "../scripts/verify-reproducibility.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -439,6 +443,58 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
   assert.throws(
     () => validateBuildReceipt(oversizedCompressedReceipt),
     /18 MiB gzip size budget/,
+  );
+});
+
+test("clean build comparison rejects any packaged hash difference", () => {
+  const build = {
+    receipt: {
+      schemaVersion: 1,
+      version: "llvmorg-22.1.8-lldb-web-4",
+      assets: {
+        "lldb-web-dap.js": { size: 11, sha256: sha256("js") },
+        "lldb-web-dap.wasm": {
+          size: 22,
+          sha256: sha256("wasm"),
+          compressed: {
+            format: "gzip",
+            level: 9,
+            size: 12,
+            sha256: sha256("gzip"),
+          },
+        },
+        [PTHREAD_WORKER_ASSET]: {
+          size: 33,
+          sha256: sha256("worker"),
+        },
+      },
+    },
+    artifactManifest: {
+      manifestVersion: 1,
+      version: "llvmorg-22.1.8-lldb-web-4",
+      debugger: { lldb: { wasmSha256: sha256("wasm") } },
+    },
+  };
+
+  assert.doesNotThrow(() =>
+    assertReproducibleBuilds(build, structuredClone(build)),
+  );
+  const changed = structuredClone(build);
+  changed.receipt.assets["lldb-web-dap.wasm"].sha256 = sha256("changed");
+  assert.throws(
+    () => assertReproducibleBuilds(build, changed),
+    /lldb-web-dap\.wasm metadata differs/,
+  );
+});
+
+test("clean build comparison requires two artifact directories", async () => {
+  await assert.rejects(
+    () =>
+      verifyReproducibleArtifactDirectories(
+        "/tmp/wasm-lldb-same-build",
+        "/tmp/wasm-lldb-same-build",
+      ),
+    /requires two directories/,
   );
 });
 

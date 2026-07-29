@@ -201,6 +201,31 @@ pull-request or `main` contract push may replace an older contract run, but it
 cannot cancel an in-flight product build; product rebuilds queue behind one
 another for the same ref.
 
+Before publishing a rebuilt debugger, produce it from two distinct empty work
+directories and compare the verified packages:
+
+```sh
+node producer/lldb-browser/scripts/prepare.mjs \
+  --work-dir /tmp/wasm-lldb-clean-a
+node producer/lldb-browser/scripts/build.mjs \
+  --work-dir /tmp/wasm-lldb-clean-a \
+  --out-dir /tmp/wasm-lldb-artifacts-a
+node producer/lldb-browser/scripts/prepare.mjs \
+  --work-dir /tmp/wasm-lldb-clean-b
+node producer/lldb-browser/scripts/build.mjs \
+  --work-dir /tmp/wasm-lldb-clean-b \
+  --out-dir /tmp/wasm-lldb-artifacts-b
+node producer/lldb-browser/scripts/verify-reproducibility.mjs \
+  /tmp/wasm-lldb-artifacts-a \
+  /tmp/wasm-lldb-artifacts-b
+```
+
+The comparison first performs the full package verification on both
+directories. It then requires identical receipt provenance, raw and
+deterministic-gzip metadata for every runtime asset, and an identical debug
+manifest. Comparing one directory with itself is rejected so the check cannot
+accidentally pass without two builds.
+
 The product bundle is generated from verified producer outputs:
 
 ```sh
