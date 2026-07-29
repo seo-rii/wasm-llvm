@@ -215,6 +215,21 @@ export function createBuildPlan(options) {
   };
 }
 
+export function assertNoEmbeddedBuildPaths(wasmBytes, forbiddenPaths) {
+  const bytes = Buffer.from(
+    wasmBytes.buffer,
+    wasmBytes.byteOffset,
+    wasmBytes.byteLength,
+  );
+  for (const forbiddenPath of forbiddenPaths) {
+    if (bytes.includes(forbiddenPath)) {
+      throw new Error(
+        `LLDB browser Wasm contains an embedded prepared build path: ${forbiddenPath}`,
+      );
+    }
+  }
+}
+
 function run(command, commandArguments) {
   return new Promise((resolve, reject) => {
     console.log(`+ ${[command, ...commandArguments].join(" ")}`);
@@ -275,6 +290,11 @@ Options:
   for (const command of plan.commands) {
     await run(command.command, command.arguments);
   }
+  const wasmBytes = await fs.readFile(plan.outputs.wasm);
+  assertNoEmbeddedBuildPaths(wasmBytes, [
+    plan.sourceDir,
+    plan.webBuildDir,
+  ]);
   if (options.package) {
     await run(process.execPath, [
       path.join(SCRIPT_DIR, "package.mjs"),

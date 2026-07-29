@@ -24,7 +24,11 @@ import {
   validateSharedRingEndpoint,
   verifyLockedInputs,
 } from "../scripts/contracts.mjs";
-import { EMSCRIPTEN_LINK_FLAGS, createBuildPlan } from "../scripts/build.mjs";
+import {
+  EMSCRIPTEN_LINK_FLAGS,
+  assertNoEmbeddedBuildPaths,
+  createBuildPlan,
+} from "../scripts/build.mjs";
 import { parsePackageArgs } from "../scripts/package.mjs";
 import { createPreparePlan } from "../scripts/prepare.mjs";
 import {
@@ -150,6 +154,33 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
   for (const plugin of REGISTERED_PLUGINS) {
     assert.match(webConfigure, new RegExp(plugin));
   }
+});
+
+test("final Wasm rejects prepared source and build paths", () => {
+  const sourceDir = "/tmp/clean-a/llvm-project";
+  const webBuildDir = "/tmp/clean-a/web-build";
+  assert.doesNotThrow(() =>
+    assertNoEmbeddedBuildPaths(
+      Buffer.from("/llvm-project/lldb/source/Core/Debugger.cpp"),
+      [sourceDir, webBuildDir],
+    ),
+  );
+  assert.throws(
+    () =>
+      assertNoEmbeddedBuildPaths(
+        Buffer.from(`${sourceDir}/lldb/source/Core/Debugger.cpp`),
+        [sourceDir, webBuildDir],
+      ),
+    /embedded prepared build path.*llvm-project/u,
+  );
+  assert.throws(
+    () =>
+      assertNoEmbeddedBuildPaths(
+        Buffer.from(`${webBuildDir}/tools/lldb-web-dap`),
+        [sourceDir, webBuildDir],
+      ),
+    /embedded prepared build path.*web-build/u,
+  );
 });
 
 test("ProcessGDBRemote patch selects ConnectionMessagePort only for the browser scheme", async () => {
