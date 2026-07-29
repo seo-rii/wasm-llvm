@@ -38,6 +38,14 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browse
 	);
 	assert.match(
 		workflow,
+		/WAMR_REPRO_SOURCE: artifacts\/wamr-browser-repro-build\/wasm-micro-runtime/
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/prepare\.mjs --source "\$WAMR_REPRO_SOURCE"/
+	);
+	assert.match(
+		workflow,
 		/node producer\/wamr-browser\/scripts\/build\.mjs[\s\S]*?--emsdk artifacts\/lldb-browser-build\/emsdk/su
 	);
 	assert.match(
@@ -47,6 +55,18 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browse
 	assert.match(
 		workflow,
 		/node producer\/wamr-browser\/scripts\/verify\.mjs --artifacts artifacts\/wamr-browser/
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/build\.mjs[\s\S]*?--source "\$WAMR_REPRO_SOURCE"[\s\S]*?--build "\$WAMR_REPRO_BUILD"/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/package\.mjs[\s\S]*?--output artifacts\/wamr-browser-repro/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/wamr-browser\/scripts\/verify-reproducibility\.mjs \\\s+artifacts\/wamr-browser \\\s+artifacts\/wamr-browser-repro/su
 	);
 	assert.match(workflow, /uses: actions\/upload-artifact@v4/);
 	assert.match(

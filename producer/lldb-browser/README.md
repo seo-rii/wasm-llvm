@@ -186,9 +186,10 @@ product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 
 The weekly schedule also performs full clean LLDB and WAMR product builds. It
 checks out the exact pinned WAMR revision, reuses the LLDB producer's pinned
-Emscripten SDK, runs both standalone package verifiers, and keeps the combined
-packages as a seven-day workflow artifact. The verifiers recompute asset
-hashes, deterministic gzip receipts, and Wasm size budgets. This catches
+Emscripten SDK, builds WAMR from two distinct clean source and build roots,
+requires their verified packages to be byte-reproducible, and keeps the primary
+LLDB/WAMR packages as a seven-day workflow artifact. The verifiers recompute
+asset hashes, deterministic gzip receipts, and Wasm size budgets. This catches
 producer, Emscripten, reproducibility, and size regressions even when no
 maintainer has requested a release build. The same schedule runs the real
 native C command and LLDB-DAP attach baselines; either job can still be selected

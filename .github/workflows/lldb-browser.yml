@@ -49,6 +49,8 @@ jobs:
             WAMR_PRODUCT_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
             WAMR_PRODUCT_SOURCE: artifacts/wamr-browser-build/wasm-micro-runtime
             WAMR_PRODUCT_BUILD: artifacts/wamr-browser-build/build
+            WAMR_REPRO_SOURCE: artifacts/wamr-browser-repro-build/wasm-micro-runtime
+            WAMR_REPRO_BUILD: artifacts/wamr-browser-repro-build/build
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
@@ -58,15 +60,21 @@ jobs:
               run: df -h .
             - name: Prepare pinned LLVM and Emscripten sources
               run: node producer/lldb-browser/scripts/prepare.mjs
-            - name: Prepare pinned WAMR browser source
+            - name: Prepare pinned WAMR browser sources
               run: |
-                  mkdir -p artifacts/wamr-browser-build
+                  mkdir -p artifacts/wamr-browser-build artifacts/wamr-browser-repro-build
                   git init "$WAMR_PRODUCT_SOURCE"
                   git -C "$WAMR_PRODUCT_SOURCE" remote add origin "$WAMR_PRODUCT_REPOSITORY"
                   git -C "$WAMR_PRODUCT_SOURCE" fetch --depth 1 origin "$WAMR_PRODUCT_COMMIT"
                   git -C "$WAMR_PRODUCT_SOURCE" checkout --detach FETCH_HEAD
                   test "$(git -C "$WAMR_PRODUCT_SOURCE" rev-parse HEAD)" = "$WAMR_PRODUCT_COMMIT"
                   node producer/wamr-browser/scripts/prepare.mjs --source "$WAMR_PRODUCT_SOURCE"
+                  git init "$WAMR_REPRO_SOURCE"
+                  git -C "$WAMR_REPRO_SOURCE" remote add origin "$WAMR_PRODUCT_REPOSITORY"
+                  git -C "$WAMR_REPRO_SOURCE" fetch --depth 1 origin "$WAMR_PRODUCT_COMMIT"
+                  git -C "$WAMR_REPRO_SOURCE" checkout --detach FETCH_HEAD
+                  test "$(git -C "$WAMR_REPRO_SOURCE" rev-parse HEAD)" = "$WAMR_PRODUCT_COMMIT"
+                  node producer/wamr-browser/scripts/prepare.mjs --source "$WAMR_REPRO_SOURCE"
             - name: Build and package LLDB browser assets
               env:
                   NINJA_JOBS: 2
@@ -84,6 +92,20 @@ jobs:
                     --output artifacts/wamr-browser
             - name: Verify packaged WAMR browser assets
               run: node producer/wamr-browser/scripts/verify.mjs --artifacts artifacts/wamr-browser
+            - name: Build independent WAMR reproducibility package
+              run: |
+                  node producer/wamr-browser/scripts/build.mjs \
+                    --source "$WAMR_REPRO_SOURCE" \
+                    --build "$WAMR_REPRO_BUILD" \
+                    --emsdk artifacts/lldb-browser-build/emsdk
+                  node producer/wamr-browser/scripts/package.mjs \
+                    --build "$WAMR_REPRO_BUILD" \
+                    --output artifacts/wamr-browser-repro
+            - name: Verify clean WAMR build reproducibility
+              run: |
+                  node producer/wamr-browser/scripts/verify-reproducibility.mjs \
+                    artifacts/wamr-browser \
+                    artifacts/wamr-browser-repro
             - uses: actions/upload-artifact@v4
               with:
                   name: lldb-wamr-browser-${{ github.sha }}
