@@ -38,7 +38,7 @@ jobs:
             - run: node --test producer/lldb-browser/test/producer.test.mjs producer/wamr-browser/test/producer.test.mjs test/debug-runtime-source.test.mjs test/lldb-browser-ci.test.mjs
 
     build-product:
-        if: github.event_name == 'workflow_dispatch' && inputs.build_product
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.build_product)
         concurrency:
             group: lldb-browser-product-${{ github.ref }}
             cancel-in-progress: false

@@ -14,13 +14,13 @@ test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
 	assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
 });
 
-test('manual CI can rebuild and upload the pinned LLDB browser product', async () => {
+test('scheduled and manual CI rebuild and upload the pinned LLDB browser product', async () => {
 	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
 
 	assert.match(workflow, /build_product:/);
 	assert.match(
 		workflow,
-		/if: github\.event_name == 'workflow_dispatch' && inputs\.build_product/
+		/build-product:\s+if: github\.event_name == 'schedule' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.build_product\)/su
 	);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/prepare\.mjs/);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/build\.mjs/);

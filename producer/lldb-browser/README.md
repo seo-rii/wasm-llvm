@@ -184,10 +184,14 @@ or rebuilding the full LLVM and WAMR binaries. It also verifies the published
 product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
 
-The same workflow runs the real native C command and LLDB-DAP attach baselines
-on its weekly schedule, or when `native_baseline=true` is selected in a manual
-dispatch. That job verifies the official LLVM and WASI SDK archive digests,
-builds the exact WAMR commit, recompiles the DWARF fixture, runs
+The weekly schedule also performs the full clean LLDB product build and keeps
+its verified package as a seven-day workflow artifact. This catches producer
+and Emscripten reproducibility or size regressions even when no maintainer has
+requested a release build. The same schedule runs the real native C command
+and LLDB-DAP attach baselines; either job can still be selected independently
+with `build_product=true` or `native_baseline=true` in a manual dispatch. The
+native job verifies the official LLVM and WASI SDK archive digests, builds the
+exact WAMR commit, recompiles the DWARF fixture, runs
 `llvm-dwarfdump --verify`, and then executes both native baseline runners. It
 uses a digest-pinned Debian container because the official LLDB binary has
 fixed Python 3.11 and ICU 72 shared-library dependencies. See
