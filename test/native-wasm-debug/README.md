@@ -139,8 +139,17 @@ plugin.
 
 ## DAP attach baseline
 
-The official LLVM archive contains `lldb-dap`. A native smoke client verified
-the browser session's intended order:
+The official LLVM archive contains `lldb-dap`. Run the automated stdio client
+against the same C fixture:
+
+```sh
+node run-native-dap-baseline.mjs \
+  --iwasm /path/to/iwasm \
+  --lldb-dap /path/to/llvm-22.1.8/bin/lldb-dap \
+  --program /path/to/program.wasm
+```
+
+It verifies the browser session's intended partial order:
 
 ```text
 initialize request
@@ -150,16 +159,33 @@ attach request
     target create /path/to/program.wasm
     process connect -p wasm connect://127.0.0.1:1234
 initialized event
+stopped event
 configurationDone request
 configurationDone response
 attach response
+threads request/response
+stackTrace request/response
+continue request plus continued event
+exited event
+terminated event
+disconnect request/response
 ```
 
-The attach used `stopOnEntry: true`. After configuration, `threads` and
-`stackTrace` returned the stopped `_start` frame; `continue` produced
-`continued`, `exited`, and `terminated` events, and `disconnect` succeeded.
-This also confirms that LLDB-DAP deliberately delays its successful `attach`
-response until after `configurationDone`.
+The attach uses `stopOnEntry: true`; `threads` and `stackTrace` return the
+stopped `_start` frame, `continue` produces zero-exit `continued`, `exited`,
+and `terminated` events, and `disconnect` succeeds while WAMR preserves
+`total=15`. LLDB-DAP deliberately delays its successful `attach` response
+until after `configurationDone`. The target can emit `stopped` before the
+configuration response, and the `continued` event can race the successful
+`continue` response, so the verifier enforces the required causal edges rather
+than one over-constrained total ordering.
+
+The dependency-free test uses a fake adapter to fragment DAP frames, validates
+paths containing spaces, and covers both legal continue orderings:
+
+```sh
+node --test test/native-wasm-dap.test.mjs
+```
 
 ## Rust baseline
 

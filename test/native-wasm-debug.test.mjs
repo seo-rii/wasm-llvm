@@ -162,7 +162,7 @@ setInterval(() => {}, 1_000);
 			iwasmPath: target,
 			lldbPath: lldb,
 			programPath: program,
-			timeoutMs: 500
+			timeoutMs: 2_000
 		}),
 		/native LLDB timed out/
 	);
