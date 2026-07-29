@@ -133,6 +133,13 @@ The generated module requires `SharedArrayBuffer` and a cross-origin-isolated
 browser context. Debug assets must be lazy-loaded; they are not intended for
 the normal `WebAssembly.instantiate()` execution path.
 
+The web C and C++ compile flags map the prepared LLVM source root to
+`/llvm-project` and the Emscripten build root to `/lldb-web-build`. LLDB retains
+many assertion and diagnostic `__FILE__` strings, so leaving host paths intact
+makes the final Wasm bytes and even their size depend on the checkout location.
+Both aliases are recorded in `manifest.json` and are part of the producer
+receipt provenance.
+
 The module exports Emscripten's canonical `HEAPU8` view in addition to `FS`
 and `callMain`. The browser worker uses only its backing buffer length to
 report monotonic linear-memory growth; debugger memory contents never cross

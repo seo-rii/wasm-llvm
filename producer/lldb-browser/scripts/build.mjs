@@ -99,6 +99,11 @@ export function createBuildPlan(options) {
   const emsdkDir = options.emsdkDir || path.join(options.workDir, "emsdk");
   const nativeBuildDir = path.join(options.workDir, "native-build");
   const webBuildDir = path.join(options.workDir, "web-build");
+  const reproducibleCompileFlags = [
+    "-pthread",
+    `-ffile-prefix-map=${sourceDir}=/llvm-project`,
+    `-ffile-prefix-map=${webBuildDir}=/lldb-web-build`,
+  ].join(" ");
   const nativeDefinitions = [
     "-G",
     "Ninja",
@@ -157,8 +162,8 @@ export function createBuildPlan(options) {
     `-DCLANG_TABLEGEN=${path.join(nativeBuildDir, "bin", "clang-tblgen")}`,
     `-DLLDB_TABLEGEN_EXE=${path.join(nativeBuildDir, "bin", "lldb-tblgen")}`,
     `-DLLDB_WEB_PLUGIN_ALLOWLIST=${REGISTERED_PLUGINS.join(";")}`,
-    "-DCMAKE_C_FLAGS=-pthread",
-    "-DCMAKE_CXX_FLAGS=-pthread",
+    `-DCMAKE_C_FLAGS=${reproducibleCompileFlags}`,
+    `-DCMAKE_CXX_FLAGS=${reproducibleCompileFlags}`,
   ];
   const emcmake = path.join(emsdkDir, "upstream", "emscripten", "emcmake");
   const parallel = process.env.NINJA_JOBS

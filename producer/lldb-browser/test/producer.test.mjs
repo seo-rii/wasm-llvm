@@ -42,6 +42,10 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   assert.equal(sourcesLock.emscripten.commit, EMSCRIPTEN_REVISION);
   assert.equal(manifest.protocols.connectionScheme, CONNECTION_SCHEME);
   assert.equal(manifest.protocols.transport, TRANSPORT_CONTRACT);
+  assert.deepEqual(manifest.build.reproduciblePathPrefixes, {
+    source: "/llvm-project",
+    build: "/lldb-web-build",
+  });
   assert.deepEqual(manifest.build.exportedRuntimeMethods, [
     "FS",
     "callMain",
@@ -117,6 +121,16 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
     buildPlan.outputs.worker,
     "/tmp/wasm-llvm-lldb-plan/web-build/bin/lldb-web-dap.pthread.mjs",
   );
+  for (const language of ["C", "CXX"]) {
+    assert.ok(
+      buildPlan.commands[2].arguments.includes(
+        `-DCMAKE_${language}_FLAGS=-pthread ` +
+          `-ffile-prefix-map=${buildPlan.sourceDir}=/llvm-project ` +
+          `-ffile-prefix-map=${buildPlan.webBuildDir}=/lldb-web-build`,
+      ),
+      `${language} compilation must normalize source and build roots`,
+    );
+  }
 
   const webConfigure = buildPlan.commands[2].arguments.join("\n");
   for (const definition of [
@@ -276,7 +290,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-5`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-6`,
   );
 });
 
