@@ -66,7 +66,13 @@ test('scheduled and manual CI run the pinned native C and DAP baselines', async 
 		workflow,
 		/C_FIXTURE_SHA256: 226c0c142d2430d107927fef8aadd672bb8ed6b3ae1744c539e792bb8475bec3/u
 	);
+	assert.match(workflow, /NATIVE_ROOT: \/tmp\/wasm-native-debug/u);
+	assert.doesNotMatch(
+		workflow,
+		/(?:NATIVE_ROOT|LLVM_ROOT|WASI_ROOT|WAMR_ROOT|PROGRAM_PATH): \$\{\{ runner\.temp \}\}/u
+	);
 	assert.match(workflow, /actions\/cache@v4/u);
+	assert.match(workflow, /path: \/tmp\/wasm-native-debug\/downloads/u);
 	assert.match(workflow, /bin\/lldb" --version.*22\.1\.8/su);
 	assert.match(workflow, /-fdebug-compilation-dir=\/workspace/u);
 	assert.match(workflow, /-ffile-prefix-map=.*=\/workspace/u);
