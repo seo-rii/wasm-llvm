@@ -38,18 +38,18 @@ llvm-dwarfdump --verify program.wasm
 ```
 
 The official binary archive does not include the WebAssembly compiler-rt
-builtins. The exact-archive revalidation therefore used its Clang and
-`wasm-ld` with the `libclang_rt.builtins-wasm32.a` resource directory from the
-verified LLVM 22.1.8 Debian package. A standalone packaged compiler must ship
-an equivalent pinned builtins archive. The resulting fixture module has
-SHA-256
-`beeff9d0f1121f93f22c5468dde405b99c38c8efe3f1c31a8ce47ff3b899becb`.
+builtins. The exact-archive revalidation therefore uses its Clang and
+`wasm-ld` with the sysroot and Clang resource directory from the SHA-256-pinned
+WASI SDK 33 archive. A standalone packaged compiler must ship equivalent
+pinned builtins. With the output name `program.wasm`, the resulting fixture
+module has SHA-256
+`226c0c142d2430d107927fef8aadd672bb8ed6b3ae1744c539e792bb8475bec3`.
 The audited Clang, sysroot, and resource directory were:
 
 ```text
 /data/llvm-22.1.8-official/bin/clang
-/usr
-/tmp/wasm-native-debug.FGYI1jMW/llvm22/root/usr/lib/llvm-22/lib/clang/22
+/data/toolchains/wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot
+/data/toolchains/wasi-sdk-33.0-x86_64-linux/lib/clang/22
 ```
 
 Build native WAMR from the pinned checkout:
@@ -88,7 +88,8 @@ still supports breakpoints and variable reads but warns that expression
 evaluation memory could not be allocated.
 
 The verified baseline covers source breakpoint resolution, continue,
-step-in/over/out, recursive stack unwinding, top-frame locals, globals, raw
+step-in/over/out, recursive stack unwinding, top-frame locals, structure
+fields, array elements, pointer values and pointee traversal, globals, raw
 linear-memory reads, stdout, and normal exit.
 
 ### Automated C baseline
@@ -110,9 +111,11 @@ readiness diagnostic when stdout is piped, so the runner accepts either the
 diagnostic or a short startup grace period; the LLDB connection remains the
 authoritative readiness check.
 
-A successful run verifies the resolved `main.c:13` breakpoint, recursive
-argument and local values, the `global_bias` value, a raw linear-memory read,
-LLDB's zero exit, and the guest's `total=15` stdout. Process orchestration,
+A successful run verifies the resolved recursive `main.c:18` and compound
+value `main.c:27` breakpoints; recursive arguments and locals; `DebugPair`
+fields; the complete `int[3]` value and indexed child; an `int *` address and
+its indexed pointee; the `global_bias` value; a raw linear-memory read; LLDB's
+zero exit; and the guest's `total=15` stdout. Process orchestration,
 dynamic-port rewriting, transcript rejection, and failure cleanup are covered
 without native toolchain dependencies:
 
@@ -208,7 +211,10 @@ SHA-256, checks out the exact WAMR 2.4.5 commit, and builds only WAMR's classic
 debug interpreter. It selectively extracts Clang, LLDB, LLDB-DAP,
 `llvm-dwarfdump`, `wasm-ld`, and `liblldb` from the large LLVM archive. The C
 fixture is compiled from source with the official LLVM 22.1.8 Clang while the
-pinned WASI SDK supplies its sysroot and compiler-rt resource directory.
+pinned WASI SDK supplies its sysroot and compiler-rt resource directory. CI
+also checks the resulting `program.wasm` SHA-256 before starting either
+debugger baseline, so toolchain or fixture drift fails before protocol output
+is interpreted.
 
 Ordinary pull requests keep running the dependency-free orchestration and
 producer contract tests. The real native job is scheduled/manual because its
@@ -268,7 +274,7 @@ Stack PCs and source lines are otherwise distinct.
 
 Reproduce it with
 `lldb -b -s lldb-parent-frame-bug.commands /path/to/program.wasm`, which sets
-the line 8 breakpoint and inspects frames 0, 1, and 2:
+the line 13 recursive base-case breakpoint and inspects frames 0, 1, and 2:
 
 ```text
 frame 0 expected/actual: n=1, doubled=2
@@ -284,8 +290,8 @@ contains only `qWasmLocal:0;1`; selecting frames 1 and 2 produces no new
 `qWasmLocal` request.
 
 Sending those packets explicitly proves that WAMR can read each frame. For the
-verified artifact, WAMR returned frame bases `0x0000ff90`, `0x0000ffb0`, and
-`0x0000ffd0`. Reading `DW_OP_fbreg +24` from those bases produced `n=1`,
+verified artifact, WAMR returned frame bases `0x0000ff70`, `0x0000ff90`, and
+`0x0000ffb0`. Reading `DW_OP_fbreg +24` from those bases produced `n=1`,
 `n=2`, and `n=3`, respectively. The defect is therefore after stack discovery
 and before LLDB requests a parent frame's virtual register; it is not a WAMR
 frame-index parsing failure.

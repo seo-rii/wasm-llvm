@@ -1,5 +1,13 @@
 process connect -p wasm connect://127.0.0.1:1234
-breakpoint set --file main.c --line 13
+breakpoint set --file main.c --line 18
+breakpoint set --file main.c --line 27
+continue
+frame variable pair
+frame variable pair.left
+frame variable values
+frame variable values[1]
+frame variable middle
+frame variable middle[0]
 continue
 thread backtrace
 frame variable

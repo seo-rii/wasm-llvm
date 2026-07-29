@@ -43,7 +43,14 @@ const commands = readFileSync(commandPath, 'utf8');
 if (/connect:\\/\\/127\\.0\\.0\\.1:1234/.test(commands)) process.exit(9);
 if (!/connect:\\/\\/127\\.0\\.0\\.1:\\d+/.test(commands)) process.exit(8);
 process.stdout.write([
-  'Breakpoint 1: main.c:13',
+  'Breakpoint 1: main.c:18',
+  'Breakpoint 2: main.c:27',
+  '(DebugPair) pair = (left = 2, right = 6)',
+  '(int) pair.left = 2',
+  '(int[3]) values = ([0] = 2, [1] = 4, [2] = 6)',
+  '(int) values[1] = 4',
+  '(int *) middle = 0x0000ffec',
+  '(int) middle[0] = 4',
   '(int) n = 2',
   '(int) doubled = 4',
   '0x00010960: 0x00000003',
@@ -192,6 +199,28 @@ test('rejects an incomplete native C transcript', () => {
 	);
 });
 
+test('rejects a native C transcript without compound DWARF values', () => {
+	assert.throws(
+		() =>
+			verifyNativeCBaseline({
+				lldbStderr: '',
+				lldbStdout: `
+Breakpoint 1: main.c:18
+Breakpoint 2: main.c:27
+(int) n = 2
+(int) doubled = 4
+0x00010968: 0x00000003
+(volatile int) global_bias = 3
+Process 1 exited with status = 0
+`,
+				port: 1234,
+				targetStderr: '',
+				targetStdout: 'total=15\n'
+			}),
+		/native C baseline did not expose the structure fields/
+	);
+});
+
 test('reads native C memory through a symbol instead of a linked address', async () => {
 	const commands = await readFile(
 		'test/native-wasm-debug/lldb.commands',
@@ -203,6 +232,16 @@ test('reads native C memory through a symbol instead of a linked address', async
 		/memory read --format x --size 4 --count 1 &global_bias/
 	);
 	assert.doesNotMatch(commands, /memory read[^\n]*0x[0-9a-f]+/i);
+});
+
+test('keeps the recursive parent-frame command on the recursive base case', async () => {
+	const commands = await readFile(
+		'test/native-wasm-debug/lldb-parent-frame-bug.commands',
+		'utf8'
+	);
+
+	assert.match(commands, /breakpoint set --file main\.c --line 13/);
+	assert.doesNotMatch(commands, /breakpoint set --file main\.c --line 8/);
 });
 
 test('verifies recursive Rust DWARF values and target output', () => {

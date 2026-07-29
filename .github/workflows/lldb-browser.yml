@@ -80,6 +80,7 @@ jobs:
             WASI_SDK_SHA256: 0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce
             WAMR_REPOSITORY: https://github.com/bytecodealliance/wasm-micro-runtime.git
             WAMR_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
+            C_FIXTURE_SHA256: 226c0c142d2430d107927fef8aadd672bb8ed6b3ae1744c539e792bb8475bec3
             NATIVE_ROOT: ${{ runner.temp }}/wasm-native-debug
             LLVM_ROOT: ${{ runner.temp }}/wasm-native-debug/llvm
             WASI_ROOT: ${{ runner.temp }}/wasm-native-debug/wasi-sdk-33.0-x86_64-linux
@@ -175,6 +176,7 @@ jobs:
                     -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
                     "$FIXTURE_ROOT/main.c" \
                     -o "$PROGRAM_PATH"
+                  echo "$C_FIXTURE_SHA256  $PROGRAM_PATH" | sha256sum --check
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$PROGRAM_PATH"
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --debug-info "$PROGRAM_PATH" |
                     grep --fixed-strings "/workspace/main.c"

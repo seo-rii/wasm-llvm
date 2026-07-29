@@ -71,8 +71,36 @@ function verifyTranscriptChecks(transcript, checks) {
 export function verifyNativeCBaseline(result) {
 	verifyTranscriptChecks(result.lldbStdout, [
 		[
-			/breakpoint 1:.*main\.c:13/is,
+			/breakpoint 1:.*main\.c:18/is,
 			'native C baseline did not verify breakpoint resolution'
+		],
+		[
+			/breakpoint 2:.*main\.c:27/is,
+			'native C baseline did not verify compound-value breakpoint resolution'
+		],
+		[
+			/\(DebugPair\) pair = \(left = 2, right = 6\)/,
+			'native C baseline did not expose the structure fields'
+		],
+		[
+			/\(int\) pair\.left = 2/,
+			'native C baseline did not traverse the structure field'
+		],
+		[
+			/\(int\[3\]\) values = \(\[0\] = 2, \[1\] = 4, \[2\] = 6\)/,
+			'native C baseline did not expose the array elements'
+		],
+		[
+			/\(int\) values\[1\] = 4/,
+			'native C baseline did not traverse the array element'
+		],
+		[
+			/\(int \*\) middle = 0x[0-9a-f]+/i,
+			'native C baseline did not expose the pointer value'
+		],
+		[
+			/\(int\) middle\[0\] = 4/,
+			'native C baseline did not traverse the pointer pointee'
 		],
 		[/\(int\) n = 2/, 'native C baseline did not expose the recursive argument'],
 		[/\(int\) doubled = 4/, 'native C baseline did not expose the recursive local'],

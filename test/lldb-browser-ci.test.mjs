@@ -62,6 +62,10 @@ test('scheduled and manual CI run the pinned native C and DAP baselines', async 
 		workflow,
 		/WAMR_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605/u
 	);
+	assert.match(
+		workflow,
+		/C_FIXTURE_SHA256: 226c0c142d2430d107927fef8aadd672bb8ed6b3ae1744c539e792bb8475bec3/u
+	);
 	assert.match(workflow, /actions\/cache@v4/u);
 	assert.match(workflow, /bin\/lldb" --version.*22\.1\.8/su);
 	assert.match(workflow, /-fdebug-compilation-dir=\/workspace/u);
@@ -70,6 +74,10 @@ test('scheduled and manual CI run the pinned native C and DAP baselines', async 
 	assert.match(
 		workflow,
 		/llvm-dwarfdump" --debug-info.*grep --fixed-strings "\/workspace\/main\.c"/su
+	);
+	assert.match(
+		workflow,
+		/echo "\$C_FIXTURE_SHA256  \$PROGRAM_PATH" \| sha256sum --check/u
 	);
 	assert.match(workflow, /run-native-baseline\.mjs/u);
 	assert.match(workflow, /run-native-dap-baseline\.mjs/u);
