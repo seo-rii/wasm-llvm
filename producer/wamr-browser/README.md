@@ -85,6 +85,9 @@ node scripts/build.mjs \
   --emsdk /path/to/emsdk
 node scripts/package.mjs --build /path/to/build --output ./artifacts
 node scripts/verify.mjs --artifacts ./artifacts
+node scripts/verify-reproducibility.mjs \
+  /path/to/clean-artifacts-a \
+  /path/to/clean-artifacts-b
 ```
 
 `prepare.mjs` refuses an unpinned checkout and applies the ordered patch set,
@@ -98,6 +101,12 @@ Emscripten ES-module pthread sidecar as `wamr-debug.worker.mjs`.
 `verify.mjs` checks all asset hashes, the sidecar/transport markers, the
 runtime-facing uncompressed Wasm asset, its reproducible gzip copy, Wasm
 validity, and the compressed asset-size budget.
+Before publishing a rebuilt interpreter, build it in two distinct clean
+directories and run `verify-reproducibility.mjs` on their packages. The
+comparison first applies the full standalone verifier to both directories,
+rejects comparing a directory with itself, and then requires identical
+producer provenance plus raw and deterministic-gzip metadata for every runtime
+asset.
 The generated module also exports Emscripten's canonical `HEAPU8` view. The
 target worker samples only the current backing buffer length so it can report
 linear-memory growth without exposing guest bytes; callers must not retain an

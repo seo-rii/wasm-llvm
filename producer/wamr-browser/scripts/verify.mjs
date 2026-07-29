@@ -96,6 +96,7 @@ export async function verifyWamrBrowser({ artifacts, sizeBudget }) {
 		}
 	}
 	console.log(`Verified WAMR browser debugger in ${artifacts}`);
+	return receipt;
 }
 
 if (isMain(import.meta.url)) {

@@ -21,6 +21,10 @@ import {
 import { packageWamrBrowser } from '../scripts/package.mjs';
 import { WAMR_PATCH_PATHS, prepareWamrSource } from '../scripts/prepare.mjs';
 import { verifyWamrBrowser } from '../scripts/verify.mjs';
+import {
+	assertReproducibleWamrBuilds,
+	verifyReproducibleWamrArtifactDirectories
+} from '../scripts/verify-reproducibility.mjs';
 
 const execFileAsync = promisify(execFile);
 const producerRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -484,6 +488,7 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 		const build = path.join(temporaryRoot, 'build');
 		const input = path.join(build, 'wasm-idle-output');
 		const output = path.join(temporaryRoot, 'output');
+		const secondOutput = path.join(temporaryRoot, 'second-output');
 		await mkdir(input, { recursive: true });
 		await writeFile(
 			path.join(input, 'wamr-debug.js'),
@@ -509,6 +514,12 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 
 		await packageWamrBrowser({ build, output });
 		await verifyWamrBrowser({ artifacts: output });
+		await packageWamrBrowser({ build, output: secondOutput });
+		const reproducibleReceipt = await verifyReproducibleWamrArtifactDirectories(
+			output,
+			secondOutput
+		);
+		assert.equal(reproducibleReceipt.wamrRevision.length, 40);
 
 		const receipt = JSON.parse(
 			await readFile(path.join(output, 'producer-receipt.json'), 'utf8')
@@ -533,6 +544,73 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 	} finally {
 		await rm(temporaryRoot, { recursive: true, force: true });
 	}
+});
+
+test('clean build comparison rejects WAMR provenance and asset differences', () => {
+	const receipt = {
+		format: 'wasm-idle-wamr-debug-v1',
+		wamrRevision: 'wamr-revision',
+		emsdkRevision: 'emsdk-revision',
+		provenance: {
+			sourcesLockSha256: 'sources',
+			producerManifestSha256: 'manifest',
+			patchesSha256: 'patches',
+			overlaysSha256: 'overlays'
+		},
+		assets: [
+			{ path: 'wamr-debug.js', bytes: 11, sha256: 'js' },
+			{ path: 'wamr-debug.wasm', bytes: 22, sha256: 'wasm' },
+			{ path: PACKAGED_PTHREAD_WORKER, bytes: 33, sha256: 'worker' },
+			{
+				path: 'wamr-debug.wasm.gz',
+				bytes: 12,
+				sha256: 'gzip',
+				uncompressedBytes: 22,
+				uncompressedSha256: 'wasm'
+			}
+		]
+	};
+
+	assert.doesNotThrow(() =>
+		assertReproducibleWamrBuilds(receipt, structuredClone(receipt))
+	);
+	const changedProvenance = structuredClone(receipt);
+	changedProvenance.provenance.patchesSha256 = 'changed';
+	assert.throws(
+		() => assertReproducibleWamrBuilds(receipt, changedProvenance),
+		/WAMR browser build receipt provenance differs/u
+	);
+	const changedAsset = structuredClone(receipt);
+	changedAsset.assets[1].sha256 = 'changed';
+	assert.throws(
+		() => assertReproducibleWamrBuilds(receipt, changedAsset),
+		/wamr-debug\.wasm metadata differs/u
+	);
+	const replacedAssetSet = structuredClone(receipt);
+	replacedAssetSet.assets[1] = {
+		path: 'unexpected-runtime.bin',
+		bytes: 22,
+		sha256: 'wasm'
+	};
+	assert.throws(
+		() =>
+			assertReproducibleWamrBuilds(
+				replacedAssetSet,
+				structuredClone(replacedAssetSet)
+			),
+		/WAMR browser build asset set differs/u
+	);
+});
+
+test('clean WAMR build comparison requires two artifact directories', async () => {
+	await assert.rejects(
+		() =>
+			verifyReproducibleWamrArtifactDirectories(
+				'/tmp/wasm-wamr-same-build',
+				'/tmp/wasm-wamr-same-build'
+			),
+		/requires two directories/u
+	);
 });
 
 test('documents separated output and the pinned host-platform caveat', async () => {
