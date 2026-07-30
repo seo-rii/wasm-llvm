@@ -135,6 +135,21 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
       `${language} compilation must normalize source and build roots`,
     );
   }
+  for (const configureCommand of [
+    buildPlan.commands[0],
+    buildPlan.commands[2],
+  ]) {
+    assert.ok(
+      configureCommand.arguments.includes(
+        "-DLLVM_FORCE_VC_REPOSITORY=https://github.com/llvm/llvm-project.git",
+      ),
+    );
+    assert.ok(
+      configureCommand.arguments.includes(
+        `-DLLVM_FORCE_VC_REVISION=${LLVM_REVISION}`,
+      ),
+    );
+  }
 
   const webConfigure = buildPlan.commands[2].arguments.join("\n");
   for (const definition of [

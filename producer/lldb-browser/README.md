@@ -140,7 +140,10 @@ makes the final Wasm bytes and even their size depend on the checkout location.
 Both aliases are recorded in `manifest.json` and are part of the producer
 receipt provenance. After linking, the producer scans the final Wasm bytes and
 refuses to package an artifact that still contains either prepared absolute
-root.
+root. The CMake plan also pins `LLVM_FORCE_VC_REPOSITORY` to the canonical
+upstream URL and `LLVM_FORCE_VC_REVISION` to the locked commit. Without those
+definitions, LLVM embeds each checkout's `origin` value, which can be either
+the upstream URL or a local clone path even after file-prefix normalization.
 
 The module exports Emscripten's canonical `HEAPU8` view in addition to `FS`
 and `callMain`. The browser worker uses only its backing buffer length to

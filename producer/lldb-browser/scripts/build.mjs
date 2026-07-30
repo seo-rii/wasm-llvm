@@ -104,6 +104,10 @@ export function createBuildPlan(options) {
     `-ffile-prefix-map=${sourceDir}=/llvm-project`,
     `-ffile-prefix-map=${webBuildDir}=/lldb-web-build`,
   ].join(" ");
+  const reproducibleVcsDefinitions = [
+    "-DLLVM_FORCE_VC_REPOSITORY=https://github.com/llvm/llvm-project.git",
+    `-DLLVM_FORCE_VC_REVISION=${LLVM_REVISION}`,
+  ];
   const nativeDefinitions = [
     "-G",
     "Ninja",
@@ -120,6 +124,7 @@ export function createBuildPlan(options) {
     "-DLLVM_INCLUDE_EXAMPLES=OFF",
     "-DLLVM_INCLUDE_BENCHMARKS=OFF",
     "-DLLVM_INCLUDE_DOCS=OFF",
+    ...reproducibleVcsDefinitions,
   ];
   const webDefinitions = [
     "-G",
@@ -158,6 +163,7 @@ export function createBuildPlan(options) {
     "-DLLVM_BUILD_LLVM_DYLIB=OFF",
     "-DLLVM_LINK_LLVM_DYLIB=OFF",
     "-DCLANG_LINK_CLANG_DYLIB=OFF",
+    ...reproducibleVcsDefinitions,
     `-DLLVM_TABLEGEN=${path.join(nativeBuildDir, "bin", "llvm-tblgen")}`,
     `-DCLANG_TABLEGEN=${path.join(nativeBuildDir, "bin", "clang-tblgen")}`,
     `-DLLDB_TABLEGEN_EXE=${path.join(nativeBuildDir, "bin", "lldb-tblgen")}`,
