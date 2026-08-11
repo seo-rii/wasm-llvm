@@ -107,7 +107,16 @@
 		"verify:assets": "node ./scripts/verify-assets.mjs",
 		"validate:clang": "npm run build && node ./runtime/clang/scripts/smoke-runtime.mjs",
 		"swift:doctor": "node ./runtime/swift/scripts/doctor.mjs",
-		"swift:test": "npm --prefix ./runtime/swift test"
+		"swift:test": "npm --prefix ./runtime/swift test",
+		"prepare:tinygo-source": "node ./producer/tinygo-browser/scripts/prepare-source.mjs",
+		"verify:tinygo-source": "node ./producer/tinygo-browser/scripts/prepare-source.mjs --verify",
+		"build:tinygo-llvm-wasi": "node ./producer/tinygo-browser/scripts/build-llvm-wasi.mjs",
+		"build:tinygo-browser": "node ./producer/tinygo-browser/scripts/build-browser-compiler.mjs",
+		"build:tinygo-package-graph": "node ./producer/tinygo-browser/scripts/build-package-graph-provider.mjs",
+		"accept:tinygo-browser": "node ./producer/tinygo-browser/scripts/accept-browser-compiler.mjs",
+		"probe:tinygo-native-split": "node ./producer/tinygo-browser/scripts/probe-native-split-pipeline.mjs",
+		"verify:tinygo-artifacts": "node ./producer/tinygo-browser/scripts/verify-artifacts.mjs",
+		"sync:tinygo": "node ./producer/tinygo-browser/scripts/sync.mjs"
 	},
 	"dependencies": {
 		"@bjorn3/browser_wasi_shim": "^0.4.2",

@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/tinygo-browser",
+  "target": "wasm32-wasip1",
+  "tinygoVersion": "0.40.1",
+  "sourcesLock": "sources.lock.json",
+  "upstreamCompiler": {
+    "status": "validated",
+    "entrypoint": {
+      "modes": [
+        "upstream-cli",
+        "upstream-compiler-adapter"
+      ],
+      "upstreamModule": "github.com/tinygo-org/tinygo",
+      "referenceCliFile": "main.go"
+    },
+    "hostTarget": "wasm32-wasip1",
+    "requiredPackages": [
+      "github.com/tinygo-org/tinygo/builder",
+      "github.com/tinygo-org/tinygo/cgo",
+      "github.com/tinygo-org/tinygo/compiler",
+      "github.com/tinygo-org/tinygo/interp",
+      "github.com/tinygo-org/tinygo/loader",
+      "github.com/tinygo-org/tinygo/transform",
+      "tinygo.org/x/go-llvm"
+    ],
+    "requiredArtifactIdentityStrings": [
+      "github.com/tinygo-org/tinygo/builder",
+      "github.com/tinygo-org/tinygo/cgo",
+      "github.com/tinygo-org/tinygo/compiler",
+      "tinygo.org/x/go-llvm"
+    ],
+    "forbiddenArtifactIdentityStrings": [
+      "/wasmbridge/",
+      "cmd/tinygo-wasi",
+      "tinygobackend",
+      "tinygofrontend"
+    ],
+    "llvmLinkage": "in-process-c-api",
+    "cgoRequired": true,
+    "hostCompileFallbackAllowed": false
+  },
+  "compileProtocol": {
+    "version": 4,
+    "format": "wasm-llvm-tinygo-link-plan-v4",
+    "capabilities": [
+      "go-embed-objects",
+      "target-cgo-c",
+      "target-cxx-freestanding",
+      "target-clang-assembly"
+    ],
+    "outputs": [
+      "objects",
+      "link-plan.json"
+    ],
+    "targetNativeSourcePolicy": {
+      "cgoFiles": "program-object-with-source-closure-v4",
+      "cFiles": "thinlto-object-set-v4",
+      "cxxFiles": "freestanding-thinlto-object-set-v4",
+      "sFiles": "clang-uppercase-s-wasm-object-set-v4",
+      "embedFiles": "generated-object-set-v2"
+    },
+    "targetNativeValidation": {
+      "llvmToolchain": "llvm-20.1.1",
+      "targetTriple": "wasm32-unknown-wasi",
+      "dataLayout": "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
+      "moduleVerifier": "llvm-bitreader+verify-module",
+      "wasmObjectVerifier": "llvm-object-wasm",
+      "wasmObjectProfile": "wasm-relocatable-object-v1",
+      "enabledTargetFeatures": [
+        "bulk-memory",
+        "bulk-memory-opt",
+        "call-indirect-overlong",
+        "mutable-globals",
+        "nontrapping-fptoint",
+        "sign-ext"
+      ],
+      "disabledTargetFeatures": [
+        "multivalue",
+        "reference-types"
+      ],
+      "allowedWasmLimitsFlags": [
+        "has-max"
+      ],
+      "maximumTotalMemories": 1,
+      "maximumTotalTables": 1,
+      "freestandingPolicy": "no-tls-ctors-dtors-cxxabi-forbidden-target-features"
+    },
+    "linkPlanRequiredFields": [
+      "compilerSha256",
+      "objects",
+      "output",
+      "arguments"
+    ],
+    "runtimeProfile": {
+      "id": "wasip1-asyncify-precise-o1",
+      "target": "wasip1",
+      "opt": "1",
+      "gc": "precise",
+      "panicStrategy": "print",
+      "scheduler": "asyncify",
+      "debug": false,
+      "parallelism": 1
+    }
+  },
+  "rootArchive": {
+    "format": "wasm-llvm-tinygo-browser-root-v1",
+    "requiredPaths": [
+      "src",
+      "go.env",
+      "targets",
+      "go.mod",
+      "go.sum",
+      "lib/clang",
+      "lib/wasi-libc/include",
+      "runtime"
+    ],
+    "omittedTinyGoPaths": [
+      "lib except receipt-bound Clang and wasi-libc headers"
+    ],
+    "runtimeClosureFormat": "wasm-llvm-tinygo-runtime-closure-v1",
+    "runtimeProbe": {
+      "fixture": "fixtures/runtime-closure-probe/main.go",
+      "sha256": "55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566"
+    }
+  },
+  "finalization": {
+    "linker": "wasm-llvm/raw-wasi-lld",
+    "optimizer": "binaryen/wasm-opt",
+    "forbiddenLinkArguments": [
+      "--thinlto-cache-dir"
+    ]
+  },
+  "acceptance": {
+    "fixture": "fixtures/upstream-language-smoke/main.go",
+    "nativeSources": [
+      "fixtures/upstream-language-smoke/cgo.go",
+      "fixtures/upstream-language-smoke/helper.c",
+      "fixtures/upstream-language-smoke/helper.cpp",
+      "fixtures/upstream-language-smoke/helper.S"
+    ],
+    "embed": "fixtures/upstream-language-smoke/greeting.txt",
+    "stdin": "fixtures/upstream-language-smoke/stdin.txt",
+    "stdout": "fixtures/upstream-language-smoke/stdout.txt",
+    "requiredFeatures": [
+      "maps",
+      "slices",
+      "structs",
+      "methods",
+      "interfaces",
+      "go:embed",
+      "cgo",
+      "c",
+      "freestanding-cxx",
+      "clang-assembly",
+      "stdin"
+    ]
+  },
+  "llvm": {
+    "version": "16.0.0",
+    "commit": "d5a963ab8b40fcf7a99acd834e5f10a1a30cc2e5",
+    "purpose": "legacy-emception-worker-only"
+  },
+  "emceptionWorker": {
+    "url": "https://jprendes.github.io/emception/emception.worker.bundle.worker.js",
+    "patchedSha256": "2c2347f5869d1c08181f46bd1ae10723be242d66cdc233e201cad0d5acb8fcea"
+  },
+  "patches": [
+    {
+      "path": "patches/tinygo-wasi-adapter.patch",
+      "sha256": "b0bf923975fde8892b6eb616305babeee2064a6d04217a7eadd6595813eb07e3"
+    },
+    {
+      "path": "patches/go-llvm-wasi-cgo-alias.patch",
+      "sha256": "cb9999cc739a022442ac0a3d6ee9442f765b67e5c481a86e58d34ca848546a38"
+    },
+    {
+      "path": "patches/go-toolchain-wasip1-exec.patch",
+      "sha256": "1e3d01e435ec4410355dd7160f9c45b93e825eb20eb679246292729e8b483e57"
+    },
+    {
+      "path": "patches/llvm-wasi-c-api-config.patch",
+      "sha256": "ebc6a405f6459bd141904cf488d1ac606bdfd2d75a41a5ccd3f6127e883f7d01"
+    }
+  ],
+  "contracts": {
+    "sourceReceipt": "contracts/tinygo-source-receipt.schema.json",
+    "compilerReceipt": "contracts/tinygo-browser-receipt.schema.json"
+  },
+  "outputs": [
+    "tinygo-compiler.wasm",
+    "tinygoroot.tar.gz",
+    "producer-receipt.json"
+  ],
+  "readiness": {
+    "strictVerifier": "scripts/verify-artifacts.mjs",
+    "ready": false,
+    "blockedOn": "Compile protocol v4 adds source-bound freestanding C++ ThinLTO objects and Clang assembler-with-cpp WebAssembly objects for CGo packages while preserving the validated Go/embed/CGo/C path. Release readiness remains false because libc++/libc++abi, exceptions, RTTI, constructors, CXXFLAGS, Go/Plan9 assembly, custom #cgo LDFLAGS, external module downloads, hard synchronous resource limits, and broader compatibility fixtures remain unsupported or unverified."
+  }
+}

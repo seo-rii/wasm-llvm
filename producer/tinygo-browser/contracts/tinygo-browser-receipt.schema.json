@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasm-llvm.invalid/contracts/tinygo-browser/tinygo-browser-receipt.schema.json",
+  "title": "wasm-llvm upstream TinyGo browser compiler receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "format",
+    "producerId",
+    "inputs",
+    "source",
+    "build",
+    "verification",
+    "assets"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 4 },
+    "format": { "const": "wasm-llvm-tinygo-browser-compiler-v4" },
+    "producerId": { "const": "wasm-llvm/tinygo-browser" },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestSha256", "sourcesLockSha256", "sourceReceiptSha256"],
+      "properties": {
+        "manifestSha256": { "$ref": "#/$defs/sha256" },
+        "sourcesLockSha256": { "$ref": "#/$defs/sha256" },
+        "sourceReceiptSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tinygoCommit", "goLlvmCommit", "llvmCommit"],
+      "properties": {
+        "tinygoCommit": { "$ref": "#/$defs/commit" },
+        "goLlvmCommit": { "$ref": "#/$defs/commit" },
+        "llvmCommit": { "$ref": "#/$defs/commit" }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entrypoint",
+        "hostTarget",
+        "cgoEnabled",
+        "llvmLinkage",
+        "hostCompileFallback",
+        "packageGraph",
+        "compileProtocol",
+        "compileOutputs",
+        "runtimeProfile",
+        "rootArchive",
+        "finalization"
+      ],
+      "properties": {
+        "entrypoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "upstreamModule", "referenceCliFile"],
+          "properties": {
+            "mode": {
+              "enum": ["upstream-cli", "upstream-compiler-adapter"]
+            },
+            "upstreamModule": { "const": "github.com/tinygo-org/tinygo" },
+            "referenceCliFile": { "const": "main.go" }
+          }
+        },
+        "hostTarget": { "const": "wasm32-wasip1" },
+        "cgoEnabled": { "const": true },
+        "llvmLinkage": { "const": "in-process-c-api" },
+        "hostCompileFallback": { "const": false },
+        "packageGraph": {
+          "type": "array",
+          "minItems": 7,
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "compileProtocol": {
+          "const": {
+            "version": 4,
+            "format": "wasm-llvm-tinygo-link-plan-v4",
+            "capabilities": [
+              "go-embed-objects",
+              "target-cgo-c",
+              "target-cxx-freestanding",
+              "target-clang-assembly"
+            ]
+          }
+        },
+        "compileOutputs": {
+          "const": ["objects", "link-plan.json"]
+        },
+        "runtimeProfile": {
+          "const": {
+            "id": "wasip1-asyncify-precise-o1",
+            "target": "wasip1",
+            "opt": "1",
+            "gc": "precise",
+            "panicStrategy": "print",
+            "scheduler": "asyncify",
+            "debug": false,
+            "parallelism": 1
+          }
+        },
+        "rootArchive": {
+          "const": {
+            "format": "wasm-llvm-tinygo-browser-root-v1",
+            "requiredPaths": [
+              "src",
+              "go.env",
+              "targets",
+              "go.mod",
+              "go.sum",
+              "lib/clang",
+              "lib/wasi-libc/include",
+              "runtime"
+            ],
+            "omittedTinyGoPaths": ["lib except receipt-bound Clang and wasi-libc headers"],
+            "runtimeClosureFormat": "wasm-llvm-tinygo-runtime-closure-v1",
+            "runtimeProbe": {
+              "fixture": "fixtures/runtime-closure-probe/main.go",
+              "sha256": "55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566"
+            }
+          }
+        },
+        "finalization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["linker", "optimizer", "linkArguments"],
+          "properties": {
+            "linker": { "const": "wasm-llvm/raw-wasi-lld" },
+            "optimizer": { "const": "binaryen/wasm-opt" },
+            "linkArguments": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "identityMode", "compilerVersion", "acceptance"],
+      "properties": {
+        "status": { "const": "passed" },
+        "identityMode": { "const": "upstream-package-graph" },
+        "compilerVersion": {
+          "type": "string",
+          "pattern": "^tinygo version 0\\.40\\.1(?:\\s|$)"
+        },
+        "acceptance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "fixture", "compile", "execution"],
+          "properties": {
+            "status": { "const": "passed" },
+            "fixture": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sourceSha256", "nativeSources", "embedSha256", "stdinSha256", "stdoutSha256"],
+              "properties": {
+                "sourceSha256": { "$ref": "#/$defs/sha256" },
+                "nativeSources": {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": { "$ref": "#/$defs/sourceEvidence" }
+                },
+                "embedSha256": { "$ref": "#/$defs/sha256" },
+                "stdinSha256": { "$ref": "#/$defs/sha256" },
+                "stdoutSha256": { "$ref": "#/$defs/sha256" }
+              }
+            },
+            "compile": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["objects", "linkPlan", "finalWasmSha256"],
+              "properties": {
+                "objects": {
+                  "type": "array",
+                  "minItems": 5,
+                  "maxItems": 1024,
+                  "items": { "$ref": "#/$defs/evidenceAsset" }
+                },
+                "linkPlan": { "$ref": "#/$defs/evidenceAsset" },
+                "finalWasmSha256": { "$ref": "#/$defs/sha256" }
+              }
+            },
+            "execution": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["exitCode", "stdout", "stdoutSha256"],
+              "properties": {
+                "exitCode": { "const": 0 },
+                "stdout": { "const": "hello Ada count=2 total=3 cgo=5/20 cxxasm=13\n" },
+                "stdoutSha256": { "$ref": "#/$defs/sha256" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "bytes", "sha256"],
+        "properties": {
+          "path": {
+            "enum": ["tinygo-compiler.wasm", "tinygoroot.tar.gz"]
+          },
+          "bytes": { "type": "integer", "minimum": 1 },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidenceAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "sourceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "enum": [
+            "fixtures/upstream-language-smoke/cgo.go",
+            "fixtures/upstream-language-smoke/helper.c",
+            "fixtures/upstream-language-smoke/helper.cpp",
+            "fixtures/upstream-language-smoke/helper.S"
+          ]
+        },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

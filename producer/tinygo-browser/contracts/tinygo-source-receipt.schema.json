@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasm-llvm.invalid/contracts/tinygo-browser/tinygo-source-receipt.schema.json",
+  "title": "wasm-llvm upstream TinyGo source receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "format",
+    "producerId",
+    "inputs",
+    "source",
+    "compilerIdentity",
+    "llvm",
+    "patches"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "format": { "const": "wasm-llvm-tinygo-source-v1" },
+    "producerId": { "const": "wasm-llvm/tinygo-browser" },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestSha256",
+        "sourcesLockSha256",
+        "sourceContractSha256",
+        "prepareSourceSha256"
+      ],
+      "properties": {
+        "manifestSha256": { "$ref": "#/$defs/sha256" },
+        "sourcesLockSha256": { "$ref": "#/$defs/sha256" },
+        "sourceContractSha256": { "$ref": "#/$defs/sha256" },
+        "prepareSourceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "ref", "version", "commit", "module", "goVersion", "clean"],
+      "properties": {
+        "repository": { "type": "string" },
+        "ref": { "type": "string" },
+        "version": { "type": "string" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "module": { "type": "string" },
+        "goVersion": { "type": "string" },
+        "clean": { "const": true }
+      }
+    },
+    "compilerIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entrypoint", "requiredPackages", "sourceFiles", "goLlvm"],
+      "properties": {
+        "entrypoint": { "const": "main.go" },
+        "requiredPackages": {
+          "type": "array",
+          "minItems": 7,
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "sourceFiles": {
+          "type": "array",
+          "minItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "bytes", "sha256"],
+            "properties": {
+              "path": { "type": "string" },
+              "bytes": { "type": "integer", "minimum": 1 },
+              "sha256": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        },
+        "goLlvm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "repository",
+            "module",
+            "version",
+            "commit",
+            "sum",
+            "goModSum",
+            "hostSupportSources"
+          ],
+          "properties": {
+            "repository": { "type": "string" },
+            "module": { "const": "tinygo.org/x/go-llvm" },
+            "version": { "type": "string" },
+            "commit": { "$ref": "#/$defs/commit" },
+            "sum": { "type": "string" },
+            "goModSum": { "type": "string" },
+            "hostSupportSources": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "sha256"],
+                "properties": {
+                  "path": { "type": "string" },
+                  "sha256": { "$ref": "#/$defs/sha256" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "llvm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "ref", "version", "commit"],
+      "properties": {
+        "repository": { "type": "string" },
+        "ref": { "type": "string" },
+        "version": { "type": "string" },
+        "commit": { "$ref": "#/$defs/commit" }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

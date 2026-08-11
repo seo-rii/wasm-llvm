@@ -1,0 +1,31 @@
+diff --git a/src/cmd/go/internal/lockedfile/lockedfile_filelock.go b/src/cmd/go/internal/lockedfile/lockedfile_filelock.go
+--- a/src/cmd/go/internal/lockedfile/lockedfile_filelock.go
++++ b/src/cmd/go/internal/lockedfile/lockedfile_filelock.go
+@@ -9,11 +9,16 @@ import (
+ import (
+ 	"io/fs"
+ 	"os"
++	"runtime"
+ 
+ 	"cmd/go/internal/lockedfile/internal/filelock"
+ )
+ 
+ func openFile(name string, flag int, perm fs.FileMode) (*os.File, error) {
++	if runtime.GOOS == "wasip1" {
++		return os.OpenFile(name, flag, perm)
++	}
++
+ 	// On BSD systems, we could add the O_SHLOCK or O_EXLOCK flag to the OpenFile
+ 	// call instead of locking separately, but we have to support separate locking
+ 	// calls for Linux and Windows anyway, so it's simpler to use that approach
+@@ -53,6 +58,10 @@ func openFile(name string, flag int, perm fs.FileMode) (*os.File, error) {
+ }
+ 
+ func closeFile(f *os.File) error {
++	if runtime.GOOS == "wasip1" {
++		return f.Close()
++	}
++
+ 	// Since locking syscalls operate on file descriptors, we must unlock the file
+ 	// while the descriptor is still valid — that is, before the file is closed —
+ 	// and avoid unlocking files that are already closed.

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "format": "wasm-llvm-tinygo-package-graph-source-lock-v1",
+  "goToolchain": {
+    "module": "golang.org/toolchain",
+    "version": "go1.24.6",
+    "platform": "linux-amd64",
+    "archiveFilename": "v0.0.1-go1.24.6.linux-amd64.zip",
+    "archiveRoot": "golang.org/toolchain@v0.0.1-go1.24.6.linux-amd64",
+    "archiveBytes": 82904480,
+    "archiveSha256": "e7f0fd16d1b06c716162a0938744bb7ebf7edbc3248d42432271a1b5c1fde1ce"
+  },
+  "entrypoint": "cmd/go",
+  "identitySources": [
+    {
+      "path": "src/go/build/build.go",
+      "sha256": "e2c9d4056a147bce2b170cce9c9dff26ca9ef9ca8aa0af85c2ead342a3277bb8"
+    },
+    {
+      "path": "src/go/build/constraint/expr.go",
+      "sha256": "850924f7ed53ce4bf1342cc6978afaaf902f6263420d63fc8c82e3485e497d9b"
+    },
+    {
+      "path": "src/cmd/go/internal/list/list.go",
+      "sha256": "f0dd7ee9cd045c796072a2edbdbfd178e859f1fa6f42a792e0711e9d0e2f361b"
+    },
+    {
+      "path": "src/cmd/go/internal/load/pkg.go",
+      "sha256": "7080541914db2ac8ec9b0a4926d55efde949786d86816efb138c444037484a6e"
+    },
+    {
+      "path": "src/cmd/go/internal/modload/load.go",
+      "sha256": "233085e67f0758e34b75501d979d966876281ac3518d1d112924769f1f129747"
+    },
+    {
+      "path": "src/cmd/go/internal/lockedfile/lockedfile_filelock.go",
+      "sha256": "c7946ebe8ced54cc3caeb461ccbee7eac37b6a8ea41052d3777e908055158529"
+    }
+  ],
+  "patch": {
+    "path": "patches/go-toolchain-wasip1-lockedfile.patch",
+    "sha256": "4497603167ec8fdf40e1c7dbfad312b4f2ae72d0292df6413f0cf5247e1063d0"
+  }
+}

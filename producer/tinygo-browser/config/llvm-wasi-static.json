@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "planId": "tinygo-llvm-wasi-static-v1",
+  "source": {
+    "repository": "https://github.com/tinygo-org/llvm-project.git",
+    "version": "20.1.1",
+    "ref": "tinygo_20.x",
+    "commit": "670759811adc85df52f410d7306788fabfc6242d"
+  },
+  "host": {
+    "compilerTarget": "wasm32-wasip1",
+    "llvmTriple": "wasm32-unknown-wasi",
+    "targetsToBuild": [
+      "WebAssembly"
+    ]
+  },
+  "build": {
+    "type": "MinSizeRel",
+    "projects": [
+      "clang",
+      "lld"
+    ],
+    "archiveTargets": [
+      "libclang",
+      "clangAnalysis",
+      "clangAPINotes",
+      "clangAST",
+      "clangASTMatchers",
+      "clangBasic",
+      "clangCodeGen",
+      "clangCrossTU",
+      "clangDriver",
+      "clangDynamicASTMatchers",
+      "clangEdit",
+      "clangExtractAPI",
+      "clangFormat",
+      "clangFrontend",
+      "clangFrontendTool",
+      "clangHandleCXX",
+      "clangHandleLLVM",
+      "clangIndex",
+      "clangInstallAPI",
+      "clangLex",
+      "clangParse",
+      "clangRewrite",
+      "clangRewriteFrontend",
+      "clangSema",
+      "clangSerialization",
+      "clangSupport",
+      "clangTooling",
+      "clangToolingASTDiff",
+      "clangToolingCore",
+      "clangToolingInclusions",
+      "lldCOFF",
+      "lldCommon",
+      "lldELF",
+      "lldMachO",
+      "lldMinGW",
+      "lldWasm",
+      "LLVMAggressiveInstCombine",
+      "LLVMAnalysis",
+      "LLVMAsmParser",
+      "LLVMAsmPrinter",
+      "LLVMBinaryFormat",
+      "LLVMBitReader",
+      "LLVMBitstreamReader",
+      "LLVMBitWriter",
+      "LLVMCFGuard",
+      "LLVMCGData",
+      "LLVMCodeGen",
+      "LLVMCodeGenTypes",
+      "LLVMCore",
+      "LLVMCoroutines",
+      "LLVMCoverage",
+      "LLVMDebugInfoCodeView",
+      "LLVMDebugInfoDWARF",
+      "LLVMDebugInfoMSF",
+      "LLVMDebugInfoPDB",
+      "LLVMDemangle",
+      "LLVMExecutionEngine",
+      "LLVMExtensions",
+      "LLVMFrontendAtomic",
+      "LLVMFrontendDriver",
+      "LLVMFrontendHLSL",
+      "LLVMFrontendOffloading",
+      "LLVMFrontendOpenMP",
+      "LLVMHipStdPar",
+      "LLVMIRPrinter",
+      "LLVMInstrumentation",
+      "LLVMInstCombine",
+      "LLVMInterpreter",
+      "LLVMipo",
+      "LLVMIRReader",
+      "LLVMJITLink",
+      "LLVMLibDriver",
+      "LLVMLinker",
+      "LLVMLTO",
+      "LLVMMC",
+      "LLVMMCDisassembler",
+      "LLVMMCJIT",
+      "LLVMMCParser",
+      "LLVMObjCARCOpts",
+      "LLVMObject",
+      "LLVMOption",
+      "LLVMOrcJIT",
+      "LLVMOrcShared",
+      "LLVMOrcTargetProcess",
+      "LLVMPasses",
+      "LLVMProfileData",
+      "LLVMRemarks",
+      "LLVMRuntimeDyld",
+      "LLVMSandboxIR",
+      "LLVMScalarOpts",
+      "LLVMSelectionDAG",
+      "LLVMSupport",
+      "LLVMSymbolize",
+      "LLVMTarget",
+      "LLVMTargetParser",
+      "LLVMTextAPI",
+      "LLVMTransformUtils",
+      "LLVMVectorize",
+      "LLVMWebAssemblyAsmParser",
+      "LLVMWebAssemblyCodeGen",
+      "LLVMWebAssemblyDesc",
+      "LLVMWebAssemblyDisassembler",
+      "LLVMWebAssemblyInfo",
+      "LLVMWebAssemblyUtils",
+      "LLVMWindowsDriver",
+      "LLVMWindowsManifest"
+    ],
+    "requiredNativeTools": [
+      "llvm-tblgen",
+      "clang-tblgen"
+    ],
+    "libclang": {
+      "target": "libclang",
+      "archiveFile": "libclang.a",
+      "requiredHeaders": [
+        {
+          "name": "clang-c/Index.h",
+          "origin": "source",
+          "relativePath": "clang/include/clang-c/Index.h"
+        },
+        {
+          "name": "llvm-c/Core.h",
+          "origin": "source",
+          "relativePath": "llvm/include/llvm-c/Core.h"
+        },
+        {
+          "name": "llvm/Config/llvm-config.h",
+          "origin": "build",
+          "relativePath": "include/llvm/Config/llvm-config.h"
+        }
+      ]
+    },
+    "hostSupport": {
+      "mode": "consumer-compiled-upstream-cxx",
+      "cxxStandard": "c++17",
+      "definitions": [
+        "CINDEX_NO_EXPORTS"
+      ],
+      "archives": [
+        {
+          "id": "tinygo-builder-cxx",
+          "sources": [
+            "builder/cc1as.cpp",
+            "builder/clang.cpp",
+            "builder/lld.cpp"
+          ],
+          "requiredSymbols": [
+            "tinygo_clang_driver",
+            "tinygo_link",
+            "tinygo_validate_wasm_object"
+          ]
+        },
+        {
+          "id": "go-llvm-cxx",
+          "sources": [
+            "IRBindings.cpp",
+            "SupportBindings.cpp",
+            "backports.cpp"
+          ],
+          "requiredSymbols": [
+            "LLVMConstantAsMetadata",
+            "LLVMLoadLibraryPermanently2",
+            "LLVMGoWriteThinLTOBitcodeToMemoryBuffer"
+          ]
+        }
+      ],
+      "allowStubSymbols": false
+    }
+  },
+  "wasi": {
+    "emulationDefinitions": [
+      "_WASI_EMULATED_GETPID",
+      "_WASI_EMULATED_MMAN",
+      "_WASI_EMULATED_PROCESS_CLOCKS",
+      "_WASI_EMULATED_SIGNAL"
+    ],
+    "finalLinkLibraries": [
+      "wasi-emulated-getpid",
+      "wasi-emulated-mman",
+      "wasi-emulated-process-clocks",
+      "wasi-emulated-signal",
+      "dl",
+      "c++",
+      "c++abi"
+    ]
+  },
+  "upstreamPatch": {
+    "repository": "https://github.com/YoWASP/llvm-project.git",
+    "commit": "1516a9b2d598e438845abd68fb32c5bc3b3e1418",
+    "parent": "87f0227cb60147a26a1eeb4fb06e3b505e9c7261",
+    "expectedPaths": [
+      "clang/include/clang/Support/Compiler.h",
+      "clang/lib/Driver/Driver.cpp",
+      "llvm/cmake/config-ix.cmake",
+      "llvm/cmake/modules/HandleLLVMOptions.cmake",
+      "llvm/include/llvm/ADT/bit.h",
+      "llvm/include/llvm/Config/config.h.cmake",
+      "llvm/include/llvm/Support/Compiler.h",
+      "llvm/lib/ExecutionEngine/Interpreter/ExternalFunctions.cpp",
+      "llvm/lib/Support/CrashRecoveryContext.cpp",
+      "llvm/lib/Support/InitLLVM.cpp",
+      "llvm/lib/Support/LockFileManager.cpp",
+      "llvm/lib/Support/Signals.cpp",
+      "llvm/lib/Support/Unix/Memory.inc",
+      "llvm/lib/Support/Unix/Path.inc",
+      "llvm/lib/Support/Unix/Process.inc",
+      "llvm/lib/Support/Unix/Program.inc",
+      "llvm/lib/Support/Unix/Unix.h",
+      "llvm/lib/Support/Unix/Watchdog.inc",
+      "llvm/lib/Support/raw_socket_stream.cpp"
+    ],
+    "excludedPaths": [
+      "clang/include/clang/Support/Compiler.h",
+      "llvm/include/llvm/Support/Compiler.h",
+      "llvm/lib/Support/CrashRecoveryContext.cpp",
+      "llvm/lib/Support/Unix/Program.inc"
+    ]
+  },
+  "patch": {
+    "path": "patches/llvm-wasi-c-api-config.patch",
+    "sha256": "ebc6a405f6459bd141904cf488d1ac606bdfd2d75a41a5ccd3f6127e883f7d01",
+    "scope": [
+      "no-pthread-discovery",
+      "tinygo-wasm-visibility",
+      "feature-gated-setjmp",
+      "wasi-rlimit-guards",
+      "wasi-signal-and-process-fallbacks",
+      "wasi-libclang-resource-path"
+    ]
+  }
+}

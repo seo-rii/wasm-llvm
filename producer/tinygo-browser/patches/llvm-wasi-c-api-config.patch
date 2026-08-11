@@ -1,0 +1,345 @@
+diff --git a/clang/include/clang/Support/Compiler.h b/clang/include/clang/Support/Compiler.h
+--- a/clang/include/clang/Support/Compiler.h
++++ b/clang/include/clang/Support/Compiler.h
+@@ -54,7 +54,7 @@
+ #define CLANG_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define CLANG_TEMPLATE_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define CLANG_EXPORT_TEMPLATE
+-#elif defined(__MACH__) || defined(__WASM__)
++#elif defined(__MACH__) || defined(__wasm__)
+ #define CLANG_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define CLANG_TEMPLATE_ABI
+ #define CLANG_EXPORT_TEMPLATE
+diff --git a/clang/tools/libclang/CIndexer.cpp b/clang/tools/libclang/CIndexer.cpp
+--- a/clang/tools/libclang/CIndexer.cpp
++++ b/clang/tools/libclang/CIndexer.cpp
+@@ -21,6 +21,7 @@
+ #include "llvm/Support/Path.h"
+ #include "llvm/Support/Program.h"
+ #include "llvm/Support/YAMLParser.h"
++#include <cstdlib>
+ #include <cstdio>
+ #include <mutex>
+ 
+@@ -34,6 +35,7 @@
+ #elif defined(_AIX)
+ #include <errno.h>
+ #include <sys/ldr.h>
++#elif defined(__wasi__)
+ #else
+ #include <dlfcn.h>
+ #endif
+@@ -122,6 +124,13 @@ const std::string &CIndexer::getClangResourcesPath() {
+   LibClangPath += path;
+ #elif defined(_AIX)
+   getClangResourcesPathImplAIX(LibClangPath);
++#elif defined(__wasi__)
++  const char *TinyGoRoot = std::getenv("TINYGOROOT");
++  if (TinyGoRoot == nullptr || TinyGoRoot[0] == '\0')
++    llvm::report_fatal_error(
++        "TINYGOROOT is required to locate Clang resources on WASI");
++  LibClangPath += TinyGoRoot;
++  llvm::sys::path::append(LibClangPath, "bin", "tinygo");
+ #else
+   bool PathFound = false;
+ #if defined(CLANG_HAVE_DLFCN_H) && defined(CLANG_HAVE_DLADDR)
+diff --git a/llvm/cmake/config-ix.cmake b/llvm/cmake/config-ix.cmake
+--- a/llvm/cmake/config-ix.cmake
++++ b/llvm/cmake/config-ix.cmake
+@@ -152,7 +152,8 @@ endif()
+ # Check for libpfm.
+ include(FindLibpfm)
+ 
+-if(HAVE_LIBPTHREAD)
++if(HAVE_LIBPTHREAD AND NOT (CMAKE_SYSTEM_NAME STREQUAL "WASI" AND
++                            NOT LLVM_ENABLE_THREADS))
+   # We want to find pthreads library and at the moment we do want to
+   # have it reported as '-l<lib>' instead of '-pthread'.
+   # TODO: switch to -pthread once the rest of the build system can deal with it.
+diff --git a/llvm/include/llvm/Support/Compiler.h b/llvm/include/llvm/Support/Compiler.h
+--- a/llvm/include/llvm/Support/Compiler.h
++++ b/llvm/include/llvm/Support/Compiler.h
+@@ -203,7 +203,7 @@
+ #define LLVM_TEMPLATE_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define LLVM_EXPORT_TEMPLATE
+ #define LLVM_ABI_EXPORT LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+-#elif defined(__MACH__) || defined(__WASM__)
++#elif defined(__MACH__) || defined(__wasm__)
+ #define LLVM_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define LLVM_TEMPLATE_ABI
+ #define LLVM_EXPORT_TEMPLATE
+diff --git a/llvm/lib/Support/CrashRecoveryContext.cpp b/llvm/lib/Support/CrashRecoveryContext.cpp
+--- a/llvm/lib/Support/CrashRecoveryContext.cpp
++++ b/llvm/lib/Support/CrashRecoveryContext.cpp
+@@ -7,6 +7,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "llvm/Support/CrashRecoveryContext.h"
++#include "llvm/Config/config.h"
+ #include "llvm/Config/llvm-config.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/ExitCodes.h"
+@@ -13,8 +14,15 @@
+ #include "llvm/Support/Signals.h"
+ #include "llvm/Support/thread.h"
+ #include <cassert>
++#if !defined(__wasi__)
++#include <csignal>
++#endif
+ #include <mutex>
++#if HAVE_SETJMP
++// We can rely on setjmp to exist everywhere except for a subset of WebAssembly
++// builds.
+ #include <setjmp.h>
++#endif
+ 
+ using namespace llvm;
+ 
+@@ -31,7 +39,9 @@ struct CrashRecoveryContextImpl {
+   const CrashRecoveryContextImpl *Next;
+ 
+   CrashRecoveryContext *CRC;
++#ifdef HAVE_SETJMP
+   ::jmp_buf JumpBuffer;
++#endif
+   volatile unsigned Failed : 1;
+   unsigned SwitchedThread : 1;
+   unsigned ValidJumpBuffer : 1;
+@@ -72,9 +82,11 @@ public:
+ 
+     CRC->RetCode = RetCode;
+ 
++#if HAVE_SETJMP
+     // Jump back to the RunSafely we were called under.
+     if (ValidJumpBuffer)
+       longjmp(JumpBuffer, 1);
++#endif
+ 
+     // Otherwise let the caller decide of the outcome of the crash. Currently
+     // this occurs when using SEH on Windows with MSVC or clang-cl.
+@@ -329,7 +341,16 @@ static void uninstallExceptionOrSignalHandlers() {
+   }
+ }
+ 
+-#else // !_WIN32
++#elif defined(__wasi__)
++
++// WASI implementation.
++//
++// WASI traps are always fatal, and recovery is not possible. Do nothing.
++
++static void installExceptionOrSignalHandlers() {}
++static void uninstallExceptionOrSignalHandlers() {}
++
++#else // !_WIN32 && !__wasi__
+ 
+ // Generic POSIX implementation.
+ //
+@@ -417,10 +438,12 @@ bool CrashRecoveryContext::RunSafely(function_ref<void()> Fn) {
+     CrashRecoveryContextImpl *CRCI = new CrashRecoveryContextImpl(this);
+     Impl = CRCI;
+ 
++#if HAVE_SETJMP
+     CRCI->ValidJumpBuffer = true;
+     if (setjmp(CRCI->JumpBuffer) != 0) {
+       return false;
+     }
++#endif
+   }
+ 
+   Fn();
+@@ -467,7 +490,9 @@ bool CrashRecoveryContext::isCrash(int RetCode) {
+ bool CrashRecoveryContext::throwIfCrash(int RetCode) {
+   if (!isCrash(RetCode))
+     return false;
+-#if defined(_WIN32)
++#if defined(__wasi__)
++  abort();
++#elif defined(_WIN32)
+   ::RaiseException(RetCode, 0, 0, NULL);
+ #else
+   llvm::sys::unregisterHandlers();
+diff --git a/llvm/lib/Support/Signals.cpp b/llvm/lib/Support/Signals.cpp
+--- a/llvm/lib/Support/Signals.cpp
++++ b/llvm/lib/Support/Signals.cpp
+@@ -126,6 +126,12 @@ static bool findModulesAndOffsets(void **StackTrace, int Depth,
+                                   const char **Modules, intptr_t *Offsets,
+                                   const char *MainExecutableName,
+                                   StringSaver &StrPool);
++#if defined(__wasi__)
++static bool findModulesAndOffsets(void **, int, const char **, intptr_t *,
++                                  const char *, StringSaver &) {
++  return false;
++}
++#endif
+ 
+ /// Format a pointer value as hexadecimal. Zero pad it out so its always the
+ /// same width.
+@@ -256,6 +262,9 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
+ }
+ 
+ static bool printMarkupContext(raw_ostream &OS, const char *MainExecutableName);
++#if defined(__wasi__)
++static bool printMarkupContext(raw_ostream &, const char *) { return false; }
++#endif
+ 
+ LLVM_ATTRIBUTE_USED
+ static bool printMarkupStackTrace(StringRef Argv0, void **StackTrace, int Depth,
+@@ -275,6 +284,7 @@ static bool printMarkupStackTrace(StringRef Argv0, void **StackTrace, int Depth,
+ // Include the platform-specific parts of this class.
+ #if defined(__wasi__)
+ // WASI does not have signals.
++void llvm::sys::PrintStackTrace(raw_ostream &OS, int Depth) {}
+ void llvm::sys::AddSignalHandler(sys::SignalHandlerCallback FnPtr,
+                                  void *Cookie) {}
+ void llvm::sys::RunInterruptHandlers() {}
+diff --git a/llvm/lib/Support/Unix/Process.inc b/llvm/lib/Support/Unix/Process.inc
+--- a/llvm/lib/Support/Unix/Process.inc
++++ b/llvm/lib/Support/Unix/Process.inc
+@@ -70,7 +70,12 @@ Process::Pid Process::getProcessId() {
+ // On Cygwin, getpagesize() returns 64k(AllocationGranularity) and
+ // offset in mmap(3) should be aligned to the AllocationGranularity.
+ Expected<unsigned> Process::getPageSize() {
+-#if defined(HAVE_GETPAGESIZE)
++#if defined(__wasi__)
++  // WebAssembly linear memory grows in fixed 64 KiB pages. Avoid wasi-libc's
++  // getpagesize implementation, which depends on the final module layout
++  // symbol __wasm_first_page_end.
++  static const int page_size = 65536;
++#elif defined(HAVE_GETPAGESIZE)
+   static const int page_size = ::getpagesize();
+ #elif defined(HAVE_SYSCONF)
+   static long page_size = ::sysconf(_SC_PAGE_SIZE);
+@@ -84,7 +89,12 @@ Expected<unsigned> Process::getPageSize() {
+ }
+ 
+ size_t Process::GetMallocUsage() {
+-#if defined(HAVE_MALLINFO2)
++#if defined(__wasi__)
++  // WASI has no portable allocator-usage API. In particular, sbrk would pull
++  // in a dependency on __wasm_first_page_end that is unavailable in the
++  // TinyGo-owned GC heap layout.
++  return 0;
++#elif defined(HAVE_MALLINFO2)
+   struct mallinfo2 mi;
+   mi = ::mallinfo2();
+   return mi.uordblks;
+@@ -131,6 +131,7 @@
+ // their operation. To prevent the disk from filling up, this function
+ // does what's necessary to prevent their generation.
+ void Process::PreventCoreFiles() {
++#if !defined(__wasi__)
+   struct rlimit rlim;
+   getrlimit(RLIMIT_CORE, &rlim);
+ #ifdef __linux__
+@@ -181,6 +182,7 @@
+   signal(SIGSEGV, _exit);
+   signal(SIGBUS, _exit);
+ #endif
++#endif
+ 
+   coreFilesPrevented = true;
+ }
+diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
+--- a/llvm/lib/Support/Unix/Program.inc
++++ b/llvm/lib/Support/Unix/Program.inc
+@@ -63,6 +63,7 @@ ProcessInfo::ProcessInfo() : Pid(0), ReturnCode(0) {}
+ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
+                                             ArrayRef<StringRef> Paths) {
+   assert(!Name.empty() && "Must have a name!");
++#if !defined(__wasi__)
+   // Use the given path verbatim if it contains any slashes; this matches
+   // the behavior of sh(1) and friends.
+   if (Name.contains('/'))
+@@ -85,12 +86,14 @@ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
+     if (sys::fs::can_execute(FilePath.c_str()))
+       return std::string(FilePath); // Found the executable!
+   }
++#endif
+   return errc::no_such_file_or_directory;
+ }
+ 
+ static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMsg) {
+   if (!Path) // Noop
+     return false;
++#if !defined(__wasi__)
+   std::string File;
+   if (Path->empty())
+     // Redirect empty paths to /dev/null
+@@ -113,6 +116,7 @@ static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMs
+     return true;
+   }
+   close(InFD); // Close the original FD
++#endif
+   return false;
+ }
+ 
+@@ -138,6 +142,9 @@ static bool RedirectIO_PS(const std::string *Path, int FD, std::string *ErrMsg,
+ static void TimeOutHandler(int Sig) {}
+ 
+ static void SetMemoryLimits(unsigned size) {
++#if defined(__wasi__)
++  (void)size;
++#else
+   struct rlimit r;
+   __typeof__(r.rlim_cur) limit = (__typeof__(r.rlim_cur))(size)*1048576;
+ 
+@@ -151,6 +158,7 @@ static void SetMemoryLimits(unsigned size) {
+   r.rlim_cur = limit;
+   setrlimit(RLIMIT_RSS, &r);
+ #endif
++#endif
+ }
+ 
+ static std::vector<const char *>
+@@ -168,6 +176,11 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+                     ArrayRef<std::optional<StringRef>> Redirects,
+                     unsigned MemoryLimit, std::string *ErrMsg,
+                     BitVector *AffinityMask, bool DetachProcess) {
++#if defined(__wasi__)
++  if (ErrMsg)
++    *ErrMsg = std::string("WASI does not support spawning subprocesses");
++  return false;
++#else
+   if (!llvm::sys::fs::exists(Program)) {
+     if (ErrMsg)
+       *ErrMsg = std::string("Executable \"") + Program.str() +
+@@ -337,6 +350,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+   PI.Process = child;
+ 
+   return true;
++#endif
+ }
+ 
+ namespace llvm {
+@@ -344,7 +358,7 @@ namespace sys {
+ 
+ #if defined(_AIX)
+ static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
+-#elif !defined(__Fuchsia__)
++#elif !defined(__Fuchsia__) && !defined(__wasi__)
+ using ::wait4;
+ #endif
+ 
+@@ -390,6 +404,13 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+                             std::string *ErrMsg,
+                             std::optional<ProcessStatistics> *ProcStat,
+                             bool Polling) {
++#if defined(__wasi__)
++  if (ErrMsg)
++    *ErrMsg = std::string("WASI does not support waiting for subprocesses");
++  ProcessInfo WaitResult;
++  WaitResult.ReturnCode = -1;
++  return WaitResult;
++#else
+   struct sigaction Act, Old;
+   assert(PI.Pid && "invalid pid to wait on, process not started?");
+ 
+@@ -507,6 +528,7 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+     WaitResult.ReturnCode = -2;
+   }
+   return WaitResult;
++#endif
+ }
+ 
+ std::error_code llvm::sys::ChangeStdinMode(fs::OpenFlags Flags) {

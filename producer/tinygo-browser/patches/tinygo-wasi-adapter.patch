@@ -1,0 +1,3258 @@
+diff --git a/builder/build.go b/builder/build.go
+index a598f01..89a1cc4 100644
+--- a/builder/build.go
++++ b/builder/build.go
+@@ -23,7 +23,6 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/gofrs/flock"
+ 	"github.com/tinygo-org/tinygo/compileopts"
+ 	"github.com/tinygo-org/tinygo/compiler"
+ 	"github.com/tinygo-org/tinygo/goenv"
+@@ -64,6 +63,34 @@ type BuildResult struct {
+ 	// Map from path to package name. It is needed to attribute binary size to
+ 	// the right Go package.
+ 	PackagePathMap map[string]string
++
++	// AuxiliaryObjects contains object files that must be linked alongside the
++	// main program object. The files remain in the Build temporary directory.
++	AuxiliaryObjects []BuildAuxiliaryObject
++
++	// CGoInputs identifies packages whose CGo source was folded into the main
++	// program object, including files read by libclang during preprocessing.
++	CGoInputs []BuildCGoInput
++}
++
++// BuildCGoInput records the source closure used while lowering one CGo
++// package into the main program module.
++type BuildCGoInput struct {
++	ImportPath   string
++	Dependencies []string
++}
++
++// BuildAuxiliaryObject identifies an object generated while building a
++// program, together with the source identity that caused it to be generated.
++type BuildAuxiliaryObject struct {
++	Kind             string
++	ImportPath       string
++	SourceField      string
++	SourcePath       string
++	SourceSHA256     string
++	EmbeddedFileHash string
++	Dependencies     []string
++	Path             string
+ }
+ 
+ // packageAction is the struct that is serialized to JSON and hashed, to work as
+@@ -146,52 +173,55 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 	// the libc needs them.
+ 	root := goenv.Get("TINYGOROOT")
+ 	var libcDependencies []*compileJob
+-	switch config.Target.Libc {
+-	case "darwin-libSystem":
+-		libcJob := makeDarwinLibSystemJob(config, tmpdir)
+-		libcDependencies = append(libcDependencies, libcJob)
+-	case "musl":
+-		var unlock func()
+-		libcJob, unlock, err := libMusl.load(config, tmpdir)
+-		if err != nil {
+-			return BuildResult{}, err
+-		}
+-		defer unlock()
+-		libcDependencies = append(libcDependencies, dummyCompileJob(filepath.Join(filepath.Dir(libcJob.result), "crt1.o")))
+-		libcDependencies = append(libcDependencies, libcJob)
+-	case "picolibc":
+-		libcJob, unlock, err := libPicolibc.load(config, tmpdir)
+-		if err != nil {
+-			return BuildResult{}, err
+-		}
+-		defer unlock()
+-		libcDependencies = append(libcDependencies, libcJob)
+-	case "wasi-libc":
+-		libcJob, unlock, err := libWasiLibc.load(config, tmpdir)
+-		if err != nil {
+-			return BuildResult{}, err
+-		}
+-		defer unlock()
+-		libcDependencies = append(libcDependencies, libcJob)
+-	case "wasmbuiltins":
+-		libcJob, unlock, err := libWasmBuiltins.load(config, tmpdir)
+-		if err != nil {
+-			return BuildResult{}, err
+-		}
+-		defer unlock()
+-		libcDependencies = append(libcDependencies, libcJob)
+-	case "mingw-w64":
+-		libcJob, unlock, err := libMinGW.load(config, tmpdir)
+-		if err != nil {
+-			return BuildResult{}, err
++	outputExtension := filepath.Ext(outpath)
++	if outputExtension != ".o" && outputExtension != ".bc" && outputExtension != ".ll" {
++		switch config.Target.Libc {
++		case "darwin-libSystem":
++			libcJob := makeDarwinLibSystemJob(config, tmpdir)
++			libcDependencies = append(libcDependencies, libcJob)
++		case "musl":
++			var unlock func()
++			libcJob, unlock, err := libMusl.load(config, tmpdir)
++			if err != nil {
++				return BuildResult{}, err
++			}
++			defer unlock()
++			libcDependencies = append(libcDependencies, dummyCompileJob(filepath.Join(filepath.Dir(libcJob.result), "crt1.o")))
++			libcDependencies = append(libcDependencies, libcJob)
++		case "picolibc":
++			libcJob, unlock, err := libPicolibc.load(config, tmpdir)
++			if err != nil {
++				return BuildResult{}, err
++			}
++			defer unlock()
++			libcDependencies = append(libcDependencies, libcJob)
++		case "wasi-libc":
++			libcJob, unlock, err := libWasiLibc.load(config, tmpdir)
++			if err != nil {
++				return BuildResult{}, err
++			}
++			defer unlock()
++			libcDependencies = append(libcDependencies, libcJob)
++		case "wasmbuiltins":
++			libcJob, unlock, err := libWasmBuiltins.load(config, tmpdir)
++			if err != nil {
++				return BuildResult{}, err
++			}
++			defer unlock()
++			libcDependencies = append(libcDependencies, libcJob)
++		case "mingw-w64":
++			libcJob, unlock, err := libMinGW.load(config, tmpdir)
++			if err != nil {
++				return BuildResult{}, err
++			}
++			defer unlock()
++			libcDependencies = append(libcDependencies, libcJob)
++			libcDependencies = append(libcDependencies, makeMinGWExtraLibs(tmpdir, config.GOARCH())...)
++		case "":
++			// no library specified, so nothing to do
++		default:
++			return BuildResult{}, fmt.Errorf("unknown libc: %s", config.Target.Libc)
+ 		}
+-		defer unlock()
+-		libcDependencies = append(libcDependencies, libcJob)
+-		libcDependencies = append(libcDependencies, makeMinGWExtraLibs(tmpdir, config.GOARCH())...)
+-	case "":
+-		// no library specified, so nothing to do
+-	default:
+-		return BuildResult{}, fmt.Errorf("unknown libc: %s", config.Target.Libc)
+ 	}
+ 
+ 	optLevel, speedLevel, sizeLevel := config.OptLevel()
+@@ -247,6 +277,15 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 	if err != nil {
+ 		return result, err
+ 	}
++	for _, pkg := range lprogram.Sorted() {
++		if len(pkg.CgoFiles) == 0 {
++			continue
++		}
++		result.CGoInputs = append(result.CGoInputs, BuildCGoInput{
++			ImportPath:   pkg.ImportPath,
++			Dependencies: append([]string(nil), pkg.CGoDependencies...),
++		})
++	}
+ 
+ 	// Store which filesystem paths map to which package name.
+ 	result.PackagePathMap = make(map[string]string, len(lprogram.Packages))
+@@ -264,6 +303,7 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 	packageActionIDJobs := make(map[string]*compileJob)
+ 
+ 	var embedFileObjects []*compileJob
++	var embedAuxiliaryObjects []*BuildAuxiliaryObject
+ 	for _, pkg := range lprogram.Sorted() {
+ 		pkg := pkg // necessary to avoid a race condition
+ 
+@@ -281,9 +321,19 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 				allFiles[file.Name] = append(allFiles[file.Name], file)
+ 			}
+ 		}
+-		for name, files := range allFiles {
++		var embedFileNames []string
++		for name := range allFiles {
++			embedFileNames = append(embedFileNames, name)
++		}
++		sort.Strings(embedFileNames)
++		for _, name := range embedFileNames {
+ 			name := name
+-			files := files
++			files := allFiles[name]
++			auxiliaryObject := &BuildAuxiliaryObject{
++				Kind:       "embed",
++				ImportPath: pkg.ImportPath,
++				SourcePath: name,
++			}
+ 			job := &compileJob{
+ 				description: "make object file for " + name,
+ 				run: func(job *compileJob) error {
+@@ -297,6 +347,8 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 					// Hash the file.
+ 					sum := sha256.Sum256(data)
+ 					hexSum := hex.EncodeToString(sum[:16])
++					auxiliaryObject.SourceSHA256 = hex.EncodeToString(sum[:])
++					auxiliaryObject.EmbeddedFileHash = hexSum
+ 
+ 					for _, file := range files {
+ 						file.Size = uint64(len(data))
+@@ -307,11 +359,13 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 					}
+ 
+ 					job.result, err = createEmbedObjectFile(string(data), hexSum, name, pkg.OriginalDir(), tmpdir, compilerConfig)
++					auxiliaryObject.Path = job.result
+ 					return err
+ 				},
+ 			}
+ 			actionIDDependencies = append(actionIDDependencies, job)
+ 			embedFileObjects = append(embedFileObjects, job)
++			embedAuxiliaryObjects = append(embedAuxiliaryObjects, auxiliaryObject)
+ 		}
+ 
+ 		// Action ID jobs need to know the action ID of all the jobs the package
+@@ -622,6 +676,89 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 		},
+ 	}
+ 
++	// Create target-native jobs before the object-only early return. The exact
++	// jobs and their results are returned to external linker adapters, so no
++	// cache or temporary-directory scan is needed. Lowercase .s files remain Go
++	// assembler inputs; only workspace .S files enter the Clang assembly path.
++	var nativeObjectJobs []*compileJob
++	var nativeAuxiliaryObjects []*BuildAuxiliaryObject
++	for _, pkg := range lprogram.Sorted() {
++		pkg := pkg
++		nativeCFlags := append([]string(nil), pkg.CFlags...)
++		if len(nativeCFlags) == 0 {
++			nativeCFlags = append(nativeCFlags, config.CFlags(true)...)
++			nativeCFlags = append(nativeCFlags, "-I"+pkg.Dir)
++		}
++		nativeCFlags = append(nativeCFlags, "-Werror=date-time")
++		type nativeSourceSet struct {
++			files       []string
++			kind        string
++			sourceField string
++			flags       []string
++		}
++		nativeSources := []nativeSourceSet{
++			{pkg.CFiles, "target-c", "CFiles", nativeCFlags},
++			{
++				pkg.CXXFiles,
++				"target-cxx",
++				"CXXFiles",
++				append(append([]string(nil), nativeCFlags...),
++					"-x", "c++",
++					"-std=c++17",
++					"-ffreestanding",
++					"-fno-exceptions",
++					"-fno-rtti",
++					"-fno-threadsafe-statics",
++					"-fno-use-cxa-atexit",
++					"-fno-unwind-tables",
++					"-fno-asynchronous-unwind-tables",
++					"-nostdinc++",
++					"-Werror=global-constructors",
++					"-Werror=exit-time-destructors",
++				),
++			},
++		}
++		if !pkg.Goroot && len(pkg.CgoFiles) != 0 {
++			var clangAssemblyFiles []string
++			for _, filename := range pkg.SFiles {
++				if filepath.Ext(filename) == ".S" {
++					clangAssemblyFiles = append(clangAssemblyFiles, filename)
++				}
++			}
++			nativeSources = append(nativeSources, nativeSourceSet{
++				clangAssemblyFiles,
++				"target-assembly",
++				"SFiles",
++				append(append([]string(nil), nativeCFlags...), "-x", "assembler-with-cpp"),
++			})
++		}
++		for _, source := range nativeSources {
++			for _, filename := range source.files {
++				filename := filename
++				source := source
++				abspath := filepath.Join(pkg.OriginalDir(), filename)
++				auxiliaryObject := &BuildAuxiliaryObject{
++					Kind:        source.kind,
++					ImportPath:  pkg.ImportPath,
++					SourceField: source.sourceField,
++					SourcePath:  filename,
++				}
++				job := &compileJob{
++					description: "compile target-native file " + abspath,
++					run: func(job *compileJob) error {
++						result, dependencies, err := compileAndCacheCFileWithDependencies(abspath, tmpdir, source.flags, config.Options.PrintCommands)
++						job.result = result
++						auxiliaryObject.Path = result
++						auxiliaryObject.Dependencies = dependencies
++						return err
++					},
++				}
++				nativeObjectJobs = append(nativeObjectJobs, job)
++				nativeAuxiliaryObjects = append(nativeAuxiliaryObjects, auxiliaryObject)
++			}
++		}
++	}
++
+ 	// Create the output directory, if needed
+ 	if err := os.MkdirAll(filepath.Dir(outpath), 0777); err != nil {
+ 		return result, err
+@@ -629,13 +766,24 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 
+ 	// Check whether we only need to create an object file.
+ 	// If so, we don't need to link anything and will be finished quickly.
+-	outext := filepath.Ext(outpath)
++	outext := outputExtension
+ 	if outext == ".o" || outext == ".bc" || outext == ".ll" {
+-		// Run jobs to produce the LLVM module.
+-		err := runJobs(programJob, config.Options.Semaphore)
++		if len(lprogram.LDFlags) != 0 {
++			return result, errors.New("external object handoff does not support CGo LDFLAGS")
++		}
++		// Run jobs to produce the LLVM module and every exact target-native object.
++		dependencies := append([]*compileJob{programJob}, nativeObjectJobs...)
++		externalObjectJob := &compileJob{
++			description:  "compile external object set",
++			dependencies: dependencies,
++			run:          func(*compileJob) error { return nil },
++		}
++		err := runJobs(externalObjectJob, config.Options.Semaphore)
+ 		if err != nil {
+ 			return result, err
+ 		}
++		result.AuxiliaryObjects = copyBuildAuxiliaryObjects(nativeAuxiliaryObjects)
++		result.AuxiliaryObjects = append(result.AuxiliaryObjects, copyBuildAuxiliaryObjects(embedAuxiliaryObjects)...)
+ 		// Generate output.
+ 		switch outext {
+ 		case ".o":
+@@ -737,24 +885,8 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 		linkerDependencies = append(linkerDependencies, job)
+ 	}
+ 
+-	// Add jobs to compile C files in all packages. This is part of CGo.
+-	// TODO: do this as part of building the package to be able to link the
+-	// bitcode files together.
+-	for _, pkg := range lprogram.Sorted() {
+-		pkg := pkg
+-		for _, filename := range pkg.CFiles {
+-			abspath := filepath.Join(pkg.OriginalDir(), filename)
+-			job := &compileJob{
+-				description: "compile CGo file " + abspath,
+-				run: func(job *compileJob) error {
+-					result, err := compileAndCacheCFile(abspath, tmpdir, pkg.CFlags, config.Options.PrintCommands)
+-					job.result = result
+-					return err
+-				},
+-			}
+-			linkerDependencies = append(linkerDependencies, job)
+-		}
+-	}
++	// Add the exact package C jobs created above in upstream linker order.
++	linkerDependencies = append(linkerDependencies, nativeObjectJobs...)
+ 
+ 	// Linker flags from CGo lines:
+ 	//     #cgo LDFLAGS: foo
+@@ -1021,6 +1153,7 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 	if err != nil {
+ 		return result, err
+ 	}
++	result.AuxiliaryObjects = copyBuildAuxiliaryObjects(embedAuxiliaryObjects)
+ 
+ 	// Get an Intel .hex file or .bin file from the .elf file.
+ 	outputBinaryFormat := config.BinaryFormat(outext)
+@@ -1064,6 +1197,15 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 	return result, nil
+ }
+ 
++func copyBuildAuxiliaryObjects(objects []*BuildAuxiliaryObject) []BuildAuxiliaryObject {
++	result := make([]BuildAuxiliaryObject, len(objects))
++	for index, object := range objects {
++		result[index] = *object
++		result[index].Dependencies = append([]string(nil), object.Dependencies...)
++	}
++	return result
++}
++
+ // createEmbedObjectFile creates a new object file with the given contents, for
+ // the embed package.
+ func createEmbedObjectFile(data, hexSum, sourceFile, sourceDir, tmpdir string, compilerConfig *compiler.Config) (string, error) {
+@@ -1529,19 +1671,6 @@ func patchRP2040BootCRC(executable string) error {
+ 	return replaceElfSection(executable, ".boot2", bytes)
+ }
+ 
+-// lock may acquire a lock at the specified path.
+-// It returns a function to release the lock.
+-// If flock is not supported, it does nothing.
+-func lock(path string) func() {
+-	flock := flock.New(path)
+-	err := flock.Lock()
+-	if err != nil {
+-		return func() {}
+-	}
+-
+-	return func() { flock.Close() }
+-}
+-
+ func b2u8(b bool) uint8 {
+ 	if b {
+ 		return 1
+diff --git a/builder/buildid.go b/builder/buildid.go
+index e5edd05..75fb368 100644
+--- a/builder/buildid.go
++++ b/builder/buildid.go
+@@ -5,6 +5,7 @@ import (
+ 	"debug/elf"
+ 	"debug/macho"
+ 	"encoding/binary"
++	"errors"
+ 	"fmt"
+ 	"io"
+ 	"os"
+@@ -13,6 +14,14 @@ import (
+ 
+ // ReadBuildID reads the build ID from the currently running executable.
+ func ReadBuildID() ([]byte, error) {
++	if runtime.GOOS == "wasip1" {
++		buildID := os.Getenv("TINYGO_BROWSER_COMPILER_BUILD_ID")
++		if buildID == "" {
++			return nil, errors.New("TINYGO_BROWSER_COMPILER_BUILD_ID is not set")
++		}
++		return []byte(buildID), nil
++	}
++
+ 	executable, err := os.Executable()
+ 	if err != nil {
+ 		return nil, err
+diff --git a/builder/cc.go b/builder/cc.go
+index b2cc739..6a2b01f 100644
+--- a/builder/cc.go
++++ b/builder/cc.go
+@@ -57,10 +57,19 @@ import (
+ //     written on each new compilation (even when it seems unnecessary). However, it
+ //     could in rare cases lead to a stale file fetched from the cache.
+ func compileAndCacheCFile(abspath, tmpdir string, cflags []string, printCommands func(string, ...string)) (string, error) {
++	outpath, _, err := compileAndCacheCFileWithDependencies(abspath, tmpdir, cflags, printCommands)
++	return outpath, err
++}
++
++// compileAndCacheCFileWithDependencies is compileAndCacheCFile with the exact
++// sorted dependency paths observed by Clang. Browser compiler adapters use the
++// dependency list to bind native output to its source closure without scanning
++// the cache or temporary directory.
++func compileAndCacheCFileWithDependencies(abspath, tmpdir string, cflags []string, printCommands func(string, ...string)) (string, []string, error) {
+ 	// Hash input file.
+ 	fileHash, err := hashFile(abspath)
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 
+ 	// Acquire a lock (if supported).
+@@ -95,37 +104,41 @@ func compileAndCacheCFile(abspath, tmpdir string, cflags []string, printCommands
+ 		// Parse it first.
+ 		err := json.Unmarshal(depfileBuf, &dependencies)
+ 		if err != nil {
+-			return "", fmt.Errorf("could not parse dependencies JSON: %w", err)
++			return "", nil, fmt.Errorf("could not parse dependencies JSON: %w", err)
+ 		}
+ 
+ 		// Obtain hashes of all the files listed as a dependency.
+ 		outpath, err := makeCFileCachePath(dependencies, depfileNameHash)
+ 		if err == nil {
+ 			if _, err := os.Stat(outpath); err == nil {
+-				return outpath, nil
++				return outpath, append([]string(nil), dependencies...), nil
+ 			} else if !errors.Is(err, fs.ErrNotExist) {
+-				return "", err
++				return "", nil, err
+ 			}
+ 		}
+ 	} else if !errors.Is(err, fs.ErrNotExist) {
+ 		// expected either nil or IsNotExist
+-		return "", err
++		return "", nil, err
+ 	}
+ 
+ 	objTmpFile, err := os.CreateTemp(goenv.Get("GOCACHE"), "tmp-*.bc")
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 	objTmpFile.Close()
+ 	depTmpFile, err := os.CreateTemp(tmpdir, "dep-*.d")
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 	depTmpFile.Close()
+-	flags := append([]string{}, cflags...)                                                 // copy cflags
+-	flags = append(flags, "-MD", "-MV", "-MTdeps", "-MF", depTmpFile.Name(), "-flto=thin") // autogenerate dependencies
++	flags := append([]string{}, cflags...)                                   // copy cflags
++	flags = append(flags, "-MD", "-MV", "-MTdeps", "-MF", depTmpFile.Name()) // autogenerate dependencies
++	isAssembly := strings.ToLower(filepath.Ext(abspath)) == ".s"
++	if !isAssembly {
++		flags = append(flags, "-flto=thin")
++	}
+ 	flags = append(flags, "-c", "-o", objTmpFile.Name(), abspath)
+-	if strings.ToLower(filepath.Ext(abspath)) == ".s" {
++	if isAssembly {
+ 		// If this is an assembly file (.s or .S, lowercase or uppercase), then
+ 		// we'll need to add -Qunused-arguments because many parameters are
+ 		// relevant to C, not assembly. And with -Werror, having meaningless
+@@ -137,13 +150,13 @@ func compileAndCacheCFile(abspath, tmpdir string, cflags []string, printCommands
+ 	}
+ 	err = runCCompiler(flags...)
+ 	if err != nil {
+-		return "", &commandError{"failed to build", abspath, err}
++		return "", nil, &commandError{"failed to build", abspath, err}
+ 	}
+ 
+ 	// Create sorted and uniqued slice of dependencies.
+ 	dependencyPaths, err := readDepFile(depTmpFile.Name())
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 	dependencyPaths = append(dependencyPaths, abspath) // necessary for .s files
+ 	dependencySet := make(map[string]struct{}, len(dependencyPaths))
+@@ -160,7 +173,7 @@ func compileAndCacheCFile(abspath, tmpdir string, cflags []string, printCommands
+ 	// Write dependencies file.
+ 	f, err := os.CreateTemp(filepath.Dir(depfileCachePath), depfileName)
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 
+ 	buf, err = json.MarshalIndent(dependencySlice, "", "\t")
+@@ -169,28 +182,28 @@ func compileAndCacheCFile(abspath, tmpdir string, cflags []string, printCommands
+ 	}
+ 	_, err = f.Write(buf)
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 	err = f.Close()
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 	err = os.Rename(f.Name(), depfileCachePath)
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 
+ 	// Move temporary object file to final location.
+ 	outpath, err := makeCFileCachePath(dependencySlice, depfileNameHash)
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 	err = os.Rename(objTmpFile.Name(), outpath)
+ 	if err != nil {
+-		return "", err
++		return "", nil, err
+ 	}
+ 
+-	return outpath, nil
++	return outpath, append([]string(nil), dependencySlice...), nil
+ }
+ 
+ // Create a cache path (a path in GOCACHE) to store the output of a compiler
+diff --git a/builder/config.go b/builder/config.go
+index bef366f..ecc6c7c 100644
+--- a/builder/config.go
++++ b/builder/config.go
+@@ -2,6 +2,7 @@ package builder
+ 
+ import (
+ 	"fmt"
++	"os"
+ 	"runtime"
+ 
+ 	"github.com/tinygo-org/tinygo/compileopts"
+@@ -46,12 +47,16 @@ func NewConfig(options *compileopts.Options) (*compileopts.Config, error) {
+ 	// compiled with the latest Go version.
+ 	// This may be a bit too aggressive: if the newer version doesn't change the
+ 	// Go language we will most likely be able to compile it.
+-	buildMajor, buildMinor, _, err := goenv.Parse(runtime.Version())
++	buildVersion := runtime.Version()
++	if runtime.GOOS == "wasip1" {
++		buildVersion = os.Getenv("GOVERSION")
++	}
++	buildMajor, buildMinor, _, err := goenv.Parse(buildVersion)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	if buildMajor != 1 || buildMinor < gorootMinor {
+-		return nil, fmt.Errorf("cannot compile with Go toolchain version go%d.%d (TinyGo was built using toolchain version %s)", gorootMajor, gorootMinor, runtime.Version())
++		return nil, fmt.Errorf("cannot compile with Go toolchain version go%d.%d (TinyGo was built using toolchain version %s)", gorootMajor, gorootMinor, buildVersion)
+ 	}
+ 
+ 	return &compileopts.Config{
+diff --git a/builder/jobs.go b/builder/jobs.go
+index 1168874..9b4f281 100644
+--- a/builder/jobs.go
++++ b/builder/jobs.go
+@@ -70,6 +70,30 @@ func runJobs(job *compileJob, sema chan struct{}) error {
+ 	}
+ 	addJobs(job)
+ 
++	// A WASI-hosted browser compiler has no process or thread service and the
++	// adapter fixes parallelism at one. Run the already topologically ordered
++	// graph directly so the compiler host does not require Asyncify merely for
++	// this job dispatcher.
++	if runtime.GOOS == "wasip1" {
++		for _, job := range jobs {
++			if jobRunnerDebug {
++				fmt.Println("## start:   ", job.description)
++			}
++			start := time.Now()
++			if job.run != nil {
++				job.err = job.run(job)
++			}
++			job.duration = time.Since(start)
++			if jobRunnerDebug {
++				fmt.Println("## finished:", job.description, "(time "+job.duration.String()+")")
++			}
++			if job.err != nil {
++				return job.err
++			}
++		}
++		return nil
++	}
++
+ 	waiting := make(map[*compileJob]map[*compileJob]struct{}, len(jobs))
+ 	dependents := make(map[*compileJob][]*compileJob, len(jobs))
+ 	compileJobs := make(map[*compileJob]int)
+diff --git a/builder/lock_default.go b/builder/lock_default.go
+new file mode 100644
+index 0000000..ff404f9
+--- /dev/null
++++ b/builder/lock_default.go
+@@ -0,0 +1,18 @@
++//go:build !wasip1
++
++package builder
++
++import "github.com/gofrs/flock"
++
++// lock may acquire a lock at the specified path.
++// It returns a function to release the lock.
++// If flock is not supported, it does nothing.
++func lock(path string) func() {
++	fileLock := flock.New(path)
++	err := fileLock.Lock()
++	if err != nil {
++		return func() {}
++	}
++
++	return func() { fileLock.Close() }
++}
+diff --git a/builder/lock_wasip1.go b/builder/lock_wasip1.go
+new file mode 100644
+index 0000000..7ab4855
+--- /dev/null
++++ b/builder/lock_wasip1.go
+@@ -0,0 +1,9 @@
++//go:build wasip1
++
++package builder
++
++// A browser compiler instance owns its cache and does not share it with
++// another process. WASI Preview 1 therefore does not need an advisory lock.
++func lock(string) func() {
++	return func() {}
++}
+diff --git a/builder/lld.cpp b/builder/lld.cpp
+index 734c570..4f1cc68 100644
+--- a/builder/lld.cpp
++++ b/builder/lld.cpp
+@@ -2,8 +2,16 @@
+ 
+ // This file provides C wrappers for liblld.
+ 
++#include <llvm/ADT/StringRef.h>
++#include <llvm/BinaryFormat/Wasm.h>
+ #include <lld/Common/Driver.h>
++#include <llvm/Object/ObjectFile.h>
++#include <llvm/Object/Wasm.h>
++#include <llvm/Support/Error.h>
++#include <llvm/Support/MemoryBuffer.h>
+ #include <llvm/Support/Parallel.h>
++#include <llvm/TargetParser/Triple.h>
++#include <system_error>
+ 
+ LLD_HAS_DRIVER(coff)
+ LLD_HAS_DRIVER(elf)
+@@ -20,8 +28,147 @@ static void configure() {
+ #endif
+ }
+ 
++static bool reject_wasm_object(llvm::StringRef message) {
++	llvm::errs() << "tinygo-browser-adapter: " << message << "\n";
++	return false;
++}
++
++static bool is_forbidden_native_symbol(llvm::StringRef name) {
++	if (name == "atexit" || name == "__dso_handle" ||
++		name == "__gxx_personality_v0" || name == "__clang_call_terminate" ||
++		name == "__tls_get_addr" || name == "__wasm_call_ctors" ||
++		name == "__wasm_apply_data_relocs") {
++		return true;
++	}
++	for (llvm::StringRef prefix : {
++			 "__cxa_", "__cxx_global_var_init", "__emutls_", "__tls_",
++			 "_GLOBAL__", "_Unwind_", "_ZGV", "_ZTI", "_ZTS", "_ZTV",
++			 "_ZNSt", "_ZNKSt", "_ZSt", "_Zd", "_Zn"}) {
++		if (name.starts_with(prefix)) {
++			return true;
++		}
++	}
++	return false;
++}
++
++static bool validate_wasm_object(const llvm::object::WasmObjectFile &object) {
++	if (!object.isRelocatableObject() || object.isSharedObject() ||
++		object.getArch() != llvm::Triple::wasm32 ||
++		object.hasUnmodeledTypes()) {
++		return reject_wasm_object("object is not a supported relocatable WebAssembly object");
++	}
++	if (object.linkingData().Version != llvm::wasm::WasmMetadataVersion ||
++		!object.linkingData().InitFunctions.empty()) {
++		return reject_wasm_object("invalid linking metadata or initialization functions");
++	}
++	if (!object.exports().empty() || object.startFunction() != UINT32_MAX ||
++		!object.tags().empty()) {
++		return reject_wasm_object("executable exports, start functions, and tags are forbidden");
++	}
++	for (const auto &feature : object.getTargetFeatures()) {
++		bool allowed = false;
++		if (feature.Prefix == llvm::wasm::WASM_FEATURE_PREFIX_USED) {
++			allowed = feature.Name == "bulk-memory" ||
++				feature.Name == "bulk-memory-opt" ||
++				feature.Name == "call-indirect-overlong" ||
++				feature.Name == "mutable-globals" ||
++				feature.Name == "nontrapping-fptoint" ||
++				feature.Name == "sign-ext";
++		} else if (feature.Prefix == llvm::wasm::WASM_FEATURE_PREFIX_DISALLOWED) {
++			allowed = feature.Name == "multivalue" ||
++				feature.Name == "reference-types";
++		}
++		if (!allowed) {
++			return reject_wasm_object("WebAssembly target feature is outside the strict allowlist");
++		}
++	}
++	constexpr unsigned allowedLimitsFlags = llvm::wasm::WASM_LIMITS_FLAG_HAS_MAX;
++	auto memoryCount = object.memories().size();
++	auto tableCount = object.tables().size();
++	for (const auto &memory : object.memories()) {
++		if (memory.Flags & ~allowedLimitsFlags) {
++			return reject_wasm_object("unsupported defined-memory limits flags");
++		}
++	}
++	for (const auto &table : object.tables()) {
++		if (table.Type.Limits.Flags & ~allowedLimitsFlags) {
++			return reject_wasm_object("unsupported defined-table limits flags");
++		}
++	}
++	for (const auto &import : object.imports()) {
++		if (import.Kind == llvm::wasm::WASM_EXTERNAL_TAG) {
++			return reject_wasm_object("exception tag imports are forbidden");
++		}
++		if (import.Kind == llvm::wasm::WASM_EXTERNAL_MEMORY) {
++			memoryCount++;
++			if (import.Memory.Flags & ~allowedLimitsFlags) {
++				return reject_wasm_object("unsupported imported-memory limits flags");
++			}
++		}
++		if (import.Kind == llvm::wasm::WASM_EXTERNAL_TABLE) {
++			tableCount++;
++			if (import.Table.Limits.Flags & ~allowedLimitsFlags) {
++				return reject_wasm_object("unsupported imported-table limits flags");
++			}
++		}
++	}
++	if (memoryCount > 1 || tableCount > 1) {
++		return reject_wasm_object("at most one total memory and one total table are allowed");
++	}
++	for (const auto &segment : object.dataSegments()) {
++		if ((segment.Data.LinkingFlags & llvm::wasm::WASM_SEG_FLAG_TLS) ||
++			segment.Data.Name.starts_with(".preinit_array") ||
++			segment.Data.Name.starts_with(".init_array") ||
++			segment.Data.Name.starts_with(".fini_array") ||
++			segment.Data.Name.starts_with(".ctors") ||
++			segment.Data.Name.starts_with(".dtors")) {
++			return reject_wasm_object("TLS and initializer/finalizer data segments are forbidden");
++		}
++	}
++	for (const llvm::object::SymbolRef &symbol : object.symbols()) {
++		const auto &wasmSymbol = object.getWasmSymbol(symbol);
++		if ((wasmSymbol.Info.Flags & llvm::wasm::WASM_SYMBOL_TLS) ||
++			(wasmSymbol.isTypeData() && wasmSymbol.Info.Name.starts_with("_ZZ")) ||
++			is_forbidden_native_symbol(wasmSymbol.Info.Name)) {
++			return reject_wasm_object("TLS or forbidden ABI symbol is present");
++		}
++	}
++	for (const llvm::object::SectionRef &section : object.sections()) {
++		for (const auto &relocation : object.getWasmSection(section).Relocations) {
++			if (relocation.Type == llvm::wasm::R_WASM_MEMORY_ADDR_LEB64 ||
++				relocation.Type == llvm::wasm::R_WASM_MEMORY_ADDR_SLEB64 ||
++				relocation.Type == llvm::wasm::R_WASM_MEMORY_ADDR_I64 ||
++				relocation.Type == llvm::wasm::R_WASM_MEMORY_ADDR_REL_SLEB64 ||
++				relocation.Type == llvm::wasm::R_WASM_TABLE_INDEX_SLEB64 ||
++				relocation.Type == llvm::wasm::R_WASM_TABLE_INDEX_I64 ||
++				relocation.Type == llvm::wasm::R_WASM_FUNCTION_OFFSET_I64 ||
++				relocation.Type == llvm::wasm::R_WASM_TABLE_INDEX_REL_SLEB64 ||
++				relocation.Type == llvm::wasm::R_WASM_MEMORY_ADDR_TLS_SLEB ||
++				relocation.Type == llvm::wasm::R_WASM_MEMORY_ADDR_TLS_SLEB64) {
++				return reject_wasm_object("memory64, table64, and TLS relocations are forbidden");
++			}
++		}
++	}
++	return true;
++}
++
+ extern "C" {
+ 
++bool tinygo_validate_wasm_object(const char *path) {
++	auto buffer = llvm::MemoryBuffer::getFile(path);
++	if (!buffer) {
++		return reject_wasm_object(buffer.getError().message());
++	}
++	auto parsed = llvm::object::ObjectFile::createObjectFile((*buffer)->getMemBufferRef());
++	if (!parsed) {
++		llvm::logAllUnhandledErrors(parsed.takeError(), llvm::errs(),
++			"tinygo-browser-adapter: LLVMObject: ");
++		return false;
++	}
++	auto *object = llvm::dyn_cast<llvm::object::WasmObjectFile>(parsed->get());
++	return object != nullptr && validate_wasm_object(*object);
++}
++
+ bool tinygo_link(int argc, char **argv) {
+ 	configure();
+ 	std::vector<const char*> args(argv, argv + argc);
+diff --git a/builder/tools-builtin.go b/builder/tools-builtin.go
+index 4169ebc..7fd31ac 100644
+--- a/builder/tools-builtin.go
++++ b/builder/tools-builtin.go
+@@ -8,11 +8,11 @@ import (
+ )
+ 
+ /*
+-#cgo CXXFLAGS: -fno-rtti
+ #include <stdbool.h>
+ #include <stdlib.h>
+ bool tinygo_clang_driver(int argc, char **argv);
+ bool tinygo_link(int argc, char **argv);
++bool tinygo_validate_wasm_object(const char *path);
+ */
+ import "C"
+ 
+@@ -35,7 +34,7 @@ func RunTool(tool string, args ...string) error {
+ 		defer C.free(unsafe.Pointer(cflag))
+ 	}
+ 
+-	var ok C.bool
++	var ok C._Bool
+ 	switch tool {
+ 	case "clang":
+ 		ok = C.tinygo_clang_driver(C.int(len(args)), (**C.char)(buf))
+@@ -49,3 +48,14 @@ func RunTool(tool string, args ...string) error {
+ 	}
+ 	return nil
+ }
++
++// ValidateWasmObject asks the pinned in-process LLVMObject parser to validate
++// one relocatable WebAssembly object and its freestanding policy boundary.
++func ValidateWasmObject(path string) error {
++	cpath := C.CString(path)
++	defer C.free(unsafe.Pointer(cpath))
++	if !C.tinygo_validate_wasm_object(cpath) {
++		return errors.New("LLVMObject rejected WebAssembly object")
++	}
++	return nil
++}
+diff --git a/builder/tools.go b/builder/tools.go
+index 9d15e4c..a90fe38 100644
+--- a/builder/tools.go
++++ b/builder/tools.go
+@@ -8,12 +8,20 @@ import (
+ 	"os"
+ 	"os/exec"
+ 	"regexp"
++	"runtime"
+ 	"strconv"
+ 	"strings"
+ )
+ 
+ // runCCompiler invokes a C compiler with the given arguments.
+ func runCCompiler(flags ...string) error {
++	if runtime.GOOS == "wasip1" {
++		if !hasBuiltinTools {
++			return fmt.Errorf("WASI C compilation requires the built-in Clang driver")
++		}
++		return RunTool("clang", flags...)
++	}
++
+ 	// Find the right command to run Clang.
+ 	var cmd *exec.Cmd
+ 	if hasBuiltinTools {
+diff --git a/cgo/libclang.go b/cgo/libclang.go
+index 3772ca5..f85907a 100644
+--- a/cgo/libclang.go
++++ b/cgo/libclang.go
+@@ -65,6 +65,31 @@ unsigned tinygo_clang_Cursor_isAnonymous(GoCXCursor c);
+ unsigned tinygo_clang_Cursor_isBitField(GoCXCursor c);
+ unsigned tinygo_clang_Cursor_isMacroFunctionLike(GoCXCursor c);
+ 
++// wasm32 cgo flattens structure arguments while Clang's C ABI passes them
++// indirectly. These trampolines retain the flattened Go declaration and
++// reconstruct the C structure in libclang_stubs.c.
++unsigned tinygo_wasm_clang_isFunctionTypeVariadic(CXType type);
++CXType tinygo_wasm_clang_getArgType(CXType type, unsigned index);
++void tinygo_wasm_clang_tokenize(CXTranslationUnit tu, CXSourceRange range, CXToken **tokens, unsigned *num_tokens);
++CXString tinygo_wasm_clang_getTokenSpelling(CXTranslationUnit tu, CXToken token);
++CXSourceLocation tinygo_wasm_clang_getTokenLocation(CXTranslationUnit tu, CXToken token);
++void tinygo_wasm_clang_getExpansionLocation(CXSourceLocation location, CXFile *file, unsigned *line, unsigned *column, unsigned *offset);
++const char *tinygo_wasm_clang_getCString(CXString string);
++void tinygo_wasm_clang_disposeString(CXString string);
++CXString tinygo_wasm_clang_getTypedefName(CXType type);
++void tinygo_wasm_clang_getFileLocation(CXSourceLocation location, CXFile *file, unsigned *line, unsigned *column, unsigned *offset);
++void tinygo_wasm_clang_getPresumedLocation(CXSourceLocation location, CXString *filename, unsigned *line, unsigned *column);
++CXType tinygo_wasm_clang_Type_getNamedType(CXType type);
++CXType tinygo_wasm_clang_getElementType(CXType type);
++long long tinygo_wasm_clang_Type_getSizeOf(CXType type);
++CXType tinygo_wasm_clang_getPointeeType(CXType type);
++long long tinygo_wasm_clang_getArraySize(CXType type);
++CXString tinygo_wasm_clang_getTypeSpelling(CXType type);
++long long tinygo_wasm_clang_Type_getAlignOf(CXType type);
++long long tinygo_wasm_clang_Type_getOffsetOf(CXType type, const char *field_name);
++CXCursorVisitor tinygo_clang_globals_visitor_bridge_ptr(void);
++CXCursorVisitor tinygo_clang_struct_visitor_bridge_ptr(void);
++
+ // Fix some warnings on Windows ARM. Without the __declspec(dllexport), it gives warnings like this:
+ //     In file included from _cgo_export.c:4:
+ //     cgo-gcc-export-header-prolog:49:34: warning: redeclaration of 'tinygo_clang_globals_visitor' should not add 'dllexport' attribute [-Wdll-attribute-on-redeclaration]
+@@ -176,7 +201,7 @@ func (f *cgoFile) readNames(fragment string, cflags []string, filename string, c
+ 	ref := storedRefs.Put(f)
+ 	defer storedRefs.Remove(ref)
+ 	cursor := C.tinygo_clang_getTranslationUnitCursor(unit)
+-	C.tinygo_clang_visitChildren(cursor, C.CXCursorVisitor(C.tinygo_clang_globals_visitor), C.CXClientData(ref))
++	C.tinygo_clang_visitChildren(cursor, C.tinygo_clang_globals_visitor_bridge_ptr(), C.CXClientData(ref))
+ 
+ 	// Determine files read during CGo processing, for caching.
+ 	inclusionCallback := func(includedFile C.CXFile) {
+@@ -270,7 +295,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
+ 			},
+ 		}
+ 		var doc []string
+-		if C.clang_isFunctionTypeVariadic(cursorType) != 0 {
++		if C.tinygo_wasm_clang_isFunctionTypeVariadic(cursorType) != 0 {
+ 			doc = append(doc, "//go:variadic")
+ 		}
+ 		if _, ok := f.noescapingFuncs[name]; ok {
+@@ -286,7 +311,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
+ 		for i := 0; i < numArgs; i++ {
+ 			arg := C.tinygo_clang_Cursor_getArgument(c, C.uint(i))
+ 			argName := getString(C.tinygo_clang_getCursorSpelling(arg))
+-			argType := C.clang_getArgType(cursorType, C.uint(i))
++			argType := C.tinygo_wasm_clang_getArgType(cursorType, C.uint(i))
+ 			if argName == "" {
+ 				argName = "$" + strconv.Itoa(i)
+ 			}
+@@ -492,7 +517,7 @@ func (f *cgoFile) getMacro(c clangCursor) (pos token.Pos, value string) {
+ 	tu := C.tinygo_clang_Cursor_getTranslationUnit(c)
+ 	var rawTokens *C.CXToken
+ 	var numTokens C.unsigned
+-	C.clang_tokenize(tu, sourceRange, &rawTokens, &numTokens)
++	C.tinygo_wasm_clang_tokenize(tu, sourceRange, &rawTokens, &numTokens)
+ 	tokens := unsafe.Slice(rawTokens, numTokens)
+ 	defer C.clang_disposeTokens(tu, rawTokens, numTokens)
+ 
+@@ -501,10 +526,10 @@ func (f *cgoFile) getMacro(c clangCursor) (pos token.Pos, value string) {
+ 	sourceBuf := &bytes.Buffer{}
+ 	var startOffset int
+ 	for i, token := range tokens {
+-		spelling := getString(C.clang_getTokenSpelling(tu, token))
+-		location := C.clang_getTokenLocation(tu, token)
++		spelling := getString(C.tinygo_wasm_clang_getTokenSpelling(tu, token))
++		location := C.tinygo_wasm_clang_getTokenLocation(tu, token)
+ 		var tokenOffset C.unsigned
+-		C.clang_getExpansionLocation(location, nil, nil, nil, &tokenOffset)
++		C.tinygo_wasm_clang_getExpansionLocation(location, nil, nil, nil, &tokenOffset)
+ 		if i == 0 {
+ 			// The first token is the macro name itself.
+ 			// Skip it (after using its location).
+@@ -530,9 +555,9 @@ func (f *cgoFile) getMacro(c clangCursor) (pos token.Pos, value string) {
+ }
+ 
+ func getString(clangString C.CXString) (s string) {
+-	rawString := C.clang_getCString(clangString)
++	rawString := C.tinygo_wasm_clang_getCString(clangString)
+ 	s = C.GoString(rawString)
+-	C.clang_disposeString(clangString)
++	C.tinygo_wasm_clang_disposeString(clangString)
+ 	return
+ }
+ 
+@@ -555,7 +580,7 @@ func tinygo_clang_globals_visitor(c, parent C.GoCXCursor, client_data C.CXClient
+ 		}
+ 	case C.CXCursor_TypedefDecl:
+ 		typedefType := C.tinygo_clang_getCursorType(c)
+-		name := getString(C.clang_getTypedefName(typedefType))
++		name := getString(C.tinygo_wasm_clang_getTypedefName(typedefType))
+ 		f.names[name] = c
+ 	case C.CXCursor_VarDecl:
+ 		name := getString(C.tinygo_clang_getCursorSpelling(c))
+@@ -586,7 +611,7 @@ func (f *cgoFile) getUniqueLocationID(pos token.Pos, cursor C.GoCXCursor) interf
+ 	var file C.CXFile
+ 	var line C.unsigned
+ 	var column C.unsigned
+-	C.clang_getFileLocation(clangLocation, &file, &line, &column, nil)
++	C.tinygo_wasm_clang_getFileLocation(clangLocation, &file, &line, &column, nil)
+ 	location := token.Position{
+ 		Filename: getString(C.clang_getFileName(file)),
+ 		Line:     int(line),
+@@ -613,7 +638,7 @@ func (p *cgoPackage) getClangLocationPosition(location C.CXSourceLocation, tu C.
+ 	var line C.unsigned
+ 	var column C.unsigned
+ 	var offset C.unsigned
+-	C.clang_getExpansionLocation(location, &file, &line, &column, &offset)
++	C.tinygo_wasm_clang_getExpansionLocation(location, &file, &line, &column, &offset)
+ 	if line == 0 || file == nil {
+ 		// Invalid token.
+ 		return token.NoPos
+@@ -648,7 +673,7 @@ func (p *cgoPackage) getClangLocationPosition(location C.CXSourceLocation, tu C.
+ 	var filename2String C.CXString
+ 	var line2 C.unsigned
+ 	var column2 C.unsigned
+-	C.clang_getPresumedLocation(location, &filename2String, &line2, &column2)
++	C.tinygo_wasm_clang_getPresumedLocation(location, &filename2String, &line2, &column2)
+ 	filename2 := getString(filename2String)
+ 	if filename2 != filename || line2 != line || column2 != column {
+ 		// The location was changed with a preprocessor directive.
+@@ -708,7 +733,7 @@ func (f *cgoFile) makeDecayingASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 		// https://clang.llvm.org/doxygen/classclang_1_1ElaboratedType.html#details
+ 		// > The type itself is always "sugar", used to express what was written
+ 		// > in the source code but containing no additional semantic information.
+-		underlyingType = C.clang_Type_getNamedType(underlyingType)
++		underlyingType = C.tinygo_wasm_clang_Type_getNamedType(underlyingType)
+ 	}
+ 	if underlyingType.kind == C.CXType_Typedef {
+ 		c := C.tinygo_clang_getTypeDeclaration(underlyingType)
+@@ -730,7 +755,7 @@ func (f *cgoFile) makeDecayingASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 	// TODO: there are more kinds of decaying types.
+ 	if underlyingType.kind == C.CXType_ConstantArray {
+ 		// Apply type decaying.
+-		pointeeType := C.clang_getElementType(underlyingType)
++		pointeeType := C.tinygo_wasm_clang_getElementType(underlyingType)
+ 		return &ast.StarExpr{
+ 			Star: pos,
+ 			X:    f.makeASTType(pointeeType, pos),
+@@ -769,7 +794,7 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 	case C.CXType_Bool:
+ 		typeName = "bool"
+ 	case C.CXType_Float, C.CXType_Double, C.CXType_LongDouble:
+-		switch C.clang_Type_getSizeOf(typ) {
++		switch C.tinygo_wasm_clang_Type_getSizeOf(typ) {
+ 		case 4:
+ 			typeName = "float32"
+ 		case 8:
+@@ -779,14 +804,14 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 			// sensible error message like "undeclared name: C.long double".
+ 		}
+ 	case C.CXType_Complex:
+-		switch C.clang_Type_getSizeOf(typ) {
++		switch C.tinygo_wasm_clang_Type_getSizeOf(typ) {
+ 		case 8:
+ 			typeName = "complex64"
+ 		case 16:
+ 			typeName = "complex128"
+ 		}
+ 	case C.CXType_Pointer:
+-		pointeeType := C.clang_getPointeeType(typ)
++		pointeeType := C.tinygo_wasm_clang_getPointeeType(typ)
+ 		if pointeeType.kind == C.CXType_Void {
+ 			// void* type is translated to Go as unsafe.Pointer
+ 			return &ast.SelectorExpr{
+@@ -810,9 +835,9 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 			Len: &ast.BasicLit{
+ 				ValuePos: pos,
+ 				Kind:     token.INT,
+-				Value:    strconv.FormatInt(int64(C.clang_getArraySize(typ)), 10),
++				Value:    strconv.FormatInt(int64(C.tinygo_wasm_clang_getArraySize(typ)), 10),
+ 			},
+-			Elt: f.makeASTType(C.clang_getElementType(typ), pos),
++			Elt: f.makeASTType(C.tinygo_wasm_clang_getElementType(typ), pos),
+ 		}
+ 	case C.CXType_FunctionProto:
+ 		// Be compatible with gc, which uses the *[0]byte type for function
+@@ -832,14 +857,14 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 			},
+ 		}
+ 	case C.CXType_Typedef:
+-		name := getString(C.clang_getTypedefName(typ))
++		name := getString(C.tinygo_wasm_clang_getTypedefName(typ))
+ 		c := C.tinygo_clang_getTypeDeclaration(typ)
+ 		return &ast.Ident{
+ 			NamePos: pos,
+ 			Name:    f.getASTDeclName(name, c, false),
+ 		}
+ 	case C.CXType_Elaborated:
+-		underlying := C.clang_Type_getNamedType(typ)
++		underlying := C.tinygo_wasm_clang_Type_getNamedType(typ)
+ 		switch underlying.kind {
+ 		case C.CXType_Record:
+ 			return f.makeASTType(underlying, pos)
+@@ -893,7 +918,7 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
+ 	}
+ 	if typeName == "" {
+ 		// Report this as an error.
+-		typeSpelling := getString(C.clang_getTypeSpelling(typ))
++		typeSpelling := getString(C.tinygo_wasm_clang_getTypeSpelling(typ))
+ 		typeKindSpelling := getString(C.clang_getTypeKindSpelling(typ.kind))
+ 		f.addError(pos, fmt.Sprintf("unknown C type: %v (libclang type kind %s)", typeSpelling, typeKindSpelling))
+ 		typeName = "_Cgo_<unknown>"
+@@ -911,7 +936,7 @@ func (p *cgoPackage) getIntegerType(name string, cursor clangCursor) *ast.TypeSp
+ 	// Find a Go type that matches the size and signedness of the given C type.
+ 	underlyingType := C.tinygo_clang_getTypedefDeclUnderlyingType(cursor)
+ 	var goName string
+-	typeSize := C.clang_Type_getSizeOf(underlyingType)
++	typeSize := C.tinygo_wasm_clang_Type_getSizeOf(underlyingType)
+ 	switch name {
+ 	case "_Cgo_char":
+ 		if typeSize != 1 {
+@@ -993,7 +1018,7 @@ func (f *cgoFile) makeASTRecordType(cursor C.GoCXCursor, pos token.Pos) *elabora
+ 		bitfieldList *[]bitfieldInfo
+ 	}{fieldList, f, &inBitfield, &bitfieldNum, &bitfieldList})
+ 	defer storedRefs.Remove(ref)
+-	C.tinygo_clang_visitChildren(cursor, C.CXCursorVisitor(C.tinygo_clang_struct_visitor), C.CXClientData(ref))
++	C.tinygo_clang_visitChildren(cursor, C.tinygo_clang_struct_visitor_bridge_ptr(), C.CXClientData(ref))
+ 	renameFieldKeywords(fieldList)
+ 	switch C.tinygo_clang_getCursorKind(cursor) {
+ 	case C.CXCursor_StructDecl:
+@@ -1023,8 +1048,8 @@ func (f *cgoFile) makeASTRecordType(cursor C.GoCXCursor, pos token.Pos) *elabora
+ 			f.addError(pos, "bitfield in a union is not supported")
+ 		}
+ 		typ := C.tinygo_clang_getCursorType(cursor)
+-		alignInBytes := int64(C.clang_Type_getAlignOf(typ))
+-		sizeInBytes := int64(C.clang_Type_getSizeOf(typ))
++		alignInBytes := int64(C.tinygo_wasm_clang_Type_getAlignOf(typ))
++		sizeInBytes := int64(C.tinygo_wasm_clang_Type_getSizeOf(typ))
+ 		if sizeInBytes == 0 {
+ 			f.addError(pos, "zero-length union is not supported")
+ 		}
+@@ -1080,8 +1105,8 @@ func tinygo_clang_struct_visitor(c, parent C.GoCXCursor, client_data C.CXClientD
+ 	field := &ast.Field{
+ 		Type: f.makeASTType(typ, f.getCursorPosition(c)),
+ 	}
+-	offsetof := int64(C.clang_Type_getOffsetOf(C.tinygo_clang_getCursorType(parent), C.CString(name)))
+-	alignOf := int64(C.clang_Type_getAlignOf(typ) * 8)
++	offsetof := int64(C.tinygo_wasm_clang_Type_getOffsetOf(C.tinygo_clang_getCursorType(parent), C.CString(name)))
++	alignOf := int64(C.tinygo_wasm_clang_Type_getAlignOf(typ) * 8)
+ 	bitfieldOffset := offsetof % alignOf
+ 	if bitfieldOffset != 0 {
+ 		if C.tinygo_clang_Cursor_isBitField(c) != 1 {
+diff --git a/cgo/libclang_stubs.c b/cgo/libclang_stubs.c
+index e8098fa..d8d4eb8 100644
+--- a/cgo/libclang_stubs.c
++++ b/cgo/libclang_stubs.c
+@@ -1,90 +1,422 @@
++// This file implements ABI trampolines between TinyGo cgo's flattened
++// structure arguments and Clang's indirect wasm32 C ABI.
+ 
+-// This file implements some small trampoline functions. The signatures
+-// are slightly different from the ones defined in libclang.go, but they
+-// should be ABI compatible.
++#include <clang-c/Index.h>
++#include <stdint.h>
+ 
+-#include <clang-c/Index.h> // If this fails, libclang headers aren't available. Please take a look here: https://tinygo.org/docs/guides/build/
++typedef struct {
++	enum CXCursorKind kind;
++	int xdata;
++	uintptr_t data[3];
++} GoCXCursor;
+ 
+-CXCursor tinygo_clang_getTranslationUnitCursor(CXTranslationUnit tu) {
+-	return clang_getTranslationUnitCursor(tu);
++static CXCursor make_cursor(enum CXCursorKind kind, int xdata,
++			    const void *data0, const void *data1,
++			    const void *data2) {
++	CXCursor cursor = {
++		.kind = kind,
++		.xdata = xdata,
++		.data = {data0, data1, data2},
++	};
++	return cursor;
+ }
+ 
+-unsigned tinygo_clang_visitChildren(CXCursor parent, CXCursorVisitor visitor, CXClientData client_data) {
+-	return clang_visitChildren(parent, visitor, client_data);
++static GoCXCursor make_go_cursor(CXCursor cursor) {
++	GoCXCursor result = {
++		.kind = cursor.kind,
++		.xdata = cursor.xdata,
++		.data = {
++			(uintptr_t)cursor.data[0],
++			(uintptr_t)cursor.data[1],
++			(uintptr_t)cursor.data[2],
++		},
++	};
++	return result;
+ }
+ 
+-CXString tinygo_clang_getCursorSpelling(CXCursor c) {
+-	return clang_getCursorSpelling(c);
++static CXType make_type(enum CXTypeKind kind, const void *data0,
++			const void *data1) {
++	CXType type = {
++		.kind = kind,
++		.data = {(void *)data0, (void *)data1},
++	};
++	return type;
+ }
+ 
+-CXString tinygo_clang_getCursorPrettyPrinted(CXCursor c, CXPrintingPolicy policy) {
+-	return clang_getCursorPrettyPrinted(c, policy);
++static CXString make_string(const void *data, unsigned private_flags) {
++	CXString string = {
++		.data = data,
++		.private_flags = private_flags,
++	};
++	return string;
+ }
+ 
+-CXPrintingPolicy tinygo_clang_getCursorPrintingPolicy(CXCursor c) {
+-	return clang_getCursorPrintingPolicy(c);
++static CXSourceLocation make_location(const void *ptr0, const void *ptr1,
++				      unsigned int_data) {
++	CXSourceLocation location = {
++		.ptr_data = {ptr0, ptr1},
++		.int_data = int_data,
++	};
++	return location;
+ }
+ 
+-enum CXCursorKind tinygo_clang_getCursorKind(CXCursor c) {
+-	return clang_getCursorKind(c);
++static CXSourceRange make_range(const void *ptr0, const void *ptr1,
++				unsigned begin_int_data,
++				unsigned end_int_data) {
++	CXSourceRange range = {
++		.ptr_data = {ptr0, ptr1},
++		.begin_int_data = begin_int_data,
++		.end_int_data = end_int_data,
++	};
++	return range;
+ }
+ 
+-CXType tinygo_clang_getCursorType(CXCursor c) {
+-	return clang_getCursorType(c);
++static CXToken make_token(unsigned int0, unsigned int1, unsigned int2,
++			  unsigned int3, void *ptr_data) {
++	CXToken token = {
++		.int_data = {int0, int1, int2, int3},
++		.ptr_data = ptr_data,
++	};
++	return token;
+ }
+ 
+-CXCursor tinygo_clang_getTypeDeclaration(CXType t) {
+-	return clang_getTypeDeclaration(t);
++void tinygo_clang_getTranslationUnitCursor(GoCXCursor *result,
++					    CXTranslationUnit tu) {
++	*result = make_go_cursor(clang_getTranslationUnitCursor(tu));
+ }
+ 
+-CXType tinygo_clang_getTypedefDeclUnderlyingType(CXCursor c) {
+-	return clang_getTypedefDeclUnderlyingType(c);
++unsigned tinygo_clang_visitChildren(enum CXCursorKind kind, int xdata,
++				    const void *data0, const void *data1,
++				    const void *data2, CXCursorVisitor visitor,
++				    CXClientData client_data) {
++	return clang_visitChildren(
++		make_cursor(kind, xdata, data0, data1, data2),
++		visitor,
++		client_data);
+ }
+ 
+-CXType tinygo_clang_getCursorResultType(CXCursor c) {
+-	return clang_getCursorResultType(c);
++void tinygo_clang_getCursorSpelling(CXString *result,
++				    enum CXCursorKind kind, int xdata,
++				    const void *data0, const void *data1,
++				    const void *data2) {
++	*result = clang_getCursorSpelling(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-int tinygo_clang_Cursor_getNumArguments(CXCursor c) {
+-	return clang_Cursor_getNumArguments(c);
++void tinygo_clang_getCursorPrettyPrinted(CXString *result,
++					 enum CXCursorKind kind, int xdata,
++					 const void *data0, const void *data1,
++					 const void *data2,
++					 CXPrintingPolicy policy) {
++	*result = clang_getCursorPrettyPrinted(
++		make_cursor(kind, xdata, data0, data1, data2),
++		policy);
+ }
+ 
+-CXCursor tinygo_clang_Cursor_getArgument(CXCursor c, unsigned i) {
+-	return clang_Cursor_getArgument(c, i);
++CXPrintingPolicy tinygo_clang_getCursorPrintingPolicy(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_getCursorPrintingPolicy(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-enum CX_StorageClass tinygo_clang_Cursor_getStorageClass(CXCursor c) {
+-	return clang_Cursor_getStorageClass(c);
++enum CXCursorKind tinygo_clang_getCursorKind(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_getCursorKind(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-CXSourceLocation tinygo_clang_getCursorLocation(CXCursor c) {
+-	return clang_getCursorLocation(c);
++void tinygo_clang_getCursorType(CXType *result, enum CXCursorKind kind,
++				int xdata, const void *data0,
++				const void *data1, const void *data2) {
++	*result = clang_getCursorType(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-CXSourceRange tinygo_clang_getCursorExtent(CXCursor c) {
+-	return clang_getCursorExtent(c);
++void tinygo_clang_getTypeDeclaration(GoCXCursor *result,
++				     enum CXTypeKind kind,
++				     const void *data0,
++				     const void *data1) {
++	*result = make_go_cursor(
++		clang_getTypeDeclaration(make_type(kind, data0, data1)));
+ }
+ 
+-CXTranslationUnit tinygo_clang_Cursor_getTranslationUnit(CXCursor c) {
+-	return clang_Cursor_getTranslationUnit(c);
++void tinygo_clang_getTypedefDeclUnderlyingType(
++	CXType *result, enum CXCursorKind kind, int xdata,
++	const void *data0, const void *data1, const void *data2) {
++	*result = clang_getTypedefDeclUnderlyingType(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-long long tinygo_clang_getEnumConstantDeclValue(CXCursor c) {
+-	return clang_getEnumConstantDeclValue(c);
++void tinygo_clang_getCursorResultType(
++	CXType *result, enum CXCursorKind kind, int xdata,
++	const void *data0, const void *data1, const void *data2) {
++	*result = clang_getCursorResultType(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-CXType tinygo_clang_getEnumDeclIntegerType(CXCursor c) {
+-	return clang_getEnumDeclIntegerType(c);
++int tinygo_clang_Cursor_getNumArguments(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_Cursor_getNumArguments(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-unsigned tinygo_clang_Cursor_isAnonymous(CXCursor c) {
+-	return clang_Cursor_isAnonymous(c);
++void tinygo_clang_Cursor_getArgument(
++	GoCXCursor *result, enum CXCursorKind kind, int xdata,
++	const void *data0, const void *data1, const void *data2,
++	unsigned index) {
++	*result = make_go_cursor(clang_Cursor_getArgument(
++		make_cursor(kind, xdata, data0, data1, data2),
++		index));
+ }
+ 
+-unsigned tinygo_clang_Cursor_isBitField(CXCursor c) {
+-	return clang_Cursor_isBitField(c);
++enum CX_StorageClass tinygo_clang_Cursor_getStorageClass(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_Cursor_getStorageClass(
++		make_cursor(kind, xdata, data0, data1, data2));
+ }
+ 
+-unsigned tinygo_clang_Cursor_isMacroFunctionLike(CXCursor c) {
+-	return clang_Cursor_isMacroFunctionLike(c);
++void tinygo_clang_getCursorLocation(
++	CXSourceLocation *result, enum CXCursorKind kind, int xdata,
++	const void *data0, const void *data1, const void *data2) {
++	*result = clang_getCursorLocation(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++void tinygo_clang_getCursorExtent(
++	CXSourceRange *result, enum CXCursorKind kind, int xdata,
++	const void *data0, const void *data1, const void *data2) {
++	*result = clang_getCursorExtent(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++CXTranslationUnit tinygo_clang_Cursor_getTranslationUnit(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_Cursor_getTranslationUnit(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++long long tinygo_clang_getEnumConstantDeclValue(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_getEnumConstantDeclValue(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++void tinygo_clang_getEnumDeclIntegerType(
++	CXType *result, enum CXCursorKind kind, int xdata,
++	const void *data0, const void *data1, const void *data2) {
++	*result = clang_getEnumDeclIntegerType(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++unsigned tinygo_clang_Cursor_isAnonymous(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_Cursor_isAnonymous(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++unsigned tinygo_clang_Cursor_isBitField(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_Cursor_isBitField(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++unsigned tinygo_clang_Cursor_isMacroFunctionLike(
++	enum CXCursorKind kind, int xdata, const void *data0,
++	const void *data1, const void *data2) {
++	return clang_Cursor_isMacroFunctionLike(
++		make_cursor(kind, xdata, data0, data1, data2));
++}
++
++unsigned tinygo_wasm_clang_isFunctionTypeVariadic(
++	enum CXTypeKind kind, const void *data0, const void *data1) {
++	return clang_isFunctionTypeVariadic(make_type(kind, data0, data1));
++}
++
++void tinygo_wasm_clang_getArgType(CXType *result, enum CXTypeKind kind,
++				  const void *data0, const void *data1,
++				  unsigned index) {
++	*result = clang_getArgType(make_type(kind, data0, data1), index);
++}
++
++void tinygo_wasm_clang_tokenize(CXTranslationUnit tu, const void *ptr0,
++				const void *ptr1, unsigned begin_int_data,
++				unsigned end_int_data, CXToken **tokens,
++				unsigned *num_tokens) {
++	clang_tokenize(
++		tu,
++		make_range(ptr0, ptr1, begin_int_data, end_int_data),
++		tokens,
++		num_tokens);
++}
++
++void tinygo_wasm_clang_getTokenSpelling(
++	CXString *result, CXTranslationUnit tu, unsigned int0,
++	unsigned int1, unsigned int2, unsigned int3, void *ptr_data) {
++	*result = clang_getTokenSpelling(
++		tu,
++		make_token(int0, int1, int2, int3, ptr_data));
++}
++
++void tinygo_wasm_clang_getTokenLocation(
++	CXSourceLocation *result, CXTranslationUnit tu, unsigned int0,
++	unsigned int1, unsigned int2, unsigned int3, void *ptr_data) {
++	*result = clang_getTokenLocation(
++		tu,
++		make_token(int0, int1, int2, int3, ptr_data));
++}
++
++void tinygo_wasm_clang_getExpansionLocation(
++	const void *ptr0, const void *ptr1, unsigned int_data,
++	CXFile *file, unsigned *line, unsigned *column, unsigned *offset) {
++	clang_getExpansionLocation(
++		make_location(ptr0, ptr1, int_data),
++		file,
++		line,
++		column,
++		offset);
++}
++
++const char *tinygo_wasm_clang_getCString(const void *data,
++					 unsigned private_flags) {
++	return clang_getCString(make_string(data, private_flags));
++}
++
++void tinygo_wasm_clang_disposeString(const void *data,
++				     unsigned private_flags) {
++	clang_disposeString(make_string(data, private_flags));
++}
++
++void tinygo_wasm_clang_getTypedefName(CXString *result,
++				      enum CXTypeKind kind,
++				      const void *data0,
++				      const void *data1) {
++	*result = clang_getTypedefName(make_type(kind, data0, data1));
++}
++
++void tinygo_wasm_clang_getFileLocation(
++	const void *ptr0, const void *ptr1, unsigned int_data,
++	CXFile *file, unsigned *line, unsigned *column, unsigned *offset) {
++	clang_getFileLocation(
++		make_location(ptr0, ptr1, int_data),
++		file,
++		line,
++		column,
++		offset);
++}
++
++void tinygo_wasm_clang_getPresumedLocation(
++	const void *ptr0, const void *ptr1, unsigned int_data,
++	CXString *filename, unsigned *line, unsigned *column) {
++	clang_getPresumedLocation(
++		make_location(ptr0, ptr1, int_data),
++		filename,
++		line,
++		column);
++}
++
++void tinygo_wasm_clang_Type_getNamedType(
++	CXType *result, enum CXTypeKind kind, const void *data0,
++	const void *data1) {
++	*result = clang_Type_getNamedType(make_type(kind, data0, data1));
++}
++
++void tinygo_wasm_clang_getElementType(
++	CXType *result, enum CXTypeKind kind, const void *data0,
++	const void *data1) {
++	*result = clang_getElementType(make_type(kind, data0, data1));
++}
++
++long long tinygo_wasm_clang_Type_getSizeOf(
++	enum CXTypeKind kind, const void *data0, const void *data1) {
++	return clang_Type_getSizeOf(make_type(kind, data0, data1));
++}
++
++void tinygo_wasm_clang_getPointeeType(
++	CXType *result, enum CXTypeKind kind, const void *data0,
++	const void *data1) {
++	*result = clang_getPointeeType(make_type(kind, data0, data1));
++}
++
++long long tinygo_wasm_clang_getArraySize(
++	enum CXTypeKind kind, const void *data0, const void *data1) {
++	return clang_getArraySize(make_type(kind, data0, data1));
++}
++
++void tinygo_wasm_clang_getTypeSpelling(
++	CXString *result, enum CXTypeKind kind, const void *data0,
++	const void *data1) {
++	*result = clang_getTypeSpelling(make_type(kind, data0, data1));
++}
++
++long long tinygo_wasm_clang_Type_getAlignOf(
++	enum CXTypeKind kind, const void *data0, const void *data1) {
++	return clang_Type_getAlignOf(make_type(kind, data0, data1));
++}
++
++long long tinygo_wasm_clang_Type_getOffsetOf(
++	enum CXTypeKind kind, const void *data0, const void *data1,
++	const char *field_name) {
++	return clang_Type_getOffsetOf(
++		make_type(kind, data0, data1),
++		field_name);
++}
++
++extern int tinygo_clang_globals_visitor(
++	enum CXCursorKind kind, int xdata, uintptr_t data0, uintptr_t data1,
++	uintptr_t data2, enum CXCursorKind parent_kind, int parent_xdata,
++	uintptr_t parent_data0, uintptr_t parent_data1, uintptr_t parent_data2,
++	CXClientData client_data);
++
++extern int tinygo_clang_struct_visitor(
++	enum CXCursorKind kind, int xdata, uintptr_t data0, uintptr_t data1,
++	uintptr_t data2, enum CXCursorKind parent_kind, int parent_xdata,
++	uintptr_t parent_data0, uintptr_t parent_data1, uintptr_t parent_data2,
++	CXClientData client_data);
++
++enum CXChildVisitResult tinygo_clang_globals_visitor_bridge(
++	CXCursor cursor, CXCursor parent, CXClientData client_data) {
++	return tinygo_clang_globals_visitor(
++		cursor.kind,
++		cursor.xdata,
++		(uintptr_t)cursor.data[0],
++		(uintptr_t)cursor.data[1],
++		(uintptr_t)cursor.data[2],
++		parent.kind,
++		parent.xdata,
++		(uintptr_t)parent.data[0],
++		(uintptr_t)parent.data[1],
++		(uintptr_t)parent.data[2],
++		client_data);
++}
++
++enum CXChildVisitResult tinygo_clang_struct_visitor_bridge(
++	CXCursor cursor, CXCursor parent, CXClientData client_data) {
++	return tinygo_clang_struct_visitor(
++		cursor.kind,
++		cursor.xdata,
++		(uintptr_t)cursor.data[0],
++		(uintptr_t)cursor.data[1],
++		(uintptr_t)cursor.data[2],
++		parent.kind,
++		parent.xdata,
++		(uintptr_t)parent.data[0],
++		(uintptr_t)parent.data[1],
++		(uintptr_t)parent.data[2],
++		client_data);
++}
++
++CXCursorVisitor tinygo_clang_globals_visitor_bridge_ptr(void) {
++	return tinygo_clang_globals_visitor_bridge;
++}
++
++CXCursorVisitor tinygo_clang_struct_visitor_bridge_ptr(void) {
++	return tinygo_clang_struct_visitor_bridge;
+ }
+diff --git a/cgo/unsigned_wasip1.go b/cgo/unsigned_wasip1.go
+new file mode 100644
+index 0000000..ea537d1
+--- /dev/null
++++ b/cgo/unsigned_wasip1.go
+@@ -0,0 +1,5 @@
++//go:build wasip1 && tinygo
++
++package cgo
++
++type _Cgo_unsigned = _Cgo_uint
+diff --git a/cmd/tinygo-browser-adapter/main.go b/cmd/tinygo-browser-adapter/main.go
+new file mode 100644
+--- /dev/null
++++ b/cmd/tinygo-browser-adapter/main.go
+@@ -0,0 +1,1216 @@
++// Command tinygo-browser-adapter compiles one explicit Go package graph with
++// upstream TinyGo. It intentionally stops at an object file: raw WASI LLD and
++// Binaryen run outside this compiler process.
++package main
++
++import (
++	"crypto/sha256"
++	"encoding/hex"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"io"
++	"os"
++	"path/filepath"
++	"sort"
++	"strings"
++	"time"
++
++	"github.com/tinygo-org/tinygo/builder"
++	"github.com/tinygo-org/tinygo/compileopts"
++	"github.com/tinygo-org/tinygo/compiler"
++	llvm "tinygo.org/x/go-llvm"
++)
++
++const (
++	packageJSONEnvironment     = "TINYGO_BROWSER_PACKAGE_JSON"
++	compilerBuildIDEnvironment = "TINYGO_BROWSER_COMPILER_BUILD_ID"
++	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v4"
++	llvmValidationToolchain    = "llvm-20.1.1"
++	wasmTargetTriple           = "wasm32-unknown-wasi"
++	wasmTargetDataLayout       = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
++)
++
++// Keep the upstream cgo package in this graph: it is backed by libclang and
++// must be cross-compiled with the compiler instead of replaced by a WASI stub.
++var upstreamCompilerPackages = []string{
++	"github.com/tinygo-org/tinygo/builder",
++	"github.com/tinygo-org/tinygo/cgo",
++	"github.com/tinygo-org/tinygo/compiler",
++	"github.com/tinygo-org/tinygo/interp",
++	"github.com/tinygo-org/tinygo/loader",
++	"github.com/tinygo-org/tinygo/transform",
++	"tinygo.org/x/go-llvm",
++}
++
++type request struct {
++	Package            string           `json:"package"`
++	PackageJSON        string           `json:"packageJSON"`
++	WorkingDirectory   string           `json:"workingDirectory"`
++	OutputDirectory    string           `json:"outputDirectory"`
++	TemporaryDirectory string           `json:"temporaryDirectory"`
++	Target             string           `json:"target"`
++	Opt                string           `json:"opt"`
++	GC                 string           `json:"gc"`
++	PanicStrategy      string           `json:"panicStrategy"`
++	Scheduler          string           `json:"scheduler"`
++	Debug              bool             `json:"debug"`
++	Parallelism        int              `json:"parallelism"`
++	Runtime            runtimeArtifacts `json:"runtime"`
++}
++
++type runtimeArtifacts struct {
++	CompilerRT string            `json:"compilerRT"`
++	WasiLibc   string            `json:"wasiLibc"`
++	ExtraFiles map[string]string `json:"extraFiles"`
++}
++
++type packageJSON struct {
++	ImportPath string
++	Dir        string
++	Goroot     bool
++	CgoFiles   []string
++	CFiles     []string
++	CXXFiles   []string
++	SFiles     []string
++	EmbedFiles []string
++}
++
++type linkPlan struct {
++	SchemaVersion    int                `json:"schemaVersion"`
++	Format           string             `json:"format"`
++	CompilerSHA256   string             `json:"compilerSha256"`
++	Capabilities     []string           `json:"capabilities"`
++	CompilerPackages []string           `json:"compilerPackages"`
++	Linker           string             `json:"linker"`
++	Objects          []linkPlanObject   `json:"objects"`
++	Output           string             `json:"output"`
++	Arguments        []string           `json:"arguments"`
++	RuntimeInputs    []runtimeInput     `json:"runtimeInputs"`
++	CGoInputs        []linkPlanCGoInput `json:"cgoInputs"`
++	Optimizer        optimizerLinkPlan  `json:"optimizer"`
++}
++
++type linkPlanCGoInput struct {
++	ImportPath   string               `json:"importPath"`
++	SourcePath   string               `json:"sourcePath"`
++	Bytes        int                  `json:"bytes"`
++	SHA256       string               `json:"sha256"`
++	Dependencies []linkPlanDependency `json:"dependencies"`
++}
++
++type linkPlanDependency struct {
++	Scope  string `json:"scope"`
++	Path   string `json:"path"`
++	Bytes  int    `json:"bytes"`
++	SHA256 string `json:"sha256"`
++}
++
++type linkPlanObject struct {
++	Kind             string                `json:"kind"`
++	Path             string                `json:"path"`
++	Format           string                `json:"format"`
++	Bytes            int                   `json:"bytes"`
++	SHA256           string                `json:"sha256"`
++	ImportPath       string                `json:"importPath,omitempty"`
++	SourceField      string                `json:"sourceField,omitempty"`
++	SourcePath       string                `json:"sourcePath,omitempty"`
++	SourceSHA256     string                `json:"sourceSha256,omitempty"`
++	EmbeddedFileHash string                `json:"embeddedFileHash,omitempty"`
++	Dependencies     []linkPlanDependency  `json:"dependencies,omitempty"`
++	LLVMValidation   *llvmObjectValidation `json:"llvmValidation,omitempty"`
++	WasmValidation   *wasmObjectValidation `json:"wasmValidation,omitempty"`
++}
++
++type llvmObjectValidation struct {
++	Toolchain           string   `json:"toolchain"`
++	ModuleVerified      bool     `json:"moduleVerified"`
++	TargetTriple        string   `json:"targetTriple"`
++	DataLayout          string   `json:"dataLayout"`
++	ThreadLocalGlobals  int      `json:"threadLocalGlobals"`
++	GlobalConstructors  int      `json:"globalConstructors"`
++	GlobalDestructors   int      `json:"globalDestructors"`
++	ForbiddenABISymbols []string `json:"forbiddenAbiSymbols"`
++}
++
++type wasmObjectValidation struct {
++	Profile        string `json:"profile"`
++	LinkingVersion int    `json:"linkingVersion"`
++	SymbolTable    bool   `json:"symbolTable"`
++}
++
++type runtimeInput struct {
++	Kind   string `json:"kind"`
++	Source string `json:"source,omitempty"`
++	Path   string `json:"path"`
++}
++
++type optimizerLinkPlan struct {
++	Tool      string   `json:"tool"`
++	Input     string   `json:"input"`
++	Output    string   `json:"output"`
++	Arguments []string `json:"arguments"`
++}
++
++func main() {
++	if err := run(os.Args[1:]); err != nil {
++		fmt.Fprintln(os.Stderr, "tinygo-browser-adapter:", err)
++		os.Exit(1)
++	}
++}
++
++func run(args []string) error {
++	if len(args) != 1 {
++		return errors.New("usage: tinygo-browser-adapter REQUEST.json")
++	}
++
++	request, err := readRequest(args[0])
++	if err != nil {
++		return err
++	}
++	if err := request.prepare(); err != nil {
++		return err
++	}
++	packages, err := validatePackageJSON(request.PackageJSON)
++	if err != nil {
++		return err
++	}
++	compilerSHA256 := os.Getenv(compilerBuildIDEnvironment)
++	decodedCompilerSHA256, err := hex.DecodeString(compilerSHA256)
++	if err != nil || len(decodedCompilerSHA256) != sha256.Size {
++		return fmt.Errorf("%s must identify the compiler build", compilerBuildIDEnvironment)
++	}
++	if err := os.Setenv(packageJSONEnvironment, request.PackageJSON); err != nil {
++		return fmt.Errorf("set %s: %w", packageJSONEnvironment, err)
++	}
++
++	options := &compileopts.Options{
++		GOOS:          "wasip1",
++		GOARCH:        "wasm",
++		Directory:     request.WorkingDirectory,
++		Target:        request.Target,
++		Opt:           request.Opt,
++		GC:            request.GC,
++		PanicStrategy: request.PanicStrategy,
++		Scheduler:     request.Scheduler,
++		SkipDWARF:     !request.Debug,
++		Debug:         request.Debug,
++		InterpTimeout: 3 * time.Minute,
++		Semaphore:     make(chan struct{}, request.Parallelism),
++	}
++	if err := options.Verify(); err != nil {
++		return err
++	}
++	config, err := builder.NewConfig(options)
++	if err != nil {
++		return fmt.Errorf("create TinyGo config: %w", err)
++	}
++	expectedDataLayout, err := deriveExpectedDataLayout(config)
++	if err != nil {
++		return err
++	}
++
++	if err := os.MkdirAll(request.OutputDirectory, 0o777); err != nil {
++		return fmt.Errorf("create output directory: %w", err)
++	}
++	objectsDirectory := filepath.Join(request.OutputDirectory, "objects")
++	if err := os.MkdirAll(objectsDirectory, 0o777); err != nil {
++		return fmt.Errorf("create objects directory: %w", err)
++	}
++	if err := os.MkdirAll(request.TemporaryDirectory, 0o777); err != nil {
++		return fmt.Errorf("create temporary directory: %w", err)
++	}
++
++	temporaryObject := filepath.Join(request.TemporaryDirectory, "tinygo-browser-program.o")
++	defer os.Remove(temporaryObject)
++	buildResult, err := builder.Build(request.Package, temporaryObject, request.TemporaryDirectory, config)
++	if err != nil {
++		return fmt.Errorf("upstream TinyGo object compilation failed: %w", err)
++	}
++	cgoInputs, err := collectCGoInputs(packages, buildResult.CGoInputs, request.WorkingDirectory)
++	if err != nil {
++		return err
++	}
++	expectedNativeObjects := map[string]struct{}{}
++	for _, pkg := range packages {
++		for _, source := range []struct {
++			field string
++			files []string
++		}{
++			{"CFiles", pkg.CFiles},
++			{"CXXFiles", pkg.CXXFiles},
++		} {
++			for _, sourcePath := range source.files {
++				expectedNativeObjects[nativeSourceIdentity(pkg.ImportPath, source.field, sourcePath)] = struct{}{}
++			}
++		}
++		if !pkg.Goroot {
++			for _, sourcePath := range pkg.SFiles {
++				expectedNativeObjects[nativeSourceIdentity(pkg.ImportPath, "SFiles", sourcePath)] = struct{}{}
++			}
++		}
++	}
++
++	objects := make([]linkPlanObject, 0, 1+len(buildResult.AuxiliaryObjects))
++	const programObjectName = "objects/0000-program.o"
++	programObject := filepath.Join(request.OutputDirectory, filepath.FromSlash(programObjectName))
++	if err := replaceFile(temporaryObject, programObject); err != nil {
++		return fmt.Errorf("publish program object: %w", err)
++	}
++	programBytes, err := os.ReadFile(programObject)
++	if err != nil {
++		return fmt.Errorf("read published program object: %w", err)
++	}
++	programSHA256 := sha256.Sum256(programBytes)
++	objects = append(objects, linkPlanObject{
++		Kind:   "program",
++		Path:   programObjectName,
++		Format: "wasm-object",
++		Bytes:  len(programBytes),
++		SHA256: hex.EncodeToString(programSHA256[:]),
++	})
++
++	sort.SliceStable(buildResult.AuxiliaryObjects, func(left, right int) bool {
++		leftObject := buildResult.AuxiliaryObjects[left]
++		rightObject := buildResult.AuxiliaryObjects[right]
++		if leftObject.Kind != rightObject.Kind {
++			return auxiliaryKindOrder(leftObject.Kind) < auxiliaryKindOrder(rightObject.Kind)
++		}
++		if leftObject.ImportPath != rightObject.ImportPath {
++			return leftObject.ImportPath < rightObject.ImportPath
++		}
++		return leftObject.SourcePath < rightObject.SourcePath
++	})
++	for index, object := range buildResult.AuxiliaryObjects {
++		defer os.Remove(object.Path)
++		if (object.Kind != "embed" && object.Kind != "target-c" && object.Kind != "target-cxx" && object.Kind != "target-assembly") || object.ImportPath == "" || object.SourcePath == "" {
++			return errors.New("upstream TinyGo returned an invalid auxiliary object identity")
++		}
++		cleanSourcePath := filepath.ToSlash(filepath.Clean(object.SourcePath))
++		if filepath.IsAbs(object.SourcePath) || strings.Contains(object.SourcePath, "\\") ||
++			cleanSourcePath != object.SourcePath || cleanSourcePath == "." ||
++			cleanSourcePath == ".." || strings.HasPrefix(cleanSourcePath, "../") {
++			return fmt.Errorf("upstream TinyGo returned unsafe auxiliary source path %q", object.SourcePath)
++		}
++		pkg, ok := packages[object.ImportPath]
++		if !ok {
++			return fmt.Errorf("upstream TinyGo returned an object for unknown package %q", object.ImportPath)
++		}
++		var objectName string
++		var objectFormat string
++		var dependencies []linkPlanDependency
++		if object.Kind == "embed" {
++			sourceDigest, sourceDigestError := hex.DecodeString(object.SourceSHA256)
++			if sourceDigestError != nil || len(sourceDigest) != sha256.Size ||
++				object.EmbeddedFileHash != object.SourceSHA256[:sha256.Size] {
++				return fmt.Errorf("upstream TinyGo returned invalid embed source evidence for %q", object.SourcePath)
++			}
++			objectName = fmt.Sprintf("objects/%04d-embed.o", index+1)
++			objectFormat = "wasm-object"
++		} else {
++			var sourceFiles []string
++			var expectedField string
++			var suffix string
++			switch object.Kind {
++			case "target-c":
++				sourceFiles = pkg.CFiles
++				expectedField = "CFiles"
++				suffix = "target-c.bc"
++				objectFormat = "llvm-bitcode"
++			case "target-cxx":
++				sourceFiles = pkg.CXXFiles
++				expectedField = "CXXFiles"
++				suffix = "target-cxx.bc"
++				objectFormat = "llvm-bitcode"
++			case "target-assembly":
++				sourceFiles = pkg.SFiles
++				expectedField = "SFiles"
++				suffix = "target-assembly.o"
++				objectFormat = "wasm-object"
++			}
++			if object.SourceField != expectedField || !containsString(sourceFiles, object.SourcePath) {
++				return fmt.Errorf("upstream TinyGo returned an unbound %s object for %q", object.Kind, object.SourcePath)
++			}
++			identity := nativeSourceIdentity(object.ImportPath, object.SourceField, object.SourcePath)
++			if _, ok := expectedNativeObjects[identity]; !ok {
++				return fmt.Errorf("upstream TinyGo returned duplicate target-native object %q", object.SourcePath)
++			}
++			delete(expectedNativeObjects, identity)
++			_, sourceSHA256, sourceError := inspectSourceFile(pkg, object.SourcePath)
++			if sourceError != nil {
++				return sourceError
++			}
++			object.SourceSHA256 = sourceSHA256
++			dependencies, err = collectDependencies(object.Dependencies, request.WorkingDirectory)
++			if err != nil {
++				return fmt.Errorf("collect target-native dependencies for %q: %w", object.SourcePath, err)
++			}
++			objectName = fmt.Sprintf("objects/%04d-%s", index+1, suffix)
++		}
++		publishedObject := filepath.Join(request.OutputDirectory, filepath.FromSlash(objectName))
++		if err := replaceFile(object.Path, publishedObject); err != nil {
++			return fmt.Errorf("publish auxiliary object %q: %w", object.SourcePath, err)
++		}
++		objectBytes, err := os.ReadFile(publishedObject)
++		if err != nil {
++			return fmt.Errorf("read published auxiliary object %q: %w", object.SourcePath, err)
++		}
++		var llvmValidation *llvmObjectValidation
++		var wasmValidation *wasmObjectValidation
++		if object.Kind == "target-c" || object.Kind == "target-cxx" {
++			validation, validationError := validateLLVMObject(publishedObject, expectedDataLayout)
++			if validationError != nil {
++				return fmt.Errorf("validate %s output for %q: %w", object.Kind, object.SourcePath, validationError)
++			}
++			llvmValidation = &validation
++		}
++		if object.Kind == "target-assembly" {
++			if !hasWasmRelocatableFraming(objectBytes) {
++				return fmt.Errorf("validate WebAssembly assembly output for %q: invalid relocatable object framing", object.SourcePath)
++			}
++			if validationError := builder.ValidateWasmObject(publishedObject); validationError != nil {
++				return fmt.Errorf("validate WebAssembly assembly output for %q with LLVMObject: %w", object.SourcePath, validationError)
++			}
++			wasmValidation = &wasmObjectValidation{
++				Profile:        "wasm-relocatable-object-v1",
++				LinkingVersion: 2,
++				SymbolTable:    true,
++			}
++		}
++		objectSHA256 := sha256.Sum256(objectBytes)
++		objects = append(objects, linkPlanObject{
++			Kind:             object.Kind,
++			Path:             objectName,
++			Format:           objectFormat,
++			Bytes:            len(objectBytes),
++			SHA256:           hex.EncodeToString(objectSHA256[:]),
++			ImportPath:       object.ImportPath,
++			SourceField:      object.SourceField,
++			SourcePath:       object.SourcePath,
++			SourceSHA256:     object.SourceSHA256,
++			EmbeddedFileHash: object.EmbeddedFileHash,
++			Dependencies:     dependencies,
++			LLVMValidation:   llvmValidation,
++			WasmValidation:   wasmValidation,
++		})
++	}
++	if len(expectedNativeObjects) != 0 {
++		return errors.New("upstream TinyGo omitted one or more target-native objects")
++	}
++
++	plan, err := createLinkPlan(config, request.Runtime, compilerSHA256, objects, cgoInputs)
++	if err != nil {
++		return err
++	}
++	if err := writeJSONFile(filepath.Join(request.OutputDirectory, "link-plan.json"), plan); err != nil {
++		return fmt.Errorf("write link plan: %w", err)
++	}
++
++	return nil
++}
++
++func readRequest(path string) (request, error) {
++	file, err := os.Open(path)
++	if err != nil {
++		return request{}, fmt.Errorf("open request: %w", err)
++	}
++	defer file.Close()
++
++	var value request
++	decoder := json.NewDecoder(file)
++	decoder.DisallowUnknownFields()
++	if err := decoder.Decode(&value); err != nil {
++		return request{}, fmt.Errorf("decode request: %w", err)
++	}
++	if err := ensureJSONEOF(decoder); err != nil {
++		return request{}, err
++	}
++	return value, nil
++}
++
++func ensureJSONEOF(decoder *json.Decoder) error {
++	var extra any
++	err := decoder.Decode(&extra)
++	if errors.Is(err, io.EOF) {
++		return nil
++	}
++	if err != nil {
++		return fmt.Errorf("decode trailing request data: %w", err)
++	}
++	return errors.New("request contains more than one JSON value")
++}
++
++func (request *request) prepare() error {
++	if request.Package == "" {
++		request.Package = "."
++	}
++	if request.Target == "" {
++		request.Target = "wasip1"
++	}
++	if request.Target != "wasip1" {
++		return fmt.Errorf("target must be wasip1, got %q", request.Target)
++	}
++	if request.Opt == "" {
++		request.Opt = "1"
++	}
++	if request.Opt != "1" {
++		return fmt.Errorf("compile protocol v4 requires opt=1, got %q", request.Opt)
++	}
++	if request.GC == "" {
++		request.GC = "precise"
++	}
++	if request.GC != "precise" {
++		return fmt.Errorf("compile protocol v4 requires gc=precise, got %q", request.GC)
++	}
++	if request.PanicStrategy == "" {
++		request.PanicStrategy = "print"
++	}
++	if request.PanicStrategy != "print" {
++		return fmt.Errorf(
++			"compile protocol v4 requires panicStrategy=print, got %q",
++			request.PanicStrategy,
++		)
++	}
++	if request.Scheduler == "" {
++		request.Scheduler = "asyncify"
++	}
++	if request.Scheduler != "asyncify" {
++		return fmt.Errorf(
++			"compile protocol v4 requires scheduler=asyncify, got %q",
++			request.Scheduler,
++		)
++	}
++	if request.Debug {
++		return errors.New("compile protocol v4 does not provide a debug runtime closure")
++	}
++	if request.Parallelism == 0 {
++		request.Parallelism = 1
++	}
++	if request.Parallelism != 1 {
++		return errors.New("compile protocol v4 requires parallelism=1")
++	}
++
++	requiredPaths := []struct {
++		name  string
++		value *string
++	}{
++		{"packageJSON", &request.PackageJSON},
++		{"workingDirectory", &request.WorkingDirectory},
++		{"outputDirectory", &request.OutputDirectory},
++		{"temporaryDirectory", &request.TemporaryDirectory},
++		{"runtime.compilerRT", &request.Runtime.CompilerRT},
++		{"runtime.wasiLibc", &request.Runtime.WasiLibc},
++	}
++	for _, required := range requiredPaths {
++		if *required.value == "" {
++			return fmt.Errorf("%s is required", required.name)
++		}
++		absolute, err := filepath.Abs(*required.value)
++		if err != nil {
++			return fmt.Errorf("resolve %s: %w", required.name, err)
++		}
++		*required.value = absolute
++	}
++	if request.Runtime.ExtraFiles == nil {
++		return errors.New("runtime.extraFiles is required")
++	}
++	for source, artifact := range request.Runtime.ExtraFiles {
++		if source == "" || artifact == "" {
++			return errors.New("runtime.extraFiles keys and values must be non-empty")
++		}
++		absolute, err := filepath.Abs(artifact)
++		if err != nil {
++			return fmt.Errorf("resolve runtime.extraFiles[%q]: %w", source, err)
++		}
++		request.Runtime.ExtraFiles[source] = absolute
++	}
++	return nil
++}
++
++func validatePackageJSON(path string) (map[string]packageJSON, error) {
++	file, err := os.Open(path)
++	if err != nil {
++		return nil, fmt.Errorf("open packageJSON: %w", err)
++	}
++	defer file.Close()
++	goRoot := os.Getenv("GOROOT")
++	if goRoot == "" {
++		return nil, errors.New("GOROOT is required")
++	}
++	goRoot, err = filepath.Abs(goRoot)
++	if err != nil {
++		return nil, fmt.Errorf("resolve GOROOT: %w", err)
++	}
++
++	decoder := json.NewDecoder(file)
++	packages := map[string]packageJSON{}
++	for {
++		var pkg packageJSON
++		err := decoder.Decode(&pkg)
++		if errors.Is(err, io.EOF) {
++			break
++		}
++		if err != nil {
++			return nil, fmt.Errorf("decode packageJSON: %w", err)
++		}
++		if pkg.ImportPath == "" || pkg.Dir == "" {
++			return nil, errors.New("packageJSON contains a package without identity")
++		}
++		if _, exists := packages[pkg.ImportPath]; exists {
++			return nil, fmt.Errorf("packageJSON contains duplicate package %q", pkg.ImportPath)
++		}
++		for _, files := range [][]string{pkg.CgoFiles, pkg.CFiles, pkg.CXXFiles, pkg.SFiles} {
++			for _, sourcePath := range files {
++				if !isSafeRelativePath(sourcePath) {
++					return nil, fmt.Errorf("package %q contains unsafe native source path %q", pkg.ImportPath, sourcePath)
++				}
++			}
++		}
++		if len(pkg.SFiles) != 0 {
++			packageDirectory, pathErr := filepath.Abs(pkg.Dir)
++			relative, relativeErr := filepath.Rel(goRoot, packageDirectory)
++			isRootPackage := pathErr == nil && relativeErr == nil && pkg.Goroot && relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator)) && !filepath.IsAbs(relative)
++			if !isRootPackage {
++				if len(pkg.CgoFiles) == 0 {
++					return nil, fmt.Errorf(
++						"package %q uses workspace assembly without CGo; compile protocol v4 keeps Go/Plan9 assembly fail-closed",
++						pkg.ImportPath,
++					)
++				}
++				for _, sourcePath := range pkg.SFiles {
++					if filepath.Ext(sourcePath) != ".S" {
++						return nil, fmt.Errorf(
++							"package %q uses %q; compile protocol v4 accepts only Clang WebAssembly .S files from the workspace",
++							pkg.ImportPath,
++							sourcePath,
++						)
++					}
++				}
++			}
++		}
++		if pkg.Goroot {
++			packageDirectory, pathErr := filepath.Abs(pkg.Dir)
++			relative, relativeErr := filepath.Rel(goRoot, packageDirectory)
++			if pathErr != nil || relativeErr != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || filepath.IsAbs(relative) {
++				return nil, fmt.Errorf("package %q claims Goroot outside GOROOT", pkg.ImportPath)
++			}
++		}
++		packages[pkg.ImportPath] = pkg
++	}
++	if len(packages) == 0 {
++		return nil, errors.New("packageJSON contains no packages")
++	}
++	return packages, nil
++}
++
++func collectCGoInputs(packages map[string]packageJSON, buildInputs []builder.BuildCGoInput, workspaceRoot string) ([]linkPlanCGoInput, error) {
++	dependenciesByPackage := make(map[string][]string, len(buildInputs))
++	for _, input := range buildInputs {
++		if input.ImportPath == "" {
++			return nil, errors.New("upstream TinyGo returned CGo input without an import path")
++		}
++		if _, exists := dependenciesByPackage[input.ImportPath]; exists {
++			return nil, fmt.Errorf("upstream TinyGo returned duplicate CGo input %q", input.ImportPath)
++		}
++		dependenciesByPackage[input.ImportPath] = append([]string(nil), input.Dependencies...)
++	}
++
++	importPaths := make([]string, 0, len(packages))
++	for importPath, pkg := range packages {
++		if len(pkg.CgoFiles) != 0 {
++			importPaths = append(importPaths, importPath)
++		}
++	}
++	sort.Strings(importPaths)
++	inputs := make([]linkPlanCGoInput, 0)
++	for _, importPath := range importPaths {
++		pkg := packages[importPath]
++		dependencyPaths, ok := dependenciesByPackage[importPath]
++		if !ok {
++			return nil, fmt.Errorf("upstream TinyGo omitted CGo input evidence for %q", importPath)
++		}
++		dependencies, err := collectDependencies(dependencyPaths, workspaceRoot)
++		if err != nil {
++			return nil, fmt.Errorf("collect CGo dependencies for %q: %w", importPath, err)
++		}
++		sourcePaths := append([]string(nil), pkg.CgoFiles...)
++		sort.Strings(sourcePaths)
++		for _, sourcePath := range sourcePaths {
++			bytes, sourceSHA256, err := inspectSourceFile(pkg, sourcePath)
++			if err != nil {
++				return nil, err
++			}
++			inputs = append(inputs, linkPlanCGoInput{
++				ImportPath: importPath,
++				SourcePath: sourcePath,
++				Bytes:      bytes,
++				SHA256:     sourceSHA256,
++				Dependencies: append(
++					make([]linkPlanDependency, 0, len(dependencies)),
++					dependencies...,
++				),
++			})
++		}
++		delete(dependenciesByPackage, importPath)
++	}
++	if len(dependenciesByPackage) != 0 {
++		return nil, errors.New("upstream TinyGo returned unexpected CGo input evidence")
++	}
++	return inputs, nil
++}
++
++func collectDependencies(paths []string, workspaceRoot string) ([]linkPlanDependency, error) {
++	root := os.Getenv("TINYGOROOT")
++	if root == "" {
++		return nil, errors.New("TINYGOROOT is required")
++	}
++	root, err := filepath.Abs(root)
++	if err != nil {
++		return nil, fmt.Errorf("resolve TINYGOROOT: %w", err)
++	}
++	workspaceRoot, err = filepath.Abs(workspaceRoot)
++	if err != nil {
++		return nil, fmt.Errorf("resolve workspace root: %w", err)
++	}
++
++	dependencies := make([]linkPlanDependency, 0, len(paths))
++	seen := map[string]struct{}{}
++	for _, dependencyPath := range paths {
++		// libclang reports each unsaved CGo translation unit using TinyGo's
++		// synthetic "!cgo.c" suffix. It has no filesystem identity and is
++		// already bound by the CGo source hash, so it is not a link-plan
++		// dependency.
++		if strings.HasSuffix(filepath.ToSlash(dependencyPath), "!cgo.c") {
++			continue
++		}
++		absolute, err := filepath.Abs(dependencyPath)
++		if err != nil {
++			return nil, fmt.Errorf("resolve dependency %q: %w", dependencyPath, err)
++		}
++		scope, relative, ok := relativeToRoot(absolute, workspaceRoot, "workspace")
++		if !ok {
++			scope, relative, ok = relativeToRoot(absolute, root, "root")
++		}
++		if !ok || !isSafeRelativePath(relative) {
++			return nil, fmt.Errorf("dependency %q is outside the workspace and TinyGo root", dependencyPath)
++		}
++		identity := scope + ":" + relative
++		if _, exists := seen[identity]; exists {
++			continue
++		}
++		seen[identity] = struct{}{}
++		data, err := os.ReadFile(absolute)
++		if err != nil {
++			return nil, fmt.Errorf("read dependency %q: %w", dependencyPath, err)
++		}
++		digest := sha256.Sum256(data)
++		dependencies = append(dependencies, linkPlanDependency{
++			Scope:  scope,
++			Path:   relative,
++			Bytes:  len(data),
++			SHA256: hex.EncodeToString(digest[:]),
++		})
++	}
++	sort.Slice(dependencies, func(left, right int) bool {
++		if dependencies[left].Scope != dependencies[right].Scope {
++			return dependencies[left].Scope < dependencies[right].Scope
++		}
++		return dependencies[left].Path < dependencies[right].Path
++	})
++	return dependencies, nil
++}
++
++func relativeToRoot(path, root, scope string) (string, string, bool) {
++	relative, err := filepath.Rel(root, path)
++	if err != nil || relative == "." || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || filepath.IsAbs(relative) {
++		return "", "", false
++	}
++	return scope, filepath.ToSlash(relative), true
++}
++
++func inspectSourceFile(pkg packageJSON, sourcePath string) (int, string, error) {
++	if !isSafeRelativePath(sourcePath) {
++		return 0, "", fmt.Errorf("package %q has unsafe source path %q", pkg.ImportPath, sourcePath)
++	}
++	absolute := filepath.Join(pkg.Dir, filepath.FromSlash(sourcePath))
++	if _, _, ok := relativeToRoot(absolute, pkg.Dir, "package"); !ok {
++		return 0, "", fmt.Errorf("package %q source escapes its directory", pkg.ImportPath)
++	}
++	data, err := os.ReadFile(absolute)
++	if err != nil {
++		return 0, "", fmt.Errorf("read package %q source %q: %w", pkg.ImportPath, sourcePath, err)
++	}
++	digest := sha256.Sum256(data)
++	return len(data), hex.EncodeToString(digest[:]), nil
++}
++
++func isSafeRelativePath(path string) bool {
++	clean := filepath.ToSlash(filepath.Clean(path))
++	return path != "" && !filepath.IsAbs(path) && !strings.Contains(path, "\\") && clean == path && clean != "." && clean != ".." && !strings.HasPrefix(clean, "../")
++}
++
++func containsString(values []string, expected string) bool {
++	for _, value := range values {
++		if value == expected {
++			return true
++		}
++	}
++	return false
++}
++
++func nativeSourceIdentity(importPath, sourceField, sourcePath string) string {
++	return importPath + "\x00" + sourceField + "\x00" + sourcePath
++}
++
++func auxiliaryKindOrder(kind string) int {
++	switch kind {
++	case "target-c":
++		return 0
++	case "target-cxx":
++		return 1
++	case "target-assembly":
++		return 2
++	case "embed":
++		return 3
++	default:
++		return 4
++	}
++}
++
++func deriveExpectedDataLayout(config *compileopts.Config) (string, error) {
++	if config.Triple() != wasmTargetTriple {
++		return "", fmt.Errorf("compile protocol v4 requires LLVM triple %q", wasmTargetTriple)
++	}
++	machine, err := compiler.NewTargetMachine(&compiler.Config{
++		Triple:          config.Triple(),
++		CPU:             config.CPU(),
++		Features:        config.Features(),
++		CodeModel:       config.CodeModel(),
++		RelocationModel: config.RelocationModel(),
++	})
++	if err != nil {
++		return "", fmt.Errorf("create protocol target machine: %w", err)
++	}
++	defer machine.Dispose()
++	targetData := machine.CreateTargetData()
++	defer targetData.Dispose()
++	dataLayout := targetData.String()
++	if dataLayout != wasmTargetDataLayout {
++		return "", fmt.Errorf("compile protocol v4 requires LLVM data layout %q, got %q", wasmTargetDataLayout, dataLayout)
++	}
++	return dataLayout, nil
++}
++
++func validateLLVMObject(path, expectedDataLayout string) (llvmObjectValidation, error) {
++	validation := llvmObjectValidation{
++		Toolchain:           llvmValidationToolchain,
++		TargetTriple:        wasmTargetTriple,
++		DataLayout:          expectedDataLayout,
++		ForbiddenABISymbols: []string{},
++	}
++	context := llvm.NewContext()
++	defer context.Dispose()
++	module, err := context.ParseBitcodeFile(path)
++	if err != nil {
++		return validation, errors.New("LLVM 20 bitreader rejected the module")
++	}
++	defer module.Dispose()
++	if err := llvm.VerifyModule(module, llvm.ReturnStatusAction); err != nil {
++		return validation, fmt.Errorf("LLVM verifier rejected the module: %w", err)
++	}
++	if module.Target() != wasmTargetTriple {
++		return validation, fmt.Errorf("LLVM module target must be %q, got %q", wasmTargetTriple, module.Target())
++	}
++	if module.DataLayout() != expectedDataLayout {
++		return validation, fmt.Errorf("LLVM module data layout must be %q, got %q", expectedDataLayout, module.DataLayout())
++	}
++
++	forbiddenSymbols := map[string]struct{}{}
++	for global := module.FirstGlobal(); !global.IsNil(); global = llvm.NextGlobal(global) {
++		name := global.Name()
++		section := global.Section()
++		if global.IsThreadLocal() || strings.HasPrefix(section, ".tdata") || strings.HasPrefix(section, ".tbss") {
++			validation.ThreadLocalGlobals++
++		}
++		if name == "llvm.global_ctors" || strings.HasPrefix(section, ".preinit_array") || strings.HasPrefix(section, ".init_array") || strings.HasPrefix(section, ".ctors") {
++			validation.GlobalConstructors++
++		}
++		if name == "llvm.global_dtors" || strings.HasPrefix(section, ".fini_array") || strings.HasPrefix(section, ".dtors") {
++			validation.GlobalDestructors++
++		}
++		if strings.HasPrefix(name, "_ZZ") || isForbiddenNativeABISymbol(name) {
++			forbiddenSymbols[name] = struct{}{}
++		}
++	}
++	for function := module.FirstFunction(); !function.IsNil(); function = llvm.NextFunction(function) {
++		if isForbiddenNativeABISymbol(function.Name()) {
++			forbiddenSymbols[function.Name()] = struct{}{}
++		}
++	}
++	for symbol := range forbiddenSymbols {
++		validation.ForbiddenABISymbols = append(validation.ForbiddenABISymbols, symbol)
++	}
++	sort.Strings(validation.ForbiddenABISymbols)
++	if err := validateLLVMTargetFeatures(module.String()); err != nil {
++		return validation, err
++	}
++	if validation.ThreadLocalGlobals != 0 || validation.GlobalConstructors != 0 ||
++		validation.GlobalDestructors != 0 || len(validation.ForbiddenABISymbols) != 0 {
++		return validation, fmt.Errorf(
++			"native module violates the freestanding ABI policy (tls=%d, ctors=%d, dtors=%d, forbidden=%v)",
++			validation.ThreadLocalGlobals,
++			validation.GlobalConstructors,
++			validation.GlobalDestructors,
++			validation.ForbiddenABISymbols,
++		)
++	}
++	validation.ModuleVerified = true
++	return validation, nil
++}
++
++func isForbiddenNativeABISymbol(name string) bool {
++	if name == "atexit" || name == "__dso_handle" || name == "__gxx_personality_v0" ||
++		name == "__clang_call_terminate" || name == "__tls_get_addr" ||
++		name == "__wasm_call_ctors" || name == "__wasm_apply_data_relocs" {
++		return true
++	}
++	for _, prefix := range []string{
++		"__cxa_",
++		"__cxx_global_var_init",
++		"__emutls_",
++		"__tls_",
++		"_GLOBAL__",
++		"_Unwind_",
++		"_ZGV",
++		"_ZTI",
++		"_ZTS",
++		"_ZTV",
++		"_ZNSt",
++		"_ZNKSt",
++		"_ZSt",
++		"_Zd",
++		"_Zn",
++		"llvm.eh.",
++		"llvm.threadlocal.",
++	} {
++		if strings.HasPrefix(name, prefix) {
++			return true
++		}
++	}
++	return false
++}
++
++func validateLLVMTargetFeatures(moduleIR string) error {
++	for _, line := range strings.Split(moduleIR, "\n") {
++		trimmed := strings.TrimSpace(line)
++		if strings.HasPrefix(trimmed, "module asm ") {
++			return errors.New("LLVM module-level inline assembly is forbidden; use an uppercase .S input")
++		}
++		if strings.HasPrefix(trimmed, "@") &&
++			(strings.Contains(trimmed, " alias ") || strings.Contains(trimmed, " ifunc ")) {
++			return errors.New("LLVM global aliases and indirect functions are forbidden")
++		}
++		if strings.Contains(trimmed, " asm ") &&
++			(strings.HasPrefix(trimmed, "call ") || strings.Contains(trimmed, " call ") ||
++				strings.HasPrefix(trimmed, "invoke ") || strings.Contains(trimmed, " invoke ") ||
++				strings.HasPrefix(trimmed, "callbr ") || strings.Contains(trimmed, " callbr ")) {
++			return errors.New("LLVM function-level inline assembly is forbidden; use an uppercase .S input")
++		}
++	}
++
++	const marker = `"target-features"="`
++	for offset := 0; ; {
++		start := strings.Index(moduleIR[offset:], marker)
++		if start < 0 {
++			return nil
++		}
++		start += offset + len(marker)
++		end := strings.IndexByte(moduleIR[start:], '"')
++		if end < 0 {
++			return errors.New("LLVM module contains malformed target-features evidence")
++		}
++		features := strings.Split(moduleIR[start:start+end], ",")
++		for _, feature := range features {
++			switch feature {
++			case "+bulk-memory", "+bulk-memory-opt", "+call-indirect-overlong", "+mutable-globals", "+nontrapping-fptoint", "+sign-ext", "-multivalue", "-reference-types":
++				// This is the exact feature policy supplied to the consumer's
++				// wasm32 LLD invocations.
++			default:
++				return fmt.Errorf("LLVM module target feature %q is outside the strict allowlist", feature)
++			}
++		}
++		offset = start + end + 1
++	}
++}
++
++// hasWasmRelocatableFraming bounds every section and the metadata records that
++// have historically caused LLVM's Wasm parser to terminate on malformed LEBs.
++// LLVMObject performs the complete semantic object/symbol/relocation parse.
++func hasWasmRelocatableFraming(data []byte) bool {
++	if len(data) < 8 || string(data[:4]) != "\x00asm" || data[4] != 1 || data[5] != 0 || data[6] != 0 || data[7] != 0 {
++		return false
++	}
++	foundLinking := false
++	foundSymbolTable := false
++	sectionCount := 0
++	for offset := 8; offset < len(data); {
++		sectionID := data[offset]
++		offset++
++		if sectionID > 13 {
++			return false
++		}
++		sectionSize, next, ok := readULEB32(data, offset)
++		if !ok || sectionSize == 0 || sectionSize > uint32(len(data)-next) {
++			return false
++		}
++		sectionEnd := next + int(sectionSize)
++		if sectionID == 0 {
++			nameSize, nameOffset, nameOK := readULEB32(data, next)
++			if !nameOK || nameSize > uint32(sectionEnd-nameOffset) {
++				return false
++			}
++			nameEnd := nameOffset + int(nameSize)
++			name := string(data[nameOffset:nameEnd])
++			switch {
++			case name == "linking":
++				if foundLinking {
++					return false
++				}
++				foundLinking = true
++				version, payloadOffset, versionOK := readULEB32(data, nameEnd)
++				if !versionOK || version != 2 {
++					return false
++				}
++				for payloadOffset < sectionEnd {
++					if payloadOffset >= len(data) {
++						return false
++					}
++					subsectionType := data[payloadOffset]
++					payloadOffset++
++					subsectionSize, subsectionOffset, subsectionOK := readULEB32(data, payloadOffset)
++					if !subsectionOK || subsectionSize > uint32(sectionEnd-subsectionOffset) {
++						return false
++					}
++					if subsectionType == 8 {
++						if foundSymbolTable {
++							return false
++						}
++						foundSymbolTable = true
++					}
++					payloadOffset = subsectionOffset + int(subsectionSize)
++				}
++				if payloadOffset != sectionEnd {
++					return false
++				}
++			case strings.HasPrefix(name, "reloc."):
++				if !hasWasmRelocationFraming(data, nameEnd, sectionEnd, sectionCount) {
++					return false
++				}
++			}
++		}
++		offset = sectionEnd
++		sectionCount++
++	}
++	return foundLinking && foundSymbolTable
++}
++
++func hasWasmRelocationFraming(data []byte, offset, end, sectionCount int) bool {
++	targetSection, offset, ok := readULEB32(data, offset)
++	if !ok || targetSection >= uint32(sectionCount) {
++		return false
++	}
++	count, offset, ok := readULEB32(data, offset)
++	if !ok || count > uint32(end-offset) {
++		return false
++	}
++	for index := uint32(0); index < count; index++ {
++		relocationType, next, typeOK := readULEB32(data, offset)
++		if !typeOK || relocationType > 26 ||
++			(relocationType >= 14 && relocationType <= 19) ||
++			relocationType == 21 || relocationType == 22 || relocationType == 24 || relocationType == 25 {
++			return false
++		}
++		offset = next
++		_, offset, ok = readULEB32(data, offset)
++		if !ok {
++			return false
++		}
++		_, offset, ok = readULEB32(data, offset)
++		if !ok {
++			return false
++		}
++		if wasmRelocationHasAddend(relocationType) {
++			_, offset, ok = readSLEB128(data, offset)
++			if !ok {
++				return false
++			}
++		}
++	}
++	return offset == end
++}
++
++func wasmRelocationHasAddend(relocationType uint32) bool {
++	switch relocationType {
++	case 3, 4, 5, 8, 9, 11, 14, 15, 16, 17, 21, 22, 23, 25:
++		return true
++	default:
++		return false
++	}
++}
++
++func readULEB32(data []byte, offset int) (uint32, int, bool) {
++	var value uint32
++	for index := uint(0); index < 5 && offset < len(data); index++ {
++		current := data[offset]
++		offset++
++		if index == 4 && current&0xf0 != 0 {
++			return 0, offset, false
++		}
++		value |= uint32(current&0x7f) << (index * 7)
++		if current&0x80 == 0 {
++			return value, offset, true
++		}
++	}
++	return 0, offset, false
++}
++
++func readSLEB128(data []byte, offset int) (int64, int, bool) {
++	var value int64
++	var current byte
++	for shift := uint(0); shift < 64 && offset < len(data); shift += 7 {
++		current = data[offset]
++		offset++
++		value |= int64(current&0x7f) << shift
++		if current&0x80 == 0 {
++			if shift < 63 && current&0x40 != 0 {
++				value |= ^int64(0) << (shift + 7)
++			}
++			return value, offset, true
++		}
++	}
++	return 0, offset, false
++}
++
++func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compilerSHA256 string, objects []linkPlanObject, cgoInputs []linkPlanCGoInput) (linkPlan, error) {
++	const (
++		linkerOutput    = "program.unoptimized.wasm"
++		optimizerOutput = "program.wasm"
++	)
++
++	arguments := append([]string{}, config.LDFlags()...)
++	arguments = append(arguments, "-o", linkerOutput)
++	if !config.Debug() {
++		arguments = append(arguments, "--strip-debug", "--compress-relocations")
++	}
++	if len(objects) == 0 || objects[0].Kind != "program" {
++		return linkPlan{}, errors.New("link plan requires one leading program object")
++	}
++	arguments = append(arguments, objects[0].Path)
++	arguments = append(arguments, runtime.CompilerRT)
++
++	runtimeInputs := []runtimeInput{
++		{Kind: "compiler-rt", Path: runtime.CompilerRT},
++	}
++	for _, source := range config.ExtraFiles() {
++		artifact, ok := runtime.ExtraFiles[source]
++		if !ok {
++			return linkPlan{}, fmt.Errorf("runtime.extraFiles is missing %q", source)
++		}
++		arguments = append(arguments, artifact)
++		runtimeInputs = append(runtimeInputs, runtimeInput{
++			Kind:   "extra-file",
++			Source: source,
++			Path:   artifact,
++		})
++	}
++	for _, object := range objects[1:] {
++		if object.Kind == "target-c" || object.Kind == "target-cxx" || object.Kind == "target-assembly" {
++			arguments = append(arguments, object.Path)
++		}
++	}
++	arguments = append(arguments, runtime.WasiLibc)
++	runtimeInputs = append(runtimeInputs, runtimeInput{Kind: "wasi-libc", Path: runtime.WasiLibc})
++	for _, object := range objects[1:] {
++		if object.Kind == "embed" {
++			arguments = append(arguments, object.Path)
++		}
++	}
++
++	_, speedLevel, sizeLevel := config.OptLevel()
++	arguments = append(
++		arguments,
++		"-mllvm",
++		"-mcpu="+config.CPU(),
++		"-mllvm",
++		"-mattr="+config.Features(),
++		fmt.Sprintf("--lto-O%d", speedLevel),
++	)
++	if sizeLevel >= 2 {
++		arguments = append(arguments, "-mllvm", "--rotation-max-header-size=0")
++	}
++
++	optLevel, _, _ := config.OptLevel()
++	optimizerArguments := make([]string, 0, 6)
++	if config.Scheduler() == "asyncify" {
++		optimizerArguments = append(optimizerArguments, "--asyncify")
++	}
++	optimizerArguments = append(
++		optimizerArguments,
++		"-"+optLevel,
++		"-g",
++		linkerOutput,
++		"--output",
++		optimizerOutput,
++	)
++
++	return linkPlan{
++		SchemaVersion:    4,
++		Format:           linkPlanFormat,
++		CompilerSHA256:   compilerSHA256,
++		Capabilities:     []string{"go-embed-objects", "target-cgo-c", "target-cxx-freestanding", "target-clang-assembly"},
++		CompilerPackages: append([]string(nil), upstreamCompilerPackages...),
++		Linker:           "wasm-ld",
++		Objects:          append([]linkPlanObject(nil), objects...),
++		Output:           linkerOutput,
++		Arguments:        arguments,
++		RuntimeInputs:    runtimeInputs,
++		CGoInputs:        append([]linkPlanCGoInput(nil), cgoInputs...),
++		Optimizer: optimizerLinkPlan{
++			Tool:      "wasm-opt",
++			Input:     linkerOutput,
++			Output:    optimizerOutput,
++			Arguments: optimizerArguments,
++		},
++	}, nil
++}
++
++func replaceFile(source, destination string) error {
++	if err := os.Remove(destination); err != nil && !errors.Is(err, os.ErrNotExist) {
++		return err
++	}
++	return os.Rename(source, destination)
++}
++
++func writeJSONFile(path string, value any) error {
++	temporary := path + ".tmp"
++	file, err := os.Create(temporary)
++	if err != nil {
++		return err
++	}
++	encoder := json.NewEncoder(file)
++	encoder.SetIndent("", "  ")
++	if err := encoder.Encode(value); err != nil {
++		file.Close()
++		os.Remove(temporary)
++		return err
++	}
++	if err := file.Close(); err != nil {
++		os.Remove(temporary)
++		return err
++	}
++	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
++		os.Remove(temporary)
++		return err
++	}
++	return os.Rename(temporary, path)
++}
+diff --git a/compileopts/config.go b/compileopts/config.go
+index 7ce7ae5..9230fcd 100644
+--- a/compileopts/config.go
++++ b/compileopts/config.go
+@@ -408,6 +408,9 @@ func (c *Config) LibcCFlags() []string {
+ 		}
+ 	case "wasi-libc":
+ 		path := c.LibraryPath("wasi-libc")
++		if os.Getenv("TINYGO_BROWSER_PACKAGE_JSON") != "" {
++			path = filepath.Join(goenv.Get("TINYGOROOT"), "lib", "wasi-libc")
++		}
+ 		return []string{
+ 			"-nostdlibinc",
+ 			"-isystem", filepath.Join(path, "include"),
+diff --git a/goenv/cache_default.go b/goenv/cache_default.go
+new file mode 100644
+index 0000000..3c38559
+--- /dev/null
++++ b/goenv/cache_default.go
+@@ -0,0 +1,9 @@
++//go:build !wasip1
++
++package goenv
++
++import "os"
++
++func userCacheDir() (string, error) {
++	return os.UserCacheDir()
++}
+diff --git a/goenv/cache_wasip1.go b/goenv/cache_wasip1.go
+new file mode 100644
+index 0000000..c3a555d
+--- /dev/null
++++ b/goenv/cache_wasip1.go
+@@ -0,0 +1,9 @@
++//go:build wasip1
++
++package goenv
++
++import "errors"
++
++func userCacheDir() (string, error) {
++	return "", errors.New("GOCACHE must be set for a WASI-hosted TinyGo compiler")
++}
+diff --git a/goenv/goenv.go b/goenv/goenv.go
+index fe4c8bf..e36193f 100644
+--- a/goenv/goenv.go
++++ b/goenv/goenv.go
+@@ -66,6 +66,16 @@ var goEnvVarsErr error // error returned from cmd.Run
+ // time will update all environment variables in goEnvVars.
+ func readGoEnvVars() error {
+ 	goEnvVarsOnce.Do(func() {
++		if runtime.GOOS == "wasip1" {
++			goEnvVars.GOPATH = os.Getenv("GOPATH")
++			goEnvVars.GOROOT = os.Getenv("GOROOT")
++			goEnvVars.GOVERSION = os.Getenv("GOVERSION")
++			if goEnvVars.GOVERSION == "" {
++				goEnvVarsErr = errors.New("GOVERSION must be set for a WASI-hosted TinyGo compiler")
++			}
++			return
++		}
++
+ 		cmd := exec.Command("go", "env", "-json", "GOPATH", "GOROOT", "GOVERSION")
+ 		output, err := cmd.Output()
+ 		if err != nil {
+@@ -145,8 +155,11 @@ func Get(name string) string {
+ 		readGoEnvVars()
+ 		return goEnvVars.GOPATH
+ 	case "GOCACHE":
++		if dir := os.Getenv("GOCACHE"); dir != "" {
++			return dir
++		}
+ 		// Get the cache directory, usually ~/.cache/tinygo
+-		dir, err := os.UserCacheDir()
++		dir, err := userCacheDir()
+ 		if err != nil {
+ 			panic("could not find cache dir: " + err.Error())
+ 		}
+diff --git a/goenv/version.go b/goenv/version.go
+index 423f959..7440659 100644
+--- a/goenv/version.go
++++ b/goenv/version.go
+@@ -3,8 +3,8 @@ package goenv
+ import (
+ 	"errors"
+ 	"fmt"
+-	"io"
+ 	"runtime/debug"
++	"strconv"
+ 	"strings"
+ )
+ 
+@@ -51,9 +51,14 @@ func GetGorootVersion() (major, minor int, err error) {
+ // If there is an error, (0, 0, 0) and an error will be returned.
+ func Parse(version string) (major, minor, patch int, err error) {
+ 	if strings.HasPrefix(version, "devel ") {
+-		version = strings.Split(strings.TrimPrefix(version, "devel "), version)[0]
++		fields := strings.Fields(strings.TrimPrefix(version, "devel "))
++		if len(fields) == 0 {
++			version = ""
++		} else {
++			version = fields[0]
++		}
+ 	}
+-	if version == "" || version[:2] != "go" {
++	if !strings.HasPrefix(version, "go") {
+ 		return 0, 0, 0, errors.New("could not parse Go version: version does not start with 'go' prefix")
+ 	}
+ 
+@@ -62,18 +67,27 @@ func Parse(version string) (major, minor, patch int, err error) {
+ 		return 0, 0, 0, errors.New("could not parse Go version: version has less than two parts")
+ 	}
+ 
+-	// Ignore the errors, we don't really handle errors here anyway.
+-	var trailing string
+-	n, err := fmt.Sscanf(version, "go%d.%d.%d%s", &major, &minor, &patch, &trailing)
+-	if n == 2 {
+-		n, err = fmt.Sscanf(version, "go%d.%d%s", &major, &minor, &trailing)
+-	}
+-	if n >= 2 && err == io.EOF {
+-		// Means there were no trailing characters (i.e., not an alpha/beta)
+-		err = nil
+-	}
+-	if err != nil {
+-		return 0, 0, 0, fmt.Errorf("failed to parse version: %s", err)
++	values := []*int{&major, &minor, &patch}
++	for index := 0; index < len(parts) && index < len(values); index++ {
++		component := parts[index]
++		digits := 0
++		for digits < len(component) && component[digits] >= '0' && component[digits] <= '9' {
++			digits++
++		}
++		if digits == 0 {
++			return 0, 0, 0, fmt.Errorf("failed to parse version component %q", component)
++		}
++		value, parseErr := strconv.Atoi(component[:digits])
++		if parseErr != nil {
++			return 0, 0, 0, fmt.Errorf("failed to parse version component %q: %w", component, parseErr)
++		}
++		*values[index] = value
++		if digits != len(component) {
++			if index == 0 {
++				return 0, 0, 0, fmt.Errorf("failed to parse major version component %q", component)
++			}
++			break
++		}
+ 	}
+ 
+ 	return major, minor, patch, nil
+diff --git a/loader/loader.go b/loader/loader.go
+index e935a9d..d6ae016 100644
+--- a/loader/loader.go
++++ b/loader/loader.go
+@@ -18,6 +18,7 @@ import (
+ 	"path"
+ 	"path/filepath"
+ 	"runtime"
++	"sort"
+ 	"strconv"
+ 	"strings"
+ 	"unicode"
+@@ -63,6 +64,9 @@ type PackageJSON struct {
+ 	GoFiles  []string
+ 	CgoFiles []string
+ 	CFiles   []string
++	CXXFiles []string
++	SFiles   []string
++	Goroot   bool
+ 
+ 	// Embedded files
+ 	EmbedFiles []string
+@@ -83,14 +87,15 @@ type PackageJSON struct {
+ type Package struct {
+ 	PackageJSON
+ 
+-	program      *Program
+-	Files        []*ast.File
+-	FileHashes   map[string][]byte
+-	CFlags       []string // CFlags used during CGo preprocessing (only set if CGo is used)
+-	CGoHeaders   []string // text above 'import "C"' lines
+-	EmbedGlobals map[string][]*EmbedFile
+-	Pkg          *types.Package
+-	info         types.Info
++	program         *Program
++	Files           []*ast.File
++	FileHashes      map[string][]byte
++	CFlags          []string // CFlags used during CGo preprocessing (only set if CGo is used)
++	CGoHeaders      []string // text above 'import "C"' lines
++	CGoDependencies []string // files read by libclang while processing CGo
++	EmbedGlobals    map[string][]*EmbedFile
++	Pkg             *types.Package
++	info            types.Info
+ }
+ 
+ type EmbedFile struct {
+@@ -105,9 +110,19 @@ type EmbedFile struct {
+ // package). Call .Parse() afterwards to parse all Go files (including CGo
+ // processing, if necessary).
+ func Load(config *compileopts.Config, inputPkg string, typeChecker types.Config) (*Program, error) {
+-	goroot, err := GetCachedGoroot(config)
+-	if err != nil {
+-		return nil, err
++	packageJSONPath := os.Getenv("TINYGO_BROWSER_PACKAGE_JSON")
++	var goroot string
++	var err error
++	if packageJSONPath != "" {
++		// The browser host prepares the exact `go list -deps -json` stream.
++		// Parsing, type checking, SSA construction, and lowering remain in the
++		// upstream TinyGo loader/compiler pipeline.
++		goroot = goenv.Get("TINYGOROOT")
++	} else {
++		goroot, err = GetCachedGoroot(config)
++		if err != nil {
++			return nil, err
++		}
+ 	}
+ 	var wd string
+ 	if config.Options.Directory != "" {
+@@ -127,28 +142,39 @@ func Load(config *compileopts.Config, inputPkg string, typeChecker types.Config)
+ 		fset:        token.NewFileSet(),
+ 	}
+ 
+-	// List the dependencies of this package, in raw JSON format.
+-	extraArgs := []string{"-json", "-deps", "-e"}
+-	if config.TestConfig.CompileTestBinary {
+-		extraArgs = append(extraArgs, "-test")
+-	}
+-	cmd, err := List(config, extraArgs, []string{inputPkg})
+-	if err != nil {
+-		return nil, err
+-	}
+-	buf := &bytes.Buffer{}
+-	cmd.Stdout = buf
+-	cmd.Stderr = os.Stderr
+-	err = cmd.Run()
+-	if err != nil {
+-		if exitErr, ok := err.(*exec.ExitError); ok {
+-			os.Exit(exitErr.ExitCode())
++	var packageJSON io.Reader
++	if packageJSONPath != "" {
++		file, err := os.Open(packageJSONPath)
++		if err != nil {
++			return nil, fmt.Errorf("failed to open package JSON: %w", err)
++		}
++		defer file.Close()
++		packageJSON = file
++	} else {
++		// List the dependencies of this package, in raw JSON format.
++		extraArgs := []string{"-json", "-deps", "-e"}
++		if config.TestConfig.CompileTestBinary {
++			extraArgs = append(extraArgs, "-test")
++		}
++		cmd, err := List(config, extraArgs, []string{inputPkg})
++		if err != nil {
++			return nil, err
++		}
++		buf := &bytes.Buffer{}
++		cmd.Stdout = buf
++		cmd.Stderr = os.Stderr
++		err = cmd.Run()
++		if err != nil {
++			if exitErr, ok := err.(*exec.ExitError); ok {
++				os.Exit(exitErr.ExitCode())
++			}
++			return nil, fmt.Errorf("failed to run `go list`: %s", err)
+ 		}
+-		return nil, fmt.Errorf("failed to run `go list`: %s", err)
++		packageJSON = buf
+ 	}
+ 
+ 	// Parse the returned json from `go list`.
+-	decoder := json.NewDecoder(buf)
++	decoder := json.NewDecoder(packageJSON)
+ 	var pkgErrors []error
+ 	for {
+ 		pkg := &Package{
+@@ -490,7 +516,9 @@ func (p *Package) parseFiles() ([]*ast.File, error) {
+ 		p.CGoHeaders = headerCode
+ 		for path, hash := range accessedFiles {
+ 			p.FileHashes[path] = hash
++			p.CGoDependencies = append(p.CGoDependencies, path)
+ 		}
++		sort.Strings(p.CGoDependencies)
+ 		if errs != nil {
+ 			fileErrs = append(fileErrs, errs...)
+ 		}
+diff --git a/src/runtime/arch_tinygowasm_malloc.go b/src/runtime/arch_tinygowasm_malloc.go
+index 471361b..f255b0f 100644
+--- a/src/runtime/arch_tinygowasm_malloc.go
++++ b/src/runtime/arch_tinygowasm_malloc.go
+@@ -16,6 +16,11 @@ import "unsafe"
+ // See https://github.com/tinygo-org/tinygo/pull/4898 for details.
+ var allocs = make(map[*byte]uintptr)
+ 
++// alignedAllocBases keeps the original GC object alive when aligned_alloc
++// returns an interior pointer. The conservative collector supports interior
++// pointers, but retaining the base also makes the ownership explicit.
++var alignedAllocBases = make(map[*byte]*byte)
++
+ //export malloc
+ func libc_malloc(size uintptr) unsafe.Pointer {
+ 	if size == 0 {
+@@ -26,6 +31,39 @@ func libc_malloc(size uintptr) unsafe.Pointer {
+ 	return ptr
+ }
+ 
++// wasi-libc uses these internal names from archive members that normally share
++// its dlmalloc implementation. Keep them on the same GC-owned allocator when
++// dlmalloc is omitted from the browser compiler link.
++//
++//export __libc_malloc
++func libc_internal_malloc(size uintptr) unsafe.Pointer {
++	return libc_malloc(size)
++}
++
++//export aligned_alloc
++func libc_aligned_alloc(alignment, size uintptr) unsafe.Pointer {
++	if size == 0 {
++		return nil
++	}
++	if alignment == 0 || alignment&(alignment-1) != 0 || size%alignment != 0 {
++		return nil
++	}
++	const naturalAlignment = 16
++	if alignment <= naturalAlignment {
++		return libc_malloc(size)
++	}
++	if size > ^uintptr(0)-(alignment-1) {
++		return nil
++	}
++
++	base := alloc(size+alignment-1, nil)
++	ptr := unsafe.Pointer((uintptr(base) + alignment - 1) &^ (alignment - 1))
++	key := (*byte)(ptr)
++	allocs[key] = size
++	alignedAllocBases[key] = (*byte)(base)
++	return ptr
++}
++
+ //export free
+ func libc_free(ptr unsafe.Pointer) {
+ 	if ptr == nil {
+@@ -33,17 +71,28 @@ func libc_free(ptr unsafe.Pointer) {
+ 	}
+ 	if _, ok := allocs[(*byte)(ptr)]; ok {
+ 		delete(allocs, (*byte)(ptr))
++		delete(alignedAllocBases, (*byte)(ptr))
+ 	} else {
+ 		panic("free: invalid pointer")
+ 	}
+ }
+ 
++//export __libc_free
++func libc_internal_free(ptr unsafe.Pointer) {
++	libc_free(ptr)
++}
++
+ //export calloc
+ func libc_calloc(nmemb, size uintptr) unsafe.Pointer {
+ 	// No difference between calloc and malloc.
+ 	return libc_malloc(nmemb * size)
+ }
+ 
++//export __libc_calloc
++func libc_internal_calloc(nmemb, size uintptr) unsafe.Pointer {
++	return libc_calloc(nmemb, size)
++}
++
+ //export realloc
+ func libc_realloc(oldPtr unsafe.Pointer, size uintptr) unsafe.Pointer {
+ 	if size == 0 {
+@@ -62,6 +111,7 @@ func libc_realloc(oldPtr unsafe.Pointer, size uintptr) unsafe.Pointer {
+ 			newBuf := unsafe.Slice((*byte)(ptr), size)
+ 			copy(newBuf, oldBuf)
+ 			delete(allocs, (*byte)(oldPtr))
++			delete(alignedAllocBases, (*byte)(oldPtr))
+ 		} else {
+ 			panic("realloc: invalid pointer")
+ 		}
+@@ -70,3 +120,8 @@ func libc_realloc(oldPtr unsafe.Pointer, size uintptr) unsafe.Pointer {
+ 	allocs[(*byte)(ptr)] = size
+ 	return ptr
+ }
++
++//export __libc_realloc
++func libc_internal_realloc(oldPtr unsafe.Pointer, size uintptr) unsafe.Pointer {
++	return libc_realloc(oldPtr, size)
++}
