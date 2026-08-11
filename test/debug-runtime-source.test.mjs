@@ -10,7 +10,7 @@ const runtimeSourceDir = path.join(repoRoot, 'artifacts', 'runtime-source');
 const llvmRevision = 'ca7933e47d3a3451d81e72ac174dcb5aa28b59d1';
 const wamrRevision = '25bd7eb63e828e4bd242cc9b38d260b4b31c6605';
 const reproducibleLldbWasmSha256 =
-	'4d355af4301df8955b91e5cd0d78f9845c6d81e6508982e7e9beae4a3f778711';
+	'b12f1fa80b00db4f5d8ed472697cc141f1025988dce704401eb25d90089d7665';
 
 async function sha256(filePath) {
 	const bytes = await readFile(filePath);
