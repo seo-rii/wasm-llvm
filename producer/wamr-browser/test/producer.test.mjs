@@ -85,6 +85,10 @@ test('uses a strict pthread pool without proxying the WAMR main lifetime', () =>
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sPTHREAD_POOL_SIZE=2'));
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sPTHREAD_POOL_SIZE_STRICT=2'));
 	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sENVIRONMENT=worker'));
+	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sALLOW_MEMORY_GROWTH=1'));
+	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sINITIAL_MEMORY=67108864'));
+	assert.ok(EMSCRIPTEN_LINK_OPTIONS.includes('-sMAXIMUM_MEMORY=2147483648'));
+	assert.ok(!EMSCRIPTEN_LINK_OPTIONS.includes('-sINITIAL_MEMORY=268435456'));
 	assert.ok(
 		EMSCRIPTEN_LINK_OPTIONS.includes(
 			"-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']"

@@ -105,10 +105,16 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
     "-pthread",
     "-sPTHREAD_POOL_SIZE=8",
     "-sPROXY_TO_PTHREAD=1",
+    "-sALLOW_MEMORY_GROWTH=1",
+    "-sINITIAL_MEMORY=268435456",
+    "-sMAXIMUM_MEMORY=4294967296",
     "-sWASM_BIGINT=1",
   ]) {
     assert.ok(buildPlan.executableLinkFlags.includes(flag));
   }
+  assert.ok(
+    !buildPlan.executableLinkFlags.includes("-sINITIAL_MEMORY=536870912"),
+  );
   assert.ok(
     buildPlan.executableLinkFlags.includes(
       "-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
