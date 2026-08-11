@@ -151,6 +151,11 @@ report monotonic linear-memory growth; debugger memory contents never cross
 the worker boundary through this telemetry path. Because Emscripten refreshes
 the canonical view after memory growth, consumers must read `module.HEAPU8`
 for every sample rather than retain an older typed array.
+The product starts this shared linear memory at 256 MiB and permits growth up
+to the wasm32 4 GiB ceiling. This is the lowest release-qualified starting size
+for the pinned C, C++, and Rust product fixtures, not a claim that every DWARF
+workload fits without growth. The consumer gate samples the real backing-buffer
+length and rejects an unexpected increase beyond its documented headroom.
 
 ## Commands
 

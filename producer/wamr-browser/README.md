@@ -117,6 +117,12 @@ The generated module also exports Emscripten's canonical `HEAPU8` view. The
 target worker samples only the current backing buffer length so it can report
 linear-memory growth without exposing guest bytes; callers must not retain an
 older view across memory growth.
+The host module starts at 64 MiB and can grow to 2 GiB. Guest linear memories,
+the interpreter, WASI state, and the two strict pthread stacks share that host
+allocation, so product validation must include actual guest execution rather
+than treating the small runtime binary size as a memory bound. The 64 MiB value
+is release-qualified for the pinned product fixtures; larger guest memories
+grow the module on demand.
 The package receipt's provenance hashes the raw `sources.lock.json`, producer
 manifest, ordered patch digest set, and ordered overlay digest set.
 `verify.mjs` recomputes all four values, and the Clang release assembler carries
