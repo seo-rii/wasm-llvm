@@ -11,9 +11,24 @@ WASI_SDK_PATH=/opt/wasi-sdk-33.0-x86_64-linux \
   bash producer/cobol-browser/scripts/build.sh
 ```
 
+`WASM_LLVM_COBOL_BUILD_DIR` overrides the temporary checkout/build cache and
+`WASM_LLVM_COBOL_ARTIFACT_DIR` overrides the checked artifact output directory.
+
 GnuCOBOL's compiler is GPL-3.0-or-later. Its runtime is LGPL-3.0-or-later. GMP is dual licensed
 under LGPL-3.0-or-later and GPL-2.0-or-later. The producer downloads unmodified upstream release
 archives and adds only the small WASI compatibility source in `compat/`.
 
 Subprocesses, dynamic loading, indexed file handlers, and terminal screen I/O do not exist in the
 browser contract. Their compatibility functions return `ENOSYS`; they are not language emulation.
+
+The build writes `artifacts/cobol-browser/toolchain.json` with producer provenance, effective
+toolchain versions, file sizes, and SHA-256 hashes. Verify the checked-in artifacts and prepare the
+externally hosted bundle with:
+
+```bash
+pnpm verify:cobol-artifacts
+pnpm prepare:cobol-release
+```
+
+The release command writes `out/cobol-browser` by default. Nothing under this producer is shipped
+through npm.

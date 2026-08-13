@@ -1,0 +1,57 @@
+diff --git a/lld/tools/lld/CMakeLists.txt b/lld/tools/lld/CMakeLists.txt
+index 4279f8cb9..ac06780e9 100644
+--- a/lld/tools/lld/CMakeLists.txt
++++ b/lld/tools/lld/CMakeLists.txt
+@@ -27,15 +27,11 @@ lld_target_link_libraries(lld
+   PRIVATE
+   lldCommon
+-  lldCOFF
+-  lldELF
+-  lldMachO
+-  lldMinGW
+   lldWasm
+   )
+ 
+ if(NOT LLD_SYMLINKS_TO_CREATE)
+   set(LLD_SYMLINKS_TO_CREATE
+-      lld-link ld.lld ld64.lld wasm-ld)
++      wasm-ld)
+ endif()
+ 
+ foreach(link ${LLD_SYMLINKS_TO_CREATE})
+diff --git a/lld/tools/lld/lld.cpp b/lld/tools/lld/lld.cpp
+index 2f7262ec7..c0c9de9e8 100644
+--- a/lld/tools/lld/lld.cpp
++++ b/lld/tools/lld/lld.cpp
+@@ -57,11 +57,9 @@ static unsigned inTestVerbosity() {
+   return v;
+ }
+ 
+-LLD_HAS_DRIVER(coff)
+-LLD_HAS_DRIVER(elf)
+-LLD_HAS_DRIVER(mingw)
+-LLD_HAS_DRIVER(macho)
+ LLD_HAS_DRIVER(wasm)
++static constexpr lld::DriverDef wasmDrivers[] = {
++    {lld::Wasm, &lld::wasm::link}};
+ 
+ int lld_main(int argc, char **argv, const llvm::ToolContext &) {
+   sys::Process::UseANSIEscapeCodes(true);
+@@ -79,7 +77,7 @@ int lld_main(int argc, char **argv, const llvm::ToolContext &) {
+   // exception handling and no memory cleanup on exit.
+   if (!inTestVerbosity()) {
+     int r =
+-        lld::unsafeLldMain(args, llvm::outs(), llvm::errs(), LLD_ALL_DRIVERS,
++        lld::unsafeLldMain(args, llvm::outs(), llvm::errs(), wasmDrivers,
+                            /*exitEarly=*/true);
+     return r;
+   }
+@@ -93,7 +91,7 @@ int lld_main(int argc, char **argv, const llvm::ToolContext &) {
+     inTestOutputDisabled = (i != 1);
+ 
+     // Execute one iteration.
+-    auto r = lldMain(args, llvm::outs(), llvm::errs(), LLD_ALL_DRIVERS);
++    auto r = lldMain(args, llvm::outs(), llvm::errs(), wasmDrivers);
+     if (!r.canRunAgain)
+       exitLld(r.retCode); // Exit now, can't re-execute again.
+ 

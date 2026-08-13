@@ -5,15 +5,17 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PRODUCER_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 REPO_ROOT=$(cd "$PRODUCER_ROOT/../.." && pwd)
 MANIFEST="$PRODUCER_ROOT/manifest.json"
-CACHE_ROOT=${WASM_COBOL_BUILD_DIR:-/tmp/wasm-llvm-cobol-browser}
+CACHE_ROOT=${WASM_LLVM_COBOL_BUILD_DIR:-/tmp/wasm-llvm-cobol-browser}
 DOWNLOAD_DIR="$CACHE_ROOT/downloads"
 SOURCE_DIR="$CACHE_ROOT/source"
 BUILD_DIR="$CACHE_ROOT/build"
 INSTALL_DIR="$CACHE_ROOT/install"
 PACKAGE_ROOT="$CACHE_ROOT/package-root"
 C_SYSROOT_ROOT="$CACHE_ROOT/c-sysroot-root"
-OUTPUT_DIR=${WASM_COBOL_OUTPUT_DIR:-$REPO_ROOT/artifacts/cobol-runtime-source}
+OUTPUT_DIR=${WASM_LLVM_COBOL_ARTIFACT_DIR:-$REPO_ROOT/artifacts/cobol-browser}
 WASI_SDK_PATH=${WASI_SDK_PATH:?Set WASI_SDK_PATH to wasi-sdk 33.0}
+TMPDIR=${TMPDIR:-$CACHE_ROOT/tmp}
+export TMPDIR
 
 GN_VERSION=$(node -p "require('$MANIFEST').gnucobol.version")
 GN_URL=$(node -p "require('$MANIFEST').gnucobol.url")
@@ -30,7 +32,7 @@ SYSROOT="$WASI_SDK_PATH/share/wasi-sysroot"
 WASI_LIB="$SYSROOT/lib/wasm32-wasip1"
 BUILD_TRIPLET=$(cc -dumpmachine)
 
-mkdir -p "$DOWNLOAD_DIR" "$SOURCE_DIR" "$BUILD_DIR" "$INSTALL_DIR" "$OUTPUT_DIR"
+mkdir -p "$DOWNLOAD_DIR" "$SOURCE_DIR" "$BUILD_DIR" "$INSTALL_DIR" "$OUTPUT_DIR" "$TMPDIR"
 
 download() {
 	local url=$1 output=$2 sha=$3
@@ -72,7 +74,7 @@ mkdir -p "$BUILD_DIR/gnucobol"
 		CFLAGS="-O2 -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID -mllvm -wasm-enable-sjlj -include $COMPAT_H" \
 		CPPFLAGS="-I$INSTALL_DIR/gmp/include" \
 		LDFLAGS="-L$INSTALL_DIR/gmp/lib -L$WASI_LIB" \
-		LIBS="$COMPAT_O -lsetjmp -lwasi-emulated-getpid -lwasi-emulated-signal" \
+		LIBS="-lsetjmp -lwasi-emulated-getpid -lwasi-emulated-signal" \
 		GMP_CFLAGS="-I$INSTALL_DIR/gmp/include" \
 		GMP_LIBS="-L$INSTALL_DIR/gmp/lib -lgmp -lwasi-emulated-getpid -lwasi-emulated-signal" \
 		ac_cv_func_fcntl=no \
@@ -82,7 +84,8 @@ mkdir -p "$BUILD_DIR/gnucobol"
 		--disable-nls --disable-shared --enable-static
 	make -j"${JOBS:-4}" -C libcob libcob.la
 	make -j"${JOBS:-4}" -C lib libsupport.la
-	make -j"${JOBS:-4}" -C cobc cobc
+	make -j"${JOBS:-4}" -C cobc cobc \
+		LIBS="$COMPAT_O -lsetjmp -lwasi-emulated-getpid -lwasi-emulated-signal"
 )
 
 rm -rf "$PACKAGE_ROOT"
@@ -115,7 +118,7 @@ TZ=UTC touch -d @315532800 "$CACHE_ROOT/rootfs.tar"
 
 rm -rf "$C_SYSROOT_ROOT"
 mkdir -p "$C_SYSROOT_ROOT"
-unzip -p "$REPO_ROOT/artifacts/runtime-source/sysroot.tar.zip" > "$CACHE_ROOT/c-sysroot.tar"
+unzip -p "$REPO_ROOT/artifacts/clang-browser/sysroot.tar.zip" > "$CACHE_ROOT/c-sysroot.tar"
 tar -C "$C_SYSROOT_ROOT" -xf "$CACHE_ROOT/c-sysroot.tar"
 rm -rf "$C_SYSROOT_ROOT/include/c++"
 rm -f "$C_SYSROOT_ROOT/lib/wasm32-wasi/libc++.a" \
@@ -128,27 +131,8 @@ rm -f "$OUTPUT_DIR/c-sysroot.tar.zip"
 (cd "$CACHE_ROOT" && TZ=UTC zip -X -9 -q "$OUTPUT_DIR/c-sysroot.tar.zip" c-sysroot.tar)
 
 FRONTEND_LLVM_VERSION=$("$CC" --version | sed -n '1s/.*version \([^ ]*\).*/\1/p')
-node --input-type=module -e '
-	import { writeFileSync } from "node:fs";
-	const [output, gnucobolVersion, gmpVersion, wasiSdkVersion, frontendLlvmVersion] =
-		process.argv.slice(1);
-	writeFileSync(
-		output,
-		JSON.stringify(
-			{
-				version: `gnucobol-${gnucobolVersion}-wasi-preview1-v1`,
-				gnucobolVersion,
-				gmpVersion,
-				wasiSdkVersion,
-				frontendLlvmVersion,
-				frontendTarget: "wasm32-wasi",
-				backend: "wasm-llvm-clang"
-			},
-			null,
-			2
-		) + "\n"
-	);
-' "$OUTPUT_DIR/toolchain.json" "$GN_VERSION" "$GMP_VERSION" "$WASI_SDK_VERSION" \
+node "$SCRIPT_DIR/write-receipt.mjs" \
+	"$OUTPUT_DIR" "$GN_VERSION" "$GMP_VERSION" "$WASI_SDK_VERSION" \
 	"$FRONTEND_LLVM_VERSION"
 
 sha256sum "$OUTPUT_DIR/cobc.zip" "$OUTPUT_DIR/rootfs.tar.zip" \

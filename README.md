@@ -1,161 +1,134 @@
 # wasm-llvm
 
-Browser-loadable LLVM toolchains and reusable language runtime profiles. `wasm-idle` consumes this
-package and keeps only its UI, worker messaging, static asset synchronization, and editor wiring.
+`wasm-llvm` is a producer-only repository for browser-hosted compiler artifacts. It records source
+pins, patches, build recipes, packaging scripts, artifact manifests, build receipts, and focused
+verification. Browser execution code, filesystem adapters, worker hosts, and language runtime APIs
+are owned by consumers such as `wasm-idle`.
 
-## Contents
+The root npm project is private and exists only as a command surface for Node-based build tools.
+It has no exports, publication lifecycle, or installable JavaScript API. Compiler modules,
+sysroots, archives, generated workers, and release bundles must be uploaded to external static
+hosting and loaded by URL from the consuming application.
 
-- `artifacts/runtime-source/clang.zip`: raw WASI `clang` WebAssembly module
-- `artifacts/runtime-source/lld.zip`: raw WASI `wasm-ld` WebAssembly module
-- `artifacts/runtime-source/memfs.zip`: bootstrap filesystem used by the runtime
-- `artifacts/runtime-source/sysroot.tar.zip`: trimmed WASI sysroot
-- `artifacts/runtime-source/clangd/`: Emscripten pthread `clangd` module
-- `artifacts/runtime-source/toolchain.json`: versions, resource paths, and asset hashes
-- `runtime/core/`: shared compatibility and serialization helpers
-- `runtime/clang/`: C/C++ compiler, linker, WASI execution, and debug runtime
-- `runtime/cobol/`: GnuCOBOL 3.2 frontend, libcob/GMP assets, and wasm-llvm orchestration
-- `runtime/emscripten-lld/`: canonical LLVM 16.0.4 Emscripten LLD JS/WASM/data validation and manifest rewriting
-- `runtime/nim/`: versioned contract for Nim's browser Clang/LLD bundle
-- `runtime/objective-c/`: libobjc2/GNUstep/libffi build profile and worker runtime
-- `runtime/rust/`: Rust LLVM 18.1.3 compiler and browser LLVM 16.0.4 cross-version contract
-- `producer/rust-browser/`: pinned source, patches, build, packaging, and receipts for the full
-  Rust 1.99.0 browser compiler with matching LLVM 22 and in-process LLD
-- `runtime/swift/`: full Swift browser compiler source build, packaging, and verification pipeline
-- `runtime/tinygo/`: checksum-pinned TinyGo 0.40.1 emception LLVM 16.0.0 download and patching
+## Producers
 
-Current packaged versions:
+| Producer       | Pinned inputs                                                                                    | Produced or verified artifacts                                      | Documentation                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
+| COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
+| Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
+| LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
+| Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
+| Rust           | Rust 1.99.0, rust-lang LLVM 22.1.8, wasi-libc and libstdc++ commits                              | Full `rustc.wasm`, target libraries, receipt                        | [`producer/rust-browser`](producer/rust-browser/README.md)                     |
+| Swift          | Swift 6.3.3, official Wasm SDK, pinned LLVM/Swift/SwiftSyntax patches                            | Swift compiler modules, SDK bundle, manifests and receipts          | [`producer/swift-browser`](producer/swift-browser/README.md)                   |
+| TinyGo         | TinyGo 0.40.1, pinned go-llvm, TinyGo LLVM 20.1.1                                                | Upstream compiler, reduced root, strict receipt, Chromium consumer acceptance | [`producer/tinygo-browser`](producer/tinygo-browser/README.md)                 |
+| WAMR           | WAMR 2.4.5, emsdk 6.0.0, browser RSP transport patch                                            | Interpreter/debug-stub JS/Wasm/pthread worker and receipt           | [`producer/wamr-browser`](producer/wamr-browser/README.md)                     |
 
-- LLVM `22.1.8`
-- WASI SDK `33`
-- Emscripten `6.0.0`
+`artifacts/clang-browser` and `artifacts/cobol-browser` hold verified producer outputs currently
+tracked for deployment. The Emscripten LLD canonical import remains next to its producer at
+`producer/emscripten-lld-browser/artifacts`. None of these paths are npm package contents.
 
-The Clang profile uses the packaged LLVM 22 toolchain. Swift retains its separately pinned upstream
-Swift/LLVM checkout because the Swift frontend requires the matching LLVM revision and libraries;
-the repository boundary is shared, but the compiler builds are not forced onto one LLVM binary.
-
-## Install
-
-Use the GitHub package directly until this is published to a package registry:
+## Setup and focused checks
 
 ```bash
-pnpm add github:seo-rii/wasm-llvm
-```
-
-Consumers can resolve the runtime source directory from Node:
-
-```js
-import { runtimeSourceDir, toolchainMetadataPath } from '@seo-rii/wasm-llvm';
-```
-
-Browser code imports only the language subpath it needs:
-
-```js
-const { BrowserClangRuntime } = await import('@seo-rii/wasm-llvm/runtime/clang');
-const { createCobolCompiler } = await import('@seo-rii/wasm-llvm/runtime/cobol');
-const { installObjectiveCWorker } = await import('@seo-rii/wasm-llvm/runtime/objective-c');
-```
-
-Swift asset synchronization can reuse the published validators without importing compiler code:
-
-```js
-import { validateSwiftRuntimeManifest } from '@seo-rii/wasm-llvm/tooling/swift/runtime-manifest';
-```
-
-Language repositories retain their compiler frontends and consume only the matching LLVM profile:
-
-```js
-import {
-  rewriteSharedEmscriptenLldAssets,
-  validateSharedEmscriptenLldAssets
-} from '@seo-rii/wasm-llvm/runtime/emscripten-lld';
-import { validateNimLlvmProfile } from '@seo-rii/wasm-llvm/runtime/nim';
-import { validateRustLlvmProfile } from '@seo-rii/wasm-llvm/runtime/rust';
-import { syncEmceptionRuntime } from '@seo-rii/wasm-llvm/runtime/tinygo';
-```
-
-These are independent, versioned profiles. Clang WASI, Emscripten LLD, Rust's LLVM worker, Swift's
-pinned LLVM checkout, and emception are not assumed to be binary-compatible.
-
-The new Rust producer replaces that historical split-backend contract for future Rust assets. See
-[`producer/rust-browser/README.md`](producer/rust-browser/README.md) for clean source build and
-attestation commands.
-
-For package-manager installs that enforce package exports, asset files are available under:
-
-```js
-import.meta.resolve('@seo-rii/wasm-llvm/artifacts/runtime-source/toolchain.json');
-```
-
-## Verify Assets
-
-```bash
-pnpm install
-pnpm verify:assets
+pnpm install --frozen-lockfile
 pnpm check
 pnpm test
-pnpm validate:clang
-pnpm swift:test
+pnpm verify:clang-artifacts
+pnpm smoke:clang-artifacts
+pnpm verify:cobol-artifacts
+pnpm verify:emscripten-lld-artifacts
+pnpm producer:rust:verify
+pnpm swift:doctor
 ```
 
-`verify:assets` checks that every required runtime asset exists and matches the hashes in
-`toolchain.json`. `validate:clang` also compiles and executes real C and C++ programs in the WASI
-runtime. The Swift suite validates source checkout, build receipts, packaging, browser execution
-contracts, and stdin fixtures.
+These checks validate repository boundaries, Node syntax, source and patch locks, checked-in
+artifact hashes, archive structure, WebAssembly validity, and producer receipts. They do not run
+the large LLVM, Rust, or Swift source builds.
 
-## Objective-C Profile
+## Build and release commands
 
-The Objective-C profile builds real upstream components rather than a language subset:
-
-- libobjc2 `v2.3`
-- GNUstep Base `base-1_31_1`
-- libffi `v3.6.0`
+The root scripts delegate to a producer; implementation details and required native tools are in
+each producer README.
 
 ```bash
-pnpm build:objective-c
-pnpm test:objective-c:libffi
-pnpm test:objective-c:foundation
+# Clang/LLD/clangd
+pnpm build:clang
+pnpm package:clang -- --help
+pnpm prepare:clang-release
+
+# LLDB debug adapter
+pnpm prepare:lldb -- --plan
+pnpm build:lldb -- --plan
+pnpm package:lldb -- --help
+
+# WAMR debug target
+pnpm prepare:wamr -- --source /path/to/wasm-micro-runtime
+pnpm build:wamr -- --source /path/to/wasm-micro-runtime --build /path/to/build --emsdk /path/to/emsdk
+pnpm package:wamr -- --build /path/to/build --output /path/to/wamr-artifacts
+
+# GnuCOBOL
+WASI_SDK_PATH=/opt/wasi-sdk pnpm build:cobol
+pnpm prepare:cobol-release
+
+# Objective-C
+WASI_SDK_PATH=/opt/wasi-sdk pnpm build:objective-c
+WASI_SDK_PATH=/opt/wasi-sdk pnpm probe:objective-c:foundation
+WASI_SDK_PATH=/opt/wasi-sdk pnpm probe:objective-c:libffi
+
+# Rust
+pnpm producer:rust:prepare
+pnpm producer:rust:build
+
+# Swift
+pnpm --dir producer/swift-browser run bootstrap:source -- --help
+pnpm --dir producer/swift-browser run build:browser-compiler -- --help
+pnpm --dir producer/swift-browser run package:from-plan -- --help
+
+# TinyGo upstream compiler plans (dry-run unless --execute is supplied)
+pnpm build:tinygo-llvm-wasi -- --help
+pnpm build:tinygo-browser -- --help
+pnpm accept:tinygo-browser -- --help
+pnpm probe:tinygo-native-split -- --help
+pnpm verify:tinygo-artifacts -- --help
+
+# Legacy LLVM 16 worker synchronization (not a TinyGo compiler)
+pnpm sync:tinygo -- out/tinygo-browser/emception.worker.js
 ```
 
-Set `LLVM_AR` when the host archiver cannot be discovered from the wasm-llvm build directory.
+Large builds write to producer-specific work or output directories. A release directory is a
+handoff to static hosting, not a publishable npm payload. Consumers must resolve an explicit URL,
+fetch the corresponding manifest or receipt, and verify hashes before loading compiler assets.
 
-## Rebuild Toolchain
-
-This is a large build. It clones LLVM, downloads WASI SDK and Emscripten inputs, builds raw WASI
-`clang`/`wasm-ld`, builds Emscripten pthread `clangd`, trims the sysroot, and refreshes
-`artifacts/runtime-source`.
+The Clang release assembler also creates `runtime-manifest.v2.json` when both debugger artifact
+directories are supplied:
 
 ```bash
-LLVM_VERSION=22.1.8 \
-WASI_SDK_VERSION=33 \
-EMSDK_VERSION=6.0.0 \
-pnpm build:toolchain
+WASM_LLVM_LLDB_ARTIFACT_DIR=/path/to/lldb-artifacts \
+WASM_LLVM_WAMR_ARTIFACT_DIR=/path/to/wamr-artifacts \
+WASM_LLVM_CLANG_RELEASE_DIR=/path/to/release \
+pnpm prepare:clang-release
 ```
 
-Useful overrides:
+That bundle pins the Clang/LLDB revision, WAMR revision, patch receipt, capabilities, and all six
+debug asset hashes. Normal execution still uses the browser WebAssembly engine; consumers
+lazy-load this LLDB/WAMR pair only for source-debug sessions.
 
-- `WASM_LLVM_TOOLCHAIN_WORK_DIR`: build cache directory
-- `WASM_LLVM_TOOLCHAIN_OUT_DIR`: output directory for packaged runtime assets
-- `NINJA_JOBS`: CMake/Ninja parallelism
-- `YOWASP_WASI_PATCH_REPO` and `YOWASP_WASI_PATCH_COMMIT`: WASI host patch source
+## Reproduction contract
 
-The legacy `WASM_CLANG_TOOLCHAIN_WORK_DIR` and `WASM_CLANG_TOOLCHAIN_OUT_DIR` variables are still
-accepted as aliases.
+Each source-built producer keeps its immutable upstream references and local patch hashes in
+`manifest.json`. Build scripts resolve and record the effective source commits and tool versions.
+Receipts bind those inputs to output sizes and SHA-256 hashes. When a source, patch, build script,
+or toolchain pin changes, regenerate the affected artifacts and receipt together; never reuse a
+receipt from an older producer state.
 
-## Package Existing Outputs
+The Emscripten LLD directory is the exception: it preserves an imported canonical artifact whose
+original build invocation is unavailable. Its manifest and receipt verify provenance and bytes,
+but the repository deliberately does not invent a reproduction command for it.
 
-If another build already produced the raw modules, package them directly:
+## Ownership boundary
 
-```bash
-pnpm package:toolchain -- \
-  --clang-wasm /path/to/clang.wasm \
-  --lld-wasm /path/to/wasm-ld.wasm \
-  --sysroot /path/to/wasi-sysroot \
-  --clangd-js /path/to/clangd.js \
-  --clangd-wasm /path/to/clangd.wasm \
-  --llvm-version 22.1.8 \
-  --wasi-sdk-version 33 \
-  --emsdk-version 6.0.0
-```
-
-The package script writes deterministic single-entry zips for `clang`, `lld`, and the sysroot,
-copies `memfs.zip` and `clangd`, then regenerates `toolchain.json`.
+This repository may contain Node scripts that download, patch, compile, package, or verify
+compiler assets. It must not contain browser runtime TypeScript, package exports, self-imports from
+`@seo-rii/wasm-llvm`, package-relative static asset loading, or npm publication hooks. The
+`scripts/check-repository.mjs` check enforces that boundary.

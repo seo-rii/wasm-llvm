@@ -124,7 +124,7 @@ the finalized producer manifest and run:
 
 ```bash
 npm run producer:rust:verify
-npx vitest run runtime/rust/test/producer.test.ts
+node --test producer/rust-browser/test/producer.test.mjs
 NINJA_JOBS=8 npm run producer:rust:container-rebuild -- /path/to/new-empty-work-directory
 ```
 

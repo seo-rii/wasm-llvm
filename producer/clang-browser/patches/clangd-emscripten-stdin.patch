@@ -1,0 +1,33 @@
+diff --git a/clang-tools-extra/clangd/JSONTransport.cpp b/clang-tools-extra/clangd/JSONTransport.cpp
+index 3c0e198..06d5881 100644
+--- a/clang-tools-extra/clangd/JSONTransport.cpp
++++ b/clang-tools-extra/clangd/JSONTransport.cpp
+@@ -16,10 +16,18 @@
+ #include <optional>
+ #include <system_error>
+ 
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++#endif
++
+ namespace clang {
+ namespace clangd {
+ namespace {
+ 
++#ifdef __EMSCRIPTEN__
++EM_ASYNC_JS(void, waitForStdin, (), { await Module.stdinReady(); });
++#endif
++
+ llvm::json::Object encodeError(llvm::Error E) {
+   std::string Message;
+   ErrorCode Code = ErrorCode::UnknownErrorCode;
+@@ -103,6 +111,9 @@ public:
+   llvm::Error loop(MessageHandler &Handler) override {
+     std::string JSON; // Messages may be large, reuse same big buffer.
+     while (!feof(In)) {
++#ifdef __EMSCRIPTEN__
++      waitForStdin();
++#endif
+       if (shutdownRequested())
+         return error(std::make_error_code(std::errc::operation_canceled),
+                      "Got signal, shutting down");

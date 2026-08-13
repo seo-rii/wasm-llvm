@@ -1,0 +1,16 @@
+diff --git a/llvm/lib/Support/Unix/Process.inc b/llvm/lib/Support/Unix/Process.inc
+index 1e6cb5f26..80156ddb9 100644
+--- a/llvm/lib/Support/Unix/Process.inc
++++ b/llvm/lib/Support/Unix/Process.inc
+@@ -266,8 +266,9 @@ std::error_code Process::FixupStandardFileDescriptors() {
+
+ std::error_code Process::SafelyCloseFileDescriptor(int FD) {
+ #if defined(__wasi__)
+-  ::close(FD);
+-  return errnoAsErrorCode();
++  if (::close(FD) < 0)
++    return errnoAsErrorCode();
++  return std::error_code();
+ #else
+   // Create a signal set filled with *all* signals.
+   sigset_t FullSet, SavedSet;

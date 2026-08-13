@@ -1,113 +1,44 @@
 {
-	"name": "@seo-rii/wasm-llvm",
-	"version": "0.4.0",
-	"description": "Browser LLVM toolchains and reusable language runtime profiles",
+	"name": "wasm-llvm-producers",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Source-pinned producers for browser-hosted LLVM compiler artifacts",
 	"type": "module",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/seo-rii/wasm-llvm.git"
 	},
-	"exports": {
-		".": "./index.mjs",
-		"./runtime/core": {
-			"types": "./dist/runtime/core/src/index.d.ts",
-			"import": "./dist/runtime/core/src/index.js",
-			"default": "./dist/runtime/core/src/index.js"
-		},
-		"./runtime/core/*": {
-			"types": "./dist/runtime/core/src/*.d.ts",
-			"import": "./dist/runtime/core/src/*.js",
-			"default": "./dist/runtime/core/src/*.js"
-		},
-		"./runtime/clang": {
-			"types": "./dist/runtime/clang/src/index.d.ts",
-			"import": "./dist/runtime/clang/src/index.js",
-			"default": "./dist/runtime/clang/src/index.js"
-		},
-		"./runtime/clang/internal/*": {
-			"types": "./dist/runtime/clang/src/*.d.ts",
-			"import": "./dist/runtime/clang/src/*.js",
-			"default": "./dist/runtime/clang/src/*.js"
-		},
-		"./runtime/cobol": {
-			"types": "./dist/runtime/cobol/src/index.d.ts",
-			"import": "./dist/runtime/cobol/src/index.js",
-			"default": "./dist/runtime/cobol/src/index.js"
-		},
-		"./runtime/objective-c": {
-			"types": "./dist/runtime/objective-c/src/index.d.ts",
-			"import": "./dist/runtime/objective-c/src/index.js",
-			"default": "./dist/runtime/objective-c/src/index.js"
-		},
-		"./runtime/emscripten-lld": {
-			"types": "./dist/runtime/emscripten-lld/src/index.d.ts",
-			"import": "./dist/runtime/emscripten-lld/src/index.js",
-			"default": "./dist/runtime/emscripten-lld/src/index.js"
-		},
-		"./runtime/emscripten-lld/assets/*": "./runtime/emscripten-lld/assets/*",
-		"./runtime/nim": {
-			"types": "./dist/runtime/nim/src/index.d.ts",
-			"import": "./dist/runtime/nim/src/index.js",
-			"default": "./dist/runtime/nim/src/index.js"
-		},
-		"./runtime/rust": {
-			"types": "./dist/runtime/rust/src/index.d.ts",
-			"import": "./dist/runtime/rust/src/index.js",
-			"default": "./dist/runtime/rust/src/index.js"
-		},
-		"./runtime/tinygo": {
-			"types": "./dist/runtime/tinygo/src/index.d.ts",
-			"import": "./dist/runtime/tinygo/src/index.js",
-			"default": "./dist/runtime/tinygo/src/index.js"
-		},
-		"./runtime/clang/assets/*": "./dist/runtime/clang/assets/*",
-		"./runtime/cobol/assets/*": "./dist/runtime/cobol/assets/*",
-		"./runtime/objective-c/assets/*": "./dist/runtime/objective-c/assets/*",
-		"./tooling/swift/runtime-build-info": "./runtime/swift/scripts/runtime-build-info.mjs",
-		"./tooling/swift/runtime-manifest": "./runtime/swift/scripts/runtime-manifest.mjs",
-		"./runtime-source": "./artifacts/runtime-source/toolchain.json",
-		"./artifacts/runtime-source/*": "./artifacts/runtime-source/*",
-		"./package.json": "./package.json"
-	},
-	"files": [
-		"artifacts/runtime-source",
-		"artifacts/cobol-runtime-source",
-		"dist",
-		"runtime/clang/scripts",
-		"runtime/cobol/scripts",
-		"runtime/emscripten-lld",
-		"runtime/nim",
-		"runtime/objective-c/scripts",
-		"runtime/rust",
-		"runtime/swift",
-		"runtime/tinygo",
-		"producer",
-		"scripts",
-		"index.mjs",
-		"README.md",
-		"LICENSE"
-	],
 	"scripts": {
-		"build": "rm -rf dist && tsc -p tsconfig.build.json && node ./runtime/clang/scripts/prepare-runtime.mjs && node ./runtime/cobol/scripts/prepare-runtime.mjs",
-		"build:objective-c": "npm run build && node ./runtime/objective-c/scripts/build.mjs",
-		"build:toolchain": "node ./scripts/build-toolchain.mjs",
-		"check": "tsc -p tsconfig.json --noEmit && node --check ./index.mjs && node --check ./scripts/build-toolchain.mjs && node --check ./scripts/package-toolchain.mjs && node --check ./scripts/verify-assets.mjs",
-		"package:toolchain": "node ./scripts/package-toolchain.mjs",
+		"check": "node ./scripts/check-repository.mjs",
+		"test": "node --test ./test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
+		"build:clang": "node ./producer/clang-browser/scripts/build-toolchain.mjs",
+		"package:clang": "node ./producer/clang-browser/scripts/package-toolchain.mjs",
+		"prepare:clang-release": "node ./producer/clang-browser/scripts/prepare-release.mjs",
+		"smoke:clang-artifacts": "node ./producer/clang-browser/scripts/smoke-artifacts.mjs",
+		"verify:clang-artifacts": "node ./producer/clang-browser/scripts/verify-artifacts.mjs",
+		"prepare:lldb": "node ./producer/lldb-browser/scripts/prepare.mjs",
+		"build:lldb": "node ./producer/lldb-browser/scripts/build.mjs",
+		"package:lldb": "node ./producer/lldb-browser/scripts/package.mjs",
+		"verify:lldb-artifacts": "node ./producer/lldb-browser/scripts/verify.mjs",
+		"prepare:wamr": "node ./producer/wamr-browser/scripts/prepare.mjs",
+		"build:wamr": "node ./producer/wamr-browser/scripts/build.mjs",
+		"package:wamr": "node ./producer/wamr-browser/scripts/package.mjs",
+		"verify:wamr-artifacts": "node ./producer/wamr-browser/scripts/verify.mjs",
+		"build:cobol": "bash ./producer/cobol-browser/scripts/build.sh",
+		"prepare:cobol-release": "node ./producer/cobol-browser/scripts/package-release.mjs",
+		"verify:cobol-artifacts": "node ./producer/cobol-browser/scripts/verify-artifacts.mjs",
+		"verify:emscripten-lld-artifacts": "node ./producer/emscripten-lld-browser/scripts/verify-artifacts.mjs",
+		"build:objective-c": "node ./producer/objective-c-browser/scripts/build.mjs",
+		"probe:objective-c:foundation": "node ./producer/objective-c-browser/scripts/probe-foundation.mjs",
+		"probe:objective-c:libffi": "node ./producer/objective-c-browser/scripts/probe-libffi.mjs --strict-wasm-backend",
+		"receipt:objective-c": "node ./producer/objective-c-browser/scripts/write-receipt.mjs",
+		"verify:objective-c-artifacts": "node ./producer/objective-c-browser/scripts/verify-artifacts.mjs",
 		"producer:rust:verify": "node ./producer/rust-browser/scripts/producer.mjs verify",
 		"producer:rust:prepare": "node ./producer/rust-browser/scripts/producer.mjs prepare",
 		"producer:rust:build": "bash ./producer/rust-browser/scripts/build.sh",
 		"producer:rust:rebuild": "bash ./producer/rust-browser/scripts/rebuild.sh",
 		"producer:rust:container-rebuild": "bash ./producer/rust-browser/scripts/container-rebuild.sh",
-		"producer:cobol:build": "bash ./producer/cobol-browser/scripts/build.sh",
-		"prepare": "npm run build",
-		"test": "vitest run",
-		"test:objective-c:foundation": "node ./runtime/objective-c/scripts/probe-foundation.mjs",
-		"test:objective-c:libffi": "node ./runtime/objective-c/scripts/probe-libffi.mjs --strict-wasm-backend",
-		"verify:assets": "node ./scripts/verify-assets.mjs",
-		"validate:clang": "npm run build && node ./runtime/clang/scripts/smoke-runtime.mjs",
-		"swift:doctor": "node ./runtime/swift/scripts/doctor.mjs",
-		"swift:test": "npm --prefix ./runtime/swift test",
 		"prepare:tinygo-source": "node ./producer/tinygo-browser/scripts/prepare-source.mjs",
 		"verify:tinygo-source": "node ./producer/tinygo-browser/scripts/prepare-source.mjs --verify",
 		"build:tinygo-llvm-wasi": "node ./producer/tinygo-browser/scripts/build-llvm-wasi.mjs",
@@ -116,17 +47,13 @@
 		"accept:tinygo-browser": "node ./producer/tinygo-browser/scripts/accept-browser-compiler.mjs",
 		"probe:tinygo-native-split": "node ./producer/tinygo-browser/scripts/probe-native-split-pipeline.mjs",
 		"verify:tinygo-artifacts": "node ./producer/tinygo-browser/scripts/verify-artifacts.mjs",
-		"sync:tinygo": "node ./producer/tinygo-browser/scripts/sync.mjs"
-	},
-	"dependencies": {
-		"@bjorn3/browser_wasi_shim": "^0.4.2",
-		"@zip.js/zip.js": "^2.8.23"
+		"sync:tinygo": "node ./producer/tinygo-browser/scripts/sync.mjs",
+		"swift:doctor": "node ./producer/swift-browser/scripts/doctor.mjs",
+		"swift:test": "pnpm --dir ./producer/swift-browser test"
 	},
 	"devDependencies": {
-		"@types/node": "^24.6.1",
-		"playwright-core": "^1.59.1",
-		"typescript": "^6.0.2",
-		"vitest": "^4.1.4"
+		"@zip.js/zip.js": "^2.8.23",
+		"playwright-core": "^1.59.1"
 	},
 	"engines": {
 		"node": ">=20"
