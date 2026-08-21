@@ -110,6 +110,8 @@ jobs:
                   test -f "$TINYGO_SOURCE/main.go"
                   test -x "$TINYGO_NATIVE_ROOT/bin/tinygo"
                   test -x "$TINYGO_NATIVE_ROOT/bin/wasm-opt"
+                  test -f "$TINYGO_NATIVE_ROOT/lib/clang/include/stddef.h"
+                  test -f "$TINYGO_NATIVE_ROOT/lib/clang/include/stdint.h"
                   test -x "$TINYGO_WASI_SDK/bin/wasm-ld"
                   tinygo_resolved_root="$(TINYGOROOT="$TINYGO_SOURCE" "$TINYGO_NATIVE_ROOT/bin/tinygo" env TINYGOROOT)"
                   test "$tinygo_resolved_root" = "$TINYGO_SOURCE"
@@ -156,6 +158,7 @@ jobs:
                     --llvm-receipt "$TINYGO_LLVM_RECEIPT" \
                     --tinygo "$TINYGO_NATIVE_ROOT/bin/tinygo" \
                     --native-tinygo-root "$TINYGO_SOURCE" \
+                    --clang-resource-dir "$TINYGO_NATIVE_ROOT/lib/clang" \
                     --native-wasm-ld "$TINYGO_WASI_SDK/bin/wasm-ld" \
                     --wasm-opt "$TINYGO_NATIVE_ROOT/bin/wasm-opt" \
                     --go-toolchain-archive "$TINYGO_GO_ARCHIVE" \
