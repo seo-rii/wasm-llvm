@@ -113,6 +113,8 @@ jobs:
                   test -f "$TINYGO_NATIVE_ROOT/lib/clang/include/stddef.h"
                   test -f "$TINYGO_NATIVE_ROOT/lib/clang/include/stdint.h"
                   test -x "$TINYGO_WASI_SDK/bin/wasm-ld"
+                  test -f "$TINYGO_WASI_SDK/share/wasi-sysroot/include/wasm32-wasip1/noeh/c++/v1/__config"
+                  test -f "$TINYGO_WASI_SDK/share/wasi-sysroot/include/wasm32-wasip1/noeh/c++/v1/vector"
                   tinygo_resolved_root="$(TINYGOROOT="$TINYGO_SOURCE" "$TINYGO_NATIVE_ROOT/bin/tinygo" env TINYGOROOT)"
                   test "$tinygo_resolved_root" = "$TINYGO_SOURCE"
                   tinygo_resolved_wasm_opt="$(TINYGOROOT="$TINYGO_SOURCE" WASMOPT="$TINYGO_NATIVE_ROOT/bin/wasm-opt" "$TINYGO_NATIVE_ROOT/bin/tinygo" env WASMOPT)"

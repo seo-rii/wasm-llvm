@@ -831,6 +831,7 @@ export async function createBrowserCompilerBuildPlan(
 		wasiSysroot,
 		'include',
 		contract.manifest.target,
+		'noeh',
 		'c++',
 		'v1'
 	);
