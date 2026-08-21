@@ -21,6 +21,7 @@ test('manual TinyGo producer rebuilds and accepts the source-locked upstream too
 		workflow,
 		/build-browser-compiler\.mjs[\s\S]*--native-wasm-ld "\$TINYGO_WASI_SDK\/bin\/wasm-ld"[\s\S]*--execute/u
 	);
+	assert.match(workflow, /--native-tinygo-root "\$TINYGO_SOURCE"/u);
 	assert.match(workflow, /build-package-graph-provider\.mjs[\s\S]*--execute/u);
 	assert.match(workflow, /accept-browser-compiler\.mjs/u);
 	assert.match(workflow, /verify-artifacts\.mjs/u);
