@@ -104,6 +104,14 @@ jobs:
                   git -C "$TINYGO_GO_LLVM_SOURCE" checkout --detach \
                     b8f170971e747fec20a03b25a4490f627140709a
 
+            - name: Restore source-locked LLVM WASI build cache
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ${{ env.TINYGO_LLVM_BUILD }}
+                      ${{ env.TINYGO_LLVM_RECEIPT }}
+                  key: tinygo-llvm-wasi-v1-${{ runner.os }}-${{ hashFiles('producer/tinygo-browser/sources.lock.json', 'producer/tinygo-browser/config/llvm-wasi-static.json', 'producer/tinygo-browser/patches/llvm-wasi-c-api-config.patch', 'producer/tinygo-browser/scripts/build-llvm-wasi.mjs') }}
+
             - name: Build source-locked LLVM host for WASI
               run: |
                   node producer/tinygo-browser/scripts/build-llvm-wasi.mjs \
