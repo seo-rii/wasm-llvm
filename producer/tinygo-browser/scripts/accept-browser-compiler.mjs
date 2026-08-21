@@ -27,7 +27,7 @@ import {
 const execFileAsync = promisify(execFile);
 const THIS_FILE = fileURLToPath(import.meta.url);
 const PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), "..");
-const COMPILER_RECEIPT_FORMAT = "wasm-llvm-tinygo-browser-compiler-v5";
+const COMPILER_RECEIPT_FORMAT = "wasm-llvm-tinygo-browser-compiler-v6";
 const RUNTIME_CLOSURE_FORMAT = "wasm-llvm-tinygo-runtime-closure-v2";
 const RUNTIME_PROFILE_ID = "wasip1-asyncify-precise-o1";
 const MAX_GO_LIST_BYTES = 64 * 1024 * 1024;
@@ -37,6 +37,8 @@ const SOURCE_FILE_FIELDS = [
   "CFiles",
   "CXXFiles",
   "SFiles",
+  "CgoCXXFLAGS",
+  "CgoLDFLAGS",
   "EmbedFiles",
 ];
 const NATIVE_OBJECT_FIELDS = new Map([
@@ -518,7 +520,7 @@ export async function acceptBrowserCompiler(options, dependencies = {}) {
     fileEvidence(outputWasmPath),
   ]);
   const receipt = {
-    schemaVersion: 5,
+    schemaVersion: 6,
     format: COMPILER_RECEIPT_FORMAT,
     producerId: contract.manifest.producerId,
     ...buildReceipt.compilerReceiptSeed,

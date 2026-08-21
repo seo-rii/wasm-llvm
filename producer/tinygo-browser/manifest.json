@@ -41,22 +41,24 @@
     "hostCompileFallbackAllowed": false
   },
   "compileProtocol": {
-    "version": 5,
-    "format": "wasm-llvm-tinygo-link-plan-v5",
+    "version": 6,
+    "format": "wasm-llvm-tinygo-link-plan-v6",
     "capabilities": [
       "go-embed-objects",
       "target-cgo-c",
       "target-cxx-hosted-noeh",
-      "target-clang-assembly"
+      "target-clang-assembly",
+      "target-cgo-cxxflags",
+      "target-cgo-linker-flags"
     ],
     "outputs": [
       "objects",
       "link-plan.json"
     ],
     "targetNativeSourcePolicy": {
-      "cgoFiles": "program-object-with-source-closure-v5",
-      "cFiles": "thinlto-object-set-v5",
-      "cxxFiles": "hosted-noeh-libcxx-thinlto-object-set-v5",
+      "cgoFiles": "program-object-with-source-closure-v6",
+      "cFiles": "thinlto-object-set-v6",
+      "cxxFiles": "hosted-noeh-libcxx-thinlto-object-set-v6",
       "sFiles": "clang-uppercase-s-wasm-object-set-v4",
       "embedFiles": "generated-object-set-v2"
     },
@@ -91,7 +93,8 @@
       "compilerSha256",
       "objects",
       "output",
-      "arguments"
+      "arguments",
+      "cgoLinkerFlags"
     ],
     "runtimeProfile": {
       "id": "wasip1-asyncify-precise-o1",
@@ -170,7 +173,7 @@
   "patches": [
     {
       "path": "patches/tinygo-wasi-adapter.patch",
-      "sha256": "16619ff277022a57a2dbbd55e08f5374b610b5f079967571e709dcedc65fcbd6"
+      "sha256": "ff1c9511e0ccdbb97a7253340a17544c7301e16a931b63de3e0dce3835d3e2b0"
     },
     {
       "path": "patches/go-llvm-wasi-cgo-alias.patch",

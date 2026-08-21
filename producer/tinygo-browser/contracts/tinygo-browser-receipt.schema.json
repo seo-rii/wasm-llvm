@@ -15,8 +15,8 @@
     "assets"
   ],
   "properties": {
-    "schemaVersion": { "const": 5 },
-    "format": { "const": "wasm-llvm-tinygo-browser-compiler-v5" },
+    "schemaVersion": { "const": 6 },
+    "format": { "const": "wasm-llvm-tinygo-browser-compiler-v6" },
     "producerId": { "const": "wasm-llvm/tinygo-browser" },
     "inputs": {
       "type": "object",
@@ -79,13 +79,15 @@
         },
         "compileProtocol": {
           "const": {
-            "version": 5,
-            "format": "wasm-llvm-tinygo-link-plan-v5",
+            "version": 6,
+            "format": "wasm-llvm-tinygo-link-plan-v6",
             "capabilities": [
               "go-embed-objects",
               "target-cgo-c",
               "target-cxx-hosted-noeh",
-              "target-clang-assembly"
+              "target-clang-assembly",
+              "target-cgo-cxxflags",
+              "target-cgo-linker-flags"
             ]
           }
         },

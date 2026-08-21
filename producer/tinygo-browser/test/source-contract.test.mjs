@@ -192,8 +192,8 @@ function wasmWithIdentity(strings, { importModule = null } = {}) {
 
 function createCompilerReceipt({ contract, sourceReceiptBytes, compilerBytes, tinygoRootBytes }) {
 	return {
-		schemaVersion: 5,
-		format: 'wasm-llvm-tinygo-browser-compiler-v5',
+		schemaVersion: 6,
+		format: 'wasm-llvm-tinygo-browser-compiler-v6',
 		producerId: contract.manifest.producerId,
 		inputs: {
 			manifestSha256: contract.inputs.manifestSha256,
@@ -349,9 +349,9 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 	);
 	assert.equal(contract.lock.llvm.commit, '670759811adc85df52f410d7306788fabfc6242d');
 	assert.deepEqual(contract.manifest.compileProtocol.targetNativeSourcePolicy, {
-		cgoFiles: 'program-object-with-source-closure-v5',
-		cFiles: 'thinlto-object-set-v5',
-		cxxFiles: 'hosted-noeh-libcxx-thinlto-object-set-v5',
+		cgoFiles: 'program-object-with-source-closure-v6',
+		cFiles: 'thinlto-object-set-v6',
+		cxxFiles: 'hosted-noeh-libcxx-thinlto-object-set-v6',
 		sFiles: 'clang-uppercase-s-wasm-object-set-v4',
 		embedFiles: 'generated-object-set-v2'
 	});
@@ -383,8 +383,8 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 	);
 	assert.equal(contract.manifest.readiness.ready, false);
 	assert.equal(contract.manifest.llvm.purpose, 'legacy-emception-worker-only');
-	assert.equal(contract.manifest.compileProtocol.version, 5);
-	assert.equal(contract.manifest.compileProtocol.format, 'wasm-llvm-tinygo-link-plan-v5');
+	assert.equal(contract.manifest.compileProtocol.version, 6);
+	assert.equal(contract.manifest.compileProtocol.format, 'wasm-llvm-tinygo-link-plan-v6');
 	assert.equal(
 		contract.manifest.rootArchive.runtimeClosureFormat,
 		'wasm-llvm-tinygo-runtime-closure-v2'
@@ -394,7 +394,9 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 		'go-embed-objects',
 		'target-cgo-c',
 		'target-cxx-hosted-noeh',
-		'target-clang-assembly'
+		'target-clang-assembly',
+		'target-cgo-cxxflags',
+		'target-cgo-linker-flags'
 	]);
 	assert.deepEqual(contract.manifest.compileProtocol.targetNativeValidation, {
 		llvmToolchain: 'llvm-20.1.1',

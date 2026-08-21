@@ -9,7 +9,7 @@ const execFileAsync = promisify(execFile);
 const THIS_FILE = fileURLToPath(import.meta.url);
 export const TINYGO_PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), '..');
 export const SOURCE_RECEIPT_FORMAT = 'wasm-llvm-tinygo-source-v1';
-export const COMPILER_RECEIPT_FORMAT = 'wasm-llvm-tinygo-browser-compiler-v5';
+export const COMPILER_RECEIPT_FORMAT = 'wasm-llvm-tinygo-browser-compiler-v6';
 
 const COMMIT_PATTERN = /^[0-9a-f]{40}$/u;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
@@ -258,10 +258,10 @@ export function validateTinyGoManifest(manifest, lock) {
 		'host compile fallback must not satisfy the browser compiler contract'
 	);
 	assertExactArray(manifest?.patches, lock.patches, 'manifest patch set');
-	assert(manifest?.compileProtocol?.version === 5, 'TinyGo compile protocol must use version 5');
+	assert(manifest?.compileProtocol?.version === 6, 'TinyGo compile protocol must use version 6');
 	assert(
-		manifest?.compileProtocol?.format === 'wasm-llvm-tinygo-link-plan-v5',
-		'TinyGo compile protocol must identify link-plan v5'
+		manifest?.compileProtocol?.format === 'wasm-llvm-tinygo-link-plan-v6',
+		'TinyGo compile protocol must identify link-plan v6'
 	);
 	assertExactArray(
 		manifest?.compileProtocol?.capabilities,
@@ -269,7 +269,9 @@ export function validateTinyGoManifest(manifest, lock) {
 			'go-embed-objects',
 			'target-cgo-c',
 			'target-cxx-hosted-noeh',
-			'target-clang-assembly'
+			'target-clang-assembly',
+			'target-cgo-cxxflags',
+			'target-cgo-linker-flags'
 		],
 		'TinyGo compile protocol capabilities'
 	);
@@ -281,9 +283,9 @@ export function validateTinyGoManifest(manifest, lock) {
 	assert(
 		JSON.stringify(manifest?.compileProtocol?.targetNativeSourcePolicy) ===
 			JSON.stringify({
-				cgoFiles: 'program-object-with-source-closure-v5',
-				cFiles: 'thinlto-object-set-v5',
-				cxxFiles: 'hosted-noeh-libcxx-thinlto-object-set-v5',
+				cgoFiles: 'program-object-with-source-closure-v6',
+				cFiles: 'thinlto-object-set-v6',
+				cxxFiles: 'hosted-noeh-libcxx-thinlto-object-set-v6',
 				sFiles: 'clang-uppercase-s-wasm-object-set-v4',
 				embedFiles: 'generated-object-set-v2'
 			}),
@@ -704,7 +706,7 @@ export function validateTinyGoCompilerReceipt(
 		sourceReceiptSha256
 	}
 ) {
-	assert(receipt?.schemaVersion === 5, 'TinyGo compiler receipt must use schemaVersion 5');
+	assert(receipt?.schemaVersion === 6, 'TinyGo compiler receipt must use schemaVersion 6');
 	assert(receipt?.format === COMPILER_RECEIPT_FORMAT, 'unexpected TinyGo compiler receipt format');
 	assert(receipt?.producerId === manifest.producerId, 'TinyGo compiler receipt producer differs');
 	assert(!('artifactKind' in receipt), 'artifactKind labels are not compiler identity evidence');

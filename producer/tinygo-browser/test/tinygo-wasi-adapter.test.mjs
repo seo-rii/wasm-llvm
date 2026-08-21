@@ -69,11 +69,17 @@ test('the adapter emits a verified object set and an executable external finaliz
 	assert.match(source, /embeddedFileHash/);
 	assert.match(source, /EmbeddedFileHash != object\.SourceSHA256\[:sha256\.Size\]/);
 	assert.match(source, /sha256\.Sum256/);
-	assert.match(source, /SchemaVersion:\s+5/);
+	assert.match(source, /SchemaVersion:\s+6/);
 	assert.match(source, /go-embed-objects/);
 	assert.match(source, /target-cgo-c/);
 	assert.match(source, /target-cxx-hosted-noeh/);
 	assert.match(source, /target-clang-assembly/);
+	assert.match(source, /target-cgo-cxxflags/);
+	assert.match(source, /target-cgo-linker-flags/);
+	assert.match(source, /CgoCXXFLAGS/);
+	assert.match(source, /CgoLDFLAGS/);
+	assert.match(source, /CGoLinkerFlags/);
+	assert.match(source, /validateCGoLinkerFlags/);
 	assert.match(source, /LibCxx\s+string\s+`json:"libCxx"`/);
 	assert.match(source, /LibCxxAbi\s+string\s+`json:"libCxxAbi"`/);
 	assert.match(patch, /"-stdlib=libc\+\+"/);

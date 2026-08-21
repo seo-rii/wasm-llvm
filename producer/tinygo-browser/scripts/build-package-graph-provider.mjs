@@ -56,6 +56,8 @@ export const TINYGO_PACKAGE_GRAPH_FIELDS = [
 	'CFiles',
 	'CXXFiles',
 	'SFiles',
+	'CgoCXXFLAGS',
+	'CgoLDFLAGS',
 	'EmbedFiles',
 	'Imports',
 	'ImportMap',

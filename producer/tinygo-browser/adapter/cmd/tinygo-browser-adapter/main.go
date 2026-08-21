@@ -25,7 +25,7 @@ import (
 const (
 	packageJSONEnvironment     = "TINYGO_BROWSER_PACKAGE_JSON"
 	compilerBuildIDEnvironment = "TINYGO_BROWSER_COMPILER_BUILD_ID"
-	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v5"
+	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v6"
 	llvmValidationToolchain    = "llvm-20.1.1"
 	wasmTargetTriple           = "wasm32-unknown-wasi"
 	wasmTargetDataLayout       = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
@@ -68,14 +68,16 @@ type runtimeArtifacts struct {
 }
 
 type packageJSON struct {
-	ImportPath string
-	Dir        string
-	Goroot     bool
-	CgoFiles   []string
-	CFiles     []string
-	CXXFiles   []string
-	SFiles     []string
-	EmbedFiles []string
+	ImportPath  string
+	Dir         string
+	Goroot      bool
+	CgoFiles    []string
+	CFiles      []string
+	CXXFiles    []string
+	SFiles      []string
+	EmbedFiles  []string
+	CgoCXXFLAGS []string
+	CgoLDFLAGS  []string
 }
 
 type linkPlan struct {
@@ -90,6 +92,7 @@ type linkPlan struct {
 	Arguments        []string           `json:"arguments"`
 	RuntimeInputs    []runtimeInput     `json:"runtimeInputs"`
 	CGoInputs        []linkPlanCGoInput `json:"cgoInputs"`
+	CGoLinkerFlags   []string           `json:"cgoLinkerFlags"`
 	Optimizer        optimizerLinkPlan  `json:"optimizer"`
 }
 
@@ -120,6 +123,7 @@ type linkPlanObject struct {
 	SourceSHA256     string                `json:"sourceSha256,omitempty"`
 	EmbeddedFileHash string                `json:"embeddedFileHash,omitempty"`
 	Dependencies     []linkPlanDependency  `json:"dependencies,omitempty"`
+	CompilerFlags    []string              `json:"compilerFlags,omitempty"`
 	LLVMValidation   *llvmObjectValidation `json:"llvmValidation,omitempty"`
 	WasmValidation   *wasmObjectValidation `json:"wasmValidation,omitempty"`
 }
@@ -233,6 +237,10 @@ func run(args []string) error {
 	if err != nil {
 		return err
 	}
+	cgoLinkerFlags, err := validateCGoLinkerFlags(packages, buildResult.LDFlags, request.WorkingDirectory)
+	if err != nil {
+		return err
+	}
 	expectedNativeObjects := map[string]struct{}{}
 	for _, pkg := range packages {
 		for _, source := range []struct {
@@ -343,6 +351,16 @@ func run(args []string) error {
 				return sourceError
 			}
 			object.SourceSHA256 = sourceSHA256
+			if object.Kind == "target-cxx" {
+				if !equalStrings(object.CompilerFlags, pkg.CgoCXXFLAGS) {
+					return fmt.Errorf("upstream TinyGo returned C++ flags that differ for %q", object.ImportPath)
+				}
+				if err := validateCGoCXXFlags(object.CompilerFlags); err != nil {
+					return fmt.Errorf("package %q CXXFLAGS: %w", object.ImportPath, err)
+				}
+			} else if len(object.CompilerFlags) != 0 {
+				return fmt.Errorf("upstream TinyGo returned compiler flags for %s", object.Kind)
+			}
 			dependencies, err = collectDependencies(object.Dependencies, request.WorkingDirectory)
 			if err != nil {
 				return fmt.Errorf("collect target-native dependencies for %q: %w", object.SourcePath, err)
@@ -392,6 +410,7 @@ func run(args []string) error {
 			SourceSHA256:     object.SourceSHA256,
 			EmbeddedFileHash: object.EmbeddedFileHash,
 			Dependencies:     dependencies,
+			CompilerFlags:    append([]string(nil), object.CompilerFlags...),
 			LLVMValidation:   llvmValidation,
 			WasmValidation:   wasmValidation,
 		})
@@ -400,7 +419,7 @@ func run(args []string) error {
 		return errors.New("upstream TinyGo omitted one or more target-native objects")
 	}
 
-	plan, err := createLinkPlan(config, request.Runtime, compilerSHA256, objects, cgoInputs)
+	plan, err := createLinkPlan(config, request.Runtime, compilerSHA256, objects, cgoInputs, cgoLinkerFlags)
 	if err != nil {
 		return err
 	}
@@ -762,6 +781,127 @@ func containsString(values []string, expected string) bool {
 	return false
 }
 
+func equalStrings(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return false
+		}
+	}
+	return true
+}
+
+func validateCGoCXXFlags(flags []string) error {
+	if len(flags) > 256 {
+		return errors.New("too many CXXFLAGS")
+	}
+	for _, flag := range flags {
+		if flag == "" || len(flag) > 4096 || strings.ContainsRune(flag, '\x00') {
+			return errors.New("contains an invalid argument")
+		}
+		for _, forbidden := range []string{
+			"@", "-o", "-x", "-target", "--target", "-stdlib", "-std=", "-flto",
+			"-fno-lto", "-fexceptions", "-frtti", "-pthread", "-Xclang", "-mllvm",
+		} {
+			if flag == forbidden || strings.HasPrefix(flag, forbidden+"=") {
+				return fmt.Errorf("argument %q overrides the browser C++ policy", flag)
+			}
+		}
+	}
+	return nil
+}
+
+func validateCGoLinkerFlags(packages map[string]packageJSON, actual []string, workspaceRoot string) ([]string, error) {
+	expected := make([]string, 0)
+	for _, pkg := range packages {
+		expected = append(expected, pkg.CgoLDFLAGS...)
+	}
+	expectedSorted := append([]string(nil), expected...)
+	actualSorted := append([]string(nil), actual...)
+	sort.Strings(expectedSorted)
+	sort.Strings(actualSorted)
+	if !equalStrings(expectedSorted, actualSorted) {
+		return nil, errors.New("upstream TinyGo CGo linker flags differ from the package graph")
+	}
+	if len(actual) > 256 {
+		return nil, errors.New("too many CGo linker flags")
+	}
+	tinyGoRoot := os.Getenv("TINYGOROOT")
+	for index := 0; index < len(actual); index++ {
+		flag := actual[index]
+		if flag == "" || len(flag) > 4096 || strings.ContainsRune(flag, '\x00') {
+			return nil, errors.New("CGo linker flags contain an invalid argument")
+		}
+		if flag == "-L" {
+			index++
+			if index >= len(actual) {
+				return nil, errors.New("CGo linker flag -L requires a directory")
+			}
+			if err := validateLinkerPath(actual[index], workspaceRoot, tinyGoRoot, true); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if strings.HasPrefix(flag, "-L") && len(flag) > 2 {
+			if err := validateLinkerPath(flag[2:], workspaceRoot, tinyGoRoot, true); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if strings.HasPrefix(flag, "-l") && len(flag) > 2 && isLinkerLibraryName(flag[2:]) {
+			continue
+		}
+		switch flag {
+		case "--start-group", "--end-group", "--whole-archive", "--no-whole-archive", "-Bstatic", "-Bdynamic", "-static":
+			continue
+		}
+		if filepath.IsAbs(flag) && (strings.HasSuffix(flag, ".a") || strings.HasSuffix(flag, ".o")) {
+			if err := validateLinkerPath(flag, workspaceRoot, tinyGoRoot, false); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		return nil, fmt.Errorf("CGo linker flag %q is outside the browser library-link policy", flag)
+	}
+	return append([]string(nil), actual...), nil
+}
+
+func isLinkerLibraryName(name string) bool {
+	for _, character := range name {
+		if (character < 'a' || character > 'z') &&
+			(character < 'A' || character > 'Z') &&
+			(character < '0' || character > '9') &&
+			character != '_' && character != '-' && character != '.' {
+			return false
+		}
+	}
+	return name != "" && name != "." && name != ".."
+}
+
+func validateLinkerPath(path, workspaceRoot, tinyGoRoot string, directory bool) error {
+	if !filepath.IsAbs(path) {
+		return fmt.Errorf("CGo linker path %q must be absolute", path)
+	}
+	clean := filepath.Clean(path)
+	inside := func(root string) bool {
+		relative, err := filepath.Rel(root, clean)
+		return err == nil && relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator)) && !filepath.IsAbs(relative)
+	}
+	if !inside(workspaceRoot) && !inside(tinyGoRoot) {
+		return fmt.Errorf("CGo linker path %q escapes the mounted roots", path)
+	}
+	info, err := os.Stat(clean)
+	if err != nil {
+		return fmt.Errorf("inspect CGo linker path %q: %w", path, err)
+	}
+	if info.IsDir() != directory {
+		return fmt.Errorf("CGo linker path %q has the wrong file type", path)
+	}
+	return nil
+}
+
 func nativeSourceIdentity(importPath, sourceField, sourcePath string) string {
 	return importPath + "\x00" + sourceField + "\x00" + sourcePath
 }
@@ -1095,13 +1235,14 @@ func readSLEB128(data []byte, offset int) (int64, int, bool) {
 	return 0, offset, false
 }
 
-func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compilerSHA256 string, objects []linkPlanObject, cgoInputs []linkPlanCGoInput) (linkPlan, error) {
+func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compilerSHA256 string, objects []linkPlanObject, cgoInputs []linkPlanCGoInput, cgoLinkerFlags []string) (linkPlan, error) {
 	const (
 		linkerOutput    = "program.unoptimized.wasm"
 		optimizerOutput = "program.wasm"
 	)
 
 	arguments := append([]string{}, config.LDFlags()...)
+	arguments = append(arguments, cgoLinkerFlags...)
 	arguments = append(arguments, "-o", linkerOutput)
 	if !config.Debug() {
 		arguments = append(arguments, "--strip-debug", "--compress-relocations")
@@ -1182,10 +1323,10 @@ func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compil
 	)
 
 	return linkPlan{
-		SchemaVersion:    5,
+		SchemaVersion:    6,
 		Format:           linkPlanFormat,
 		CompilerSHA256:   compilerSHA256,
-		Capabilities:     []string{"go-embed-objects", "target-cgo-c", "target-cxx-hosted-noeh", "target-clang-assembly"},
+		Capabilities:     []string{"go-embed-objects", "target-cgo-c", "target-cxx-hosted-noeh", "target-clang-assembly", "target-cgo-cxxflags", "target-cgo-linker-flags"},
 		CompilerPackages: append([]string(nil), upstreamCompilerPackages...),
 		Linker:           "wasm-ld",
 		Objects:          append([]linkPlanObject(nil), objects...),
@@ -1193,6 +1334,7 @@ func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compil
 		Arguments:        arguments,
 		RuntimeInputs:    runtimeInputs,
 		CGoInputs:        append([]linkPlanCGoInput(nil), cgoInputs...),
+		CGoLinkerFlags:   append([]string(nil), cgoLinkerFlags...),
 		Optimizer: optimizerLinkPlan{
 			Tool:      "wasm-opt",
 			Input:     linkerOutput,
