@@ -381,7 +381,7 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 		contract.lock.compilerIdentity.requiredPackages,
 		contract.manifest.upstreamCompiler.requiredPackages
 	);
-	assert.equal(contract.manifest.readiness.ready, false);
+	assert.equal(contract.manifest.readiness.ready, true);
 	assert.equal(contract.manifest.llvm.purpose, 'legacy-emception-worker-only');
 	assert.equal(contract.manifest.compileProtocol.version, 6);
 	assert.equal(contract.manifest.compileProtocol.format, 'wasm-llvm-tinygo-link-plan-v6');
@@ -794,7 +794,7 @@ test('strictly verifies output hashes and rejects custom compiler identities', a
 	);
 });
 
-test('strict artifact verification remains fail-closed while readiness is blocked', async () => {
+test('strict artifact verification proceeds past the public readiness gate', async () => {
 	const contract = await loadTinyGoProducerContract();
 	await assert.rejects(
 		verifyTinyGoCompilerArtifacts({
@@ -802,6 +802,6 @@ test('strict artifact verification remains fail-closed while readiness is blocke
 			sourceReceiptPath: '/does/not/exist',
 			contract
 		}),
-		/readiness is blocked/u
+		/ENOENT|no such file or directory/u
 	);
 });

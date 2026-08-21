@@ -1,0 +1,184 @@
+name: TinyGo browser compiler producer
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: tinygo-browser-producer-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    build-product:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 720
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Reclaim ephemeral runner disk
+              run: |
+                  sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+                  docker system prune --all --force
+                  df -h /
+
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 10.30.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: pnpm
+
+            - name: Install native LLVM 20 and build tools
+              run: |
+                  curl --fail --location --retry 3 https://apt.llvm.org/llvm.sh -o "$RUNNER_TEMP/llvm.sh"
+                  chmod +x "$RUNNER_TEMP/llvm.sh"
+                  sudo "$RUNNER_TEMP/llvm.sh" 20
+                  sudo apt-get install --yes binaryen clang-20 clang-tools-20 lld-20 llvm-20-dev ninja-build
+                  test -x /usr/lib/llvm-20/bin/llvm-tblgen
+                  test -x /usr/lib/llvm-20/bin/clang-tblgen
+
+            - run: pnpm install --frozen-lockfile
+
+            - name: Define isolated producer paths
+              run: |
+                  {
+                    echo "TINYGO_WORK=$RUNNER_TEMP/tinygo-browser-producer"
+                    echo "TINYGO_SOURCE=$RUNNER_TEMP/tinygo-browser-producer/tinygo-source"
+                    echo "TINYGO_SOURCE_RECEIPT=$RUNNER_TEMP/tinygo-browser-producer/tinygo-source-receipt.json"
+                    echo "TINYGO_LLVM_SOURCE=$RUNNER_TEMP/tinygo-browser-producer/llvm-project"
+                    echo "TINYGO_LLVM_BUILD=$RUNNER_TEMP/tinygo-browser-producer/llvm-wasi-build"
+                    echo "TINYGO_LLVM_RECEIPT=$RUNNER_TEMP/tinygo-browser-producer/llvm-wasi-build.json"
+                    echo "TINYGO_GO_LLVM_SOURCE=$RUNNER_TEMP/tinygo-browser-producer/go-llvm"
+                    echo "TINYGO_WASI_SDK=$RUNNER_TEMP/tinygo-browser-producer/wasi-sdk-33.0-x86_64-linux"
+                    echo "TINYGO_NATIVE_ROOT=$RUNNER_TEMP/tinygo-browser-producer/tinygo"
+                    echo "TINYGO_GO_ARCHIVE=$RUNNER_TEMP/tinygo-browser-producer/v0.0.1-go1.24.6.linux-amd64.zip"
+                    echo "TINYGO_GO_ROOT=$RUNNER_TEMP/tinygo-browser-producer/go-root"
+                    echo "TINYGO_ARTIFACTS=$RUNNER_TEMP/tinygo-browser-producer/compiler-artifacts"
+                    echo "TINYGO_COMPILER_BUILD=$RUNNER_TEMP/tinygo-browser-producer/compiler-build"
+                    echo "TINYGO_BUILD_RECEIPT=$RUNNER_TEMP/tinygo-browser-producer/compiler-build.json"
+                    echo "TINYGO_GRAPH_ARTIFACTS=$RUNNER_TEMP/tinygo-browser-producer/package-graph-artifacts"
+                    echo "TINYGO_GRAPH_BUILD=$RUNNER_TEMP/tinygo-browser-producer/package-graph-build"
+                    echo "TINYGO_GRAPH_RECEIPT=$RUNNER_TEMP/tinygo-browser-producer/package-graph-provider-receipt.json"
+                    echo "TINYGO_ACCEPTANCE=$RUNNER_TEMP/tinygo-browser-producer/acceptance"
+                    echo "TINYGO_PRODUCT=$RUNNER_TEMP/tinygo-browser-producer/product"
+                  } >> "$GITHUB_ENV"
+                  mkdir -p "$RUNNER_TEMP/tinygo-browser-producer"
+
+            - name: Download pinned host toolchains
+              run: |
+                  curl --fail --location --retry 3 \
+                    https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz \
+                    -o "$TINYGO_WORK/wasi-sdk.tar.gz"
+                  tar -xzf "$TINYGO_WORK/wasi-sdk.tar.gz" -C "$TINYGO_WORK"
+                  curl --fail --location --retry 3 \
+                    https://github.com/tinygo-org/tinygo/releases/download/v0.40.1/tinygo0.40.1.linux-amd64.tar.gz \
+                    -o "$TINYGO_WORK/tinygo.tar.gz"
+                  tar -xzf "$TINYGO_WORK/tinygo.tar.gz" -C "$TINYGO_WORK"
+                  curl --fail --location --retry 3 \
+                    https://proxy.golang.org/golang.org/toolchain/@v/v0.0.1-go1.24.6.linux-amd64.zip \
+                    -o "$TINYGO_GO_ARCHIVE"
+                  test "$(sha256sum "$TINYGO_GO_ARCHIVE" | cut -d ' ' -f 1)" = \
+                    e7f0fd16d1b06c716162a0938744bb7ebf7edbc3248d42432271a1b5c1fde1ce
+                  unzip -q "$TINYGO_GO_ARCHIVE" -d "$TINYGO_WORK/go-module"
+                  mv "$TINYGO_WORK/go-module/golang.org/toolchain@v0.0.1-go1.24.6.linux-amd64" "$TINYGO_GO_ROOT"
+
+            - name: Prepare locked source checkouts
+              run: |
+                  node producer/tinygo-browser/scripts/prepare-source.mjs \
+                    "$TINYGO_SOURCE" "$TINYGO_SOURCE_RECEIPT"
+                  test "$(git -C "$TINYGO_SOURCE" rev-parse HEAD)" = db9f1182f5f2a64ea496752899626578d2b313a7
+                  git clone --filter=blob:none --no-checkout \
+                    https://github.com/tinygo-org/llvm-project.git "$TINYGO_LLVM_SOURCE"
+                  git -C "$TINYGO_LLVM_SOURCE" fetch --depth=1 origin \
+                    670759811adc85df52f410d7306788fabfc6242d
+                  git -C "$TINYGO_LLVM_SOURCE" checkout --detach \
+                    670759811adc85df52f410d7306788fabfc6242d
+                  git clone --filter=blob:none --no-checkout \
+                    https://github.com/tinygo-org/go-llvm.git "$TINYGO_GO_LLVM_SOURCE"
+                  git -C "$TINYGO_GO_LLVM_SOURCE" fetch --depth=1 origin \
+                    b8f170971e747fec20a03b25a4490f627140709a
+                  git -C "$TINYGO_GO_LLVM_SOURCE" checkout --detach \
+                    b8f170971e747fec20a03b25a4490f627140709a
+
+            - name: Build source-locked LLVM host for WASI
+              run: |
+                  node producer/tinygo-browser/scripts/build-llvm-wasi.mjs \
+                    --source-root "$TINYGO_LLVM_SOURCE" \
+                    --wasi-sdk "$TINYGO_WASI_SDK" \
+                    --native-tool-dir /usr/lib/llvm-20/bin \
+                    --build-dir "$TINYGO_LLVM_BUILD" \
+                    --receipt "$TINYGO_LLVM_RECEIPT" \
+                    --jobs 4 \
+                    --execute
+
+            - name: Build upstream TinyGo browser compiler
+              run: |
+                  node producer/tinygo-browser/scripts/build-browser-compiler.mjs \
+                    --source-root "$TINYGO_SOURCE" \
+                    --source-receipt "$TINYGO_SOURCE_RECEIPT" \
+                    --go-llvm-source-root "$TINYGO_GO_LLVM_SOURCE" \
+                    --llvm-receipt "$TINYGO_LLVM_RECEIPT" \
+                    --tinygo "$TINYGO_NATIVE_ROOT/bin/tinygo" \
+                    --native-tinygo-root "$TINYGO_NATIVE_ROOT" \
+                    --native-wasm-ld "$TINYGO_NATIVE_ROOT/bin/wasm-ld" \
+                    --wasm-opt "$TINYGO_NATIVE_ROOT/bin/wasm-opt" \
+                    --go-toolchain-archive "$TINYGO_GO_ARCHIVE" \
+                    --artifact-dir "$TINYGO_ARTIFACTS" \
+                    --build-dir "$TINYGO_COMPILER_BUILD" \
+                    --receipt "$TINYGO_BUILD_RECEIPT" \
+                    --execute
+
+            - name: Build upstream cmd/go package graph provider
+              run: |
+                  node producer/tinygo-browser/scripts/build-package-graph-provider.mjs \
+                    --go-toolchain-archive "$TINYGO_GO_ARCHIVE" \
+                    --root-archive "$TINYGO_ARTIFACTS/tinygoroot.tar.gz" \
+                    --fixture producer/tinygo-browser/fixtures/package-graph-module \
+                    --artifact-dir "$TINYGO_GRAPH_ARTIFACTS" \
+                    --build-dir "$TINYGO_GRAPH_BUILD" \
+                    --receipt "$TINYGO_GRAPH_RECEIPT" \
+                    --execute
+
+            - name: Run producer acceptance and strict verification
+              run: |
+                  mkdir -p "$TINYGO_WORK/extracted-root" "$TINYGO_PRODUCT"
+                  tar -xzf "$TINYGO_ARTIFACTS/tinygoroot.tar.gz" -C "$TINYGO_WORK/extracted-root"
+                  unzip -p artifacts/clang-browser/lld.zip lld > "$TINYGO_PRODUCT/lld.wasm"
+                  node producer/tinygo-browser/scripts/accept-browser-compiler.mjs \
+                    --compiler "$TINYGO_ARTIFACTS/tinygo-compiler.wasm" \
+                    --root "$TINYGO_WORK/extracted-root" \
+                    --build-receipt "$TINYGO_BUILD_RECEIPT" \
+                    --source-receipt "$TINYGO_SOURCE_RECEIPT" \
+                    --native-tinygo "$TINYGO_NATIVE_ROOT/bin/tinygo" \
+                    --native-goroot "$TINYGO_GO_ROOT" \
+                    --lld-wasm "$TINYGO_PRODUCT/lld.wasm" \
+                    --wasm-opt "$TINYGO_NATIVE_ROOT/bin/wasm-opt" \
+                    --fixture producer/tinygo-browser/fixtures/upstream-language-smoke/main.go \
+                    --stdin producer/tinygo-browser/fixtures/upstream-language-smoke/stdin.txt \
+                    --stdout producer/tinygo-browser/fixtures/upstream-language-smoke/stdout.txt \
+                    --work-dir "$TINYGO_ACCEPTANCE" \
+                    --producer-receipt "$TINYGO_ARTIFACTS/producer-receipt.json"
+                  node producer/tinygo-browser/scripts/verify-artifacts.mjs \
+                    "$TINYGO_ARTIFACTS" "$TINYGO_SOURCE_RECEIPT"
+
+            - name: Assemble verified consumer inputs
+              run: |
+                  cp "$TINYGO_ARTIFACTS/tinygo-compiler.wasm" "$TINYGO_PRODUCT/"
+                  cp "$TINYGO_ARTIFACTS/tinygoroot.tar.gz" "$TINYGO_PRODUCT/"
+                  cp "$TINYGO_ARTIFACTS/producer-receipt.json" "$TINYGO_PRODUCT/"
+                  cp "$TINYGO_GRAPH_ARTIFACTS/tinygo-package-graph.wasm" "$TINYGO_PRODUCT/"
+                  cp "$TINYGO_GRAPH_RECEIPT" "$TINYGO_PRODUCT/package-graph-provider-receipt.json"
+                  cp "$TINYGO_SOURCE_RECEIPT" "$TINYGO_PRODUCT/"
+                  sha256sum "$TINYGO_PRODUCT"/* | sort
+
+            - name: Upload verified TinyGo browser product
+              uses: actions/upload-artifact@v4
+              with:
+                  name: tinygo-browser-${{ github.sha }}
+                  path: ${{ env.TINYGO_PRODUCT }}
+                  if-no-files-found: error
+                  retention-days: 14

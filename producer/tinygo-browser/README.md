@@ -24,14 +24,15 @@ hashes, imports, and execution evidence. wasm-idle now also owns an independent 
 VFS/package-graph/compiler/raw-LLD/Binaryen path. The package provider matches the same pinned
 native `cmd/go` JSON exactly, and a 45-package local-module workspace with `CgoFiles`, target
 `CFile`/`CXXFile`/uppercase `.S`, and `go:embed` passed end to end in Node and headless Chromium.
-Compile protocol v4 publishes TinyGo's program/embed objects, CGo source evidence, target-C and
-freestanding-C++17 ThinLTO bitcode, and Clang assembler-with-cpp WebAssembly objects with per-source
-dependency and object hashes for external LLD. Before publishing native entries, the adapter uses
+Compile protocol v6 publishes TinyGo's program/embed objects, CGo source evidence, target-C,
+hosted C++17 ThinLTO bitcode with libc++/libc++abi, and Clang assembler-with-cpp WebAssembly
+objects with per-source dependency and object hashes for external LLD. Restricted CXXFLAGS and
+library-oriented linker flags are preserved exactly; offline external modules use the standard
+`vendor/modules.txt` and `-mod=vendor` contract. Before publishing native entries, the adapter uses
 the pinned LLVM 20.1.1 bitreader and verifier for bitcode and LLVMObject's WebAssembly parser for
-relocatable `.S` objects. `manifest.json` still records
-`readiness.ready: false`: this is deliberately not libc++/libc++abi or general TinyGo assembly
-support, custom `#cgo LDFLAGS` remain unsupported, offline external dependencies are unavailable,
-and synchronous compiler phases lack enforceable budgets.
+relocatable `.S` objects. `manifest.json` records `readiness.ready: true`, which enables the strict
+verifier but does not replace it: only a fresh workflow run whose expanded fixture passes may issue
+public artifacts.
 The Emception worker and handwritten Go-to-C subset remain
 ineligible as TinyGo implementations. See the
 [package-graph audit](audits/2026-08-01-package-graph-provider.md) and the
@@ -235,16 +236,18 @@ The producer and consumer each bind their own fixture's exact objects and Wasm. 
 Node and Chromium results match one another byte-for-byte; the producer fixture has distinct source
 and artifact hashes and is not incorrectly treated as the same build.
 
-Package discovery is now upstream-derived: wasm-idle runs the receipt-bound Go 1.24.6 `cmd/go` WASI
+Package discovery is upstream-derived: wasm-idle runs the receipt-bound Go 1.24.6 `cmd/go` WASI
 provider over the supplied module workspace and passes its normalized graph directly to the
-compiler. Module downloads remain deliberately disabled, and synchronous compiler/LLD calls still
-need enforceable time and memory budgets before public enablement.
+compiler. Network module resolution remains deliberately disabled; `vendor/modules.txt` selects
+the receipt-bound offline vendor mode and other workspaces remain `-mod=readonly`. Compiler,
+package-graph, LLD, and Binaryen work runs in a disposable Worker with phase deadlines, abort
+termination, and rewritten wasm32 linear-memory maxima.
 
-Compile protocol v4 preserves the v2 `EmbedFiles` and v3 CGo/C handoffs, then adds two narrow
-target-native capabilities. Every preprocessed target-native C, C++, and uppercase `.S` input uses
-`-Werror=date-time`. `CXXFiles` are compiled by packaged Clang as C++17 ThinLTO bitcode with
-`-ffreestanding`, `-nostdinc++`, exceptions/RTTI/static
-constructors/destructors disabled, and no libc++ or libc++abi. LLVM 20.1.1 fully parses and verifies
+Compile protocol v6 preserves the earlier embed, CGo/C, and target-native handoffs. Every
+preprocessed target-native C, C++, and uppercase `.S` input uses `-Werror=date-time`. `CXXFiles`
+are compiled by packaged Clang as C++17 ThinLTO bitcode with the receipt-bound WASI libc++ headers
+and linked libc++/libc++abi archives. Exceptions, RTTI, threads, and target/toolchain overrides stay
+disabled. LLVM 20.1.1 fully parses and verifies
 every C/C++ module, checks the exact `wasm32-unknown-wasi` triple/data layout, and rejects TLS,
 pre-initializers/initializers/finalizers, C++ runtime ABI symbols, and target features outside the
 consumer's exact allowlist (`+bulk-memory`, `+bulk-memory-opt`, `+call-indirect-overlong`,
@@ -260,11 +263,11 @@ bounded Go pre-scan rejects oversized or overflowing u32 LEB fields before invok
 Lowercase `.s`, non-CGo package assembly, and Go/Plan 9 assembly remain fail-closed. The
 adapter sorts native and embed jobs deterministically, preserves
 multiplicity, publishes deterministic object names, and binds source, transitive dependency, format,
-and object hashes in the link plan. It also rejects custom `#cgo LDFLAGS`, `CXXFLAGS`, general C++
-runtime features, and unsupported assembly rather than silently dropping their semantics. Assembly
-inside the pinned GOROOT remains under upstream TinyGo's existing standard-package
-intrinsic/replacement path. Public TinyGo support must remain disabled until the general native
-policies, offline dependency, resource-limit, and broader compatibility gates are closed.
+and object hashes in the link plan. It accepts only policy-safe CXXFLAGS plus library search,
+library selection, archive grouping, and mounted `.a`/`.o` linker inputs; all other native flag
+semantics fail closed. Assembly inside the pinned GOROOT remains under upstream TinyGo's existing
+standard-package intrinsic/replacement path. The browser adapter does not invent a Plan 9 assembler
+for source forms that upstream TinyGo 0.40.1 itself does not load.
 
 The checked-in native split-pipeline test proves the backend boundary on the acceptance fixture.
 To inspect its explicit-path command surface, run:
