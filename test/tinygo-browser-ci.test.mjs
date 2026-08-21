@@ -20,6 +20,10 @@ test('manual TinyGo producer rebuilds and accepts the source-locked upstream too
 	);
 	assert.match(workflow, /uses: actions\/cache\/restore@v4/u);
 	assert.match(workflow, /uses: actions\/cache\/save@v4/u);
+	assert.match(
+		workflow,
+		/name: Build source-locked LLVM host for WASI\s+if: steps\.tinygo-llvm-cache\.outputs\.cache-hit != 'true'/u
+	);
 	assert.match(workflow, /if: steps\.tinygo-llvm-cache\.outputs\.cache-hit != 'true'/u);
 	assert.match(workflow, /TINYGO_LLVM_BUILD/u);
 	assert.match(workflow, /build-llvm-wasi\.mjs[\s\S]*--execute/u);

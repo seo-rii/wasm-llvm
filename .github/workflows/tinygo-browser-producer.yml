@@ -130,6 +130,7 @@ jobs:
                   key: tinygo-llvm-wasi-v1-${{ runner.os }}-${{ hashFiles('producer/tinygo-browser/sources.lock.json', 'producer/tinygo-browser/config/llvm-wasi-static.json', 'producer/tinygo-browser/patches/llvm-wasi-c-api-config.patch', 'producer/tinygo-browser/scripts/build-llvm-wasi.mjs') }}
 
             - name: Build source-locked LLVM host for WASI
+              if: steps.tinygo-llvm-cache.outputs.cache-hit != 'true'
               run: |
                   node producer/tinygo-browser/scripts/build-llvm-wasi.mjs \
                     --source-root "$TINYGO_LLVM_SOURCE" \
