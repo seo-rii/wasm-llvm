@@ -54,7 +54,10 @@ test('the adapter delegates Go semantics to the upstream TinyGo builder', async 
 });
 
 test('the adapter emits a verified object set and an executable external finalization plan', async () => {
-	const source = await readFile(adapterPath, 'utf8');
+	const [source, patch] = await Promise.all([
+		readFile(adapterPath, 'utf8'),
+		readFile(patchPath, 'utf8')
+	]);
 
 	assert.match(source, /objects\/0000-program\.o/);
 	assert.match(source, /objects\/%04d-embed\.o/);
@@ -66,11 +69,17 @@ test('the adapter emits a verified object set and an executable external finaliz
 	assert.match(source, /embeddedFileHash/);
 	assert.match(source, /EmbeddedFileHash != object\.SourceSHA256\[:sha256\.Size\]/);
 	assert.match(source, /sha256\.Sum256/);
-	assert.match(source, /SchemaVersion:\s+4/);
+	assert.match(source, /SchemaVersion:\s+5/);
 	assert.match(source, /go-embed-objects/);
 	assert.match(source, /target-cgo-c/);
-	assert.match(source, /target-cxx-freestanding/);
+	assert.match(source, /target-cxx-hosted-noeh/);
 	assert.match(source, /target-clang-assembly/);
+	assert.match(source, /LibCxx\s+string\s+`json:"libCxx"`/);
+	assert.match(source, /LibCxxAbi\s+string\s+`json:"libCxxAbi"`/);
+	assert.match(patch, /"-stdlib=libc\+\+"/);
+	assert.doesNotMatch(patch, /"-ffreestanding"|"-nostdinc\+\+"/);
+	assert.match(source, /runtime\.LibCxx/);
+	assert.match(source, /runtime\.LibCxxAbi/);
 	assert.match(source, /validateLLVMObject/);
 	assert.match(source, /hasWasmRelocatableFraming/);
 	assert.match(source, /builder\.ValidateWasmObject/);

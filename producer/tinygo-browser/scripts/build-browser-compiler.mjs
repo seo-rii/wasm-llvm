@@ -49,9 +49,10 @@ const ROOT_ARCHIVE_PATHS = [
 	'go.sum',
 	'lib/clang',
 	'lib/wasi-libc/include',
+	'lib/wasi-libc/include/c++/v1',
 	'runtime'
 ];
-const RUNTIME_CLOSURE_FORMAT = 'wasm-llvm-tinygo-runtime-closure-v1';
+const RUNTIME_CLOSURE_FORMAT = 'wasm-llvm-tinygo-runtime-closure-v2';
 const RUNTIME_PROFILE = Object.freeze({
 	id: 'wasip1-asyncify-precise-o1',
 	target: 'wasip1',
@@ -821,10 +822,12 @@ export async function createBrowserCompilerBuildPlan(
 		'wasi-libc',
 		'include'
 	);
+	const browserCxxIncludeDir = path.join(browserWasiLibcIncludeDir, 'c++', 'v1');
 	const runtimeClosureDir = path.join(browserRootOverlayDir, 'runtime');
 	const runtimeProfileDir = path.join(runtimeClosureDir, RUNTIME_PROFILE.id);
 	const runtimeProbePath = path.join(options.buildDir, 'runtime-closure-probe.wasm');
 	const wasiLibcSourcePath = path.join(wasiLibraryDir, 'libc.a');
+	const wasiCxxIncludeDir = path.join(wasiSysroot, 'include', 'c++', 'v1');
 	const filteredWasiLibcPath = path.join(hostSupportDir, 'libc-no-dlmalloc.a');
 	const lockedTinyGoSources = new Map(
 		contract.lock.compilerIdentity.requiredSources.map((source) => [source.path, source])
@@ -1150,6 +1153,8 @@ export async function createBrowserCompilerBuildPlan(
 			hostLinkInputDir,
 			browserRootOverlayDir,
 			browserWasiLibcIncludeDir,
+			browserCxxIncludeDir,
+			wasiCxxIncludeDir,
 			runtimeClosureDir,
 			runtimeProfileDir,
 			runtimeProbePath,
@@ -1257,11 +1262,14 @@ export async function createBrowserCompilerBuildPlan(
 		rootArchive: {
 			format: 'wasm-llvm-tinygo-browser-root-v1',
 			paths: [...ROOT_ARCHIVE_PATHS],
-			omittedTinyGoPaths: ['lib except receipt-bound Clang and wasi-libc headers'],
+			omittedTinyGoPaths: [
+				'lib except receipt-bound Clang, wasi-libc, and libc++ headers'
+			],
 			cgoHeaderClosure: {
 				status: 'planned',
 				clangResource: null,
-				wasiLibc: null
+				wasiLibc: null,
+				libCxx: null
 			},
 			mergedGoRoot: {
 				status: 'planned',
@@ -1542,7 +1550,8 @@ export async function buildBrowserCompiler(
 				...receipt.hostSupport.includeRoots.map((includeRoot) => access(includeRoot)),
 				...receipt.llvm.wasiLibraries.map((library) => access(library.path)),
 				access(receipt.llvm.compilerRuntime.path),
-				access(receipt.llvm.wasiLibc.sourcePath)
+				access(receipt.llvm.wasiLibc.sourcePath),
+				access(receipt.paths.wasiCxxIncludeDir)
 			]);
 			receipt.hostSupport.toolEvidence = await Promise.all(
 				Object.entries(receipt.hostSupport.tools).map(async ([name, toolPath]) => ({
@@ -2155,6 +2164,9 @@ export async function buildBrowserCompiler(
 			const wasiLibcIncludeEvidence = await inspectDirectoryTree(
 				wasiLibcIncludeSource
 			);
+			const wasiCxxIncludeEvidence = await inspectDirectoryTree(
+				receipt.paths.wasiCxxIncludeDir
+			);
 			await mkdir(path.dirname(receipt.paths.browserWasiLibcIncludeDir), {
 				recursive: true
 			});
@@ -2162,14 +2174,24 @@ export async function buildBrowserCompiler(
 				recursive: true,
 				preserveTimestamps: true
 			});
+			await mkdir(path.dirname(receipt.paths.browserCxxIncludeDir), { recursive: true });
+			await cp(receipt.paths.wasiCxxIncludeDir, receipt.paths.browserCxxIncludeDir, {
+				recursive: true,
+				preserveTimestamps: true
+			});
 			const archivedWasiLibcInclude = await inspectDirectoryTree(
 				receipt.paths.browserWasiLibcIncludeDir
 			);
+			const archivedWasiCxxInclude = await inspectDirectoryTree(
+				receipt.paths.browserCxxIncludeDir
+			);
 			assert(
-				archivedWasiLibcInclude.files === wasiLibcIncludeEvidence.files &&
-					archivedWasiLibcInclude.bytes === wasiLibcIncludeEvidence.bytes &&
-					archivedWasiLibcInclude.sha256 === wasiLibcIncludeEvidence.sha256,
-				'archived wasi-libc headers differ from the runtime closure input'
+				archivedWasiLibcInclude.files ===
+					wasiLibcIncludeEvidence.files + wasiCxxIncludeEvidence.files &&
+					archivedWasiCxxInclude.files === wasiCxxIncludeEvidence.files &&
+					archivedWasiCxxInclude.bytes === wasiCxxIncludeEvidence.bytes &&
+					archivedWasiCxxInclude.sha256 === wasiCxxIncludeEvidence.sha256,
+				'archived libc++ headers differ from the pinned WASI sysroot input'
 			);
 			receipt.rootArchive.cgoHeaderClosure = {
 				status: 'passed',
@@ -2182,9 +2204,16 @@ export async function buildBrowserCompiler(
 				wasiLibc: {
 					path: 'lib/wasi-libc/include',
 					sourcePath: wasiLibcIncludeSource,
-					files: archivedWasiLibcInclude.files,
-					bytes: archivedWasiLibcInclude.bytes,
-					sha256: archivedWasiLibcInclude.sha256
+					files: wasiLibcIncludeEvidence.files,
+					bytes: wasiLibcIncludeEvidence.bytes,
+					sha256: wasiLibcIncludeEvidence.sha256
+				},
+				libCxx: {
+					path: 'lib/wasi-libc/include/c++/v1',
+					sourcePath: receipt.paths.wasiCxxIncludeDir,
+					files: archivedWasiCxxInclude.files,
+					bytes: archivedWasiCxxInclude.bytes,
+					sha256: archivedWasiCxxInclude.sha256
 				}
 			};
 			const runtimeAssets = [];
@@ -2201,6 +2230,14 @@ export async function buildBrowserCompiler(
 					outputName: 'wasi-libc.a',
 					format: 'static-archive'
 				},
+				...receipt.llvm.wasiLibraries
+					.filter((library) => library.name === 'c++' || library.name === 'c++abi')
+					.map((library) => ({
+						id: library.name === 'c++' ? 'libcxx' : 'libcxxabi',
+						sourcePath: library.path,
+						outputName: library.name === 'c++' ? 'libcxx.a' : 'libcxxabi.a',
+						format: 'static-archive'
+					})),
 				...RUNTIME_EXTRA_INPUTS.map((runtimeInput, index) => ({
 					id: `extra-${index}`,
 					...runtimeInput,
@@ -2230,6 +2267,8 @@ export async function buildBrowserCompiler(
 				profile: { ...RUNTIME_PROFILE },
 				compilerRT: runtimeAssets.find((asset) => asset.id === 'compiler-rt'),
 				wasiLibc: runtimeAssets.find((asset) => asset.id === 'wasi-libc'),
+				libCxx: runtimeAssets.find((asset) => asset.id === 'libcxx'),
+				libCxxAbi: runtimeAssets.find((asset) => asset.id === 'libcxxabi'),
 				extraFiles: Object.fromEntries(
 					runtimeAssets
 						.filter((asset) => asset.source)

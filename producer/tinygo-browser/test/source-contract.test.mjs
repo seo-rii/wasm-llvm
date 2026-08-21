@@ -192,8 +192,8 @@ function wasmWithIdentity(strings, { importModule = null } = {}) {
 
 function createCompilerReceipt({ contract, sourceReceiptBytes, compilerBytes, tinygoRootBytes }) {
 	return {
-		schemaVersion: 4,
-		format: 'wasm-llvm-tinygo-browser-compiler-v4',
+		schemaVersion: 5,
+		format: 'wasm-llvm-tinygo-browser-compiler-v5',
 		producerId: contract.manifest.producerId,
 		inputs: {
 			manifestSha256: contract.inputs.manifestSha256,
@@ -349,9 +349,9 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 	);
 	assert.equal(contract.lock.llvm.commit, '670759811adc85df52f410d7306788fabfc6242d');
 	assert.deepEqual(contract.manifest.compileProtocol.targetNativeSourcePolicy, {
-		cgoFiles: 'program-object-with-source-closure-v4',
-		cFiles: 'thinlto-object-set-v4',
-		cxxFiles: 'freestanding-thinlto-object-set-v4',
+		cgoFiles: 'program-object-with-source-closure-v5',
+		cFiles: 'thinlto-object-set-v5',
+		cxxFiles: 'hosted-noeh-libcxx-thinlto-object-set-v5',
 		sFiles: 'clang-uppercase-s-wasm-object-set-v4',
 		embedFiles: 'generated-object-set-v2'
 	});
@@ -373,6 +373,7 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 		'go.sum',
 		'lib/clang',
 		'lib/wasi-libc/include',
+		'lib/wasi-libc/include/c++/v1',
 		'runtime'
 	]);
 	assert.equal(contract.lock.compilerIdentity.entrypoint, 'main.go');
@@ -382,11 +383,17 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 	);
 	assert.equal(contract.manifest.readiness.ready, false);
 	assert.equal(contract.manifest.llvm.purpose, 'legacy-emception-worker-only');
+	assert.equal(contract.manifest.compileProtocol.version, 5);
+	assert.equal(contract.manifest.compileProtocol.format, 'wasm-llvm-tinygo-link-plan-v5');
+	assert.equal(
+		contract.manifest.rootArchive.runtimeClosureFormat,
+		'wasm-llvm-tinygo-runtime-closure-v2'
+	);
 	assert.deepEqual(contract.manifest.compileProtocol.outputs, ['objects', 'link-plan.json']);
 	assert.deepEqual(contract.manifest.compileProtocol.capabilities, [
 		'go-embed-objects',
 		'target-cgo-c',
-		'target-cxx-freestanding',
+		'target-cxx-hosted-noeh',
 		'target-clang-assembly'
 	]);
 	assert.deepEqual(contract.manifest.compileProtocol.targetNativeValidation, {
@@ -409,7 +416,8 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 		allowedWasmLimitsFlags: ['has-max'],
 		maximumTotalMemories: 1,
 		maximumTotalTables: 1,
-		freestandingPolicy: 'no-tls-ctors-dtors-cxxabi-forbidden-target-features'
+		cPolicy: 'no-tls-ctors-dtors-forbidden-target-features',
+		cxxPolicy: 'libcxx-libcxxabi-noeh-nortti-no-global-ctors-dtors-v1'
 	});
 	assert.deepEqual(
 		contract.acceptance.nativeSources.map((source) => source.path),

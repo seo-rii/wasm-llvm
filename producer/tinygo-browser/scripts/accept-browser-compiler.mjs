@@ -27,8 +27,8 @@ import {
 const execFileAsync = promisify(execFile);
 const THIS_FILE = fileURLToPath(import.meta.url);
 const PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), "..");
-const COMPILER_RECEIPT_FORMAT = "wasm-llvm-tinygo-browser-compiler-v4";
-const RUNTIME_CLOSURE_FORMAT = "wasm-llvm-tinygo-runtime-closure-v1";
+const COMPILER_RECEIPT_FORMAT = "wasm-llvm-tinygo-browser-compiler-v5";
+const RUNTIME_CLOSURE_FORMAT = "wasm-llvm-tinygo-runtime-closure-v2";
 const RUNTIME_PROFILE_ID = "wasip1-asyncify-precise-o1";
 const MAX_GO_LIST_BYTES = 64 * 1024 * 1024;
 const SOURCE_FILE_FIELDS = [
@@ -300,7 +300,8 @@ async function loadRuntimeClosure({ rootPath, compilerEvidence }) {
     manifest.wasiLibc,
     ...Object.values(manifest.extraFiles ?? {}),
   ];
-  assert(assets.length === 5, "runtime closure must contain exactly five link inputs");
+  assets.push(manifest.libCxx, manifest.libCxxAbi);
+  assert(assets.length === 7, "runtime closure must contain exactly seven link inputs");
   for (const asset of assets) {
     assert(typeof asset?.path === "string", "runtime closure asset path is missing");
     const assetPath = path.join(rootPath, asset.path);
@@ -315,6 +316,8 @@ async function loadRuntimeClosure({ rootPath, compilerEvidence }) {
     manifest,
     compilerRT: path.join(rootPath, manifest.compilerRT.path),
     wasiLibc: path.join(rootPath, manifest.wasiLibc.path),
+    libCxx: path.join(rootPath, manifest.libCxx.path),
+    libCxxAbi: path.join(rootPath, manifest.libCxxAbi.path),
     extraFiles: Object.fromEntries(
       Object.entries(manifest.extraFiles).map(([source, asset]) => [
         source,
@@ -436,6 +439,8 @@ export async function acceptBrowserCompiler(options, dependencies = {}) {
     runtime: {
       compilerRT: runtime.compilerRT,
       wasiLibc: runtime.wasiLibc,
+      libCxx: runtime.libCxx,
+      libCxxAbi: runtime.libCxxAbi,
       extraFiles: runtime.extraFiles,
     },
   };
@@ -513,7 +518,7 @@ export async function acceptBrowserCompiler(options, dependencies = {}) {
     fileEvidence(outputWasmPath),
   ]);
   const receipt = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     format: COMPILER_RECEIPT_FORMAT,
     producerId: contract.manifest.producerId,
     ...buildReceipt.compilerReceiptSeed,

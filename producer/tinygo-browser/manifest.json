@@ -41,12 +41,12 @@
     "hostCompileFallbackAllowed": false
   },
   "compileProtocol": {
-    "version": 4,
-    "format": "wasm-llvm-tinygo-link-plan-v4",
+    "version": 5,
+    "format": "wasm-llvm-tinygo-link-plan-v5",
     "capabilities": [
       "go-embed-objects",
       "target-cgo-c",
-      "target-cxx-freestanding",
+      "target-cxx-hosted-noeh",
       "target-clang-assembly"
     ],
     "outputs": [
@@ -54,9 +54,9 @@
       "link-plan.json"
     ],
     "targetNativeSourcePolicy": {
-      "cgoFiles": "program-object-with-source-closure-v4",
-      "cFiles": "thinlto-object-set-v4",
-      "cxxFiles": "freestanding-thinlto-object-set-v4",
+      "cgoFiles": "program-object-with-source-closure-v5",
+      "cFiles": "thinlto-object-set-v5",
+      "cxxFiles": "hosted-noeh-libcxx-thinlto-object-set-v5",
       "sFiles": "clang-uppercase-s-wasm-object-set-v4",
       "embedFiles": "generated-object-set-v2"
     },
@@ -84,7 +84,8 @@
       ],
       "maximumTotalMemories": 1,
       "maximumTotalTables": 1,
-      "freestandingPolicy": "no-tls-ctors-dtors-cxxabi-forbidden-target-features"
+      "cPolicy": "no-tls-ctors-dtors-forbidden-target-features",
+      "cxxPolicy": "libcxx-libcxxabi-noeh-nortti-no-global-ctors-dtors-v1"
     },
     "linkPlanRequiredFields": [
       "compilerSha256",
@@ -113,12 +114,13 @@
       "go.sum",
       "lib/clang",
       "lib/wasi-libc/include",
+      "lib/wasi-libc/include/c++/v1",
       "runtime"
     ],
     "omittedTinyGoPaths": [
-      "lib except receipt-bound Clang and wasi-libc headers"
+      "lib except receipt-bound Clang, wasi-libc, and libc++ headers"
     ],
-    "runtimeClosureFormat": "wasm-llvm-tinygo-runtime-closure-v1",
+    "runtimeClosureFormat": "wasm-llvm-tinygo-runtime-closure-v2",
     "runtimeProbe": {
       "fixture": "fixtures/runtime-closure-probe/main.go",
       "sha256": "55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566"
@@ -168,7 +170,7 @@
   "patches": [
     {
       "path": "patches/tinygo-wasi-adapter.patch",
-      "sha256": "b0bf923975fde8892b6eb616305babeee2064a6d04217a7eadd6595813eb07e3"
+      "sha256": "16619ff277022a57a2dbbd55e08f5374b610b5f079967571e709dcedc65fcbd6"
     },
     {
       "path": "patches/go-llvm-wasi-cgo-alias.patch",

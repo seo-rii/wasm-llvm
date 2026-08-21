@@ -15,8 +15,8 @@
     "assets"
   ],
   "properties": {
-    "schemaVersion": { "const": 4 },
-    "format": { "const": "wasm-llvm-tinygo-browser-compiler-v4" },
+    "schemaVersion": { "const": 5 },
+    "format": { "const": "wasm-llvm-tinygo-browser-compiler-v5" },
     "producerId": { "const": "wasm-llvm/tinygo-browser" },
     "inputs": {
       "type": "object",
@@ -79,12 +79,12 @@
         },
         "compileProtocol": {
           "const": {
-            "version": 4,
-            "format": "wasm-llvm-tinygo-link-plan-v4",
+            "version": 5,
+            "format": "wasm-llvm-tinygo-link-plan-v5",
             "capabilities": [
               "go-embed-objects",
               "target-cgo-c",
-              "target-cxx-freestanding",
+              "target-cxx-hosted-noeh",
               "target-clang-assembly"
             ]
           }
@@ -115,10 +115,11 @@
               "go.sum",
               "lib/clang",
               "lib/wasi-libc/include",
+              "lib/wasi-libc/include/c++/v1",
               "runtime"
             ],
-            "omittedTinyGoPaths": ["lib except receipt-bound Clang and wasi-libc headers"],
-            "runtimeClosureFormat": "wasm-llvm-tinygo-runtime-closure-v1",
+            "omittedTinyGoPaths": ["lib except receipt-bound Clang, wasi-libc, and libc++ headers"],
+            "runtimeClosureFormat": "wasm-llvm-tinygo-runtime-closure-v2",
             "runtimeProbe": {
               "fixture": "fixtures/runtime-closure-probe/main.go",
               "sha256": "55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566"

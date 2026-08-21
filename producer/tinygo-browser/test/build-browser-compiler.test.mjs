@@ -228,6 +228,11 @@ async function createFixture() {
 		await chmod(toolPath, 0o755);
 	}
 	await mkdir(wasiSysroot, { recursive: true });
+	await writeFixtureFile(
+		path.join(wasiSysroot, 'include', 'c++', 'v1'),
+		'string',
+		'// libc++ string fixture\n'
+	);
 	for (const library of ['wasi-emulated-mman', 'dl', 'c++', 'c++abi']) {
 		const libraryDir = path.join(
 			wasiSysroot,
@@ -1009,9 +1014,14 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.rootArchive.cgoHeaderClosure.status, 'passed');
 	assert.equal(receipt.rootArchive.cgoHeaderClosure.clangResource.path, 'lib/clang');
 	assert.equal(receipt.rootArchive.cgoHeaderClosure.wasiLibc.path, 'lib/wasi-libc/include');
+	assert.equal(
+		receipt.rootArchive.cgoHeaderClosure.libCxx.path,
+		'lib/wasi-libc/include/c++/v1'
+	);
 	await access(
 		path.join(receipt.paths.browserWasiLibcIncludeDir, 'stdio.h')
 	);
+	await access(path.join(receipt.paths.browserCxxIncludeDir, 'string'));
 	assert.equal(
 		receipt.rootArchive.runtimeClosure.manifest.value.compilerSha256,
 		receipt.build.linkedCompiler.sha256
@@ -1020,11 +1030,13 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		[
 			receipt.rootArchive.runtimeClosure.manifest.value.compilerRT,
 			receipt.rootArchive.runtimeClosure.manifest.value.wasiLibc,
+			receipt.rootArchive.runtimeClosure.manifest.value.libCxx,
+			receipt.rootArchive.runtimeClosure.manifest.value.libCxxAbi,
 			...Object.values(
 				receipt.rootArchive.runtimeClosure.manifest.value.extraFiles
 			)
 		].map((asset) => asset.id),
-		['compiler-rt', 'wasi-libc', 'extra-0', 'extra-1', 'extra-2']
+		['compiler-rt', 'wasi-libc', 'libcxx', 'libcxxabi', 'extra-0', 'extra-1', 'extra-2']
 	);
 	assert.deepEqual(
 		Object.values(

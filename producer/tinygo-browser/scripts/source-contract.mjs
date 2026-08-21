@@ -9,7 +9,7 @@ const execFileAsync = promisify(execFile);
 const THIS_FILE = fileURLToPath(import.meta.url);
 export const TINYGO_PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), '..');
 export const SOURCE_RECEIPT_FORMAT = 'wasm-llvm-tinygo-source-v1';
-export const COMPILER_RECEIPT_FORMAT = 'wasm-llvm-tinygo-browser-compiler-v4';
+export const COMPILER_RECEIPT_FORMAT = 'wasm-llvm-tinygo-browser-compiler-v5';
 
 const COMMIT_PATTERN = /^[0-9a-f]{40}$/u;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
@@ -258,17 +258,17 @@ export function validateTinyGoManifest(manifest, lock) {
 		'host compile fallback must not satisfy the browser compiler contract'
 	);
 	assertExactArray(manifest?.patches, lock.patches, 'manifest patch set');
-	assert(manifest?.compileProtocol?.version === 4, 'TinyGo compile protocol must use version 4');
+	assert(manifest?.compileProtocol?.version === 5, 'TinyGo compile protocol must use version 5');
 	assert(
-		manifest?.compileProtocol?.format === 'wasm-llvm-tinygo-link-plan-v4',
-		'TinyGo compile protocol must identify link-plan v4'
+		manifest?.compileProtocol?.format === 'wasm-llvm-tinygo-link-plan-v5',
+		'TinyGo compile protocol must identify link-plan v5'
 	);
 	assertExactArray(
 		manifest?.compileProtocol?.capabilities,
 		[
 			'go-embed-objects',
 			'target-cgo-c',
-			'target-cxx-freestanding',
+			'target-cxx-hosted-noeh',
 			'target-clang-assembly'
 		],
 		'TinyGo compile protocol capabilities'
@@ -281,9 +281,9 @@ export function validateTinyGoManifest(manifest, lock) {
 	assert(
 		JSON.stringify(manifest?.compileProtocol?.targetNativeSourcePolicy) ===
 			JSON.stringify({
-				cgoFiles: 'program-object-with-source-closure-v4',
-				cFiles: 'thinlto-object-set-v4',
-				cxxFiles: 'freestanding-thinlto-object-set-v4',
+				cgoFiles: 'program-object-with-source-closure-v5',
+				cFiles: 'thinlto-object-set-v5',
+				cxxFiles: 'hosted-noeh-libcxx-thinlto-object-set-v5',
 				sFiles: 'clang-uppercase-s-wasm-object-set-v4',
 				embedFiles: 'generated-object-set-v2'
 			}),
@@ -311,7 +311,8 @@ export function validateTinyGoManifest(manifest, lock) {
 				allowedWasmLimitsFlags: ['has-max'],
 				maximumTotalMemories: 1,
 				maximumTotalTables: 1,
-				freestandingPolicy: 'no-tls-ctors-dtors-cxxabi-forbidden-target-features'
+				cPolicy: 'no-tls-ctors-dtors-forbidden-target-features',
+				cxxPolicy: 'libcxx-libcxxabi-noeh-nortti-no-global-ctors-dtors-v1'
 			}),
 		'TinyGo compile protocol must pin its target-native validation boundary'
 	);
@@ -341,10 +342,13 @@ export function validateTinyGoManifest(manifest, lock) {
 					'go.sum',
 					'lib/clang',
 					'lib/wasi-libc/include',
+					'lib/wasi-libc/include/c++/v1',
 					'runtime'
 				],
-				omittedTinyGoPaths: ['lib except receipt-bound Clang and wasi-libc headers'],
-				runtimeClosureFormat: 'wasm-llvm-tinygo-runtime-closure-v1',
+				omittedTinyGoPaths: [
+					'lib except receipt-bound Clang, wasi-libc, and libc++ headers'
+				],
+				runtimeClosureFormat: 'wasm-llvm-tinygo-runtime-closure-v2',
 				runtimeProbe: {
 					fixture: 'fixtures/runtime-closure-probe/main.go',
 					sha256: '55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566'
@@ -700,7 +704,7 @@ export function validateTinyGoCompilerReceipt(
 		sourceReceiptSha256
 	}
 ) {
-	assert(receipt?.schemaVersion === 4, 'TinyGo compiler receipt must use schemaVersion 4');
+	assert(receipt?.schemaVersion === 5, 'TinyGo compiler receipt must use schemaVersion 5');
 	assert(receipt?.format === COMPILER_RECEIPT_FORMAT, 'unexpected TinyGo compiler receipt format');
 	assert(receipt?.producerId === manifest.producerId, 'TinyGo compiler receipt producer differs');
 	assert(!('artifactKind' in receipt), 'artifactKind labels are not compiler identity evidence');

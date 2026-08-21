@@ -25,7 +25,7 @@ import (
 const (
 	packageJSONEnvironment     = "TINYGO_BROWSER_PACKAGE_JSON"
 	compilerBuildIDEnvironment = "TINYGO_BROWSER_COMPILER_BUILD_ID"
-	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v4"
+	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v5"
 	llvmValidationToolchain    = "llvm-20.1.1"
 	wasmTargetTriple           = "wasm32-unknown-wasi"
 	wasmTargetDataLayout       = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
@@ -62,6 +62,8 @@ type request struct {
 type runtimeArtifacts struct {
 	CompilerRT string            `json:"compilerRT"`
 	WasiLibc   string            `json:"wasiLibc"`
+	LibCxx     string            `json:"libCxx"`
+	LibCxxAbi  string            `json:"libCxxAbi"`
 	ExtraFiles map[string]string `json:"extraFiles"`
 }
 
@@ -454,20 +456,20 @@ func (request *request) prepare() error {
 		request.Opt = "1"
 	}
 	if request.Opt != "1" {
-		return fmt.Errorf("compile protocol v4 requires opt=1, got %q", request.Opt)
+		return fmt.Errorf("compile protocol v5 requires opt=1, got %q", request.Opt)
 	}
 	if request.GC == "" {
 		request.GC = "precise"
 	}
 	if request.GC != "precise" {
-		return fmt.Errorf("compile protocol v4 requires gc=precise, got %q", request.GC)
+		return fmt.Errorf("compile protocol v5 requires gc=precise, got %q", request.GC)
 	}
 	if request.PanicStrategy == "" {
 		request.PanicStrategy = "print"
 	}
 	if request.PanicStrategy != "print" {
 		return fmt.Errorf(
-			"compile protocol v4 requires panicStrategy=print, got %q",
+			"compile protocol v5 requires panicStrategy=print, got %q",
 			request.PanicStrategy,
 		)
 	}
@@ -476,18 +478,18 @@ func (request *request) prepare() error {
 	}
 	if request.Scheduler != "asyncify" {
 		return fmt.Errorf(
-			"compile protocol v4 requires scheduler=asyncify, got %q",
+			"compile protocol v5 requires scheduler=asyncify, got %q",
 			request.Scheduler,
 		)
 	}
 	if request.Debug {
-		return errors.New("compile protocol v4 does not provide a debug runtime closure")
+		return errors.New("compile protocol v5 does not provide a debug runtime closure")
 	}
 	if request.Parallelism == 0 {
 		request.Parallelism = 1
 	}
 	if request.Parallelism != 1 {
-		return errors.New("compile protocol v4 requires parallelism=1")
+		return errors.New("compile protocol v5 requires parallelism=1")
 	}
 
 	requiredPaths := []struct {
@@ -500,6 +502,8 @@ func (request *request) prepare() error {
 		{"temporaryDirectory", &request.TemporaryDirectory},
 		{"runtime.compilerRT", &request.Runtime.CompilerRT},
 		{"runtime.wasiLibc", &request.Runtime.WasiLibc},
+		{"runtime.libCxx", &request.Runtime.LibCxx},
+		{"runtime.libCxxAbi", &request.Runtime.LibCxxAbi},
 	}
 	for _, required := range requiredPaths {
 		if *required.value == "" {
@@ -779,7 +783,7 @@ func auxiliaryKindOrder(kind string) int {
 
 func deriveExpectedDataLayout(config *compileopts.Config) (string, error) {
 	if config.Triple() != wasmTargetTriple {
-		return "", fmt.Errorf("compile protocol v4 requires LLVM triple %q", wasmTargetTriple)
+		return "", fmt.Errorf("compile protocol v5 requires LLVM triple %q", wasmTargetTriple)
 	}
 	machine, err := compiler.NewTargetMachine(&compiler.Config{
 		Triple:          config.Triple(),
@@ -796,7 +800,7 @@ func deriveExpectedDataLayout(config *compileopts.Config) (string, error) {
 	defer targetData.Dispose()
 	dataLayout := targetData.String()
 	if dataLayout != wasmTargetDataLayout {
-		return "", fmt.Errorf("compile protocol v4 requires LLVM data layout %q, got %q", wasmTargetDataLayout, dataLayout)
+		return "", fmt.Errorf("compile protocol v5 requires LLVM data layout %q, got %q", wasmTargetDataLayout, dataLayout)
 	}
 	return dataLayout, nil
 }
@@ -1128,6 +1132,20 @@ func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compil
 			arguments = append(arguments, object.Path)
 		}
 	}
+	hasHostedCXX := false
+	for _, object := range objects[1:] {
+		if object.Kind == "target-cxx" {
+			hasHostedCXX = true
+			break
+		}
+	}
+	if hasHostedCXX {
+		arguments = append(arguments, runtime.LibCxx, runtime.LibCxxAbi)
+		runtimeInputs = append(runtimeInputs,
+			runtimeInput{Kind: "libcxx", Path: runtime.LibCxx},
+			runtimeInput{Kind: "libcxxabi", Path: runtime.LibCxxAbi},
+		)
+	}
 	arguments = append(arguments, runtime.WasiLibc)
 	runtimeInputs = append(runtimeInputs, runtimeInput{Kind: "wasi-libc", Path: runtime.WasiLibc})
 	for _, object := range objects[1:] {
@@ -1164,10 +1182,10 @@ func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compil
 	)
 
 	return linkPlan{
-		SchemaVersion:    4,
+		SchemaVersion:    5,
 		Format:           linkPlanFormat,
 		CompilerSHA256:   compilerSHA256,
-		Capabilities:     []string{"go-embed-objects", "target-cgo-c", "target-cxx-freestanding", "target-clang-assembly"},
+		Capabilities:     []string{"go-embed-objects", "target-cgo-c", "target-cxx-hosted-noeh", "target-clang-assembly"},
 		CompilerPackages: append([]string(nil), upstreamCompilerPackages...),
 		Linker:           "wasm-ld",
 		Objects:          append([]linkPlanObject(nil), objects...),
