@@ -104,6 +104,20 @@ jobs:
                   git -C "$TINYGO_GO_LLVM_SOURCE" checkout --detach \
                     b8f170971e747fec20a03b25a4490f627140709a
 
+            - name: Verify native TinyGo bootstrap inputs
+              run: |
+                  test -f "$TINYGO_SOURCE/go.mod"
+                  test -f "$TINYGO_SOURCE/main.go"
+                  test -x "$TINYGO_NATIVE_ROOT/bin/tinygo"
+                  test -x "$TINYGO_NATIVE_ROOT/bin/wasm-opt"
+                  test -x "$TINYGO_WASI_SDK/bin/wasm-ld"
+                  tinygo_resolved_root="$(TINYGOROOT="$TINYGO_SOURCE" "$TINYGO_NATIVE_ROOT/bin/tinygo" env TINYGOROOT)"
+                  test "$tinygo_resolved_root" = "$TINYGO_SOURCE"
+                  tinygo_resolved_wasm_opt="$(TINYGOROOT="$TINYGO_SOURCE" WASMOPT="$TINYGO_NATIVE_ROOT/bin/wasm-opt" "$TINYGO_NATIVE_ROOT/bin/tinygo" env WASMOPT)"
+                  test "$tinygo_resolved_wasm_opt" = "$TINYGO_NATIVE_ROOT/bin/wasm-opt"
+                  "$TINYGO_NATIVE_ROOT/bin/tinygo" version
+                  "$TINYGO_WASI_SDK/bin/wasm-ld" --version
+
             - name: Restore source-locked LLVM WASI build cache
               id: tinygo-llvm-cache
               uses: actions/cache/restore@v4
