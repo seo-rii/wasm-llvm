@@ -804,6 +804,7 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 					command[0] === fixture.tools.cxx &&
 					command.includes('--target=wasm32-wasip1') &&
 					command.includes('-std=c++17') &&
+					command.includes('-DCLANG_BUILD_STATIC') &&
 					command.includes('-fno-rtti')
 			)
 	);

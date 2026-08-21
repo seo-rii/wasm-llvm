@@ -864,6 +864,7 @@ export async function createBrowserCompilerBuildPlan(
 		'-D__STDC_CONSTANT_MACROS',
 		'-D__STDC_FORMAT_MACROS',
 		'-D__STDC_LIMIT_MACROS',
+		'-DCLANG_BUILD_STATIC',
 		...llvmInputs.hostSupport.definitions.map((definition) => `-D${definition}`),
 		...llvmInputs.hostSupport.includeRoots.map((root) => `-I${root}`),
 		`-I${path.join(patchedSourceRoot, 'builder')}`,
