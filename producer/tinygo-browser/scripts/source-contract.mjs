@@ -63,10 +63,16 @@ const REQUIRED_ACCEPTANCE_FEATURES = [
 	'methods',
 	'interfaces',
 	'go:embed',
+	'generics',
+	'package-init',
+	'goroutines',
+	'channels',
 	'cgo',
 	'c',
-	'freestanding-cxx',
+	'hosted-cxx-noeh',
 	'clang-assembly',
+	'cgo-cxxflags',
+	'cgo-linker-flags',
 	'stdin'
 ];
 

@@ -430,7 +430,29 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 			'fixtures/upstream-language-smoke/helper.S'
 		]
 	);
-	assert.equal(contract.acceptance.expectedStdout, 'hello Ada count=2 total=3 cgo=5/20 cxxasm=13\n');
+	assert.deepEqual(contract.manifest.acceptance.requiredFeatures, [
+		'maps',
+		'slices',
+		'structs',
+		'methods',
+		'interfaces',
+		'go:embed',
+		'generics',
+		'package-init',
+		'goroutines',
+		'channels',
+		'cgo',
+		'c',
+		'hosted-cxx-noeh',
+		'clang-assembly',
+		'cgo-cxxflags',
+		'cgo-linker-flags',
+		'stdin'
+	]);
+	assert.equal(
+		contract.acceptance.expectedStdout,
+		'hello Ada count=2 total=3 semantics=9/9 cgo=5/20 cxxasm=13\n'
+	);
 });
 
 test('accepts pnpm literal argument separators in source preparation commands', () => {

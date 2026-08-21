@@ -11,6 +11,32 @@ import (
 //go:embed greeting.txt
 var greeting string
 
+var initializedValues []int
+
+func init() {
+	initializedValues = append(initializedValues, 4, 5)
+}
+
+type integer interface {
+	~int
+}
+
+func sum[T integer](values []T) T {
+	var total T
+	for _, value := range values {
+		total += value
+	}
+	return total
+}
+
+func concurrentSum(values []int) int {
+	result := make(chan int, 1)
+	go func() {
+		result <- sum(values)
+	}()
+	return <-result
+}
+
 type greeter interface {
 	greeting() string
 }
@@ -39,5 +65,13 @@ func main() {
 	}
 	var value greeter = person{name: name, values: []int{1, 2}}
 	added, multiplied, cppAssembly := nativeValues()
-	fmt.Printf("%s cgo=%d/%d cxxasm=%d\n", value.greeting(), added, multiplied, cppAssembly)
+	fmt.Printf(
+		"%s semantics=%d/%d cgo=%d/%d cxxasm=%d\n",
+		value.greeting(),
+		sum(initializedValues),
+		concurrentSum(initializedValues),
+		added,
+		multiplied,
+		cppAssembly,
+	)
 }

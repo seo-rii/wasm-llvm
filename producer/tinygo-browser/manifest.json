@@ -154,10 +154,16 @@
       "methods",
       "interfaces",
       "go:embed",
+      "generics",
+      "package-init",
+      "goroutines",
+      "channels",
       "cgo",
       "c",
-      "freestanding-cxx",
+      "hosted-cxx-noeh",
       "clang-assembly",
+      "cgo-cxxflags",
+      "cgo-linker-flags",
       "stdin"
     ]
   },
@@ -200,6 +206,6 @@
   "readiness": {
     "strictVerifier": "scripts/verify-artifacts.mjs",
     "ready": false,
-    "blockedOn": "Compile protocol v4 adds source-bound freestanding C++ ThinLTO objects and Clang assembler-with-cpp WebAssembly objects for CGo packages while preserving the validated Go/embed/CGo/C path. Release readiness remains false because libc++/libc++abi, exceptions, RTTI, constructors, CXXFLAGS, Go/Plan9 assembly, custom #cgo LDFLAGS, external module downloads, hard synchronous resource limits, and broader compatibility fixtures remain unsupported or unverified."
+    "blockedOn": "Compile protocol v6 closes hosted C++ without exceptions/RTTI, restricted CXXFLAGS and linker flags, and offline vendor-mode contracts. The expanded generics/init/goroutine/channel fixture must still produce fresh producer, Node, and Chromium acceptance receipts before public readiness is marked passed."
   }
 }

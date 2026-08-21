@@ -1,6 +1,8 @@
 package main
 
 /*
+#cgo CXXFLAGS: -DTINYGO_CXX_SCALE=2
+#cgo LDFLAGS: -L${SRCDIR}
 int tinygo_inline_add(int a, int b) { return a + b; }
 int tinygo_external_mul(int a, int b);
 int tinygo_cpp_asm_mix(int a, int b);

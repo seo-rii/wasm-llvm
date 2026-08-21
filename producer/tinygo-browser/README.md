@@ -191,13 +191,14 @@ the upstream package graph, cgo-enabled in-process LLVM C API linkage, and both 
 hashes. The link plan must omit `--thinlto-cache-dir`, which fails with WASI `ENOSYS`. A recorded
 version is not accepted as compiler identity on its own.
 
-The checked-in acceptance fixture exercises real CGo, separate target C and C++ files, an uppercase
-preprocessed `.S` file, `go:embed`, maps, slices, a struct, a method, an interface, and stdin. A
-conforming receipt must record the complete object set and
+The checked-in acceptance fixture exercises real CGo, separate target C and hosted C++ files, an
+uppercase preprocessed `.S` file, receipt-bound CXXFLAGS/linker flags, `go:embed`, maps, slices, a
+struct, a method, an interface, generics, package initialization, a goroutine/channel handoff, and
+stdin. A conforming receipt must record the complete object set and
 `link-plan.json`, external LLD/Binaryen finalization, and execution output:
 
 ```text
-hello Ada count=2 total=3 cgo=5/20 cxxasm=13
+hello Ada count=2 total=3 semantics=9/9 cgo=5/20 cxxasm=13
 ```
 
 After the remaining public blockers are closed, update `manifest.json`, rebuild its bound receipts,
