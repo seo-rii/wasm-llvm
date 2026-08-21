@@ -105,7 +105,8 @@ jobs:
                     b8f170971e747fec20a03b25a4490f627140709a
 
             - name: Restore source-locked LLVM WASI build cache
-              uses: actions/cache@v4
+              id: tinygo-llvm-cache
+              uses: actions/cache/restore@v4
               with:
                   path: |
                       ${{ env.TINYGO_LLVM_BUILD }}
@@ -122,6 +123,15 @@ jobs:
                     --receipt "$TINYGO_LLVM_RECEIPT" \
                     --jobs 4 \
                     --execute
+
+            - name: Save source-locked LLVM WASI build cache
+              if: steps.tinygo-llvm-cache.outputs.cache-hit != 'true'
+              uses: actions/cache/save@v4
+              with:
+                  path: |
+                      ${{ env.TINYGO_LLVM_BUILD }}
+                      ${{ env.TINYGO_LLVM_RECEIPT }}
+                  key: ${{ steps.tinygo-llvm-cache.outputs.cache-primary-key }}
 
             - name: Build upstream TinyGo browser compiler
               run: |
