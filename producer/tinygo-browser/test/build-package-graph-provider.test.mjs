@@ -37,6 +37,7 @@ test('pins list-only cmd/go fields and the complete TinyGo wasip1 tag profile', 
 		'--execute'
 	]);
 	const plan = createPackageGraphProviderPlan(options, contract);
+	assert.equal(plan.format, 'wasm-llvm-tinygo-package-graph-provider-v2');
 	assert.equal(plan.status, 'building');
 	assert.equal(plan.upstream.entrypoint, 'cmd/go');
 	assert.deepEqual(plan.protocol.arguments, [
@@ -47,6 +48,15 @@ test('pins list-only cmd/go fields and the complete TinyGo wasip1 tag profile', 
 		`-tags=${TINYGO_PACKAGE_GRAPH_TAGS.join(' ')}`,
 		'.'
 	]);
+	assert.deepEqual(plan.protocol.argumentsByModuleMode.vendor, [
+		`-json=${TINYGO_PACKAGE_GRAPH_FIELDS.join(',')}`,
+		'-deps',
+		'-e',
+		'-mod=vendor',
+		`-tags=${TINYGO_PACKAGE_GRAPH_TAGS.join(' ')}`,
+		'.'
+	]);
+	assert.deepEqual(plan.protocol.moduleModes, ['readonly', 'vendor']);
 	assert.equal(TINYGO_PACKAGE_GRAPH_TAGS.at(-1), 'go1.24');
 	assert.ok(plan.upstream.identityPackages.includes('cmd/go/internal/list'));
 	assert.equal(plan.protocol.environment.GOPROXY, 'off');

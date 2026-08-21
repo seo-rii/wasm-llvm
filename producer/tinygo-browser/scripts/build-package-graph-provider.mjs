@@ -24,7 +24,7 @@ import { sha256 } from './source-contract.mjs';
 const execFileAsync = promisify(execFile);
 const THIS_FILE = fileURLToPath(import.meta.url);
 const PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), '..');
-const RECEIPT_FORMAT = 'wasm-llvm-tinygo-package-graph-provider-v1';
+const RECEIPT_FORMAT = 'wasm-llvm-tinygo-package-graph-provider-v2';
 const PROVIDER_FILENAME = 'tinygo-package-graph.wasm';
 const SOURCE_LOCK_PATH = path.join(PRODUCER_ROOT, 'package-graph.lock.json');
 const PROVIDER_IDENTITY = [
@@ -84,12 +84,12 @@ const REQUIRED_FLAGS = new Map([
 	['--receipt', 'receipt']
 ]);
 
-function packageGraphArguments() {
+function packageGraphArguments(moduleMode = 'readonly') {
 	return [
 		`-json=${TINYGO_PACKAGE_GRAPH_FIELDS.join(',')}`,
 		'-deps',
 		'-e',
-		'-mod=readonly',
+		`-mod=${moduleMode}`,
 		`-tags=${TINYGO_PACKAGE_GRAPH_TAGS.join(' ')}`,
 		'.'
 	];
@@ -187,6 +187,11 @@ export function createPackageGraphProviderPlan(options, contract) {
 		protocol: {
 			command: 'list',
 			arguments: packageGraphArguments(),
+			argumentsByModuleMode: {
+				readonly: packageGraphArguments('readonly'),
+				vendor: packageGraphArguments('vendor')
+			},
+			moduleModes: ['readonly', 'vendor'],
 			environment: {
 				GOOS: 'wasip1',
 				GOARCH: 'wasm',
