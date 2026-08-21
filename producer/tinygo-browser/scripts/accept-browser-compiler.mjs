@@ -37,10 +37,9 @@ const SOURCE_FILE_FIELDS = [
   "CFiles",
   "CXXFiles",
   "SFiles",
-  "CgoCXXFLAGS",
-  "CgoLDFLAGS",
   "EmbedFiles",
 ];
+const NATIVE_FLAG_FIELDS = ["CgoCXXFLAGS", "CgoLDFLAGS"];
 const NATIVE_OBJECT_FIELDS = new Map([
   ["target-c", "CFiles"],
   ["target-cxx", "CXXFiles"],
@@ -196,6 +195,16 @@ export async function normalizePackageGraph(packages, { rootPath, fixtureDir }) 
           `package ${pkg.ImportPath} has an invalid ${field} entry`,
         );
         await access(path.join(pkg.Dir, file));
+      }
+    }
+    for (const field of NATIVE_FLAG_FIELDS) {
+      const flags = pkg[field] ?? [];
+      assert(Array.isArray(flags), `package ${pkg.ImportPath} ${field} is not an array`);
+      for (const flag of flags) {
+        assert(
+          typeof flag === "string" && flag.length > 0,
+          `package ${pkg.ImportPath} has an invalid ${field} entry`,
+        );
       }
     }
   }

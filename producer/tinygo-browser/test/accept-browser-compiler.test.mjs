@@ -65,6 +65,8 @@ test("normalizes one synthetic GOROOT and rejects paths outside the root and fix
       Dir: fixtureDir,
       ImportPath: "_/fixture",
       GoFiles: ["main.go"],
+      CgoCXXFLAGS: ["-DTINYGO_CXX_SCALE=2"],
+      CgoLDFLAGS: ["-L${SRCDIR}"],
     },
   ];
   const normalized = await normalizePackageGraph(packages, {
@@ -73,6 +75,8 @@ test("normalizes one synthetic GOROOT and rejects paths outside the root and fix
   });
   assert.equal(normalized.packages.length, 2);
   assert.equal(normalized.packages[0].Dir, path.join(rootPath, "src", "fmt"));
+  assert.deepEqual(normalized.packages[1].CgoCXXFLAGS, ["-DTINYGO_CXX_SCALE=2"]);
+  assert.deepEqual(normalized.packages[1].CgoLDFLAGS, ["-L${SRCDIR}"]);
   assert.doesNotMatch(normalized.serialized, /host\/synthetic-go-root/u);
 
   await assert.rejects(
@@ -91,5 +95,12 @@ test("normalizes one synthetic GOROOT and rejects paths outside the root and fix
       { rootPath, fixtureDir },
     ),
     /invalid GoFiles entry/u,
+  );
+  await assert.rejects(
+    normalizePackageGraph(
+      [{ ...packages[0], CgoCXXFLAGS: "-DTINYGO_CXX_SCALE=2" }],
+      { rootPath, fixtureDir },
+    ),
+    /CgoCXXFLAGS is not an array/u,
   );
 });
