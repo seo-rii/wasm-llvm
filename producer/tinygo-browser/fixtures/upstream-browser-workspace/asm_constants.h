@@ -1,0 +1,1 @@
+#define TINYGO_ASM_BIAS 0

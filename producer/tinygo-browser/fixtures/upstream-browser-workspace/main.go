@@ -2,12 +2,42 @@ package main
 
 import (
 	"bufio"
+	_ "embed"
 	"fmt"
 	"os"
 	"strings"
 
 	"example.com/tinygo-browser/workspace/numbers"
 )
+
+//go:embed greeting.txt
+var greeting string
+
+var initializedValues []int
+
+func init() {
+	initializedValues = append(initializedValues, 4, 5)
+}
+
+type integer interface {
+	~int
+}
+
+func sum[T integer](values []T) T {
+	var total T
+	for _, value := range values {
+		total += value
+	}
+	return total
+}
+
+func concurrentSum(values []int) int {
+	result := make(chan int, 1)
+	go func() {
+		result <- sum(values)
+	}()
+	return <-result
+}
 
 type greeter interface {
 	greeting() string
@@ -24,14 +54,12 @@ func (value person) greeting() string {
 	for _, number := range value.values {
 		total += number
 	}
-	inline, external := nativeValues()
 	return fmt.Sprintf(
-		"hello %s count=%d total=%d cgo=%d/%d",
+		"%s %s count=%d total=%d",
+		strings.TrimSpace(greeting),
 		value.name,
 		counts["values"],
 		total,
-		inline,
-		external,
 	)
 }
 
@@ -44,5 +72,14 @@ func main() {
 		}
 	}
 	var value greeter = person{name: name, values: numbers.Values()}
-	fmt.Println(value.greeting())
+	added, multiplied, cppAssembly := nativeValues()
+	fmt.Printf(
+		"%s semantics=%d/%d cgo=%d/%d cxxasm=%d\n",
+		value.greeting(),
+		sum(initializedValues),
+		concurrentSum(initializedValues),
+		added,
+		multiplied,
+		cppAssembly,
+	)
 }

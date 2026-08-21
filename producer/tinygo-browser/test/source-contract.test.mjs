@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -464,6 +464,30 @@ test('accepts pnpm literal argument separators in source preparation commands', 
 			sourceDir: path.resolve('out/source'),
 			receiptPath: path.resolve('out/source-receipt.json')
 		}
+	);
+});
+
+test('keeps the independent consumer workspace broader than the producer smoke', async () => {
+	const fixtureRoot = path.join(
+		TINYGO_PRODUCER_ROOT,
+		'fixtures',
+		'upstream-browser-workspace'
+	);
+	const [cgoSource, mainSource, expectedStdout] = await Promise.all([
+		readFile(path.join(fixtureRoot, 'cgo.go'), 'utf8'),
+		readFile(path.join(fixtureRoot, 'main.go'), 'utf8'),
+		readFile(path.join(fixtureRoot, 'stdout.txt'), 'utf8')
+	]);
+
+	assert.match(cgoSource, /#cgo CXXFLAGS: -DTINYGO_CXX_SCALE=3/u);
+	assert.match(cgoSource, /#cgo LDFLAGS: -L\$\{SRCDIR\}/u);
+	assert.match(mainSource, /\/\/go:embed greeting\.txt/u);
+	assert.match(mainSource, /func sum\[T integer\]/u);
+	assert.match(mainSource, /func init\(\)/u);
+	assert.match(mainSource, /go func\(\)/u);
+	assert.equal(
+		expectedStdout,
+		'hello Ada count=2 total=3 semantics=9/9 cgo=5/20 cxxasm=16\n'
 	);
 });
 
