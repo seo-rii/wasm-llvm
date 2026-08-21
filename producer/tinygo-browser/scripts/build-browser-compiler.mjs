@@ -827,7 +827,13 @@ export async function createBrowserCompilerBuildPlan(
 	const runtimeProfileDir = path.join(runtimeClosureDir, RUNTIME_PROFILE.id);
 	const runtimeProbePath = path.join(options.buildDir, 'runtime-closure-probe.wasm');
 	const wasiLibcSourcePath = path.join(wasiLibraryDir, 'libc.a');
-	const wasiCxxIncludeDir = path.join(wasiSysroot, 'include', 'c++', 'v1');
+	const wasiCxxIncludeDir = path.join(
+		wasiSysroot,
+		'include',
+		contract.manifest.target,
+		'c++',
+		'v1'
+	);
 	const filteredWasiLibcPath = path.join(hostSupportDir, 'libc-no-dlmalloc.a');
 	const lockedTinyGoSources = new Map(
 		contract.lock.compilerIdentity.requiredSources.map((source) => [source.path, source])

@@ -229,7 +229,7 @@ async function createFixture() {
 	}
 	await mkdir(wasiSysroot, { recursive: true });
 	await writeFixtureFile(
-		path.join(wasiSysroot, 'include', 'c++', 'v1'),
+		path.join(wasiSysroot, 'include', 'wasm32-wasip1', 'c++', 'v1'),
 		'string',
 		'// libc++ string fixture\n'
 	);
