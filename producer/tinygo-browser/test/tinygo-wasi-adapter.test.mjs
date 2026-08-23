@@ -187,6 +187,7 @@ test('the upstream patch adapts only WASI host services and the wasm32 libclang 
 	assert.match(patch, /runtime\.GOOS == "wasip1"/);
 	assert.match(patch, /case "CXXFLAGS":/);
 	assert.match(patch, /checkCompilerFlags\(name, flags\)/);
+	assert.match(patch, /strings\.ReplaceAll\(arg, "\$\{SRCDIR\}", p\.packageDir\)/);
 	assert.match(patch, /-.*github\.com\/gofrs\/flock/);
 	assert.match(patch, /-#cgo CXXFLAGS: -fno-rtti/);
 	assert.match(patch, /diff --git a\/builder\/lock_default\.go/);

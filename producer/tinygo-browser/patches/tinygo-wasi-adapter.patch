@@ -917,6 +917,9 @@ diff --git a/cgo/cgo.go b/cgo/cgo.go
 index 6b8ea437..4a52dd81 100644
 --- a/cgo/cgo.go
 +++ b/cgo/cgo.go
+@@ -449,0 +450,2 @@ func (p *cgoPackage) makePathsAbsolute(args []string) {
++		arg = strings.ReplaceAll(arg, "${SRCDIR}", p.packageDir)
++		args[i] = arg
 @@ -555,0 +556,15 @@ func (p *cgoPackage) parseCGoPreprocessorLines(text string, pos token.Pos) strin
 +		case "CXXFLAGS":
 +			flags, err := shlex.Split(value)
