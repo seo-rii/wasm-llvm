@@ -65,6 +65,15 @@ package builder
 // bool tinygo_clang_driver(
 // bool tinygo_link(
 `,
+	'cgo/cgo.go': `package cgo
+func Process(
+func parseFlags(name string) {
+	switch name {
+	case "CFLAGS":
+	case "LDFLAGS":
+	}
+}
+`,
 	'cgo/libclang.go': `package cgo
 /*
 #include <clang-c/Index.h>
@@ -573,7 +582,7 @@ test('initializes missing submodules in an existing TinyGo checkout', async () =
 test('verifies source contents and creates a deterministic upstream compiler receipt', async () => {
 	const contract = await createFixtureContract();
 	assert.equal(contract.sourceReceipt.source.clean, true);
-	assert.equal(contract.sourceReceipt.compilerIdentity.sourceFiles.length, 16);
+	assert.equal(contract.sourceReceipt.compilerIdentity.sourceFiles.length, 17);
 	assert.ok(
 		contract.sourceReceipt.compilerIdentity.requiredPackages.includes(
 			'github.com/tinygo-org/tinygo/cgo'

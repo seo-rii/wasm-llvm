@@ -913,6 +913,26 @@ index 9d15e4ccaab1e1b7337f42cf5b64c6d532e35ed0..a90fe384ff08493c82dbe52ed437bca7
  	// Find the right command to run Clang.
  	var cmd *exec.Cmd
  	if hasBuiltinTools {
+diff --git a/cgo/cgo.go b/cgo/cgo.go
+index 6b8ea437..4a52dd81 100644
+--- a/cgo/cgo.go
++++ b/cgo/cgo.go
+@@ -555,0 +556,15 @@ func (p *cgoPackage) parseCGoPreprocessorLines(text string, pos token.Pos) strin
++		case "CXXFLAGS":
++			flags, err := shlex.Split(value)
++			if err != nil {
++				// TODO: find the exact location where the error happened.
++				p.addErrorAfter(pos, text[:lineStart+colon+1], "failed to parse flags in #cgo line: "+err.Error())
++				continue
++			}
++			if err := checkCompilerFlags(name, flags); err != nil {
++				p.addErrorAfter(pos, text[:lineStart+colon+1], err.Error())
++				continue
++			}
++			// The browser adapter receives the same cmd/go-derived CXXFLAGS
++			// independently and binds them to each externally compiled C++ object.
++			// Accept and validate the directive here so upstream CGo parsing does not
++			// reject the source before that receipt-bound handoff.
 diff --git a/cgo/libclang.go b/cgo/libclang.go
 index 3772ca5073af5aef2d2e4ed7c2c2f0821f3f126a..f85907a03c6a2fd9d3b8d95ed30d9890f7f12bbb 100644
 --- a/cgo/libclang.go

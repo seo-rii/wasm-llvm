@@ -711,6 +711,7 @@ export async function createBrowserCompilerBuildPlan(
 		`${ADAPTER_PATCH_PATH} does not add the upstream compiler adapter`
 	);
 	const allowedCgoAdapterPaths = new Set([
+		'cgo/cgo.go',
 		'cgo/libclang.go',
 		'cgo/libclang_stubs.c',
 		'cgo/unsigned_wasip1.go'
@@ -721,7 +722,7 @@ export async function createBrowserCompilerBuildPlan(
 				/^(?:compiler|interp|transform)\//u.test(entry) ||
 				(entry.startsWith('cgo/') && !allowedCgoAdapterPaths.has(entry))
 		),
-		`${ADAPTER_PATCH_PATH} changes compiler semantics outside the registered wasm32 cgo ABI adapter`
+		`${ADAPTER_PATCH_PATH} changes compiler semantics outside the registered browser host adapter`
 	);
 
 	for (const [candidatePath, label] of [
@@ -1344,7 +1345,13 @@ export async function buildBrowserCompiler(
 		});
 		const reverseCheck = await run(
 			'git',
-			['apply', '--reverse', '--check', path.join(producerRoot, receipt.patch.path)],
+			[
+				'apply',
+				'--unidiff-zero',
+				'--reverse',
+				'--check',
+				path.join(producerRoot, receipt.patch.path)
+			],
 			{ cwd: receipt.paths.sourceRoot, capture: true }
 		);
 		assert(
@@ -1353,7 +1360,12 @@ export async function buildBrowserCompiler(
 		);
 		const applyCheck = await run(
 			'git',
-			['apply', '--check', path.join(producerRoot, receipt.patch.path)],
+			[
+				'apply',
+				'--unidiff-zero',
+				'--check',
+				path.join(producerRoot, receipt.patch.path)
+			],
 			{ cwd: receipt.paths.sourceRoot, capture: true }
 		);
 		assert(
@@ -1796,7 +1808,11 @@ export async function buildBrowserCompiler(
 			);
 			const applied = await run(
 				'git',
-				['apply', path.join(producerRoot, receipt.patch.path)],
+				[
+					'apply',
+					'--unidiff-zero',
+					path.join(producerRoot, receipt.patch.path)
+				],
 				{ cwd: receipt.paths.patchedSourceRoot, capture: true }
 			);
 			assert(

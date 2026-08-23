@@ -451,7 +451,11 @@ function createCommandRunner(
 		calls.push({ command, args, runOptions });
 		if (command === 'git') {
 			if (args.includes('--reverse')) return result({ exitCode: 1, stderr: 'not applied' });
-			if (args[0] === 'apply' && args.length === 2) {
+			if (
+				args[0] === 'apply' &&
+				!args.includes('--check') &&
+				!args.includes('--reverse')
+			) {
 				if (path.basename(runOptions.cwd) === 'go-llvm-wasi') {
 					await writeFixtureFile(
 						runOptions.cwd,

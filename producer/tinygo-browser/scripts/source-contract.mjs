@@ -22,6 +22,7 @@ const REQUIRED_IDENTITY_PATHS = [
 	'builder/clang.cpp',
 	'builder/lld.cpp',
 	'builder/tools-builtin.go',
+	'cgo/cgo.go',
 	'cgo/libclang.go',
 	'compiler/compiler.go',
 	'go.mod',
