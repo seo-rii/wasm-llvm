@@ -21,10 +21,7 @@ test('manual TinyGo producer rebuilds and accepts the source-locked upstream too
 	assert.match(workflow, /uses: actions\/cache\/restore@v4/u);
 	assert.match(workflow, /uses: actions\/cache\/save@v4/u);
 	assert.match(workflow, /key: tinygo-llvm-wasi-v2-/u);
-	assert.match(
-		workflow,
-		/restore-keys:[\s\S]*tinygo-llvm-wasi-v1-Linux-da3e6a0c8eeb0afa93b32f0c70c6363a6cf9bf2b78a3979e96523cb5a95afe24/u
-	);
+	assert.doesNotMatch(workflow, /tinygo-llvm-wasi-v1-/u);
 	const cacheKeyLine = workflow
 		.split('\n')
 		.find((line) => line.includes('key: tinygo-llvm-wasi-v2-'));
@@ -32,7 +29,7 @@ test('manual TinyGo producer rebuilds and accepts the source-locked upstream too
 	assert.doesNotMatch(cacheKeyLine, /sources\.lock\.json/u);
 	assert.match(
 		workflow,
-		/name: Build source-locked LLVM host for WASI\s+if: steps\.tinygo-llvm-cache\.outputs\.cache-hit != 'true' && steps\.tinygo-llvm-cache\.outputs\.cache-matched-key == ''/u
+		/name: Build source-locked LLVM host for WASI\s+if: steps\.tinygo-llvm-cache\.outputs\.cache-hit != 'true'/u
 	);
 	assert.match(workflow, /if: steps\.tinygo-llvm-cache\.outputs\.cache-hit != 'true'/u);
 	assert.match(workflow, /TINYGO_LLVM_BUILD/u);
