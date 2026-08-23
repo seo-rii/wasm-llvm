@@ -311,8 +311,8 @@ export function validateLlvmWasiReceipt(receipt, { contract }) {
 	assert(receipt?.format === LLVM_RECEIPT_FORMAT, 'unexpected LLVM WASI receipt format');
 	assert(receipt?.status === 'passed', 'LLVM WASI receipt must have status passed');
 	assert(
-		receipt?.inputs?.sourcesLockSha256 === contract.inputs.sourcesLockSha256,
-		'LLVM WASI receipt is not bound to the current TinyGo sources lock'
+		JSON.stringify(receipt?.source) === JSON.stringify(contract.lock.llvm),
+		'LLVM WASI receipt is not bound to the current LLVM source lock'
 	);
 	const llvmPatch = contract.lock.patches.find(
 		(entry) => entry.path === 'patches/llvm-wasi-c-api-config.patch'
@@ -326,6 +326,11 @@ export function validateLlvmWasiReceipt(receipt, { contract }) {
 		receipt?.inputs?.upstreamPatchCommit === contract.lock.wasiHostPatch.commit &&
 			receipt?.inputs?.upstreamPatchParent === contract.lock.wasiHostPatch.parent,
 		'LLVM WASI receipt is not bound to the pinned YoWASP host patch'
+	);
+	assert(
+		JSON.stringify(receipt?.upstreamPatch) ===
+			JSON.stringify(contract.lock.wasiHostPatch),
+		'LLVM WASI receipt YoWASP host patch contract differs from the source lock'
 	);
 	assert(
 		SHA256_PATTERN.test(receipt?.inputs?.configSha256 ?? '') &&

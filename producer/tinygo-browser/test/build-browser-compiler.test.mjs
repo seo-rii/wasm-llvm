@@ -341,9 +341,8 @@ async function createFixture() {
 		upstreamPatchStatus: 'applied',
 		upstreamPatchEvidence: await fileEvidence(upstreamPatchPath),
 		patchStatus: 'applied',
-		source: {
-			commit: contract.lock.llvm.commit
-		},
+		source: structuredClone(contract.lock.llvm),
+		upstreamPatch: structuredClone(contract.lock.wasiHostPatch),
 		host: {
 			compilerTarget: contract.manifest.target
 		},
@@ -742,6 +741,17 @@ test('validates passed LLVM, Clang, libclang, LLD, and host-support requirements
 	assert.equal(validated.hostSupport.tools.nm, fixture.tools.nm);
 	assert.equal(validated.outputByTarget.get('lldWasm').target, 'lldWasm');
 	assert.equal(fixture.llvmReceipt.paths.sourceRoot, path.join(fixture.root, 'llvm-project'));
+	const adapterOnlyLockChange = structuredClone(fixture.llvmReceipt);
+	adapterOnlyLockChange.inputs.sourcesLockSha256 = 'f'.repeat(64);
+	assert.doesNotThrow(() =>
+		validateLlvmWasiReceipt(adapterOnlyLockChange, { contract: fixture.contract })
+	);
+	const wrongLlvmSource = structuredClone(fixture.llvmReceipt);
+	wrongLlvmSource.source.commit = '0'.repeat(40);
+	assert.throws(
+		() => validateLlvmWasiReceipt(wrongLlvmSource, { contract: fixture.contract }),
+		/current LLVM source lock/u
+	);
 
 	const withoutLld = structuredClone(fixture.llvmReceipt);
 	withoutLld.projects = ['clang'];
