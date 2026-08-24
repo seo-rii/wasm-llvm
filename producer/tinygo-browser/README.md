@@ -15,7 +15,7 @@ This producer separates three things that were previously easy to confuse:
   1.24.6 `cmd/go` itself for WASI. This is the browser package selector; it is not a handwritten
   import scanner.
 
-The full LLVM/Clang/LLD cross-build passed on 2026-07-30. On 2026-08-09 the source-locked producer
+The full LLVM/Clang/LLD cross-build passed on 2026-07-30. On 2026-08-24 the source-locked producer
 built a self-contained upstream TinyGo compiler Wasm and deterministic TinyGo root archive with
 the Clang resource headers and generated wasi-libc header closure required by CGo, then compiled
 and executed the acceptance fixture through external LLD and Binaryen. The
@@ -37,8 +37,8 @@ The Emception worker and handwritten Go-to-C subset remain
 ineligible as TinyGo implementations. See the
 [package-graph audit](audits/2026-08-01-package-graph-provider.md) and the
 [historical compile-protocol-v2 audit](audits/2026-08-01-compile-protocol-v2.md). The current
-evidence is recorded in the
-[compile-protocol-v4 C++/assembly audit](audits/2026-08-09-compile-protocol-v4-cxx-assembly.md).
+evidence is recorded in the [public-product audit](audits/2026-08-24-public-product.md); earlier
+protocol audits remain point-in-time history.
 
 ## Prepare and verify upstream source identity
 
@@ -176,10 +176,11 @@ A completed producer build must publish exactly:
 
 The compiler can expose the full upstream CLI or a narrow browser adapter. The adapter is not a
 language reimplementation: its built package graph must contain upstream TinyGo `builder`,
-`cgo/libclang`, `compiler`, `interp`, `loader`, `transform`, and `go-llvm`. Compile protocol v4
+`cgo/libclang`, `compiler`, `interp`, `loader`, `transform`, and `go-llvm`. Compile protocol v6
 writes an ordered `objects/` set and `link-plan.json`: the program object is followed by sorted
-target-C and freestanding-C++17 ThinLTO bitcode, sorted Clang assembler-with-cpp objects, and
-TinyGo-generated embed objects. The LLD plan inserts the receipt-bound runtime extras before the
+target-C and hosted-C++17 ThinLTO bitcode, sorted Clang assembler-with-cpp objects, and
+TinyGo-generated embed objects. It also binds exact approved C++ flags, restricted linker flags,
+and offline vendoring evidence. The LLD plan inserts the receipt-bound runtime extras before the
 target-native set and wasi-libc before embed objects. CGo/native source and dependency identities
 are included in the plan. Target-C/C++ entries include exact LLVM toolchain, module-verifier,
 triple, data-layout, TLS, constructor/destructor, and forbidden-ABI evidence; assembly entries bind
@@ -202,8 +203,7 @@ stdin. A conforming receipt must record the complete object set and
 hello Ada count=2 total=3 semantics=9/9 cgo=5/20 cxxasm=13
 ```
 
-After the remaining public blockers are closed, update `manifest.json`, rebuild its bound receipts,
-and run the release verifier with:
+To reproduce the public readiness gate, rebuild the bound receipts and run the release verifier:
 
 ```sh
 pnpm verify:tinygo-artifacts -- \
