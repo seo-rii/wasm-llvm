@@ -218,6 +218,21 @@ test('the upstream patch adapts only WASI host services and the wasm32 libclang 
 	assert.match(patch, /EmbeddedFileHash/);
 	assert.match(patch, /A WASI-hosted browser compiler has no process or thread service/);
 	assert.match(patch, /diff --git a\/src\/runtime\/arch_tinygowasm_malloc\.go/);
+	assert.match(patch, /diff --git a\/src\/runtime\/arch_tinygowasm\.go/);
+	assert.match(
+		patch,
+		/diff --git a\/src\/runtime\/arch_tinygowasm_heapgrowth_browsercompiler\.go/
+	);
+	assert.match(
+		patch,
+		/diff --git a\/src\/runtime\/arch_tinygowasm_heapgrowth_default\.go/
+	);
+	assert.match(
+		patch,
+		/growth := \(memorySize \+ wasmHeapGrowthDivisor - 1\) \/ wasmHeapGrowthDivisor/
+	);
+	assert.match(patch, /const wasmHeapGrowthDivisor int32 = 3/);
+	assert.match(patch, /const wasmHeapGrowthDivisor int32 = 1/);
 	assert.match(patch, /\/\/export aligned_alloc/);
 	assert.match(patch, /\/\/export __libc_malloc/);
 	assert.match(patch, /InterpTimeout:\s+3 \* time\.Minute/);

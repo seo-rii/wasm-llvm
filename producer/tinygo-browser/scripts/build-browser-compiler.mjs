@@ -38,6 +38,7 @@ const GO_LLVM_ALIAS_PATH = 'tinygo_cgo_unsigned.go';
 const GO_TOOLCHAIN_EXEC_PATH = 'src/os/exec/exec.go';
 const WASI_LIBC_MALLOC_MEMBER = 'dlmalloc.c.obj';
 const COMPILER_HOST_STACK_SIZE = 8 * 1024 * 1024;
+const COMPILER_HOST_MAX_MEMORY = 1280 * 1024 * 1024;
 const COMPILER_INTERP_TIMEOUT = '10m';
 const COMPILER_HOST_FEATURES =
 	'+bulk-memory,+bulk-memory-opt,+call-indirect-overlong,+mutable-globals,+nontrapping-fptoint,+sign-ext,-multivalue,-reference-types';
@@ -956,7 +957,7 @@ export async function createBrowserCompilerBuildPlan(
 		inherits: ['wasip1'],
 		scheduler: 'none',
 		'default-stack-size': COMPILER_HOST_STACK_SIZE,
-		'build-tags': ['byollvm', 'osusergo'],
+		'build-tags': ['byollvm', 'osusergo', 'tinygo.browsercompiler'],
 		cflags: [
 			`--sysroot=${wasiSysroot}`,
 			'-D_GNU_SOURCE',
@@ -971,6 +972,7 @@ export async function createBrowserCompilerBuildPlan(
 		ldflags: [
 			'--threads=1',
 			'--thinlto-jobs=1',
+			`--max-memory=${COMPILER_HOST_MAX_MEMORY}`,
 			'-z',
 			`stack-size=${COMPILER_HOST_STACK_SIZE}`,
 			`-L${wasiLibraryDir}`,

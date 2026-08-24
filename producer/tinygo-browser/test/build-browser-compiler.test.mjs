@@ -853,11 +853,17 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	);
 	assert.equal(receipt.build.targetConfig.scheduler, 'none');
 	assert.equal(receipt.build.targetConfig['default-stack-size'], 8 * 1024 * 1024);
+	assert.deepEqual(receipt.build.targetConfig['build-tags'], [
+		'byollvm',
+		'osusergo',
+		'tinygo.browsercompiler'
+	]);
 	assert.ok(receipt.build.command.some((argument) => argument.endsWith('tinygo-compiler.bc')));
 	assert.ok(receipt.build.command.includes('-work'));
 	assert.ok(receipt.build.command.includes('-interp-timeout=10m'));
 	assert.equal(receipt.build.linkCommand[0], fixture.nativeWasmLd);
 	assert.ok(receipt.build.linkCommand.includes('stack-size=8388608'));
+	assert.ok(receipt.build.linkCommand.includes('--max-memory=1342177280'));
 	assert.deepEqual(
 		receipt.hostSupport.compilerObjects.inputs.map((object) => object.id),
 		['tinygo-runtime-stack', 'tinygo-libclang-abi']
@@ -1008,6 +1014,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		linkCall.args.includes(receipt.build.generatedEmbedObjects.outputs[0].path)
 	);
 	assert.ok(linkCall.args.includes('stack-size=8388608'));
+	assert.ok(linkCall.args.includes('--max-memory=1342177280'));
 	assert.deepEqual(receipt.build.imports, []);
 	assert.ok(
 		calls.every(

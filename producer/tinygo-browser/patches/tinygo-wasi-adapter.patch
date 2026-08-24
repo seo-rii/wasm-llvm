@@ -3453,3 +3453,44 @@ index 471361bd778cfda9a4b3258826bd0ddd777e33aa..f255b0f48963d97269de4cdb4a7fc2a5
 +func libc_internal_realloc(oldPtr unsafe.Pointer, size uintptr) unsafe.Pointer {
 +	return libc_realloc(oldPtr, size)
 +}
+diff --git a/src/runtime/arch_tinygowasm.go b/src/runtime/arch_tinygowasm.go
+index 0f61fe00..2d71c405 100644
+--- a/src/runtime/arch_tinygowasm.go
++++ b/src/runtime/arch_tinygowasm.go
+@@ -84,9 +84,9 @@ func saveStackPointer() {
+ // growHeap tries to grow the heap size. It returns true if it succeeds, false
+ // otherwise.
+ func growHeap() bool {
+-	// Grow memory by the available size, which means the heap size is doubled.
+ 	memorySize := wasm_memory_size(wasmMemoryIndex)
+-	result := wasm_memory_grow(wasmMemoryIndex, memorySize)
++	growth := (memorySize + wasmHeapGrowthDivisor - 1) / wasmHeapGrowthDivisor
++	result := wasm_memory_grow(wasmMemoryIndex, growth)
+ 	if result == -1 {
+ 		// Grow failed.
+ 		return false
+diff --git a/src/runtime/arch_tinygowasm_heapgrowth_default.go b/src/runtime/arch_tinygowasm_heapgrowth_default.go
+new file mode 100644
+index 00000000..7ef09465
+--- /dev/null
++++ b/src/runtime/arch_tinygowasm_heapgrowth_default.go
+@@ -0,0 +1,6 @@
++//go:build tinygo.wasm && !tinygo.browsercompiler
++
++package runtime
++
++// Grow memory by the current size, which doubles the heap.
++const wasmHeapGrowthDivisor int32 = 1
+diff --git a/src/runtime/arch_tinygowasm_heapgrowth_browsercompiler.go b/src/runtime/arch_tinygowasm_heapgrowth_browsercompiler.go
+new file mode 100644
+index 00000000..1c8e351e
+--- /dev/null
++++ b/src/runtime/arch_tinygowasm_heapgrowth_browsercompiler.go
+@@ -0,0 +1,7 @@
++//go:build tinygo.wasm && tinygo.browsercompiler
++
++package runtime
++
++// Grow the browser compiler heap by roughly one third to avoid jumping from
++// 976 MiB directly to 1,952 MiB near the wasm32 ceiling.
++const wasmHeapGrowthDivisor int32 = 3
