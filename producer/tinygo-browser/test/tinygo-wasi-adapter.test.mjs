@@ -82,7 +82,7 @@ test('the adapter emits a verified object set and an executable external finaliz
 	assert.match(source, /validateCGoLinkerFlags/);
 	assert.match(source, /LibCxx\s+string\s+`json:"libCxx"`/);
 	assert.match(source, /LibCxxAbi\s+string\s+`json:"libCxxAbi"`/);
-	assert.match(patch, /"-stdlib=libc\+\+"/);
+	assert.doesNotMatch(patch, /"-stdlib=libc\+\+"/);
 	assert.doesNotMatch(patch, /"-ffreestanding"|"-nostdinc\+\+"/);
 	assert.match(source, /runtime\.LibCxx/);
 	assert.match(source, /runtime\.LibCxxAbi/);
