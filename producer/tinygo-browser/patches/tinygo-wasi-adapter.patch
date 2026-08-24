@@ -3016,8 +3016,8 @@ index 0000000000000000000000000000000000000000..deb87e287b6fab9ecbea435aefc20e7f
 +		Output:           linkerOutput,
 +		Arguments:        arguments,
 +		RuntimeInputs:    runtimeInputs,
-+		CGoInputs:        append([]linkPlanCGoInput(nil), cgoInputs...),
-+		CGoLinkerFlags:   append([]string(nil), cgoLinkerFlags...),
++		CGoInputs:        append([]linkPlanCGoInput{}, cgoInputs...),
++		CGoLinkerFlags:   append([]string{}, cgoLinkerFlags...),
 +		Optimizer: optimizerLinkPlan{
 +			Tool:      "wasm-opt",
 +			Input:     linkerOutput,

@@ -79,6 +79,14 @@ test('the adapter emits a verified object set and an executable external finaliz
 	assert.match(source, /CgoCXXFLAGS/);
 	assert.match(source, /CgoLDFLAGS/);
 	assert.match(source, /CGoLinkerFlags/);
+	assert.match(
+		source,
+		/CGoInputs:\s+append\(\[\]linkPlanCGoInput\{\}, cgoInputs\.\.\.\)/
+	);
+	assert.match(
+		source,
+		/CGoLinkerFlags:\s+append\(\[\]string\{\}, cgoLinkerFlags\.\.\.\)/
+	);
 	assert.match(source, /validateCGoLinkerFlags/);
 	assert.match(source, /LibCxx\s+string\s+`json:"libCxx"`/);
 	assert.match(source, /LibCxxAbi\s+string\s+`json:"libCxxAbi"`/);

@@ -1333,8 +1333,8 @@ func createLinkPlan(config *compileopts.Config, runtime runtimeArtifacts, compil
 		Output:           linkerOutput,
 		Arguments:        arguments,
 		RuntimeInputs:    runtimeInputs,
-		CGoInputs:        append([]linkPlanCGoInput(nil), cgoInputs...),
-		CGoLinkerFlags:   append([]string(nil), cgoLinkerFlags...),
+		CGoInputs:        append([]linkPlanCGoInput{}, cgoInputs...),
+		CGoLinkerFlags:   append([]string{}, cgoLinkerFlags...),
 		Optimizer: optimizerLinkPlan{
 			Tool:      "wasm-opt",
 			Input:     linkerOutput,
