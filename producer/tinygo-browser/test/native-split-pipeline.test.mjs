@@ -21,14 +21,16 @@ const bitcodeHeaderSha256 = createHash("sha256").update(bitcodeHeader).digest("h
 
 function validLinkPlan() {
   return {
-    schemaVersion: 4,
-    format: "wasm-llvm-tinygo-link-plan-v4",
+    schemaVersion: 6,
+    format: "wasm-llvm-tinygo-link-plan-v6",
     compilerSha256: "a".repeat(64),
     capabilities: [
       "go-embed-objects",
       "target-cgo-c",
-      "target-cxx-freestanding",
+      "target-cxx-hosted-noeh",
       "target-clang-assembly",
+      "target-cgo-cxxflags",
+      "target-cgo-linker-flags",
     ],
     compilerPackages: ["github.com/tinygo-org/tinygo/builder"],
     linker: "wasm-ld",
@@ -51,6 +53,16 @@ function validLinkPlan() {
         sourcePath: "helper.c",
         sourceSha256: "b".repeat(64),
         dependencies: [],
+        llvmValidation: {
+          toolchain: "llvm-20.1.1",
+          moduleVerified: true,
+          targetTriple: "wasm32-unknown-wasi",
+          dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
+          threadLocalGlobals: 0,
+          globalConstructors: 0,
+          globalDestructors: 0,
+          forbiddenAbiSymbols: [],
+        },
       },
       {
         kind: "target-cxx",
@@ -63,6 +75,17 @@ function validLinkPlan() {
         sourcePath: "helper.cpp",
         sourceSha256: "e".repeat(64),
         dependencies: [],
+        compilerFlags: ["-DTINYGO_CXX_SCALE=2"],
+        llvmValidation: {
+          toolchain: "llvm-20.1.1",
+          moduleVerified: true,
+          targetTriple: "wasm32-unknown-wasi",
+          dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
+          threadLocalGlobals: 0,
+          globalConstructors: 0,
+          globalDestructors: 0,
+          forbiddenAbiSymbols: [],
+        },
       },
       {
         kind: "target-assembly",
@@ -75,6 +98,11 @@ function validLinkPlan() {
         sourcePath: "helper.S",
         sourceSha256: "f".repeat(64),
         dependencies: [],
+        wasmValidation: {
+          profile: "wasm-relocatable-object-v1",
+          linkingVersion: 2,
+          symbolTable: true,
+        },
       },
       {
         kind: "embed",
@@ -102,6 +130,8 @@ function validLinkPlan() {
       "objects/0001-target-c.bc",
       "objects/0002-target-cxx.bc",
       "objects/0003-target-assembly.o",
+      "/toolchain/libcxx.a",
+      "/toolchain/libcxxabi.a",
       "/toolchain/libc.a",
       "objects/0004-embed.o",
       "-mllvm",
@@ -110,6 +140,8 @@ function validLinkPlan() {
     runtimeInputs: [
       { kind: "compiler-rt", path: "/toolchain/compiler-rt.a" },
       { kind: "extra-file", source: "/tinygo/runtime.o", path: "/toolchain/runtime.o" },
+      { kind: "libcxx", path: "/toolchain/libcxx.a" },
+      { kind: "libcxxabi", path: "/toolchain/libcxxabi.a" },
       { kind: "wasi-libc", path: "/toolchain/libc.a" },
     ],
     cgoInputs: [
@@ -121,6 +153,7 @@ function validLinkPlan() {
         dependencies: [],
       },
     ],
+    cgoLinkerFlags: [],
     optimizer: {
       tool: "wasm-opt",
       input: "program.unoptimized.wasm",
@@ -371,6 +404,14 @@ test("fails when final execution differs byte-for-byte from expected stdout", as
 });
 
 test("rejects reordered C objects and malformed native dependency evidence", () => {
+  const staleProtocol = validLinkPlan();
+  staleProtocol.schemaVersion = 4;
+  staleProtocol.format = "wasm-llvm-tinygo-link-plan-v4";
+  assert.throws(
+    () => validateNativeLinkPlan(staleProtocol),
+    /identity differs from compile protocol v6/u,
+  );
+
   const reordered = validLinkPlan();
   [reordered.objects[1], reordered.objects[2]] = [
     reordered.objects[2],
@@ -400,5 +441,19 @@ test("rejects reordered C objects and malformed native dependency evidence", () 
   assert.throws(
     () => validateNativeLinkPlan(nullDependencies),
     /CGo input 0 dependencies are invalid/u,
+  );
+
+  const missingLLVMValidation = validLinkPlan();
+  delete missingLLVMValidation.objects[1].llvmValidation;
+  assert.throws(
+    () => validateNativeLinkPlan(missingLLVMValidation),
+    /lacks exact LLVM validation/u,
+  );
+
+  const unboundCGoLinkerFlags = validLinkPlan();
+  unboundCGoLinkerFlags.cgoLinkerFlags = ["-lexample"];
+  assert.throws(
+    () => validateNativeLinkPlan(unboundCGoLinkerFlags),
+    /do not bind its CGo linker flags/u,
   );
 });

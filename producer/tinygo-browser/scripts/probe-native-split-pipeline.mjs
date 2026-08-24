@@ -28,9 +28,26 @@ const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
 const LINK_PLAN_CAPABILITIES = [
   "go-embed-objects",
   "target-cgo-c",
-  "target-cxx-freestanding",
+  "target-cxx-hosted-noeh",
   "target-clang-assembly",
+  "target-cgo-cxxflags",
+  "target-cgo-linker-flags",
 ];
+const LLVM_OBJECT_VALIDATION = {
+  toolchain: "llvm-20.1.1",
+  moduleVerified: true,
+  targetTriple: "wasm32-unknown-wasi",
+  dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
+  threadLocalGlobals: 0,
+  globalConstructors: 0,
+  globalDestructors: 0,
+  forbiddenAbiSymbols: [],
+};
+const WASM_OBJECT_VALIDATION = {
+  profile: "wasm-relocatable-object-v1",
+  linkingVersion: 2,
+  symbolTable: true,
+};
 const NATIVE_OBJECT_SPECS = new Map([
   ["target-c", { sourceField: "CFiles", suffix: "target-c.bc", format: "llvm-bitcode", rank: 0 }],
   ["target-cxx", { sourceField: "CXXFiles", suffix: "target-cxx.bc", format: "llvm-bitcode", rank: 1 }],
@@ -103,18 +120,18 @@ export function validateNativeLinkPlan(linkPlan) {
     throw new Error("link-plan.json must contain an object");
   }
   if (
-    linkPlan.schemaVersion !== 4 ||
-    linkPlan.format !== "wasm-llvm-tinygo-link-plan-v4" ||
+    linkPlan.schemaVersion !== 6 ||
+    linkPlan.format !== "wasm-llvm-tinygo-link-plan-v6" ||
     !SHA256_PATTERN.test(linkPlan.compilerSha256 ?? "") ||
     JSON.stringify(linkPlan.capabilities) !== JSON.stringify(LINK_PLAN_CAPABILITIES)
   ) {
-    throw new Error("link-plan.json identity differs from compile protocol v4");
+    throw new Error("link-plan.json identity differs from compile protocol v6");
   }
   if (
     linkPlan.linker !== "wasm-ld" ||
     linkPlan.output !== "program.unoptimized.wasm"
   ) {
-    throw new Error("link-plan.json linker output differs from compile protocol v4");
+    throw new Error("link-plan.json linker output differs from compile protocol v6");
   }
   if (
     !Array.isArray(linkPlan.compilerPackages) ||
@@ -169,6 +186,36 @@ export function validateNativeLinkPlan(linkPlan) {
         throw new Error(`link-plan.json target-native object ${index} has invalid source evidence`);
       }
       validateDependencies(object.dependencies, `object ${index}`);
+      if (kind === "target-cxx") {
+        if (
+          !Array.isArray(object.compilerFlags) ||
+          object.compilerFlags.length > 256 ||
+          object.compilerFlags.some(
+            (flag) =>
+              typeof flag !== "string" ||
+              flag.length === 0 ||
+              flag.length > 4096 ||
+              flag.includes("\0"),
+          )
+        ) {
+          throw new Error(`link-plan.json target-native object ${index} has invalid CXXFLAGS`);
+        }
+      } else if (object.compilerFlags !== undefined) {
+        throw new Error(`link-plan.json target-native object ${index} has unexpected CXXFLAGS`);
+      }
+      if (kind === "target-c" || kind === "target-cxx") {
+        if (
+          JSON.stringify(object.llvmValidation) !== JSON.stringify(LLVM_OBJECT_VALIDATION) ||
+          object.wasmValidation !== undefined
+        ) {
+          throw new Error(`link-plan.json target-native object ${index} lacks exact LLVM validation`);
+        }
+      } else if (
+        JSON.stringify(object.wasmValidation) !== JSON.stringify(WASM_OBJECT_VALIDATION) ||
+        object.llvmValidation !== undefined
+      ) {
+        throw new Error(`link-plan.json target-native object ${index} lacks exact Wasm validation`);
+      }
     } else if (kind === "embed") {
       if (
         typeof object.importPath !== "string" ||
@@ -207,23 +254,51 @@ export function validateNativeLinkPlan(linkPlan) {
     cgoIdentities.add(identity);
     previousCGoIdentity = identity;
   }
+  if (
+    !Array.isArray(linkPlan.cgoLinkerFlags) ||
+    linkPlan.cgoLinkerFlags.length > 256 ||
+    linkPlan.cgoLinkerFlags.some(
+      (flag) =>
+        typeof flag !== "string" ||
+        flag.length === 0 ||
+        flag.length > 4096 ||
+        flag.includes("\0"),
+    )
+  ) {
+    throw new Error("link-plan.json CGo linker flags are invalid");
+  }
   if (!Array.isArray(linkPlan.runtimeInputs) || linkPlan.runtimeInputs.length < 2) {
     throw new Error("link-plan.json runtime inputs are invalid");
   }
+  const hasHostedCxx = linkPlan.objects.some((object) => object.kind === "target-cxx");
+  const runtimeKinds = linkPlan.runtimeInputs.map((input) => input?.kind);
+  let runtimeKindIndex = 0;
+  if (runtimeKinds[runtimeKindIndex++] !== "compiler-rt") {
+    throw new Error("link-plan.json runtime inputs must start with compiler-rt");
+  }
+  while (runtimeKinds[runtimeKindIndex] === "extra-file") runtimeKindIndex += 1;
+  if (hasHostedCxx) {
+    if (
+      runtimeKinds[runtimeKindIndex++] !== "libcxx" ||
+      runtimeKinds[runtimeKindIndex++] !== "libcxxabi"
+    ) {
+      throw new Error("link-plan.json hosted C++ runtime inputs are invalid");
+    }
+  }
+  if (
+    runtimeKinds[runtimeKindIndex++] !== "wasi-libc" ||
+    runtimeKindIndex !== runtimeKinds.length
+  ) {
+    throw new Error("link-plan.json runtime input order is invalid");
+  }
   for (const [index, input] of linkPlan.runtimeInputs.entries()) {
-    const expectedKind =
-      index === 0
-        ? "compiler-rt"
-        : index === linkPlan.runtimeInputs.length - 1
-          ? "wasi-libc"
-          : "extra-file";
     if (
       !input ||
-      input.kind !== expectedKind ||
       typeof input.path !== "string" ||
       !path.isAbsolute(input.path) ||
-      (expectedKind === "extra-file" &&
-        (typeof input.source !== "string" || input.source.length === 0))
+      (input.kind === "extra-file"
+        ? typeof input.source !== "string" || input.source.length === 0
+        : input.source !== undefined)
     ) {
       throw new Error(`link-plan.json runtime input ${index} is invalid`);
     }
@@ -244,7 +319,7 @@ export function validateNativeLinkPlan(linkPlan) {
       ],
     })
   ) {
-    throw new Error("link-plan.json optimizer plan differs from compile protocol v4");
+    throw new Error("link-plan.json optimizer plan differs from compile protocol v6");
   }
   if (
     !Array.isArray(linkPlan.arguments) ||
@@ -261,6 +336,21 @@ export function validateNativeLinkPlan(linkPlan) {
       "link-plan.json arguments must omit the wasm-ld executable name",
     );
   }
+  const outputOptionIndices = linkPlan.arguments
+    .map((argument, index) => (argument === "-o" ? index : -1))
+    .filter((index) => index !== -1);
+  const outputOptionIndex = outputOptionIndices[0];
+  if (
+    outputOptionIndices.length !== 1 ||
+    JSON.stringify(
+      linkPlan.arguments.slice(
+        outputOptionIndex - linkPlan.cgoLinkerFlags.length,
+        outputOptionIndex,
+      ),
+    ) !== JSON.stringify(linkPlan.cgoLinkerFlags)
+  ) {
+    throw new Error("link-plan.json arguments do not bind its CGo linker flags");
+  }
   for (const argument of linkPlan.arguments) {
     if (
       new RegExp(`(?:^|[=,])${THIN_LTO_CACHE_OPTION}(?:$|[=,])`, "u").test(
@@ -272,11 +362,19 @@ export function validateNativeLinkPlan(linkPlan) {
       );
     }
   }
+  const baseRuntimeInputs = linkPlan.runtimeInputs.filter(
+    (input) => input.kind === "compiler-rt" || input.kind === "extra-file",
+  );
+  const hostedCxxRuntimeInputs = linkPlan.runtimeInputs.filter(
+    (input) => input.kind === "libcxx" || input.kind === "libcxxabi",
+  );
+  const wasiLibcInput = linkPlan.runtimeInputs.at(-1);
   const orderedInputs = [
     linkPlan.objects[0].path,
-    ...linkPlan.runtimeInputs.slice(0, -1).map((input) => input.path),
+    ...baseRuntimeInputs.map((input) => input.path),
     ...linkPlan.objects.slice(1).filter((object) => NATIVE_OBJECT_SPECS.has(object.kind)).map((object) => object.path),
-    linkPlan.runtimeInputs.at(-1).path,
+    ...hostedCxxRuntimeInputs.map((input) => input.path),
+    wasiLibcInput.path,
     ...linkPlan.objects.slice(1).filter((object) => object.kind === "embed").map((object) => object.path),
   ];
   let previousInputIndex = -1;
@@ -289,7 +387,10 @@ export function validateNativeLinkPlan(linkPlan) {
     }
     previousInputIndex = positions[0];
   }
-  if (linkPlan.arguments.filter((argument) => argument === linkPlan.output).length !== 1) {
+  if (
+    linkPlan.arguments.filter((argument) => argument === linkPlan.output).length !== 1 ||
+    linkPlan.arguments[outputOptionIndex + 1] !== linkPlan.output
+  ) {
     throw new Error("link-plan.json arguments must reference its output exactly once");
   }
   for (const argument of linkPlan.arguments) {

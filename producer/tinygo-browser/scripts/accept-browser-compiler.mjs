@@ -267,8 +267,27 @@ async function verifyLinkPlanSourceEvidence({
       evidence.sha256 === object.sourceSha256,
       `${object.kind} object source differs from ${object.sourcePath}`,
     );
+    if (object.kind === "target-cxx") {
+      assert(
+        JSON.stringify(object.compilerFlags) === JSON.stringify(pkg.CgoCXXFLAGS ?? []),
+        `${object.kind} object CXXFLAGS differ from ${object.importPath}.CgoCXXFLAGS`,
+      );
+    } else {
+      assert(
+        object.compilerFlags === undefined,
+        `${object.kind} object unexpectedly publishes CXXFLAGS`,
+      );
+    }
     nativeEvidence.push({ path: object.sourcePath, sha256: object.sourceSha256 });
   }
+  const expectedCGoLinkerFlags = packageGraph.packages
+    .flatMap((pkg) => pkg.CgoLDFLAGS ?? [])
+    .sort();
+  assert(
+    JSON.stringify([...linkPlan.cgoLinkerFlags].sort()) ===
+      JSON.stringify(expectedCGoLinkerFlags),
+    "link plan CGo linker flags differ from the package graph",
+  );
   for (const dependencies of dependencySets) {
     for (const dependency of dependencies) {
       const scopeRoot = dependency.scope === "root" ? rootPath : fixtureDir;
