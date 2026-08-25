@@ -1,0 +1,281 @@
+diff --git a/core/iwasm/interpreter/wasm_interp_classic.c b/core/iwasm/interpreter/wasm_interp_classic.c
+index 9f7e03e2..c474cbb3 100644
+--- a/core/iwasm/interpreter/wasm_interp_classic.c
++++ b/core/iwasm/interpreter/wasm_interp_classic.c
+@@ -133,29 +133,34 @@ typedef float64 CellType_F64;
+     } while (0)
+ 
+ #if WASM_ENABLE_DEBUG_INTERP != 0
+-#define TRIGGER_WATCHPOINT_SIGTRAP()                              \
++#define TRIGGER_WATCHPOINT_SIGTRAP(type, current_addr)             \
+     do {                                                          \
++        debug_instance->stopped_watchpoint_type = (type);         \
++        debug_instance->stopped_watchpoint_addr = (current_addr); \
+         wasm_cluster_thread_send_signal(exec_env, WAMR_SIG_TRAP); \
+         CHECK_SUSPEND_FLAGS();                                    \
+     } while (0)
+ 
+-#define CHECK_WATCHPOINT(list, current_addr)                               \
++#define CHECK_WATCHPOINT(list, current_addr, type)                         \
+     do {                                                                   \
+         WASMDebugWatchPoint *watchpoint = bh_list_first_elem(list);        \
+         while (watchpoint) {                                               \
+             WASMDebugWatchPoint *next = bh_list_elem_next(watchpoint);     \
+             if (watchpoint->addr <= current_addr                           \
+                 && watchpoint->addr + watchpoint->length > current_addr) { \
+-                TRIGGER_WATCHPOINT_SIGTRAP();                              \
++                TRIGGER_WATCHPOINT_SIGTRAP(type, current_addr);            \
++                break;                                                     \
+             }                                                              \
+             watchpoint = next;                                             \
+         }                                                                  \
+     } while (0)
+ 
+ #define CHECK_READ_WATCHPOINT(addr, offset) \
+-    CHECK_WATCHPOINT(watch_point_list_read, WASM_ADDR_OFFSET(addr + offset))
++    CHECK_WATCHPOINT(watch_point_list_read, WASM_ADDR_OFFSET(addr + offset), \
++                     WASM_DEBUG_WATCHPOINT_READ)
+ #define CHECK_WRITE_WATCHPOINT(addr, offset) \
+-    CHECK_WATCHPOINT(watch_point_list_write, WASM_ADDR_OFFSET(addr + offset))
++    CHECK_WATCHPOINT(watch_point_list_write, WASM_ADDR_OFFSET(addr + offset), \
++                     WASM_DEBUG_WATCHPOINT_WRITE)
+ #else
+ #define CHECK_READ_WATCHPOINT(addr, offset) (void)0
+ #define CHECK_WRITE_WATCHPOINT(addr, offset) (void)0
+diff --git a/core/iwasm/libraries/debug-engine/debug_engine.c b/core/iwasm/libraries/debug-engine/debug_engine.c
+index 24d57d70..5ad42c3b 100644
+--- a/core/iwasm/libraries/debug-engine/debug_engine.c
++++ b/core/iwasm/libraries/debug-engine/debug_engine.c
+@@ -1123,6 +1123,8 @@ wasm_debug_instance_continue(WASMDebugInstance *instance)
+     if (!instance)
+         return false;
+ 
++    instance->stopped_watchpoint_type = WASM_DEBUG_WATCHPOINT_NONE;
++
+     if (instance->current_state == APP_RUNNING) {
+         LOG_VERBOSE("Already in running state, ignore continue request");
+         return false;
+@@ -1150,6 +1152,8 @@ wasm_debug_instance_interrupt_all_threads(WASMDebugInstance *instance)
+     if (!instance)
+         return false;
+ 
++    instance->stopped_watchpoint_type = WASM_DEBUG_WATCHPOINT_NONE;
++
+     exec_env = bh_list_first_elem(&instance->cluster->exec_env_list);
+     if (!exec_env)
+         return false;
+@@ -1227,6 +1231,8 @@ wasm_debug_instance_singlestep(WASMDebugInstance *instance, korp_tid tid)
+     if (!instance)
+         return false;
+ 
++    instance->stopped_watchpoint_type = WASM_DEBUG_WATCHPOINT_NONE;
++
+     if (instance->current_state == APP_RUNNING) {
+         LOG_VERBOSE("Already in running state, ignore step request");
+         return false;
+diff --git a/core/iwasm/libraries/debug-engine/debug_engine.h b/core/iwasm/libraries/debug-engine/debug_engine.h
+index 275eeaad..df8b67fe 100644
+--- a/core/iwasm/libraries/debug-engine/debug_engine.h
++++ b/core/iwasm/libraries/debug-engine/debug_engine.h
+@@ -42,6 +42,13 @@ typedef struct WASMDebugWatchPoint {
+     uint64 length;
+ } WASMDebugWatchPoint;
+ 
++typedef enum WASMDebugWatchPointType {
++    WASM_DEBUG_WATCHPOINT_NONE = 0,
++    WASM_DEBUG_WATCHPOINT_WRITE = 2,
++    WASM_DEBUG_WATCHPOINT_READ = 3,
++    WASM_DEBUG_WATCHPOINT_READ_WRITE = 4,
++} WASMDebugWatchPointType;
++
+ typedef enum debug_state_t {
+     /* Debugger state conversion sequence:
+      *   DBG_LAUNCHING ---> APP_STOPPED <---> APP_RUNNING
+@@ -64,6 +71,8 @@ struct WASMDebugInstance {
+     bh_list break_point_list;
+     bh_list watch_point_list_read;
+     bh_list watch_point_list_write;
++    uint64 stopped_watchpoint_addr;
++    uint8 stopped_watchpoint_type;
+     WASMCluster *cluster;
+     uint32 id;
+     korp_tid current_tid;
+diff --git a/core/iwasm/libraries/debug-engine/handler.c b/core/iwasm/libraries/debug-engine/handler.c
+index 14c7fae6..f38e5150 100644
+--- a/core/iwasm/libraries/debug-engine/handler.c
++++ b/core/iwasm/libraries/debug-engine/handler.c
+@@ -393,8 +393,13 @@ send_thread_stop_status(WASMGDBServer *server, uint32 status, korp_tid tid)
+     uint32 tids_count, i = 0;
+     uint32 gdb_status = status;
+     WASMExecEnv *exec_env;
++    WASMDebugInstance *debug_instance = server->thread->debug_instance;
++    uint64 watchpoint_addr = debug_instance->stopped_watchpoint_addr;
++    uint8 watchpoint_type = debug_instance->stopped_watchpoint_type;
+     const char *exception;
+ 
++    debug_instance->stopped_watchpoint_type = WASM_DEBUG_WATCHPOINT_NONE;
++
+     if (status == 0) {
+         os_mutex_lock(&tmpbuf_lock);
+         (void)snprintf(tmpbuf, MAX_PACKET_SIZE, "W%02" PRIx32, status);
+@@ -491,7 +496,21 @@ send_thread_stop_status(WASMGDBServer *server, uint32 status, korp_tid tid)
+         (void)snprintf(tmpbuf + len, MAX_PACKET_SIZE - len, ";");
+     }
+     else {
+-        if (status == WAMR_SIG_TRAP) {
++        if (status == WAMR_SIG_TRAP
++            && watchpoint_type != WASM_DEBUG_WATCHPOINT_NONE) {
++            const char *watchpoint_key =
++                watchpoint_type == WASM_DEBUG_WATCHPOINT_WRITE
++                    ? "watch"
++                    : (watchpoint_type == WASM_DEBUG_WATCHPOINT_READ
++                           ? "rwatch"
++                           : "awatch");
++            (void)snprintf(tmpbuf + len, MAX_PACKET_SIZE - len,
++                           "thread-pcs:%" PRIx64
++                           ";00:%s;reason:%s;%s:%" PRIx64 ";",
++                           pc, pc_string, "watchpoint", watchpoint_key,
++                           watchpoint_addr);
++        }
++        else if (status == WAMR_SIG_TRAP) {
+             (void)snprintf(tmpbuf + len, MAX_PACKET_SIZE - len,
+                            "thread-pcs:%" PRIx64 ";00:%s;reason:%s;", pc,
+                            pc_string, "breakpoint");
+@@ -724,37 +743,40 @@ handle_breakpoint_software_remove(WASMGDBServer *server, uint64 addr,
+     write_packet(server, ret ? "OK" : "EO1");
+ }
+ 
+-void
++bool
+ handle_watchpoint_write_add(WASMGDBServer *server, uint64 addr, size_t length)
+ {
+-    bool ret = wasm_debug_instance_watchpoint_write_add(
++    return wasm_debug_instance_watchpoint_write_add(
+         (WASMDebugInstance *)server->thread->debug_instance, addr, length);
+-    write_packet(server, ret ? "OK" : "EO1");
+ }
+ 
+-void
++bool
+ handle_watchpoint_write_remove(WASMGDBServer *server, uint64 addr,
+                                size_t length)
+ {
+-    bool ret = wasm_debug_instance_watchpoint_write_remove(
++    return wasm_debug_instance_watchpoint_write_remove(
+         (WASMDebugInstance *)server->thread->debug_instance, addr, length);
+-    write_packet(server, ret ? "OK" : "EO1");
+ }
+ 
+-void
++bool
+ handle_watchpoint_read_add(WASMGDBServer *server, uint64 addr, size_t length)
+ {
+-    bool ret = wasm_debug_instance_watchpoint_read_add(
++    return wasm_debug_instance_watchpoint_read_add(
+         (WASMDebugInstance *)server->thread->debug_instance, addr, length);
+-    write_packet(server, ret ? "OK" : "EO1");
+ }
+ 
+-void
++bool
+ handle_watchpoint_read_remove(WASMGDBServer *server, uint64 addr, size_t length)
+ {
+-    bool ret = wasm_debug_instance_watchpoint_read_remove(
++    return wasm_debug_instance_watchpoint_read_remove(
+         (WASMDebugInstance *)server->thread->debug_instance, addr, length);
+-    write_packet(server, ret ? "OK" : "EO1");
++}
++
++static bool
++is_valid_watchpoint_range(uint64 addr, size_t length)
++{
++    return length > 0 && addr <= UINT32_MAX
++           && (uint64)length <= (uint64)UINT32_MAX + 1 - addr;
+ }
+ 
+ void
+@@ -763,6 +785,7 @@ handle_add_break(WASMGDBServer *server, char *payload)
+     int arg_c;
+     size_t type, length;
+     uint64 addr;
++    bool ret;
+ 
+     if ((arg_c = sscanf(payload, "%zx,%" SCNx64 ",%zx", &type, &addr, &length))
+         != 3) {
+@@ -771,19 +794,31 @@ handle_add_break(WASMGDBServer *server, char *payload)
+         return;
+     }
+ 
++    if (type >= eWatchpointWrite && type <= eWatchpointReadWrite
++        && !is_valid_watchpoint_range(addr, length)) {
++        write_packet(server, "E01");
++        return;
++    }
++
+     switch (type) {
+         case eBreakpointSoftware:
+             handle_breakpoint_software_add(server, addr, length);
+             break;
+         case eWatchpointWrite:
+-            handle_watchpoint_write_add(server, addr, length);
++            ret = handle_watchpoint_write_add(server, addr, length);
++            write_packet(server, ret ? "OK" : "EO1");
+             break;
+         case eWatchpointRead:
+-            handle_watchpoint_read_add(server, addr, length);
++            ret = handle_watchpoint_read_add(server, addr, length);
++            write_packet(server, ret ? "OK" : "EO1");
+             break;
+         case eWatchpointReadWrite:
+-            handle_watchpoint_write_add(server, addr, length);
+-            handle_watchpoint_read_add(server, addr, length);
++            ret = handle_watchpoint_write_add(server, addr, length);
++            if (ret && !handle_watchpoint_read_add(server, addr, length)) {
++                handle_watchpoint_write_remove(server, addr, length);
++                ret = false;
++            }
++            write_packet(server, ret ? "OK" : "EO1");
+             break;
+         default:
+             LOG_ERROR("Unsupported breakpoint type %zu", type);
+@@ -798,6 +833,7 @@ handle_remove_break(WASMGDBServer *server, char *payload)
+     int arg_c;
+     size_t type, length;
+     uint64 addr;
++    bool ret;
+ 
+     if ((arg_c = sscanf(payload, "%zx,%" SCNx64 ",%zx", &type, &addr, &length))
+         != 3) {
+@@ -806,19 +842,28 @@ handle_remove_break(WASMGDBServer *server, char *payload)
+         return;
+     }
+ 
++    if (type >= eWatchpointWrite && type <= eWatchpointReadWrite
++        && !is_valid_watchpoint_range(addr, length)) {
++        write_packet(server, "E01");
++        return;
++    }
++
+     switch (type) {
+         case eBreakpointSoftware:
+             handle_breakpoint_software_remove(server, addr, length);
+             break;
+         case eWatchpointWrite:
+-            handle_watchpoint_write_remove(server, addr, length);
++            ret = handle_watchpoint_write_remove(server, addr, length);
++            write_packet(server, ret ? "OK" : "EO1");
+             break;
+         case eWatchpointRead:
+-            handle_watchpoint_read_remove(server, addr, length);
++            ret = handle_watchpoint_read_remove(server, addr, length);
++            write_packet(server, ret ? "OK" : "EO1");
+             break;
+         case eWatchpointReadWrite:
+-            handle_watchpoint_write_remove(server, addr, length);
+-            handle_watchpoint_read_remove(server, addr, length);
++            ret = handle_watchpoint_write_remove(server, addr, length);
++            ret = handle_watchpoint_read_remove(server, addr, length) && ret;
++            write_packet(server, ret ? "OK" : "EO1");
+             break;
+         default:
+             LOG_ERROR("Unsupported breakpoint type %zu", type);

@@ -42,6 +42,7 @@ test('pins WAMR, emsdk, and the classic source-debug interpreter', async () => {
 	assert.match(lock.emscripten.commit, /^[\da-f]{40}$/u);
 	assert.equal(manifest.configuration.interpreter, 'classic');
 	assert.equal(manifest.configuration.sourceDebugger, true);
+	assert.deepEqual(manifest.configuration.watchpoints, ['read', 'write', 'readWrite']);
 	assert.equal(manifest.configuration.aot, false);
 	assert.equal(manifest.configuration.jit, false);
 	assert.equal(manifest.configuration.guestThreads, false);
@@ -200,6 +201,27 @@ test('transport distinguishes timeout, close, and bytes pending at close', async
 		'utf8'
 	);
 	assert.match(patch, /n == WASM_DEBUG_TRANSPORT_CLOSED/u);
+});
+
+test('reports browser watchpoint hits without corrupting the RSP stream', async () => {
+	const manifest = JSON.parse(await readFile(path.join(producerRoot, 'manifest.json'), 'utf8'));
+	const patchPath = manifest.patches.browserWatchpoints?.path;
+	assert.equal(patchPath, 'patches/wamr-browser-watchpoints.patch');
+	const patch = await readFile(path.join(producerRoot, patchPath), 'utf8');
+
+	assert.match(patch, /stopped_watchpoint_addr/u);
+	assert.match(patch, /stopped_watchpoint_type/u);
+	assert.match(patch, /"watch"/u);
+	assert.match(patch, /"rwatch"/u);
+	assert.match(patch, /"awatch"/u);
+	assert.match(patch, /reason:%s;%s:/u);
+	assert.match(patch, /ret = handle_watchpoint_write_add/u);
+	assert.match(patch, /ret = handle_watchpoint_read_add/u);
+	assert.match(patch, /write_packet\(server, ret \? "OK" : "EO1"\)/u);
+	assert.doesNotMatch(
+		patch,
+		/handle_watchpoint_write_add\(server, addr, length\);\s*handle_watchpoint_read_add/u
+	);
 });
 
 test('preserves wasm32-wasi i32 native returns only in Emscripten builds', async () => {

@@ -23,6 +23,7 @@ application worker. See `contracts/pthread-transport-v1.md`.
 - classic interpreter only
 - WASI libc enabled
 - source debugger enabled
+- read, write, and combined read/write linear-memory watchpoints
 - JIT, fast JIT, AOT, wasm threads, and multi-module disabled
 - one debug target session per worker
 

@@ -143,7 +143,7 @@ async function prepareDebugRuntimeManifest() {
 			readMemory: true,
 			writeMemory: true,
 			evaluateExpressions: false,
-			dataBreakpoints: false,
+			dataBreakpoints: true,
 			wasmThreads: false
 		};
 		for (const [capability, expected] of Object.entries(requiredCapabilities)) {
@@ -334,7 +334,7 @@ async function prepareDebugRuntimeManifest() {
 			capabilities: {
 				...lldbManifest.debugger.capabilities,
 				evaluateExpressions: false,
-				dataBreakpoints: false,
+				dataBreakpoints: true,
 				wasmThreads: false
 			}
 		}

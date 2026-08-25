@@ -48,6 +48,7 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   assert.equal(manifest.protocols.transport, TRANSPORT_CONTRACT);
   assert.equal(manifest.capabilities.readMemory, true);
   assert.equal(manifest.capabilities.writeMemory, true);
+  assert.equal(manifest.capabilities.dataBreakpoints, true);
   assert.deepEqual(manifest.build.reproduciblePathPrefixes, {
     source: "/llvm-project",
     build: "/lldb-web-build",
@@ -486,6 +487,7 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
       readMemory: true,
       writeMemory: true,
       evaluateExpressions: false,
+      dataBreakpoints: true,
     },
   });
 
@@ -509,6 +511,12 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
   assert.throws(
     () => validateArtifactManifest(missingWriteMemory),
     /writeMemory capability/,
+  );
+  const missingDataBreakpoints = structuredClone(artifactManifest);
+  delete missingDataBreakpoints.debugger.capabilities.dataBreakpoints;
+  assert.throws(
+    () => validateArtifactManifest(missingDataBreakpoints),
+    /dataBreakpoints capability/,
   );
   const compressedWasm = gzipSync(wasmBytes, { level: 9, mtime: 0 });
   assert.deepEqual(receipt.assets["lldb-web-dap.wasm"].compressed, {

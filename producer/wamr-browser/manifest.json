@@ -21,6 +21,10 @@
 			"path": "patches/wamr-browser-debug-transport.patch",
 			"sha256": "0eff1e9b57585ec5bc66f3d4b0ba5084e628f8c898a6846818dcb05434797e44"
 		},
+		"browserWatchpoints": {
+			"path": "patches/wamr-browser-watchpoints.patch",
+			"sha256": "4f15425d2909119023003c8730258e525bd9265317b46d57d4f82f4200d51b16"
+		},
 		"wasm32WasiNativeReturn": {
 			"path": "patches/wamr-browser-wasm32-wasi-native-return.patch",
 			"sha256": "77284828588174d26f9d44c313bd17faec29059d53118f82a38a86ce05426001"
@@ -53,6 +57,7 @@
 		"interpreter": "classic",
 		"wasi": true,
 		"sourceDebugger": true,
+		"watchpoints": ["read", "write", "readWrite"],
 		"transport": "shared-ring-v1",
 		"pthreadTransport": "pthread-transport-v1",
 		"pthread": true,

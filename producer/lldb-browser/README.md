@@ -75,6 +75,17 @@ not imply `setVariable`, Wasm local/global mutation, or expression evaluation.
 The assembled runtime manifest requires this capability explicitly so an older
 or incomplete debugger bundle fails closed before a browser session starts.
 
+The same pinned pair supports address-based data breakpoints through LLDB-DAP.
+LLVM 22.1.8 translates write, read, and combined read/write watchpoints to RSP
+`Z2`, `Z3`, and `Z4`, and the WAMR 2.4.5 classic debug interpreter checks guest
+linear-memory accesses. The browser WAMR patch makes combined add/remove
+transactional with one RSP reply and reports `watch`, `rwatch`, or `awatch`
+metadata in its stop packet. LLDB can therefore publish the DAP
+`data breakpoint` stop reason instead of confusing a memory access with a
+source breakpoint. Watchpoints cover scalar classic-interpreter loads and
+stores; bulk-memory operations, host-side memory writes, guest threads, and
+non-linear-memory addresses remain outside this capability.
+
 `DynamicLoaderWasmDYLD` is required even though the program is already mounted
 in LLDB's MEMFS before attach. Its attach hook asks the GDB remote stub for the
 loaded Wasm module and assigns the runtime module id to the object sections.

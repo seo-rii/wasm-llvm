@@ -98,7 +98,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 					readMemory: true,
 					writeMemory: true,
 					evaluateExpressions: false,
-					dataBreakpoints: false,
+					dataBreakpoints: true,
 					wasmThreads: false
 				}
 			}
