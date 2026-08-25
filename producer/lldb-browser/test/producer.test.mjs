@@ -46,6 +46,8 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   assert.equal(sourcesLock.emscripten.commit, EMSCRIPTEN_REVISION);
   assert.equal(manifest.protocols.connectionScheme, CONNECTION_SCHEME);
   assert.equal(manifest.protocols.transport, TRANSPORT_CONTRACT);
+  assert.equal(manifest.capabilities.readMemory, true);
+  assert.equal(manifest.capabilities.writeMemory, true);
   assert.deepEqual(manifest.build.reproduciblePathPrefixes, {
     source: "/llvm-project",
     build: "/lldb-web-build",
@@ -479,7 +481,12 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
     wasmSha256: receipt.assets["lldb-web-dap.wasm"].sha256,
     workerSha256: receipt.assets[PTHREAD_WORKER_ASSET].sha256,
     patchesSha256: receipt.source.patchesSha256,
-    capabilities: { breakpoints: true, evaluateExpressions: false },
+    capabilities: {
+      breakpoints: true,
+      readMemory: true,
+      writeMemory: true,
+      evaluateExpressions: false,
+    },
   });
 
   assert.doesNotThrow(() => validateBuildReceipt(receipt));
@@ -497,6 +504,12 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
   assert.equal(receipt.build.proxyToPthread, true);
   assert.equal(receipt.build.pthreadWorker, PTHREAD_WORKER_ASSET);
   assert.equal(artifactManifest.debugger.lldb.worker, PTHREAD_WORKER_ASSET);
+  const missingWriteMemory = structuredClone(artifactManifest);
+  delete missingWriteMemory.debugger.capabilities.writeMemory;
+  assert.throws(
+    () => validateArtifactManifest(missingWriteMemory),
+    /writeMemory capability/,
+  );
   const compressedWasm = gzipSync(wasmBytes, { level: 9, mtime: 0 });
   assert.deepEqual(receipt.assets["lldb-web-dap.wasm"].compressed, {
     format: "gzip",

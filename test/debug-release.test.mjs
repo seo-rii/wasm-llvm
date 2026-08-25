@@ -96,6 +96,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 					locals: true,
 					globals: true,
 					readMemory: true,
+					writeMemory: true,
 					evaluateExpressions: false,
 					dataBreakpoints: false,
 					wasmThreads: false
@@ -227,6 +228,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		assert.equal(manifest.debugger.transport, 'shared-ring-v1');
 		assert.equal(manifest.debugger.lldb.worker, 'debug/lldb-web-dap.pthread.mjs');
 		assert.equal(manifest.debugger.targetRuntime.worker, 'debug/wamr-debug.worker.mjs');
+		assert.equal(manifest.debugger.capabilities.writeMemory, true);
 		assert.deepEqual(await readFile(path.join(output, 'debug/wamr-debug.wasm')), wamrWasm);
 
 		await writeFile(path.join(wamr, 'wamr-debug.wasm'), 'corrupt');
@@ -300,6 +302,15 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 					value.debugger.lldb.llvmRevision = '0'.repeat(40);
 				},
 				error: /Invalid LLDB artifact manifest/u
+			},
+			{
+				name: 'missing LLDB write-memory capability',
+				file: path.join(lldb, 'debug-manifest.json'),
+				base: validLldbManifest,
+				mutate(value) {
+					delete value.debugger.capabilities.writeMemory;
+				},
+				error: /invalid writeMemory capability/u
 			},
 			{
 				name: 'tampered WAMR protocol version',

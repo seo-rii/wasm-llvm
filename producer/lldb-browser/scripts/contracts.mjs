@@ -353,6 +353,9 @@ export function validateArtifactManifest(artifactManifest) {
   ) {
     throw new Error("debug-manifest.json has an invalid transport contract");
   }
+  if (artifactManifest.debugger?.capabilities?.writeMemory !== true) {
+    throw new Error("debug-manifest.json has an invalid writeMemory capability");
+  }
 }
 
 export function validateBuildReceipt(receipt) {

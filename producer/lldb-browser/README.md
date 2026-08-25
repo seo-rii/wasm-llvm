@@ -68,6 +68,13 @@ launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
 General Clang expression evaluation is not an advertised capability of this
 artifact.
 
+The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
+through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP
+`M` packet to guest linear memory. This is a raw-memory operation only: it does
+not imply `setVariable`, Wasm local/global mutation, or expression evaluation.
+The assembled runtime manifest requires this capability explicitly so an older
+or incomplete debugger bundle fails closed before a browser session starts.
+
 `DynamicLoaderWasmDYLD` is required even though the program is already mounted
 in LLDB's MEMFS before attach. Its attach hook asks the GDB remote stub for the
 loaded Wasm module and assigns the runtime module id to the object sections.

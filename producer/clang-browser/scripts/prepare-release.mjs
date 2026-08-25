@@ -141,6 +141,7 @@ async function prepareDebugRuntimeManifest() {
 			locals: true,
 			globals: true,
 			readMemory: true,
+			writeMemory: true,
 			evaluateExpressions: false,
 			dataBreakpoints: false,
 			wasmThreads: false
