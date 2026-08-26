@@ -8,6 +8,7 @@ import test from 'node:test';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import { gzipSync } from 'node:zlib';
 
 import {
 	EMSCRIPTEN_LINK_OPTIONS,
@@ -726,4 +727,25 @@ test('documents separated output and the pinned host-platform caveat', async () 
 	assert.match(readme, /123 bytes/u);
 	assert.match(readme, /RSP `\$W00`/u);
 	assert.match(readme, /provenance.*sources\.lock\.json.*patch.*overlay/su);
+});
+
+test('documents the manifest-pinned WAMR artifact sizes', async () => {
+	const runtimeSourceRoot = path.resolve(producerRoot, '../../artifacts/runtime-source');
+	const runtimeManifest = JSON.parse(
+		await readFile(path.join(runtimeSourceRoot, 'runtime-manifest.v2.json'), 'utf8')
+	);
+	assert.equal(runtimeManifest.debugger.targetRuntime.name, 'wamr');
+	const wasm = await readFile(
+		path.join(runtimeSourceRoot, runtimeManifest.debugger.targetRuntime.wasm)
+	);
+	const compressedWasm = gzipSync(wasm, { level: 9, mtime: 0 });
+	const readme = await readFile(path.join(producerRoot, 'README.md'), 'utf8');
+	const normalizedReadme = readme.replace(/\s+/gu, ' ');
+
+	assert.ok(
+		normalizedReadme.includes(
+			`The current pinned product is ${wasm.byteLength.toLocaleString('en-US')} bytes raw and ${compressedWasm.byteLength.toLocaleString('en-US')} bytes compressed`
+		),
+		'README must report the raw and deterministic-gzip sizes of the manifest-pinned WAMR artifact'
+	);
 });
