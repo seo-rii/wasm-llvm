@@ -218,8 +218,10 @@ test('reports browser watchpoint hits without corrupting the RSP stream', async 
 	assert.match(patch, /ret = handle_watchpoint_write_add/u);
 	assert.match(patch, /ret = handle_watchpoint_read_add/u);
 	assert.match(patch, /CHECK_WATCHPOINT\(list, current_addr, access_size, type\)/u);
-	assert.match(patch, /watchpoint->addr < current_addr \+ access_size/u);
-	assert.match(patch, /current_addr < watchpoint->addr \+ watchpoint->length/u);
+	assert.match(patch, /watchpoint->addr < \(current_addr\) \+ \(access_size\)/u);
+	assert.match(patch, /\(current_addr\) < watchpoint->addr \+ watchpoint->length/u);
+	assert.match(patch, /watchpoint->addr > \(current_addr\)/u);
+	assert.doesNotMatch(patch, /current_addr \+ access_size/u);
 	assert.match(patch, /CHECK_READ_WATCHPOINT\(addr, offset, 8\)/u);
 	assert.match(patch, /CHECK_WRITE_WATCHPOINT\(addr, offset, 8\)/u);
 	const addedLines = patch

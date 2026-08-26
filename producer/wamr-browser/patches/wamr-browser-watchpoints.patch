@@ -20,12 +20,12 @@ index 9f7e03e2..cce5e673 100644
 -            if (watchpoint->addr <= current_addr                           \
 -                && watchpoint->addr + watchpoint->length > current_addr) { \
 -                TRIGGER_WATCHPOINT_SIGTRAP();                              \
-+            if (watchpoint->addr < current_addr + access_size              \
-+                && current_addr < watchpoint->addr + watchpoint->length) { \
++            if (watchpoint->addr < (current_addr) + (access_size)          \
++                && (current_addr) < watchpoint->addr + watchpoint->length) { \
 +                TRIGGER_WATCHPOINT_SIGTRAP(                                \
-+                    type, watchpoint->addr > current_addr                  \
++                    type, watchpoint->addr > (current_addr)                \
 +                              ? watchpoint->addr                           \
-+                              : current_addr);                             \
++                              : (current_addr));                           \
 +                break;                                                     \
              }                                                              \
 @@ -154,9 +160,12 @@ typedef float64 CellType_F64;
