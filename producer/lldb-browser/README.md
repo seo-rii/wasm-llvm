@@ -78,9 +78,11 @@ or incomplete debugger bundle fails closed before a browser session starts.
 The same pinned pair supports address-based data breakpoints through LLDB-DAP.
 LLVM 22.1.8 translates write, read, and combined read/write watchpoints to RSP
 `Z2`, `Z3`, and `Z4`, and the WAMR 2.4.5 classic debug interpreter checks guest
-linear-memory accesses. The browser WAMR patch makes combined add/remove
-transactional with one RSP reply and reports `watch`, `rwatch`, or `awatch`
-metadata in its stop packet. LLDB can therefore publish the DAP
+linear-memory accesses. A combined add rolls back the write watchpoint when
+installing its read half fails. A combined removal attempts both halves and
+returns a single aggregate RSP reply; removal is best-effort rather than
+transactional. The stub reports `watch`, `rwatch`, or `awatch` metadata in its
+stop packet. LLDB can therefore publish the DAP
 `data breakpoint` stop reason instead of confusing a memory access with a
 source breakpoint. Watchpoints cover scalar classic-interpreter loads and
 stores; bulk-memory operations, host-side memory writes, guest threads, and

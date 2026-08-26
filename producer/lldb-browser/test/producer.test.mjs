@@ -180,6 +180,15 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
   }
 });
 
+test("documents asymmetric combined watchpoint lifecycle semantics", async () => {
+  const readme = await fs.readFile(path.join(PRODUCER_ROOT, "README.md"), "utf8");
+
+  assert.match(readme, /combined add rolls back the write watchpoint/u);
+  assert.match(readme, /combined removal attempts both halves/u);
+  assert.match(readme, /single aggregate RSP reply/u);
+  assert.doesNotMatch(readme, /combined add\/remove\s+transactional/u);
+});
+
 test("final Wasm rejects prepared source and build paths", () => {
   const sourceDir = "/tmp/clean-a/llvm-project";
   const webBuildDir = "/tmp/clean-a/web-build";
