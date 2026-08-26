@@ -217,7 +217,17 @@ test('reports browser watchpoint hits without corrupting the RSP stream', async 
 	assert.match(patch, /reason:%s;%s:/u);
 	assert.match(patch, /ret = handle_watchpoint_write_add/u);
 	assert.match(patch, /ret = handle_watchpoint_read_add/u);
-	assert.match(patch, /write_packet\(server, ret \? "OK" : "EO1"\)/u);
+	assert.match(patch, /CHECK_WATCHPOINT\(list, current_addr, access_size, type\)/u);
+	assert.match(patch, /watchpoint->addr < current_addr \+ access_size/u);
+	assert.match(patch, /current_addr < watchpoint->addr \+ watchpoint->length/u);
+	assert.match(patch, /CHECK_READ_WATCHPOINT\(addr, offset, 8\)/u);
+	assert.match(patch, /CHECK_WRITE_WATCHPOINT\(addr, offset, 8\)/u);
+	const addedLines = patch
+		.split('\n')
+		.filter((line) => line.startsWith('+') && !line.startsWith('+++'))
+		.join('\n');
+	assert.match(addedLines, /write_packet\(server, ret \? "OK" : "E01"\)/u);
+	assert.doesNotMatch(addedLines, /"EO1"/u);
 	assert.doesNotMatch(
 		patch,
 		/handle_watchpoint_write_add\(server, addr, length\);\s*handle_watchpoint_read_add/u

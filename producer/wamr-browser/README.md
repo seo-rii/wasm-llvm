@@ -27,6 +27,12 @@ application worker. See `contracts/pthread-transport-v1.md`.
 - JIT, fast JIT, AOT, wasm threads, and multi-module disabled
 - one debug target session per worker
 
+Watchpoint matching uses the complete 1/2/4/8-byte interpreter memory access
+range. A scalar access that begins before a watched byte still stops when the
+two ranges overlap, and the RSP stop reply reports the first overlapping byte.
+Failed breakpoint and watchpoint operations use the canonical `E01` RSP error
+packet.
+
 The build requires the exact emsdk commit for Emscripten 6.0.0 and uses a
 strict, preloaded pthread pool, so the deployed application must be
 cross-origin isolated. `callMain()` runs directly in wasm-idle's dedicated
