@@ -212,7 +212,7 @@ It also measures a deterministic gzip representation (`level: 9`, `mtime: 0`)
 without changing the runtime-facing uncompressed asset. Receipt verification
 recomputes that representation and enforces both a 48 MiB uncompressed budget
 and an 18 MiB gzip budget for `lldb-web-dap.wasm`; the current product is
-42,718,251 bytes raw and 14,930,084 bytes compressed. Its JS, Wasm, and pthread
+42,718,338 bytes raw and 14,930,235 bytes compressed. Its JS, Wasm, and pthread
 worker hashes match between a clean GitHub Actions build and a local build
 prepared through a different clone root. A larger binary requires an explicit
 reviewed budget change.
