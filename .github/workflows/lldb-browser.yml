@@ -59,6 +59,11 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 360
         env:
+            LLDB_PRODUCT_WORK: artifacts/lldb-browser-build-a
+            LLDB_REPRO_WORK: artifacts/lldb-browser-build-b
+            LLDB_PRODUCT_OUTPUT: artifacts/lldb-browser
+            LLDB_REPRO_OUTPUT: artifacts/lldb-browser-repro
+            LLDB_EMSDK: artifacts/lldb-browser-toolchain/emsdk
             WAMR_PRODUCT_REPOSITORY: https://github.com/bytecodealliance/wasm-micro-runtime.git
             WAMR_PRODUCT_COMMIT: 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
             WAMR_PRODUCT_SOURCE: artifacts/wamr-browser-build/wasm-micro-runtime
@@ -72,8 +77,44 @@ jobs:
                   node-version: 24
             - name: Report available disk
               run: df -h .
-            - name: Prepare pinned LLVM and Emscripten sources
-              run: node producer/lldb-browser/scripts/prepare.mjs
+            - name: Prepare primary pinned LLVM build
+              run: |
+                  node producer/lldb-browser/scripts/prepare.mjs \
+                    --work-dir "$LLDB_PRODUCT_WORK" \
+                    --emsdk-dir "$LLDB_EMSDK"
+            - name: Build and package primary LLDB browser assets
+              env:
+                  NINJA_JOBS: 2
+              run: |
+                  node producer/lldb-browser/scripts/build.mjs \
+                    --work-dir "$LLDB_PRODUCT_WORK" \
+                    --emsdk-dir "$LLDB_EMSDK" \
+                    --out-dir "$LLDB_PRODUCT_OUTPUT"
+            - name: Verify primary LLDB browser assets
+              run: node producer/lldb-browser/scripts/verify.mjs "$LLDB_PRODUCT_OUTPUT"
+            - name: Release primary LLDB build workspace
+              run: find artifacts/lldb-browser-build-a -xdev -depth -delete
+            - name: Prepare independent pinned LLVM build
+              run: |
+                  node producer/lldb-browser/scripts/prepare.mjs \
+                    --work-dir "$LLDB_REPRO_WORK" \
+                    --emsdk-dir "$LLDB_EMSDK" \
+                    --skip-emsdk-install
+            - name: Build independent LLDB reproducibility package
+              env:
+                  NINJA_JOBS: 2
+              run: |
+                  node producer/lldb-browser/scripts/build.mjs \
+                    --work-dir "$LLDB_REPRO_WORK" \
+                    --emsdk-dir "$LLDB_EMSDK" \
+                    --out-dir "$LLDB_REPRO_OUTPUT"
+            - name: Verify clean LLDB build reproducibility
+              run: |
+                  node producer/lldb-browser/scripts/verify-reproducibility.mjs \
+                    "$LLDB_PRODUCT_OUTPUT" \
+                    "$LLDB_REPRO_OUTPUT"
+            - name: Release independent LLDB build workspace
+              run: find artifacts/lldb-browser-build-b -xdev -depth -delete
             - name: Prepare pinned WAMR browser sources
               run: |
                   mkdir -p artifacts/wamr-browser-build artifacts/wamr-browser-repro-build
@@ -89,18 +130,12 @@ jobs:
                   git -C "$WAMR_REPRO_SOURCE" checkout --detach FETCH_HEAD
                   test "$(git -C "$WAMR_REPRO_SOURCE" rev-parse HEAD)" = "$WAMR_PRODUCT_COMMIT"
                   node producer/wamr-browser/scripts/prepare.mjs --source "$WAMR_REPRO_SOURCE"
-            - name: Build and package LLDB browser assets
-              env:
-                  NINJA_JOBS: 2
-              run: node producer/lldb-browser/scripts/build.mjs
-            - name: Verify packaged LLDB browser assets
-              run: node producer/lldb-browser/scripts/verify.mjs artifacts/lldb-browser
             - name: Build and package WAMR browser assets
               run: |
                   node producer/wamr-browser/scripts/build.mjs \
                     --source "$WAMR_PRODUCT_SOURCE" \
                     --build "$WAMR_PRODUCT_BUILD" \
-                    --emsdk artifacts/lldb-browser-build/emsdk
+                    --emsdk "$LLDB_EMSDK"
                   node producer/wamr-browser/scripts/package.mjs \
                     --build "$WAMR_PRODUCT_BUILD" \
                     --output artifacts/wamr-browser
@@ -111,7 +146,7 @@ jobs:
                   node producer/wamr-browser/scripts/build.mjs \
                     --source "$WAMR_REPRO_SOURCE" \
                     --build "$WAMR_REPRO_BUILD" \
-                    --emsdk artifacts/lldb-browser-build/emsdk
+                    --emsdk "$LLDB_EMSDK"
                   node producer/wamr-browser/scripts/package.mjs \
                     --build "$WAMR_REPRO_BUILD" \
                     --output artifacts/wamr-browser-repro

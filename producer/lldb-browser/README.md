@@ -235,22 +235,26 @@ product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
 
 The weekly schedule also performs full clean LLDB and WAMR product builds. It
-checks out the exact pinned WAMR revision, reuses the LLDB producer's pinned
-Emscripten SDK, builds WAMR from two distinct clean source and build roots,
-requires their verified packages to be byte-reproducible, and keeps the primary
-LLDB/WAMR packages as a seven-day workflow artifact. The verifiers recompute
-asset hashes, deterministic gzip receipts, and Wasm size budgets. This catches
-producer, Emscripten, reproducibility, and size regressions even when no
-maintainer has requested a release build. The same schedule runs the real
-native C command and LLDB-DAP attach baselines; either job can still be selected
-independently with `build_product=true` or `native_baseline=true` in a manual
-dispatch. The native job verifies the official LLVM and WASI SDK archive
-digests, builds the exact WAMR commit, recompiles the DWARF fixture, runs
-`llvm-dwarfdump --verify`, and then executes both native baseline runners. It
-uses a digest-pinned Debian container because the official LLDB binary has
-fixed Python 3.11 and ICU 72 shared-library dependencies. See
-`test/native-wasm-debug/README.md` for the command transcript contract and
-manual invocation.
+builds LLDB sequentially from two distinct empty LLVM source and build roots,
+fully verifies both packages, and requires them to be byte-reproducible before
+uploading the primary package. The first work root is deleted before the second
+build so the runner never retains two LLVM build trees at once; both builds use
+the same checksum-pinned Emscripten installation. The workflow then checks out
+the exact pinned WAMR revision into two distinct clean source and build roots,
+reuses that Emscripten installation, and applies the same verified-package and
+byte-reproducibility requirement. Only the primary LLDB/WAMR packages are kept
+as a seven-day workflow artifact. The verifiers recompute asset hashes,
+deterministic gzip receipts, and Wasm size budgets. This catches producer,
+Emscripten, reproducibility, and size regressions even when no maintainer has
+requested a release build. The same schedule runs the real native C command and
+LLDB-DAP attach baselines; either job can still be selected independently with
+`build_product=true` or `native_baseline=true` in a manual dispatch. The native
+job verifies the official LLVM and WASI SDK archive digests, builds the exact
+WAMR commit, recompiles the DWARF fixture, runs `llvm-dwarfdump --verify`, and
+then executes both native baseline runners. It uses a digest-pinned Debian
+container because the official LLDB binary has fixed Python 3.11 and ICU 72
+shared-library dependencies. See `test/native-wasm-debug/README.md` for the
+command transcript contract and manual invocation.
 
 Maintainers can request the full pinned LLDB/WAMR rebuild and a seven-day
 downloadable artifact without making the ordinary contract gate expensive:

@@ -57,10 +57,45 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browse
 		/build-product:\s+needs: producer-contracts\s+if: github\.event_name == 'schedule' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.build_product\)/su
 	);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/prepare\.mjs/);
-	assert.match(workflow, /node producer\/lldb-browser\/scripts\/build\.mjs/);
 	assert.match(
 		workflow,
-		/node producer\/lldb-browser\/scripts\/verify\.mjs artifacts\/lldb-browser/
+		/LLDB_PRODUCT_WORK: artifacts\/lldb-browser-build-a/u
+	);
+	assert.match(
+		workflow,
+		/LLDB_REPRO_WORK: artifacts\/lldb-browser-build-b/u
+	);
+	assert.match(
+		workflow,
+		/LLDB_PRODUCT_OUTPUT: artifacts\/lldb-browser/u
+	);
+	assert.match(
+		workflow,
+		/LLDB_REPRO_OUTPUT: artifacts\/lldb-browser-repro/u
+	);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/prepare\.mjs \\\s+--work-dir "\$LLDB_PRODUCT_WORK" \\\s+--emsdk-dir "\$LLDB_EMSDK"/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/build\.mjs \\\s+--work-dir "\$LLDB_PRODUCT_WORK" \\\s+--emsdk-dir "\$LLDB_EMSDK" \\\s+--out-dir "\$LLDB_PRODUCT_OUTPUT"/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/verify\.mjs "\$LLDB_PRODUCT_OUTPUT"/u
+	);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/prepare\.mjs \\\s+--work-dir "\$LLDB_REPRO_WORK" \\\s+--emsdk-dir "\$LLDB_EMSDK" \\\s+--skip-emsdk-install/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/build\.mjs \\\s+--work-dir "\$LLDB_REPRO_WORK" \\\s+--emsdk-dir "\$LLDB_EMSDK" \\\s+--out-dir "\$LLDB_REPRO_OUTPUT"/su
+	);
+	assert.match(
+		workflow,
+		/node producer\/lldb-browser\/scripts\/verify-reproducibility\.mjs \\\s+"\$LLDB_PRODUCT_OUTPUT" \\\s+"\$LLDB_REPRO_OUTPUT"/su
 	);
 	assert.match(
 		workflow,
@@ -80,7 +115,7 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browse
 	);
 	assert.match(
 		workflow,
-		/node producer\/wamr-browser\/scripts\/build\.mjs[\s\S]*?--emsdk artifacts\/lldb-browser-build\/emsdk/su
+		/node producer\/wamr-browser\/scripts\/build\.mjs[\s\S]*?--emsdk "\$LLDB_EMSDK"/su
 	);
 	assert.match(
 		workflow,
