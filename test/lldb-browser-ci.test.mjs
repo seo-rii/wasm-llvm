@@ -9,9 +9,43 @@ test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
 	assert.match(workflow, /branches: \[main\]/);
 	assert.match(
 		workflow,
-		/node --test producer\/lldb-browser\/test\/producer\.test\.mjs producer\/wamr-browser\/test\/producer\.test\.mjs test\/debug-release\.test\.mjs test\/debug-runtime-source\.test\.mjs test\/lldb-browser-ci\.test\.mjs/
+		/node --test producer\/lldb-browser\/test\/producer\.test\.mjs producer\/wamr-browser\/test\/producer\.test\.mjs test\/debug-release\.test\.mjs test\/lldb-browser-ci\.test\.mjs/
 	);
 	assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
+});
+
+test('checked runtime provenance remains a required gate without blocking product regeneration', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+	const producerContracts = workflow.match(
+		/^    producer-contracts:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
+	)?.[0];
+	const runtimeSourceProvenance = workflow.match(
+		/^    runtime-source-provenance:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
+	)?.[0];
+	const buildProduct = workflow.match(
+		/^    build-product:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
+	)?.[0];
+
+	assert.ok(producerContracts, 'producer-contracts job must exist');
+	assert.ok(runtimeSourceProvenance, 'runtime-source-provenance job must exist');
+	assert.ok(buildProduct, 'build-product job must exist');
+	assert.doesNotMatch(producerContracts, /debug-runtime-source\.test\.mjs/u);
+	assert.match(
+		runtimeSourceProvenance,
+		/node --test test\/debug-runtime-source\.test\.mjs/u
+	);
+	assert.doesNotMatch(runtimeSourceProvenance, /continue-on-error:\s*true/u);
+	assert.doesNotMatch(runtimeSourceProvenance, /^\s+needs:/mu);
+	assert.match(buildProduct, /^        needs: producer-contracts$/mu);
+	assert.doesNotMatch(buildProduct, /runtime-source-provenance/u);
+});
+
+test('documents the two-phase producer regeneration gate', async () => {
+	const readme = await fs.readFile('producer/lldb-browser/README.md', 'utf8');
+
+	assert.match(readme, /source and patch contracts gate the product build/u);
+	assert.match(readme, /runtime-source provenance runs independently/u);
+	assert.match(readme, /both jobs must be green/u);
 });
 
 test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browser products', async () => {
@@ -20,7 +54,7 @@ test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browse
 	assert.match(workflow, /build_product:/);
 	assert.match(
 		workflow,
-		/build-product:\s+if: github\.event_name == 'schedule' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.build_product\)/su
+		/build-product:\s+needs: producer-contracts\s+if: github\.event_name == 'schedule' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.build_product\)/su
 	);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/prepare\.mjs/);
 	assert.match(workflow, /node producer\/lldb-browser\/scripts\/build\.mjs/);
@@ -80,7 +114,7 @@ test('contract pushes cannot cancel an in-flight manual LLDB product build', asy
 
 	assert.match(
 		workflow,
-		/build-product:\s+if:.*?\s+concurrency:\s+group: lldb-browser-product-\$\{\{ github\.ref \}\}\s+cancel-in-progress: false/su
+		/build-product:\s+needs: producer-contracts\s+if:.*?\s+concurrency:\s+group: lldb-browser-product-\$\{\{ github\.ref \}\}\s+cancel-in-progress: false/su
 	);
 	assert.match(
 		workflow,

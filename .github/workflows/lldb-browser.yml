@@ -35,9 +35,23 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: 24
-            - run: node --test producer/lldb-browser/test/producer.test.mjs producer/wamr-browser/test/producer.test.mjs test/debug-release.test.mjs test/debug-runtime-source.test.mjs test/lldb-browser-ci.test.mjs
+            - run: node --test producer/lldb-browser/test/producer.test.mjs producer/wamr-browser/test/producer.test.mjs test/debug-release.test.mjs test/lldb-browser-ci.test.mjs
+
+    runtime-source-provenance:
+        concurrency:
+            group: lldb-runtime-source-provenance-${{ github.ref }}
+            cancel-in-progress: true
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - run: node --test test/debug-runtime-source.test.mjs
 
     build-product:
+        needs: producer-contracts
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.build_product)
         concurrency:
             group: lldb-browser-product-${{ github.ref }}

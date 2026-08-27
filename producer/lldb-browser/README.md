@@ -185,6 +185,14 @@ length and rejects an unexpected increase beyond its documented headroom.
 The scripts are deliberately split so source mutation, compilation, and
 packaging remain auditable:
 
+CI follows the same two-phase contract.
+The source and patch contracts gate the product build.
+Checked-in runtime-source provenance runs independently. A source change may
+therefore leave the provenance job red while the explicitly requested
+replacement product is still built and uploaded. After that product is
+synchronized into `artifacts/runtime-source/debug`, both jobs must be green
+before the revision can be released or promoted.
+
 ```sh
 node producer/lldb-browser/scripts/prepare.mjs
 node producer/lldb-browser/scripts/build.mjs
