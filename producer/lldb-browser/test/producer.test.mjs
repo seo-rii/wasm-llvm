@@ -189,6 +189,44 @@ test("documents asymmetric combined watchpoint lifecycle semantics", async () =>
   assert.doesNotMatch(readme, /combined add\/remove\s+transactional/u);
 });
 
+test("fails closed when resetting data breakpoints cannot delete all watchpoints", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const patchEntry = sourcesLock.patches.find(
+    ({ path: patchPath }) =>
+      patchPath === "patches/0009-lldb-dap-fail-closed-watchpoint-reset.patch",
+  );
+  assert.ok(patchEntry, "the LLDB-DAP watchpoint reset fix must be hash locked");
+
+  const patch = await fs.readFile(
+    path.join(PRODUCER_ROOT, patchEntry.path),
+    "utf8",
+  );
+  const addedLines = patch
+    .split("\n")
+    .filter((line) => line.startsWith("+") && !line.startsWith("+++"))
+    .join("\n");
+
+  assert.match(
+    addedLines,
+    /if \(!dap\.target\.DeleteAllWatchpoints\(\)\)/u,
+    "DeleteAllWatchpoints must be checked before replacement watchpoints are installed",
+  );
+  assert.match(
+    addedLines,
+    /return target_sp->RemoveAllWatchpoints\(\);/u,
+    "SBTarget must propagate a target-side watchpoint deletion failure",
+  );
+  assert.match(
+    addedLines,
+    /return llvm::make_error<DAPError>\([\s\S]*failed to delete existing data breakpoints[\s\S]*\);/u,
+    "a failed watchpoint reset must become a failed DAP response",
+  );
+  assert.doesNotMatch(
+    addedLines,
+    /^\+\s*dap\.target\.DeleteAllWatchpoints\(\);$/mu,
+  );
+});
+
 test("final Wasm rejects prepared source and build paths", () => {
   const sourceDir = "/tmp/clean-a/llvm-project";
   const webBuildDir = "/tmp/clean-a/web-build";
