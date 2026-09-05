@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/crystal-browser",
+  "target": "wasm32-unknown-wasi",
+  "sources": {
+    "crystal": {
+      "repository": "https://github.com/crystal-lang/crystal.git",
+      "version": "1.21.0",
+      "tag": "1.21.0",
+      "commit": "57cf7da5094db6c5d3c058c6d054a757b5ced19e"
+    },
+    "markd": {
+      "repository": "https://github.com/icyleaf/markd.git",
+      "tag": "v0.5.0",
+      "commit": "d61dd52d40e659b53cb78712a7b1190cfdb9bc66"
+    }
+  },
+  "bootstrap": {
+    "platform": "linux-x86_64",
+    "url": "https://github.com/crystal-lang/crystal/releases/download/1.21.0/crystal-1.21.0-1-linux-x86_64-bundled.tar.gz",
+    "bytes": 58168482,
+    "sha256": "cc407bd071915cc7b5d9348281e669a911d20a1f4b9fac52a62088660eb22208"
+  },
+  "readiness": {
+    "ready": false,
+    "stage": "compiler-host-portability-probe",
+    "reason": "WASI program cross-compilation and compiler-host compilation are separate acceptance gates; no browser compiler is published."
+  }
+}
