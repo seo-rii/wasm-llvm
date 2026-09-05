@@ -21,6 +21,9 @@ wasm_idle_rsp_write(const uint8_t *buffer, uint32_t length,
 extern void
 wasm_idle_rsp_close(void);
 
+extern void
+wasm_idle_rsp_interrupt(void);
+
 wasm_debug_transport_t *
 wasm_debug_transport_create(void)
 {
@@ -69,7 +72,8 @@ wasm_debug_transport_write_all(wasm_debug_transport_t *transport,
 void
 wasm_debug_transport_interrupt(wasm_debug_transport_t *transport)
 {
-    (void)transport;
+    if (transport && !transport->closed)
+        wasm_idle_rsp_interrupt();
 }
 
 void

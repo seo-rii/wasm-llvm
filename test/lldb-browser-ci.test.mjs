@@ -9,7 +9,7 @@ test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
 	assert.match(workflow, /branches: \[main\]/);
 	assert.match(
 		workflow,
-		/node --test producer\/lldb-browser\/test\/producer\.test\.mjs producer\/wamr-browser\/test\/producer\.test\.mjs test\/debug-release\.test\.mjs test\/lldb-browser-ci\.test\.mjs/
+		/node --test producer\/lldb-browser\/test\/producer\.test\.mjs producer\/wamr-browser\/test\/\*\.test\.mjs test\/debug-release\.test\.mjs test\/lldb-browser-ci\.test\.mjs/
 	);
 	assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
 });

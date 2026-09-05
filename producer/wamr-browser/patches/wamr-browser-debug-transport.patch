@@ -131,13 +131,15 @@ index 88b2d88..6413e7a 100644
  }
  
  static inline void
-@@ -294,19 +326,33 @@ wasm_gdbserver_handle_packet(WASMGDBServer *server)
+@@ -294,19 +326,35 @@ wasm_gdbserver_handle_packet(WASMGDBServer *server)
      int32 n;
      char buf[1024];
  
 +#if WASM_DEBUG_BROWSER_TRANSPORT != 0
 +    n = wasm_debug_transport_read(server->browser_transport, (uint8_t *)buf,
 +                                  sizeof(buf), 1000);
++    if (n == WASM_DEBUG_TRANSPORT_INTERRUPTED)
++        return true;
 +#else
      if (os_socket_settimeout(server->socket_fd, 1000) != 0) {
          LOG_ERROR("Set socket recv timeout failed");
@@ -165,7 +167,7 @@ index 88b2d88..6413e7a 100644
  #if defined(BH_PLATFORM_WINDOWS)
          if (WSAGetLastError() == WSAETIMEDOUT)
  #else
-@@ -316,5 +353,6 @@ wasm_gdbserver_handle_packet(WASMGDBServer *server)
+@@ -316,5 +355,6 @@ wasm_gdbserver_handle_packet(WASMGDBServer *server)
              return false;
          }
 +#endif
@@ -197,4 +199,21 @@ index 16bdd73..d272be1 100644
 +        exit(-2);
 +#endif
      }
+ }
+diff --git a/core/iwasm/libraries/debug-engine/debug_engine.c b/core/iwasm/libraries/debug-engine/debug_engine.c
+--- a/core/iwasm/libraries/debug-engine/debug_engine.c
++++ b/core/iwasm/libraries/debug-engine/debug_engine.c
+@@ -36,2 +36,6 @@
+     os_mutex_unlock(&debug_inst->wait_lock);
++#if WASM_DEBUG_BROWSER_TRANSPORT != 0
++    wasm_debug_transport_interrupt(
++        debug_inst->control_thread->server->browser_transport);
++#endif
+ }
+@@ -53,2 +57,6 @@
+     os_mutex_unlock(&debug_inst->wait_lock);
++#if WASM_DEBUG_BROWSER_TRANSPORT != 0
++    wasm_debug_transport_interrupt(
++        debug_inst->control_thread->server->browser_transport);
++#endif
  }
