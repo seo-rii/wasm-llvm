@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/odin-browser",
+  "compilerHost": "wasm32-unknown-emscripten",
+  "programTarget": "wasi_wasm32",
+  "source": {
+    "repository": "https://github.com/odin-lang/Odin.git",
+    "ref": "dev-2026-09",
+    "commit": "a2fb372b76e81ef31fbbc8a2cf2b4fdf5ac6c924",
+    "files": [
+      {
+        "path": "build_odin.sh",
+        "sha256": "d55a0cc0ac702a8697bbfe048966fa7d4f74377ce5c7f66bd853fce1cf1de206"
+      },
+      {
+        "path": "src/main.cpp",
+        "sha256": "924283cf7bad7da488ffa6c97607a0be026accf5382f3cbe5bbee7f8c19e5af2"
+      },
+      {
+        "path": "src/libtommath.cpp",
+        "sha256": "e68e57e55af7b206892ecae68c683643c5ae1f2ab4b1348cfd40701dadbb4712"
+      },
+      {
+        "path": "src/gb/gb.h",
+        "sha256": "e89a2412e725550b1f52066341d0f1682db5af9f60c054f59da0cc6ed042fac0"
+      },
+      {
+        "path": "src/threading.cpp",
+        "sha256": "09f1b00d97ef9de6e656b6e9ca0d4b5ddbe994c81f43ca2e5b4dc11dd4ad8baf"
+      },
+      {
+        "path": "src/linker.cpp",
+        "sha256": "a52bd2bd976657833b971998b5e1b3e84caad01272ce152c64dd422e1d804cf8"
+      },
+      {
+        "path": "src/build_settings.cpp",
+        "sha256": "d5d048fe036c5765fd4344c54aaa40f38953249054b57ec0eaaca98fbb19edf3"
+      },
+      {
+        "path": "src/llvm_backend.cpp",
+        "sha256": "179f85b41da7902bdd2a877247d71ea433dec8e59735c301bb46aaba112c9b94"
+      },
+      {
+        "path": "core/os/file_wasi.odin",
+        "sha256": "3d94b0b3ac1b86332966995cadf0bd10cb0b2a77e54bee48f37f3eb12ead5ce6"
+      },
+      {
+        "path": "core/sys/wasm/README.md",
+        "sha256": "a4ba63497b91fd2150d2efd4cc2a1cc94b6afc8a0d80a8636352ab781acd856c"
+      }
+    ]
+  },
+  "nativeBootstrap": {
+    "host": "linux-x64",
+    "url": "https://github.com/odin-lang/Odin/releases/download/dev-2026-09/odin-linux-amd64-dev-2026-09.tar.gz",
+    "archive": "odin-linux-amd64-dev-2026-09.tar.gz",
+    "bytes": 70000274,
+    "sha256": "167c3e1d7056419dad2e04bb3bd98715b7ff286d4c125f3c5a5ee337c6254283",
+    "root": "odin-linux-amd64-nightly+2026-09-01",
+    "executableSha256": "fc74430486881325ba5b68db58645102a304a729f65fc6488ea68ae7bd869dc6",
+    "version": "dev-2026-09-nightly:a2fb372",
+    "llvmVersion": "20.1.8"
+  },
+  "hostProbe": {
+    "kind": "upstream-main-cxx-syntax",
+    "emscripten": {
+      "repository": "https://github.com/emscripten-core/emsdk.git",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+      "version": "6.0.0"
+    },
+    "llvmHeaders": {
+      "version": "22.1.8",
+      "configSha256": "b806b09268fe673a5b775c696a0cc43c2fa95334b98bef3290f27aff3dac7983",
+      "url": "https://github.com/c3lang/llvm-for-c3/releases/download/llvm_22.1.10/llvm-wasm32-emscripten.tar.xz",
+      "archiveBytes": 24218528,
+      "archiveSha256": "a38b647965a35f8df87c11fe3692751a32001b789cdd887550aeba80bcfe427d",
+      "includePath": "usr/include",
+      "provenance": "Upstream binary headers; release tag llvm_22.1.10 contains LLVM 22.1.8 headers. This probe does not link its libraries."
+    }
+  },
+  "readiness": {
+    "ready": false,
+    "status": "host-port-required",
+    "nativeBaseline": "available",
+    "browserCompiler": "not-built",
+    "consumerAcceptance": "not-run",
+    "blockers": [
+      "Odin gb.h rejects Emscripten host OS and WebAssembly CPU.",
+      "Odin gb.h includes sys/sendfile.h, unavailable in Emscripten.",
+      "Threading, filesystem, process spawning, and external linking need a real browser-host port and acceptance."
+    ]
+  },
+  "patches": [],
+  "outputs": []
+}
