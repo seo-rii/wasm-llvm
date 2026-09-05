@@ -40,6 +40,29 @@ The official SDK URL and checksum are recorded in `manifest.json` and exposed by
 `scripts/probe-toolchain.mjs`. Embedded-only SDKs are rejected because this producer targets full
 Swift.
 
+## Browser target stdin baseline
+
+After installing the pinned native Swift toolchain and full Wasm SDK, run:
+
+```sh
+pnpm probe:swift-browser-target
+# Use an existing Chromium installation when needed:
+pnpm probe:swift-browser-target -- --chromium /path/to/chromium
+```
+
+This compiles `fixtures/browser-stdin.swift` with native SwiftPM and executes the resulting
+WASI Preview 1 program in fresh Chromium Workers. The fixture uses standard `readLine`,
+collections, integer arithmetic, and `print`; acceptance covers UTF-8, input delivered in short
+reads, a final line without a newline, and empty input followed by EOF. Each case must return
+the exact expected stdout, empty stderr, and exit code zero within 15 seconds.
+
+The local server and Worker under `test/` are acceptance tools. Product runtime integration
+belongs to `wasm-idle`. The receipt in `out/swift-browser-target/probe-*/receipt.json` records
+the native toolchain version, SDK identifier, source and target hashes, Chromium version, and
+each result. It sets `compilerHost: native` and leaves browser compiler, browser SwiftPM, and
+release readiness gates false. This command verifies target execution; packaging still requires
+the existing browser compiler contracts below. See [the recorded validation](browser-target-audit.md).
+
 ## Bootstrap source
 
 First write a checkout plan. Add `--execute` only when the large clone and dependency checkout

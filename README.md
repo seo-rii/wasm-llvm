@@ -81,6 +81,7 @@ pnpm producer:rust:prepare
 pnpm producer:rust:build
 
 # Swift
+pnpm probe:swift-browser-target
 pnpm --dir producer/swift-browser run bootstrap:source -- --help
 pnpm --dir producer/swift-browser run build:browser-compiler -- --help
 pnpm --dir producer/swift-browser run package:from-plan -- --help

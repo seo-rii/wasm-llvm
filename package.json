@@ -49,9 +49,11 @@
 		"verify:tinygo-artifacts": "node ./producer/tinygo-browser/scripts/verify-artifacts.mjs",
 		"sync:tinygo": "node ./producer/tinygo-browser/scripts/sync.mjs",
 		"swift:doctor": "node ./producer/swift-browser/scripts/doctor.mjs",
-		"swift:test": "pnpm --dir ./producer/swift-browser test"
+		"swift:test": "pnpm --dir ./producer/swift-browser test",
+		"probe:swift-browser-target": "node ./producer/swift-browser/scripts/probe-browser-target.mjs"
 	},
 	"devDependencies": {
+		"@bjorn3/browser_wasi_shim": "0.4.2",
 		"@zip.js/zip.js": "^2.8.23",
 		"playwright-core": "^1.59.1"
 	},
