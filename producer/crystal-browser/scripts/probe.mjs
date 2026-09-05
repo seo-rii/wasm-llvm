@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { access, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, mkdtemp, readFile, readlink, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'node:path';
@@ -82,10 +82,67 @@ async function downloadBootstrap(file) {
 }
 
 export async function verifySource(source, expected = manifest.sources.crystal) {
+  source = await realpath(source);
+  if (await checked('git', ['rev-parse', '--show-toplevel'], { cwd: source }) !== source) {
+    throw new Error('Source path must be the Git checkout root: ' + source);
+  }
   const commit = await checked('git', ['rev-parse', 'HEAD'], { cwd: source });
   if (commit !== expected.commit) throw new Error('Source revision does not match the manifest: ' + source);
-  const changes = await checked('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: source });
-  if (changes) throw new Error('Crystal source checkout must be clean');
+  const changes = await checked('git', ['status', '--porcelain', '--untracked-files=all', '--ignored=matching'], { cwd: source });
+  if (changes) throw new Error('Crystal source checkout must be clean, including ignored and untracked files');
+
+  // Read the pinned tree, not the index: status/diff can hide assume-unchanged or skip-worktree edits.
+  // Stream metadata separately because the generic command runner deliberately truncates output.
+  const tree = spawn('git', ['ls-tree', '-rz', '--full-tree', commit], {
+    cwd: source, stdio: ['ignore', 'pipe', 'pipe']
+  });
+  tree.stdout.setEncoding('utf8');
+  let stderr = '';
+  tree.stderr.on('data', (chunk) => { stderr = (stderr + chunk).slice(-4096); });
+  const completed = new Promise((resolve, reject) => {
+    tree.once('error', reject);
+    tree.once('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error('Unable to read pinned source tree: ' + stderr));
+    });
+  });
+  // Hashing files can outlive the short git process; keep early command failures handled.
+  completed.catch(() => {});
+  let pending = '';
+  try {
+    for await (const chunk of tree.stdout) {
+      pending += chunk;
+      let end;
+      while ((end = pending.indexOf('\0')) !== -1) {
+        const entry = pending.slice(0, end);
+        pending = pending.slice(end + 1);
+        const match = /^(100644|100755|120000) blob ([a-f0-9]{40})\t(.+)$/su.exec(entry);
+        if (!match) throw new Error('Pinned source tree contains an unsupported entry: ' + entry);
+        const [, mode, blob, relative] = match;
+        const filename = path.join(source, relative);
+        const info = await lstat(filename);
+        let actual;
+        if (mode === '120000') {
+          if (!info.isSymbolicLink()) throw new Error('Source symlink was replaced: ' + relative);
+          const target = await readlink(filename, { encoding: 'buffer' });
+          actual = createHash('sha1').update(`blob ${target.length}\0`).update(target).digest('hex');
+        } else {
+          if (!info.isFile() || info.isSymbolicLink()) throw new Error('Source is not a regular file: ' + relative);
+          if (((info.mode & 0o111) !== 0) !== (mode === '100755')) throw new Error('Source executable mode changed: ' + relative);
+          const hash = createHash('sha1').update(`blob ${info.size}\0`);
+          for await (const bytes of createReadStream(filename)) hash.update(bytes);
+          actual = hash.digest('hex');
+        }
+        if (actual !== blob) throw new Error('Source Git blob mismatch: ' + relative);
+      }
+    }
+    if (pending) throw new Error('Incomplete pinned source tree metadata');
+    await completed;
+  } catch (error) {
+    tree.kill('SIGTERM');
+    await completed.catch(() => {});
+    throw error;
+  }
   return commit;
 }
 

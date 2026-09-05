@@ -1,9 +1,64 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { assertWasmObject, classifyProbe, manifest, run, verifyBootstrap } from '../producer/crystal-browser/scripts/probe.mjs';
+import { assertWasmObject, classifyProbe, manifest, run, verifyBootstrap, verifySource } from '../producer/crystal-browser/scripts/probe.mjs';
+
+async function git(directory, args) {
+  const result = await run('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false',
+    '-c', 'user.name=Crystal producer test', '-c', 'user.email=crystal-test@example.invalid', ...args], { cwd: directory });
+  assert.equal(result.exitCode, 0, result.stderr);
+  return result.stdout.trim();
+}
+
+async function sourceFixture(t) {
+  const directory = await mkdtemp(path.join(tmpdir(), 'crystal-source-test-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await git(directory, ['init']);
+  await writeFile(path.join(directory, 'main.cr'), 'VALUE = 1\n');
+  await writeFile(path.join(directory, 'helper.cr'), 'OTHER = 1\n');
+  await writeFile(path.join(directory, '.gitignore'), 'ignored.cr\n');
+  await symlink('main.cr', path.join(directory, 'source-link'));
+  await git(directory, ['add', '.']);
+  await git(directory, ['commit', '-m', 'fixture']);
+  return { directory, expected: { commit: await git(directory, ['rev-parse', 'HEAD']) } };
+}
+
+test('pinned source accepts intact tracked files and symlinks but rejects the wrong revision', async (t) => {
+  const { directory, expected } = await sourceFixture(t);
+  assert.equal(await verifySource(directory, expected), expected.commit);
+  await assert.rejects(verifySource(directory, { commit: '0'.repeat(40) }), /revision does not match/u);
+});
+
+test('pinned source rejects untracked and ignored input injection', async (t) => {
+  const { directory, expected } = await sourceFixture(t);
+  for (const filename of ['injected.cr', 'ignored.cr']) {
+    await writeFile(path.join(directory, filename), 'INJECTED = true\n');
+    await assert.rejects(verifySource(directory, expected), /including ignored and untracked/u);
+    await rm(path.join(directory, filename));
+  }
+  assert.equal(await verifySource(directory, expected), expected.commit);
+});
+
+test('Git blob verification detects tracked changes hidden by either index flag', async (t) => {
+  for (const flag of ['--assume-unchanged', '--skip-worktree']) {
+    const { directory, expected } = await sourceFixture(t);
+    await git(directory, ['update-index', flag, 'helper.cr']);
+    await writeFile(path.join(directory, 'helper.cr'), 'OTHER = 2\n');
+    assert.equal(await git(directory, ['status', '--porcelain']), '');
+    await assert.rejects(verifySource(directory, expected), /Source Git blob mismatch: helper\.cr/u);
+  }
+});
+
+test('Git blob verification checks symlink text without following its target', async (t) => {
+  const { directory, expected } = await sourceFixture(t);
+  await git(directory, ['update-index', '--assume-unchanged', 'source-link']);
+  await rm(path.join(directory, 'source-link'));
+  await symlink('helper.cr', path.join(directory, 'source-link'));
+  assert.equal(await git(directory, ['status', '--porcelain']), '');
+  await assert.rejects(verifySource(directory, expected), /Source Git blob mismatch: source-link/u);
+});
 
 test('native object compilation cannot qualify browser execution', () => {
   const success = { exitCode: 0, wasmObject: true, stdout: '', stderr: '' };
