@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/c3-browser",
+  "compilerHost": "wasm32-emscripten",
+  "programTarget": "wasm32-unknown-unknown",
+  "sources": {
+    "c3": {
+      "repository": "https://github.com/c3lang/c3c.git",
+      "version": "0.8.3",
+      "commit": "1d155ee04d3b607261b99aa15ed5eefd6d7db284"
+    },
+    "emsdk": {
+      "repository": "https://github.com/emscripten-core/emsdk.git",
+      "version": "6.0.0",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+    }
+  },
+  "llvm": {
+    "version": "22.1.8",
+    "releaseTag": "llvm_22.1.10",
+    "release": "https://github.com/c3lang/llvm-for-c3/releases/tag/llvm_22.1.10",
+    "url": "https://github.com/c3lang/llvm-for-c3/releases/download/llvm_22.1.10/llvm-wasm32-emscripten.tar.xz",
+    "bytes": 24218528,
+    "sha256": "a38b647965a35f8df87c11fe3692751a32001b789cdd887550aeba80bcfe427d",
+    "provenance": "upstream-binary; original Emscripten SDK version not recorded"
+  },
+  "patches": [
+    {
+      "path": "patches/0001-reject-browser-subprocess.patch",
+      "sha256": "f3c8600ef23d46d54c61431e33c2ea59b928004b6fa6749a8b04d1e7b33d1e88"
+    }
+  ],
+  "outputs": [
+    "c3c.mjs",
+    "c3c.wasm",
+    "producer-receipt.json"
+  ]
+}
