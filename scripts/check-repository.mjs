@@ -40,6 +40,7 @@ const REQUIRED_PRODUCERS = [
 	'emscripten-lld-browser',
 	'lldb-browser',
 	'objective-c-browser',
+	'odin-browser',
 	'rust-browser',
 	'swift-browser',
 	'tinygo-browser',
