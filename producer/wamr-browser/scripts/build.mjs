@@ -99,7 +99,12 @@ export async function buildWamrBrowser({ source, build, emsdk }) {
 	}
 	await mkdir(build, { recursive: true });
 	const jsLibrary = path.join(producerRoot, 'src', 'wasm-debug-transport.js');
-	const linkOptions = [...EMSCRIPTEN_LINK_OPTIONS, `--js-library=${jsLibrary}`].join(' ');
+	const stdinLibrary = path.join(producerRoot, 'src', 'wasm-debug-stdin.js');
+	const linkOptions = [
+		...EMSCRIPTEN_LINK_OPTIONS,
+		`--js-library=${jsLibrary}`,
+		`--js-library=${stdinLibrary}`
+	].join(' ');
 	await run(
 		path.join(emscriptenRoot, 'emcmake'),
 		[
