@@ -12,12 +12,16 @@ export const INPUT_FILES = [
 	'sources.lock.json', 'manifest.json', 'patches/source-archive-and-bridge.patch',
 	'src/CMakeLists.txt', 'src/compiler.cpp', 'scripts/producer.mjs',
 	'scripts/shared.mjs', 'scripts/validate.mjs',
-	'fixtures/read-array.f90', 'fixtures/module.f90', 'fixtures/invalid.f90'
+	'fixtures/read-array.f90', 'fixtures/module.f90', 'fixtures/invalid.f90',
+	'fixtures/nested-print.f90', 'fixtures/eof.f90'
 ];
 export const VALIDATION_CASES = [
 	{ name: 'read-array', fixture: 'read-array.f90', stdin: '3\n10 20 30\n', stdout: '60\n', exitCode: 0 },
 	{ name: 'read-array-other-input', fixture: 'read-array.f90', stdin: '4\n-5 6 7 8\n', stdout: '16\n', exitCode: 0 },
 	{ name: 'module', fixture: 'module.f90', stdin: '', stdout: '42\n', exitCode: 0 },
+	{ name: 'nested-print', fixture: 'nested-print.f90', stdin: '', stdout: 'if=1\nloop=1\nif=2\nloop=2\nloop=3\ntotal=6\n', exitCode: 0 },
+	{ name: 'eof', fixture: 'eof.f90', stdin: '', stdout: 'EOF\n', exitCode: 0 },
+	{ name: 'eof-other-input', fixture: 'eof.f90', stdin: '7\n', stdout: '7\n', exitCode: 0 },
 	{ name: 'invalid-source', fixture: 'invalid.f90', stdin: '', stdout: '', exitCode: 1 }
 ];
 

@@ -105,7 +105,7 @@ module produced by successful evaluations. Its receipt keeps
 `browserAcceptance: false` to describe the scope of Node validation. Chromium
 verification writes its own receipt for compilation and execution in Workers;
 `wasm-idle` integration and consumer acceptance remain separate. Verification
-requires all four cases, their source and stdin hashes, their expected results,
+requires all seven cases, their source and stdin hashes, their expected results,
 and the current validator hash; a `passed` flag alone is insufficient.
 
 No JupyterLite site, xeus UI, application Worker runtime, npm runtime API,
@@ -120,3 +120,9 @@ pnpm check
 
 These checks validate locks, receipt integrity and the producer boundary. They
 do not build LFortran or claim that a compiler artifact has passed validation.
+
+The source patch also restores statement replacement flags after nested ASR
+transforms. Without this upstream pass correction, formatted PRINT at the end
+of an IF or DO body can remove the enclosing statement silently. The real
+compiler gates include nested IF/DO output, accumulated loop state, and both
+EOF and non-EOF IOSTAT branches.

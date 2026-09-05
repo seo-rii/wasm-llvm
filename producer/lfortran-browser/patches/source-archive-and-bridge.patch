@@ -47,3 +47,35 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 +if(LFORTRAN_BROWSER_BRIDGE)
 +    add_subdirectory(producer-bridge)
 +endif()
+diff --git a/src/libasr/pass/pass_utils.h b/src/libasr/pass/pass_utils.h
+--- a/src/libasr/pass/pass_utils.h
++++ b/src/libasr/pass/pass_utils.h
+@@ -413,7 +413,7 @@
+ 
+             public:
+ 
+-                bool asr_changed, retain_original_stmt, remove_original_stmt;
++                bool asr_changed = false, retain_original_stmt = false, remove_original_stmt = false;
+                 Allocator& al;
+                 Vec<ASR::stmt_t*> pass_result;
+ 
+@@ -424,6 +424,10 @@
+                 }
+ 
+                 void transform_stmts(ASR::stmt_t **&m_body, size_t &n_body) {
++                    // Nested transforms consume their replacement statements here.
++                    // Their flags must not remove or retain the enclosing IF/DO.
++                    const bool saved_retain_original_stmt = retain_original_stmt;
++                    const bool saved_remove_original_stmt = remove_original_stmt;
+                     Vec<ASR::stmt_t*> body;
+                     body.reserve(al, n_body);
+                     if (pass_result.size() > 0) {
+@@ -456,6 +460,8 @@
+                     }
+                     m_body = body.p;
+                     n_body = body.size();
++                    retain_original_stmt = saved_retain_original_stmt;
++                    remove_original_stmt = saved_remove_original_stmt;
+                 }
+ 
+                 void visit_Program(const ASR::Program_t &x) {
