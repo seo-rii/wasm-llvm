@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"check": "node ./scripts/check-repository.mjs",
-		"test": "node --test ./test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
+		"test": "node --test ./producer/c3-browser/test/*.test.mjs ./test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
 		"build:clang": "node ./producer/clang-browser/scripts/build-toolchain.mjs",
 		"package:clang": "node ./producer/clang-browser/scripts/package-toolchain.mjs",
 		"prepare:clang-release": "node ./producer/clang-browser/scripts/prepare-release.mjs",
@@ -49,7 +49,13 @@
 		"verify:tinygo-artifacts": "node ./producer/tinygo-browser/scripts/verify-artifacts.mjs",
 		"sync:tinygo": "node ./producer/tinygo-browser/scripts/sync.mjs",
 		"swift:doctor": "node ./producer/swift-browser/scripts/doctor.mjs",
-		"swift:test": "pnpm --dir ./producer/swift-browser test"
+		"swift:test": "pnpm --dir ./producer/swift-browser test",
+		"prepare:c3": "node ./producer/c3-browser/scripts/producer.mjs prepare",
+		"build:c3": "node ./producer/c3-browser/scripts/producer.mjs build",
+		"smoke:c3": "node ./producer/c3-browser/scripts/smoke.mjs",
+		"smoke:c3:browser": "node ./producer/c3-browser/scripts/browser-smoke.mjs",
+		"package:c3": "node ./producer/c3-browser/scripts/package.mjs",
+		"verify:c3-artifacts": "node ./producer/c3-browser/scripts/package.mjs --verify"
 	},
 	"devDependencies": {
 		"@zip.js/zip.js": "^2.8.23",
