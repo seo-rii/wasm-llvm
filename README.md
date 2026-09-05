@@ -16,6 +16,7 @@ hosting and loaded by URL from the consuming application.
 | -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
 | COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
+| Crystal        | Crystal 1.21.0, verified native bootstrap, markd 0.5.0                                          | WASI object and compiler-host portability receipts; browser host blocked | [`producer/crystal-browser`](producer/crystal-browser/README.md)             |
 | Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
 | Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
@@ -70,6 +71,10 @@ pnpm package:wamr -- --build /path/to/build --output /path/to/wamr-artifacts
 # GnuCOBOL
 WASI_SDK_PATH=/opt/wasi-sdk pnpm build:cobol
 pnpm prepare:cobol-release
+
+# Crystal portability probe (currently exits 1 at the compiler-host gate)
+pnpm probe:crystal-browser -- prepare
+pnpm probe:crystal-browser -- probe --llvm-config /path/to/llvm-config
 
 # Objective-C
 WASI_SDK_PATH=/opt/wasi-sdk pnpm build:objective-c

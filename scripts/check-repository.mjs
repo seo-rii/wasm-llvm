@@ -37,6 +37,7 @@ const FORBIDDEN_LIFECYCLE_SCRIPTS = [
 const REQUIRED_PRODUCERS = [
 	'clang-browser',
 	'cobol-browser',
+	'crystal-browser',
 	'emscripten-lld-browser',
 	'lldb-browser',
 	'objective-c-browser',
