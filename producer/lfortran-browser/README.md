@@ -71,8 +71,9 @@ The small C++ command entry point takes a source path and calls that evaluator.
 It uses the evaluator's interactive compilation mode so program units get a
 callable entry point and actually execute in the current Emscripten instance.
 The source patch supplies the archive version, invokes Python 3 explicitly and
-adds this command's CMake target. It does not change Fortran semantics or the
-upstream evaluator.
+adds this command's CMake target. It also restores statement-transformation flags
+after nested bodies so formatted `PRINT` does not delete its enclosing `IF` or
+`DO`. Compilation and execution still use the upstream LLVM evaluator.
 
 The output closure is `lfortran.js`, `lfortran.wasm`, `lfortran.data`, and
 `producer-receipt.json`. The receipt binds source, patches, build inputs, tool
