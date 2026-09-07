@@ -9,8 +9,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const runtimeSourceDir = path.join(repoRoot, 'artifacts', 'runtime-source');
 const llvmRevision = 'ca7933e47d3a3451d81e72ac174dcb5aa28b59d1';
 const wamrRevision = '25bd7eb63e828e4bd242cc9b38d260b4b31c6605';
-const reproducibleLldbWasmSha256 =
-	'17346bd942d9e630437ed6519e5aa1cd1c88f2a9c5e46c96f4dcbb74d6a680d0';
+const qualifiedLldbWasmSha256 =
+	'e7146642a865ffb41cca6635c72f97bfe923be1ce7f0d930e2e59713a3ee5222';
 
 function sha256Bytes(bytes) {
 	return createHash('sha256').update(bytes).digest('hex');
@@ -30,7 +30,7 @@ test('published runtime source contains a revision-locked LLDB and WAMR bundle',
 	assert.equal(manifest.debugger.protocolVersion, 1);
 	assert.equal(manifest.debugger.transport, 'shared-ring-v1');
 	assert.equal(manifest.debugger.lldb.llvmRevision, llvmRevision);
-	assert.equal(manifest.debugger.lldb.wasmSha256, reproducibleLldbWasmSha256);
+	assert.equal(manifest.debugger.lldb.wasmSha256, qualifiedLldbWasmSha256);
 	assert.equal(manifest.debugger.targetRuntime.revision, wamrRevision);
 
 	const [lldbSourcesLockBytes, wamrSourcesLockBytes, wamrProducerManifestBytes] =

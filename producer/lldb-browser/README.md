@@ -128,6 +128,20 @@ the normal variable API, verifies ordered and distinct CFAs and values, and
 requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The producer
 contract test additionally pins the patch content and hash.
 
+`0010-wasm-caller-pc-cache.patch` reads a caller's PC from the existing Wasm
+unwind snapshot. LLVM's tail-call reconstruction asks each caller register
+context for its PC; the upstream context otherwise sends a separate `p0`
+request, which returns the live thread's PC instead of that caller's return
+address. A 100-frame stack trace therefore used to issue 99 identical remote
+PC reads. Caller contexts now use their concrete frame index to obtain the
+raw return PC already received through `qWasmCallStack`. Frame zero keeps the
+live register path, and Wasm locals/globals keep their frame-specific lookup.
+The existing unwinder clears its snapshot at every stop, including internal
+source-step stops; no second PC cache or source-symbolication `PC - 1` value is
+introduced. The producer contract pins this implementation and patch hash.
+The wasm-idle Chromium regression exercises 100-frame recursive stacks, caller
+source locations and locals, and bounds live PC requests after a source step.
+
 LLVM's generic plugin lookup accepts its predicate as `std::function`.
 `0008-plugin-predicate-template.patch` keeps that short-lived lookup predicate
 concrete so the Emscripten compiler can emit a direct or inlined call across

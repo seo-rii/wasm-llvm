@@ -364,6 +364,19 @@ test("Wasm unwind patch gives recursive frames distinct synthetic CFAs", async (
   assert.match(patch, /qWasmLocal:1;2/);
 });
 
+test("Wasm caller PCs use the stop-scoped unwind snapshot", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const patchPath = "patches/0010-wasm-caller-pc-cache.patch";
+  assert.ok(sourcesLock.patches.some((entry) => entry.path === patchPath));
+  const patch = await fs.readFile(path.join(PRODUCER_ROOT, patchPath), "utf8");
+  assert.match(patch, /reg_info->name && m_concrete_frame_idx != 0/);
+  assert.match(patch, /kinds\[eRegisterKindGeneric\] == LLDB_REGNUM_GENERIC_PC/);
+  assert.match(patch, /thread\.GetWasmFramePC\(m_concrete_frame_idx, pc\)/);
+  assert.match(patch, /GetUnwinder\(\)\.GetFrameInfoAtIndex\(concrete_frame_idx/);
+  assert.match(patch, /value\.SetUInt\(pc, reg_info->byte_size\)/);
+  assert.match(patch, /m_frames\.size\(\) <= concrete_frame_idx/);
+});
+
 test("browser plugin lookup avoids std::function callback dispatch", async () => {
   const { sourcesLock } = await loadProducerMetadata();
   const patchPath = "patches/0008-plugin-predicate-template.patch";
@@ -392,7 +405,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-6`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-7`,
   );
 });
 
