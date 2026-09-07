@@ -17,6 +17,7 @@ hosting and loaded by URL from the consuming application.
 | Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
 | COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
 | Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
+| LFortran       | LFortran source snapshot, LLVM 22.1.8 Emscripten package, emsdk 4.0.9                              | LLVM-enabled compiler producer and real Fortran input validation     | [`producer/lfortran-browser`](producer/lfortran-browser/README.md)             |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
 | Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
 | Odin           | dev-2026-09 source commit and official native bootstrap, emsdk 6.0.0                           | Native WASI object/link/stdio baseline and browser-host portability probe; browser compiler not ready | [`producer/odin-browser`](producer/odin-browser/README.md) |
@@ -87,6 +88,7 @@ pnpm verify:odin-source -- --source out/odin-browser/source
 # See producer/odin-browser/README.md for the explicit linker and host probe inputs.
 
 # Swift
+pnpm probe:swift-browser-target
 pnpm --dir producer/swift-browser run bootstrap:source -- --help
 pnpm --dir producer/swift-browser run build:browser-compiler -- --help
 pnpm --dir producer/swift-browser run package:from-plan -- --help
