@@ -41,6 +41,7 @@ const REQUIRED_PRODUCERS = [
 	'lfortran-browser',
 	'lldb-browser',
 	'objective-c-browser',
+	'odin-browser',
 	'rust-browser',
 	'swift-browser',
 	'tinygo-browser',

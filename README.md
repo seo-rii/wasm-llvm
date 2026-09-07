@@ -20,6 +20,7 @@ hosting and loaded by URL from the consuming application.
 | LFortran       | LFortran source snapshot, LLVM 22.1.8 Emscripten package, emsdk 4.0.9                              | LLVM-enabled compiler producer and real Fortran input validation     | [`producer/lfortran-browser`](producer/lfortran-browser/README.md)             |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
 | Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
+| Odin           | dev-2026-09 source commit and official native bootstrap, emsdk 6.0.0                           | Native WASI object/link/stdio baseline and browser-host portability probe; browser compiler not ready | [`producer/odin-browser`](producer/odin-browser/README.md) |
 | Rust           | Rust 1.99.0, rust-lang LLVM 22.1.8, wasi-libc and libstdc++ commits                              | Full `rustc.wasm`, target libraries, receipt                        | [`producer/rust-browser`](producer/rust-browser/README.md)                     |
 | Swift          | Swift 6.3.3, official Wasm SDK, pinned LLVM/Swift/SwiftSyntax patches                            | Swift compiler modules, SDK bundle, manifests and receipts          | [`producer/swift-browser`](producer/swift-browser/README.md)                   |
 | TinyGo         | TinyGo 0.40.1, pinned go-llvm, TinyGo LLVM 20.1.1                                                | Upstream compiler, reduced root, strict receipt, Chromium consumer acceptance | [`producer/tinygo-browser`](producer/tinygo-browser/README.md)                 |
@@ -80,6 +81,11 @@ WASI_SDK_PATH=/opt/wasi-sdk pnpm probe:objective-c:libffi
 # Rust
 pnpm producer:rust:prepare
 pnpm producer:rust:build
+
+# Odin native WASI baseline and compiler-host portability investigation
+pnpm prepare:odin -- --work out/odin-browser
+pnpm verify:odin-source -- --source out/odin-browser/source
+# See producer/odin-browser/README.md for the explicit linker and host probe inputs.
 
 # Swift
 pnpm probe:swift-browser-target
