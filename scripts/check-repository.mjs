@@ -38,6 +38,7 @@ const REQUIRED_PRODUCERS = [
 	'clang-browser',
 	'cobol-browser',
 	'emscripten-lld-browser',
+	'lfortran-browser',
 	'lldb-browser',
 	'objective-c-browser',
 	'rust-browser',
