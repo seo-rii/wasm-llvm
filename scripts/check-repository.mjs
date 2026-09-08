@@ -35,6 +35,7 @@ const FORBIDDEN_LIFECYCLE_SCRIPTS = [
 	'postpublish'
 ];
 const REQUIRED_PRODUCERS = [
+	'c3-browser',
 	'clang-browser',
 	'cobol-browser',
 	'emscripten-lld-browser',
