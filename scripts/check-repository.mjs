@@ -35,12 +35,15 @@ const FORBIDDEN_LIFECYCLE_SCRIPTS = [
 	'postpublish'
 ];
 const REQUIRED_PRODUCERS = [
+	'c3-browser',
 	'clang-browser',
 	'cobol-browser',
 	'crystal-browser',
 	'emscripten-lld-browser',
+	'lfortran-browser',
 	'lldb-browser',
 	'objective-c-browser',
+	'odin-browser',
 	'rust-browser',
 	'swift-browser',
 	'tinygo-browser',
