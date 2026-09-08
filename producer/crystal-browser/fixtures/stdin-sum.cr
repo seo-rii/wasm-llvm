@@ -1,2 +1,3 @@
-values = STDIN.gets_to_end.split.map(&.to_i64)
-puts values.sum
+lines = STDIN.gets_to_end.lines
+puts lines[1] if lines.size > 1
+puts lines[0].split.map(&.to_i64).sum

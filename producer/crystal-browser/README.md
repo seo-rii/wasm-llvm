@@ -5,6 +5,11 @@ It cross-compiles a real standard-input program to a WASI relocatable object, ch
 diagnostic, and attempts to cross-compile the upstream Crystal compiler itself. Browser compiler
 and browser stdin/stdout readiness remain false.
 
+The fixture preserves the original one-line integer-sum behavior. When input has a second line it
+echoes that line before the sum, allowing a consumer to prove UTF-8 bytes crossed a transport
+boundary. For example, UTF-8 input `1 2\nabc한xyz\n` (where `한` crosses an eight-byte boundary)
+must eventually produce `abc한xyz\n3\n` once a browser compiler host is available.
+
 ## Run the probe
 
 Requires Linux x86_64, Node 20+, Git, tar, and a native `llvm-config` supported by Crystal.
@@ -29,9 +34,11 @@ The current pinned compiler-host probe exits **1** because `Crystal::System::Pro
 is unavailable for WASI. The standard-input target produces a valid Wasm object, and the invalid
 source returns a parser diagnostic. See [the recorded validation](portability-audit.md).
 
-Each run uses a new `probe-*` directory with a mode-0600 `receipt.json`. The receipt records
-source revisions, manifest/bootstrap/tool/fixture hashes, exact compiler commands, exit status,
-diagnostics, and object hashes. Compiler steps have a three-minute timeout. A successful object
+Each run uses a new `probe-*` directory with a mode-0600 `receipt.json`. The version-2 receipt binds
+the producing Git commit and probe script hash, source revisions, manifest/bootstrap/tool hashes,
+both fixture hashes, exact compiler commands, exit status, diagnostics, and object hashes. The
+producer directory must be committed and clean before a probe. Compiler steps have a three-minute
+timeout. A successful object
 must pass WebAssembly validation and contain a version-2 `linking` section. A target object or
 syntax diagnostic cannot set the browser readiness gates.
 
@@ -47,7 +54,7 @@ inspect bounded output after completion.
 ## Focused checks
 
 ```sh
-node --test test/crystal-browser-producer.test.mjs test/producer-repository.test.mjs
+node --test producer/crystal-browser/test/*.test.mjs test/crystal-browser-producer.test.mjs test/producer-repository.test.mjs
 pnpm check
 ```
 

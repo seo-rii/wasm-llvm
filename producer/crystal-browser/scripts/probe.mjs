@@ -186,10 +186,12 @@ export function assertWasmObject(bytes) {
 }
 
 export function classifyProbe({ baseline, negative, compilerHost }) {
+  const negativeOutput = negative.stderr + negative.stdout;
   return {
     nativeWasiObject: baseline.exitCode === 0 && baseline.wasmObject === true,
     nativeDiagnostics: negative.exitCode !== null && negative.exitCode !== 0 && !negative.timedOut &&
-      /Syntax error|Error:/u.test(negative.stderr + negative.stdout),
+      (/(?:^|\n)In .*[/\\]invalid\.cr:\d+:\d+[\s\S]*\nError: unexpected token:/u.test(negativeOutput) ||
+        /Syntax error in invalid\.cr/u.test(negativeOutput)),
     compilerHostObject: compilerHost.exitCode === 0 && compilerHost.wasmObject === true,
     browserCompiler: false,
     browserStdinStdout: false,
@@ -197,9 +199,24 @@ export function classifyProbe({ baseline, negative, compilerHost }) {
   };
 }
 
+async function producerIdentity() {
+  const root = await realpath(REPO_ROOT);
+  if (await checked('git', ['rev-parse', '--show-toplevel'], { cwd: root }) !== root) {
+    throw new Error('Producer repository root does not match the Git checkout root');
+  }
+  const changes = await checked('git', ['status', '--porcelain', '--untracked-files=all', '--',
+    path.relative(root, PRODUCER_ROOT)], { cwd: root });
+  if (changes) throw new Error('Crystal producer must be committed and clean before probing');
+  return {
+    gitCommit: await checked('git', ['rev-parse', 'HEAD'], { cwd: root }),
+    scriptSha256: await sha256(THIS_FILE)
+  };
+}
+
 export async function probe(workRoot, { llvmConfig } = {}) {
-  const startedAt = new Date().toISOString();
-  const inputs = await prepare(workRoot);
+	const startedAt = new Date().toISOString();
+  const producer = await producerIdentity();
+	const inputs = await prepare(workRoot);
   const directory = await mkdtemp(path.join(workRoot, 'probe-'));
   const env = { ...process.env,
     CRYSTAL_PATH: Object.values(inputs.checkouts).map((checkout) => path.join(checkout, 'src')).join(path.delimiter),
@@ -218,8 +235,9 @@ export async function probe(workRoot, { llvmConfig } = {}) {
     ['compilerHost', path.join(inputs.source, 'src', 'compiler', 'crystal.cr'),
       ['-Di_know_what_im_doing', '-Dwithout_playground', '-Dwithout_interpreter', '-Dwithout_libxml2', '-Dwithout_openssl', '-Dwithout_zlib']]
   ];
-  for (const [name, source, flags] of cases) {
-    const output = path.join(directory, name + '.wasm');
+	for (const [name, source, flags] of cases) {
+		const output = path.join(directory, name + '.wasm');
+    const sourceReceipt = { path: path.relative(REPO_ROOT, source), sha256: await sha256(source) };
     const args = ['build', source, ...commonArgs, ...flags, '-o', output];
     const result = await run(inputs.compiler, args, { cwd: directory, env });
     // With --cross-compile Crystal writes the relocatable object directly to -o.
@@ -234,18 +252,20 @@ export async function probe(workRoot, { llvmConfig } = {}) {
         result.validationError = error.message;
       }
     }
-    steps[name] = { command: [inputs.compiler, ...args], ...result, wasmObject: objectReceipt !== null, object: objectReceipt };
+    steps[name] = { source: sourceReceipt, command: [inputs.compiler, ...args], ...result,
+      wasmObject: objectReceipt !== null, object: objectReceipt };
     console.log(name + ': exit=' + result.exitCode + ', wasmObject=' + (objectReceipt !== null));
     if (result.exitCode !== 0) console.log((result.stderr || result.stdout).slice(-12000));
   }
   const receipt = {
-    format: 'wasm-llvm-crystal-portability-v1', startedAt, completedAt: new Date().toISOString(),
+    format: 'wasm-llvm-crystal-portability-v2', startedAt, completedAt: new Date().toISOString(), producer,
     target: manifest.target, manifestSha256: await sha256(path.join(PRODUCER_ROOT, 'manifest.json')),
     sourceCommit: manifest.sources.crystal.commit,
     dependencyCommits: Object.fromEntries(Object.entries(manifest.sources).map(([name, pin]) => [name, pin.commit])),
     llvm,
     bootstrap: { archiveSha256: manifest.bootstrap.sha256, compilerSha256: inputs.compilerSha256, version: inputs.version },
-    fixtureSha256: await sha256(path.join(PRODUCER_ROOT, 'fixtures', 'stdin-sum.cr')),
+    fixtureSha256: steps.baseline.source.sha256,
+    fixtureSha256s: { baseline: steps.baseline.source.sha256, negative: steps.negative.source.sha256 },
     steps, gates: classifyProbe(steps)
   };
   const receiptPath = path.join(directory, 'receipt.json');

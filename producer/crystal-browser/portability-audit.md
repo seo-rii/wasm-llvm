@@ -36,5 +36,7 @@ and source revisions; the generated local receipt records the observed versions,
 hashes, and diagnostics for all three compiler invocations. The overall probe exit code is **1**
 until every compile-time gate passes. Browser readiness remains a separate future acceptance gate.
 
-The six focused tests, including the producer repository check, passed. The updated repository
-producer-count invariant and `git diff --check` also passed.
+The focused tests, including the producer repository check, passed. The updated repository
+producer-count invariant and `git diff --check` also passed. Version-2 receipts bind the exact
+producer Git commit and probe script plus both fixture inputs, so later validation can distinguish
+current evidence from a probe made before the reviewed implementation was committed.
