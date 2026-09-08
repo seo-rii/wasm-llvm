@@ -11,6 +11,10 @@ export const repoRoot = path.resolve(producerRoot, '../..');
 const manifestPath = path.join(producerRoot, 'manifest.json');
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 export const readManifest = async () => JSON.parse(await readFile(manifestPath, 'utf8'));
+const sdkGeneratedPaths = [
+	'upstream', 'node', 'downloads', '.emscripten', '.emscripten.old',
+	'.emscripten_cache', '.emscripten_cache__last_clear', '.emscripten_sanity', '.emscripten_sanity_wasm'
+];
 
 export async function treeHash(directory) {
 	const entries = [];
@@ -98,13 +102,22 @@ export async function assertCleanCheckout(directory, { sdkGeneratedFiles = false
 	await run('git', ['-C', directory, 'diff', '--cached', '--exit-code'], { capture: true });
 	// Deliberately omit --exclude-standard: ignored C3 files can still affect its build.
 	const untracked = await run('git', ['-C', directory, 'ls-files', '--others', '-z'], { capture: true });
-	const generated = new Set(sdkGeneratedFiles ? [
-		'upstream', 'node', 'downloads', '.emscripten', '.emscripten.old',
-		'.emscripten_cache', '.emscripten_cache__last_clear', '.emscripten_sanity', '.emscripten_sanity_wasm'
-	] : []);
+	const generated = new Set(sdkGeneratedFiles ? sdkGeneratedPaths : []);
 	if (untracked.split('\0').filter(Boolean).some((name) => !generated.has(name.split('/')[0]))) {
 		throw new Error(`Unexpected untracked or ignored files in pinned source checkout: ${directory}`);
 	}
+}
+
+export async function resetSdkGeneratedFiles(directory) {
+	for (const name of sdkGeneratedPaths) await rm(path.join(directory, name), { recursive: true, force: true });
+	await assertCleanCheckout(directory);
+}
+
+export async function assertPreparedInputs(p, prepared) {
+	if (prepared.manifestSha256 !== sha256(await readFile(manifestPath))) throw new Error('Manifest changed; run prepare again');
+	if (prepared.sourceTreeSha256 !== await treeHash(p.source)) throw new Error('Prepared C3 source tree changed');
+	if (prepared.llvmTreeSha256 !== await treeHash(p.llvm)) throw new Error('Prepared LLVM library tree changed');
+	if (prepared.sdkTreeSha256 !== await treeHash(p.sdk)) throw new Error('Prepared Emscripten SDK tree changed');
 }
 
 async function checkout(pin, directory, patches = [], options = {}) {
@@ -155,12 +168,14 @@ export async function prepare(p = paths()) {
 	} finally {
 		await rm(extracted, { recursive: true, force: true });
 	}
+	await resetSdkGeneratedFiles(p.sdk);
 	await run(path.join(p.sdk, 'emsdk'), ['install', manifest.sources.emsdk.version], { cwd: p.sdk });
 	await run(path.join(p.sdk, 'emsdk'), ['activate', manifest.sources.emsdk.version], { cwd: p.sdk });
 	await writeFile(path.join(p.work, 'prepared.json'), `${JSON.stringify({
 		manifestSha256: sha256(await readFile(manifestPath)),
 		sourceTreeSha256: await treeHash(p.source),
-		llvmTreeSha256: await treeHash(p.llvm)
+		llvmTreeSha256: await treeHash(p.llvm),
+		sdkTreeSha256: await treeHash(p.sdk)
 	}, null, 2)}\n`);
 	console.log(`Prepared C3 ${manifest.sources.c3.version} in ${p.work}`);
 }
@@ -169,10 +184,8 @@ export async function build(p = paths()) {
 	const manifest = await readManifest();
 	const builderSha256 = sha256(await readFile(fileURLToPath(import.meta.url)));
 	const prepared = JSON.parse(await readFile(path.join(p.work, 'prepared.json'), 'utf8'));
-	if (prepared.manifestSha256 !== sha256(await readFile(manifestPath))) throw new Error('Manifest changed; run prepare again');
-	if (prepared.sourceTreeSha256 !== await treeHash(p.source)) throw new Error('Prepared C3 source tree changed');
-	if (prepared.llvmTreeSha256 !== await treeHash(p.llvm)) throw new Error('Prepared LLVM library tree changed');
 	await checkout(manifest.sources.emsdk, p.sdk, [], { sdkGeneratedFiles: true });
+	await assertPreparedInputs(p, prepared);
 	assertReceipt(await readFile(path.join(p.cache, 'llvm-wasm32-emscripten.tar.xz')), manifest.llvm, 'LLVM archive');
 	const env = { ...await sdkEnvironment(p), EMCC_CORES: '2', BINARYEN_CORES: '2' };
 	const emcc = path.join(p.sdk, 'upstream/emscripten/emcc');

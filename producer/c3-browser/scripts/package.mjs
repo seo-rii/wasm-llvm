@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertReceipt, paths, producerRoot, readManifest, sha256 } from './producer.mjs';
 import { assertAcceptanceInputs } from './evidence.mjs';
 
 export const compilerAssets = ['c3c.mjs', 'c3c.wasm'];
+const releaseFiles = [...compilerAssets, 'producer-receipt.json'];
+
+async function assertReleaseEntries(directory, { complete = true } = {}) {
+	const entries = await readdir(directory, { withFileTypes: true });
+	const unexpected = entries.filter((entry) => !releaseFiles.includes(entry.name) || !entry.isFile());
+	if (unexpected.length > 0) throw new Error(`Unexpected C3 release entries: ${unexpected.map((entry) => entry.name).join(', ')}`);
+	if (complete && (entries.length !== releaseFiles.length || releaseFiles.some((name) => !entries.some((entry) => entry.name === name)))) {
+		throw new Error('C3 release directory must contain exactly the compiler loader, Wasm module, and receipt');
+	}
+}
 
 export function requireSmokeChecks(smoke) {
 	for (const check of ['compileOnly', 'invalidSourceDiagnostic', 'builtinLink', 'arithmetic', 'hostByteInputOutput']) {
@@ -15,6 +25,7 @@ export function requireSmokeChecks(smoke) {
 }
 
 export async function verify(directory = paths().release) {
+	await assertReleaseEntries(directory);
 	const manifestBytes = await readFile(path.join(producerRoot, 'manifest.json'));
 	const receipt = JSON.parse(await readFile(path.join(directory, 'producer-receipt.json'), 'utf8'));
 	if (receipt.schemaVersion !== 1 || receipt.producerId !== 'wasm-llvm/c3-browser' || receipt.manifestSha256 !== sha256(manifestBytes)) {
@@ -68,6 +79,7 @@ export async function packageCompiler(p = paths()) {
 		assets[name] = { bytes: bytes.length, sha256: sha256(bytes) };
 	}
 	await mkdir(p.release, { recursive: true });
+	await assertReleaseEntries(p.release, { complete: false });
 	for (const name of compilerAssets) await copyFile(path.join(p.build, name), path.join(p.release, name));
 	await writeFile(path.join(p.release, 'producer-receipt.json'), `${JSON.stringify({
 		schemaVersion: 1,

@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { assertCleanCheckout, assertReceipt, producerRoot, run, sha256, treeHash } from '../scripts/producer.mjs';
+import { assertCleanCheckout, assertPreparedInputs, assertReceipt, producerRoot, resetSdkGeneratedFiles, run, sha256, treeHash } from '../scripts/producer.mjs';
 import { packageCompiler, requireSmokeChecks, verify } from '../scripts/package.mjs';
 import { acceptanceHashes, acceptanceInputs, assertAcceptanceInputs } from '../scripts/evidence.mjs';
 
@@ -56,7 +56,7 @@ test('prepare rejects tracked changes hidden by Git index flags', async () => {
 	}
 });
 
-test('prepare rejects ignored C3 inputs and only allows named SDK installation paths', async () => {
+test('prepare removes mutable SDK installation paths before reinstalling', async () => {
 	const directory = await makeCheckout();
 	try {
 		await writeFile(path.join(directory, 'ignored.h'), '#define injected 1');
@@ -65,9 +65,36 @@ test('prepare rejects ignored C3 inputs and only allows named SDK installation p
 		await assert.rejects(assertCleanCheckout(directory, { sdkGeneratedFiles: true }), /untracked or ignored/u);
 		await rm(path.join(directory, 'ignored.h'));
 		await mkdir(path.join(directory, 'upstream'));
-		await writeFile(path.join(directory, 'upstream/emcc'), 'installed SDK component');
+		await mkdir(path.join(directory, 'upstream/emscripten'));
+		await writeFile(path.join(directory, 'upstream/emscripten/emcc'), 'modified SDK component');
 		await assert.rejects(assertCleanCheckout(directory), /untracked or ignored/u);
 		await assertCleanCheckout(directory, { sdkGeneratedFiles: true });
+		await resetSdkGeneratedFiles(directory);
+		await assert.rejects(readFile(path.join(directory, 'upstream/emscripten/emcc')), /ENOENT/u);
+		await assertCleanCheckout(directory);
+	} finally {
+		await rm(directory, { recursive: true, force: true });
+	}
+});
+
+test('build rejects changes to the prepared Emscripten SDK tree', async () => {
+	const directory = await mkdtemp(path.join(os.tmpdir(), 'c3-prepared-inputs-'));
+	try {
+		const p = { source: path.join(directory, 'source'), llvm: path.join(directory, 'llvm'), sdk: path.join(directory, 'sdk') };
+		for (const name of Object.values(p)) await mkdir(name);
+		await writeFile(path.join(p.source, 'main.c'), 'int main() { return 0; }');
+		await writeFile(path.join(p.llvm, 'libLLVM.a'), 'pinned LLVM');
+		await mkdir(path.join(p.sdk, 'upstream'));
+		await writeFile(path.join(p.sdk, 'upstream/emcc'), 'pinned emcc');
+		const prepared = {
+			manifestSha256: sha256(await readFile(path.join(producerRoot, 'manifest.json'))),
+			sourceTreeSha256: await treeHash(p.source),
+			llvmTreeSha256: await treeHash(p.llvm),
+			sdkTreeSha256: await treeHash(p.sdk)
+		};
+		await assertPreparedInputs(p, prepared);
+		await writeFile(path.join(p.sdk, 'upstream/emcc'), 'modified emcc');
+		await assert.rejects(assertPreparedInputs(p, prepared), /Emscripten SDK tree changed/u);
 	} finally {
 		await rm(directory, { recursive: true, force: true });
 	}
@@ -109,11 +136,50 @@ test('package and verify reject stale acceptance before copying or loading asset
 		await writeFile(path.join(directory, 'smoke.json'), JSON.stringify(stale));
 		await writeFile(path.join(directory, 'browser-smoke.json'), JSON.stringify(stale));
 		await assert.rejects(packageCompiler({ build: directory, release: path.join(directory, 'release') }), /acceptance inputs changed/u);
-		await writeFile(path.join(directory, 'producer-receipt.json'), JSON.stringify({
+		const release = path.join(directory, 'release');
+		await mkdir(release);
+		await writeFile(path.join(release, 'c3c.mjs'), 'not loaded');
+		await writeFile(path.join(release, 'c3c.wasm'), 'not loaded');
+		await writeFile(path.join(release, 'producer-receipt.json'), JSON.stringify({
 			schemaVersion: 1, producerId: 'wasm-llvm/c3-browser', manifestSha256, build,
 			assets: { 'c3c.mjs': {}, 'c3c.wasm': {} }, smoke: stale, browserSmoke: stale
 		}));
-		await assert.rejects(verify(directory), /acceptance inputs changed/u);
+		await assert.rejects(verify(release), /acceptance inputs changed/u);
+	} finally {
+		await rm(directory, { recursive: true, force: true });
+	}
+});
+
+test('package and verify reject extra release directory entries', async () => {
+	const directory = await mkdtemp(path.join(os.tmpdir(), 'c3-release-files-'));
+	try {
+		const buildDirectory = path.join(directory, 'build');
+		const release = path.join(directory, 'release');
+		await mkdir(buildDirectory);
+		await mkdir(release);
+		const manifestSha256 = sha256(await readFile(path.join(producerRoot, 'manifest.json')));
+		const assets = {
+			'c3c.mjs': Buffer.from('export default function () {}'),
+			'c3c.wasm': Buffer.from([0, 97, 115, 109, 1, 0, 0, 0])
+		};
+		const assetReceipts = Object.fromEntries(Object.entries(assets).map(([name, bytes]) => [name, { bytes: bytes.length, sha256: sha256(bytes) }]));
+		const checks = { compileOnly: true, invalidSourceDiagnostic: true, builtinLink: true, arithmetic: true, hostByteInputOutput: true };
+		const smoke = { checks, inputs: await acceptanceHashes(), assets: assetReceipts };
+		const browserSmoke = { ...smoke, checks: { ...checks, browserGuest: true } };
+		for (const [name, bytes] of Object.entries(assets)) await writeFile(path.join(buildDirectory, name), bytes);
+		await writeFile(path.join(buildDirectory, 'build-receipt.json'), JSON.stringify({
+			manifestSha256,
+			builderSha256: sha256(await readFile(path.join(producerRoot, 'scripts/producer.mjs'))),
+			assets: assetReceipts
+		}));
+		await writeFile(path.join(buildDirectory, 'smoke.json'), JSON.stringify(smoke));
+		await writeFile(path.join(buildDirectory, 'browser-smoke.json'), JSON.stringify(browserSmoke));
+		await writeFile(path.join(release, 'stale-runtime.js'), 'stale');
+		await assert.rejects(packageCompiler({ build: buildDirectory, release }), /Unexpected C3 release entries/u);
+		await rm(path.join(release, 'stale-runtime.js'));
+		await packageCompiler({ build: buildDirectory, release });
+		await writeFile(path.join(release, 'stale-runtime.js'), 'stale');
+		await assert.rejects(verify(release), /Unexpected C3 release entries/u);
 	} finally {
 		await rm(directory, { recursive: true, force: true });
 	}
@@ -140,6 +206,8 @@ test('prepared LLVM symlinks stay within their pinned tree', async () => {
 test('artifact verification rejects receipts from another manifest before loading assets', async () => {
 	const directory = await mkdtemp(path.join(os.tmpdir(), 'c3-receipt-'));
 	try {
+		await writeFile(path.join(directory, 'c3c.mjs'), 'not loaded');
+		await writeFile(path.join(directory, 'c3c.wasm'), 'not loaded');
 		await writeFile(path.join(directory, 'producer-receipt.json'), JSON.stringify({ schemaVersion: 1, producerId: 'wasm-llvm/c3-browser', manifestSha256: '0'.repeat(64) }));
 		await assert.rejects(verify(directory), /producer manifest/u);
 		const manifestSha256 = sha256(await readFile(path.join(producerRoot, 'manifest.json')));

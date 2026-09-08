@@ -7,7 +7,8 @@ diagnostics, and links bare WebAssembly programs using its embedded LLVM/LLD lib
 The source pin is C3 0.8.3 (`1d155ee04d3b607261b99aa15ed5eefd6d7db284`), built with the pinned
 Emscripten 6.0.0 SDK. The producer imports a size- and SHA-256-verified LLVM-for-C3 Emscripten archive.
 Preparation rejects hidden Git index flags and all untracked or ignored C3 source inputs; the SDK
-has an explicit exception for its downloaded installation directories and generated configuration.
+installation directories and generated configuration are removed before every install, then the
+fresh installed tree is fingerprinted and checked again immediately before the build.
 Although that archive is published under `llvm_22.1.10`, its `LLVMConfig.cmake` reports **22.1.8**.
 Both values are recorded in the manifest. The original SDK version used to build those LLVM
 libraries is unavailable; this recipe reproduces the C3 build from that binary input and does not
@@ -35,8 +36,9 @@ pnpm verify:c3-artifacts
 The browser smoke serves only the compiler and acceptance harness on an ephemeral loopback port.
 It runs the compiler in Chromium module Workers and executes the generated guest in Chromium.
 
-The release contains `c3c.mjs`, `c3c.wasm`, and `producer-receipt.json`. The receipt binds the
-manifest, patched source/library tree hashes, build recipe, SDK version, and compiler asset hashes
+The release contains exactly `c3c.mjs`, `c3c.wasm`, and `producer-receipt.json`; packaging and
+verification reject any other directory entry. The receipt binds the manifest, patched source,
+LLVM and installed SDK tree hashes, build recipe, SDK version, and compiler asset hashes
 to separate Node and Chromium acceptance results. Both results also hash their source fixtures,
 Worker harness, and acceptance/verification scripts; changing any of them invalidates old results.
 Packaging requires both acceptance runs to have
