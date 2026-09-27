@@ -36,6 +36,7 @@ jobs:
               with:
                   node-version: 24
             - run: node --test producer/lldb-browser/test/producer.test.mjs producer/wamr-browser/test/producer.test.mjs test/debug-runtime-source.test.mjs test/lldb-browser-ci.test.mjs
+            - run: node --test test/clang-language-sysroots.test.mjs test/rust-sysroot-profiles.test.mjs producer/rust-browser/test/crate-registry.test.mjs
 
     build-product:
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.build_product)
