@@ -107,7 +107,10 @@ pnpm prepare:clang-release
 
 `verify:clang-artifacts` checks every artifact against `toolchain.json`.
 Both verification commands reject clangd assets that omit either the loader-side
-`Module.stdinReady` callback or the WebAssembly `__asyncjs__waitForStdin` import.
+`Module.stdinReady` callback or the WebAssembly import wired to `__asyncjs__waitForStdin`.
+Optimized Emscripten builds shorten import names when assertions are disabled. Verification
+parses the loader without executing it, resolves the generated import table and namespace,
+and requires the matching function import in Wasm. Ambiguous or unsupported mappings are rejected.
 `smoke:clang-artifacts` also opens the archives, compiles the Clang, LLD, and clangd WebAssembly
 modules, and checks the sysroot and MemFS payloads. `prepare:clang-release` writes the externally
 hosted bundle to `out/clang-browser` by default, including `runtime-manifest.v1.json` and
