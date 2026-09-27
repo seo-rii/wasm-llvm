@@ -31,6 +31,8 @@ consumer's `addDirectory` operation is idempotent. Manifest `files` lists regula
 The output directory is reserved exclusively before writing, and `language-sysroots.v1.json`
 is published last as the completion marker. Consumers must ignore an output without that
 manifest, which can briefly exist while packaging is in progress.
+If packaging fails after reservation, leave the incomplete directory in place rather than
+deleting a path another process could have replaced. Inspect ownership before cleaning it up.
 
 ## Consumer gate
 

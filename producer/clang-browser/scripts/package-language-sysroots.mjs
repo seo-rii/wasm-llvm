@@ -112,29 +112,25 @@ export async function packageLanguageSysroots({ sysroot, output, toolchainReceip
 		profiles:{ c:['c-sysroot.tar.gz'], cpp:['c-sysroot.tar.gz','cpp-addon.tar.gz'] }, assets:{}
 	};
 	await fs.mkdir(path.dirname(out), { recursive:true });
-	if (insideDirectory(realRoot,await realPathForPotentialOutput(out)))
+	const finalOut=path.join(await fs.realpath(path.dirname(out)),path.basename(out));
+	if (insideDirectory(realRoot,finalOut))
 		throw new Error('Output must be outside the sysroot');
 	// Reserve the final path atomically. A prior lstat followed by rename can replace a
 	// concurrently created empty directory on POSIX filesystems.
-	try { await fs.mkdir(out); }
+	try { await fs.mkdir(finalOut); }
 	catch (error) { if (error.code === 'EEXIST') throw new Error('Output already exists'); throw error; }
-	try {
-		for (const [name, selected] of [['c-sysroot.tar.gz',core],['cpp-addon.tar.gz',extra]]) {
-			const tar = deterministicTar(selected), compressed = gzipSync(tar,{level:9,mtime:0});
-			manifest.assets[name] = { bytes:compressed.length, sha256:digest(compressed), uncompressedBytes:tar.length, uncompressedSha256:digest(tar), files:selected.map(e=>files.find(f=>f.path===e.path)) };
-			await fs.writeFile(path.join(out,name),compressed,{flag:'wx'});
-		}
-		const metadata=Buffer.from(JSON.stringify(manifest,null,2)+'\n');
-		const partialManifest=path.join(out,'.language-sysroots.v1.json.tmp');
-		await fs.writeFile(partialManifest,metadata,{flag:'wx'});
-		// The final manifest is the atomic completion marker for this reserved output.
-		await fs.link(partialManifest,path.join(out,'language-sysroots.v1.json'));
-		await fs.unlink(partialManifest);
-		return { manifest, manifestSha256:digest(metadata) };
-	} catch (error) {
-		await fs.rm(out,{recursive:true,force:true});
-		throw error;
+	for (const [name, selected] of [['c-sysroot.tar.gz',core],['cpp-addon.tar.gz',extra]]) {
+		const tar = deterministicTar(selected), compressed = gzipSync(tar,{level:9,mtime:0});
+		manifest.assets[name] = { bytes:compressed.length, sha256:digest(compressed), uncompressedBytes:tar.length, uncompressedSha256:digest(tar), files:selected.map(e=>files.find(f=>f.path===e.path)) };
+		await fs.writeFile(path.join(finalOut,name),compressed,{flag:'wx'});
 	}
+	const metadata=Buffer.from(JSON.stringify(manifest,null,2)+'\n');
+	const partialManifest=path.join(finalOut,'.language-sysroots.v1.json.tmp');
+	await fs.writeFile(partialManifest,metadata,{flag:'wx'});
+	// The final manifest is the atomic completion marker for this reserved output.
+	await fs.link(partialManifest,path.join(finalOut,'language-sysroots.v1.json'));
+	await fs.unlink(partialManifest);
+	return { manifest, manifestSha256:digest(metadata) };
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 	const args = process.argv.slice(2);

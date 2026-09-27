@@ -94,6 +94,16 @@ test('does not replace a directory created concurrently at publication',async t=
  assert(injected);
  assert.equal(await fs.readFile(path.join(f.output,'keep'),'utf8'),'racer');
 });
+test('leaves an incomplete reservation without a publishable manifest after write failure',async t=>{
+ const f=await fixture(t),originalWriteFile=fs.writeFile;
+ fs.writeFile=async(target,...args)=>{
+  if(target===path.join(f.output,'cpp-addon.tar.gz'))throw new Error('injected write failure');
+  return originalWriteFile(target,...args);
+ };
+ try{await assert.rejects(packageLanguageSysroots(f),/injected write failure/)}finally{fs.writeFile=originalWriteFile}
+ assert((await fs.readdir(f.output)).includes('c-sysroot.tar.gz'));
+ await assert.rejects(fs.lstat(path.join(f.output,'language-sysroots.v1.json')),{code:'ENOENT'});
+});
 test('rejects invalid provenance',async t=>{const f=await fixture(t);await fs.writeFile(f.toolchainReceipt,'{}');await assert.rejects(packageLanguageSysroots(f),/LLVM revision/)});
 test('USTAR encodes prefix paths and rejects traversal/control names',()=>{
  const tar=deterministicTar([{path:'include/'+('long/'.repeat(24))+'header.h',bytes:Buffer.from('x')}]);assert.equal(tar.length%512,0);
