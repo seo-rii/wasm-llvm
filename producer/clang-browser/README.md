@@ -53,6 +53,9 @@ Useful overrides:
 - `CLANGD_LTO=ON|OFF` (default `ON`) controls link-time optimization of clangd. LLVM's
   CMake configuration adds `-flto` to C, C++, and linker flags together. Use `OFF` for an
   otherwise identical comparison build; Clang/LLD's existing WASI LTO settings are independent.
+- `CLANGD_ASSERTIONS=ON|OFF` controls Emscripten runtime assertions. It defaults to `OFF`
+  for optimized builds and `ON` for `LLVM_BUILD_TYPE=Debug`; explicitly set `ON` when
+  diagnosing worker or Asyncify failures. This affects runtime checks, not source diagnostics.
 
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
