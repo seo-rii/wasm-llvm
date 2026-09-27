@@ -15,6 +15,7 @@ const repoRoot = path.resolve(producerRoot, '..', '..');
 const producerManifest = JSON.parse(
 	await fs.readFile(path.join(producerRoot, 'manifest.json'), 'utf8')
 );
+const llvmBuildType = process.env.LLVM_BUILD_TYPE || 'MinSizeRel';
 
 const config = {
 	llvmVersion: process.env.LLVM_VERSION || producerManifest.sources.llvm.version,
@@ -32,9 +33,10 @@ const config = {
 		process.env.YOWASP_WASI_PATCH_REPO || producerManifest.sources.wasiHostPatch.repository,
 	yowaspWasiPatchCommit:
 		process.env.YOWASP_WASI_PATCH_COMMIT || producerManifest.sources.wasiHostPatch.commit,
-	llvmBuildType: process.env.LLVM_BUILD_TYPE || 'MinSizeRel',
+	llvmBuildType,
 	llvmMinSizeOpt: process.env.LLVM_MINSIZE_OPT || 'Oz',
 	clangdLto: process.env.CLANGD_LTO || 'ON',
+	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -50,8 +52,11 @@ const config = {
 const tempDir = path.resolve(process.env.TMPDIR || path.join(config.workDir, 'tmp'));
 process.env.TMPDIR = tempDir;
 
-if (!['ON', 'OFF'].includes(config.clangdLto)) {
-	throw new Error('CLANGD_LTO must be ON or OFF');
+for (const [name, value] of [
+	['CLANGD_LTO', config.clangdLto],
+	['CLANGD_ASSERTIONS', config.clangdAssertions]
+]) {
+	if (!['ON', 'OFF'].includes(value)) throw new Error(`${name} must be ON or OFF`);
 }
 if (!['Os', 'Oz'].includes(config.llvmMinSizeOpt)) {
 	throw new Error('LLVM_MINSIZE_OPT must be Os or Oz');
@@ -72,6 +77,7 @@ Environment:
   LLVM_BUILD_TYPE=${config.llvmBuildType}
   LLVM_MINSIZE_OPT=${config.llvmMinSizeOpt}
   CLANGD_LTO=${config.clangdLto}
+  CLANGD_ASSERTIONS=${config.clangdAssertions}
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -678,7 +684,7 @@ const clangdConfigure = [
 	shellQuote(clangdBuild),
 	shellQuote('-DCMAKE_CXX_FLAGS=-pthread -Dwait4=__syscall_wait4'),
 	shellQuote(
-		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${clangdIncludeDir}@/usr/include`
+		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${clangdIncludeDir}@/usr/include`
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
 	shellQuote(`-DCMAKE_C_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),

@@ -9,7 +9,7 @@ const script = fileURLToPath(new URL('../producer/clang-browser/scripts/build-to
 function help(env = {}) {
 	return spawnSync(process.execPath, [script, '--help'], {
 		cwd: path.dirname(script),
-		env: { ...process.env, CLANGD_LTO: '', LLVM_MINSIZE_OPT: '', ...env },
+		env: { ...process.env, CLANGD_LTO: '', LLVM_MINSIZE_OPT: '', LLVM_BUILD_TYPE: '', CLANGD_ASSERTIONS: '', ...env },
 		encoding: 'utf8'
 	});
 }
@@ -43,5 +43,26 @@ test('rejects optimization values that are not supported size comparison modes',
 	const result = help({ LLVM_MINSIZE_OPT: 'O3' });
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /LLVM_MINSIZE_OPT must be Os or Oz/);
+	assert.equal(result.stdout, '');
+});
+
+test('runtime assertions follow release/debug defaults and allow explicit overrides', () => {
+	for (const [env, expected] of [
+		[{}, 'OFF'],
+		[{ LLVM_BUILD_TYPE: 'Debug' }, 'ON'],
+		[{ LLVM_BUILD_TYPE: 'Release' }, 'OFF'],
+		[{ CLANGD_ASSERTIONS: 'ON' }, 'ON'],
+		[{ LLVM_BUILD_TYPE: 'Debug', CLANGD_ASSERTIONS: 'OFF' }, 'OFF']
+	]) {
+		const result = help(env);
+		assert.equal(result.status, 0, result.stderr);
+		assert.ok(result.stdout.includes(`CLANGD_ASSERTIONS=${expected}`));
+	}
+});
+
+test('rejects invalid runtime assertion settings before any build starts', () => {
+	const result = help({ CLANGD_ASSERTIONS: 'false' });
+	assert.notEqual(result.status, 0);
+	assert.match(result.stderr, /CLANGD_ASSERTIONS must be ON or OFF/);
 	assert.equal(result.stdout, '');
 });
