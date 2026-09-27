@@ -33,6 +33,7 @@ const config = {
 	yowaspWasiPatchCommit:
 		process.env.YOWASP_WASI_PATCH_COMMIT || producerManifest.sources.wasiHostPatch.commit,
 	llvmBuildType: process.env.LLVM_BUILD_TYPE || 'MinSizeRel',
+	clangdLto: process.env.CLANGD_LTO || 'ON',
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -48,6 +49,10 @@ const config = {
 const tempDir = path.resolve(process.env.TMPDIR || path.join(config.workDir, 'tmp'));
 process.env.TMPDIR = tempDir;
 
+if (!['ON', 'OFF'].includes(config.clangdLto)) {
+	throw new Error('CLANGD_LTO must be ON or OFF');
+}
+
 const args = process.argv.slice(2).filter((arg) => arg !== '--');
 if (args.includes('--help') || args.includes('-h')) {
 	console.log(`Usage: pnpm build:clang
@@ -60,6 +65,7 @@ Environment:
   EMSDK_COMMIT=${config.emsdkCommit || '<required with EMSDK_VERSION>'}
   TARGET_TRIPLE=${config.targetTriple}
   HOST_TRIPLE=${config.hostTriple}
+  CLANGD_LTO=${config.clangdLto}
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -668,6 +674,7 @@ const clangdConfigure = [
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
 	'-DLLVM_TARGET_ARCH=wasm32-emscripten',
+	`-DLLVM_ENABLE_LTO=${config.clangdLto}`,
 	`-DLLVM_DEFAULT_TARGET_TRIPLE=${config.targetTriple}`,
 	'-DLLVM_TARGETS_TO_BUILD=WebAssembly',
 	shellQuote('-DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra'),
