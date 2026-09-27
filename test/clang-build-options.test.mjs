@@ -9,7 +9,15 @@ const script = fileURLToPath(new URL('../producer/clang-browser/scripts/build-to
 function help(env = {}) {
 	return spawnSync(process.execPath, [script, '--help'], {
 		cwd: path.dirname(script),
-		env: { ...process.env, CLANGD_LTO: '', LLVM_MINSIZE_OPT: '', LLVM_BUILD_TYPE: '', CLANGD_ASSERTIONS: '', ...env },
+		env: {
+			...process.env,
+			CLANGD_LTO: '',
+			LLVM_MINSIZE_OPT: '',
+			LLVM_BUILD_TYPE: '',
+			CLANGD_ASSERTIONS: '',
+			CLANGD_TIDY_CHECKS: '',
+			...env
+		},
 		encoding: 'utf8'
 	});
 }
@@ -64,5 +72,21 @@ test('rejects invalid runtime assertion settings before any build starts', () =>
 	const result = help({ CLANGD_ASSERTIONS: 'false' });
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /CLANGD_ASSERTIONS must be ON or OFF/);
+	assert.equal(result.stdout, '');
+});
+
+test('omits tidy checks by default and accepts a full-feature comparison', () => {
+	const defaults = help();
+	assert.equal(defaults.status, 0, defaults.stderr);
+	assert.match(defaults.stdout, /CLANGD_TIDY_CHECKS=OFF/);
+	const full = help({ CLANGD_TIDY_CHECKS: 'ON' });
+	assert.equal(full.status, 0, full.stderr);
+	assert.match(full.stdout, /CLANGD_TIDY_CHECKS=ON/);
+});
+
+test('rejects invalid tidy feature settings before any build starts', () => {
+	const result = help({ CLANGD_TIDY_CHECKS: 'ALL' });
+	assert.notEqual(result.status, 0);
+	assert.match(result.stderr, /CLANGD_TIDY_CHECKS must be ON or OFF/);
 	assert.equal(result.stdout, '');
 });
