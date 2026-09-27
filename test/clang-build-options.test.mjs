@@ -9,7 +9,7 @@ const script = fileURLToPath(new URL('../producer/clang-browser/scripts/build-to
 function help(env = {}) {
 	return spawnSync(process.execPath, [script, '--help'], {
 		cwd: path.dirname(script),
-		env: { ...process.env, CLANGD_LTO: '', ...env },
+		env: { ...process.env, CLANGD_LTO: '', LLVM_MINSIZE_OPT: '', ...env },
 		encoding: 'utf8'
 	});
 }
@@ -27,5 +27,21 @@ test('rejects a misspelled LTO mode before starting the producer', () => {
 	const result = help({ CLANGD_LTO: 'OF' });
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /CLANGD_LTO must be ON or OFF/);
+	assert.equal(result.stdout, '');
+});
+
+test('reports size-first optimization and accepts the previous MinSizeRel level', () => {
+	const defaults = help();
+	assert.equal(defaults.status, 0, defaults.stderr);
+	assert.match(defaults.stdout, /LLVM_MINSIZE_OPT=Oz/);
+	const baseline = help({ LLVM_MINSIZE_OPT: 'Os' });
+	assert.equal(baseline.status, 0, baseline.stderr);
+	assert.match(baseline.stdout, /LLVM_MINSIZE_OPT=Os/);
+});
+
+test('rejects optimization values that are not supported size comparison modes', () => {
+	const result = help({ LLVM_MINSIZE_OPT: 'O3' });
+	assert.notEqual(result.status, 0);
+	assert.match(result.stderr, /LLVM_MINSIZE_OPT must be Os or Oz/);
 	assert.equal(result.stdout, '');
 });

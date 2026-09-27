@@ -46,6 +46,10 @@ Useful overrides:
 - `WASM_LLVM_TOOLCHAIN_WORK_DIR` for build intermediates
 - `WASM_LLVM_TOOLCHAIN_OUT_DIR` for producer artifacts
 - `NINJA_JOBS` for build parallelism
+- `LLVM_BUILD_TYPE` (default `MinSizeRel`) selects the WASI and clangd build configuration.
+- `LLVM_MINSIZE_OPT=Oz|Os` (default `Oz`) selects size optimization for `MinSizeRel` C/C++
+  compilation and final links, preserving `-DNDEBUG`. `Os` restores the previous optimization
+  level for comparisons. Other build configurations and native TableGen remain unchanged.
 - `CLANGD_LTO=ON|OFF` (default `ON`) controls link-time optimization of clangd. LLVM's
   CMake configuration adds `-flto` to C, C++, and linker flags together. Use `OFF` for an
   otherwise identical comparison build; Clang/LLD's existing WASI LTO settings are independent.
@@ -54,6 +58,9 @@ LTO requires recompiling clangd's libraries and can increase link time and peak 
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
 sizes. Recipe changes require new artifacts, receipts, and browser acceptance before promotion;
 the checked-in artifacts are not regenerated merely by editing this build script.
+
+`Oz` prioritizes size more aggressively than `Os`. Compare compiler execution and clangd
+diagnostic/completion latency as well as download size before promoting a newly built bundle.
 
 To package raw outputs from another build:
 
