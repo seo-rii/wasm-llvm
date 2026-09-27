@@ -60,6 +60,10 @@ Useful overrides:
   from clangd. Compiler diagnostics, completion, navigation, and formatting remain available;
   clang-tidy-specific diagnostics and fixes require rebuilding with `ON`. A runtime
   `--clang-tidy` option cannot restore checks omitted at build time.
+- `CLANGD_DECISION_FOREST=ON|OFF` (default `OFF`) omits the generated completion ranking
+  model. LLVM 22 falls back to heuristic ranking; completion stays available, but suggestion
+  order can change. Set `ON` to restore the model for quality and size comparisons; forcing
+  `--ranking-model=decision_forest` at runtime requires a build with the model enabled.
 
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
@@ -68,6 +72,14 @@ the checked-in artifacts are not regenerated merely by editing this build script
 
 `Oz` prioritizes size more aggressively than `Os`. Compare compiler execution and clangd
 diagnostic/completion latency as well as download size before promoting a newly built bundle.
+
+To compare only the header trimming against the previous build settings, use
+`LLVM_MINSIZE_OPT=Os CLANGD_LTO=OFF CLANGD_ASSERTIONS=ON CLANGD_TIDY_CHECKS=ON
+CLANGD_DECISION_FOREST=ON`. Change one setting at a time in separate work/output directories.
+Validate C, C++, and Objective-C diagnostics/completion and regenerate consumer integrity records
+when adopting new artifacts. Asyncify remains enabled with its normal indirect-call analysis:
+the stdin wait is reached through the virtual JSON transport loop, so narrowing instrumentation
+requires a rebuilt artifact and verified suspend/resume call paths first.
 
 To package raw outputs from another build:
 

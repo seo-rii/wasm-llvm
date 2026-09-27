@@ -16,6 +16,7 @@ function help(env = {}) {
 			LLVM_BUILD_TYPE: '',
 			CLANGD_ASSERTIONS: '',
 			CLANGD_TIDY_CHECKS: '',
+			CLANGD_DECISION_FOREST: '',
 			...env
 		},
 		encoding: 'utf8'
@@ -88,5 +89,21 @@ test('rejects invalid tidy feature settings before any build starts', () => {
 	const result = help({ CLANGD_TIDY_CHECKS: 'ALL' });
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /CLANGD_TIDY_CHECKS must be ON or OFF/);
+	assert.equal(result.stdout, '');
+});
+
+test('uses heuristic completion by default and accepts restoring the ranking model', () => {
+	const defaults = help();
+	assert.equal(defaults.status, 0, defaults.stderr);
+	assert.match(defaults.stdout, /CLANGD_DECISION_FOREST=OFF/);
+	const full = help({ CLANGD_DECISION_FOREST: 'ON' });
+	assert.equal(full.status, 0, full.stderr);
+	assert.match(full.stdout, /CLANGD_DECISION_FOREST=ON/);
+});
+
+test('rejects invalid completion model settings before any build starts', () => {
+	const result = help({ CLANGD_DECISION_FOREST: 'heuristics' });
+	assert.notEqual(result.status, 0);
+	assert.match(result.stderr, /CLANGD_DECISION_FOREST must be ON or OFF/);
 	assert.equal(result.stdout, '');
 });
