@@ -46,6 +46,14 @@ Useful overrides:
 - `WASM_LLVM_TOOLCHAIN_WORK_DIR` for build intermediates
 - `WASM_LLVM_TOOLCHAIN_OUT_DIR` for producer artifacts
 - `NINJA_JOBS` for build parallelism
+- `CLANGD_LTO=ON|OFF` (default `ON`) controls link-time optimization of clangd. LLVM's
+  CMake configuration adds `-flto` to C, C++, and linker flags together. Use `OFF` for an
+  otherwise identical comparison build; Clang/LLD's existing WASI LTO settings are independent.
+
+LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
+Use separate work/output directories for comparisons and record both compressed and raw Wasm
+sizes. Recipe changes require new artifacts, receipts, and browser acceptance before promotion;
+the checked-in artifacts are not regenerated merely by editing this build script.
 
 To package raw outputs from another build:
 
