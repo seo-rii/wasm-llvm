@@ -25,6 +25,12 @@ new manifest must itself be pinned by the consumer.
 The input must be a materialized directory of regular files/directories (no links/devices).
 Limits are 20,000 files and 128 MiB of input. Unsafe paths and USTAR overflow are rejected.
 Packaging is deterministic across input modes, mtimes and directory enumeration order.
+Each archive records parent directories before regular files, so the current wasm-idle tar
+consumer can create its MemFS paths. The C++ add-on repeats shared parent directories; the
+consumer's `addDirectory` operation is idempotent. Manifest `files` lists regular files only.
+The output directory is reserved exclusively before writing, and `language-sysroots.v1.json`
+is published last as the completion marker. Consumers must ignore an output without that
+manifest, which can briefly exist while packaging is in progress.
 
 ## Consumer gate
 
@@ -42,5 +48,6 @@ node --test test/clang-language-sysroots.test.mjs
 
 Tests use small deterministic fixture sysroots and real gzip/USTAR extraction with GNU tar.
 They check byte-preserving partitioning, resource headers, reproducibility, unsafe inputs,
-provenance fields and refusal to overwrite outputs. A production Clang/sysroot rebuild and
-real-browser C/C++ compatibility run remain release prerequisites.
+provenance fields, parent-first directory entries, real-path output containment, and refusal
+to overwrite outputs even when an output directory appears concurrently. A production
+Clang/sysroot rebuild and real-browser C/C++ compatibility run remain release prerequisites.

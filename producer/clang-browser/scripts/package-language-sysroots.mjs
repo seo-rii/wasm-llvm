@@ -40,8 +40,20 @@ export async function readSysroot(root) {
 }
 export function deterministicTar(files) {
 	const chunks = [];
-	for (const file of [...files].sort((a,b)=>ordered(a.path,b.path))) {
-		const name = safePath(file.path); let tail = name, prefix = '';
+	const sortedFiles = [...files].sort((a,b)=>ordered(a.path,b.path));
+	const directories = new Set(), seenFiles = new Set();
+	for (const file of sortedFiles) {
+		const name = safePath(file.path);
+		if (seenFiles.has(name)) throw new Error(`Duplicate sysroot file: ${name}`);
+		seenFiles.add(name);
+		for (let parent = path.posix.dirname(name); parent !== '.'; parent = path.posix.dirname(parent)) directories.add(parent);
+	}
+	const sortedDirectories = [...directories].sort((a,b)=>a.split('/').length-b.split('/').length || ordered(a,b));
+	for (const entry of [
+		...sortedDirectories.map(name=>({ name, bytes:Buffer.alloc(0), directory:true })),
+		...sortedFiles.map(file=>({ name:file.path, bytes:file.bytes, directory:false }))
+	]) {
+		const name = entry.name; let tail = name, prefix = '';
 		if (Buffer.byteLength(tail) > 100) {
 			const slash = [...name.matchAll(/\//g)].map(m=>m.index).reverse().find(i=>Buffer.byteLength(name.slice(i+1))<=100 && Buffer.byteLength(name.slice(0,i))<=155);
 			if (slash === undefined) throw new Error(`Path exceeds USTAR limit: ${name}`);
@@ -50,17 +62,37 @@ export function deterministicTar(files) {
 		const header = Buffer.alloc(512);
 		const field = (text, at, length) => { const value = Buffer.from(text); if (value.length > length) throw new Error('USTAR field overflow'); value.copy(header,at); };
 		const octal = (value, at, length) => field(value.toString(8).padStart(length-1,'0')+'\0',at,length);
-		field(tail,0,100); octal(0o644,100,8); octal(0,108,8); octal(0,116,8);
-		octal(file.bytes.length,124,12); octal(0,136,12); header.fill(32,148,156); header[156]=48;
+		field(tail,0,100); octal(entry.directory?0o755:0o644,100,8); octal(0,108,8); octal(0,116,8);
+		octal(entry.bytes.length,124,12); octal(0,136,12); header.fill(32,148,156); header[156]=entry.directory?53:48;
 		field('ustar\0',257,6); field('00',263,2); field(prefix,345,155);
 		field([...header].reduce((a,b)=>a+b,0).toString(8).padStart(6,'0')+'\0 ',148,8);
-		chunks.push(header,Buffer.from(file.bytes),Buffer.alloc((512-file.bytes.length%512)%512));
+		chunks.push(header);
+		if (!entry.directory) chunks.push(Buffer.from(entry.bytes),Buffer.alloc((512-entry.bytes.length%512)%512));
 	}
 	return Buffer.concat([...chunks,Buffer.alloc(1024)]);
 }
+function insideDirectory(root, candidate) {
+	const relative = path.relative(root, candidate);
+	return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+async function realPathForPotentialOutput(candidate) {
+	const missing = [];
+	let existing = candidate;
+	for (;;) {
+		try { return path.resolve(await fs.realpath(existing), ...missing.reverse()); }
+		catch (error) {
+			if (error.code !== 'ENOENT') throw error;
+			const parent = path.dirname(existing);
+			if (parent === existing) throw error;
+			missing.push(path.basename(existing)); existing = parent;
+		}
+	}
+}
 export async function packageLanguageSysroots({ sysroot, output, toolchainReceipt }) {
 	const root = path.resolve(sysroot), out = path.resolve(output);
-	if (out === root || out.startsWith(root+path.sep)) throw new Error('Output must be outside the sysroot');
+	const realRoot = await fs.realpath(root);
+	if (insideDirectory(root,out) || insideDirectory(realRoot,await realPathForPotentialOutput(out)))
+		throw new Error('Output must be outside the sysroot');
 	const receiptBytes = await fs.readFile(toolchainReceipt);
 	const receipt = JSON.parse(receiptBytes);
 	if (!/^[a-f0-9]{40}$/.test(receipt.llvmCommit) || typeof receipt.llvmVersion !== 'string' || !receipt.llvmVersion)
@@ -80,21 +112,29 @@ export async function packageLanguageSysroots({ sysroot, output, toolchainReceip
 		profiles:{ c:['c-sysroot.tar.gz'], cpp:['c-sysroot.tar.gz','cpp-addon.tar.gz'] }, assets:{}
 	};
 	await fs.mkdir(path.dirname(out), { recursive:true });
-	try { await fs.lstat(out); throw new Error('Output already exists'); } catch(error) { if(error.code!=='ENOENT') throw error; }
-	const temp = await fs.mkdtemp(out+'.tmp-');
+	if (insideDirectory(realRoot,await realPathForPotentialOutput(out)))
+		throw new Error('Output must be outside the sysroot');
+	// Reserve the final path atomically. A prior lstat followed by rename can replace a
+	// concurrently created empty directory on POSIX filesystems.
+	try { await fs.mkdir(out); }
+	catch (error) { if (error.code === 'EEXIST') throw new Error('Output already exists'); throw error; }
 	try {
 		for (const [name, selected] of [['c-sysroot.tar.gz',core],['cpp-addon.tar.gz',extra]]) {
 			const tar = deterministicTar(selected), compressed = gzipSync(tar,{level:9,mtime:0});
 			manifest.assets[name] = { bytes:compressed.length, sha256:digest(compressed), uncompressedBytes:tar.length, uncompressedSha256:digest(tar), files:selected.map(e=>files.find(f=>f.path===e.path)) };
-			await fs.writeFile(path.join(temp,name),compressed);
+			await fs.writeFile(path.join(out,name),compressed,{flag:'wx'});
 		}
 		const metadata=Buffer.from(JSON.stringify(manifest,null,2)+'\n');
-		await fs.writeFile(path.join(temp,'language-sysroots.v1.json'),metadata);
-		// Check again immediately before publication; never intentionally replace a release.
-		try { await fs.lstat(out); throw new Error('Output already exists'); } catch(error) { if(error.code!=='ENOENT') throw error; }
-		await fs.rename(temp,out);
+		const partialManifest=path.join(out,'.language-sysroots.v1.json.tmp');
+		await fs.writeFile(partialManifest,metadata,{flag:'wx'});
+		// The final manifest is the atomic completion marker for this reserved output.
+		await fs.link(partialManifest,path.join(out,'language-sysroots.v1.json'));
+		await fs.unlink(partialManifest);
 		return { manifest, manifestSha256:digest(metadata) };
-	} finally { await fs.rm(temp,{recursive:true,force:true}); }
+	} catch (error) {
+		await fs.rm(out,{recursive:true,force:true});
+		throw error;
+	}
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 	const args = process.argv.slice(2);
