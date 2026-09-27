@@ -9,6 +9,22 @@ const MAX_BYTES = 128 * 1024 * 1024;
 const sha = data => createHash('sha256').update(data).digest('hex');
 const sort = (a,b) => a < b ? -1 : a > b ? 1 : 0;
 const targets = new Set(['wasm32-wasip1','wasm32-wasip2','wasm32-wasip3']);
+function inside(root, destination) {
+ const relative=path.relative(root,destination);
+ return relative==='' || (relative!=='..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+async function resolveNewOutput(output) {
+ const absolute=path.resolve(output),suffix=[path.basename(absolute)];
+ let parent=path.dirname(absolute);
+ for(;;){
+  let exists=false;
+  try{await fs.lstat(parent);exists=true}catch(error){if(error.code!=='ENOENT')throw error}
+  if(exists)return path.resolve(await fs.realpath(parent),...suffix.reverse());
+  const next=path.dirname(parent);
+  if(next===parent)throw new Error('Output parent is unavailable');
+  suffix.push(path.basename(parent));parent=next;
+ }
+}
 function safe(name) {
  if (typeof name!=='string' || !name || name.startsWith('/') || /[\\:\x00-\x1f\x7f]/.test(name) || name.split('/').some(p=>!p || p==='.' || p==='..')) throw new Error('Unsafe sysroot path');
  return name;
@@ -70,23 +86,30 @@ export function selectSysrootDelivery({direct,delta,cachedBaseSha256=[]}){
  return cost<directBytes?{kind:'delta',bytes:cost,requiresBase:!cached}:{kind:'direct',bytes:directBytes};
 }
 export async function packageSysrootProfiles({sysroot,target,compilerManifest,traceFile,output}){
- const out=path.resolve(output),root=path.resolve(sysroot);
- if(out===root||out.startsWith(root+path.sep))throw new Error('Output must be outside input');
+ const root=path.resolve(sysroot),realRoot=await fs.realpath(root),candidate=await resolveNewOutput(output);
+ if(inside(realRoot,candidate))throw new Error('Output must be outside input');
  const compilerBytes=await fs.readFile(compilerManifest);JSON.parse(compilerBytes);
  const compilerManifestSha256=sha(compilerBytes),inventory=await inventorySysroot(root,target);
  const traceBytes=await fs.readFile(traceFile),trace=JSON.parse(traceBytes);
  const selected=validateSysrootTrace(trace,inventory,target,compilerManifestSha256);
  const hot=inventory.entries.filter(e=>selected.has(e.path)),extra=inventory.entries.filter(e=>!selected.has(e.path));
- await fs.mkdir(path.dirname(out),{recursive:true});
- try{await fs.lstat(out);throw new Error('Output already exists')}catch(e){if(e.code!=='ENOENT')throw e}
+ await fs.mkdir(path.dirname(candidate),{recursive:true});
+ const out=path.join(await fs.realpath(path.dirname(candidate)),path.basename(candidate));
+ if(inside(realRoot,out))throw new Error('Output must be outside input');
  const temp=await fs.mkdtemp(out+'.tmp-');
  try{
   const manifest={format:'wasm-rust-sysroot-profiles-v1',target,compilerManifestSha256,inventorySha256:inventory.inventorySha256,traceSha256:sha(traceBytes),coverage:trace.scenarios.map(s=>({name:s.name,sourceSha256:s.sourceSha256})),promotion:'requires-real-compiler-probe',files:inventory.files,profiles:{}};
   // Always retain a direct full target pack. Cold P2/P3 need not fetch a P1 base.
   for(const[name,entries]of [['full',inventory.entries],['hot',hot],['extra',extra]])manifest.profiles[name]=await emitPack(temp,name,entries,target);
   const bytes=Buffer.from(JSON.stringify(manifest,null,2)+'\n');await fs.writeFile(path.join(temp,'sysroot-profiles.v1.json'),bytes);
-  try{await fs.lstat(out);throw new Error('Output already exists')}catch(e){if(e.code!=='ENOENT')throw e}
-  await fs.rename(temp,out);return {manifest,manifestSha256:sha(bytes)};
+  try{await fs.mkdir(out,{mode:0o700})}catch(error){if(error.code==='EEXIST')throw new Error('Output already exists');throw error}
+  // The exclusive directory reservation cannot replace another producer's output.
+  // Publish the manifest last so incomplete directories are never promoted.
+  for(const name of await fs.readdir(temp)){
+   if(name!=='sysroot-profiles.v1.json')await fs.copyFile(path.join(temp,name),path.join(out,name),constants.COPYFILE_EXCL);
+  }
+  await fs.copyFile(path.join(temp,'sysroot-profiles.v1.json'),path.join(out,'sysroot-profiles.v1.json'),constants.COPYFILE_EXCL);
+  return {manifest,manifestSha256:sha(bytes)};
  }finally{await fs.rm(temp,{recursive:true,force:true})}
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){

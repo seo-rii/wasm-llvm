@@ -35,6 +35,10 @@ indexes in the existing identity-pack format. `hot` plus `extra` preserves every
 once; `full` is independently runnable with respect to sysroot availability. All compressed/logical
 bytes, file inventories and coverage source hashes are recorded.
 
+The output directory is reserved exclusively after pack generation; an existing output is never
+replaced. The manifest is copied last. If publication fails after reservation, the directory may be
+incomplete and must not be released; inspect ownership before removing it and retry with a new output.
+
 ## Cold direct versus warm delta
 
 Every selected target retains a direct full pack. P2/P3 can therefore be published without requiring

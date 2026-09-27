@@ -35,6 +35,40 @@ test('rejects stale inventory, compiler, target, failed scenarios and unknown fi
 test('rejects symlink inputs and refuses existing output',async t=>{
  const f=await fixture(t);await fs.symlink('/etc/passwd',path.join(f.sysroot,'link'));await assert.rejects(packageSysrootProfiles(f),/Non-regular/);await fs.unlink(path.join(f.sysroot,'link'));await fs.mkdir(f.output);await assert.rejects(packageSysrootProfiles(f),/already exists/);
 });
+test('rejects an output beneath a symlinked alias of the input before creating directories',async t=>{
+ const f=await fixture(t),alias=path.join(f.dir,'alias');
+ await fs.symlink(f.sysroot,alias,'dir');
+ await assert.rejects(packageSysrootProfiles({...f,output:path.join(alias,'generated','profiles')}),/outside input/);
+ await assert.rejects(fs.lstat(path.join(f.sysroot,'generated')),{code:'ENOENT'});
+});
+test('reserves the output before publishing and never replaces a competing directory',async t=>{
+ const f=await fixture(t),originalMkdir=fs.mkdir,marker=path.join(f.output,'competitor');
+ let competed=false;
+ fs.mkdir=async(directory,...args)=>{
+  if(directory===f.output && !competed){
+   competed=true;
+   await originalMkdir(f.output);
+   await fs.writeFile(marker,'owned by another operation');
+  }
+  return originalMkdir(directory,...args);
+ };
+ try{await assert.rejects(packageSysrootProfiles(f),/already exists|EEXIST/)}
+ finally{fs.mkdir=originalMkdir}
+ assert.equal(competed,true);
+ assert.equal(await fs.readFile(marker,'utf8'),'owned by another operation');
+ assert.deepEqual(await fs.readdir(f.output),['competitor']);
+});
+test('does not publish a manifest when copying a reserved output fails',async t=>{
+ const f=await fixture(t),originalCopyFile=fs.copyFile;
+ fs.copyFile=async(source,destination,...args)=>{
+  if(path.basename(destination)==='hot.pack.gz')throw new Error('injected copy failure');
+  return originalCopyFile(source,destination,...args);
+ };
+ try{await assert.rejects(packageSysrootProfiles(f),/injected copy failure/)}
+ finally{fs.copyFile=originalCopyFile}
+ await assert.rejects(fs.lstat(path.join(f.output,'sysroot-profiles.v1.json')),{code:'ENOENT'});
+ assert((await fs.readdir(f.output)).length>0);
+});
 test('is byte deterministic and permits an empty extra pack',async t=>{
  const f=await fixture(t);f.trace.scenarios[0].files=f.inventory.files.map(f=>f.path);await fs.writeFile(f.traceFile,JSON.stringify(f.trace));
  const a=await packageSysrootProfiles(f);assert.equal(a.manifest.profiles.extra.fileCount,0);
