@@ -28,6 +28,12 @@ producer then builds Clang/LLD/clangd, trims the sysroot, and packages the resul
 the immutable MemFS payload pinned by commit and SHA-256 in the producer manifest, so a clean output
 directory is sufficient.
 
+Before linking clangd, the producer prepares a separate `clangd-include` directory containing
+shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
+copying, so excluding other WASI targets cannot leave dangling links. The complete selected C/C++
+headers remain available to clangd; the later compiler sysroot dependency pruning does not affect
+this directory. The include tree remains mounted at `/usr/include` in the worker.
+
 ```sh
 pnpm build:clang
 ```

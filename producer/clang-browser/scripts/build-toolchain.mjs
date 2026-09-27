@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
+import { prepareClangdHeaders } from './prepare-clangd-headers.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
@@ -640,6 +641,14 @@ await run(path.join(emsdkDir, 'emsdk'), ['install', config.emsdkVersion]);
 await run(path.join(emsdkDir, 'emsdk'), ['activate', config.emsdkVersion]);
 
 const clangdBuild = path.join(buildDir, 'clangd');
+// Keep the complete selected C/C++ headers for clangd, independently of the
+// dependency-pruned compiler sysroot packaged below.
+const clangdIncludeDir = path.join(config.workDir, 'clangd-include');
+await prepareClangdHeaders({
+	sysroot: stagingSysroot,
+	destination: clangdIncludeDir,
+	targetTriple: config.targetTriple
+});
 const emsdkEnv = shellQuote(path.join(emsdkDir, 'emsdk_env.sh'));
 const clangdConfigure = [
 	'source',
@@ -655,7 +664,7 @@ const clangdConfigure = [
 	shellQuote(clangdBuild),
 	shellQuote('-DCMAKE_CXX_FLAGS=-pthread -Dwait4=__syscall_wait4'),
 	shellQuote(
-		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${stagingSysroot}/include@/usr/include`
+		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${clangdIncludeDir}@/usr/include`
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
 	'-DLLVM_TARGET_ARCH=wasm32-emscripten',
