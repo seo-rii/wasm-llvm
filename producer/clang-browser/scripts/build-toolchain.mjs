@@ -37,6 +37,7 @@ const config = {
 	llvmMinSizeOpt: process.env.LLVM_MINSIZE_OPT || 'Oz',
 	clangdLto: process.env.CLANGD_LTO || 'ON',
 	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
+	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -54,7 +55,8 @@ process.env.TMPDIR = tempDir;
 
 for (const [name, value] of [
 	['CLANGD_LTO', config.clangdLto],
-	['CLANGD_ASSERTIONS', config.clangdAssertions]
+	['CLANGD_ASSERTIONS', config.clangdAssertions],
+	['CLANGD_TIDY_CHECKS', config.clangdTidyChecks]
 ]) {
 	if (!['ON', 'OFF'].includes(value)) throw new Error(`${name} must be ON or OFF`);
 }
@@ -78,6 +80,7 @@ Environment:
   LLVM_MINSIZE_OPT=${config.llvmMinSizeOpt}
   CLANGD_LTO=${config.clangdLto}
   CLANGD_ASSERTIONS=${config.clangdAssertions}
+  CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -691,6 +694,7 @@ const clangdConfigure = [
 	shellQuote(`-DCMAKE_CXX_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),
 	'-DLLVM_TARGET_ARCH=wasm32-emscripten',
 	`-DLLVM_ENABLE_LTO=${config.clangdLto}`,
+	`-DCLANGD_TIDY_CHECKS=${config.clangdTidyChecks}`,
 	`-DLLVM_DEFAULT_TARGET_TRIPLE=${config.targetTriple}`,
 	'-DLLVM_TARGETS_TO_BUILD=WebAssembly',
 	shellQuote('-DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra'),

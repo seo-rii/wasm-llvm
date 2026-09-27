@@ -56,6 +56,10 @@ Useful overrides:
 - `CLANGD_ASSERTIONS=ON|OFF` controls Emscripten runtime assertions. It defaults to `OFF`
   for optimized builds and `ON` for `LLVM_BUILD_TYPE=Debug`; explicitly set `ON` when
   diagnosing worker or Asyncify failures. This affects runtime checks, not source diagnostics.
+- `CLANGD_TIDY_CHECKS=ON|OFF` (default `OFF`) excludes the built-in clang-tidy check modules
+  from clangd. Compiler diagnostics, completion, navigation, and formatting remain available;
+  clang-tidy-specific diagnostics and fixes require rebuilding with `ON`. A runtime
+  `--clang-tidy` option cannot restore checks omitted at build time.
 
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
