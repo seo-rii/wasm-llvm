@@ -25,6 +25,7 @@ import {
 	verifyTinyGoSourceReceipt
 } from './source-contract.mjs';
 import { verifyTinyGoArtifactPayloads } from './verify-artifacts.mjs';
+import { stripCompilerNames } from './strip-compiler-names.mjs';
 
 const THIS_FILE = fileURLToPath(import.meta.url);
 const PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), '..');
@@ -2080,6 +2081,15 @@ export async function buildBrowserCompiler(
 				linked.exitCode === 0,
 				`external wasm-ld browser compiler link failed with ${linked.signal ?? linked.exitCode}`
 			);
+			const unstrippedCompiler = await readFile(receipt.paths.compilerPath);
+			const strippedCompiler = stripCompilerNames(unstrippedCompiler);
+			await writeFile(receipt.paths.compilerPath, strippedCompiler.output);
+			receipt.build.compilerNameStripping = {
+				inputSha256: sha256(unstrippedCompiler),
+				outputSha256: sha256(strippedCompiler.output),
+				removedBytes: strippedCompiler.removedBytes,
+				removedSections: strippedCompiler.removedSections
+			};
 			receipt.build.linkedCompiler = await inspectFile(receipt.paths.compilerPath, {
 				wasmObject: true
 			});
