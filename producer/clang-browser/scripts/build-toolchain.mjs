@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
+import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
@@ -759,103 +760,29 @@ await fs.rm(probeDir, { recursive: true, force: true });
 await fs.mkdir(probeDir, { recursive: true });
 const cProbe = path.join(probeDir, 'probe.c');
 const cppProbe = path.join(probeDir, 'probe.cpp');
-const cDeps = path.join(probeDir, 'probe-c.d');
-const cppDeps = path.join(probeDir, 'probe-cpp.d');
-await fs.writeFile(cProbe, '#include <stdio.h>\nint main(void) { return puts("probe"); }\n');
-await fs.writeFile(
-	cppProbe,
-	[
-		'#include <bits/stdc++.h>',
-		'#include <bits/extc++.h>',
-		'#include <ext/rope>',
-		'#include <ext/pb_ds/assoc_container.hpp>',
-		'#include <ext/pb_ds/tree_policy.hpp>',
-		'using namespace std;',
-		'using namespace __gnu_cxx;',
-		'using namespace __gnu_pbds;',
-		'using ordered_set = tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update>;',
-		'int main() {',
-		'  ordered_set values;',
-		'  gp_hash_table<int, int> table;',
-		'  crope text("abc");',
-		'  __gnu_pbds::priority_queue<int> heap;',
-		'  cout << values.size() << table.size() << text.size() << heap.size() << "\\n";',
-		'}',
-		''
-	].join('\n')
-);
+await fs.writeFile(cProbe, SYSROOT_C_PROBE);
+await fs.writeFile(cppProbe, SYSROOT_CPP_PROBE);
 const wasiBinDir = path.join(wasiSdkPath, 'bin');
-const cProbeCommand = [
-	shellQuote(path.join(wasiBinDir, 'clang')),
+const probeFlags = [
 	`--target=${config.targetTriple}`,
-	`--sysroot=${shellQuote(stagingSysroot)}`,
-	`-resource-dir ${shellQuote(path.join(stagingSysroot, 'lib', 'clang', resourceVersion))}`,
-	`-I${shellQuote(path.join(stagingSysroot, 'include'))}`,
-	`-isystem ${shellQuote(path.join(stagingSysroot, 'include', config.targetTriple))}`,
-	'-E',
-	'-M',
-	shellQuote(cProbe),
-	'>',
-	shellQuote(cDeps)
-].join(' ');
-const cppProbeCommand = [
-	shellQuote(path.join(wasiBinDir, 'clang++')),
-	`--target=${config.targetTriple}`,
-	`--sysroot=${shellQuote(stagingSysroot)}`,
-	`-resource-dir ${shellQuote(path.join(stagingSysroot, 'lib', 'clang', resourceVersion))}`,
-	'-std=gnu++20',
-	`-I${shellQuote(path.join(stagingSysroot, 'include'))}`,
-	`-isystem ${shellQuote(libcxxIncludeDir)}`,
-	`-isystem ${shellQuote(path.join(stagingSysroot, 'include', config.targetTriple))}`,
-	'-E',
-	'-M',
-	shellQuote(cppProbe),
-	'>',
-	shellQuote(cppDeps)
-].join(' ');
-await run('bash', ['-lc', cProbeCommand]);
-await run('bash', ['-lc', cppProbeCommand]);
-
-const dependencyFiles = new Set();
-for (const depsFile of [cDeps, cppDeps]) {
-	const deps = (await fs.readFile(depsFile, 'utf8')).replaceAll(/\\\r?\n/g, ' ');
-	for (const token of deps.split(/\s+/).slice(1)) {
-		const normalizedToken = token.replace(/\\$/, '');
-		if (!normalizedToken || normalizedToken === ':') continue;
-		const relative = path.relative(stagingSysroot, path.resolve(normalizedToken));
-		if (relative.startsWith('..') || path.isAbsolute(relative)) continue;
-		dependencyFiles.add(relative.split(path.sep).join('/'));
-	}
-}
-
-async function pruneFilesOutsideDependencyClosure(directory, isRoot = true) {
-	let hasEntries = false;
-	for (const entry of await fs.readdir(directory, { withFileTypes: true }).catch(() => [])) {
-		const entryPath = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			if (await pruneFilesOutsideDependencyClosure(entryPath, false)) hasEntries = true;
-			continue;
-		}
-		if (!entry.isFile()) {
-			hasEntries = true;
-			continue;
-		}
-		const relative = path.relative(stagingSysroot, entryPath).split(path.sep).join('/');
-		if (dependencyFiles.has(relative)) {
-			hasEntries = true;
-			continue;
-		}
-		await fs.rm(entryPath, { force: true });
-	}
-	if (!isRoot && !hasEntries) {
-		await fs.rm(directory, { recursive: true, force: true });
-		return false;
-	}
-	return true;
-}
-
-await pruneFilesOutsideDependencyClosure(path.join(stagingSysroot, 'include'));
-await pruneFilesOutsideDependencyClosure(stagedResourceIncludeDir);
+	`--sysroot=${stagingSysroot}`,
+	'-resource-dir',
+	path.join(stagingSysroot, 'lib', 'clang', resourceVersion),
+	`-I${path.join(stagingSysroot, 'include')}`
+];
+const targetIncludeFlags = ['-isystem', path.join(stagingSysroot, 'include', config.targetTriple)];
+await pruneSysrootHeaders({
+	sysroot: stagingSysroot,
+	resourceIncludeDir: stagedResourceIncludeDir,
+	probeDir,
+	cCompiler: path.join(wasiBinDir, 'clang'),
+	cppCompiler: path.join(wasiBinDir, 'clang++'),
+	cFlags: [...probeFlags, ...targetIncludeFlags],
+	cppFlags: [...probeFlags, '-isystem', libcxxIncludeDir, ...targetIncludeFlags],
+	cProbe,
+	cppProbe,
+	run
+});
 
 await run('node', [
 	path.join(scriptDir, 'package-toolchain.mjs'),
