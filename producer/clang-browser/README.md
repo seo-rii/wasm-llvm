@@ -29,6 +29,12 @@ MemFS from the small source files pinned by immutable revision, size and SHA-256
 The node table holds 8192 entries instead of 1024, leaving room for Objective-C headers and workspace
 files after mounting the sysroot. A clean output directory is sufficient.
 
+Before linking clangd, the producer prepares a separate `clangd-include` directory containing
+shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
+copying, so excluding other WASI targets cannot leave dangling links. The complete selected C/C++
+headers remain available to clangd; the later compiler sysroot dependency pruning does not affect
+this directory. The include tree remains mounted at `/usr/include` in the worker.
+
 ```sh
 pnpm build:clang
 ```
@@ -73,6 +79,40 @@ Useful overrides:
 - `WASM_LLVM_TOOLCHAIN_WORK_DIR` for build intermediates
 - `WASM_LLVM_TOOLCHAIN_OUT_DIR` for producer artifacts
 - `NINJA_JOBS` for build parallelism
+- `LLVM_BUILD_TYPE` (default `MinSizeRel`) selects the WASI and clangd build configuration.
+- `LLVM_MINSIZE_OPT=Oz|Os` (default `Oz`) selects size optimization for `MinSizeRel` C/C++
+  compilation and final links, preserving `-DNDEBUG`. `Os` restores the previous optimization
+  level for comparisons. Other build configurations and native TableGen remain unchanged.
+- `CLANGD_LTO=ON|OFF` (default `ON`) controls link-time optimization of clangd. LLVM's
+  CMake configuration adds `-flto` to C, C++, and linker flags together. Use `OFF` for an
+  otherwise identical comparison build; Clang/LLD's existing WASI LTO settings are independent.
+- `CLANGD_ASSERTIONS=ON|OFF` controls Emscripten runtime assertions. It defaults to `OFF`
+  for optimized builds and `ON` for `LLVM_BUILD_TYPE=Debug`; explicitly set `ON` when
+  diagnosing worker or Asyncify failures. This affects runtime checks, not source diagnostics.
+- `CLANGD_TIDY_CHECKS=ON|OFF` (default `OFF`) excludes the built-in clang-tidy check modules
+  from clangd. Compiler diagnostics, completion, navigation, and formatting remain available;
+  clang-tidy-specific diagnostics and fixes require rebuilding with `ON`. A runtime
+  `--clang-tidy` option cannot restore checks omitted at build time.
+- `CLANGD_DECISION_FOREST=ON|OFF` (default `OFF`) omits the generated completion ranking
+  model. LLVM 22 falls back to heuristic ranking; completion stays available, but suggestion
+  order can change. Set `ON` to restore the model for quality and size comparisons; forcing
+  `--ranking-model=decision_forest` at runtime requires a build with the model enabled.
+
+LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
+Use separate work/output directories for comparisons and record both compressed and raw Wasm
+sizes. Recipe changes require new artifacts, receipts, and browser acceptance before promotion;
+the checked-in artifacts are not regenerated merely by editing this build script.
+
+`Oz` prioritizes size more aggressively than `Os`. Compare compiler execution and clangd
+diagnostic/completion latency as well as download size before promoting a newly built bundle.
+
+To compare only the header trimming against the previous build settings, use
+`LLVM_MINSIZE_OPT=Os CLANGD_LTO=OFF CLANGD_ASSERTIONS=ON CLANGD_TIDY_CHECKS=ON
+CLANGD_DECISION_FOREST=ON`. Change one setting at a time in separate work/output directories.
+Validate C, C++, and Objective-C diagnostics/completion and regenerate consumer integrity records
+when adopting new artifacts. Asyncify remains enabled with its normal indirect-call analysis:
+the stdin wait is reached through the virtual JSON transport loop, so narrowing instrumentation
+requires a rebuilt artifact and verified suspend/resume call paths first.
 
 To package raw outputs from another build:
 
@@ -100,7 +140,10 @@ pnpm prepare:clang-release
 
 `verify:clang-artifacts` checks every artifact against `toolchain.json`.
 Both verification commands reject clangd assets that omit either the loader-side
-`Module.stdinReady` callback or the WebAssembly `__asyncjs__waitForStdin` import.
+`Module.stdinReady` callback or the WebAssembly import wired to `__asyncjs__waitForStdin`.
+Optimized Emscripten builds shorten import names when assertions are disabled. Verification
+parses the loader without executing it, resolves the generated import table and namespace,
+and requires the matching function import in Wasm. Ambiguous or unsupported mappings are rejected.
 `smoke:clang-artifacts` also opens the archives, compiles the Clang, LLD, and clangd WebAssembly
 modules, and checks the sysroot and MemFS payloads. `prepare:clang-release` writes the externally
 hosted bundle to `out/clang-browser` by default, including `runtime-manifest.v1.json` and

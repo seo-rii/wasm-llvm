@@ -1,0 +1,18 @@
+diff --git a/src/compiler/subprocess.c b/src/compiler/subprocess.c
+index a0800d7..b8540ed 100644
+--- a/src/compiler/subprocess.c
++++ b/src/compiler/subprocess.c
+@@ -32,7 +32,12 @@ void signal_to_subprocess(int sig)
+ 
+ int run_subprocess(const char *name, const char **args)
+ {
+-#if PLATFORM_WINDOWS
++#if defined(__EMSCRIPTEN__)
++	(void)args;
++	errno = ENOSYS;
++	eprintf("Browser compiler cannot launch external process '%s'; use compile-only or the builtin linker.\n", name);
++	return -1;
++#elif PLATFORM_WINDOWS
+ 	// https://docs.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
+ 
+ 	STARTUPINFOA siStartInfo;

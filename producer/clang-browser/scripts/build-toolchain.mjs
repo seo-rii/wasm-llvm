@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
 import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
+import { prepareClangdHeaders } from './prepare-clangd-headers.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
@@ -16,6 +17,7 @@ const repoRoot = path.resolve(producerRoot, '..', '..');
 const producerManifest = JSON.parse(
 	await fs.readFile(path.join(producerRoot, 'manifest.json'), 'utf8')
 );
+const llvmBuildType = process.env.LLVM_BUILD_TYPE || 'MinSizeRel';
 
 const config = {
 	llvmVersion: process.env.LLVM_VERSION || producerManifest.sources.llvm.version,
@@ -33,7 +35,12 @@ const config = {
 		process.env.YOWASP_WASI_PATCH_REPO || producerManifest.sources.wasiHostPatch.repository,
 	yowaspWasiPatchCommit:
 		process.env.YOWASP_WASI_PATCH_COMMIT || producerManifest.sources.wasiHostPatch.commit,
-	llvmBuildType: process.env.LLVM_BUILD_TYPE || 'MinSizeRel',
+	llvmBuildType,
+	llvmMinSizeOpt: process.env.LLVM_MINSIZE_OPT || 'Oz',
+	clangdLto: process.env.CLANGD_LTO || 'ON',
+	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
+	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
+	clangdDecisionForest: process.env.CLANGD_DECISION_FOREST || 'OFF',
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -49,6 +56,18 @@ const config = {
 const tempDir = path.resolve(process.env.TMPDIR || path.join(config.workDir, 'tmp'));
 process.env.TMPDIR = tempDir;
 
+for (const [name, value] of [
+	['CLANGD_LTO', config.clangdLto],
+	['CLANGD_ASSERTIONS', config.clangdAssertions],
+	['CLANGD_TIDY_CHECKS', config.clangdTidyChecks],
+	['CLANGD_DECISION_FOREST', config.clangdDecisionForest]
+]) {
+	if (!['ON', 'OFF'].includes(value)) throw new Error(`${name} must be ON or OFF`);
+}
+if (!['Os', 'Oz'].includes(config.llvmMinSizeOpt)) {
+	throw new Error('LLVM_MINSIZE_OPT must be Os or Oz');
+}
+
 const args = process.argv.slice(2).filter((arg) => arg !== '--');
 if (args.includes('--help') || args.includes('-h')) {
 	console.log(`Usage: pnpm build:clang
@@ -61,6 +80,12 @@ Environment:
   EMSDK_COMMIT=${config.emsdkCommit || '<required with EMSDK_VERSION>'}
   TARGET_TRIPLE=${config.targetTriple}
   HOST_TRIPLE=${config.hostTriple}
+  LLVM_BUILD_TYPE=${config.llvmBuildType}
+  LLVM_MINSIZE_OPT=${config.llvmMinSizeOpt}
+  CLANGD_LTO=${config.clangdLto}
+  CLANGD_ASSERTIONS=${config.clangdAssertions}
+  CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
+  CLANGD_DECISION_FOREST=${config.clangdDecisionForest}
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -482,6 +507,8 @@ await run('cmake', [
 	wasiBuild,
 	`-DCMAKE_TOOLCHAIN_FILE=${llvmWasiToolchainFile}`,
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
+	`-DCMAKE_C_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`,
+	`-DCMAKE_CXX_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`,
 	`-DCMAKE_C_FLAGS=${wasiCompileFlags}`,
 	`-DCMAKE_CXX_FLAGS=${wasiCompileFlags}`,
 	`-DCMAKE_EXE_LINKER_FLAGS=${wasiLinkerFlags}`,
@@ -641,6 +668,14 @@ await run(path.join(emsdkDir, 'emsdk'), ['install', config.emsdkVersion]);
 await run(path.join(emsdkDir, 'emsdk'), ['activate', config.emsdkVersion]);
 
 const clangdBuild = path.join(buildDir, 'clangd');
+// Keep the complete selected C/C++ headers for clangd, independently of the
+// dependency-pruned compiler sysroot packaged below.
+const clangdIncludeDir = path.join(config.workDir, 'clangd-include');
+await prepareClangdHeaders({
+	sysroot: stagingSysroot,
+	destination: clangdIncludeDir,
+	targetTriple: config.targetTriple
+});
 const emsdkEnv = shellQuote(path.join(emsdkDir, 'emsdk_env.sh'));
 const clangdConfigure = [
 	'source',
@@ -656,10 +691,15 @@ const clangdConfigure = [
 	shellQuote(clangdBuild),
 	shellQuote('-DCMAKE_CXX_FLAGS=-pthread -Dwait4=__syscall_wait4'),
 	shellQuote(
-		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${stagingSysroot}/include@/usr/include`
+		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${clangdIncludeDir}@/usr/include`
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
+	shellQuote(`-DCMAKE_C_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),
+	shellQuote(`-DCMAKE_CXX_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),
 	'-DLLVM_TARGET_ARCH=wasm32-emscripten',
+	`-DLLVM_ENABLE_LTO=${config.clangdLto}`,
+	`-DCLANGD_TIDY_CHECKS=${config.clangdTidyChecks}`,
+	`-DCLANGD_DECISION_FOREST=${config.clangdDecisionForest}`,
 	`-DLLVM_DEFAULT_TARGET_TRIPLE=${config.targetTriple}`,
 	'-DLLVM_TARGETS_TO_BUILD=WebAssembly',
 	shellQuote('-DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra'),

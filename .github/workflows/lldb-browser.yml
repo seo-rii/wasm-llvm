@@ -32,10 +32,17 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 10.30.0
             - uses: actions/setup-node@v4
               with:
                   node-version: 24
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
             - run: node --test producer/lldb-browser/test/producer.test.mjs producer/wamr-browser/test/*.test.mjs test/debug-release.test.mjs test/lldb-browser-ci.test.mjs
+            - run: node --test test/clang-language-sysroots.test.mjs test/rust-sysroot-profiles.test.mjs producer/rust-browser/test/crate-registry.test.mjs
+            - run: node --test test/clang-build-options.test.mjs test/clangd-headers.test.mjs test/clangd-artifact-contract.test.mjs test/clang-sysroot-pruning.test.mjs test/clang-toolchain.test.mjs test/clang-memfs*.test.mjs
 
     runtime-source-provenance:
         concurrency:

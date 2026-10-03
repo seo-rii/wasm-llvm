@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"producerId": "wasm-llvm/lfortran-browser",
+	"sources": {
+		"lfortran": {
+			"repository": "https://github.com/lfortran/lfortran",
+			"commit": "ab867a23029b0c1b1c3131b5a0e2363709be37f0"
+		}
+	},
+	"sourceLock": "sources.lock.json",
+	"target": "emscripten-web-worker",
+	"backend": "llvm",
+	"execution": "emscripten-dynamic-side-module",
+	"outputs": ["lfortran.js", "lfortran.wasm", "lfortran.data", "producer-receipt.json"],
+	"readiness": {
+		"ready": false,
+		"requirement": "A verified build receipt and real Fortran stdin evaluation are required before consumer activation."
+	}
+}

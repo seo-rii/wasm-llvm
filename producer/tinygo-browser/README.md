@@ -40,6 +40,34 @@ ineligible as TinyGo implementations. See the
 evidence is recorded in the [public-product audit](audits/2026-08-24-public-product.md); earlier
 protocol audits remain point-in-time history.
 
+## Strip compiler debug names
+
+Fresh compiler builds remove only the WebAssembly `name` custom sections before
+recording output hashes and generating the runtime closure. All executable,
+data, export, DWARF, producer and target-feature bytes are preserved. WebAssembly
+engine stack traces consequently use numeric function indices; diagnostics
+and debug information in programs compiled by TinyGo are unchanged.
+
+To derive smaller delivery assets from an already accepted v6 artifact set:
+
+```sh
+node producer/tinygo-browser/scripts/strip-compiler-names.mjs INPUT_DIR NEW_OUTPUT_DIR
+```
+
+The input directory must contain the receipt-bound `tinygo-compiler.wasm`,
+`tinygoroot.tar.gz`, and `producer-receipt.json`. The output directory must not
+exist. The script changes only the compiler's name sections and the 64-byte
+`compilerSha256` field in the archived runtime manifest, then recompresses the
+archive. It does not rebuild or prune any runtime files.
+
+The output receipt uses `wasm-llvm-tinygo-name-stripped-v1`. It embeds the exact
+original receipt and its digest, identifies the transformation script by digest,
+and records input/output hashes and byte-preservation evidence. Original
+acceptance applies to the input artifacts only. Run the real consumer compiler
+and browser acceptance against the derived outputs before publishing them;
+store that separate acceptance receipt alongside the release evidence. The
+normal source-build verifier continues to accept original compiler receipts.
+
 ## Prepare and verify upstream source identity
 
 Prepare a shallow detached checkout and deterministic source receipt:
