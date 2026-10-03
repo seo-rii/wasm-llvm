@@ -46,7 +46,13 @@ test("pins, verifies, and packages MemFS without relying on an existing output a
   );
 
   assert.match(manifest.sources.memfs.commit, /^[0-9a-f]{40}$/);
-  assert.match(manifest.sources.memfs.sha256, /^[0-9a-f]{64}$/);
+  assert.equal(manifest.sources.memfs.maxNodes, 8192);
+  for (const name of [
+    "memfs.c", "stb_sprintf.h", "Makefile", "imports.txt", "LICENSE.llvm.txt",
+  ]) {
+    assert.match(manifest.sources.memfs.files[name].sha256, /^[0-9a-f]{64}$/);
+    assert.ok(manifest.sources.memfs.files[name].bytes > 0);
+  }
   assert.equal(
     manifest.sources.lldWasmOnlyPatch.path,
     "patches/lld-wasm-only.patch",
@@ -77,7 +83,8 @@ test("pins, verifies, and packages MemFS without relying on an existing output a
   ]) {
     assert.match(manifest.toolchains.wasiSdk.archives[host], /^[0-9a-f]{64}$/);
   }
-  assert.match(buildSource, /assertSha256\(memfsWasm, memfsSource\.sha256/);
+  assert.match(buildSource, /const \{ wasmPath: memfsWasm, receiptPath: memfsReceipt \} = await buildMemfs\(/);
+  assert.match(buildSource, /'--memfs-receipt',\s*memfsReceipt/);
   assert.match(buildSource, /assertSha256\(archivePath, archiveSha256/);
   assert.match(buildSource, /toolchains\.wasiSdk\.sysrootSha256/);
   assert.match(buildSource, /toolchains\.wasiSdk\.clangRtSha256/);

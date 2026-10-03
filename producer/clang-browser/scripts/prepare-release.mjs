@@ -8,6 +8,7 @@ import {
 	validateBuildReceipt as validateLldbBuildReceipt
 } from '../../lldb-browser/scripts/contracts.mjs';
 import { verifyWamrBrowser } from '../../wamr-browser/scripts/verify.mjs';
+import { loadMemfsReleaseFiles } from './memfs-provenance.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const LOCAL_ARTIFACT_DIR = path.resolve(REPO_ROOT, 'artifacts', 'clang-browser');
@@ -45,6 +46,9 @@ await fs.mkdir(TARGET_BIN_DIR, { recursive: true });
 await fs.mkdir(TARGET_CLANGD_DIR, { recursive: true });
 
 const toolchain = JSON.parse(await fs.readFile(path.resolve(SOURCE_DIR, 'toolchain.json'), 'utf8'));
+const memfsFiles = toolchain.memfs === undefined ? new Map() : await loadMemfsReleaseFiles(
+	SOURCE_DIR, toolchain.memfs, await fs.readFile(path.join(SOURCE_DIR, 'memfs.zip'))
+);
 
 const buildAssets = [];
 for (const asset of assets) {
@@ -58,6 +62,9 @@ for (const asset of assets) {
 		size: bytes.byteLength,
 		sha256: crypto.createHash('sha256').update(bytes).digest('hex')
 	});
+}
+for (const [name, bytes] of memfsFiles) {
+	await fs.writeFile(path.join(TARGET_DIR, name), bytes);
 }
 
 const manifest = {

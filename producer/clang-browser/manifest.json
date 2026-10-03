@@ -26,10 +26,41 @@
       "sha256": "e60c4c1299d7e028451e9f46270318c5eb80f8d77ce3af773e2f1ad802b3a022"
     },
     "memfs": {
-      "repository": "https://github.com/binji/wasm-clang",
-      "commit": "648c4a89997a351eef75cdaec3ef5b89d4937dec",
-      "path": "memfs",
-      "sha256": "2c72ee42bd9430029dda8c6bafc9f37143f6fe88d5f1ea950a70259ab748bcfe"
+      "repository": "https://github.com/binji/llvm-project",
+      "commit": "5dc09c94393510bc8d042a9f07382b53e845c0f2",
+      "maxNodes": 8192,
+      "files": {
+        "memfs.c": {
+          "path": "binji/memfs.c",
+          "bytes": 35435,
+          "sha256": "10e73c8a1cad2ed8da0eb9095253b1477b06a218ab90cab4337988816468ba8b"
+        },
+        "stb_sprintf.h": {
+          "path": "binji/stb_sprintf.h",
+          "bytes": 56600,
+          "sha256": "2f985eb41aae52d1853fe4f90693bb899305d734e04ecad9346356037873d3f7"
+        },
+        "Makefile": {
+          "path": "binji/Makefile",
+          "bytes": 533,
+          "sha256": "c7cc94a866553f6cfc1a0b0d69a35dbe3617348336ccf28216ea981bc7e0e7da"
+        },
+        "imports.txt": {
+          "path": "binji/imports.txt",
+          "bytes": 808,
+          "sha256": "9df02710e96167ac0be79edf86548d16f81ac75f5f5a19a615bb7a4dedaec9d9"
+        },
+        "LICENSE.llvm.txt": {
+          "path": "llvm/LICENSE.TXT",
+          "bytes": 3192,
+          "sha256": "24b67da19b1422a819395738cb83ea34eee3fdce52870b0d1758524ba1615069"
+        }
+      },
+      "license": {
+        "llvmLicenseAtPinnedRevision": "NCSA",
+        "stbSprintfSelectedLicense": "MIT",
+        "notice": "memfs.c has no per-file license header. Preserve the LLVM release license at this revision and stb_sprintf's MIT notice; do not infer Apache licensing from newer LLVM revisions. Modified for MAX_NODES=8192 and modern WASI API names, retaining abort's trap behavior."
+      }
     }
   },
   "toolchains": {

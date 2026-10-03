@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
+import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -423,8 +424,6 @@ const llvmWasiToolchainFile = await writeLlvmWasiToolchainFile(wasiSdkPath);
 
 const sysrootArchive = `wasi-sysroot-${config.wasiSdkVersion}.0+m.tar.gz`;
 const clangRtArchive = `libclang_rt-${config.wasiSdkVersion}.0+m.tar.gz`;
-const memfsSource = producerManifest.sources.memfs;
-const memfsWasm = path.join(downloadDir, `memfs-${memfsSource.commit}.wasm`);
 await download(
 	`https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${config.wasiSdkVersion}/wasi-sysroot-${config.wasiSdkVersion}.0%2Bm.tar.gz`,
 	path.join(downloadDir, sysrootArchive)
@@ -443,11 +442,12 @@ await assertSha256(
 	producerManifest.toolchains.wasiSdk.clangRtSha256,
 	'WASI compiler-rt archive'
 );
-await download(
-	`https://raw.githubusercontent.com/binji/wasm-clang/${memfsSource.commit}/${memfsSource.path}`,
-	memfsWasm
-);
-await assertSha256(memfsWasm, memfsSource.sha256, 'MemFS WebAssembly payload');
+const { wasmPath: memfsWasm, receiptPath: memfsReceipt } = await buildMemfs({
+	wasiSdkPath,
+	wasiSdkVersion: config.wasiSdkVersion,
+	workDir: path.join(buildDir, 'memfs'),
+	outDir: path.join(config.outDir, 'memfs-build')
+});
 
 const nativeBuild = path.join(buildDir, 'native');
 await run('cmake', [
@@ -795,6 +795,8 @@ await run('node', [
 	stagingSysroot,
 	'--memfs-wasm',
 	memfsWasm,
+	'--memfs-receipt',
+	memfsReceipt,
 	'--clangd-js',
 	path.join(clangdBuild, 'bin', 'clangd.js'),
 	'--clangd-wasm',
