@@ -9,12 +9,15 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const runtimeSourceDir = path.join(repoRoot, 'artifacts', 'runtime-source');
 const llvmRevision = 'ca7933e47d3a3451d81e72ac174dcb5aa28b59d1';
 const wamrRevision = '25bd7eb63e828e4bd242cc9b38d260b4b31c6605';
-const reproducibleLldbWasmSha256 =
-	'b12f1fa80b00db4f5d8ed472697cc141f1025988dce704401eb25d90089d7665';
+const qualifiedLldbWasmSha256 =
+	'e7146642a865ffb41cca6635c72f97bfe923be1ce7f0d930e2e59713a3ee5222';
+
+function sha256Bytes(bytes) {
+	return createHash('sha256').update(bytes).digest('hex');
+}
 
 async function sha256(filePath) {
-	const bytes = await readFile(filePath);
-	return createHash('sha256').update(bytes).digest('hex');
+	return sha256Bytes(await readFile(filePath));
 }
 
 test('published runtime source contains a revision-locked LLDB and WAMR bundle', async () => {
@@ -27,8 +30,45 @@ test('published runtime source contains a revision-locked LLDB and WAMR bundle',
 	assert.equal(manifest.debugger.protocolVersion, 1);
 	assert.equal(manifest.debugger.transport, 'shared-ring-v1');
 	assert.equal(manifest.debugger.lldb.llvmRevision, llvmRevision);
-	assert.equal(manifest.debugger.lldb.wasmSha256, reproducibleLldbWasmSha256);
+	assert.equal(manifest.debugger.lldb.wasmSha256, qualifiedLldbWasmSha256);
 	assert.equal(manifest.debugger.targetRuntime.revision, wamrRevision);
+
+	const [lldbSourcesLockBytes, wamrSourcesLockBytes, wamrProducerManifestBytes] =
+		await Promise.all([
+			readFile(path.join(repoRoot, 'producer/lldb-browser/sources.lock.json')),
+			readFile(path.join(repoRoot, 'producer/wamr-browser/sources.lock.json')),
+			readFile(path.join(repoRoot, 'producer/wamr-browser/manifest.json'))
+		]);
+	const lldbSourcesLock = JSON.parse(lldbSourcesLockBytes);
+	const wamrProducerManifest = JSON.parse(wamrProducerManifestBytes);
+	assert.equal(
+		manifest.debugger.lldb.sourcesLockSha256,
+		sha256Bytes(lldbSourcesLockBytes),
+		'published LLDB provenance must match the current source lock'
+	);
+	assert.equal(
+		manifest.debugger.lldb.patchesSha256,
+		sha256Bytes(lldbSourcesLock.patches.map((entry) => entry.sha256).join('\n')),
+		'published LLDB provenance must match the current patch set'
+	);
+	assert.deepEqual(
+		manifest.debugger.targetRuntime.provenance,
+		{
+			sourcesLockSha256: sha256Bytes(wamrSourcesLockBytes),
+			producerManifestSha256: sha256Bytes(wamrProducerManifestBytes),
+			patchesSha256: sha256Bytes(
+				Object.values(wamrProducerManifest.patches)
+					.map((entry) => entry.sha256)
+					.join('\n')
+			),
+			overlaysSha256: sha256Bytes(
+				Object.values(wamrProducerManifest.overlays)
+					.map((entry) => entry.sha256)
+					.join('\n')
+			)
+		},
+		'published WAMR provenance must match the current producer inputs'
+	);
 
 	const assets = [
 		[manifest.debugger.lldb.js, manifest.debugger.lldb.jsSha256],

@@ -46,6 +46,9 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   assert.equal(sourcesLock.emscripten.commit, EMSCRIPTEN_REVISION);
   assert.equal(manifest.protocols.connectionScheme, CONNECTION_SCHEME);
   assert.equal(manifest.protocols.transport, TRANSPORT_CONTRACT);
+  assert.equal(manifest.capabilities.readMemory, true);
+  assert.equal(manifest.capabilities.writeMemory, true);
+  assert.equal(manifest.capabilities.dataBreakpoints, true);
   assert.deepEqual(manifest.build.reproduciblePathPrefixes, {
     source: "/llvm-project",
     build: "/lldb-web-build",
@@ -175,6 +178,53 @@ test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB bu
   for (const plugin of REGISTERED_PLUGINS) {
     assert.match(webConfigure, new RegExp(plugin));
   }
+});
+
+test("documents asymmetric combined watchpoint lifecycle semantics", async () => {
+  const readme = await fs.readFile(path.join(PRODUCER_ROOT, "README.md"), "utf8");
+
+  assert.match(readme, /combined add rolls back the write watchpoint/u);
+  assert.match(readme, /combined removal attempts both halves/u);
+  assert.match(readme, /single aggregate RSP reply/u);
+  assert.doesNotMatch(readme, /combined add\/remove\s+transactional/u);
+});
+
+test("fails closed when resetting data breakpoints cannot delete all watchpoints", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const patchEntry = sourcesLock.patches.find(
+    ({ path: patchPath }) =>
+      patchPath === "patches/0009-lldb-dap-fail-closed-watchpoint-reset.patch",
+  );
+  assert.ok(patchEntry, "the LLDB-DAP watchpoint reset fix must be hash locked");
+
+  const patch = await fs.readFile(
+    path.join(PRODUCER_ROOT, patchEntry.path),
+    "utf8",
+  );
+  const addedLines = patch
+    .split("\n")
+    .filter((line) => line.startsWith("+") && !line.startsWith("+++"))
+    .join("\n");
+
+  assert.match(
+    addedLines,
+    /if \(!dap\.target\.DeleteAllWatchpoints\(\)\)/u,
+    "DeleteAllWatchpoints must be checked before replacement watchpoints are installed",
+  );
+  assert.match(
+    addedLines,
+    /return target_sp->RemoveAllWatchpoints\(\);/u,
+    "SBTarget must propagate a target-side watchpoint deletion failure",
+  );
+  assert.match(
+    addedLines,
+    /return llvm::make_error<DAPError>\([\s\S]*failed to delete existing data breakpoints[\s\S]*\);/u,
+    "a failed watchpoint reset must become a failed DAP response",
+  );
+  assert.doesNotMatch(
+    addedLines,
+    /^\+\s*dap\.target\.DeleteAllWatchpoints\(\);$/mu,
+  );
 });
 
 test("final Wasm rejects prepared source and build paths", () => {
@@ -314,6 +364,19 @@ test("Wasm unwind patch gives recursive frames distinct synthetic CFAs", async (
   assert.match(patch, /qWasmLocal:1;2/);
 });
 
+test("Wasm caller PCs use the stop-scoped unwind snapshot", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const patchPath = "patches/0010-wasm-caller-pc-cache.patch";
+  assert.ok(sourcesLock.patches.some((entry) => entry.path === patchPath));
+  const patch = await fs.readFile(path.join(PRODUCER_ROOT, patchPath), "utf8");
+  assert.match(patch, /reg_info->name && m_concrete_frame_idx != 0/);
+  assert.match(patch, /kinds\[eRegisterKindGeneric\] == LLDB_REGNUM_GENERIC_PC/);
+  assert.match(patch, /thread\.GetWasmFramePC\(m_concrete_frame_idx, pc\)/);
+  assert.match(patch, /GetUnwinder\(\)\.GetFrameInfoAtIndex\(concrete_frame_idx/);
+  assert.match(patch, /value\.SetUInt\(pc, reg_info->byte_size\)/);
+  assert.match(patch, /m_frames\.size\(\) <= concrete_frame_idx/);
+});
+
 test("browser plugin lookup avoids std::function callback dispatch", async () => {
   const { sourcesLock } = await loadProducerMetadata();
   const patchPath = "patches/0008-plugin-predicate-template.patch";
@@ -342,7 +405,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-6`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-7`,
   );
 });
 
@@ -479,7 +542,13 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
     wasmSha256: receipt.assets["lldb-web-dap.wasm"].sha256,
     workerSha256: receipt.assets[PTHREAD_WORKER_ASSET].sha256,
     patchesSha256: receipt.source.patchesSha256,
-    capabilities: { breakpoints: true, evaluateExpressions: false },
+    capabilities: {
+      breakpoints: true,
+      readMemory: true,
+      writeMemory: true,
+      evaluateExpressions: false,
+      dataBreakpoints: true,
+    },
   });
 
   assert.doesNotThrow(() => validateBuildReceipt(receipt));
@@ -497,6 +566,18 @@ test("receipt and debug manifest bind assets to locked provenance", () => {
   assert.equal(receipt.build.proxyToPthread, true);
   assert.equal(receipt.build.pthreadWorker, PTHREAD_WORKER_ASSET);
   assert.equal(artifactManifest.debugger.lldb.worker, PTHREAD_WORKER_ASSET);
+  const missingWriteMemory = structuredClone(artifactManifest);
+  delete missingWriteMemory.debugger.capabilities.writeMemory;
+  assert.throws(
+    () => validateArtifactManifest(missingWriteMemory),
+    /writeMemory capability/,
+  );
+  const missingDataBreakpoints = structuredClone(artifactManifest);
+  delete missingDataBreakpoints.debugger.capabilities.dataBreakpoints;
+  assert.throws(
+    () => validateArtifactManifest(missingDataBreakpoints),
+    /dataBreakpoints capability/,
+  );
   const compressedWasm = gzipSync(wasmBytes, { level: 9, mtime: 0 });
   assert.deepEqual(receipt.assets["lldb-web-dap.wasm"].compressed, {
     format: "gzip",

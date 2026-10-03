@@ -10,6 +10,13 @@ replaces only the socket boundary with two generation-scoped
 `SharedArrayBuffer` byte rings supplied by `@wasm-idle/llvm-core`. Program
 stdout/stderr remain separate from the RSP byte stream.
 
+The stdin JS library preserves short reads across multiple WASI iovecs. The
+consumer installs a blocking whole-read stdin device; one `readv` gathers at
+most 64 KiB with one device read, then scatters the available bytes into the
+requested vectors. Filling the first vector therefore does not block on the
+next vector or require EOF. File reads, positional reads, and single-vector
+reads retain the pinned Emscripten implementation.
+
 WAMR performs RSP I/O on its source-debug control pthread. Emscripten does not
 copy arbitrary incoming `Module` properties into pthread realms, so the
 `pthread-transport-v1` bridge passes cloneable ring descriptors to every
@@ -23,8 +30,15 @@ application worker. See `contracts/pthread-transport-v1.md`.
 - classic interpreter only
 - WASI libc enabled
 - source debugger enabled
+- read, write, and combined read/write linear-memory watchpoints
 - JIT, fast JIT, AOT, wasm threads, and multi-module disabled
 - one debug target session per worker
+
+Watchpoint matching uses the complete 1/2/4/8-byte interpreter memory access
+range. A scalar access that begins before a watched byte still stops when the
+two ranges overlap, and the RSP stop reply reports the first overlapping byte.
+Failed breakpoint and watchpoint operations use the canonical `E01` RSP error
+packet.
 
 The build requires the exact emsdk commit for Emscripten 6.0.0 and uses a
 strict, preloaded pthread pool, so the deployed application must be
@@ -104,8 +118,8 @@ uncompressed Wasm asset, its reproducible gzip copy, Wasm validity, and the
 raw and compressed asset-size budgets. Missing, duplicate, and unexpected
 receipt paths are rejected before any runtime asset is read.
 The product gate caps `wamr-debug.wasm` at 1 MiB raw and 512 KiB as a
-deterministic level-9 gzip. The current pinned product is 277,904 bytes raw and
-100,204 bytes compressed, leaving explicit headroom without allowing accidental
+deterministic level-9 gzip. The current pinned product is 278,958 bytes raw and
+100,560 bytes compressed, leaving explicit headroom without allowing accidental
 multi-megabyte growth.
 Before publishing a rebuilt interpreter, build it in two distinct clean
 directories and run `verify-reproducibility.mjs` on their packages. The

@@ -107,6 +107,7 @@ for (let offset = 0; offset + 512 <= sysroot.length; ) {
 for (const requiredEntry of [
   "lib/wasm32-wasi/crt1.o",
   "lib/wasm32-wasi/libc.a",
+  "lib/wasm32-wasi/libc-printscan-long-double.a",
   "lib/wasm32-wasi/libc++.a",
   "lib/wasm32-wasi/libc++abi.a",
   "lib/wasm32-wasi/libm.a",

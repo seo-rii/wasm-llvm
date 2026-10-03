@@ -24,9 +24,10 @@ applies the pinned YoWASP WASI-host patch, the checksum-pinned LLVM patch that p
 WASI `close()` results instead of returning stale `errno`, and the checksum-pinned local patch that
 limits the standalone LLD module to its WebAssembly driver. A separate checksum-pinned clangd patch
 adds the Asyncify bridge that waits for browser-provided stdin before each JSON-RPC message. The
-producer then builds Clang/LLD/clangd, trims the sysroot, and packages the result. It also downloads
-the immutable MemFS payload pinned by commit and SHA-256 in the producer manifest, so a clean output
-directory is sufficient.
+producer then builds Clang/LLD/clangd, trims the sysroot, and packages the result. It also rebuilds
+MemFS from the small source files pinned by immutable revision, size and SHA-256 in the manifest.
+The node table holds 8192 entries instead of 1024, leaving room for Objective-C headers and workspace
+files after mounting the sysroot. A clean output directory is sufficient.
 
 Before linking clangd, the producer prepares a separate `clangd-include` directory containing
 shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
@@ -37,6 +38,38 @@ this directory. The include tree remains mounted at `/usr/include` in the worker
 ```sh
 pnpm build:clang
 ```
+
+To rebuild only MemFS with an existing WASI SDK 33 installation:
+
+```sh
+node producer/clang-browser/scripts/build-memfs.mjs \
+  --wasi-sdk /path/to/wasi-sdk-33.0-x86_64-linux \
+  --work-dir /path/to/memfs-work \
+  --out-dir /path/to/memfs-output
+```
+
+This downloads five pinned source/license files, without cloning LLVM. Source hash failures stop
+the build, including cached-file mismatches. Both the full build and this command use the same
+helper. Its compatibility patch changes WASI API names and preserves the old module's abort trap;
+the linker explicitly exports the original API and strips custom debug/name sections. Each build
+checks the exact import/export set, function arities and 8188 usable file nodes, including a trap
+at exhaustion. It writes `memfs.wasm`, deterministic `memfs.wasm.gz`, license notices, and
+`memfs-build-receipt.json` with source, patched-source and builder hashes, SDK identity, commands,
+capacity and output hashes. The full build places these under the output directory's `memfs-build/`.
+
+The full build passes that receipt to the packager using `--memfs-receipt`. When packaging outputs
+manually, pass the same option alongside `--memfs-wasm`; the receipt's directory must also contain
+`LICENSE.llvm.txt` and `LICENSE.stb_sprintf.txt`. Packaging verifies the module against its receipt
+and verifies both license notices. `toolchain.json` records the original receipt and sidecar hashes
+under `memfs`, separately from the six runtime assets. `prepare:clang-release` verifies and copies
+`memfs-build-receipt.json`, `LICENSE.memfs-llvm.txt` and `LICENSE.memfs-stb_sprintf.txt` into the release
+root, preserving their metadata in `runtime-build.json`. Legacy/custom inputs without an explicit
+MemFS receipt retain the existing packaging contract; an explicit missing or mismatched receipt or
+license is an error.
+
+The pinned 2019 LLVM release license is NCSA; `memfs.c` itself has no per-file license header.
+The build preserves that license and selects the MIT option embedded in `stb_sprintf.h`, recording
+the source's licensing context and modifications in the receipt.
 
 Useful overrides:
 

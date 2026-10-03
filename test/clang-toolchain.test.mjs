@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -45,7 +46,13 @@ test("pins, verifies, and packages MemFS without relying on an existing output a
   );
 
   assert.match(manifest.sources.memfs.commit, /^[0-9a-f]{40}$/);
-  assert.match(manifest.sources.memfs.sha256, /^[0-9a-f]{64}$/);
+  assert.equal(manifest.sources.memfs.maxNodes, 8192);
+  for (const name of [
+    "memfs.c", "stb_sprintf.h", "Makefile", "imports.txt", "LICENSE.llvm.txt",
+  ]) {
+    assert.match(manifest.sources.memfs.files[name].sha256, /^[0-9a-f]{64}$/);
+    assert.ok(manifest.sources.memfs.files[name].bytes > 0);
+  }
   assert.equal(
     manifest.sources.lldWasmOnlyPatch.path,
     "patches/lld-wasm-only.patch",
@@ -76,7 +83,8 @@ test("pins, verifies, and packages MemFS without relying on an existing output a
   ]) {
     assert.match(manifest.toolchains.wasiSdk.archives[host], /^[0-9a-f]{64}$/);
   }
-  assert.match(buildSource, /assertSha256\(memfsWasm, memfsSource\.sha256/);
+  assert.match(buildSource, /const \{ wasmPath: memfsWasm, receiptPath: memfsReceipt \} = await buildMemfs\(/);
+  assert.match(buildSource, /'--memfs-receipt',\s*memfsReceipt/);
   assert.match(buildSource, /assertSha256\(archivePath, archiveSha256/);
   assert.match(buildSource, /toolchains\.wasiSdk\.sysrootSha256/);
   assert.match(buildSource, /toolchains\.wasiSdk\.clangRtSha256/);
@@ -250,6 +258,7 @@ test("requires the browser linker runtime libraries in the packaged sysroot", as
   for (const runtimeFile of [
     "crt1.o",
     "libc.a",
+    "libc-printscan-long-double.a",
     "libc++.a",
     "libc++abi.a",
     "libm.a",
@@ -258,4 +267,73 @@ test("requires the browser linker runtime libraries in the packaged sysroot", as
     assert.ok(buildSource.includes(`'${runtimeFile}'`));
     assert.ok(smokeSource.includes(`lib/wasm32-wasi/${runtimeFile}`));
   }
+});
+
+test("the SDK long-double library replaces the trapping printf/scanf implementations", {
+  skip: !process.env.WASI_SDK_PATH && "Set WASI_SDK_PATH for the WASI execution regression",
+}, async (t) => {
+  const { WASI } = await import("node:wasi");
+  const sdk = path.resolve(process.env.WASI_SDK_PATH);
+  const directory = await mkdtemp(path.join(os.tmpdir(), "wasm-llvm-long-double-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const source = path.join(directory, "long-double.c");
+  await writeFile(source, `#include <float.h>
+#include <stdio.h>
+_Static_assert(sizeof(long double) == 16 && LDBL_MANT_DIG == 113,
+               "The WASI long double ABI must remain binary128");
+int main(void) {
+  char buffer[64];
+  long double scanned = 0;
+  if (snprintf(buffer, sizeof buffer, "%.3Lf", 1.25L) != 5) return 1;
+  if (sscanf("2.5", "%Lf", &scanned) != 1 || scanned != 2.5L) return 2;
+  printf("format=%s scan=%.3Lf\\n", buffer, scanned);
+  return 0;
+}
+`);
+  const compiler = path.join(sdk, "bin", "clang");
+  const options = ["--target=wasm32-wasi", source];
+  const baseline = path.join(directory, "baseline.wasm");
+  const repaired = path.join(directory, "repaired.wasm");
+  execFileSync(compiler, [...options, "-o", baseline], { stdio: "pipe" });
+  // This archive must precede libc so its definitions replace libc's stubs.
+  execFileSync(compiler, [...options, "-lc-printscan-long-double", "-o", repaired], {
+    stdio: "pipe",
+  });
+  async function runWasi(file, label) {
+    const stdoutPath = path.join(directory, `${label}.stdout`);
+    const stderrPath = path.join(directory, `${label}.stderr`);
+    const stdout = await open(stdoutPath, "w");
+    const stderr = await open(stderrPath, "w");
+    let exitCode;
+    let error;
+    try {
+      const wasi = new WASI({
+        version: "preview1", args: ["long-double"], env: {}, preopens: {},
+        returnOnExit: true, stdout: stdout.fd, stderr: stderr.fd,
+      });
+      const module = await WebAssembly.compile(await readFile(file));
+      const instance = await WebAssembly.instantiate(module, wasi.getImportObject());
+      try {
+        exitCode = wasi.start(instance);
+      } catch (caught) {
+        error = caught;
+      }
+    } finally {
+      await stdout.close();
+      await stderr.close();
+    }
+    return {
+      exitCode, error,
+      stdout: await readFile(stdoutPath, "utf8"),
+      stderr: await readFile(stderrPath, "utf8"),
+    };
+  }
+  const withoutLibrary = await runWasi(baseline, "baseline");
+  assert.ok(withoutLibrary.error instanceof WebAssembly.RuntimeError);
+  assert.match(withoutLibrary.stderr, /Support for formatting long double values is currently disabled/);
+  const withLibrary = await runWasi(repaired, "repaired");
+  assert.equal(withLibrary.error, undefined);
+  assert.equal(withLibrary.exitCode, 0);
+  assert.equal(withLibrary.stdout, "format=1.250 scan=2.500\n");
+  assert.equal(withLibrary.stderr, "");
 });

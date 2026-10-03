@@ -67,6 +67,13 @@ reference is rewritten to the same name.
 - Reads drain pending bytes before observing close.
 - An empty open-ring timeout returns `0`, a closed ring returns `-2`, and a
   failed/stale ring returns `-1`.
+- Interpreter stop and exit events increment the input ring's `INTERRUPT`
+  counter and notify `EPOCH`. Reads retain their last observed counter across
+  calls and return `-3` when it changes, so the debug-control loop immediately
+  checks for a stopped thread. Pending bytes and close take precedence over an
+  interrupt. Notifications received before a read or between its state check
+  and atomic wait remain observable; the one-second read timeout is only a
+  fallback for idle transport maintenance.
 - Writes reject a closed queue.
 - Stale generations and invalid cursor/capacity state fail the transport.
 - stdout, stderr, stdin, and worker lifecycle events remain outside RSP.

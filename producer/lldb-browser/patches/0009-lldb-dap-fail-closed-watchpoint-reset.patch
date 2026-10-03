@@ -1,0 +1,30 @@
+diff --git a/lldb/tools/lldb-dap/Handler/SetDataBreakpointsRequestHandler.cpp b/lldb/tools/lldb-dap/Handler/SetDataBreakpointsRequestHandler.cpp
+index 1caaa23..a51ab89 100644
+--- a/lldb/tools/lldb-dap/Handler/SetDataBreakpointsRequestHandler.cpp
++++ b/lldb/tools/lldb-dap/Handler/SetDataBreakpointsRequestHandler.cpp
+@@ -25,7 +25,10 @@ SetDataBreakpointsRequestHandler::Run(
+     const protocol::SetDataBreakpointsArguments &args) const {
+   std::vector<protocol::Breakpoint> response_breakpoints;
+
+-  dap.target.DeleteAllWatchpoints();
++  if (!dap.target.DeleteAllWatchpoints())
++    return llvm::make_error<DAPError>(
++        "failed to delete existing data breakpoints");
++
+   std::vector<Watchpoint> watchpoints;
+   for (const auto &bp : args.breakpoints)
+     watchpoints.emplace_back(dap, bp);
+diff --git a/lldb/source/API/SBTarget.cpp b/lldb/source/API/SBTarget.cpp
+index 99dfbb3f..d1cc2cdd 100644
+--- a/lldb/source/API/SBTarget.cpp
++++ b/lldb/source/API/SBTarget.cpp
+@@ -1454,8 +1454,7 @@ bool SBTarget::DeleteAllWatchpoints() {
+     std::lock_guard<std::recursive_mutex> guard(target_sp->GetAPIMutex());
+     std::unique_lock<std::recursive_mutex> lock;
+     target_sp->GetWatchpointList().GetListMutex(lock);
+-    target_sp->RemoveAllWatchpoints();
+-    return true;
++    return target_sp->RemoveAllWatchpoints();
+   }
+   return false;
+ }

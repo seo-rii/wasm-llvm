@@ -68,6 +68,29 @@ launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
 General Clang expression evaluation is not an advertised capability of this
 artifact.
 
+The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
+through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP
+`M` packet to guest linear memory. This is a raw-memory operation only: it does
+not imply `setVariable`, Wasm local/global mutation, or expression evaluation.
+The assembled runtime manifest requires this capability explicitly so an older
+or incomplete debugger bundle fails closed before a browser session starts.
+
+The same pinned pair supports address-based data breakpoints through LLDB-DAP.
+LLVM 22.1.8 translates write, read, and combined read/write watchpoints to RSP
+`Z2`, `Z3`, and `Z4`, and the WAMR 2.4.5 classic debug interpreter checks guest
+linear-memory accesses. A combined add rolls back the write watchpoint when
+installing its read half fails. A combined removal attempts both halves and
+returns a single aggregate RSP reply; removal is best-effort rather than
+transactional. LLDB-DAP checks that aggregate reset result before installing a
+replacement set and fails the `setDataBreakpoints` request when any existing
+watchpoint cannot be removed. It never reports a successful replacement over a
+partially retained target configuration. The stub reports `watch`, `rwatch`, or
+`awatch` metadata in its stop packet. LLDB can therefore publish the DAP
+`data breakpoint` stop reason instead of confusing a memory access with a
+source breakpoint. Watchpoints cover scalar classic-interpreter loads and
+stores; bulk-memory operations, host-side memory writes, guest threads, and
+non-linear-memory addresses remain outside this capability.
+
 `DynamicLoaderWasmDYLD` is required even though the program is already mounted
 in LLDB's MEMFS before attach. Its attach hook asks the GDB remote stub for the
 loaded Wasm module and assigns the runtime module id to the object sections.
@@ -104,6 +127,20 @@ Its upstream-style GDB remote regression selects two recursive frames through
 the normal variable API, verifies ordered and distinct CFAs and values, and
 requires both `qWasmLocal:0;...` and `qWasmLocal:1;...` requests. The producer
 contract test additionally pins the patch content and hash.
+
+`0010-wasm-caller-pc-cache.patch` reads a caller's PC from the existing Wasm
+unwind snapshot. LLVM's tail-call reconstruction asks each caller register
+context for its PC; the upstream context otherwise sends a separate `p0`
+request, which returns the live thread's PC instead of that caller's return
+address. A 100-frame stack trace therefore used to issue 99 identical remote
+PC reads. Caller contexts now use their concrete frame index to obtain the
+raw return PC already received through `qWasmCallStack`. Frame zero keeps the
+live register path, and Wasm locals/globals keep their frame-specific lookup.
+The existing unwinder clears its snapshot at every stop, including internal
+source-step stops; no second PC cache or source-symbolication `PC - 1` value is
+introduced. The producer contract pins this implementation and patch hash.
+The wasm-idle Chromium regression exercises 100-frame recursive stacks, caller
+source locations and locals, and bounds live PC requests after a source step.
 
 LLVM's generic plugin lookup accepts its predicate as `std::function`.
 `0008-plugin-predicate-template.patch` keeps that short-lived lookup predicate
@@ -162,6 +199,14 @@ length and rejects an unexpected increase beyond its documented headroom.
 The scripts are deliberately split so source mutation, compilation, and
 packaging remain auditable:
 
+CI follows the same two-phase contract.
+The source and patch contracts gate the product build.
+Checked-in runtime-source provenance runs independently. A source change may
+therefore leave the provenance job red while the explicitly requested
+replacement product is still built and uploaded. After that product is
+synchronized into `artifacts/runtime-source/debug`, both jobs must be green
+before the revision can be released or promoted.
+
 ```sh
 node producer/lldb-browser/scripts/prepare.mjs
 node producer/lldb-browser/scripts/build.mjs
@@ -181,7 +226,7 @@ It also measures a deterministic gzip representation (`level: 9`, `mtime: 0`)
 without changing the runtime-facing uncompressed asset. Receipt verification
 recomputes that representation and enforces both a 48 MiB uncompressed budget
 and an 18 MiB gzip budget for `lldb-web-dap.wasm`; the current product is
-42,718,251 bytes raw and 14,930,084 bytes compressed. Its JS, Wasm, and pthread
+42,718,338 bytes raw and 14,930,235 bytes compressed. Its JS, Wasm, and pthread
 worker hashes match between a clean GitHub Actions build and a local build
 prepared through a different clone root. A larger binary requires an explicit
 reviewed budget change.
@@ -204,22 +249,26 @@ product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
 
 The weekly schedule also performs full clean LLDB and WAMR product builds. It
-checks out the exact pinned WAMR revision, reuses the LLDB producer's pinned
-Emscripten SDK, builds WAMR from two distinct clean source and build roots,
-requires their verified packages to be byte-reproducible, and keeps the primary
-LLDB/WAMR packages as a seven-day workflow artifact. The verifiers recompute
-asset hashes, deterministic gzip receipts, and Wasm size budgets. This catches
-producer, Emscripten, reproducibility, and size regressions even when no
-maintainer has requested a release build. The same schedule runs the real
-native C command and LLDB-DAP attach baselines; either job can still be selected
-independently with `build_product=true` or `native_baseline=true` in a manual
-dispatch. The native job verifies the official LLVM and WASI SDK archive
-digests, builds the exact WAMR commit, recompiles the DWARF fixture, runs
-`llvm-dwarfdump --verify`, and then executes both native baseline runners. It
-uses a digest-pinned Debian container because the official LLDB binary has
-fixed Python 3.11 and ICU 72 shared-library dependencies. See
-`test/native-wasm-debug/README.md` for the command transcript contract and
-manual invocation.
+builds LLDB sequentially from two distinct empty LLVM source and build roots,
+fully verifies both packages, and requires them to be byte-reproducible before
+uploading the primary package. The first work root is deleted before the second
+build so the runner never retains two LLVM build trees at once; both builds use
+the same checksum-pinned Emscripten installation. The workflow then checks out
+the exact pinned WAMR revision into two distinct clean source and build roots,
+reuses that Emscripten installation, and applies the same verified-package and
+byte-reproducibility requirement. Only the primary LLDB/WAMR packages are kept
+as a seven-day workflow artifact. The verifiers recompute asset hashes,
+deterministic gzip receipts, and Wasm size budgets. This catches producer,
+Emscripten, reproducibility, and size regressions even when no maintainer has
+requested a release build. The same schedule runs the real native C command and
+LLDB-DAP attach baselines; either job can still be selected independently with
+`build_product=true` or `native_baseline=true` in a manual dispatch. The native
+job verifies the official LLVM and WASI SDK archive digests, builds the exact
+WAMR commit, recompiles the DWARF fixture, runs `llvm-dwarfdump --verify`, and
+then executes both native baseline runners. It uses a digest-pinned Debian
+container because the official LLDB binary has fixed Python 3.11 and ICU 72
+shared-library dependencies. See `test/native-wasm-debug/README.md` for the
+command transcript contract and manual invocation.
 
 Maintainers can request the full pinned LLDB/WAMR rebuild and a seven-day
 downloadable artifact without making the ordinary contract gate expensive:

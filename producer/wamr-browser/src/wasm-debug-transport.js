@@ -71,7 +71,9 @@ var LibraryWasmIdleDebugTransportV1 = {
 				control: control,
 				data: data,
 				capacity: capacity,
-				generation: descriptor.generation
+				generation: descriptor.generation,
+				interruptGeneration:
+					Atomics.load(control, WasmIdleDebugTransportV1.INTERRUPT) >>> 0
 			};
 		},
 
@@ -184,6 +186,14 @@ var LibraryWasmIdleDebugTransportV1 = {
 				var state = Atomics.load(ring.control, WasmIdleDebugTransportV1.STATE);
 				if (state === 1) return -2;
 				if (state !== 0) return -1;
+				// Keep this generation across read calls: a stop can arrive after
+				// the control loop checks its state but before entering this read.
+				var interruptGeneration =
+					Atomics.load(ring.control, WasmIdleDebugTransportV1.INTERRUPT) >>> 0;
+				if (interruptGeneration !== ring.interruptGeneration) {
+					ring.interruptGeneration = interruptGeneration;
+					return -3;
+				}
 				var remaining =
 					deadline === Infinity ? undefined : Math.max(0, deadline - Date.now());
 				if (remaining === 0) return 0;
@@ -279,6 +289,14 @@ var LibraryWasmIdleDebugTransportV1 = {
 	wasm_idle_rsp_close: function () {
 		WasmIdleDebugTransportV1.close(WasmIdleDebugTransportV1.rspInput);
 		WasmIdleDebugTransportV1.close(WasmIdleDebugTransportV1.rspOutput);
+	},
+
+	wasm_idle_rsp_interrupt__deps: ['$WasmIdleDebugTransportV1'],
+	wasm_idle_rsp_interrupt: function () {
+		var ring = WasmIdleDebugTransportV1.rspInput;
+		if (!ring || !WasmIdleDebugTransportV1.validGeneration(ring)) return;
+		Atomics.add(ring.control, WasmIdleDebugTransportV1.INTERRUPT, 1);
+		WasmIdleDebugTransportV1.notify(ring);
 	}
 };
 

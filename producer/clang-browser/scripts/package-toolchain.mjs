@@ -16,6 +16,7 @@ import {
 	configure
 } from '@zip.js/zip.js';
 import { assertClangdStdinBridge } from './clangd-artifact-contract.mjs';
+import { loadMemfsBuildMetadata } from './memfs-provenance.mjs';
 
 configure({ useWebWorkers: false });
 
@@ -46,6 +47,7 @@ const usage = `Usage:
 Options:
   --target-dir DIR                 Output directory. Defaults to artifacts/clang-browser.
   --memfs-wasm FILE                Raw MemFS WebAssembly module.
+  --memfs-receipt FILE             Verified build receipt; requires sibling MemFS license notices.
   --memfs-zip FILE                 Legacy single-entry archive input. Defaults to the current target memfs.zip.
   --version NAME                   Runtime manifest version. Defaults to llvmorg-<llvm-version>.
   --resource-dir PATH              Defaults to /lib/clang/<llvm-version>.
@@ -232,6 +234,9 @@ async function main() {
 		await assertWasm('lld', lldBytes);
 		await assertWasm('memfs', memfsBytes);
 		await assertClangdStdinBridge(clangdJsBytes, clangdWasmBytes);
+		const memfs = args.has('memfs-receipt')
+			? await loadMemfsBuildMetadata(path.resolve(required(args, 'memfs-receipt')), memfsBytes)
+			: null;
 
 		await fs.mkdir(path.join(targetDir, 'clangd'), { recursive: true });
 		const assetHashes = {
@@ -257,6 +262,11 @@ async function main() {
 
 		await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.js'), clangdJsBytes);
 		await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.wasm.gz'), clangdWasmGzipBytes);
+		if (memfs) {
+			for (const [name, bytes] of memfs.files) {
+				await fs.writeFile(path.join(targetDir, name), bytes);
+			}
+		}
 
 		const metadata = {
 			producer: {
@@ -271,6 +281,7 @@ async function main() {
 			...(emsdkVersion ? { emsdkVersion } : {}),
 			resourceDir,
 			compilerRuntimeLibDir,
+			...(memfs ? { memfs: memfs.metadata } : {}),
 			clangd: {
 				stdinBridge: 'emscripten-asyncify',
 				patch: producerManifest.sources.clangdEmscriptenStdinPatch.path,

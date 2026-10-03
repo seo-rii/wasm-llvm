@@ -19,9 +19,549 @@
   "assets": {
     "clang.zip": "d088e163f4562c0befd12603468b8275ee18f9951e3e3dfa16b853de8e31c4ed",
     "lld.zip": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039",
-    "sysroot.tar.zip": "3948a257ad5fd3ed6ee26789ef2634ce28169f2e12fd60fc0682f6f30ad4be77",
-    "memfs.zip": "51eefede548b6638565b79ab46aac23c8131682f04cc9946035b614ccd3feda1",
+    "sysroot.tar.zip": "79c77fe54d89eeb9b3f405f601bbffac21c4e57d698d2aea9c96a898442d77ec",
+    "memfs.zip": "a8091407232ff90aac632b625a2f932aad07cdbd7eab172638cb99983d4d08b2",
     "clangd/clangd.js": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27",
     "clangd/clangd.wasm.gz": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+  },
+  "memfs": {
+    "buildReceipt": {
+      "format": "wasm-llvm-memfs-build-v1",
+      "maxNodes": 8192,
+      "abi": {
+        "imports": [
+          {
+            "module": "env",
+            "name": "memfs_log",
+            "kind": "function"
+          },
+          {
+            "module": "env",
+            "name": "copy_out",
+            "kind": "function"
+          },
+          {
+            "module": "env",
+            "name": "copy_in",
+            "kind": "function"
+          },
+          {
+            "module": "env",
+            "name": "host_read",
+            "kind": "function"
+          },
+          {
+            "module": "env",
+            "name": "host_write",
+            "kind": "function"
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": "memory"
+          },
+          {
+            "name": "init",
+            "kind": "function"
+          },
+          {
+            "name": "fd_allocate",
+            "kind": "function"
+          },
+          {
+            "name": "fd_close",
+            "kind": "function"
+          },
+          {
+            "name": "fd_fdstat_get",
+            "kind": "function"
+          },
+          {
+            "name": "fd_fdstat_set_flags",
+            "kind": "function"
+          },
+          {
+            "name": "fd_filestat_get",
+            "kind": "function"
+          },
+          {
+            "name": "fd_filestat_set_size",
+            "kind": "function"
+          },
+          {
+            "name": "fd_pread",
+            "kind": "function"
+          },
+          {
+            "name": "fd_prestat_dir_name",
+            "kind": "function"
+          },
+          {
+            "name": "fd_prestat_get",
+            "kind": "function"
+          },
+          {
+            "name": "fd_read",
+            "kind": "function"
+          },
+          {
+            "name": "fd_readdir",
+            "kind": "function"
+          },
+          {
+            "name": "fd_seek",
+            "kind": "function"
+          },
+          {
+            "name": "fd_write",
+            "kind": "function"
+          },
+          {
+            "name": "path_create_directory",
+            "kind": "function"
+          },
+          {
+            "name": "path_filestat_get",
+            "kind": "function"
+          },
+          {
+            "name": "path_open",
+            "kind": "function"
+          },
+          {
+            "name": "path_readlink",
+            "kind": "function"
+          },
+          {
+            "name": "path_remove_directory",
+            "kind": "function"
+          },
+          {
+            "name": "path_rename",
+            "kind": "function"
+          },
+          {
+            "name": "path_symlink",
+            "kind": "function"
+          },
+          {
+            "name": "path_unlink_file",
+            "kind": "function"
+          },
+          {
+            "name": "GetPathBuf",
+            "kind": "function"
+          },
+          {
+            "name": "GetPathBufLen",
+            "kind": "function"
+          },
+          {
+            "name": "FindNode",
+            "kind": "function"
+          },
+          {
+            "name": "AddDirectoryNode",
+            "kind": "function"
+          },
+          {
+            "name": "AddFileNode",
+            "kind": "function"
+          },
+          {
+            "name": "GetFileNodeAddress",
+            "kind": "function"
+          },
+          {
+            "name": "GetFileNodeSize",
+            "kind": "function"
+          }
+        ],
+        "functionArity": {
+          "init": 0,
+          "fd_allocate": 3,
+          "fd_close": 1,
+          "fd_fdstat_get": 2,
+          "fd_fdstat_set_flags": 2,
+          "fd_filestat_get": 2,
+          "fd_filestat_set_size": 2,
+          "fd_pread": 5,
+          "fd_prestat_dir_name": 3,
+          "fd_prestat_get": 2,
+          "fd_read": 4,
+          "fd_readdir": 5,
+          "fd_seek": 4,
+          "fd_write": 4,
+          "path_create_directory": 3,
+          "path_filestat_get": 5,
+          "path_open": 9,
+          "path_readlink": 6,
+          "path_remove_directory": 3,
+          "path_rename": 6,
+          "path_symlink": 5,
+          "path_unlink_file": 3,
+          "GetPathBuf": 0,
+          "GetPathBufLen": 0,
+          "FindNode": 1,
+          "AddDirectoryNode": 1,
+          "AddFileNode": 2,
+          "GetFileNodeAddress": 1,
+          "GetFileNodeSize": 1
+        },
+        "maxNodes": 8192,
+        "usableNodes": 8188,
+        "initialMemoryBytes": 1179648
+      },
+      "source": {
+        "repository": "https://github.com/binji/llvm-project",
+        "commit": "5dc09c94393510bc8d042a9f07382b53e845c0f2",
+        "files": {
+          "memfs.c": {
+            "url": "https://raw.githubusercontent.com/binji/llvm-project/5dc09c94393510bc8d042a9f07382b53e845c0f2/binji/memfs.c",
+            "bytes": 35435,
+            "sha256": "10e73c8a1cad2ed8da0eb9095253b1477b06a218ab90cab4337988816468ba8b"
+          },
+          "stb_sprintf.h": {
+            "url": "https://raw.githubusercontent.com/binji/llvm-project/5dc09c94393510bc8d042a9f07382b53e845c0f2/binji/stb_sprintf.h",
+            "bytes": 56600,
+            "sha256": "2f985eb41aae52d1853fe4f90693bb899305d734e04ecad9346356037873d3f7"
+          },
+          "Makefile": {
+            "url": "https://raw.githubusercontent.com/binji/llvm-project/5dc09c94393510bc8d042a9f07382b53e845c0f2/binji/Makefile",
+            "bytes": 533,
+            "sha256": "c7cc94a866553f6cfc1a0b0d69a35dbe3617348336ccf28216ea981bc7e0e7da"
+          },
+          "imports.txt": {
+            "url": "https://raw.githubusercontent.com/binji/llvm-project/5dc09c94393510bc8d042a9f07382b53e845c0f2/binji/imports.txt",
+            "bytes": 808,
+            "sha256": "9df02710e96167ac0be79edf86548d16f81ac75f5f5a19a615bb7a4dedaec9d9"
+          },
+          "LICENSE.llvm.txt": {
+            "url": "https://raw.githubusercontent.com/binji/llvm-project/5dc09c94393510bc8d042a9f07382b53e845c0f2/llvm/LICENSE.TXT",
+            "bytes": 3192,
+            "sha256": "24b67da19b1422a819395738cb83ea34eee3fdce52870b0d1758524ba1615069"
+          }
+        }
+      },
+      "license": {
+        "llvmLicenseAtPinnedRevision": "NCSA",
+        "stbSprintfSelectedLicense": "MIT",
+        "notice": "memfs.c has no per-file license header. Preserve the LLVM release license at this revision and stb_sprintf's MIT notice; do not infer Apache licensing from newer LLVM revisions. Modified for MAX_NODES=8192 and modern WASI API names, retaining abort's trap behavior."
+      },
+      "patch": {
+        "description": "MAX_NODES; WASI header, errno, flag and field renames; preserve abort trap",
+        "originalSha256": "10e73c8a1cad2ed8da0eb9095253b1477b06a218ab90cab4337988816468ba8b",
+        "patchedSha256": "6e1cdbb4cdc223c5eadb71cd3ceccbe6d4256d043febae97ff61d9e0e1ef6f95",
+        "builderSha256": "a7e2bc27013c054698a78e222c5bd623c03d688475491a6784771cca86a5022b"
+      },
+      "toolchain": {
+        "wasiSdkVersion": "33",
+        "sdkVersion": "33.0+m\nwasi-libc: 161b3195fc25\nllvm: 4434dabb6991\nllvm-version: 22.1.0\nconfig: f992bcc08219",
+        "clangVersion": "clang version 22.1.0-wasi-sdk (https://github.com/llvm/llvm-project 4434dabb69916856b824f68a64b029c67175e532)"
+      },
+      "commands": [
+        [
+          "${WASI_SDK_PATH}/bin/clang",
+          "--sysroot=${WASI_SDK_PATH}/share/wasi-sysroot",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Wno-unused-parameter",
+          "-c",
+          "-o",
+          "memfs.o",
+          "memfs.c"
+        ],
+        [
+          "${WASI_SDK_PATH}/bin/clang",
+          "--sysroot=${WASI_SDK_PATH}/share/wasi-sysroot",
+          "-DSTB_SPRINTF_IMPLEMENTATION",
+          "-x",
+          "c",
+          "-O2",
+          "-c",
+          "-o",
+          "stb_sprintf.o",
+          "stb_sprintf.h"
+        ],
+        [
+          "${WASI_SDK_PATH}/bin/wasm-ld",
+          "-L${WASI_SDK_PATH}/share/wasi-sysroot/lib/wasm32-wasi",
+          "--no-entry",
+          "--strip-all",
+          "--export-memory",
+          "--export=init",
+          "--export=fd_allocate",
+          "--export=fd_close",
+          "--export=fd_fdstat_get",
+          "--export=fd_fdstat_set_flags",
+          "--export=fd_filestat_get",
+          "--export=fd_filestat_set_size",
+          "--export=fd_pread",
+          "--export=fd_prestat_dir_name",
+          "--export=fd_prestat_get",
+          "--export=fd_read",
+          "--export=fd_readdir",
+          "--export=fd_seek",
+          "--export=fd_write",
+          "--export=path_create_directory",
+          "--export=path_filestat_get",
+          "--export=path_open",
+          "--export=path_readlink",
+          "--export=path_remove_directory",
+          "--export=path_rename",
+          "--export=path_symlink",
+          "--export=path_unlink_file",
+          "--export=GetPathBuf",
+          "--export=GetPathBufLen",
+          "--export=FindNode",
+          "--export=AddDirectoryNode",
+          "--export=AddFileNode",
+          "--export=GetFileNodeAddress",
+          "--export=GetFileNodeSize",
+          "--allow-undefined",
+          "-o",
+          "memfs.wasm",
+          "memfs.o",
+          "stb_sprintf.o",
+          "-lc"
+        ]
+      ],
+      "outputs": {
+        "memfs.wasm": {
+          "bytes": 38071,
+          "sha256": "5b741e03dd3502bcfd80e4e5055232b5d633604e1461752efed0189f93407dc3"
+        },
+        "memfs.wasm.gz": {
+          "bytes": 16111,
+          "sha256": "a3e43451bc15ae69a7f113009e2ee82ab4db711625c1782cd45d0d3c4d38175a"
+        }
+      }
+    },
+    "files": {
+      "memfs-build-receipt.json": {
+        "bytes": 8344,
+        "sha256": "c4ef4aa971195d15b4dec7abe617bce0292d2b889bfcc99ad67c2da1518c620b"
+      },
+      "LICENSE.memfs-llvm.txt": {
+        "bytes": 3192,
+        "sha256": "24b67da19b1422a819395738cb83ea34eee3fdce52870b0d1758524ba1615069"
+      },
+      "LICENSE.memfs-stb_sprintf.txt": {
+        "bytes": 1133,
+        "sha256": "88420bf461670fb7b9d6c3d3dd4a50f9a653361ee1e0eafc079ba715b1944e72"
+      }
+    }
+  },
+  "componentDerivation": {
+    "format": "wasm-llvm-clang-component-refresh-v1",
+    "compilerRebuilt": false,
+    "description": "Preserves all prior Clang/LLD/clangd artifact bytes and all prior sysroot files; adds the SDK 33 conditional header closure and long-double archive, and replaces MemFS with the separately source-built 8192-node module.",
+    "originalToolchain": {
+      "bytes": 1215,
+      "sha256": "7c1cb6e03672248c226ca4a2425882ea48365f093c199cba90fc60fdcd4f6f33",
+      "metadata": {
+        "producer": {
+          "id": "wasm-llvm/clang-browser",
+          "manifest": "producer/clang-browser/manifest.json",
+          "manifestSha256": "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78"
+        },
+        "version": "llvmorg-22.1.8",
+        "llvmVersion": "22.1.8",
+        "llvmCommit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+        "wasiSdkVersion": "33",
+        "emsdkVersion": "6.0.0",
+        "resourceDir": "/lib/clang/22",
+        "compilerRuntimeLibDir": "lib/clang/22/lib/wasi",
+        "clangd": {
+          "stdinBridge": "emscripten-asyncify",
+          "patch": "patches/clangd-emscripten-stdin.patch",
+          "patchSha256": "e60c4c1299d7e028451e9f46270318c5eb80f8d77ce3af773e2f1ad802b3a022"
+        },
+        "assets": {
+          "clang.zip": "d088e163f4562c0befd12603468b8275ee18f9951e3e3dfa16b853de8e31c4ed",
+          "lld.zip": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039",
+          "sysroot.tar.zip": "3948a257ad5fd3ed6ee26789ef2634ce28169f2e12fd60fc0682f6f30ad4be77",
+          "memfs.zip": "51eefede548b6638565b79ab46aac23c8131682f04cc9946035b614ccd3feda1",
+          "clangd/clangd.js": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27",
+          "clangd/clangd.wasm.gz": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+        }
+      }
+    },
+    "preservedAssets": {
+      "clang.zip": {
+        "bytes": 13131146,
+        "sha256": "d088e163f4562c0befd12603468b8275ee18f9951e3e3dfa16b853de8e31c4ed"
+      },
+      "lld.zip": {
+        "bytes": 6424145,
+        "sha256": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039"
+      },
+      "clangd/clangd.js": {
+        "bytes": 97002,
+        "sha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27"
+      },
+      "clangd/clangd.wasm.gz": {
+        "bytes": 16723115,
+        "sha256": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+      }
+    },
+    "source": {
+      "sdkVersion": "33",
+      "sdkArchive": {
+        "name": "wasi-sdk-33.0-x86_64-linux.tar.gz",
+        "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce"
+      },
+      "producerManifestSha256": "747c4158e33532b3ede5048abb87015a709e432a9adf66d644db75da36784864",
+      "scripts": {
+        "producer/clang-browser/scripts/sysroot-pruning.mjs": {
+          "bytes": 4276,
+          "sha256": "83277d46868f505ddb312d91e47c7b3e4b32a4939d4993f215647d4c52fbb313"
+        },
+        "producer/clang-browser/scripts/gcc-compat.mjs": {
+          "bytes": 24894,
+          "sha256": "69828023d89d6e2ebf6707942a6f4ef9f28f98abdeb00bd5901fd3f4dd0a8830"
+        },
+        "producer/clang-browser/scripts/package-toolchain.mjs": {
+          "bytes": 10536,
+          "sha256": "10b7307e65e53a3a86f8d6dc91f6f5a2ece30ef2ee38672129439334556cdbab"
+        },
+        "producer/clang-browser/scripts/memfs-provenance.mjs": {
+          "bytes": 4483,
+          "sha256": "6677d370675ea65c17a18cbe2a30802dc002fce9103ff8e60e072b432a31af39"
+        }
+      }
+    },
+    "regeneration": {
+      "helper": "artifacts/clang-browser/component-refresh-recipe.mjs",
+      "bytes": 14964,
+      "sha256": "d14d0162a78a0b80c12b760dad5c28bb6d46a8f5c9d92001a9a3698f6108aea1",
+      "helperSource": "import assert from 'node:assert/strict';\nimport {createHash} from 'node:crypto';\nimport {execFile} from 'node:child_process';\nimport fs from 'node:fs/promises';\nimport path from 'node:path';\nimport {promisify} from 'node:util';\nimport {fileURLToPath} from 'node:url';\n\nprocess.umask(0o077);\n// Run from the wasm-llvm checkout. Inputs are explicit; work is disposable and\n// must be outside the producer artifacts. The source-built MemFS input contains\n// memfs.wasm, memfs-build-receipt.json, LICENSE.llvm.txt and LICENSE.stb_sprintf.txt.\nconst root=path.resolve(process.env.WASM_LLVM_REPO_ROOT || process.cwd());\nfor(const key of ['CLANG_REFRESH_WORK_DIR','WASI_SDK_PATH','MEMFS_SOURCE_DIR'])assert(process.env[key],`Set ${key}`);\nconst cache=path.resolve(process.env.CLANG_REFRESH_WORK_DIR);\nconst sdk=path.resolve(process.env.WASI_SDK_PATH);\nconst sdkArchive=process.env.WASI_SDK_ARCHIVE || sdk+'.tar.gz';\nconst memfsSource=path.resolve(process.env.MEMFS_SOURCE_DIR);\nconst artifacts=path.join(root,'artifacts/clang-browser');\nassert(!cache.startsWith(artifacts+path.sep)&&cache!==artifacts,'Work directory must be outside artifacts');\nawait fs.mkdir(cache,{recursive:true,mode:0o700});\nconst baseline=process.env.CLANG_REFRESH_BASELINE_DIR || path.join(cache,'baseline');\nconst work=path.join(cache,'work');\nconst output=path.join(cache,'output');\nconst producerDir=path.join(root,'producer/clang-browser');\nconst scriptDir=path.join(producerDir,'scripts');\nconst execute=promisify(execFile);\nconst run=async(command,args)=>{await execute(command,args,{maxBuffer:8*1024**2});};\nconst hash=bytes=>createHash('sha256').update(bytes).digest('hex');\nconst digest=bytes=>({bytes:bytes.length,sha256:hash(bytes)});\nconst readJson=async file=>JSON.parse(await fs.readFile(file,'utf8'));\nconst writeJson=async(file,data)=>fs.writeFile(file,JSON.stringify(data,null,2)+'\\n');\nconst {ZipReader,Uint8ArrayReader,Uint8ArrayWriter,configure}=await import(path.join(root,'node_modules/@zip.js/zip.js/index.js'));\nconfigure({useWebWorkers:false});\nconst {pruneSysrootHeaders,SYSROOT_C_PROBE,SYSROOT_CPP_PROBE,SYSROOT_CPP_STANDARDS}=await import(path.join(scriptDir,'sysroot-pruning.mjs'));\nconst {GCC_COMPATIBILITY_HEADERS}=await import(path.join(scriptDir,'gcc-compat.mjs'));\nconst {verifyMemfsModule}=await import(path.join(scriptDir,'build-memfs.mjs'));\n\nasync function unzip(file,name){\n const reader=new ZipReader(new Uint8ArrayReader(await fs.readFile(file)));\n try{const entries=(await reader.getEntries()).filter(e=>!e.directory);assert.equal(entries.length,1);assert.equal(entries[0].filename,name);return Buffer.from(await entries[0].getData(new Uint8ArrayWriter()));}finally{await reader.close();}\n}\nasync function inventory(dir){\n const result=new Map();\n async function walk(relative=''){\n  for(const entry of (await fs.readdir(path.join(dir,relative),{withFileTypes:true})).sort((a,b)=>a.name<b.name?-1:1)){\n   const next=relative?relative+'/'+entry.name:entry.name;\n   if(entry.isDirectory())await walk(next);else{assert(entry.isFile(),`Unexpected non-file ${next}`);result.set(next,await fs.readFile(path.join(dir,next)));}\n  }\n }\n await walk();return result;\n}\nasync function writeFile(relative,bytes,dir){const target=path.join(dir,relative);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,bytes);}\nconst manifestBytes=await fs.readFile(path.join(producerDir,'manifest.json'));\nconst manifest=JSON.parse(manifestBytes);\nconst initialSysrootSha='3948a257ad5fd3ed6ee26789ef2634ce28169f2e12fd60fc0682f6f30ad4be77';\ntry{await fs.access(baseline);}catch{\n const original=await readJson(path.join(artifacts,'toolchain.json'));\n assert.equal(original.assets['sysroot.tar.zip'],initialSysrootSha);\n await fs.mkdir(baseline,{recursive:true});\n for(const name of ['toolchain.json',...Object.keys(original.assets)])await writeFile(name,await fs.readFile(path.join(artifacts,name)),baseline);\n}\nconst originalBytes=await fs.readFile(path.join(baseline,'toolchain.json'));\nconst original=JSON.parse(originalBytes);\nassert.equal(original.assets['sysroot.tar.zip'],initialSysrootSha);\nfor(const [name,sha]of Object.entries(original.assets))assert.equal(hash(await fs.readFile(path.join(baseline,name))),sha,name);\nassert.equal(hash(await fs.readFile(sdkArchive)),manifest.toolchains.wasiSdk.archives['x86_64-linux'],'pinned SDK archive');\nconsole.log('Verified original asset snapshot and pinned SDK 33 archive.');\nawait fs.rm(work,{recursive:true,force:true});await fs.mkdir(work,{recursive:true});\nawait fs.rm(output,{recursive:true,force:true});\nconst archiveRoot=path.join(work,'sdk');await fs.mkdir(archiveRoot);\n// Include all target headers so archive hard links can resolve in their original order.\nawait run('tar',['-xzf',sdkArchive,'-C',archiveRoot,'--wildcards',\n 'wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/*',\n 'wasi-sdk-33.0-x86_64-linux/lib/clang/22/include/*',\n 'wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/lib/*/libc-printscan-long-double.a']);\nconst extracted=path.join(archiveRoot,'wasi-sdk-33.0-x86_64-linux');\nconst sourceInclude=path.join(extracted,'share/wasi-sysroot/include');\nconst candidate=path.join(work,'candidate');\nawait fs.mkdir(path.join(candidate,'include'),{recursive:true});\nawait fs.cp(path.join(sourceInclude,'wasm32-wasi'),path.join(candidate,'include/wasm32-wasi'),{\n recursive:true,dereference:true,filter:source=>!['eh','noeh'].includes(path.basename(source))\n});\nawait fs.cp(path.join(sourceInclude,'wasm32-wasi/noeh/c++/v1'),path.join(candidate,'include/c++/v1'),{recursive:true,dereference:true});\nawait fs.cp(path.join(extracted,'lib/clang/22/include'),path.join(candidate,'lib/clang/22/include'),{recursive:true,dereference:true});\nfor(const header of GCC_COMPATIBILITY_HEADERS)await writeFile(header.path,Buffer.from(header.contents),candidate);\nconst originalTar=await unzip(path.join(baseline,'sysroot.tar.zip'),'sysroot.tar');\nconst originalRoot=path.join(work,'original');await fs.mkdir(originalRoot);\nawait fs.writeFile(path.join(work,'original.tar'),originalTar);\nawait run('tar',['-xf',path.join(work,'original.tar'),'-C',originalRoot]);\nconst oldFiles=await inventory(originalRoot);assert.equal(oldFiles.size,900);\n// Use the exact shipped existing header bytes where present, adding only missing SDK files.\nfor(const [name,bytes]of oldFiles)if(name.startsWith('include/')||name.startsWith('lib/clang/22/include/'))await writeFile(name,bytes,candidate);\nconst probeDir=path.join(work,'probes');await fs.mkdir(probeDir);\nconst cProbe=path.join(probeDir,'probe.c'),cppProbe=path.join(probeDir,'probe.cpp');\nawait fs.writeFile(cProbe,SYSROOT_C_PROBE);await fs.writeFile(cppProbe,SYSROOT_CPP_PROBE);\nconst flags=dir=>['--target=wasm32-wasi',`--sysroot=${dir}`,'-resource-dir',path.join(dir,'lib/clang/22'),'-I',path.join(dir,'include')];\nconst cFlags=dir=>[...flags(dir),'-isystem',path.join(dir,'include/wasm32-wasi')];\nconst cppFlags=dir=>[...flags(dir),'-isystem',path.join(dir,'include/c++/v1'),'-isystem',path.join(dir,'include/wasm32-wasi')];\nconst cCompiler=path.join(sdk,'bin/clang'),cppCompiler=path.join(sdk,'bin/clang++');\nawait pruneSysrootHeaders({sysroot:candidate,resourceIncludeDir:path.join(candidate,'lib/clang/22/include'),probeDir,cCompiler,cppCompiler,cFlags:cFlags(candidate),cppFlags:cppFlags(candidate),cProbe,cppProbe,run});\nconst closure=await inventory(candidate);\nconst refreshed=path.join(work,'refreshed');await fs.cp(originalRoot,refreshed,{recursive:true});\nconst added=[];\nfor(const[name,bytes]of closure){\n if(oldFiles.has(name)){assert.deepEqual(bytes,oldFiles.get(name),name);continue;}\n await writeFile(name,bytes,refreshed);\n const archivePath=name.startsWith('include/c++/v1/')?'share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/'+name.slice('include/c++/v1/'.length):name.startsWith('include/wasm32-wasi/')?'share/wasi-sysroot/'+name:name;\n assert.deepEqual(bytes,await fs.readFile(path.join(extracted,archivePath)),`SDK source ${name}`);\n added.push({path:name,...digest(bytes),sourcePath:'wasi-sdk-33.0-x86_64-linux/'+archivePath});\n}\nconst longDoublePath='lib/wasm32-wasi/libc-printscan-long-double.a';\nconst longDouble=await fs.readFile(path.join(extracted,'share/wasi-sysroot',longDoublePath));\nassert(!oldFiles.has(longDoublePath));await writeFile(longDoublePath,longDouble,refreshed);\nadded.push({path:longDoublePath,...digest(longDouble),sourcePath:'wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/'+longDoublePath});\nadded.sort((a,b)=>a.path<b.path?-1:1);\nfor(const standard of SYSROOT_CPP_STANDARDS){\n const object=path.join(probeDir,standard+'.o');await run(cppCompiler,[...cppFlags(refreshed),'-std='+standard,'-c',cppProbe,'-o',object]);\n assert.deepEqual((await fs.readFile(object)).subarray(0,4),Buffer.from([0,97,115,109]));\n}\nconsole.log(`Preserved ${oldFiles.size} existing files; added ${added.length} receipt-bound SDK files. All 8 C++ modes compile.`);\nconst source=path.join(probeDir,'long-double.cpp');\nawait fs.writeFile(source,'#include <cstdio>\\n#include <iostream>\\n#include <cfloat>\\nstatic_assert(sizeof(long double)==16 && LDBL_MANT_DIG==113);\\nint main(){long double x=0; if(sscanf(\"2.5\",\"%Lf\",&x)!=1)return 1; printf(\"format=%.3Lf scan=%.3Lf\\\\n\",1.25L,x); std::cout<<\"iostream=\"<<x<<\"\\\\n\";}\\n');\nconst guest=path.join(probeDir,'long-double.wasm');\nawait run(cppCompiler,[...cppFlags(refreshed),'-std=gnu++26',source,'-lc-printscan-long-double','-o',guest]);\nconst {WASI}=await import('node:wasi');\nconst stdout=await fs.open(path.join(probeDir,'stdout'),'w'),stderr=await fs.open(path.join(probeDir,'stderr'),'w');\ntry{const wasi=new WASI({version:'preview1',args:['long-double'],env:{},preopens:{},returnOnExit:true,stdout:stdout.fd,stderr:stderr.fd});const instance=await WebAssembly.instantiate(await WebAssembly.compile(await fs.readFile(guest)),wasi.getImportObject());assert.equal(wasi.start(instance),0);}finally{await stdout.close();await stderr.close();}\nconst expectedOutput='format=1.250 scan=2.500\\niostream=2.5\\n';\nassert.equal(await fs.readFile(path.join(probeDir,'stdout'),'utf8'),expectedOutput);assert.equal(await fs.readFile(path.join(probeDir,'stderr'),'utf8'),'');\nconst memfsWasm=await fs.readFile(path.join(memfsSource,'memfs.wasm'));\nawait verifyMemfsModule(memfsWasm);\nawait run(process.execPath,[path.join(scriptDir,'package-toolchain.mjs'),\n '--clang-wasm',path.join(baseline,'clang.zip'),'--lld-wasm',path.join(baseline,'lld.zip'),\n '--sysroot',refreshed,'--memfs-wasm',path.join(memfsSource,'memfs.wasm'),'--memfs-receipt',path.join(memfsSource,'memfs-build-receipt.json'),\n '--clangd-js',path.join(baseline,'clangd/clangd.js'),'--clangd-wasm',path.join(baseline,'clangd/clangd.wasm.gz'),\n '--target-dir',output,'--llvm-version',original.llvmVersion,'--llvm-commit',original.llvmCommit,'--wasi-sdk-version',original.wasiSdkVersion,\n '--emsdk-version',original.emsdkVersion,'--resource-dir',original.resourceDir,'--compiler-runtime-lib-dir',original.compilerRuntimeLibDir]);\nconst packaged=await readJson(path.join(output,'toolchain.json'));\nconst preservedNames=['clang.zip','lld.zip','clangd/clangd.js','clangd/clangd.wasm.gz'];\nconst preservedAssets={};\nfor(const name of preservedNames){const bytes=await fs.readFile(path.join(baseline,name));await writeFile(name,bytes,output);preservedAssets[name]=digest(bytes);}\nconst refreshedFiles=await inventory(refreshed);\nfor(const[name,bytes]of oldFiles)assert.deepEqual(refreshedFiles.get(name),bytes,`Preserved ${name}`);\nconst scripts={};\nfor(const name of ['sysroot-pruning.mjs','gcc-compat.mjs','package-toolchain.mjs','memfs-provenance.mjs'])scripts['producer/clang-browser/scripts/'+name]=digest(await fs.readFile(path.join(scriptDir,name)));\nconst toolchain={...original,assets:{...original.assets,'sysroot.tar.zip':packaged.assets['sysroot.tar.zip'],'memfs.zip':packaged.assets['memfs.zip']},memfs:packaged.memfs,\n componentDerivation:{format:'wasm-llvm-clang-component-refresh-v1',compilerRebuilt:false,\n  description:'Preserves all prior Clang/LLD/clangd artifact bytes and all prior sysroot files; adds the SDK 33 conditional header closure and long-double archive, and replaces MemFS with the separately source-built 8192-node module.',\n  originalToolchain:{...digest(originalBytes),metadata:original},preservedAssets,\n  source:{sdkVersion:'33',sdkArchive:{name:path.basename(sdkArchive),sha256:manifest.toolchains.wasiSdk.archives['x86_64-linux']},producerManifestSha256:hash(manifestBytes),scripts},\n  regeneration:{helper:'artifacts/clang-browser/component-refresh-recipe.mjs',...digest(await fs.readFile(fileURLToPath(import.meta.url))),\n   helperSource:await fs.readFile(fileURLToPath(import.meta.url),'utf8'),\n   argv:['node','artifacts/clang-browser/component-refresh-recipe.mjs'],\n   environment:{WASM_LLVM_REPO_ROOT:'<wasm-llvm checkout>',CLANG_REFRESH_WORK_DIR:'<task-owned work directory outside artifacts>',WASI_SDK_PATH:'<extracted pinned WASI SDK 33>',WASI_SDK_ARCHIVE:'<pinned wasi-sdk-33.0-x86_64-linux.tar.gz>',MEMFS_SOURCE_DIR:'<source-built MemFS output with raw module, receipt and licenses>',CLANG_REFRESH_BASELINE_DIR:'<original artifact snapshot from baseRevision>'},\n   baseRevision:'36e14dd531483a0f2b8c63b85713fec2cd4ab93e',baselinePath:'artifacts/clang-browser',publishOption:'--publish'},\n  sysroot:{originalZipSha256:original.assets['sysroot.tar.zip'],originalTar:digest(originalTar),originalFileCount:oldFiles.size,retainedOriginalFileCount:oldFiles.size,\n   addedFiles:added,outputFileCount:refreshedFiles.size,outputZipSha256:packaged.assets['sysroot.tar.zip'],outputTar:digest(await unzip(path.join(output,'sysroot.tar.zip'),'sysroot.tar'))},\n  memfs:{outputZipSha256:packaged.assets['memfs.zip'],buildReceiptSha256:packaged.memfs.files['memfs-build-receipt.json'].sha256},\n  validation:{cppCodeGeneration:SYSROOT_CPP_STANDARDS,longDouble:{standard:'gnu++26',abi:'binary128',expectedOutput},memfs:{maxNodes:8192,usableFileNodes:8188},preservedBytes:true}\n }};\nawait writeJson(path.join(output,'toolchain.json'),toolchain);\nawait fs.copyFile(fileURLToPath(import.meta.url),path.join(output,'component-refresh-recipe.mjs'));\nfor(const name of preservedNames)assert.deepEqual(await fs.readFile(path.join(artifacts,name)),await fs.readFile(path.join(baseline,name)),name);\nconst changed=['sysroot.tar.zip','memfs.zip','toolchain.json','memfs-build-receipt.json','LICENSE.memfs-llvm.txt','LICENSE.memfs-stb_sprintf.txt','component-refresh-recipe.mjs'];\nif(process.argv.includes('--publish'))for(const name of changed)await fs.copyFile(path.join(output,name),path.join(artifacts,name));\nconst report={changed:changed.map(name=>({path:'artifacts/clang-browser/'+name,...(name==='toolchain.json'?{}:{sha256:toolchain.assets[name]??toolchain.memfs.files[name]?.sha256})})),preservedAssets,addedFiles:added.length,outputFiles:refreshedFiles.size,published:process.argv.includes('--publish')};\nawait writeJson(path.join(cache,'report.json'),report);console.log(JSON.stringify(report,null,2));\n",
+      "argv": [
+        "node",
+        "artifacts/clang-browser/component-refresh-recipe.mjs"
+      ],
+      "environment": {
+        "WASM_LLVM_REPO_ROOT": "<wasm-llvm checkout>",
+        "CLANG_REFRESH_WORK_DIR": "<task-owned work directory outside artifacts>",
+        "WASI_SDK_PATH": "<extracted pinned WASI SDK 33>",
+        "WASI_SDK_ARCHIVE": "<pinned wasi-sdk-33.0-x86_64-linux.tar.gz>",
+        "MEMFS_SOURCE_DIR": "<source-built MemFS output with raw module, receipt and licenses>",
+        "CLANG_REFRESH_BASELINE_DIR": "<original artifact snapshot from baseRevision>"
+      },
+      "baseRevision": "36e14dd531483a0f2b8c63b85713fec2cd4ab93e",
+      "baselinePath": "artifacts/clang-browser",
+      "publishOption": "--publish"
+    },
+    "sysroot": {
+      "originalZipSha256": "3948a257ad5fd3ed6ee26789ef2634ce28169f2e12fd60fc0682f6f30ad4be77",
+      "originalTar": {
+        "bytes": 19312640,
+        "sha256": "e122f1acec0642d62d8976101c542aaa5346460df6eae5a3f8efb594ff32f5ae"
+      },
+      "originalFileCount": 900,
+      "retainedOriginalFileCount": 900,
+      "addedFiles": [
+        {
+          "path": "include/c++/v1/__algorithm/ranges_contains_subrange.h",
+          "bytes": 3072,
+          "sha256": "0ba1887fe51c2c1eb7b0fd9da36142c0bdb6b67ff41402296e2ccb554b6dd0d4",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__algorithm/ranges_contains_subrange.h"
+        },
+        {
+          "path": "include/c++/v1/__algorithm/ranges_ends_with.h",
+          "bytes": 6713,
+          "sha256": "23e1b722e80390fa79bee0cd1c8d0f46d0b5ebb480d237f930c14db4753b7e1d",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__algorithm/ranges_ends_with.h"
+        },
+        {
+          "path": "include/c++/v1/__algorithm/ranges_find_last.h",
+          "bytes": 6098,
+          "sha256": "ff9346bd0f1bd8a81c3bd078b27ffa44734e40f469513826b68be1d98d44b5bc",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__algorithm/ranges_find_last.h"
+        },
+        {
+          "path": "include/c++/v1/__algorithm/ranges_fold.h",
+          "bytes": 4975,
+          "sha256": "87ef10131bdb9c2bfabc1ee857a0354db2494c52719b47b133a124d1d033aff6",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__algorithm/ranges_fold.h"
+        },
+        {
+          "path": "include/c++/v1/__algorithm/ranges_starts_with.h",
+          "bytes": 2938,
+          "sha256": "9b360c6372639335b2e5a88ec566f9fcb65ea2e748ead94c9c86152c68cedac7",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__algorithm/ranges_starts_with.h"
+        },
+        {
+          "path": "include/c++/v1/__ostream/print.h",
+          "bytes": 7054,
+          "sha256": "971da176275a3495490538b5aaaba03eed4d3e633d9074a0ccfa67eecbe715a0",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__ostream/print.h"
+        },
+        {
+          "path": "include/c++/v1/__type_traits/is_implicit_lifetime.h",
+          "bytes": 1103,
+          "sha256": "7b57aacc776035beba3cacdf7635c6dbf42e400a7ea2066cff849361b8f489f2",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__type_traits/is_implicit_lifetime.h"
+        },
+        {
+          "path": "include/c++/v1/__type_traits/is_within_lifetime.h",
+          "bytes": 920,
+          "sha256": "8b914f20947cdfb9c49fa6b960d8a0fb123aa72310d722526f0bd1607c06cd30",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__type_traits/is_within_lifetime.h"
+        },
+        {
+          "path": "include/c++/v1/__type_traits/reference_converts_from_temporary.h",
+          "bytes": 1164,
+          "sha256": "d9e28235fb3d39d3b4b741b453dc4d52770a7bdb836891e41dda039df3258283",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__type_traits/reference_converts_from_temporary.h"
+        },
+        {
+          "path": "include/c++/v1/__vector/vector_bool_formatter.h",
+          "bytes": 1547,
+          "sha256": "60aec95ec7168ddf59e89173adeac68e4a48ee77bab567ee8919296b6aa4162a",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/__vector/vector_bool_formatter.h"
+        },
+        {
+          "path": "lib/wasm32-wasi/libc-printscan-long-double.a",
+          "bytes": 111062,
+          "sha256": "33e04007d3547095068391b42189d1ac5398dd04e9da3118dfa644ffea7f4148",
+          "sourcePath": "wasi-sdk-33.0-x86_64-linux/share/wasi-sysroot/lib/wasm32-wasi/libc-printscan-long-double.a"
+        }
+      ],
+      "outputFileCount": 911,
+      "outputZipSha256": "79c77fe54d89eeb9b3f405f601bbffac21c4e57d698d2aea9c96a898442d77ec",
+      "outputTar": {
+        "bytes": 19466240,
+        "sha256": "25b7c305628bc480fa5243de493343edcadb1c57dd66552ea0820340a9dd5492"
+      }
+    },
+    "memfs": {
+      "outputZipSha256": "a8091407232ff90aac632b625a2f932aad07cdbd7eab172638cb99983d4d08b2",
+      "buildReceiptSha256": "c4ef4aa971195d15b4dec7abe617bce0292d2b889bfcc99ad67c2da1518c620b"
+    },
+    "validation": {
+      "cppCodeGeneration": [
+        "gnu++98",
+        "gnu++03",
+        "gnu++11",
+        "gnu++14",
+        "gnu++17",
+        "gnu++20",
+        "gnu++23",
+        "gnu++26"
+      ],
+      "longDouble": {
+        "standard": "gnu++26",
+        "abi": "binary128",
+        "expectedOutput": "format=1.250 scan=2.500\niostream=2.5\n"
+      },
+      "memfs": {
+        "maxNodes": 8192,
+        "usableFileNodes": 8188
+      },
+      "preservedBytes": true
+    }
   }
 }

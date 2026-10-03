@@ -13,6 +13,7 @@ typedef struct wasm_debug_transport wasm_debug_transport_t;
 
 #define WASM_DEBUG_TRANSPORT_ERROR (-1)
 #define WASM_DEBUG_TRANSPORT_CLOSED (-2)
+#define WASM_DEBUG_TRANSPORT_INTERRUPTED (-3)
 #define WASM_DEBUG_TRANSPORT_TIMED_OUT 0
 
 wasm_debug_transport_t *

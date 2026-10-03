@@ -15,6 +15,7 @@ import {
 
 export const WAMR_PATCH_PATHS = Object.freeze([
 	'patches/wamr-browser-debug-transport.patch',
+	'patches/wamr-browser-watchpoints.patch',
 	'patches/wamr-browser-wasm32-wasi-native-return.patch',
 	'patches/wamr-browser-wasi-i64-argument-dispatch.patch'
 ]);
