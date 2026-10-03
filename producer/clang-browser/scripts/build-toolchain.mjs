@@ -709,6 +709,7 @@ const targetLibDir = path.join(stagingSysroot, 'lib', config.targetTriple);
 const retainedTargetLibraries = [
 	'crt1.o',
 	'libc.a',
+	'libc-printscan-long-double.a',
 	'libc++.a',
 	'libc++abi.a',
 	'libm.a',
