@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -106,4 +107,14 @@ test('rejects invalid completion model settings before any build starts', () => 
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /CLANGD_DECISION_FOREST must be ON or OFF/);
 	assert.equal(result.stdout, '');
+});
+
+test('optimizes the WASI compiler modules with the pinned Binaryen instead of the host PATH', () => {
+	const source = readFileSync(script, 'utf8');
+	const linkerFlags = source.match(/const wasiLinkerFlags =\s*'([^']*)'/)?.[1] ?? '';
+	assert.match(linkerFlags, /(^| )--no-wasm-opt( |$)/);
+	assert.match(linkerFlags, /-Wl,--keep-section=target_features/);
+	assert.match(source, /path\.join\(emsdkDir, 'upstream', 'bin', 'wasm-opt'\)/);
+	assert.match(source, /MinSizeRel: config\.llvmMinSizeOpt/);
+	assert.match(source, /'--clang-wasm',\s*clangWasm,\s*'--lld-wasm',\s*lldWasm/);
 });
