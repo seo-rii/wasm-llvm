@@ -251,7 +251,7 @@ index 110c360..ec17f6c 100644
      lean_always_assert(
          false && ("Please build a version of Lean4 with libuv to invoke this.")
 diff --git a/src/util/shell.cpp b/src/util/shell.cpp
-index 29b8598..20ccfce 100644
+index 29b8598..ae5ef4e 100644
 --- a/src/util/shell.cpp
 +++ b/src/util/shell.cpp
 @@ -215,10 +215,16 @@ int run_shell_main(int argc, char* argv[], object_ref const & shell_opts) {
@@ -273,3 +273,17 @@ index 29b8598..20ccfce 100644
  }
  
  extern "C" object* lean_init_search_path();
+@@ -286,9 +292,11 @@ extern "C" LEAN_EXPORT int lean_main(int argc, char ** argv) {
+ #ifdef LEAN_EMSCRIPTEN
+     // When running in command-line mode under Node.js, we make system directories available in the virtual filesystem.
+     // This mode is used to compile 32-bit oleans.
++    // wasm-llvm/lean-browser: in a browser Worker the embedder prepares the virtual file system
++    // (library under /lean/lib/lean, program in MEMFS), so only the Node.js host mounts remain.
+     EM_ASM(
+-        if ((typeof process === "undefined") || (process.release.name !== "node")) {
+-            throw new Error("The Lean command-line driver can only run under Node.js. For the embeddable WASM library, see lean_wasm.cpp.");
++        if ((typeof process === "undefined") || !process.release || (process.release.name !== "node")) {
++            return;
+         }
+ 
+         var lean_path = process.env["LEAN_PATH"];

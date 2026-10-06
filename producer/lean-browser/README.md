@@ -53,6 +53,8 @@ The patch only touches the C++ runtime/shell; Lean sources are unchanged:
   existing "build with libuv" assertions; they are reachable only from `Std.Internal` networking.
 - `lean --run` exit codes unbox `UInt32` correctly on 32-bit targets (upstream used scalar
   unboxing, so successful programs exited with pointer-derived codes).
+- The shell no longer refuses to start outside Node.js; the Node-only host mounts are skipped in a
+  browser Worker, where the embedder prepares the file system.
 - The upstream `-flto` Emscripten flag is dropped so the runtime archives link with separately
   compiled objects.
 
