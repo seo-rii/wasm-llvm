@@ -104,6 +104,45 @@ Useful overrides:
   order can change. Set `ON` to restore the model for quality and size comparisons; forcing
   `--ranking-model=decision_forest` at runtime requires a build with the model enabled.
 
+Speed comparisons for the WASI clang/wasm-ld modules that run on every browser compile:
+
+- `LLVM_HOT_PATH_OPT=none|O2|O3` (default `none`) compiles the sources under `LLVM_HOT_PATH_DIRS`
+  at that level while the rest of the module keeps `LLVM_MINSIZE_OPT`. The CMake compiler launcher
+  `scripts/hot-path-launcher.sh` rewrites the flag per source; LTO keeps the per-function level.
+  `LLVM_HOT_PATH_DIRS` is a comma-separated list of LLVM checkout paths and defaults to the clang
+  frontend (`clang/lib/{Lex,Parse,Sema,AST,Basic}`) and `llvm/lib/Support`.
+- `CLANG_WASM_OPT=default|O2|O3` (default `default`) replaces the build type's level for the pinned
+  Binaryen pass over the linked clang and wasm-ld modules.
+- `--compiler-only` stops after those two modules and writes them with `compiler-build.json` to
+  `WASM_LLVM_TOOLCHAIN_OUT_DIR/compiler`, skipping clangd and packaging.
+
+`scripts/benchmark-compiler.mjs` compares builds against a baseline. It reports raw and gzip sizes of
+both modules and the compile and link latency of C, `<bits/stdc++.h>`, template-heavy and `-O0 -g`
+workloads in Node's V8, links and runs each program to check its output, and with `--enforce` fails
+when any module grows by more than `--max-growth` percent (default 10) in raw or gzip bytes:
+
+```sh
+node producer/clang-browser/scripts/benchmark-compiler.mjs \
+  --sysroot artifacts/clang-browser/sysroot.tar.zip \
+  --baseline artifacts/clang-browser \
+  --candidate os=/path/to/os/out/compiler --runs 5 --enforce
+```
+
+Measured with LLVM 22.1.8 against the shipped `Oz` build (warm median of four runs, Node 24):
+
+| Build | clang raw / gzip | wasm-ld raw / gzip | `<bits/stdc++.h>` `-O2` | templates `-O2` |
+| --- | --- | --- | --- | --- |
+| `Oz` (shipped) | 35.7 MB / 13.1 MB | 16.2 MB / 6.4 MB | 3063 ms | 9561 ms |
+| `Oz` + Binaryen `O3` pass\* | +0.8% / +0.5% | +1.3% / +0.6% | 2996 ms | 9448 ms |
+| `LLVM_HOT_PATH_OPT=O2`, Lex/Basic/Support | +4.0% / +3.4% | +2.8% / +2.2% | 2912 ms | 9354 ms |
+| `LLVM_HOT_PATH_OPT=O2`, default dirs | +35.1% / +24.1% | +2.8% / +2.2% | 2584 ms | 8588 ms |
+| `LLVM_MINSIZE_OPT=Os` | +23.8% / +19.8% | +28.6% / +22.1% | 2515 ms | 7714 ms |
+
+\* An extra pinned `wasm-opt -O3` over the shipped modules, approximating `CLANG_WASM_OPT=O3`.
+
+Within a 10% size budget, the narrow hot path gains about 4% and the Binaryen pass about 2%. The
+frontend-wide hot path and `Os` gain 15 to 20% but grow the modules by 20 to 35%.
+
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
 sizes. Recipe changes require new artifacts, receipts, and browser acceptance before promotion;

@@ -18,6 +18,16 @@ const producerManifest = JSON.parse(
 	await fs.readFile(path.join(producerRoot, 'manifest.json'), 'utf8')
 );
 const llvmBuildType = process.env.LLVM_BUILD_TYPE || 'MinSizeRel';
+// Libraries that dominate parsing, semantic analysis and code generation time when the WASI
+// compiler builds typical single-file programs. Relative to the LLVM checkout.
+const defaultHotPathDirs = [
+	'clang/lib/Lex',
+	'clang/lib/Parse',
+	'clang/lib/Sema',
+	'clang/lib/AST',
+	'clang/lib/Basic',
+	'llvm/lib/Support'
+];
 
 const config = {
 	llvmVersion: process.env.LLVM_VERSION || producerManifest.sources.llvm.version,
@@ -37,6 +47,12 @@ const config = {
 		process.env.YOWASP_WASI_PATCH_COMMIT || producerManifest.sources.wasiHostPatch.commit,
 	llvmBuildType,
 	llvmMinSizeOpt: process.env.LLVM_MINSIZE_OPT || 'Oz',
+	llvmHotPathOpt: process.env.LLVM_HOT_PATH_OPT || 'none',
+	llvmHotPathDirs: (process.env.LLVM_HOT_PATH_DIRS || defaultHotPathDirs.join(','))
+		.split(',')
+		.map((entry) => entry.trim())
+		.filter(Boolean),
+	clangWasmOpt: process.env.CLANG_WASM_OPT || 'default',
 	clangdLto: process.env.CLANGD_LTO || 'ON',
 	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
 	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
@@ -67,10 +83,25 @@ for (const [name, value] of [
 if (!['Os', 'Oz'].includes(config.llvmMinSizeOpt)) {
 	throw new Error('LLVM_MINSIZE_OPT must be Os or Oz');
 }
+if (!['none', 'O2', 'O3'].includes(config.llvmHotPathOpt)) {
+	throw new Error('LLVM_HOT_PATH_OPT must be none, O2 or O3');
+}
+if (config.llvmHotPathOpt !== 'none' && config.llvmBuildType !== 'MinSizeRel') {
+	throw new Error('LLVM_HOT_PATH_OPT requires LLVM_BUILD_TYPE=MinSizeRel');
+}
+for (const dir of config.llvmHotPathDirs) {
+	if (path.isAbsolute(dir) || dir.split('/').includes('..') || dir.includes(':')) {
+		throw new Error(`LLVM_HOT_PATH_DIRS entries must be relative LLVM checkout paths: ${dir}`);
+	}
+}
+if (!['default', 'O2', 'O3'].includes(config.clangWasmOpt)) {
+	throw new Error('CLANG_WASM_OPT must be default, O2 or O3');
+}
 
 const args = process.argv.slice(2).filter((arg) => arg !== '--');
+const compilerOnly = args.includes('--compiler-only');
 if (args.includes('--help') || args.includes('-h')) {
-	console.log(`Usage: pnpm build:clang
+	console.log(`Usage: pnpm build:clang [-- --compiler-only]
 
 Environment:
   LLVM_VERSION=${config.llvmVersion}
@@ -82,6 +113,9 @@ Environment:
   HOST_TRIPLE=${config.hostTriple}
   LLVM_BUILD_TYPE=${config.llvmBuildType}
   LLVM_MINSIZE_OPT=${config.llvmMinSizeOpt}
+  LLVM_HOT_PATH_OPT=${config.llvmHotPathOpt}
+  LLVM_HOT_PATH_DIRS=${config.llvmHotPathDirs.join(',')}
+  CLANG_WASM_OPT=${config.clangWasmOpt}
   CLANGD_LTO=${config.clangdLto}
   CLANGD_ASSERTIONS=${config.clangdAssertions}
   CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
@@ -94,7 +128,9 @@ Environment:
   NINJA_JOBS=<optional ninja parallelism>
 
 This is a large build. It builds raw WASI clang/wasm-ld and an Emscripten pthread clangd,
-then calls package-toolchain.mjs to refresh artifacts/clang-browser.`);
+then calls package-toolchain.mjs to refresh artifacts/clang-browser. --compiler-only stops after
+the WASI clang/wasm-ld modules and writes them with compiler-build.json to
+WASM_LLVM_TOOLCHAIN_OUT_DIR/compiler for benchmark-compiler.mjs.`);
 	process.exit(0);
 }
 
@@ -501,6 +537,19 @@ await run('cmake', [
 ]);
 
 const wasiBuild = path.join(buildDir, 'wasi-raw');
+const hotPathLauncher =
+	config.llvmHotPathOpt === 'none'
+		? ''
+		: [
+				path.join(scriptDir, 'hot-path-launcher.sh'),
+				config.llvmHotPathOpt,
+				config.llvmHotPathDirs.map((dir) => path.join(llvmSource, dir)).join(':')
+			].join(';');
+// An empty launcher clears a previous configuration in a reused build directory.
+const hotPathLauncherArgs = [
+	`-DCMAKE_C_COMPILER_LAUNCHER=${hotPathLauncher}`,
+	`-DCMAKE_CXX_COMPILER_LAUNCHER=${hotPathLauncher}`
+];
 await run('cmake', [
 	'-G',
 	'Ninja',
@@ -515,6 +564,7 @@ await run('cmake', [
 	`-DCMAKE_C_FLAGS=${wasiCompileFlags}`,
 	`-DCMAKE_CXX_FLAGS=${wasiCompileFlags}`,
 	`-DCMAKE_EXE_LINKER_FLAGS=${wasiLinkerFlags}`,
+	...hotPathLauncherArgs,
 	`-DLLVM_HOST_TRIPLE=${config.hostTriple}`,
 	`-DLLVM_DEFAULT_TARGET_TRIPLE=${config.targetTriple}`,
 	'-DLLVM_TARGETS_TO_BUILD=WebAssembly',
@@ -676,18 +726,61 @@ const wasmOptLevel = {
 	Release: 'O3',
 	RelWithDebInfo: 'O2'
 }[config.llvmBuildType];
+const effectiveWasmOptLevel =
+	config.clangWasmOpt === 'default' ? wasmOptLevel : config.clangWasmOpt;
 let clangWasm = path.join(wasiBuild, 'bin', 'llvm');
 let lldWasm = path.join(wasiBuild, 'bin', 'lld');
-if (wasmOptLevel) {
+if (effectiveWasmOptLevel) {
 	const wasmOpt = path.join(emsdkDir, 'upstream', 'bin', 'wasm-opt');
 	const optimizedDir = path.join(buildDir, 'wasm-opt');
 	await fs.mkdir(optimizedDir, { recursive: true });
 	const optimizedClang = path.join(optimizedDir, 'llvm');
 	const optimizedLld = path.join(optimizedDir, 'lld');
-	await run(wasmOpt, [`-${wasmOptLevel}`, clangWasm, '-o', optimizedClang]);
-	await run(wasmOpt, [`-${wasmOptLevel}`, lldWasm, '-o', optimizedLld]);
+	await run(wasmOpt, [`-${effectiveWasmOptLevel}`, clangWasm, '-o', optimizedClang]);
+	await run(wasmOpt, [`-${effectiveWasmOptLevel}`, lldWasm, '-o', optimizedLld]);
 	clangWasm = optimizedClang;
 	lldWasm = optimizedLld;
+}
+
+if (compilerOnly) {
+	const compilerOutDir = path.join(config.outDir, 'compiler');
+	await fs.rm(compilerOutDir, { recursive: true, force: true });
+	await fs.mkdir(compilerOutDir, { recursive: true });
+	const modules = {};
+	for (const [name, source] of [
+		['clang', clangWasm],
+		['lld', lldWasm]
+	]) {
+		const target = path.join(compilerOutDir, name);
+		await fs.copyFile(source, target);
+		const bytes = await fs.readFile(target);
+		modules[name] = {
+			bytes: bytes.length,
+			sha256: createHash('sha256').update(bytes).digest('hex')
+		};
+	}
+	await fs.writeFile(
+		path.join(compilerOutDir, 'compiler-build.json'),
+		`${JSON.stringify(
+			{
+				llvmVersion: config.llvmVersion,
+				llvmCommit: config.llvmCommit,
+				wasiSdkVersion: config.wasiSdkVersion,
+				emsdkVersion: config.emsdkVersion,
+				llvmBuildType: config.llvmBuildType,
+				llvmMinSizeOpt: config.llvmMinSizeOpt,
+				llvmHotPathOpt: config.llvmHotPathOpt,
+				llvmHotPathDirs: config.llvmHotPathOpt === 'none' ? [] : config.llvmHotPathDirs,
+				clangWasmOpt: config.clangWasmOpt,
+				wasmOptLevel: effectiveWasmOptLevel ?? 'none',
+				modules
+			},
+			null,
+			2
+		)}\n`
+	);
+	console.log(`Wrote WASI compiler modules to ${compilerOutDir}`);
+	process.exit(0);
 }
 
 const clangdBuild = path.join(buildDir, 'clangd');
