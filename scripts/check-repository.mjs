@@ -47,6 +47,7 @@ const REQUIRED_PRODUCERS = [
 	'rust-browser',
 	'swift-browser',
 	'tinygo-browser',
+	'v-browser',
 	'wamr-browser'
 ];
 
