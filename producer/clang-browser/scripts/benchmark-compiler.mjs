@@ -151,6 +151,9 @@ export function parseArgs(argv) {
 			const entry = value();
 			const separator = entry.indexOf('=');
 			if (separator <= 0) throw new Error(`--candidate expects <name>=<dir>, got ${entry}`);
+			if (separator === entry.length - 1) {
+				throw new Error(`--candidate requires a directory, got ${entry}`);
+			}
 			options.candidates.push({
 				name: entry.slice(0, separator),
 				dir: entry.slice(separator + 1)
@@ -164,6 +167,11 @@ export function parseArgs(argv) {
 	if (options.help) return options;
 	if (!options.sysroot || !options.baseline || options.candidates.length === 0) {
 		throw new Error('--sysroot, --baseline and at least one --candidate are required');
+	}
+	const names = new Set(['baseline']);
+	for (const { name } of options.candidates) {
+		if (names.has(name)) throw new Error(`Duplicate benchmark name: ${name}`);
+		names.add(name);
 	}
 	if (!Number.isInteger(options.runs) || options.runs < 2) {
 		throw new Error('--runs must be an integer of at least 2');
@@ -347,8 +355,8 @@ async function main() {
 				variant.compiled[name] = await WebAssembly.compile(variant.modules[name].bytes);
 				variant.compileMs[name] = performance.now() - start;
 			}
-			variant.work = path.join(scratch, variant.name.replaceAll(/[^A-Za-z0-9_.-]/g, '_'));
-			await fs.mkdir(variant.work, { recursive: true });
+			// Report labels must never select filesystem paths or make variants share their outputs.
+			variant.work = await fs.mkdtemp(path.join(scratch, 'variant-'));
 			for (const [name, source] of Object.entries(SOURCES)) {
 				await fs.writeFile(path.join(variant.work, name), source);
 			}

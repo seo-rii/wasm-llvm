@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
 	median,
@@ -59,4 +64,40 @@ test('parses candidates and rejects incomplete benchmark arguments', () => {
 test('reports the middle value for odd and even run counts', () => {
 	assert.equal(median([5, 1, 3]), 3);
 	assert.equal(median([4, 1, 3, 2]), 2.5);
+});
+
+test('rejects duplicate report labels and candidates without a directory', () => {
+	const args = ['--sysroot', 's', '--baseline', 'b'];
+	assert.throws(() => parseArgs([...args, '--candidate', 'x=']), /directory/);
+	assert.throws(() => parseArgs([...args, '--candidate', 'baseline=x']), /duplicate.*baseline/i);
+	assert.throws(
+		() => parseArgs([...args, '--candidate', 'x=a', '--candidate', 'x=b']),
+		/duplicate.*x/i
+	);
+});
+
+test('keeps candidate workspaces inside scratch even when a report label is ..', async () => {
+	const temporary = await mkdtemp(path.join(os.tmpdir(), 'clang-benchmark-workspace-test-'));
+	try {
+		const input = path.join(temporary, 'input');
+		await mkdir(input);
+		// These compile successfully but lack WASI exports, stopping the benchmark after workspace
+		// setup. The scratch directory must be cleaned without leaving fixtures in its parent.
+		const emptyModule = Uint8Array.of(0, 97, 115, 109, 1, 0, 0, 0);
+		await writeFile(path.join(input, 'clang'), emptyModule);
+		await writeFile(path.join(input, 'lld'), emptyModule);
+		const script = fileURLToPath(
+			new URL('../producer/clang-browser/scripts/benchmark-compiler.mjs', import.meta.url)
+		);
+		const result = spawnSync(
+			process.execPath,
+			[script, '--sysroot', input, '--baseline', input, '--candidate', `..=${input}`, '--runs', '2'],
+			{ env: { ...process.env, TMPDIR: temporary }, encoding: 'utf8' }
+		);
+		assert.equal(result.status, 1, result.stderr);
+		assert.match(result.stderr, /instance\.exports\.memory/);
+		assert.deepEqual(await readdir(temporary), ['input']);
+	} finally {
+		await rm(temporary, { recursive: true, force: true });
+	}
 });
