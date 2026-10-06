@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/ecl-browser",
+  "runtimeHost": "wasm32-emscripten",
+  "language": "Common Lisp",
+  "sources": {
+    "ecl": {
+      "repository": "https://gitlab.com/embeddable-common-lisp/ecl.git",
+      "version": "26.5.5",
+      "tag": "26.5.5",
+      "commit": "74780fa2cd2874889793a657d55b557488d3e346",
+      "license": "LGPL-2.1-or-later"
+    },
+    "emsdk": {
+      "repository": "https://github.com/emscripten-core/emsdk.git",
+      "version": "6.0.0",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+    }
+  },
+  "patches": [],
+  "overlays": [
+    {
+      "path": "src/ecl-browser-main.c",
+      "sha256": "cf64df9aee7f49c5f6e3009a9dd358ee854b3308087565f803a380ce425a4cfc"
+    }
+  ],
+  "host": {
+    "configure": [
+      "--disable-shared"
+    ]
+  },
+  "cross": {
+    "configure": [
+      "--host=wasm32-unknown-emscripten",
+      "--build=x86_64-pc-linux-gnu",
+      "--with-cross-config=src/util/wasm32-unknown-emscripten.cross_config",
+      "--disable-shared",
+      "--with-tcp=no",
+      "--with-cmp=no"
+    ],
+    "cflags": [
+      "-fwasm-exceptions",
+      "-sSUPPORT_LONGJMP=wasm"
+    ],
+    "ldflags": [
+      "-fwasm-exceptions",
+      "-sSUPPORT_LONGJMP=wasm",
+      "--profiling-funcs"
+    ]
+  },
+  "link": {
+    "objects": [
+      "libecl-help.a",
+      "libecl-cdb.a",
+      "libecl.a",
+      "-leclgc",
+      "-leclgmp",
+      "-lm"
+    ],
+    "flags": [
+      "-O2",
+      "-fwasm-exceptions",
+      "-sSUPPORT_LONGJMP=wasm",
+      "-sSTACK_SIZE=16777216",
+      "-sBINARYEN_EXTRA_PASSES=--spill-pointers",
+      "--profiling-funcs",
+      "-sMODULARIZE=1",
+      "-sEXPORT_ES6=1",
+      "-sENVIRONMENT=web,worker,node",
+      "-sEXPORTED_RUNTIME_METHODS=FS,callMain",
+      "-sINVOKE_RUN=0",
+      "-sEXIT_RUNTIME=1",
+      "-sIMPORTED_MEMORY=1",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sINITIAL_MEMORY=67108864",
+      "-sMAXIMUM_MEMORY=2147483648"
+    ]
+  },
+  "outputs": [
+    "ecl.mjs",
+    "ecl.wasm",
+    "producer-receipt.json"
+  ]
+}

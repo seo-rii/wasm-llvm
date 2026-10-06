@@ -18,6 +18,7 @@ hosting and loaded by URL from the consuming application.
 | Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
 | COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
 | Crystal        | Crystal 1.21.0, verified native bootstrap, markd 0.5.0                                          | WASI object and compiler-host portability receipts; browser host blocked | [`producer/crystal-browser`](producer/crystal-browser/README.md)             |
+| ECL (Common Lisp) | ECL 26.5.5, emsdk 6.0.0 | Emscripten ES module runtime (`ecl.mjs`/gzip `ecl.wasm.gz`), receipt, Node and Chromium stdin/condition acceptance | [`producer/ecl-browser`](producer/ecl-browser/README.md) |
 | Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
 | LFortran       | LFortran source snapshot, LLVM 22.1.8 Emscripten package, emsdk 4.0.9                              | LLVM-enabled compiler producer and real Fortran input validation     | [`producer/lfortran-browser`](producer/lfortran-browser/README.md)             |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
@@ -70,6 +71,13 @@ pnpm package:lldb -- --help
 pnpm prepare:wamr -- --source /path/to/wasm-micro-runtime
 pnpm build:wamr -- --source /path/to/wasm-micro-runtime --build /path/to/build --emsdk /path/to/emsdk
 pnpm package:wamr -- --build /path/to/build --output /path/to/wamr-artifacts
+
+# ECL (Common Lisp) runtime
+pnpm prepare:ecl
+pnpm build:ecl
+pnpm smoke:ecl && pnpm smoke:ecl:browser
+pnpm package:ecl
+pnpm verify:ecl-artifacts
 
 # GnuCOBOL
 WASI_SDK_PATH=/opt/wasi-sdk pnpm build:cobol
