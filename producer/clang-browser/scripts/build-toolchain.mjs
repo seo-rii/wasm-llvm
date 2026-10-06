@@ -371,8 +371,11 @@ async function patchClangdForEmscriptenStdin() {
 const ninjaArgs = config.ninjaJobs ? ['-j', config.ninjaJobs] : [];
 const wasiCompileFlags =
 	'-DBYTE_ORDER=1234 -DLITTLE_ENDIAN=1234 -DBIG_ENDIAN=4321 -D_WASI_EMULATED_MMAN -flto';
+// --no-wasm-opt keeps the WASI SDK driver from running whichever Binaryen is on PATH at link time;
+// the pinned Emscripten SDK's wasm-opt applies the same optimization after the build. Like the
+// driver does for its own wasm-opt run, keep target_features so Binaryen enables the same features.
 const wasiLinkerFlags =
-	'-lwasi-emulated-mman -Wl,--max-memory=4294967296 -Wl,-z,stack-size=8388608,--stack-first -flto -Wl,--strip-all';
+	'-lwasi-emulated-mman -Wl,--max-memory=4294967296 -Wl,-z,stack-size=8388608,--stack-first -flto -Wl,--strip-all -Wl,--keep-section=target_features --no-wasm-opt';
 const downloadDir = path.join(config.workDir, 'downloads');
 const sourceDir = path.join(config.workDir, 'src');
 const buildDir = path.join(config.workDir, 'build');
@@ -667,6 +670,26 @@ if (emsdkHead !== config.emsdkCommit) {
 await run(path.join(emsdkDir, 'emsdk'), ['install', config.emsdkVersion]);
 await run(path.join(emsdkDir, 'emsdk'), ['activate', config.emsdkVersion]);
 
+// The level the WASI SDK driver derives from the configuration's link-time -O flag.
+const wasmOptLevel = {
+	MinSizeRel: config.llvmMinSizeOpt,
+	Release: 'O3',
+	RelWithDebInfo: 'O2'
+}[config.llvmBuildType];
+let clangWasm = path.join(wasiBuild, 'bin', 'llvm');
+let lldWasm = path.join(wasiBuild, 'bin', 'lld');
+if (wasmOptLevel) {
+	const wasmOpt = path.join(emsdkDir, 'upstream', 'bin', 'wasm-opt');
+	const optimizedDir = path.join(buildDir, 'wasm-opt');
+	await fs.mkdir(optimizedDir, { recursive: true });
+	const optimizedClang = path.join(optimizedDir, 'llvm');
+	const optimizedLld = path.join(optimizedDir, 'lld');
+	await run(wasmOpt, [`-${wasmOptLevel}`, clangWasm, '-o', optimizedClang]);
+	await run(wasmOpt, [`-${wasmOptLevel}`, lldWasm, '-o', optimizedLld]);
+	clangWasm = optimizedClang;
+	lldWasm = optimizedLld;
+}
+
 const clangdBuild = path.join(buildDir, 'clangd');
 // Keep the complete selected C/C++ headers for clangd, independently of the
 // dependency-pruned compiler sysroot packaged below.
@@ -828,9 +851,9 @@ await pruneSysrootHeaders({
 await run('node', [
 	path.join(scriptDir, 'package-toolchain.mjs'),
 	'--clang-wasm',
-	path.join(wasiBuild, 'bin', 'llvm'),
+	clangWasm,
 	'--lld-wasm',
-	path.join(wasiBuild, 'bin', 'lld'),
+	lldWasm,
 	'--sysroot',
 	stagingSysroot,
 	'--memfs-wasm',

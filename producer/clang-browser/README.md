@@ -29,6 +29,12 @@ MemFS from the small source files pinned by immutable revision, size and SHA-256
 The node table holds 8192 entries instead of 1024, leaving room for Objective-C headers and workspace
 files after mounting the sysroot. A clean output directory is sufficient.
 
+The WASI SDK clang driver normally runs any `wasm-opt` found on `PATH` after linking, so a host
+Binaryen package would silently change the clang and wasm-ld bytes. The producer links them with
+`--no-wasm-opt`, keeps the `target_features` section as the driver does for its own pass, and then runs `wasm-opt` from the pinned Emscripten SDK at the level the driver
+would have used (`LLVM_MINSIZE_OPT` for `MinSizeRel`, `O3` for `Release`, `O2` for
+`RelWithDebInfo`, none for `Debug`).
+
 Before linking clangd, the producer prepares a separate `clangd-include` directory containing
 shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
 copying, so excluding other WASI targets cannot leave dangling links. The complete selected C/C++
