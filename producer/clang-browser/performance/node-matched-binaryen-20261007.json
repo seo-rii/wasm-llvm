@@ -1,0 +1,616 @@
+{
+	"format": "wasm-llvm-compiler-performance-reference-v1",
+	"originalReport": {
+		"path": "/home/seorii/.cache/wasm-llvm-perf-20261006/node-matched-binaryen-comparison.json",
+		"bytes": 106001,
+		"sha256": "d25cf6b666d0a861f11ed9c14cd79a3b3fc96bb629f95cf358df6353b274c5ed"
+	},
+	"provenanceSummaryNote": "Full source receipt files are identified by their original file SHA-256. Summaries omit unrelated memfs, clangd and previous component-refresh details; measurement samples and post-processing commands are preserved.",
+	"generatedAt": "2026-10-06T15:17:38.894Z",
+	"measurementScope": "Node WASI reference: local bytes, no download, no persistent cache, fresh instance per invocation. Browser acceptance is separate.",
+	"gzipLevel": 9,
+	"runs": 5,
+	"maxGrowthPercent": 10,
+	"node": "v24.1.0",
+	"v8": "13.6.233.10-node.16",
+	"platform": "linux",
+	"arch": "x64",
+	"sourceSha256": {
+		"c.c": "6ee1d7e16b65446410c686d5309c36d01451615c8d86c3c1c1a9e4ade94499e8",
+		"stdcpp.cpp": "412f45d2623c8c1aafe2a6dc594ba132fe233c02aa690126c519a936efe9b871",
+		"templates.cpp": "ddf80898b2142ac33bc84992e9c7c366f45ff32a9d2b21f9bd6ab128782ee1a7"
+	},
+	"workloads": [
+		{
+			"name": "c -O2",
+			"tool": "clang",
+			"source": "c.c",
+			"args": ["-O2", "-std=gnu17", "-x", "c"]
+		},
+		{
+			"name": "bits/stdc++ -O2",
+			"tool": "clang",
+			"source": "stdcpp.cpp",
+			"args": ["-O2", "-std=gnu++17", "-x", "c++"]
+		},
+		{
+			"name": "templates -O2",
+			"tool": "clang",
+			"source": "templates.cpp",
+			"args": ["-O2", "-std=gnu++20", "-x", "c++"]
+		},
+		{
+			"name": "bits/stdc++ -O0 -g",
+			"tool": "clang",
+			"source": "stdcpp.cpp",
+			"args": [
+				"-O0",
+				"-std=gnu++17",
+				"-x",
+				"c++",
+				"-debug-info-kind=standalone",
+				"-dwarf-version=4",
+				"-debugger-tuning=gdb"
+			]
+		},
+		{
+			"name": "link bits/stdc++",
+			"tool": "lld",
+			"link": "stdcpp.cpp"
+		}
+	],
+	"expectedOutput": {
+		"c.c": "0 63 4\n",
+		"stdcpp.cpp": "1000 1000 1008 504678\n",
+		"templates.cpp": "12.5x6 12   1\n"
+	},
+	"variants": [
+		{
+			"name": "baseline",
+			"dir": "/home/seorii/.cache/wasm-llvm-perf-20261006/raw-oz",
+			"provenance": [
+				{
+					"file": "/home/seorii/.cache/wasm-llvm-perf-20261006/raw-oz/benchmark-provenance.json",
+					"sha256": "cf11fea19e58fafcfbc49f0a6261f08f1784e223d8de1d2c59a72d0ab24d3250",
+					"receiptSummary": {
+						"sourceBuild": {
+							"producer": {
+								"id": "wasm-llvm/clang-browser",
+								"manifest": "producer/clang-browser/manifest.json",
+								"manifestSha256": "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78"
+							},
+							"version": "llvmorg-22.1.8",
+							"llvmVersion": "22.1.8",
+							"llvmCommit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+							"wasiSdkVersion": "33",
+							"emsdkVersion": "6.0.0",
+							"resourceDir": "/lib/clang/22",
+							"compilerRuntimeLibDir": "lib/clang/22/lib/wasi",
+							"assets": {
+								"clang.zip": "d088e163f4562c0befd12603468b8275ee18f9951e3e3dfa16b853de8e31c4ed",
+								"lld.zip": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039",
+								"sysroot.tar.zip": "79c77fe54d89eeb9b3f405f601bbffac21c4e57d698d2aea9c96a898442d77ec",
+								"memfs.zip": "a8091407232ff90aac632b625a2f932aad07cdbd7eab172638cb99983d4d08b2",
+								"clangd/clangd.js": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27",
+								"clangd/clangd.wasm.gz": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+							}
+						},
+						"scope": "Execution WASI Clang/LLD only; user-program optimization and clangd unchanged",
+						"postprocessing": {
+							"binaryen": {
+								"path": "/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+								"version": "wasm-opt version 130 (version_130-4-gb9c72894f)",
+								"sha256": "edaca574b1d17eee1a03c902d0b827bd3fb30e131c249b0c7f5612b16bf55275",
+								"emsdkVersion": "6.0.0"
+							},
+							"steps": [
+								{
+									"command": [
+										"/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+										"-Oz",
+										"/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/llvm",
+										"-o",
+										"/home/seorii/.cache/wasm-llvm-perf-20261006/raw-oz/clang"
+									],
+									"input": {
+										"path": "/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/llvm",
+										"bytes": 35658969,
+										"sha256": "d92ef06cdd3fea88acf384db15a6f2a344790c05bcba8e9f13f5b75b36ad4a99"
+									},
+									"output": {
+										"path": "/home/seorii/.cache/wasm-llvm-perf-20261006/raw-oz/clang",
+										"bytes": 35543064,
+										"sha256": "5d67fd170ac3ffa19d5c4ee1670fb2ec22e252b2d6deff51bf032f295a332a37"
+									}
+								},
+								{
+									"command": [
+										"/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+										"-Oz",
+										"/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/lld",
+										"-o",
+										"/home/seorii/.cache/wasm-llvm-perf-20261006/raw-oz/lld"
+									],
+									"input": {
+										"path": "/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/lld",
+										"bytes": 16171013,
+										"sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+									},
+									"output": {
+										"path": "/home/seorii/.cache/wasm-llvm-perf-20261006/raw-oz/lld",
+										"bytes": 16128402,
+										"sha256": "5c66b708a31010aebe81025dc446f47e252b0c59fd47f108271fa96bf75bf55f"
+									}
+								}
+							]
+						},
+						"modules": {
+							"clang": {
+								"bytes": 35543064,
+								"sha256": "5d67fd170ac3ffa19d5c4ee1670fb2ec22e252b2d6deff51bf032f295a332a37"
+							},
+							"lld": {
+								"bytes": 16128402,
+								"sha256": "5c66b708a31010aebe81025dc446f47e252b0c59fd47f108271fa96bf75bf55f"
+							}
+						},
+						"shippedComparison": {
+							"clang": {
+								"rawOz": {
+									"bytes": 35543064,
+									"sha256": "5d67fd170ac3ffa19d5c4ee1670fb2ec22e252b2d6deff51bf032f295a332a37"
+								},
+								"shipped": {
+									"bytes": 35658969,
+									"sha256": "d92ef06cdd3fea88acf384db15a6f2a344790c05bcba8e9f13f5b75b36ad4a99"
+								},
+								"matchesShipped": false,
+								"matchesPreviouslyCachedPinnedOz": false
+							},
+							"lld": {
+								"rawOz": {
+									"bytes": 16128402,
+									"sha256": "5c66b708a31010aebe81025dc446f47e252b0c59fd47f108271fa96bf75bf55f"
+								},
+								"shipped": {
+									"bytes": 16171013,
+									"sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+								},
+								"matchesShipped": false,
+								"matchesPreviouslyCachedPinnedOz": false
+							}
+						},
+						"comparisonNote": "Compare direct raw-O3 against this direct raw-Oz control for the Binaryen-only effect. Compare both against shipped artifacts separately."
+					}
+				}
+			],
+			"sizes": {
+				"clang": {
+					"raw": 35543064,
+					"gzip": 13121364,
+					"sha256": "5d67fd170ac3ffa19d5c4ee1670fb2ec22e252b2d6deff51bf032f295a332a37"
+				},
+				"lld": {
+					"raw": 16128402,
+					"gzip": 6415190,
+					"sha256": "5c66b708a31010aebe81025dc446f47e252b0c59fd47f108271fa96bf75bf55f"
+				}
+			},
+			"moduleCompileMs": {
+				"clang": 118,
+				"lld": 63
+			},
+			"workloads": {
+				"c -O2": {
+					"firstMs": 606,
+					"warmMedianMs": 64,
+					"firstPreparationMs": 22,
+					"warmPreparationMedianMs": 24,
+					"firstInstantiateAndRunMs": 627,
+					"warmInstantiateAndRunMedianMs": 88,
+					"samplesMs": [
+						605.9303990000008, 82.16679499999736, 49.76419900001201, 61.15311400000064,
+						67.41981999998097
+					],
+					"preparationSamplesMs": [
+						21.55384799999956, 26.671447000000626, 21.92770999998902,
+						27.476952000011806, 20.546036000014283
+					],
+					"instantiateAndRunSamplesMs": [
+						627.4842470000003, 108.83824199999799, 71.69190900000103, 88.63006600001245,
+						87.96585599999526
+					]
+				},
+				"bits/stdc++ -O2": {
+					"firstMs": 5095,
+					"warmMedianMs": 3658,
+					"firstPreparationMs": 29,
+					"warmPreparationMedianMs": 21,
+					"firstInstantiateAndRunMs": 5124,
+					"warmInstantiateAndRunMedianMs": 3679,
+					"samplesMs": [
+						5094.804046000001, 3401.6659999999974, 3914.545146000004, 3938.731071000002,
+						2970.2104509999917
+					],
+					"preparationSamplesMs": [
+						28.977240999999594, 21.043249000002106, 20.74116900000081,
+						24.981713000001037, 19.04588099999819
+					],
+					"instantiateAndRunSamplesMs": [
+						5123.781287000001, 3422.7092489999995, 3935.286315000005, 3963.712784000003,
+						2989.25633199999
+					]
+				},
+				"templates -O2": {
+					"firstMs": 11210,
+					"warmMedianMs": 10794,
+					"firstPreparationMs": 21,
+					"warmPreparationMedianMs": 18,
+					"firstInstantiateAndRunMs": 11231,
+					"warmInstantiateAndRunMedianMs": 10816,
+					"samplesMs": [
+						11209.946061, 10602.608625, 11179.375308999995, 10985.880915000002,
+						9947.009122999996
+					],
+					"preparationSamplesMs": [
+						20.610806999999113, 19.665756000002148, 16.794349999996484,
+						23.354561999993166, 16.728531000000658
+					],
+					"instantiateAndRunSamplesMs": [
+						11230.556868, 10622.274381000003, 11196.169658999992, 11009.235476999995,
+						9963.737653999997
+					]
+				},
+				"bits/stdc++ -O0 -g": {
+					"firstMs": 3501,
+					"warmMedianMs": 3523,
+					"firstPreparationMs": 18,
+					"warmPreparationMedianMs": 16,
+					"firstInstantiateAndRunMs": 3518,
+					"warmInstantiateAndRunMedianMs": 3540,
+					"samplesMs": [
+						3500.782063999999, 3805.362699999998, 4071.2060340000025,
+						3239.8167970000068, 3135.167486999999
+					],
+					"preparationSamplesMs": [
+						17.63606300000174, 16.337585000001127, 15.522224999993341,
+						18.520168999995803, 16.120954000012716
+					],
+					"instantiateAndRunSamplesMs": [
+						3518.418127000001, 3821.700284999999, 4086.728258999996, 3258.3369660000026,
+						3151.2884410000115
+					]
+				},
+				"link bits/stdc++": {
+					"firstMs": 219,
+					"warmMedianMs": 150,
+					"firstPreparationMs": 14,
+					"warmPreparationMedianMs": 10,
+					"firstInstantiateAndRunMs": 233,
+					"warmInstantiateAndRunMedianMs": 159,
+					"samplesMs": [
+						219.1259859999991, 224.34754299999622, 152.6675680000044, 146.9458239999949,
+						144.4186650000047
+					],
+					"preparationSamplesMs": [
+						13.678291000000172, 16.640304999993532, 8.367543999993359,
+						9.838724000001093, 9.242213999998057
+					],
+					"instantiateAndRunSamplesMs": [
+						232.80427699999927, 240.98784799998975, 161.03511199999775,
+						156.784547999996, 153.66087900000275
+					]
+				}
+			},
+			"failures": []
+		},
+		{
+			"name": "raw-o3",
+			"dir": "/home/seorii/.cache/wasm-llvm-perf-20261006/baseline-o3",
+			"provenance": [
+				{
+					"file": "/home/seorii/.cache/wasm-llvm-perf-20261006/baseline-o3/benchmark-provenance.json",
+					"sha256": "79b32f4383ba4c6cc3914b613603b6ca758c79227c5c598b746b3f17d77bddf0",
+					"receiptSummary": {
+						"sourceBuild": {
+							"producer": {
+								"id": "wasm-llvm/clang-browser",
+								"manifest": "producer/clang-browser/manifest.json",
+								"manifestSha256": "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78"
+							},
+							"version": "llvmorg-22.1.8",
+							"llvmVersion": "22.1.8",
+							"llvmCommit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+							"wasiSdkVersion": "33",
+							"emsdkVersion": "6.0.0",
+							"resourceDir": "/lib/clang/22",
+							"compilerRuntimeLibDir": "lib/clang/22/lib/wasi",
+							"assets": {
+								"clang.zip": "d088e163f4562c0befd12603468b8275ee18f9951e3e3dfa16b853de8e31c4ed",
+								"lld.zip": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039",
+								"sysroot.tar.zip": "79c77fe54d89eeb9b3f405f601bbffac21c4e57d698d2aea9c96a898442d77ec",
+								"memfs.zip": "a8091407232ff90aac632b625a2f932aad07cdbd7eab172638cb99983d4d08b2",
+								"clangd/clangd.js": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27",
+								"clangd/clangd.wasm.gz": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+							}
+						},
+						"scope": "Execution WASI Clang/LLD only; user-program optimization and clangd unchanged",
+						"postprocessing": {
+							"binaryen": {
+								"path": "/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+								"version": "wasm-opt version 130 (version_130-4-gb9c72894f)",
+								"sha256": "edaca574b1d17eee1a03c902d0b827bd3fb30e131c249b0c7f5612b16bf55275",
+								"emsdkVersion": "6.0.0"
+							},
+							"steps": [
+								{
+									"command": [
+										"/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+										"-O3",
+										"/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/llvm",
+										"-o",
+										"/home/seorii/.cache/wasm-llvm-perf-20261006/baseline-o3/clang"
+									],
+									"input": {
+										"path": "/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/llvm",
+										"bytes": 35658969,
+										"sha256": "d92ef06cdd3fea88acf384db15a6f2a344790c05bcba8e9f13f5b75b36ad4a99"
+									},
+									"output": {
+										"path": "/home/seorii/.cache/wasm-llvm-perf-20261006/baseline-o3/clang",
+										"bytes": 35926269,
+										"sha256": "b74b60a03126cdd7f5130e98481967bf04368dc480782618a70d497f631e0ace"
+									}
+								},
+								{
+									"command": [
+										"/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+										"-O3",
+										"/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/lld",
+										"-o",
+										"/home/seorii/.cache/wasm-llvm-perf-20261006/baseline-o3/lld"
+									],
+									"input": {
+										"path": "/home/seorii/.cache/wasm-llvm-clang-slim/20260927-182443-feed518-c6ef/work/build/wasi-raw/bin/lld",
+										"bytes": 16171013,
+										"sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+									},
+									"output": {
+										"path": "/home/seorii/.cache/wasm-llvm-perf-20261006/baseline-o3/lld",
+										"bytes": 16373430,
+										"sha256": "488b9cf2b816f3051752c48c3e33a1e97d951e3d99adfa4b30496130f474733f"
+									}
+								}
+							]
+						},
+						"modules": {
+							"clang": {
+								"bytes": 35926269,
+								"sha256": "b74b60a03126cdd7f5130e98481967bf04368dc480782618a70d497f631e0ace"
+							},
+							"lld": {
+								"bytes": 16373430,
+								"sha256": "488b9cf2b816f3051752c48c3e33a1e97d951e3d99adfa4b30496130f474733f"
+							}
+						}
+					}
+				}
+			],
+			"sizes": {
+				"clang": {
+					"raw": 35926269,
+					"gzip": 13184307,
+					"sha256": "b74b60a03126cdd7f5130e98481967bf04368dc480782618a70d497f631e0ace"
+				},
+				"lld": {
+					"raw": 16373430,
+					"gzip": 6454222,
+					"sha256": "488b9cf2b816f3051752c48c3e33a1e97d951e3d99adfa4b30496130f474733f"
+				}
+			},
+			"moduleCompileMs": {
+				"clang": 142,
+				"lld": 60
+			},
+			"workloads": {
+				"c -O2": {
+					"firstMs": 594,
+					"warmMedianMs": 43,
+					"firstPreparationMs": 20,
+					"warmPreparationMedianMs": 21,
+					"firstInstantiateAndRunMs": 615,
+					"warmInstantiateAndRunMedianMs": 63,
+					"samplesMs": [
+						594.2358160000003, 44.18035399999644, 43.01245500000368, 42.40426800001296,
+						40.996157000015955
+					],
+					"preparationSamplesMs": [
+						20.45694299999741, 25.54102899999998, 20.22516099999484, 21.28386599998339,
+						21.688341999979457
+					],
+					"instantiateAndRunSamplesMs": [
+						614.6927589999977, 69.72138299999642, 63.237615999998525, 63.68813399999635,
+						62.68449899999541
+					]
+				},
+				"bits/stdc++ -O2": {
+					"firstMs": 4374,
+					"warmMedianMs": 3004,
+					"firstPreparationMs": 21,
+					"warmPreparationMedianMs": 19,
+					"firstInstantiateAndRunMs": 4395,
+					"warmInstantiateAndRunMedianMs": 3024,
+					"samplesMs": [
+						4373.649174000002, 3283.0090490000002, 3063.969398999994, 2943.862055000005,
+						2916.3299140000017
+					],
+					"preparationSamplesMs": [
+						21.32406799999808, 18.21253400000569, 20.319870999999694,
+						19.020771999988938, 19.144346999994013
+					],
+					"instantiateAndRunSamplesMs": [
+						4394.973242, 3301.221583000006, 3084.289269999994, 2962.882826999994,
+						2935.4742609999957
+					]
+				},
+				"templates -O2": {
+					"firstMs": 13005,
+					"warmMedianMs": 10479,
+					"firstPreparationMs": 22,
+					"warmPreparationMedianMs": 17,
+					"firstInstantiateAndRunMs": 13027,
+					"warmInstantiateAndRunMedianMs": 10495,
+					"samplesMs": [
+						13005.202225999998, 12378.13014899999, 11652.484383000003,
+						9224.937107999984, 9305.530753
+					],
+					"preparationSamplesMs": [
+						21.719301000000996, 20.689463000002434, 17.087492999999085,
+						16.964545000024373, 15.868109000002733
+					],
+					"instantiateAndRunSamplesMs": [
+						13026.921526999999, 12398.819611999992, 11669.571876000002,
+						9241.901653000008, 9321.398862000002
+					]
+				},
+				"bits/stdc++ -O0 -g": {
+					"firstMs": 3521,
+					"warmMedianMs": 3202,
+					"firstPreparationMs": 21,
+					"warmPreparationMedianMs": 17,
+					"firstInstantiateAndRunMs": 3543,
+					"warmInstantiateAndRunMedianMs": 3218,
+					"samplesMs": [
+						3521.467251999995, 4163.154191000009, 3326.342564999999, 3053.3263549999974,
+						3078.164512999996
+					],
+					"preparationSamplesMs": [
+						21.273670000002312, 25.91796799999429, 15.082449000008637,
+						16.739173000009032, 16.78387300000759
+					],
+					"instantiateAndRunSamplesMs": [
+						3542.740921999997, 4189.072159000003, 3341.4250140000076,
+						3070.0655280000065, 3094.9483860000037
+					]
+				},
+				"link bits/stdc++": {
+					"firstMs": 268,
+					"warmMedianMs": 169,
+					"firstPreparationMs": 9,
+					"warmPreparationMedianMs": 11,
+					"firstInstantiateAndRunMs": 278,
+					"warmInstantiateAndRunMedianMs": 180,
+					"samplesMs": [
+						268.22281600000133, 192.83373699999356, 224.60441400000127,
+						145.4238830000104, 142.1768489999813
+					],
+					"preparationSamplesMs": [
+						9.36198599999625, 12.537609000006341, 12.680670999994618, 8.740298999997322,
+						9.33579500002088
+					],
+					"instantiateAndRunSamplesMs": [
+						277.5848019999976, 205.3713459999999, 237.2850849999959, 154.1641820000077,
+						151.51264400000218
+					]
+				}
+			},
+			"failures": [],
+			"sizeGrowth": {
+				"clang": {
+					"raw": {
+						"bytes": 35926269,
+						"growthPercent": 1.08
+					},
+					"gzip": {
+						"bytes": 13184307,
+						"growthPercent": 0.48
+					}
+				},
+				"lld": {
+					"raw": {
+						"bytes": 16373430,
+						"growthPercent": 1.52
+					},
+					"gzip": {
+						"bytes": 6454222,
+						"growthPercent": 0.61
+					}
+				}
+			},
+			"withinSizeBudget": true,
+			"speedup": {
+				"c -O2": 1.488,
+				"bits/stdc++ -O2": 1.218,
+				"templates -O2": 1.03,
+				"bits/stdc++ -O0 -g": 1.1,
+				"link bits/stdc++": 0.888
+			}
+		}
+	],
+	"browserFixtureAssetReceipts": {
+		"raw-oz": {
+			"bin/clang.wasm.gz": {
+				"bytes": 13121364,
+				"sha256": "8a9b13a5dcc0a16e17966713efffb375cbacd521b1a7cd12372826a2d73ab734",
+				"uncompressedBytes": 35543064,
+				"uncompressedSha256": "5d67fd170ac3ffa19d5c4ee1670fb2ec22e252b2d6deff51bf032f295a332a37"
+			},
+			"bin/lld.wasm.gz": {
+				"bytes": 6415190,
+				"sha256": "a3457d3d72f2bd59edec1196694536168b295419ff57e8610dff0d9e8362c6d5",
+				"uncompressedBytes": 16128402,
+				"uncompressedSha256": "5c66b708a31010aebe81025dc446f47e252b0c59fd47f108271fa96bf75bf55f"
+			},
+			"bin/memfs.wasm.gz": {
+				"bytes": 16111,
+				"sha256": "a3e43451bc15ae69a7f113009e2ee82ab4db711625c1782cd45d0d3c4d38175a",
+				"uncompressedBytes": 38071,
+				"uncompressedSha256": "5b741e03dd3502bcfd80e4e5055232b5d633604e1461752efed0189f93407dc3"
+			},
+			"bin/sysroot.tar.gz": {
+				"bytes": 5059493,
+				"sha256": "c0ef46e903492383a3c7069bfd4aed0e764e8df988f92bb81eb96bea50bf2c00",
+				"uncompressedBytes": 19312640,
+				"uncompressedSha256": "e122f1acec0642d62d8976101c542aaa5346460df6eae5a3f8efb594ff32f5ae"
+			},
+			"libc-printscan-long-double.a.gz": {
+				"bytes": 52723,
+				"sha256": "b3f11e17e40fb13371a97244fdde00d5bd951ad8e20dfdf88a069167d6be628b",
+				"uncompressedBytes": 111062,
+				"uncompressedSha256": "33e04007d3547095068391b42189d1ac5398dd04e9da3118dfa644ffea7f4148"
+			}
+		},
+		"baseline-o3": {
+			"bin/clang.wasm.gz": {
+				"bytes": 13184307,
+				"sha256": "cb77ae89c02d29831ee0e54f077f1482272bf6a44d66a42c9570fc3725b1eed6",
+				"uncompressedBytes": 35926269,
+				"uncompressedSha256": "b74b60a03126cdd7f5130e98481967bf04368dc480782618a70d497f631e0ace"
+			},
+			"bin/lld.wasm.gz": {
+				"bytes": 6454222,
+				"sha256": "e482ee8477ca0aeeda1415e856533abf2cc0e8af0a7560f4676ed7e99b851248",
+				"uncompressedBytes": 16373430,
+				"uncompressedSha256": "488b9cf2b816f3051752c48c3e33a1e97d951e3d99adfa4b30496130f474733f"
+			},
+			"bin/memfs.wasm.gz": {
+				"bytes": 16111,
+				"sha256": "a3e43451bc15ae69a7f113009e2ee82ab4db711625c1782cd45d0d3c4d38175a",
+				"uncompressedBytes": 38071,
+				"uncompressedSha256": "5b741e03dd3502bcfd80e4e5055232b5d633604e1461752efed0189f93407dc3"
+			},
+			"bin/sysroot.tar.gz": {
+				"bytes": 5059493,
+				"sha256": "c0ef46e903492383a3c7069bfd4aed0e764e8df988f92bb81eb96bea50bf2c00",
+				"uncompressedBytes": 19312640,
+				"uncompressedSha256": "e122f1acec0642d62d8976101c542aaa5346460df6eae5a3f8efb594ff32f5ae"
+			},
+			"libc-printscan-long-double.a.gz": {
+				"bytes": 52723,
+				"sha256": "b3f11e17e40fb13371a97244fdde00d5bd951ad8e20dfdf88a069167d6be628b",
+				"uncompressedBytes": 111062,
+				"uncompressedSha256": "33e04007d3547095068391b42189d1ac5398dd04e9da3118dfa644ffea7f4148"
+			}
+		}
+	}
+}
