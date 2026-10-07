@@ -53,7 +53,8 @@ and cannot replace this complete clangd header tree.
 The separated candidate passed C/C++ diagnostics, completion and pthread startup checks, but
 current Chromium measurements showed slower readiness and first diagnostics. Header separation
 therefore remains an opt-in configuration; shipped headers remain embedded. It shrinks raw Wasm
-without guaranteeing a smaller combined download or faster startup.
+without guaranteeing a smaller combined download or faster startup. The measurements and artifact
+decisions are recorded in [PERFORMANCE.md](PERFORMANCE.md).
 
 ```sh
 pnpm build:clang
@@ -177,10 +178,44 @@ Verify that the pinned existing-level pass over the same raw inputs reproduces t
 If it differs, retain that matched raw-input control for attributing the Binaryen-only effect and
 report the comparison against shipped artifacts separately.
 
+`scripts/prepare-browser-benchmark.mjs` prepares local fixtures for the consumer's Chromium probe
+from a JSON configuration. `runtimeManifest` identifies the consumer manifest, `compilerAssets`
+contains the shared compressed memfs/sysroot assets, and each compiler uses exactly one raw or
+compressed directory. Raw directories contain `clang` and `lld`; compressed directories contain
+`clang.wasm.gz` and `lld.wasm.gz`. The script copies existing compressed bytes unchanged, uses
+level-9 gzip for raw candidates, derives receipts from actual bytes, verifies separated headers,
+and preserves source-build/post-processing receipts. Paths are relative to the configuration file:
+
+```json
+{
+  "runtimeManifest": "../wasm-idle/static/clang/runtime-manifest.v1.json",
+  "compilerAssets": "../wasm-idle/static/clang/bin",
+  "compiler": {
+    "baseline": { "compressedDirectory": "../wasm-idle/static/clang/bin" },
+    "raw-oz": { "rawDirectory": "/path/to/raw-oz" },
+    "baseline-o3": { "rawDirectory": "/path/to/baseline-o3" },
+    "narrow-oz": { "rawDirectory": "/path/to/narrow-oz" },
+    "narrow-o3": { "rawDirectory": "/path/to/narrow-o3" }
+  },
+  "clangd": {
+    "shipped": { "directory": "../wasm-idle/static/clangd", "implementation": "shipped" },
+    "separated": {
+      "directory": "/path/to/separated-clangd", "implementation": "current",
+      "rawWasm": "clangd.wasm", "headers": "clangd.headers.json.gz"
+    }
+  }
+}
+```
+
+```sh
+node producer/clang-browser/scripts/prepare-browser-benchmark.mjs \
+  --config /path/to/browser-fixtures-config.json --out-dir /path/to/browser-fixtures
+```
+
 Keep the shipped baseline until measured first program output and warm operation justify the
 compressed-byte increase under both normal and constrained networks. Record empty-cache startup,
 persistent-cache reload, preparation stages, emitted output, and compiler diagnostics separately.
-
+The current comparison results and artifact promotion decision are in [PERFORMANCE.md](PERFORMANCE.md).
 
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
