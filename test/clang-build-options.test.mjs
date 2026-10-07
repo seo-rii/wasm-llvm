@@ -18,6 +18,7 @@ function help(env = {}) {
 			CLANGD_ASSERTIONS: '',
 			CLANGD_TIDY_CHECKS: '',
 			CLANGD_DECISION_FOREST: '',
+			CLANGD_SEPARATE_HEADERS: '',
 			LLVM_HOT_PATH_OPT: '',
 			LLVM_HOT_PATH_DIRS: '',
 			CLANG_WASM_OPT: '',
@@ -109,6 +110,25 @@ test('rejects invalid completion model settings before any build starts', () => 
 	const result = help({ CLANGD_DECISION_FOREST: 'heuristics' });
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /CLANGD_DECISION_FOREST must be ON or OFF/);
+	assert.equal(result.stdout, '');
+});
+
+test('retains embedded headers by default and accepts the separated-header comparison build', () => {
+	const defaults = help();
+	assert.equal(defaults.status, 0, defaults.stderr);
+	assert.match(defaults.stdout, /CLANGD_SEPARATE_HEADERS=OFF/);
+	const separated = help({ CLANGD_SEPARATE_HEADERS: 'ON' });
+	assert.equal(separated.status, 0, separated.stderr);
+	assert.match(separated.stdout, /CLANGD_SEPARATE_HEADERS=ON/);
+	const embedded = help({ CLANGD_SEPARATE_HEADERS: 'OFF' });
+	assert.equal(embedded.status, 0, embedded.stderr);
+	assert.match(embedded.stdout, /CLANGD_SEPARATE_HEADERS=OFF/);
+});
+
+test('rejects invalid header-separation settings before any build starts', () => {
+	const result = help({ CLANGD_SEPARATE_HEADERS: 'true' });
+	assert.notEqual(result.status, 0);
+	assert.match(result.stderr, /CLANGD_SEPARATE_HEADERS must be ON or OFF/);
 	assert.equal(result.stdout, '');
 });
 
