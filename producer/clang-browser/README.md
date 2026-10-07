@@ -117,32 +117,43 @@ Speed comparisons for the WASI clang/wasm-ld modules that run on every browser c
 - `--compiler-only` stops after those two modules and writes them with `compiler-build.json` to
   `WASM_LLVM_TOOLCHAIN_OUT_DIR/compiler`, skipping clangd and packaging.
 
-`scripts/benchmark-compiler.mjs` compares builds against a baseline. It reports raw and gzip sizes of
-both modules and the compile and link latency of C, `<bits/stdc++.h>`, template-heavy and `-O0 -g`
-workloads in Node's V8, links and runs each program to check its output, and with `--enforce` fails
-when any module grows by more than `--max-growth` percent (default 10) in raw or gzip bytes:
+`scripts/benchmark-compiler.mjs` compares builds against a baseline. It reports raw and level-9 gzip
+sizes, SHA-256 identities, module compilation time, and compile/link latency of C,
+`<bits/stdc++.h>`, template-heavy and `-O0 -g` workloads in Node. The report separates execution
+time from preparation and instantiation, preserves every sample, and links and runs each source
+to verify its output. `--enforce` fails when output differs or any module grows by more than
+`--max-growth` percent (default 10) in raw or gzip bytes:
 
 ```sh
 node producer/clang-browser/scripts/benchmark-compiler.mjs \
   --sysroot artifacts/clang-browser/sysroot.tar.zip \
   --baseline artifacts/clang-browser \
-  --candidate os=/path/to/os/out/compiler --runs 5 --enforce
+  --candidate raw-oz=/path/to/raw-oz \
+  --candidate baseline-o3=/path/to/baseline-o3 \
+  --candidate narrow-oz=/path/to/narrow-oz \
+  --candidate narrow-o3=/path/to/narrow-o3 \
+  --runs 5 --enforce --json /path/to/node-comparison.json
 ```
 
-Measured with LLVM 22.1.8 against the shipped `Oz` build (warm median of four runs, Node 24):
+Each directory's `compiler-build.json`, `toolchain.json`, and optional `benchmark-provenance.json`
+are included with receipt-file hashes. For post-processing experiments, the latter records the
+pinned Binaryen executable/version/hash, exact command, source-build receipt, and input/output
+module hashes. `SOURCES`, `WORKLOADS`, and `EXPECTED_OUTPUT` are exported for browser probes to
+use equivalent workloads.
 
-| Build | clang raw / gzip | wasm-ld raw / gzip | `<bits/stdc++.h>` `-O2` | templates `-O2` |
-| --- | --- | --- | --- | --- |
-| `Oz` (shipped) | 35.7 MB / 13.1 MB | 16.2 MB / 6.4 MB | 3063 ms | 9561 ms |
-| `Oz` + Binaryen `O3` pass\* | +0.8% / +0.5% | +1.3% / +0.6% | 2996 ms | 9448 ms |
-| `LLVM_HOT_PATH_OPT=O2`, Lex/Basic/Support | +4.0% / +3.4% | +2.8% / +2.2% | 2912 ms | 9354 ms |
-| `LLVM_HOT_PATH_OPT=O2`, default dirs | +35.1% / +24.1% | +2.8% / +2.2% | 2584 ms | 8588 ms |
-| `LLVM_MINSIZE_OPT=Os` | +23.8% / +19.8% | +28.6% / +22.1% | 2515 ms | 7714 ms |
+Node measurements use local bytes and a fresh WASI instance for each invocation. They omit network
+transfer and persistent-cache reloads; V8 tiering and browser preparation can affect the outcome.
+Earlier Node improvement percentages are reference data and do not predict browser improvements.
+Measure Binaryen `O3` from raw linker outputs separately from narrow selective `O2` with the existing
+Binaryen level, then measure their combination. Their improvement percentages must not be added.
+Verify that the pinned existing-level pass over the same raw inputs reproduces the shipped hashes.
+If it differs, retain that matched raw-input control for attributing the Binaryen-only effect and
+report the comparison against shipped artifacts separately.
 
-\* An extra pinned `wasm-opt -O3` over the shipped modules, approximating `CLANG_WASM_OPT=O3`.
+Keep the shipped baseline until measured first program output and warm operation justify the
+compressed-byte increase under both normal and constrained networks. Record empty-cache startup,
+persistent-cache reload, preparation stages, emitted output, and compiler diagnostics separately.
 
-Within a 10% size budget, the narrow hot path gains about 4% and the Binaryen pass about 2%. The
-frontend-wide hot path and `Os` gain 15 to 20% but grow the modules by 20 to 35%.
 
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
