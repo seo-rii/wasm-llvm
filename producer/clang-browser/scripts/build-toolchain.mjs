@@ -20,14 +20,7 @@ const producerManifest = JSON.parse(
 const llvmBuildType = process.env.LLVM_BUILD_TYPE || 'MinSizeRel';
 // Libraries that dominate parsing, semantic analysis and code generation time when the WASI
 // compiler builds typical single-file programs. Relative to the LLVM checkout.
-const defaultHotPathDirs = [
-	'clang/lib/Lex',
-	'clang/lib/Parse',
-	'clang/lib/Sema',
-	'clang/lib/AST',
-	'clang/lib/Basic',
-	'llvm/lib/Support'
-];
+const defaultHotPathDirs = ['clang/lib/Lex', 'clang/lib/Basic', 'llvm/lib/Support'];
 
 const config = {
 	llvmVersion: process.env.LLVM_VERSION || producerManifest.sources.llvm.version,

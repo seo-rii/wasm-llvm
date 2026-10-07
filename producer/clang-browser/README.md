@@ -109,8 +109,9 @@ Speed comparisons for the WASI clang/wasm-ld modules that run on every browser c
 - `LLVM_HOT_PATH_OPT=none|O2|O3` (default `none`) compiles the sources under `LLVM_HOT_PATH_DIRS`
   at that level while the rest of the module keeps `LLVM_MINSIZE_OPT`. The CMake compiler launcher
   `scripts/hot-path-launcher.sh` rewrites the flag per source; LTO keeps the per-function level.
-  `LLVM_HOT_PATH_DIRS` is a comma-separated list of LLVM checkout paths and defaults to the clang
-  frontend (`clang/lib/{Lex,Parse,Sema,AST,Basic}`) and `llvm/lib/Support`.
+  `LLVM_HOT_PATH_DIRS` is a comma-separated list of LLVM checkout paths and defaults to
+  `clang/lib/Lex,clang/lib/Basic,llvm/lib/Support`. These flags
+  optimize the execution compiler itself; they do not change user-program optimization or clangd.
 - `CLANG_WASM_OPT=default|O2|O3` (default `default`) replaces the build type's level for the pinned
   Binaryen pass over the linked clang and wasm-ld modules.
 - `--compiler-only` stops after those two modules and writes them with `compiler-build.json` to

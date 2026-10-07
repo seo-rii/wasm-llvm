@@ -127,7 +127,7 @@ test('keeps speed profiles off by default and accepts hot-path and wasm-opt comp
 	const defaults = help();
 	assert.equal(defaults.status, 0, defaults.stderr);
 	assert.match(defaults.stdout, /LLVM_HOT_PATH_OPT=none/);
-	assert.match(defaults.stdout, /LLVM_HOT_PATH_DIRS=clang\/lib\/Lex,/);
+	assert.match(defaults.stdout, /LLVM_HOT_PATH_DIRS=clang\/lib\/Lex,clang\/lib\/Basic,llvm\/lib\/Support\n/);
 	assert.match(defaults.stdout, /CLANG_WASM_OPT=default/);
 	const speed = help({
 		LLVM_HOT_PATH_OPT: 'O2',
