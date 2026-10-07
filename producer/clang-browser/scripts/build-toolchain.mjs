@@ -50,6 +50,7 @@ const config = {
 	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
 	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
 	clangdDecisionForest: process.env.CLANGD_DECISION_FOREST || 'OFF',
+	clangdSeparateHeaders: process.env.CLANGD_SEPARATE_HEADERS || 'OFF',
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -69,7 +70,8 @@ for (const [name, value] of [
 	['CLANGD_LTO', config.clangdLto],
 	['CLANGD_ASSERTIONS', config.clangdAssertions],
 	['CLANGD_TIDY_CHECKS', config.clangdTidyChecks],
-	['CLANGD_DECISION_FOREST', config.clangdDecisionForest]
+	['CLANGD_DECISION_FOREST', config.clangdDecisionForest],
+	['CLANGD_SEPARATE_HEADERS', config.clangdSeparateHeaders]
 ]) {
 	if (!['ON', 'OFF'].includes(value)) throw new Error(`${name} must be ON or OFF`);
 }
@@ -113,6 +115,7 @@ Environment:
   CLANGD_ASSERTIONS=${config.clangdAssertions}
   CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
   CLANGD_DECISION_FOREST=${config.clangdDecisionForest}
+  CLANGD_SEPARATE_HEADERS=${config.clangdSeparateHeaders}
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -785,6 +788,8 @@ await prepareClangdHeaders({
 	destination: clangdIncludeDir,
 	targetTriple: config.targetTriple
 });
+const clangdHeaderLinkFlags =
+	config.clangdSeparateHeaders === 'ON' ? '' : ` --embed-file=${clangdIncludeDir}@/usr/include`;
 const emsdkEnv = shellQuote(path.join(emsdkDir, 'emsdk_env.sh'));
 const clangdConfigure = [
 	'source',
@@ -800,7 +805,7 @@ const clangdConfigure = [
 	shellQuote(clangdBuild),
 	shellQuote('-DCMAKE_CXX_FLAGS=-pthread -Dwait4=__syscall_wait4'),
 	shellQuote(
-		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)' --embed-file=${clangdIncludeDir}@/usr/include`
+		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)'${clangdHeaderLinkFlags}`
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
 	shellQuote(`-DCMAKE_C_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),
@@ -950,6 +955,16 @@ await run('node', [
 	path.join(clangdBuild, 'bin', 'clangd.js'),
 	'--clangd-wasm',
 	path.join(clangdBuild, 'bin', 'clangd.wasm'),
+	...(config.clangdSeparateHeaders === 'ON'
+		? [
+				'--clangd-include',
+				clangdIncludeDir,
+				'--clangd-resource-include',
+				resourceIncludeDir,
+				'--target-triple',
+				config.targetTriple
+			]
+		: []),
 	'--target-dir',
 	config.outDir,
 	'--llvm-version',

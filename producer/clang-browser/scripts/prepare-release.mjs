@@ -9,6 +9,7 @@ import {
 } from '../../lldb-browser/scripts/contracts.mjs';
 import { verifyWamrBrowser } from '../../wamr-browser/scripts/verify.mjs';
 import { loadMemfsReleaseFiles } from './memfs-provenance.mjs';
+import { verifyClangdHeaderAsset } from './clangd-header-asset-contract.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const LOCAL_ARTIFACT_DIR = path.resolve(REPO_ROOT, 'artifacts', 'clang-browser');
@@ -46,6 +47,13 @@ await fs.mkdir(TARGET_BIN_DIR, { recursive: true });
 await fs.mkdir(TARGET_CLANGD_DIR, { recursive: true });
 
 const toolchain = JSON.parse(await fs.readFile(path.resolve(SOURCE_DIR, 'toolchain.json'), 'utf8'));
+if (toolchain.clangd?.headers) {
+	verifyClangdHeaderAsset(
+		await fs.readFile(path.join(SOURCE_DIR, 'clangd/clangd.headers.json.gz')),
+		toolchain.clangd.headers
+	);
+	assets.push({ source: toolchain.clangd.headers.asset, target: ['clangd', 'clangd.headers.json.gz'] });
+}
 const memfsFiles = toolchain.memfs === undefined ? new Map() : await loadMemfsReleaseFiles(
 	SOURCE_DIR, toolchain.memfs, await fs.readFile(path.join(SOURCE_DIR, 'memfs.zip'))
 );
@@ -101,7 +109,8 @@ const manifest = {
 	},
 	clangd: {
 		js: 'clangd/clangd.js',
-		wasm: 'clangd/clangd.wasm.gz'
+		wasm: 'clangd/clangd.wasm.gz',
+		...(toolchain.clangd?.headers ? { headers: { ...toolchain.clangd.headers } } : {})
 	},
 	targets: {
 		'wasm32-wasi': {

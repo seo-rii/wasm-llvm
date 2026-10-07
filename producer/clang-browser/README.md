@@ -11,6 +11,7 @@ completed build writes checksums and effective versions to `artifacts/clang-brow
 - `sysroot.tar.zip`: trimmed WASI C/C++ sysroot and Clang resource headers
 - `memfs.zip`: bootstrap filesystem used by the external host runtime
 - `clangd/clangd.js` and `clangd/clangd.wasm.gz`: Emscripten pthread clangd worker
+- `clangd/clangd.headers.json.gz`: optional separately fingerprinted complete selected-target C/C++ and resource headers, produced with `CLANGD_SEPARATE_HEADERS=ON`
 - `toolchain.json`: build receipt and SHA-256 hashes
 
 The checked-in producer artifacts are inputs to deployment, not npm package contents. Run
@@ -39,10 +40,32 @@ Before linking clangd, the producer prepares a separate `clangd-include` directo
 shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
 copying, so excluding other WASI targets cannot leave dangling links. The complete selected C/C++
 headers remain available to clangd; the later compiler sysroot dependency pruning does not affect
-this directory. The include tree remains mounted at `/usr/include` in the worker.
+this directory. The default `CLANGD_SEPARATE_HEADERS=OFF` embeds it at `/usr/include` in clangd's
+Wasm, preserving the two-asset worker contract.
+
+With `CLANGD_SEPARATE_HEADERS=ON`, the linker omits the embedded tree. Packaging stores the complete
+tree at `/usr/include` and the matching resource headers at `/lib/clang/<major>/include` in a
+separately versioned gzip JSON asset. The runtime verifies and prepares that asset concurrently
+with Wasm compilation, then mounts every header before document analysis. Embedded-header and
+custom asset configurations remain supported. The selected execution sysroot is dependency-pruned
+and cannot replace this complete clangd header tree.
+
+The separated candidate passed C/C++ diagnostics, completion and pthread startup checks, but
+current Chromium measurements showed slower readiness and first diagnostics. Header separation
+therefore remains an opt-in configuration; shipped headers remain embedded. It shrinks raw Wasm
+without guaranteeing a smaller combined download or faster startup.
 
 ```sh
 pnpm build:clang
+```
+
+To build the separate-header variant in isolated work/output directories:
+
+```sh
+CLANGD_SEPARATE_HEADERS=ON \
+  WASM_LLVM_TOOLCHAIN_WORK_DIR=/path/to/separated-work \
+  WASM_LLVM_TOOLCHAIN_OUT_DIR=/path/to/separated-output \
+  pnpm build:clang
 ```
 
 To rebuild only MemFS with an existing WASI SDK 33 installation:
@@ -103,6 +126,10 @@ Useful overrides:
   model. LLVM 22 falls back to heuristic ranking; completion stays available, but suggestion
   order can change. Set `ON` to restore the model for quality and size comparisons; forcing
   `--ranking-model=decision_forest` at runtime requires a build with the model enabled.
+- `CLANGD_SEPARATE_HEADERS=ON|OFF` (default `OFF`) keeps complete selected-target headers embedded
+  by default. `ON` packages the header tree and matching resource headers separately with
+  compressed/raw fingerprints and preserves their virtual filesystem paths. Switching modes
+  requires relinking clangd and packaging matching assets and receipts together.
 
 Speed comparisons for the WASI clang/wasm-ld modules that run on every browser compile:
 
@@ -181,6 +208,8 @@ pnpm package:clang -- \
   --memfs-wasm /path/to/memfs.wasm \
   --clangd-js /path/to/clangd.js \
   --clangd-wasm /path/to/clangd.wasm \
+  --clangd-include /path/to/complete/clangd-include \
+  --clangd-resource-include /path/to/resource/include \
   --llvm-version 22.1.8 \
   --llvm-commit ca7933e47d3a3451d81e72ac174dcb5aa28b59d1 \
   --wasi-sdk-version 33 \

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { prepareClangdHeaders } from '../producer/clang-browser/scripts/prepare-clangd-headers.mjs';
+import { prepareClangdHeaders, createClangdHeaderAsset } from '../producer/clang-browser/scripts/prepare-clangd-headers.mjs';
 
 async function fixture(t) {
 	const root = await fs.mkdtemp(path.join(os.tmpdir(), 'clangd-headers-'));
@@ -44,6 +44,30 @@ async function snapshot(directory) {
 	await walk('');
 	return result;
 }
+
+test('packages complete selected and resource headers at the original virtual paths', async (t) => {
+	const options = await fixture(t);
+	await prepareClangdHeaders(options);
+	const resourceIncludeDir = path.join(options.root, 'resource');
+	await fs.mkdir(resourceIncludeDir);
+	await fs.writeFile(path.join(resourceIncludeDir, 'stddef.h'), 'resource stddef');
+	await fs.writeFile(path.join(resourceIncludeDir, 'module.modulemap'), 'resource modules');
+	const input = { includeDir: options.destination, resourceIncludeDir, resourceDir: '/lib/clang/22', targetTriple: options.targetTriple, version: '22:revision' };
+	for (const resourceDir of ['/lib/clang/.', '/lib/clang/..'])
+		await assert.rejects(createClangdHeaderAsset({ ...input, resourceDir }), /Invalid clangd header asset metadata/);
+	const bytes = await createClangdHeaderAsset(input);
+	const tree = JSON.parse(bytes);
+	assert.equal(tree.version, '22:revision');
+	assert.equal(tree.targetTriple, 'wasm32-wasi');
+	assert.equal(tree.files['/usr/include/wasm32-wasi/stdio.h'], 'selected stdio');
+	assert.equal(tree.files['/usr/include/c++/v1/vector'], 'shared C++ vector');
+	assert.equal(tree.files['/usr/include/wasm32-wasi/eh/c++/v1/__config_site'], 'selected exception C++ configuration');
+	assert.equal(tree.files['/lib/clang/22/include/module.modulemap'], 'resource modules');
+	assert.ok(!Object.keys(tree.files).some((file) => file.includes('wasip2')));
+	assert.deepEqual(await createClangdHeaderAsset(input), bytes);
+	await fs.symlink('stddef.h', path.join(resourceIncludeDir, 'alias.h'));
+	await assert.rejects(createClangdHeaderAsset(input), /resolved regular files/);
+});
 
 test('retains shared and selected C/C++ headers, resolving aliases without modifying the sysroot', async (t) => {
 	const options = await fixture(t);

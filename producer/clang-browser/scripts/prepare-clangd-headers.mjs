@@ -88,3 +88,33 @@ export async function prepareClangdHeaders({ sysroot, destination, targetTriple 
 	}
 	return outputDir;
 }
+
+// The asset carries the complete selected sysroot headers and this compiler's
+// resource headers. It is deliberately prepared before execution-header pruning.
+export async function createClangdHeaderAsset({ includeDir, resourceIncludeDir, resourceDir, targetTriple, version }) {
+	if (!/^wasm32-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(targetTriple) ||
+		!/^\/lib\/clang\/[a-zA-Z0-9_.-]+$/.test(resourceDir) ||
+		['.', '..'].includes(resourceDir.split('/').at(-1)) ||
+		typeof version !== 'string' || !version) {
+		throw new Error('Invalid clangd header asset metadata');
+	}
+	const files = Object.create(null);
+	async function collect(directory, mount) {
+		for (const entry of (await fs.readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+			if (/[\\\x00-\x1f]/u.test(entry.name)) throw new Error('Invalid clangd header filename');
+			const source = path.join(directory, entry.name);
+			const target = `${mount}/${entry.name}`;
+			if (entry.isDirectory()) await collect(source, target);
+			else if (entry.isFile()) {
+				// Fatal decoding prevents silently changing header contents during packaging.
+				files[target] = new TextDecoder('utf-8', { fatal: true }).decode(await fs.readFile(source));
+			} else throw new Error(`clangd header asset requires resolved regular files: ${source}`);
+		}
+	}
+	await collect(includeDir, '/usr/include');
+	await collect(resourceIncludeDir, `${resourceDir}/include`);
+	for (const file of [`/usr/include/${targetTriple}/stdio.h`, '/usr/include/c++/v1/vector', `${resourceDir}/include/stddef.h`]) {
+		if (typeof files[file] !== 'string') throw new Error(`Required clangd asset header is missing: ${file}`);
+	}
+	return Buffer.from(JSON.stringify({ schemaVersion: 1, version, targetTriple, resourceDir, files }));
+}

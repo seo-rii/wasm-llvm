@@ -17,6 +17,7 @@ import {
 } from '@zip.js/zip.js';
 import { assertClangdStdinBridge } from './clangd-artifact-contract.mjs';
 import { loadMemfsBuildMetadata } from './memfs-provenance.mjs';
+import { createClangdHeaderAsset } from './prepare-clangd-headers.mjs';
 
 configure({ useWebWorkers: false });
 
@@ -52,6 +53,9 @@ Options:
   --version NAME                   Runtime manifest version. Defaults to llvmorg-<llvm-version>.
   --resource-dir PATH              Defaults to /lib/clang/<llvm-version>.
   --compiler-runtime-lib-dir PATH  Defaults to lib/clang/<llvm-version>/lib/wasi.
+  --clangd-include DIR             Complete selected-target C/C++ header tree (separate from pruned sysroot).
+  --clangd-resource-include DIR    Matching Clang resource headers; required with --clangd-include.
+  --target-triple TRIPLE           Header target, defaults to wasm32-wasi.
 
 Notes:
   clang and lld must be raw WASI WebAssembly modules. clangd must be the Emscripten
@@ -229,6 +233,17 @@ async function main() {
 		const clangdJsBytes = await fs.readFile(clangdJsPath);
 		const { gzipBytes: clangdWasmGzipBytes, wasmBytes: clangdWasmBytes } =
 			await resolveClangdWasmGzip(clangdWasmPath);
+		if (args.has('clangd-resource-include') !== args.has('clangd-include')) {
+			throw new Error('Both --clangd-include and --clangd-resource-include are required');
+		}
+		const headerBytes = args.has('clangd-include') ? await createClangdHeaderAsset({
+			includeDir: path.resolve(args.get('clangd-include')),
+			resourceIncludeDir: path.resolve(args.get('clangd-resource-include')),
+			resourceDir,
+			targetTriple: args.get('target-triple') || 'wasm32-wasi',
+			version: `${version}:${llvmCommit || 'custom'}`
+		}) : undefined;
+		const headerGzip = headerBytes ? await gzipAsync(headerBytes, { level: 9 }) : undefined;
 
 		await assertWasm('clang', clangBytes);
 		await assertWasm('lld', lldBytes);
@@ -262,6 +277,10 @@ async function main() {
 
 		await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.js'), clangdJsBytes);
 		await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.wasm.gz'), clangdWasmGzipBytes);
+		if (headerGzip) {
+			await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.headers.json.gz'), headerGzip);
+			assetHashes['clangd/clangd.headers.json.gz'] = sha256(headerGzip);
+		}
 		if (memfs) {
 			for (const [name, bytes] of memfs.files) {
 				await fs.writeFile(path.join(targetDir, name), bytes);
@@ -285,7 +304,18 @@ async function main() {
 			clangd: {
 				stdinBridge: 'emscripten-asyncify',
 				patch: producerManifest.sources.clangdEmscriptenStdinPatch.path,
-				patchSha256: producerManifest.sources.clangdEmscriptenStdinPatch.sha256
+				patchSha256: producerManifest.sources.clangdEmscriptenStdinPatch.sha256,
+				...(headerBytes ? { headers: {
+					asset: 'clangd/clangd.headers.json.gz',
+					format: 'clangd-headers-v1',
+					version: sha256(headerBytes),
+					targetTriple: args.get('target-triple') || 'wasm32-wasi',
+					resourceDir,
+					bytes: headerGzip.length,
+					sha256: sha256(headerGzip),
+					uncompressedBytes: headerBytes.length,
+					uncompressedSha256: sha256(headerBytes)
+				} } : {})
 			},
 			assets: assetHashes
 		};
