@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-// Compares WASI clang/wasm-ld builds by module size and by compile latency in Node's V8, which
-// uses the same WebAssembly tiers as Chromium. Each candidate must stay within the size budget
-// for both raw and gzip bytes of every module.
+// Node measurements are reference data. Browser startup, streaming preparation, tiering,
+// caching, and execution must be measured separately before promoting compiler artifacts.
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,6 +13,7 @@ import { WASI } from 'node:wasi';
 import { gzipSync } from 'node:zlib';
 
 const MODULES = ['clang', 'lld'];
+const PROVENANCE_FILES = ['compiler-build.json', 'toolchain.json', 'benchmark-provenance.json'];
 const RESOURCE_DIR = '/lib/clang/22';
 const INCLUDE_ARGS = [
 	'/include/c++/v1',
@@ -22,7 +23,7 @@ const INCLUDE_ARGS = [
 	'/include'
 ].flatMap((dir) => ['-internal-isystem', dir]);
 
-const SOURCES = {
+export const SOURCES = {
 	'c.c': `#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,8 +89,13 @@ int main() {
 `
 };
 
-const WORKLOADS = [
-	{ name: 'c -O2', tool: 'clang', source: 'c.c', args: ['-O2', '-std=gnu17', '-x', 'c'] },
+export const WORKLOADS = [
+	{
+		name: 'c -O2',
+		tool: 'clang',
+		source: 'c.c',
+		args: ['-O2', '-std=gnu17', '-x', 'c']
+	},
 	{
 		name: 'bits/stdc++ -O2',
 		tool: 'clang',
@@ -119,7 +125,7 @@ const WORKLOADS = [
 	{ name: 'link bits/stdc++', tool: 'lld', link: 'stdcpp.cpp' }
 ];
 
-const EXPECTED_OUTPUT = {
+export const EXPECTED_OUTPUT = {
 	'c.c': '0 63 4\n',
 	'stdcpp.cpp': '1000 1000 1008 504678\n',
 	'templates.cpp': '12.5x6 12   1\n'
@@ -224,26 +230,61 @@ async function loadModules(dir) {
 		const bytes = (await exists(raw))
 			? await fs.readFile(raw)
 			: unzipSingle(path.join(dir, `${name}.zip`));
-		modules[name] = { bytes, raw: bytes.length, gzip: gzipSync(bytes, { level: 9 }).length };
+		modules[name] = {
+			bytes,
+			raw: bytes.length,
+			gzip: gzipSync(bytes, { level: 9 }).length,
+			sha256: createHash('sha256').update(bytes).digest('hex')
+		};
 	}
 	return modules;
+}
+
+async function loadProvenance(dir) {
+	const receipts = [];
+	for (const name of PROVENANCE_FILES) {
+		const file = path.join(dir, name);
+		if (!(await exists(file))) continue;
+		const bytes = await fs.readFile(file);
+		receipts.push({
+			file: path.resolve(file),
+			sha256: createHash('sha256').update(bytes).digest('hex'),
+			receipt: JSON.parse(bytes.toString('utf8'))
+		});
+	}
+	return receipts;
 }
 
 async function prepareSysroot(sysroot, scratch) {
 	if ((await fs.stat(sysroot)).isDirectory()) return path.resolve(sysroot);
 	const target = path.join(scratch, 'sysroot');
 	await fs.mkdir(target, { recursive: true });
-	const tar = spawnSync('tar', ['-x', '-C', target], { input: unzipSingle(sysroot) });
+	const tar = spawnSync('tar', ['-x', '-C', target], {
+		input: unzipSingle(sysroot)
+	});
 	if (tar.status !== 0) throw new Error(`tar failed: ${tar.stderr}`);
 	return target;
 }
 
 async function runWasi(module, args, preopens) {
-	const wasi = new WASI({ version: 'preview1', args, env: {}, preopens, returnOnExit: true });
+	const prepareStart = performance.now();
+	const wasi = new WASI({
+		version: 'preview1',
+		args,
+		env: {},
+		preopens,
+		returnOnExit: true
+	});
 	const instance = await WebAssembly.instantiate(module, wasi.getImportObject());
 	const start = performance.now();
 	const code = wasi.start(instance);
-	return { code, ms: performance.now() - start };
+	const end = performance.now();
+	return {
+		code,
+		ms: end - start,
+		preparationMs: start - prepareStart,
+		totalMs: end - prepareStart
+	};
 }
 
 function compileArgs(workload, input, output) {
@@ -348,6 +389,7 @@ async function main() {
 		);
 		for (const variant of variants) {
 			variant.modules = await loadModules(variant.dir);
+			variant.provenance = await loadProvenance(variant.dir);
 			variant.compiled = {};
 			variant.compileMs = {};
 			for (const name of MODULES) {
@@ -361,6 +403,12 @@ async function main() {
 				await fs.writeFile(path.join(variant.work, name), source);
 			}
 			variant.timings = Object.fromEntries(WORKLOADS.map((workload) => [workload.name, []]));
+			variant.preparationTimings = Object.fromEntries(
+				WORKLOADS.map((workload) => [workload.name, []])
+			);
+			variant.totalTimings = Object.fromEntries(
+				WORKLOADS.map((workload) => [workload.name, []])
+			);
 			variant.failures = [];
 		}
 
@@ -382,6 +430,8 @@ async function main() {
 						variant.failures.push(`${workload.name} exited with ${result.code}`);
 					}
 					variant.timings[workload.name].push(result.ms);
+					variant.preparationTimings[workload.name].push(result.preparationMs);
+					variant.totalTimings[workload.name].push(result.totalMs);
 				}
 			}
 		}
@@ -391,16 +441,36 @@ async function main() {
 		}
 
 		const report = {
+			generatedAt: new Date().toISOString(),
+			measurementScope:
+				'Node WASI reference: local bytes, no download, no persistent cache, fresh instance per invocation. Browser acceptance is separate.',
+			gzipLevel: 9,
 			runs: options.runs,
 			maxGrowthPercent: options.maxGrowth,
 			node: process.version,
+			v8: process.versions.v8,
+			platform: process.platform,
+			arch: process.arch,
+			sourceSha256: Object.fromEntries(
+				Object.entries(SOURCES).map(([name, source]) => [
+					name,
+					createHash('sha256').update(source).digest('hex')
+				])
+			),
+			workloads: WORKLOADS,
+			expectedOutput: EXPECTED_OUTPUT,
 			variants: variants.map((variant) => ({
 				name: variant.name,
 				dir: path.resolve(variant.dir),
+				provenance: variant.provenance,
 				sizes: Object.fromEntries(
 					MODULES.map((name) => [
 						name,
-						{ raw: variant.modules[name].raw, gzip: variant.modules[name].gzip }
+						{
+							raw: variant.modules[name].raw,
+							gzip: variant.modules[name].gzip,
+							sha256: variant.modules[name].sha256
+						}
 					])
 				),
 				moduleCompileMs: Object.fromEntries(
@@ -413,7 +483,22 @@ async function main() {
 							workload.name,
 							{
 								firstMs: Math.round(timings[0]),
-								warmMedianMs: Math.round(median(timings.slice(1)))
+								warmMedianMs: Math.round(median(timings.slice(1))),
+								firstPreparationMs: Math.round(
+									variant.preparationTimings[workload.name][0]
+								),
+								warmPreparationMedianMs: Math.round(
+									median(variant.preparationTimings[workload.name].slice(1))
+								),
+								firstInstantiateAndRunMs: Math.round(
+									variant.totalTimings[workload.name][0]
+								),
+								warmInstantiateAndRunMedianMs: Math.round(
+									median(variant.totalTimings[workload.name].slice(1))
+								),
+								samplesMs: timings,
+								preparationSamplesMs: variant.preparationTimings[workload.name],
+								instantiateAndRunSamplesMs: variant.totalTimings[workload.name]
 							}
 						];
 					})
