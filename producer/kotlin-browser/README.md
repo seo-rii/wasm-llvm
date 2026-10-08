@@ -5,11 +5,19 @@ parser → FIR resolution/checking → FIR2IR → KLIB/IR linking → Wasm backe
 The intended compiler host is `wasmJs`; the initial user console target is
 `wasmWasi` with WASI Preview 1. These are separate library/build sets.
 
-**Status: official parser JVM/browser comparison and JVM-hosted example builds; G0
-blocked; browser compiler not built.**
+**Status: official compiler source port and actual wasmJs compiler build attempts;
+G0 blocked; browser compiler not built.**
 There is no full compiler Wasm bundle, accepted release receipt, or public Kotlin
 support in this change. GraalVM Web Image, TeaVM hosting, remote
 compilation, and a handwritten Kotlin subset are outside this implementation path.
+
+The active implementation is [compiler-port](compiler-port/README.md): verified
+official source inputs, a standalone new-parser/FIR/checker/FIR2IR entry, memory
+KLIB serialization/linking and the official Wasm code generator/writer. Original
+Java helper and host dependencies are ported with differential receipts. The
+complete compiler source still fails to build for wasmJs; no fresh Kotlin input
+has been compiled by a browser compiler. Native-built console examples below are
+runtime fixtures and do not satisfy this objective.
 
 ## Source and evidence
 
@@ -61,7 +69,7 @@ The audit process can exit successfully while its G0 result remains blocked.
 Copied upstream fixtures retain their exact bytes and are accompanied by
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the pinned upstream license.
 
-## Real Hello World and Fibonacci builds
+## JVM-hosted compiler reference fixtures
 
 The [bootstrap reference recipe](build/README.md) downloads a bounded official
 compiler/stdlib set, verifies every payload, then invokes the official
@@ -147,7 +155,7 @@ language/API 2.5 settings are separate from the original 2.4 example profile.
 | --- | --- | --- |
 | G0 | Complete source/generated/tool locks, resolved dependency closure, R0/R1 baseline | Blocked; selected source inventory recorded |
 | G1 | Official parser JVM/browser comparison, errors and Unicode | Passed for 17-case standalone parser corpus; old/new parser semantic comparison remains separate |
-| G2 | Portable byte sink/registry/KLIB/writer host comparisons | Writer unit passed; registry and KLIB probes remain unrun |
+| G2 | Portable byte sink/registry/KLIB/writer host comparisons | Individual writer, registry, protobuf and KLIB probes passed for their recorded corpora; full compiler dependency closure remains incomplete |
 | G3 | New-parser raw/resolved FIR, builtins, common/target checkers | Not run |
 | G4 | Browser compiler emits a new program using official IR/backend | Not run |
 | G5 | Real Kotlin WASI stdin/EOF/ABI/output/exception execution | Hello/Fibonacci, stdin, output-limit and fresh-instance recovery pass; allocator canaries and full corpus remain unrun |
