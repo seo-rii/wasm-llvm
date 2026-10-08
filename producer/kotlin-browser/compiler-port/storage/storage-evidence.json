@@ -1,0 +1,526 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-compiler-core-storage-differential",
+  "status": "passed",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "originals": [
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/LockBasedStorageManager.java",
+      "bytes": 30008,
+      "gitBlob": "b40982d30e34f86f326d472957abde4b5ca759b9",
+      "sha256": "fb8e873639b58e8525d0cc1c320c05b1605ff113977c0c1442d72a632efa44ad"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/NoLock.java",
+      "bytes": 1691,
+      "gitBlob": "b2eca0a0974e30453e64cb4081a8122024ae2644",
+      "sha256": "a66f6258fe9f3551b2e0a65dff5cd47cfe0f793311668b6efde230a803f8c2c1"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/SingleThreadValue.java",
+      "bytes": 1155,
+      "gitBlob": "b688b4e1198087921d186bd655fcb68ffc9a0651",
+      "sha256": "c8a24406c909073ff009b9b621b65bd564687d40740274cb9c384b585c798351"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/WrappedValues.java",
+      "bytes": 2873,
+      "gitBlob": "ad135010847d9e13dbab39864474ed3a29830d34",
+      "sha256": "74f95675719649abcf3b32e08244660276de896e40029e99663db87e8e9dbb5a"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/StorageManager.kt",
+      "bytes": 3845,
+      "gitBlob": "b517f0a50639da4f9e15d60dc2f148ae7a22c67d",
+      "sha256": "69d319640820cb692333914c01d04e1f54513b6f17dd483b458bc36173da5b97"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/storage.kt",
+      "bytes": 1638,
+      "gitBlob": "02fba7c8f4386cdebc158328d9bdcfb40671ea7a",
+      "sha256": "8e85b76d36f36bc4bd18eb8fa0063a86654d395473192f29377a098235c6f3a9"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/locks.kt",
+      "bytes": 2146,
+      "gitBlob": "8d47c184f30ed58ed8b27ab66121d60e693c98ce",
+      "sha256": "924277e4e2bc0ee8d167554b5ec477bf538755098336d1f8567f768a45879264"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/exceptionUtils.kt",
+      "bytes": 1464,
+      "gitBlob": "6e0982f24f4417b2609691ed06bcad0498d98827",
+      "sha256": "bd46cf2854629ac2a18fe8485b0f664f23958fce6737813cdee808030a1c7fd6"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/storage/ObservableStorageManager.kt",
+      "bytes": 4232,
+      "gitBlob": "141299df18dd83ae379292c4e7b2c21b7c7255e6",
+      "sha256": "00df0749444fad338c1e06e158049d739c9da8ba2b0916f36975f960d5b0ab53"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/SuppressJdk6SignatureCheck.kt",
+      "bytes": 651,
+      "gitBlob": "ff09a57b7797ca7cd9955de4b14fcf66296dbc5c",
+      "sha256": "ae17a783a16818d615fcf22be9d4544df209fae3a1500e2914e12eecd0d4475d"
+    }
+  ],
+  "portable": [
+    {
+      "path": "LockBasedStorageManager.kt",
+      "bytes": 19027,
+      "sha256": "37804347972762d6751ab73531fd314fa981df9272dbfc25202d6009ab4df9ca"
+    },
+    {
+      "path": "SingleThreadValue.kt",
+      "bytes": 628,
+      "sha256": "5820a9c4c8f45f7dffbf9e467a4e8aa02b2fe23985c8aa83c5c7e5974fecf8ee"
+    },
+    {
+      "path": "WrappedValues.kt",
+      "bytes": 1398,
+      "sha256": "10cb0dd84711f6f7abeeded8beceec7d3ad41748510c033022d46195a641d012"
+    },
+    {
+      "path": "locks.kt",
+      "bytes": 1667,
+      "sha256": "87af8f5acc673083537daabca955314713f9d099a5471e579df160d5e7f506bf"
+    },
+    {
+      "path": "exceptionUtils.kt",
+      "bytes": 614,
+      "sha256": "9080ec3d34b3dfed8efc2345d8fa5dfcca9d9adc0080c321cc4cb3303bf31236"
+    },
+    {
+      "path": "ProcessCanceledException.kt",
+      "bytes": 246,
+      "sha256": "95af72995f7003c89e307794806b3433a87cf79a7bbde9fb590686a44252e2b0"
+    }
+  ],
+  "mapInterfaceReplacements": [
+    {
+      "path": "StorageManager.kt",
+      "originalPath": "core/util.runtime/src/org/jetbrains/kotlin/storage/StorageManager.kt",
+      "bytes": 3857,
+      "sha256": "61c5ede2b24ada1746d29440f9edf8e7489a8a9c77ab9e7d9d1fb29b498d29bf",
+      "operation": "replace-exact-ConcurrentMap-import-only"
+    },
+    {
+      "path": "ObservableStorageManager.kt",
+      "originalPath": "core/util.runtime/src/org/jetbrains/kotlin/storage/ObservableStorageManager.kt",
+      "bytes": 4244,
+      "sha256": "86670cf3fbd76f7cfbc777bcb720c2e04af16a7bb787d963ad4dfd6e9096f544",
+      "operation": "replace-exact-ConcurrentMap-import-only"
+    }
+  ],
+  "recipeSha256": "0e0cd2adea45ca40fe3b26803d3288ba7b2c8ae2a78b8e80a4837b3473b86ac6",
+  "observerSources": [
+    {
+      "path": "StorageProbe.kt",
+      "bytes": 8974,
+      "sha256": "94abde639825f77a148aad2b919a731ef69ab1020d4a2a09cf3d68c386435732"
+    },
+    {
+      "path": "StorageJvmEntry.kt",
+      "bytes": 88,
+      "sha256": "652a298d1b6c3cc9f3b8123921ccb6fc187618883f71e94f9a12cc8d5742666d"
+    },
+    {
+      "path": "StorageWasmEntry.kt",
+      "bytes": 135,
+      "sha256": "f6861bdf4855c4bd188d4137445223652de075cb0386be11673f03775fc54570"
+    },
+    {
+      "path": "OriginalProbeMap.kt",
+      "bytes": 351,
+      "sha256": "664d7850203bc2f04c50d65a673463fc7de348e0e9ededf1ba86450fa20cc041"
+    },
+    {
+      "path": "PortableProbeMap.kt",
+      "bytes": 389,
+      "sha256": "3e7c45020c52d66280d753aed226bf5e0248dc6f7e1684d01b16f80491bd8fa7"
+    }
+  ],
+  "buildScriptSha256": "d866f5bb0822058882a88770739fb9d34a7012801543eb98ef15fc6cc91d4518",
+  "prepareScriptSha256": "e7d08bb033f5c24e0b075004f8e70343c45b64a00ab38350f7bbfa1e1ab5e0ff",
+  "bootstrapVersion": "2.5.0-dev-10106",
+  "bootstrapCompilerSourceCommit": null,
+  "bootstrapArtifacts": [
+    {
+      "id": "compiler",
+      "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 59164049,
+      "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "build-tools-api",
+      "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+      "bytes": 575844,
+      "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-jvm",
+      "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+      "bytes": 1859448,
+      "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "daemon",
+      "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 372801,
+      "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-wasi",
+      "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+      "bytes": 4044976,
+      "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-js",
+      "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+      "bytes": 4065926,
+      "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "reflect",
+      "file": "kotlin-reflect-1.6.10.jar",
+      "bytes": 3038560,
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+      "version": "1.6.10",
+      "verified": true
+    },
+    {
+      "id": "coroutines",
+      "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+      "bytes": 1548360,
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+      "version": "1.8.0",
+      "verified": true
+    },
+    {
+      "id": "annotations",
+      "file": "annotations-13.0.jar",
+      "bytes": 17536,
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+      "version": "13.0",
+      "verified": true
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-storage-kotlin-interfaces",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/original-support.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/StorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/storage.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/locks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/utils/exceptionUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/SuppressJdk6SignatureCheck.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/ProcessCanceledException.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 8739.328951
+    },
+    {
+      "phase": "original-storage-javac",
+      "argv": [
+        "javac",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/original-support.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/classes",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/LockBasedStorageManager.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/NoLock.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/SingleThreadValue.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/utils/WrappedValues.java"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 2325.1944089999997
+    },
+    {
+      "phase": "original-storage-jvm-observer-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/original-support.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/OriginalProbeMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 12549.691820999999
+    },
+    {
+      "phase": "portable-storage-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/LockBasedStorageManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/SingleThreadValue.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/WrappedValues.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/locks.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/exceptionUtils.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ProcessCanceledException.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/StorageManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ObservableStorageManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/storage.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/PortableProbeMap.kt",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/LockBasedStorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/SingleThreadValue.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/WrappedValues.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/locks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/exceptionUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ProcessCanceledException.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/StorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ObservableStorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/storage.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/PortableProbeMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 26398.504141999998
+    },
+    {
+      "phase": "original-storage-jvm-observe",
+      "argv": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/original-support.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.storageprobe.StorageJvmEntryKt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 923.1066460000002
+    },
+    {
+      "phase": "portable-storage-jvm-observe",
+      "argv": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.storageprobe.StorageJvmEntryKt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1175.8306400000001
+    },
+    {
+      "phase": "portable-storage-wasmjs-klib-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/LockBasedStorageManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/SingleThreadValue.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/WrappedValues.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/locks.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/exceptionUtils.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ProcessCanceledException.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/StorageManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ObservableStorageManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/storage.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/PortableProbeMap.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/klib",
+        "-ir-output-name",
+        "storage-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/LockBasedStorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/SingleThreadValue.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/WrappedValues.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/locks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/exceptionUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ProcessCanceledException.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/StorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/compiler-port-storage/ObservableStorageManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/original/core/util.runtime/src/org/jetbrains/kotlin/storage/storage.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/PortableProbeMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/storage/StorageWasmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 33077.392391999994
+    },
+    {
+      "phase": "portable-storage-wasmjs-binary-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/klib/storage-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/wasm",
+        "-ir-output-name",
+        "storage-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 23511.898558999994
+    },
+    {
+      "phase": "portable-storage-wasmjs-observe",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const module = await import(process.argv[1]); console.log(module.storageProbeJson());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-storage-probe-complete/wasm/storage-probe.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 156.02363500000502
+    }
+  ],
+  "outputs": [
+    {
+      "path": "jvm/original-support.jar",
+      "bytes": 16622,
+      "sha256": "f928ae3e941418960cccbe0d4e6c85321160f33834ea45921b79f11348df6565"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 16843,
+      "sha256": "308a8fdcd9e9340a646fa7921533bc56db70195644fd81ee7c247058b49df797"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 84708,
+      "sha256": "3f3b1a926718674859be65a1b6d59fdee5b4fae64b1013590b5cf263b9dfbcc7"
+    },
+    {
+      "path": "klib/storage-probe.klib",
+      "bytes": 73867,
+      "sha256": "9961bf50cf0e2e92e4fbc6f28c913851ca9646b1408b0acbecb6c1fa45ecf6e7"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 1308,
+      "sha256": "adfbeba399f5e2fa9cb9367310294a9ac059970b598f6981a9b1ee9252d71923"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 1308,
+      "sha256": "adfbeba399f5e2fa9cb9367310294a9ac059970b598f6981a9b1ee9252d71923"
+    },
+    {
+      "path": "portable-wasmjs.json",
+      "bytes": 1308,
+      "sha256": "adfbeba399f5e2fa9cb9367310294a9ac059970b598f6981a9b1ee9252d71923"
+    },
+    {
+      "path": "wasm/storage-probe.import-object.mjs",
+      "bytes": 9488,
+      "sha256": "0f72cb4f7e32da50e02648185a5cbd020e49f71c5ea77ba3d612b9b4b8c3a18c"
+    },
+    {
+      "path": "wasm/storage-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/storage-probe.mjs",
+      "bytes": 2270,
+      "sha256": "6d9650218dcc3a10e79fd640d785ccc798599e75bd9b35123aa9d9cf592a7d18"
+    },
+    {
+      "path": "wasm/storage-probe.wasm",
+      "bytes": 847129,
+      "sha256": "ef35bb18170c88358cf5abb0448f3981c7d9abf526e775d6603b8420b04a173f"
+    }
+  ],
+  "comparison": {
+    "required": 36,
+    "passed": 36,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "originalJavaEqualsPortableJvm": true,
+    "originalJavaEqualsPortableWasm": true
+  },
+  "wasmEngine": {
+    "kind": "Node",
+    "version": "v24.1.0",
+    "flags": [
+      "--experimental-wasm-exnref"
+    ]
+  },
+  "browserComparison": "not-run",
+  "limitations": [
+    "Tests the actual storage dependency state machines, not the full browser compiler.",
+    "Host profile is one serial Worker; JVM contention, interruption and cross-thread visibility are excluded.",
+    "ProcessCanceledException is a typed cancellation marker tested against the original reflection classifier, not an IntelliJ service implementation.",
+    "Object identity debug strings and JVM stack traces are not claimed byte-identical.",
+    "Both original JVM references run with assertions enabled; portable non-null result guards are retained."
+  ],
+  "browserCompiler": "not-built",
+  "languageReadiness": false
+}
