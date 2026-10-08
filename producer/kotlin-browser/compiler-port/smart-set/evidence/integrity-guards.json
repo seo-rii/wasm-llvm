@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-smart-set-preparation-guards",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "result": "pass",
+  "testSourceSha256": "b0b2be8fd2787b10f8118e79364c304a20322188a0265cb5ab626a536b0fdf81",
+  "preparationReceiptSha256": "6781832e98ecdcebb57f6941b1e87b98a7912a34be4406ebccacdcb55d59538c",
+  "output": {
+    "path": "integrity-guards.tap",
+    "bytes": 1898,
+    "sha256": "d9fb5a39b0d54abfae0ea8f00a0e935d81630c89f7dbeb8eb632a8c49fadf56c"
+  },
+  "commands": [
+    {
+      "command": "node",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "producer/kotlin-browser/compiler-port/smart-set/integrity.test.mjs"
+      ],
+      "environment": {
+        "KOTLIN_SMART_SET_PREPARED": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set"
+      },
+      "exitCode": 0
+    }
+  ],
+  "comparison": {
+    "required": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0
+  },
+  "browserCompilerBuilt": false,
+  "languageReadiness": false
+}
