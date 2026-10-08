@@ -1,0 +1,724 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-compiler-type-registry-differential",
+  "status": "passed",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "originals": [
+    {
+      "path": "compiler/fir/cones/src/org/jetbrains/kotlin/fir/util/ConeTypeRegistry.kt",
+      "gitBlob": "8fe9e499a9b80424d3d933a1bdcf71acd6732eb5",
+      "bytes": 613,
+      "sha256": "45f8c60a4b94ba2023b47438a39616053f76ee693f13545f15a092f5f00da815"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt",
+      "gitBlob": "63434ab2e80555c152d71f209b4eac7614a27539",
+      "bytes": 3844,
+      "sha256": "b0b1c24b2713820b00a7fe4685f3c28b02761b3c829cc531d2fe32ce2fd9c14d"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMapOwner.kt",
+      "gitBlob": "ec0f2859e16dd64d8cafe36063bf140b3ffe55b9",
+      "bytes": 4151,
+      "sha256": "d6e0bf6cf59286c07e2bacf6813dec518c9a5e085f4e44efd787507854628527"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/AttributeArrayOwner.kt",
+      "gitBlob": "c06a28b3889beb358e130895477b2d8271c70f6e",
+      "bytes": 3988,
+      "sha256": "7b6c782bc6b0c618353df82df40ac1fac907b44afb3f8e4bd95ca3c396a5df1f"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt",
+      "gitBlob": "76d921bc82482290c47ee9a689e5bfedd9c3e126",
+      "bytes": 1961,
+      "sha256": "807e4ab32e8e18b1efdec1027c039c65dd09e19ce55e6f161e67e9e8a2ba1e43"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/types/TypeAttributes.kt",
+      "gitBlob": "2ba8ed9b98253426c0e2ee85ad2343348894d34a",
+      "bytes": 5059,
+      "sha256": "de947f4730e75eba663149be981e1992a6853c361c6e0ba185f51fa7694db321"
+    }
+  ],
+  "portable": [
+    {
+      "path": "RegistryHost.kt",
+      "bytes": 2083,
+      "sha256": "dda07110ff80ef453287de144d8e773ed4982846666fba60a652cf3df8a484ad"
+    }
+  ],
+  "transformations": [
+    {
+      "path": "ConeTypeRegistry.kt",
+      "originalPath": "compiler/fir/cones/src/org/jetbrains/kotlin/fir/util/ConeTypeRegistry.kt",
+      "bytes": 646,
+      "sha256": "dc6ce4e465cb84b04a0d3e96e6494ab3663f116b8677f4f5c0eb8c2dae005ea3",
+      "replacements": [
+        {
+          "from": "import java.util.concurrent.ConcurrentHashMap",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryMap as ConcurrentHashMap"
+        }
+      ]
+    },
+    {
+      "path": "ArrayMapOwner.kt",
+      "originalPath": "core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMapOwner.kt",
+      "bytes": 4214,
+      "sha256": "1bafb1975c379356a97197d9dd4c21acdd401de1de0f628e4a085005fdae919f",
+      "replacements": [
+        {
+          "from": "import java.util.concurrent.ConcurrentHashMap",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryMap as ConcurrentHashMap"
+        },
+        {
+          "from": "import java.util.concurrent.atomic.AtomicInteger",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryCounter as AtomicInteger"
+        }
+      ]
+    },
+    {
+      "path": "AttributeArrayOwner.kt",
+      "originalPath": "core/compiler.common/src/org/jetbrains/kotlin/util/AttributeArrayOwner.kt",
+      "bytes": 3983,
+      "sha256": "8aaf99dc8aad14c362e1dc255f908648ba77b3329494f015f03936446b8d7e03",
+      "replacements": [
+        {
+          "from": "${map::class.java}",
+          "to": "${map::class}"
+        }
+      ]
+    },
+    {
+      "path": "TypeAttributes.kt",
+      "originalPath": "core/descriptors/src/org/jetbrains/kotlin/types/TypeAttributes.kt",
+      "bytes": 5159,
+      "sha256": "3430ce60443701c02ebe9941e23d60fb079f6632642bbb60f98dcce0020e68e4",
+      "replacements": [
+        {
+          "from": "import java.util.concurrent.ConcurrentHashMap",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryMap as ConcurrentHashMap"
+        },
+        {
+          "from": "import kotlin.properties.ReadOnlyProperty",
+          "to": "import org.jetbrains.kotlin.portable.registry.withRegistryLock\nimport kotlin.properties.ReadOnlyProperty"
+        },
+        {
+          "from": "synchronized(this)",
+          "to": "withRegistryLock(this)"
+        }
+      ]
+    }
+  ],
+  "sourceBuildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "requiredFlags": [
+    "-Xwasm-kclass-fqn"
+  ],
+  "flagProvenance": [
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClass.kt",
+      "gitBlob": "cb98048a8a6081010849ad34ffdf40c8739025ac",
+      "bytes": 1620,
+      "sha256": "4a758c1be048bb5eba845afdd671aa7015f66688d92d6d15d1ceb3af114a9fcb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClassImpl.kt",
+      "gitBlob": "ecbdc5ef10eacda4bd7439badb4be64774c85730",
+      "bytes": 1439,
+      "sha256": "311f78cfaf7daabe88831b2a3fee2984efc5b3fd597cbf1187ccf4188e5b6d70"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClassInterfaceImpl.kt",
+      "gitBlob": "b273fec97dd25553630182b0d717a3e8b02f5336",
+      "bytes": 1146,
+      "sha256": "54e73511f2cf67f131e46a3150d965d81ae32a98a4c7a0140a8c1ebd15cf9565"
+    }
+  ],
+  "omittedFlag": {
+    "sourceCompileExit": 0,
+    "binaryLinkExit": 0,
+    "runtimeExit": 0,
+    "comparison": "equal"
+  },
+  "recipeSha256": "38100d01cf5d03734636efd77e4744a7ca717c31d129072847a6a07d8cb9710b",
+  "observerSources": [
+    {
+      "path": "RegistryProbe.kt",
+      "bytes": 9585,
+      "sha256": "07630bbc3a7d98a9e1894a42ecaef4cf93b38b4dc1a9e3a01be48b7fef22d7a1"
+    },
+    {
+      "path": "RegistryJvmEntry.kt",
+      "bytes": 210,
+      "sha256": "78e62d095234a8e8657a9515e080296185336347090cfeb0937d2acbcb7d83ec"
+    },
+    {
+      "path": "RegistryWasmEntry.kt",
+      "bytes": 266,
+      "sha256": "239c58ebc78792357783e72176568156bad83a370818651fe6939af43a994347"
+    },
+    {
+      "path": "OriginalProbePolicy.kt",
+      "bytes": 335,
+      "sha256": "c95897fb3f79df554b935cd0263d0f516e1aaf80a0a998b260e726c4633dc7dd"
+    },
+    {
+      "path": "PortableProbePolicy.kt",
+      "bytes": 423,
+      "sha256": "787bdc5729a81899f37a6bc9b56667df5f17ac074ca7498fafafee300888b25b"
+    }
+  ],
+  "buildScriptSha256": "d7e017441c7bbd58b3fe885671029551a4290c5b00212cd0f60630ff1d604c99",
+  "prepareScriptSha256": "e27296f8db7f7b4d6762e4a15d56c760f26e261e731d6b9464f22b685e7b05b3",
+  "bootstrapVersion": "2.5.0-dev-10106",
+  "bootstrapCompilerSourceCommit": null,
+  "bootstrapArtifacts": [
+    {
+      "id": "compiler",
+      "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 59164049,
+      "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "build-tools-api",
+      "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+      "bytes": 575844,
+      "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-jvm",
+      "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+      "bytes": 1859448,
+      "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "daemon",
+      "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 372801,
+      "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-wasi",
+      "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+      "bytes": 4044976,
+      "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-js",
+      "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+      "bytes": 4065926,
+      "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "reflect",
+      "file": "kotlin-reflect-1.6.10.jar",
+      "bytes": 3038560,
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+      "version": "1.6.10",
+      "verified": true
+    },
+    {
+      "id": "coroutines",
+      "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+      "bytes": 1548360,
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+      "version": "1.8.0",
+      "verified": true
+    },
+    {
+      "id": "annotations",
+      "file": "annotations-13.0.jar",
+      "bytes": 17536,
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+      "version": "13.0",
+      "verified": true
+    }
+  ],
+  "commands": [
+    {
+      "phase": "official-registry-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/compiler/fir/cones/src/org/jetbrains/kotlin/fir/util/ConeTypeRegistry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMapOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/AttributeArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/OriginalProbePolicy.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 11491.731036
+    },
+    {
+      "phase": "portable-registry-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/RegistryHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ConeTypeRegistry.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ArrayMapOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/AttributeArrayOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/PortableProbePolicy.kt",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/RegistryHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ConeTypeRegistry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ArrayMapOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/AttributeArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/PortableProbePolicy.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 12467.993538
+    },
+    {
+      "phase": "official-registry-jvm-observe",
+      "argv": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.registryprobe.RegistryJvmEntryKt"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 376.61252599999716
+    },
+    {
+      "phase": "portable-registry-jvm-observe",
+      "argv": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.registryprobe.RegistryJvmEntryKt"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 343.13875100000223
+    },
+    {
+      "phase": "qualified-name-source-without-profile-flag",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/RegistryHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ConeTypeRegistry.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ArrayMapOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/AttributeArrayOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/PortableProbePolicy.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-name",
+        "registry-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/RegistryHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ConeTypeRegistry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ArrayMapOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/AttributeArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/PortableProbePolicy.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryWasmEntry.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/missing-flag-klib"
+      ],
+      "exitCode": 0,
+      "allowFailure": true,
+      "elapsedMs": 10014.020976999996
+    },
+    {
+      "phase": "qualified-name-link-without-profile-flag",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/missing-flag-klib/registry-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/missing-flag-wasm",
+        "-ir-output-name",
+        "registry-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0,
+      "allowFailure": true,
+      "elapsedMs": 8824.979609000002
+    },
+    {
+      "phase": "qualified-name-runtime-without-profile-flag",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const module = await import(process.argv[1]); console.log(module.registryProbeJson());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/missing-flag-wasm/registry-probe.mjs"
+      ],
+      "exitCode": 0,
+      "allowFailure": true,
+      "elapsedMs": 107.41899900000135
+    },
+    {
+      "phase": "portable-registry-wasmjs-klib-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xwasm-kclass-fqn",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/RegistryHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ConeTypeRegistry.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ArrayMapOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/AttributeArrayOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/PortableProbePolicy.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-name",
+        "registry-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/RegistryHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ConeTypeRegistry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/ArrayMapOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/compiler-port-registry/AttributeArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/original/core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/PortableProbePolicy.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/registry/RegistryWasmEntry.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/klib"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 10127.647685999997
+    },
+    {
+      "phase": "portable-registry-wasmjs-binary-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xwasm-kclass-fqn",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/klib/registry-probe.klib",
+        "-ir-output-name",
+        "registry-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/wasm"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 8397.188036
+    },
+    {
+      "phase": "portable-registry-wasmjs-observe",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const module = await import(process.argv[1]); console.log(module.registryProbeJson());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-registry-probe-verified/wasm/registry-probe.mjs"
+      ],
+      "exitCode": 0,
+      "allowFailure": false,
+      "elapsedMs": 104.67943899999955
+    }
+  ],
+  "outputs": [
+    {
+      "path": "jvm/original.jar",
+      "bytes": 56455,
+      "sha256": "fe8901b62f21dea2f4dc1a9efca76c4411d6163b199953bd90f862a08ba0cc5c"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 60767,
+      "sha256": "ceb196fc0d295957a7cc77ba5ca68f325ee658d5239be7effab602ce4577d096"
+    },
+    {
+      "path": "klib/registry-probe.klib",
+      "bytes": 65964,
+      "sha256": "aed4e81ee5b87a10605d4ef861338d3ff795d164edc14d6bfe8085100890af6b"
+    },
+    {
+      "path": "missing-flag-diagnostic.txt",
+      "bytes": 4040,
+      "sha256": "505eecb4425fe69c0a9e9be95ccb8d361d18eecbe62453c52820c1e87a7a2451"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 1632,
+      "sha256": "ed6e5fecc1b3f58b3e75305b3262e7e7c974534be2e4629ec0ad4a1c4f8067f6"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 1632,
+      "sha256": "ed6e5fecc1b3f58b3e75305b3262e7e7c974534be2e4629ec0ad4a1c4f8067f6"
+    },
+    {
+      "path": "portable-wasmjs.json",
+      "bytes": 1632,
+      "sha256": "ed6e5fecc1b3f58b3e75305b3262e7e7c974534be2e4629ec0ad4a1c4f8067f6"
+    },
+    {
+      "path": "wasm/registry-probe.import-object.mjs",
+      "bytes": 9489,
+      "sha256": "00dfefd5d82601335efec66db7dc523ce1f3fdf88e3ffc3fdd912914bd4a7c4a"
+    },
+    {
+      "path": "wasm/registry-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/registry-probe.mjs",
+      "bytes": 2275,
+      "sha256": "f55d38d83abac1bb04a8c88dc24deaa191b078aead991efcefc99eb3d13f6437"
+    },
+    {
+      "path": "wasm/registry-probe.wasm",
+      "bytes": 823357,
+      "sha256": "30a9843bcdf173ebcdb1cbdff3afc96cd6e189f11fc635d048e0a99d0e8f4507"
+    }
+  ],
+  "comparison": {
+    "required": 34,
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "originalJvmEqualsPortableJvm": true,
+    "originalJvmEqualsPortableWasm": true,
+    "observationsPerCasePerHost": 2
+  },
+  "wasmEngine": {
+    "kind": "Node",
+    "version": "v24.1.0",
+    "flags": [
+      "--experimental-wasm-exnref"
+    ]
+  },
+  "browserComparison": "not-run",
+  "limitations": [
+    "Compares the actual TypeRegistry, ArrayMap and owner algorithms, not the full compiler.",
+    "TypeAttributes transformation is verified whole-file; its legacy callback policy is instrumented in the observer, while descriptor attribute semantics are not exercised here.",
+    "Maps are for the selected single-Worker registry operations, not a general ConcurrentHashMap substitute or a concurrency guarantee.",
+    "Named classes use official RTTI names with -Xwasm-kclass-fqn; anonymous/local keys retain the original null-name failure.",
+    "The omitted-flag experiment records actual bootstrap source/link/runtime outcomes and does not infer rejection from upstream documentation.",
+    "Registry IDs have one owning registry lifetime; no numeric reset or cross-build/session serialization contract is introduced.",
+    "Render-map ordering and JVM class diagnostic rendering are host-specific."
+  ],
+  "browserCompiler": "not-built",
+  "languageReadiness": false
+}
