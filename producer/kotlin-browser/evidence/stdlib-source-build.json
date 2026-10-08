@@ -1,0 +1,319 @@
+{
+  "recordedAt": "2026-10-08T06:32:11.554Z",
+  "producerCheckoutCommit": "764a129dc93a48336710957b6a9a3038cf9d3e7d",
+  "environment": {
+    "node": "24.1.0",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment (build 17.0.20.1+1-1-deb12u1-Debian)\nOpenJDK 64-Bit Server VM (build 17.0.20.1+1-1-deb12u1-Debian, mixed mode, sharing)"
+  },
+  "limits": [
+    "This builds target library T and reference programs with the official JVM-hosted bootstrap; source compiler R0/R1 and browser compiler C remain unbuilt.",
+    "Gradle tasks are not executed; source hierarchy, byte-copy builtins and unchanged official version-generation logic use explicit standalone adapters.",
+    "Expected program output is distinct from observed browser execution in the consumer evidence."
+  ],
+  "schemaVersion": 1,
+  "kind": "selected-source-kotlin-wasi-stdlib-build",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e",
+    "stdlibTreeSha": "739294c5d27641fa0672194e6184f406ad2b7780"
+  },
+  "recipeSha256": "78a1e578848593131aa1527cc22fabc7c883ce8a67800a16dde1d72edd6d12f8",
+  "compiler": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "role": "official-bootstrap",
+    "jarSha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+  },
+  "kotlinVersion": "2.5.255-SNAPSHOT",
+  "compilerHost": "jvm",
+  "programTarget": "wasmWasi",
+  "gradleTaskExecution": "not-run",
+  "sourceFiles": 507,
+  "compiledSourceFiles": 501,
+  "commands": [
+    {
+      "phase": "version-generator-compile",
+      "command": [
+        "java",
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "@/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/version-generator-compile.args"
+      ],
+      "argumentFile": "version-generator-compile.args",
+      "argumentFileSha256": "f67ec429449f3cd723534ffac02259d7c92c6492fc538e631af52ebaa1bed0c7",
+      "exitCode": 0,
+      "elapsedMs": 16956.292762
+    },
+    {
+      "phase": "stdlib-klib",
+      "command": [
+        "java",
+        "-Xmx2g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "@/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/stdlib-klib.args"
+      ],
+      "argumentFile": "stdlib-klib.args",
+      "argumentFileSha256": "b87c7fbba3ca8a47a72a556edd7a2fc162343e7e973182cfb6a3197b0005f076",
+      "exitCode": 0,
+      "elapsedMs": 213826.76065299998
+    }
+  ],
+  "status": "pass",
+  "browserCompiler": "not-built",
+  "publicLanguageSupport": false,
+  "sourceWorkspace": {
+    "kind": "isolated subset repository",
+    "checkedOutCommit": null,
+    "identity": "Every source byte is verified against recipe pins; this is not a full upstream checkout."
+  },
+  "patch": {
+    "schemaVersion": 1,
+    "kind": "kotlin-wasi-stdlib-source-patch-verification",
+    "patchId": "kotlin-wasi-preview1-full-poll-allocations",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "metadataSha256": "d057b1e80af1fbc47e58f4235e8fa4acba12c59db654c61613833830d7acd648",
+    "patch": {
+      "path": "wasi-preview1-io.patch",
+      "bytes": 755,
+      "gitBlob": "9fd1c8df01204d08e52790c53921a3ef74737a97",
+      "sha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede"
+    },
+    "original": {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/io.kt",
+      "bytes": 8555,
+      "gitBlob": "54e71e8cd135f904f516893517626d6f7d8c17b6",
+      "sha256": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040"
+    },
+    "patched": {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/io.kt",
+      "bytes": 8555,
+      "gitBlob": "d1bd42e39bb583abc24ac5ace410cb0c1fa46d79",
+      "sha256": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4"
+    },
+    "sourceDependencies": [
+      {
+        "path": "libraries/stdlib/wasm/src/kotlin/wasm/unsafe/MemoryAllocation.kt",
+        "bytes": 23735,
+        "gitBlob": "c924241099baf9cf073529fbd17fc767b192e73e",
+        "sha256": "aa492bfb78de89a71e3da8a1b08d02f9d5d0b4a50895779617eecd5d88429e2b"
+      },
+      {
+        "path": "libraries/stdlib/build.gradle.kts",
+        "bytes": 45605,
+        "gitBlob": "9d1a32fa9ef5e1e0ab5f1a62f051839aa0ac1a83",
+        "sha256": "2c795ec85a8e2649f81fd46bcb834bdc56d41265589e0e050079827a95f1afc8"
+      }
+    ],
+    "abi": {
+      "repository": "https://github.com/WebAssembly/wasi-libc.git",
+      "commit": "165235bc467d5fa52d424f5d82587dfb76ed9d54",
+      "header": {
+        "path": "libc-bottom-half/headers/public/wasi/wasip1.h",
+        "bytes": 59704,
+        "gitBlob": "afca1aaf8ecb381d12a5671cae339dd3c49c6a1b",
+        "sha256": "db122dfbbd0a51c28c888aabc7163814e9b400689d4c76727b54e404e0e754b6"
+      },
+      "subscriptionBytes": 48,
+      "eventBytes": 32,
+      "alignment": 8,
+      "subscriptionOffsets": {
+        "userdata": 0,
+        "type": 8,
+        "fd": 16
+      },
+      "eventOffsets": {
+        "userdata": 0,
+        "errno": 8,
+        "type": 10,
+        "nbytes": 16,
+        "flags": 24
+      }
+    },
+    "action": "apply",
+    "selectedSourceBytesVerified": true,
+    "entireSourceTreeVerified": false,
+    "sourceState": "patched",
+    "patchVerification": {
+      "apply": "pass",
+      "reverse": "pass",
+      "changedPaths": [
+        "libraries/stdlib/wasm/wasi/src/kotlin/io.kt"
+      ],
+      "addedLines": 2,
+      "removedLines": 2
+    },
+    "allocator": {
+      "kind": "source-inspection",
+      "pointerAlignment": 8,
+      "roundingMultiple": 8,
+      "originalRequestedBytes": {
+        "subscription": 20,
+        "event": 26
+      },
+      "originalPhysicalBytes": {
+        "subscription": 24,
+        "event": 32
+      },
+      "patchedRequestedBytes": {
+        "subscription": 48,
+        "event": 32
+      },
+      "patchedPhysicalBytes": {
+        "subscription": 48,
+        "event": 32
+      },
+      "observation": "The current allocator already rounds event26 to32; subscription20 rounds24, below48.",
+      "wasmExecution": "not-run",
+      "actualMemoryCorruption": "not-reproduced"
+    },
+    "structures": {
+      "kind": "source-inspection",
+      "subscriptionBytes": 48,
+      "eventBytes": 32,
+      "alignment": 8
+    },
+    "build": {
+      "projectId": ":kotlin-stdlib",
+      "target": "wasmWasi",
+      "sourceSet": "wasmWasiMain",
+      "taskCandidate": ":kotlin-stdlib:compileKotlinWasmWasi",
+      "taskConfirmedByGradle": false,
+      "requiresGeneratedBuiltinsAndVersion": true,
+      "targetStdlib": "not-built",
+      "compilerIdentity": "must-match-candidate-source-build-set",
+      "ioFileOnlyOverrideSupported": false
+    },
+    "execution": {
+      "stdlibRebuild": "not-run",
+      "kotlinAllocatorCanary": "not-run",
+      "kotlinBrowserRun": "not-run"
+    },
+    "readiness": {
+      "ready": false,
+      "sourcePatchVerification": "pass",
+      "G5": "not-run"
+    },
+    "limits": [
+      "This verifies selected source bytes and exact patch application, not a complete stdlib/compiler build set.",
+      "The current source allocator alignment and rounding are inspected, not executed in Kotlin Wasm.",
+      "Changing source does not change a precompiled KLIB: rebuild and hash the wasmWasi target stdlib.",
+      "Do not compile io.kt alone as an override library or mix patched candidate source with an unrelated stdlib.",
+      "Linear-memory bounds cannot identify smaller logical allocator objects in an unpatched program."
+    ]
+  },
+  "versionGeneration": {
+    "inputProperty": "defaultSnapshotVersion",
+    "inputValue": "2.5.255-SNAPSHOT",
+    "upstreamTask": ":prepare:build.version:writeStdlibVersion",
+    "upstreamGradleTaskExecution": "not-run",
+    "unchangedOfficialLogicExecution": "pass",
+    "generatorSource": {
+      "path": "prepare/build.version/build.gradle.kts",
+      "gitBlob": "ca721ddff8cc91514d7b7594c4a46d1c0aeb149f",
+      "bytes": 2499,
+      "kind": "generator-input",
+      "sha256": "aee1660dc050104e18e8584dfa64e5d330084483402abe213c4264664ab89bda"
+    },
+    "functionSha256": "8691ea44d0711a60e2078f36003a1719882a2f5b9c8e42046739a0ffd7a785f4",
+    "executionBodySha256": "710686f38f53d737f7c8843d59aa9781a27db676959833af31850d57929427e1",
+    "harnessSha256": "08b9ae520bbde410830b2745d9679cae6abfdb30c3e1b8395169e956467908cf",
+    "generatorJarSha256": "d78d072408e0a9a601c370306215649aca97cf80cfa7eddf49c786fd19fa98ed",
+    "command": [
+      "java",
+      "-Xmx256m",
+      "-cp",
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/version-generator.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+      "GenerateVersionKt",
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/sources/libraries/stdlib/src/kotlin/util/KotlinVersion.kt",
+      "2.5.255-SNAPSHOT"
+    ],
+    "exitCode": 0,
+    "originalSha256": "d0f6cac93cb1d3ed6252e6444ca18e57a06c20bbfcd6f654a09ae367eb6a946b",
+    "generatedSha256": "d0f6cac93cb1d3ed6252e6444ca18e57a06c20bbfcd6f654a09ae367eb6a946b",
+    "generatedGitBlob": "08a0ec6e1f06a4a5cde05ee914e57056ded4d07b"
+  },
+  "builtinGeneration": {
+    "kind": "upstream Sync copy adapter",
+    "upstreamTask": ":kotlin-stdlib:prepareWasmBuiltinSources",
+    "upstreamGradleTaskExecution": "not-run",
+    "copied": [
+      {
+        "sourcePath": "libraries/stdlib/jvm/builtins/Annotation.kt",
+        "generatedPath": "generated/wasm-builtin-sources/kotlin/Annotation.kt",
+        "sha256": "d03b97c1aa090c96d7e9556d2348ecb3a6d819a6a4c3911e48060d8e49fe2066"
+      },
+      {
+        "sourcePath": "libraries/stdlib/jvm/builtins/CharSequence.kt",
+        "generatedPath": "generated/wasm-builtin-sources/kotlin/CharSequence.kt",
+        "sha256": "88ac72188d2c066ef21eda55a5702c7413eb0c5efbad2807add7f1494b0a6568"
+      },
+      {
+        "sourcePath": "libraries/stdlib/jvm/builtins/Comparable.kt",
+        "generatedPath": "generated/wasm-builtin-sources/kotlin/Comparable.kt",
+        "sha256": "8f900a52901bea336d8d595a3c9f53ad79fc76d78798ee479b2edf118c54e001"
+      },
+      {
+        "sourcePath": "libraries/stdlib/jvm/builtins/Coroutines.kt",
+        "generatedPath": "generated/wasm-builtin-sources/kotlin/Coroutines.kt",
+        "sha256": "263aaabbb884a8ba5a3ef265ec3f1ee9ed70532ad92067436754ad77803b0cdd"
+      },
+      {
+        "sourcePath": "libraries/stdlib/jvm/builtins/Number.kt",
+        "generatedPath": "generated/wasm-builtin-sources/kotlin/Number.kt",
+        "sha256": "2fa1c05a53ecc302c080aa3268645223d9bc5f69b0a0bd4684dc0c2498ab9877"
+      }
+    ],
+    "sourceBytesPreserved": true
+  },
+  "stdlib": {
+    "path": "stdlib/kotlin-stdlib-wasm-wasi.klib",
+    "bytes": 4111645,
+    "sha256": "3c97b68581963cf32c18d8b6d93b467f3accc9eae2689c1655e8ed4b31f52d28",
+    "version": "2.5.255-SNAPSHOT",
+    "sourceCommit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "patched": true,
+    "patchSha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede"
+  },
+  "outputBundle": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f",
+  "metadata": {
+    "abi_version": "2.5.0",
+    "builtins_platform": "WASM",
+    "compiler_version": "2.5.0-dev-10106",
+    "language_features": "+CollectionLiterals +CompanionBlocks +ContextSensitiveResolutionUsingExpectedType +DeprecateNameMismatchInShortDestructuringWithParentheses +EnableNameBasedDestructuringShortForm +ExplicitContextArguments +JsAllowImplementingFunctionInterface +MultiPlatformProjects",
+    "metadata_version": "2.5.0",
+    "unique_name": "kotlin",
+    "wasm_targets": "wasm-wasi"
+  },
+  "sourceTreeVerification": {
+    "kind": "computed Git tree SHA-1 from complete cached entries; root immediate tree",
+    "root": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e",
+    "repo": "e6578e57bc58cee1ad710be6b2c0952bdb2ded40",
+    "stdlib": "739294c5d27641fa0672194e6184f406ad2b7780",
+    "prepare": "c83f17f736a15f67a6185232149a7d47d11a9ded",
+    "libraries": "8c01ed499827f864fc3c2fc2e7cbf546867a7a97",
+    "ancestry": "root libraries -> complete stdlib; root repo/prepare -> build and generator inputs; every subtree Git SHA-1 recomputed"
+  },
+  "buildLog": "/home/seorii/logs/kotlin-stdlib-source-build-20261008-0mmey7x6.log",
+  "buildExitCode": 0,
+  "earlierAttempts": [
+    {
+      "output": "out/kotlin-stdlib-probe/builds/run-b126ed4b",
+      "exitCode": 1,
+      "cause": "Git apply discovered the producer parent worktree; post-patch byte verification rejected the unchanged file."
+    },
+    {
+      "output": "out/kotlin-stdlib-probe/builds/run-c4fcdcdc",
+      "exitCode": 1,
+      "cause": "Official KotlinWasmCompiler rejected the legacy -no-stdlib argument; corrected adapter uses no -libraries and -Xstdlib-compilation."
+    }
+  ]
+}

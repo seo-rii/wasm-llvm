@@ -95,6 +95,24 @@ This compiler is the official precompiled bootstrap `2.5.0-dev-10106`, with
 candidate's R0/R1 build and not a browser compiler. The stock target stdlib is
 unpatched. These examples cannot advance G4 or enable public Kotlin support.
 
+The separate [target stdlib source probe](stdlib-probe/README.md) builds all 501
+selected-source compilation units, including the exact Preview 1 allocation
+patch. Its 507 original/build/generator inputs are Git-blob/SHA-256 pinned;
+the CLI preserves six source fragments and both WASI parents without linking a
+precompiled target library. The unchanged upstream version-generator logic runs
+through a JVM adapter, and official builtin files are copied unchanged. The
+upstream Gradle task itself remains unrun.
+
+[`evidence/stdlib-source-build.json`](evidence/stdlib-source-build.json) records
+the successful complete source build: target version `2.5.255-SNAPSHOT`, KLIB
+4,111,645 bytes, compiler source commit unknown. The separate
+[patched-target example receipt](evidence/stdlib-patched-baseline.json) records
+successful two-stage official Hello/Fibonacci builds using that KLIB. Both target
+library variants pass the five real browser execution scenarios recorded by
+[wasm-idle](https://github.com/seo-rii/wasm-idle/tree/feat/kotlin-browser-foundation/runtimes/wasm-kotlin/evidence).
+The source-built T is not an accepted browser C/T release pair, and the probe's
+language/API 2.5 settings are separate from the original 2.4 example profile.
+
 ## Verified boundaries
 
 - [The official parser build](https://github.com/JetBrains/kotlin/blob/4d78aae1e337cd40f69baa865aed950fe807a775/compiler/multiplatform-parsing/build.gradle.kts)
@@ -119,8 +137,9 @@ unpatched. These examples cannot advance G4 or enable public Kotlin support.
   rounding, so the event gets 32 bytes but the subscription only 24. The exact
   [stdlib source patch](patches/wasi-README.md) changes the requested sizes to
   48/32 without changing the official I/O logic. Git apply/reverse and seven
-  integrity/application guards passed. The patched stdlib is not built; actual
-  Kotlin allocator canaries and G5 acceptance remain untested.
+  integrity/application guards passed. The complete patched target stdlib now
+  builds and runs both examples in Chromium; actual Kotlin allocator canaries
+  and the full G5 corpus remain untested.
 
 ## Gate progression
 
@@ -131,14 +150,16 @@ unpatched. These examples cannot advance G4 or enable public Kotlin support.
 | G2 | Portable byte sink/registry/KLIB/writer host comparisons | Writer unit passed; registry and KLIB probes remain unrun |
 | G3 | New-parser raw/resolved FIR, builtins, common/target checkers | Not run |
 | G4 | Browser compiler emits a new program using official IR/backend | Not run |
-| G5 | Real Kotlin WASI stdin/EOF/ABI/output/exception execution | Not run |
+| G5 | Real Kotlin WASI stdin/EOF/ABI/output/exception execution | Hello/Fibonacci, stdin, output-limit and fresh-instance recovery pass; allocator canaries and full corpus remain unrun |
 | G6 | Consumer compile/run, cancellation/recovery/offline/cache | Not run |
 | G7 | Required corpus, browser matrix, measured resource/performance profile | Not run |
 | G8 | Clean reproducible release, licenses, immutable receipts and rollback | Not run |
 
-The matching wasm-idle candidate provides source/protocol validation and a
-standard WASI ABI microprobe. That probe does not advance Kotlin G5: it executes
-a WAT fixture, not a Kotlin-generated artifact.
+The matching wasm-idle candidate provides source/protocol validation, a standard
+WASI ABI microprobe and actual Kotlin-generated program execution. The WAT fixture
+checks host structure layouts separately; the real programs demonstrate console
+I/O with both unpatched bootstrap and source-built patched target libraries.
+Neither proves complete Kotlin ABI/runtime acceptance or browser compilation.
 
 The [parser receipt](parser-probe/evidence/g1-parser.json) records the unmodified
 official common sources built with the pinned bootstrap, complete token and

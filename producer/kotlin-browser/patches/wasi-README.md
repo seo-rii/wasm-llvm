@@ -62,6 +62,11 @@ patched stdlib. A bootstrap-version stdlib is a separate artifact probe and
 cannot be labeled as a same-commit patched target stdlib.
 
 This source-patch verification does not pass G5 or enable public Kotlin support.
-The remaining execution gate requires Kotlin-generated programs, actual allocator
-alignment and full-sized poll canaries, stdin/EOF/Unicode/stderr checks, and browser
-execution with the rebuilt and hashed target stdlib.
+The [source stdlib probe](../stdlib-probe/README.md) now builds the complete pinned
+WASI target library through the official CLI, including generated version and
+copied builtin inputs. The upstream Gradle task above is still unrun. Its
+[source-build receipt](../evidence/stdlib-source-build.json) records the actual
+patched KLIB hash, commands and exit status. Hello World and stdin-driven Fibonacci
+built with that KLIB run in Chromium; their execution receipt is maintained in
+wasm-idle. Actual allocator alignment and full-sized poll canaries, complete
+stdin/EOF/Unicode/stderr coverage and the remaining G5 checks are still required.

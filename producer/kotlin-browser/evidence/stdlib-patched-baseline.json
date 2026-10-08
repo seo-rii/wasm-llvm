@@ -1,0 +1,330 @@
+{
+  "recordedAt": "2026-10-08T06:32:11.554Z",
+  "producerCheckoutCommit": "764a129dc93a48336710957b6a9a3038cf9d3e7d",
+  "environment": {
+    "node": "24.1.0",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment (build 17.0.20.1+1-1-deb12u1-Debian)\nOpenJDK 64-Bit Server VM (build 17.0.20.1+1-1-deb12u1-Debian, mixed mode, sharing)"
+  },
+  "limits": [
+    "This builds target library T and reference programs with the official JVM-hosted bootstrap; source compiler R0/R1 and browser compiler C remain unbuilt.",
+    "Gradle tasks are not executed; source hierarchy, byte-copy builtins and unchanged official version-generation logic use explicit standalone adapters.",
+    "Expected program output is distinct from observed browser execution in the consumer evidence."
+  ],
+  "schemaVersion": 1,
+  "kind": "jvm-hosted-kotlin-wasi-baseline",
+  "compilerHost": "jvm",
+  "programTarget": "wasmWasi",
+  "programAbi": "wasi-preview1",
+  "compiler": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "role": "bootstrap-reference",
+    "jarSha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+  },
+  "selectedSourceCommit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+  "relationship": "Official bootstrap compiler compiles programs against a complete selected-source patched target stdlib; this is not compiler R0/R1 or browser compilation.",
+  "featureRequirements": {
+    "wasmGC": true,
+    "exceptionHandling": "exnref",
+    "wasi": "preview1"
+  },
+  "stdlib": {
+    "path": "stdlib/kotlin-stdlib-wasm-wasi.klib",
+    "bytes": 4111645,
+    "sha256": "3c97b68581963cf32c18d8b6d93b467f3accc9eae2689c1655e8ed4b31f52d28",
+    "version": "2.5.255-SNAPSHOT",
+    "sourceCommit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "patched": true,
+    "patchSha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede",
+    "file": "kotlin-stdlib-wasm-wasi.klib",
+    "recipeSha256": "78a1e578848593131aa1527cc22fabc7c883ce8a67800a16dde1d72edd6d12f8",
+    "buildReceiptSha256": "fe7d12a5f7328a72ac397356b1b8f6d72f826f6b3c8e6a3ccdebe1e3a142c655"
+  },
+  "cases": [
+    {
+      "id": "hello-world",
+      "sourcePath": "sources/hello-world.kt",
+      "sourceBytes": 42,
+      "sourceSha256": "8830ed7da79c4782f43cc1a550547536794aee7836d85cc526c668ea289d96e5",
+      "klibPath": "hello-world/klib/hello-world.klib",
+      "klibBytes": 3277,
+      "klibSha256": "fb2e7b82b4bf46a171668167f1d9ece1c88730303f7188a1d066393fb32b5e06",
+      "wasmPath": "hello-world/program/hello-world.wasm",
+      "wasmBytes": 700186,
+      "wasmSha256": "9e5c58c4878af735b1360b26477041c5b734a1494d4da6c6ef79bdea089e8b96",
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "poll_oneoff",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "random_get",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "cabi_realloc",
+          "kind": "function"
+        },
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "memoryExport": "memory",
+      "entry": {
+        "kind": "command",
+        "exportName": "_start"
+      },
+      "startSection": true,
+      "nodeValidation": {
+        "status": "pass",
+        "nodeVersion": "24.1.0",
+        "flags": [
+          "--experimental-wasm-exnref"
+        ]
+      },
+      "expected": {
+        "stdin": "",
+        "stdout": "Hello World\n",
+        "stderr": "",
+        "exitCode": 0
+      },
+      "additionalInputs": [],
+      "build": {
+        "status": "pass",
+        "sourcePhase": {
+          "command": [
+            "java",
+            "-Xmx2g",
+            "-cp",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+            "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+            "-Xwasm-target=wasm-wasi",
+            "-libraries",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/stdlib/kotlin-stdlib-wasm-wasi.klib",
+            "-main",
+            "call",
+            "-language-version",
+            "2.5",
+            "-api-version",
+            "2.5",
+            "-Xwasm-enable-array-range-checks",
+            "-Xwasm-enable-asserts",
+            "-Xwasm-use-new-exception-proposal",
+            "-ir-output-dir",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/hello-world/klib",
+            "-ir-output-name",
+            "hello-world",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/sources/hello-world.kt"
+          ],
+          "exitCode": 0,
+          "elapsedMs": 7967.500569999999,
+          "stdout": "",
+          "stderr": ""
+        },
+        "binaryPhase": {
+          "command": [
+            "java",
+            "-Xmx2g",
+            "-cp",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+            "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+            "-Xwasm-target=wasm-wasi",
+            "-libraries",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/stdlib/kotlin-stdlib-wasm-wasi.klib",
+            "-main",
+            "call",
+            "-language-version",
+            "2.5",
+            "-api-version",
+            "2.5",
+            "-Xwasm-enable-array-range-checks",
+            "-Xwasm-enable-asserts",
+            "-Xwasm-use-new-exception-proposal",
+            "-Xir-produce-js",
+            "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/hello-world/klib/hello-world.klib",
+            "-ir-output-dir",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/hello-world/program",
+            "-ir-output-name",
+            "hello-world"
+          ],
+          "exitCode": 0,
+          "elapsedMs": 13426.392458000002,
+          "stdout": "",
+          "stderr": ""
+        }
+      },
+      "execution": {
+        "native": "not-run",
+        "browser": "not-run"
+      }
+    },
+    {
+      "id": "fibonacci",
+      "sourcePath": "sources/fibonacci.kt",
+      "sourceBytes": 307,
+      "sourceSha256": "1e3e4be9c3f5be891a5adb7d32022b4f3efc7237e6c8e98abbf41b1004ae4990",
+      "klibPath": "fibonacci/klib/fibonacci.klib",
+      "klibBytes": 5590,
+      "klibSha256": "df180b62cf566286c7d6da53546828616f2a2497adc3a387226eca1a95fd9a13",
+      "wasmPath": "fibonacci/program/fibonacci.wasm",
+      "wasmBytes": 709250,
+      "wasmSha256": "e401539da51fcfddf450a7c6ede0a721dbc4f717516f6e2d6e5b6b2729a53496",
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "poll_oneoff",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "random_get",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "cabi_realloc",
+          "kind": "function"
+        },
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "memoryExport": "memory",
+      "entry": {
+        "kind": "command",
+        "exportName": "_start"
+      },
+      "startSection": true,
+      "nodeValidation": {
+        "status": "pass",
+        "nodeVersion": "24.1.0",
+        "flags": [
+          "--experimental-wasm-exnref"
+        ]
+      },
+      "expected": {
+        "stdin": "10\n",
+        "stdout": "55\n",
+        "stderr": "",
+        "exitCode": 0
+      },
+      "additionalInputs": [
+        {
+          "stdin": "20\n",
+          "stdout": "6765\n",
+          "stderr": "",
+          "exitCode": 0
+        }
+      ],
+      "build": {
+        "status": "pass",
+        "sourcePhase": {
+          "command": [
+            "java",
+            "-Xmx2g",
+            "-cp",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+            "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+            "-Xwasm-target=wasm-wasi",
+            "-libraries",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/stdlib/kotlin-stdlib-wasm-wasi.klib",
+            "-main",
+            "call",
+            "-language-version",
+            "2.5",
+            "-api-version",
+            "2.5",
+            "-Xwasm-enable-array-range-checks",
+            "-Xwasm-enable-asserts",
+            "-Xwasm-use-new-exception-proposal",
+            "-ir-output-dir",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/fibonacci/klib",
+            "-ir-output-name",
+            "fibonacci",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/sources/fibonacci.kt"
+          ],
+          "exitCode": 0,
+          "elapsedMs": 5274.009717000001,
+          "stdout": "",
+          "stderr": ""
+        },
+        "binaryPhase": {
+          "command": [
+            "java",
+            "-Xmx2g",
+            "-cp",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+            "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+            "-Xwasm-target=wasm-wasi",
+            "-libraries",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/stdlib/kotlin-stdlib-wasm-wasi.klib",
+            "-main",
+            "call",
+            "-language-version",
+            "2.5",
+            "-api-version",
+            "2.5",
+            "-Xwasm-enable-array-range-checks",
+            "-Xwasm-enable-asserts",
+            "-Xwasm-use-new-exception-proposal",
+            "-Xir-produce-js",
+            "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/fibonacci/klib/fibonacci.klib",
+            "-ir-output-dir",
+            "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e/fibonacci/program",
+            "-ir-output-name",
+            "fibonacci"
+          ],
+          "exitCode": 0,
+          "elapsedMs": 8410.653188,
+          "stdout": "",
+          "stderr": ""
+        }
+      },
+      "execution": {
+        "native": "not-run",
+        "browser": "not-run"
+      }
+    }
+  ],
+  "readiness": {
+    "ready": false,
+    "R0": "not-run",
+    "R1": "not-run",
+    "browserCompiler": "not-built",
+    "browserExecution": "not-run"
+  },
+  "outputBundle": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/baselines/run-ddc0dd7e",
+  "stdlibBuildEvidenceSha256": "5adb79fccf4c42361f730ba98be46a7f90f9689a47faac81757f8421117a1af1",
+  "buildLog": "/home/seorii/logs/kotlin-patched-stdlib-baseline-20261008-k1_4hf8z.log",
+  "buildExitCode": 0
+}
