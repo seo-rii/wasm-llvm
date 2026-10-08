@@ -30,6 +30,9 @@ await assertNoSymlink(output);
 await mkdir(output, { recursive: false });
 const lockBytes = await readRegular(path.join(here, 'sources.lock.json'));
 const lock = JSON.parse(lockBytes);
+const sourceBuildFlagsBytes = await readRegular(path.join(here, '../build-flags.json'));
+const sourceBuildFlags = JSON.parse(sourceBuildFlagsBytes);
+assert.equal(sourceBuildFlags.source.commit, lock.source.commit);
 const bootstrap = await verifyBootstrap(options['--bootstrap-cache'] ?? defaultCache);
 const commands = [];
 async function command(phase, argv, capture = false) {
@@ -80,10 +83,11 @@ const fixture = JSON.parse(fixtureBytes);
 for (const directory of ['jvm', 'klib', 'wasm']) await mkdir(path.join(output, directory));
 const compiler = ['java', '-Xmx1024m', '-cp', bootstrap.classPath];
 const jvm = [...compiler, 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler', '-no-stdlib', '-no-reflect', '-jvm-target', '17',
-    '-language-version', '2.5', '-api-version', '2.5', '-classpath', bootstrap.classPath];
+    '-language-version', '2.5', '-api-version', '2.5', ...sourceBuildFlags.compilerFlags, '-classpath', bootstrap.classPath];
+const originalJvm = jvm.map((arg) => arg === '-Xname-based-destructuring=complete' ? '-Xname-based-destructuring=only-syntax' : arg);
 const wasm = [...compiler, 'org.jetbrains.kotlin.cli.js.KotlinWasmCompiler', '-Xwasm-target=wasm-js',
-    '-language-version', '2.5', '-api-version', '2.5', '-libraries', bootstrap.wasmJsStdlib];
-await command('original-jvm-build', [...jvm, '-d', path.join(output, 'jvm/original.jar'), ...originalSources, local('Probe.kt'), local('OriginalJvmEntry.kt')]);
+    '-language-version', '2.5', '-api-version', '2.5', ...sourceBuildFlags.compilerFlags, '-libraries', bootstrap.wasmJsStdlib];
+await command('original-jvm-build', [...originalJvm, '-d', path.join(output, 'jvm/original.jar'), ...originalSources, local('Probe.kt'), local('OriginalJvmEntry.kt')]);
 await command('portable-jvm-build', [...jvm, '-d', path.join(output, 'jvm/portable.jar'), ...common, local('Probe.kt'), local('PortableChecks.kt'), local('PortableJvmEntry.kt')]);
 const snapshots = [];
 for (const variant of ['original', 'portable']) {
@@ -113,6 +117,7 @@ for (const filename of ['jvm/original.jar', 'jvm/portable.jar', 'klib/klib-probe
 const receipt = { schemaVersion: 1, kind: 'official-klib-real-stdlib-host-build', status: 'passed', source: lock.source, sourceLockSha256: hash(lockBytes), patch: lock.patch,
     preparation: prepared.receipt, referenceOnlySources: lock.referenceOnlySources, observerSources, buildScriptSha256: hash(await readRegular(fileURLToPath(import.meta.url))),
     hostLibraryPathSha256: hash(hostPathBytes), bootstrapVersion: bootstrap.lock.version, bootstrapCompilerSourceCommit: bootstrap.lock.compilerSourceCommit,
+    sourceBuildFlags: { ...sourceBuildFlags, sha256: hash(sourceBuildFlagsBytes) },
     bootstrapArtifacts: bootstrap.artifacts.map(({ path: ignored, ...record }) => record), commands,
     targetStdlib: { path: target, sha256: fixture.stdlibSha256, sourceCommit: fixture.sourceCommit, fixtureIndexSha256: hash(fixtureBytes), files: fixture.files.length,
         decodedBytes: fixture.decodedBytes, directories: fixture.directories.length },
@@ -123,6 +128,7 @@ const receipt = { schemaVersion: 1, kind: 'official-klib-real-stdlib-host-build'
         'The target fixture is the rebuilt selected-source stdlib, produced using the locked official bootstrap compiler; compiler source commit is not proven equal to candidate.',
         'Finite byte/table limits are explicit new host policy; invalid inputs now fail before allocation or crossing a table row.',
         'String-only manifest properties do not implement arbitrary Java Properties object values/default property chains.',
+        'Portable JVM/Wasm builds use the selected combined C source flags; byte-identical original JVM filesystem helpers require only-syntax destructuring mode.',
         'No full browser-hosted Kotlin compiler, whole G2 gate, browser matrix or GC heap cap is established by this build.'] };
 await writeFile(path.join(output, 'build-receipt.json'), JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 console.log(JSON.stringify({ output, status: receipt.status, unitCases: receipt.jvmComparison.unitCases, stdlibSnapshotBytes: originalSnapshot.byteLength,

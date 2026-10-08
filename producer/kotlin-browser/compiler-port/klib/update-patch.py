@@ -129,7 +129,8 @@ def ir_impl(text):
 def properties_util(text):
     start = text.index('import org.jetbrains.kotlin.util.parseSpaceSeparatedArgs')
     end = text.index('/**\n * TODO: this method working with suffixes')
-    return text[:start] + 'import org.jetbrains.kotlin.util.parseSpaceSeparatedArgs\nimport org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties\n\n' + text[end:]
+    portable = text[:start] + 'import org.jetbrains.kotlin.util.parseSpaceSeparatedArgs\nimport org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties\n\n' + text[end:]
+    return replace(portable, 'val (property, rest) = ', 'val [property, rest] = ')
 
 
 def manifest_type(text):

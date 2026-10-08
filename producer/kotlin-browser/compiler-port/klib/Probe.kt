@@ -99,7 +99,7 @@ fun librarySnapshot(
 ): ByteArray {
     val snapshot = Snapshot()
     snapshot.int(manifest.size)
-    for ((key, value) in manifest.toList().sortedBy { it.first }) { snapshot.text(key); snapshot.text(value) }
+    for ([key, value] in manifest.toList().sortedBy { it.first }) { snapshot.text(key); snapshot.text(value) }
     snapshot.text(versioning.compilerVersion.orEmpty())
     snapshot.text(versioning.abiVersion?.toString().orEmpty())
     snapshot.text(versioning.metadataVersion?.toString().orEmpty())

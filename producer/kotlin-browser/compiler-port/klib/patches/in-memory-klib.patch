@@ -511,6 +511,15 @@
  
  /**
   * TODO: this method working with suffixes should be replaced with
+@@ -100,7 +70,7 @@
+             val prefix = substring(0, sigil)
+             val afterSigil = substring(sigil + 1)
+ 
+-            val (property, rest) = if (afterSigil.startsWith('{')) {
++            val [property, rest] = if (afterSigil.startsWith('{')) {
+                 val endBrace = afterSigil.indexOf('}')
+                 require(endBrace != -1) { "Unclosed '{' in: $this" }
+                 Pair(afterSigil.substring(1, endBrace), afterSigil.substring(endBrace + 1))
 --- a/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt
 +++ b/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt
 @@ -4,48 +4,6 @@

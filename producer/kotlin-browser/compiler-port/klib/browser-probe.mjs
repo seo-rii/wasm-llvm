@@ -26,6 +26,7 @@ assert.equal(build.sourceLockSha256, hash(await readFile(path.join(here, 'source
 assert.equal(build.buildScriptSha256, hash(await readFile(path.join(here, 'build-probe.mjs'))));
 assert.equal(build.patch.sha256, hash(await readFile(path.join(here, build.patch.path))));
 assert.equal(build.hostLibraryPathSha256, hash(await readFile(path.join(here, '../host/LibraryPath.kt'))));
+assert.equal(build.sourceBuildFlags.sha256, hash(await readFile(path.join(here, '../build-flags.json'))));
 for (const record of build.observerSources) assert.equal(record.sha256, hash(await readFile(path.join(here, record.path))));
 for (const record of build.preparation.sources.filter((record) => record.originalSha256 === null)) {
     assert.equal(record.sha256, hash(await readFile(path.join(here, path.basename(record.path)))));
@@ -143,6 +144,7 @@ try {
         referenceOnlySources: build.referenceOnlySources, observerSources: build.observerSources, buildScriptSha256: build.buildScriptSha256,
         browserProbeSha256: hash(await readFile(fileURLToPath(import.meta.url))), buildReceiptSha256: hash(buildBytes),
         hostLibraryPathSha256: build.hostLibraryPathSha256, bootstrapVersion: build.bootstrapVersion,
+        sourceBuildFlags: build.sourceBuildFlags,
         bootstrapCompilerSourceCommit: build.bootstrapCompilerSourceCommit, bootstrapArtifacts: build.bootstrapArtifacts,
         commands: build.commands, browserCommand: [process.execPath, ...process.argv.slice(1)], targetStdlib: build.targetStdlib, outputs: build.outputs,
         corpus: { required: build.jvmComparison.unitCases + build.jvmComparison.manifestCases + portable.guards.length + 1,
