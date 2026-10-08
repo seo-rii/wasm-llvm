@@ -1,0 +1,160 @@
+/* Platform carrier observer. Production positioning algorithms are copied separately from the source pin. */
+@file:OptIn(org.jetbrains.kotlin.diagnostics.DiagnosticLossRisk::class)
+package org.jetbrains.kotlin.portable.positioningprobe
+
+import @HOST@.LighterASTNode
+import @REF@
+import @TYPE@
+import @TREE@
+import @RANGE@
+import @TOKEN_TYPE@
+import org.jetbrains.kotlin.KtNodeTypes
+import org.jetbrains.kotlin.KtNodeType
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.lexer.KtToken
+import org.jetbrains.kotlin.lexer.KtSingleValueToken
+import org.jetbrains.kotlin.lexer.KtKeywordToken
+import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
+import org.jetbrains.kotlin.kdoc.lexer.KDocTokens
+import org.jetbrains.kotlin.diagnostics.*
+import org.jetbrains.kotlin.util.getChildren
+import org.jetbrains.kotlin.util.getSingleChildOrNull
+import org.jetbrains.kotlin.util.getPreviousSibling
+import org.jetbrains.kotlin.ElementTypeUtils.isExpression
+import org.jetbrains.kotlin.resolve.source.getAssignmentLhsIfUnwrappable
+import org.jetbrains.kotlin.fir.builder.KotlinLightTreeStructure
+import org.jetbrains.kotlin.fir.builder.KOTLIN_DIRECT_PLACEHOLDER_TYPE
+import org.jetbrains.kotlin.kmp.tree.buildLanguageSpecificLightTree
+import org.jetbrains.kotlin.kmp.lexer.KotlinLexer
+import org.jetbrains.kotlin.kmp.parser.KotlinParser
+import com.intellij.platform.syntax.lexer.performLexing
+import com.intellij.platform.syntax.parser.SyntaxTreeBuilderFactory
+
+private val kinds: Map<String, IElementType> = mapOf(
+@KINDS@
+    "error" to TokenType.ERROR_ELEMENT,
+    "placeholder" to KOTLIN_DIRECT_PLACEHOLDER_TYPE,
+)
+private val strategies: Map<String, LightTreePositioningStrategy> = mapOf(
+@STRATEGIES@
+)
+
+fun strategyNames(): List<String> = strategies.keys.toList()
+
+private class CarrierNode(val input: FixtureNode) : LighterASTNode {
+    var parent: CarrierNode? = null
+    val children = input.children.map { CarrierNode(it).also { node -> node.parent = this } }
+@NODE_MEMBERS@
+    override fun toString(): String = input.toString()
+}
+
+private class CarrierTree(input: FixtureNode, val mode: String = "normal") : FlyweightCapableTreeStructure<LighterASTNode> {
+    val rootNode = CarrierNode(input)
+    override fun getRoot(): LighterASTNode = rootNode
+    override fun getParent(node: LighterASTNode): LighterASTNode? = (node as CarrierNode).parent
+    override fun getChildren(parent: LighterASTNode, into: Ref<Array<@NULLABLE@LighterASTNode@SUFFIX@>>): Int {
+        if (mode == "no-write-zero") return 0
+        if (mode == "no-write-one") return 1
+        val children = (parent as CarrierNode).children
+        into.set(Array(children.size) { children[it] })
+        return children.size
+    }
+    override fun disposeChildren(nodes: Array<out LighterASTNode>?, count: Int) {}
+    override fun toString(node: LighterASTNode): CharSequence = (node as CarrierNode).input.text
+    override fun getStartOffset(node: LighterASTNode): Int = (node as CarrierNode).input.start
+    override fun getEndOffset(node: LighterASTNode): Int = (node as CarrierNode).input.end
+}
+
+private inline fun observe(action: () -> Any?): String = try { "ok:${action()}" } catch (failure: Throwable) {
+    val kind = when (failure) {
+        is NullPointerException -> "NullPointerException"
+        is IllegalStateException -> "IllegalStateException"
+        is IllegalArgumentException -> "IllegalArgumentException"
+        is IndexOutOfBoundsException -> "IndexOutOfBoundsException"
+        else -> failure::class.simpleName
+    }
+    "failure:$kind:${if (failure is IllegalStateException || failure is IllegalArgumentException) failure.message else ""}"
+}
+
+fun markSnapshot(name: String, fixture: FixtureNode, startOffset: Int, endOffset: Int): String = observe {
+    val tree = CarrierTree(fixture)
+    strategies.getValue(name).mark(tree.rootNode, startOffset, endOffset, tree).joinToString()
+}
+
+fun validitySnapshot(name: String, fixture: FixtureNode): String = observe {
+    val tree = CarrierTree(fixture)
+    strategies.getValue(name).isValid(tree.rootNode, tree)
+}
+
+fun helperSnapshot(fixture: FixtureNode): String = observe {
+    val tree = CarrierTree(fixture); val root = tree.rootNode
+    val children = root.getChildren(tree)
+    val childNames = children.map { (it as CarrierNode).input.id }
+    val single = (root.getSingleChildOrNull(tree) as CarrierNode?)?.input?.id
+    val previous = children.map { (it.getPreviousSibling(tree) as CarrierNode?)?.input?.id }
+    val lhs = (root.getAssignmentLhsIfUnwrappable(tree) as CarrierNode?)?.input?.id
+    "children=$childNames;single=$single;previous=$previous;lhs=$lhs;expression=${root.isExpression()};" +
+        "fillers=${children.map { it.isFiller() }};mark=${markElement(root, fixture.start + 500, fixture.end + 500, tree)}"
+}
+
+fun childGuardSnapshots(): List<Pair<String, String>> {
+    val fixture = FixtureNode("guard", "n:BLOCK", 1, 3)
+    val result = mutableListOf<Pair<String, String>>()
+    for (mode in listOf("no-write-zero", "no-write-one")) {
+        val tree = CarrierTree(fixture, mode)
+        result.add("$mode/single-null-sentinel" to observe { tree.rootNode.getSingleChildOrNull(tree) })
+        result.add("$mode/list-null-failure" to observe { tree.rootNode.getChildren(tree) })
+        result.add("$mode/default-original-fallback" to observe { LightTreePositioningStrategies.DEFAULT.mark(tree.rootNode, 1, 3, tree) })
+    }
+    return result
+}
+
+fun unreachableSnapshot(fixture: FixtureNode): String = observe {
+    val tree = CarrierTree(fixture)
+    val nodes = mutableListOf<LighterASTNode>()
+    tree.traverseDescendants(tree.rootNode) { nodes.add(it); true }
+    val reachable = nodes.filter { (it as CarrierNode).input.id == "a" }.toSet()
+    val unreachable = nodes.filter { (it as CarrierNode).input.id == "c" }.toSet()
+    with(UnreachableCodeLightTreeHelper(tree)) {
+        val leaves = tree.rootNode.getLeavesOrReachableChildren(reachable, unreachable)
+        val filtered = leaves.removeReachableElementsWithMeaninglessSiblings(reachable)
+        val merged = listOf(TextRange(1, 2), TextRange(2, 4), TextRange(5, 7), TextRange(7, 8)).mergeAdjacentTextRanges()
+        "contains=${tree.rootNode.hasChildrenInSet(reachable)};leaves=${leaves.map { (it as CarrierNode).input.id }};" +
+            "filtered=${filtered.map { (it as CarrierNode).input.id }};merged=$merged;empty=${emptyList<TextRange>().mergeAdjacentTextRanges()}"
+    }
+}
+
+fun declarationSnapshots(): List<Pair<String, String>> = kinds.filterKeys { it != "placeholder" }.map { [name, type] ->
+    val category = when (type) {
+        is KtModifierKeywordToken -> "modifier"
+        is KtKeywordToken -> "keyword"
+        is KtSingleValueToken -> "single"
+        is KtToken -> "token"
+        is KtNodeType -> "node"
+        else -> "carrier"
+    }
+    val tokenId = (type as? KtToken)?.tokenId
+    val value = (type as? KtSingleValueToken)?.value
+    val soft = (type as? KtKeywordToken)?.isSoft
+    val left = @LEFT_BOUND@
+    name to "$type:$category:$tokenId:$value:$soft:$left"
+}
+
+fun placeholderSnapshot(source: String): String = observe {
+    val parser = KotlinParser(isScript = false, isLazy = false)
+    val builder = SyntaxTreeBuilderFactory.builder(source,
+        performLexing(source, KotlinLexer(), cancellationProvider = null, logger = null),
+        whitespaces = parser.whitespaces, comments = parser.comments)
+        .withStartOffset(0).withWhitespaceOrCommentBindingPolicy(parser.whitespaceOrCommentBindingPolicy).build()
+    parser.parse(builder)
+    val light = buildLanguageSpecificLightTree(builder, source, { KotlinLightTreeStructure(it) }, { false })
+    val tree = light.lightSourceTreeStructure as KotlinLightTreeStructure
+    val visited = mutableListOf<LighterASTNode>(); visited.add(tree.getRoot())
+    tree.traverseDescendants(tree.getRoot()) { visited.add(it); true }
+    val observations = visited.map { node ->
+        "${node.startOffset}:${node.endOffset}:${node.tokenType === KOTLIN_DIRECT_PLACEHOLDER_TYPE}:" +
+            "${LightTreePositioningStrategies.DEFAULT.mark(node, node.startOffset, node.endOffset, tree)}:" +
+            "${LightTreePositioningStrategies.DEFAULT.isValid(node, tree)}"
+    }
+    "length=${source.length};nodes=$observations"
+}
