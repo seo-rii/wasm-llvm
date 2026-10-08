@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "kind": "kotlin-wasi-stdlib-source-patch-guard-regressions",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "patchSha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede",
+  "scriptSha256": "357e28840c4870f4cfdafd1bda5106a97d8b581c0db03dc26997a3d48a937ca8",
+  "environment": {
+    "os": "Linux-6.1.0-53-cloud-amd64-x86_64-with-glibc2.36",
+    "node": "v24.1.0"
+  },
+  "counts": {
+    "required": 7,
+    "pass": 7,
+    "fail": 0,
+    "notRun": 0,
+    "skip": 0
+  },
+  "cases": [
+    {
+      "id": "WASI-PATCH-APPLY",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "apply",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/application-sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/apply-receipt.json"
+      ],
+      "expectedExitStatus": 0,
+      "actualExitStatus": 0,
+      "result": "pass",
+      "sourceSha256Before": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "sourceSha256After": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4",
+      "stderr": null,
+      "stdout": null
+    },
+    {
+      "id": "WASI-PATCH-CHECK",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "check",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/application-sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/check-receipt.json"
+      ],
+      "expectedExitStatus": 0,
+      "actualExitStatus": 0,
+      "result": "pass",
+      "sourceSha256Before": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4",
+      "sourceSha256After": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4",
+      "stderr": null,
+      "stdout": null
+    },
+    {
+      "id": "WASI-PATCH-REAPPLY-REJECT",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "apply",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/application-sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/reapply-receipt.json"
+      ],
+      "expectedExitStatus": 1,
+      "actualExitStatus": 1,
+      "result": "pass",
+      "sourceSha256Before": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4",
+      "sourceSha256After": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4",
+      "stderr": "Pinned source content mismatch: libraries/stdlib/wasm/wasi/src/kotlin/io.kt\n",
+      "stdout": null
+    },
+    {
+      "id": "WASI-PATCH-STALE-SOURCE-REJECT",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "verify",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/stale-sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/stale-receipt.json"
+      ],
+      "expectedExitStatus": 1,
+      "actualExitStatus": 1,
+      "result": "pass",
+      "sourceSha256Before": "6eb01fdc1546f3c06d219427b39222b509e7723aea95349d661dc45ffafd5db1",
+      "sourceSha256After": "6eb01fdc1546f3c06d219427b39222b509e7723aea95349d661dc45ffafd5db1",
+      "stderr": "Expected a bounded regular file: /tmp/kotlin-wasi-stdlib-y7j1q0cs/stale-sources/libraries/stdlib/wasm/wasi/src/kotlin/io.kt\n",
+      "stdout": null
+    },
+    {
+      "id": "WASI-PATCH-ABI-HASH-REJECT",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "verify",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wrong-wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wrong-abi-receipt.json"
+      ],
+      "expectedExitStatus": 1,
+      "actualExitStatus": 1,
+      "result": "pass",
+      "sourceSha256Before": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "sourceSha256After": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "stderr": "Pinned source content mismatch: libc-bottom-half/headers/public/wasi/wasip1.h\n",
+      "stdout": null
+    },
+    {
+      "id": "WASI-PATCH-SYMLINK-REJECT",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "verify",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/linked-sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/linked-receipt.json"
+      ],
+      "expectedExitStatus": 1,
+      "actualExitStatus": 1,
+      "result": "pass",
+      "sourceSha256Before": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "sourceSha256After": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "stderr": "Symlink paths are not accepted: /tmp/kotlin-wasi-stdlib-y7j1q0cs/linked-sources/libraries/stdlib/wasm/wasi/src/kotlin/io.kt\n",
+      "stdout": null
+    },
+    {
+      "id": "WASI-PATCH-EXISTING-EVIDENCE-REJECT",
+      "command": [
+        "node",
+        "producer/kotlin-browser/patches/wasi-stdlib-patch.mjs",
+        "apply",
+        "--source-dir",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/occupied-output-sources",
+        "--abi-header",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/wasip1.h",
+        "--output",
+        "/tmp/kotlin-wasi-stdlib-y7j1q0cs/existing-receipt.json"
+      ],
+      "expectedExitStatus": 1,
+      "actualExitStatus": 1,
+      "result": "pass",
+      "sourceSha256Before": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "sourceSha256After": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040",
+      "stderr": "Refusing to overwrite an existing verification receipt\n",
+      "stdout": null
+    }
+  ],
+  "execution": {
+    "stdlibRebuild": "not-run",
+    "kotlinAllocatorCanary": "not-run",
+    "kotlinBrowserRun": "not-run"
+  },
+  "limits": [
+    "These are source patch integrity/application checks, not Kotlin language or runtime conformance cases.",
+    "Only selected upstream source files and the pinned Preview1 header were verified; full source/build closure is not asserted."
+  ]
+}

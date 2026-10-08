@@ -74,8 +74,12 @@ Copied upstream fixtures retain their exact bytes and are accompanied by
 - [Kotlin WASI I/O](https://github.com/JetBrains/kotlin/blob/4d78aae1e337cd40f69baa865aed950fe807a775/libraries/stdlib/wasm/wasi/src/kotlin/io.kt)
   requests 20/26-byte poll allocations; pinned
   [Preview 1 structures](https://github.com/WebAssembly/wasi-libc/blob/165235bc467d5fa52d424f5d82587dfb76ed9d54/libc-bottom-half/headers/public/wasi/wasip1.h)
-  require 48/32 bytes aligned to 8. Actual allocator behavior, canary damage with
-  Kotlin output, and any required stdlib patch remain untested.
+  require 48/32 bytes aligned to 8. Source inspection confirms 8-byte allocator
+  rounding, so the event gets 32 bytes but the subscription only 24. The exact
+  [stdlib source patch](patches/wasi-README.md) changes the requested sizes to
+  48/32 without changing the official I/O logic. Git apply/reverse and seven
+  integrity/application guards passed. The patched stdlib is not built; actual
+  Kotlin allocator canaries and G5 acceptance remain untested.
 
 ## Gate progression
 

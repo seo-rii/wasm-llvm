@@ -21,7 +21,16 @@
     ":compiler:ir.serialization.js",
     ":wasm:wasm.ir"
   ],
-  "patches": [],
+  "patches": [
+    {
+      "id": "kotlin-wasi-preview1-full-poll-allocations",
+      "path": "patches/wasi-preview1-io.patch",
+      "sha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede",
+      "metadata": "patches/wasi-preview1-io.json",
+      "scope": "target-stdlib-source",
+      "buildStatus": "not-built"
+    }
+  ],
   "outputs": [],
   "readiness": {
     "ready": false,

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "patchId": "kotlin-wasi-preview1-full-poll-allocations",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "patch": {
+    "path": "wasi-preview1-io.patch",
+    "bytes": 755,
+    "gitBlob": "9fd1c8df01204d08e52790c53921a3ef74737a97",
+    "sha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede"
+  },
+  "original": {
+    "path": "libraries/stdlib/wasm/wasi/src/kotlin/io.kt",
+    "bytes": 8555,
+    "gitBlob": "54e71e8cd135f904f516893517626d6f7d8c17b6",
+    "sha256": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040"
+  },
+  "patched": {
+    "path": "libraries/stdlib/wasm/wasi/src/kotlin/io.kt",
+    "bytes": 8555,
+    "gitBlob": "d1bd42e39bb583abc24ac5ace410cb0c1fa46d79",
+    "sha256": "93b4caa20e4c1f82647f87035d37c12eb8cb3221ae7c5cb875447cff47a03eb4"
+  },
+  "edits": [
+    {
+      "before": "    val subscriptionPtr = allocator.allocate(20)",
+      "after": "    val subscriptionPtr = allocator.allocate(48)"
+    },
+    {
+      "before": "    val eventSize = 26",
+      "after": "    val eventSize = 32"
+    }
+  ],
+  "sourceDependencies": [
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/wasm/unsafe/MemoryAllocation.kt",
+      "bytes": 23735,
+      "gitBlob": "c924241099baf9cf073529fbd17fc767b192e73e",
+      "sha256": "aa492bfb78de89a71e3da8a1b08d02f9d5d0b4a50895779617eecd5d88429e2b"
+    },
+    {
+      "path": "libraries/stdlib/build.gradle.kts",
+      "bytes": 45605,
+      "gitBlob": "9d1a32fa9ef5e1e0ab5f1a62f051839aa0ac1a83",
+      "sha256": "2c795ec85a8e2649f81fd46bcb834bdc56d41265589e0e050079827a95f1afc8"
+    }
+  ],
+  "abi": {
+    "repository": "https://github.com/WebAssembly/wasi-libc.git",
+    "commit": "165235bc467d5fa52d424f5d82587dfb76ed9d54",
+    "header": {
+      "path": "libc-bottom-half/headers/public/wasi/wasip1.h",
+      "bytes": 59704,
+      "gitBlob": "afca1aaf8ecb381d12a5671cae339dd3c49c6a1b",
+      "sha256": "db122dfbbd0a51c28c888aabc7163814e9b400689d4c76727b54e404e0e754b6"
+    },
+    "subscriptionBytes": 48,
+    "eventBytes": 32,
+    "alignment": 8,
+    "subscriptionOffsets": {
+      "userdata": 0,
+      "type": 8,
+      "fd": 16
+    },
+    "eventOffsets": {
+      "userdata": 0,
+      "errno": 8,
+      "type": 10,
+      "nbytes": 16,
+      "flags": 24
+    }
+  },
+  "allocator": {
+    "sourcePath": "libraries/stdlib/wasm/src/kotlin/wasm/unsafe/MemoryAllocation.kt",
+    "pointerAlignment": 8,
+    "roundingMultiple": 8,
+    "originalPhysicalBytes": {
+      "subscription": 24,
+      "event": 32
+    },
+    "patchedPhysicalBytes": {
+      "subscription": 48,
+      "event": 32
+    },
+    "verification": "source-inspection",
+    "wasmExecution": "not-run"
+  },
+  "build": {
+    "projectId": ":kotlin-stdlib",
+    "target": "wasmWasi",
+    "sourceSet": "wasmWasiMain",
+    "taskCandidate": ":kotlin-stdlib:compileKotlinWasmWasi",
+    "taskConfirmedByGradle": false,
+    "requiresGeneratedBuiltinsAndVersion": true,
+    "targetStdlib": "not-built",
+    "compilerIdentity": "must-match-candidate-source-build-set",
+    "ioFileOnlyOverrideSupported": false
+  },
+  "readiness": {
+    "ready": false,
+    "sourcePatch": "defined",
+    "stdlibRebuild": "not-run",
+    "kotlinAllocatorCanary": "not-run",
+    "kotlinBrowserRun": "not-run"
+  },
+  "verificationEvidence": "../evidence/wasi-stdlib-patch-verification.json"
+}
