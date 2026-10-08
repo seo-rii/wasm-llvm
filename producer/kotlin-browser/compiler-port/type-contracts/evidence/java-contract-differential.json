@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-type-contract-differential",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "result": "pass",
+  "preparationSha256": "c11683b9c5d5072b579507d378e3c60fdd82e1e346a591bb4347524e86dc48c2",
+  "buildReceiptSha256": "659496963ba0dd22da972c9ed7558b5c8ae2a3ebcb768b2a37d3a5047bd8779c",
+  "verificationToolSha256": "246e5a7714182fff7956be36e6fc9bc8b5bb518e668eb0da4b9149803c2cc1e4",
+  "referenceToolSha256": "58b240b7c3f738a4b37b5fa03bf836e7f27b242ace9f54ff692f239363392845",
+  "probeSourceSha256": "0f7046681fcfaf4044b9b7acd8721a4b7f804739fef8ec9223f577bfb2775f99",
+  "originalJavaUnits": 9,
+  "interfaces": 10,
+  "enums": 2,
+  "sourceMethods": 46,
+  "comparedClasses": 13,
+  "classes": [
+    "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper",
+    "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper$Default",
+    "org.jetbrains.kotlin.descriptors.annotations.AnnotationArgumentVisitor",
+    "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition",
+    "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Contract",
+    "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Result",
+    "org.jetbrains.kotlin.resolve.scopes.receivers.Receiver",
+    "org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue",
+    "org.jetbrains.kotlin.types.TypeConstructor",
+    "org.jetbrains.kotlin.types.TypeProjection",
+    "org.jetbrains.kotlin.types.checker.KotlinTypeChecker",
+    "org.jetbrains.kotlin.types.checker.KotlinTypeChecker$TypeConstructorEquality",
+    "org.jetbrains.kotlin.types.checker.TypeCheckingProcedureCallbacks"
+  ],
+  "erasedApiSha256": "113087a7867fc42fd148fa58b3765af49b917101e44693884cd3d3e3690849f7",
+  "portableApiSha256": "0a513f61d25e2352856cfec20e1b8bb68dff4af2cc94fc15d1b7a9bee6a50567",
+  "knownCompilerGeneratedAdditions": [
+    {
+      "className": "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Result",
+      "method": "getEntries():kotlin.enums.EnumEntries"
+    },
+    {
+      "className": "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Contract",
+      "method": "getEntries():kotlin.enums.EnumEntries"
+    }
+  ],
+  "preservedBodies": [
+    {
+      "owner": "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper.Default",
+      "method": "mapPlatformClass",
+      "originalBody": "{\n    return Collections.emptyList();\n}",
+      "commonBody": "emptyList()",
+      "scope": "original immutable empty collection default, not a replacement checker"
+    }
+  ],
+  "preservedFields": [
+    {
+      "owner": "org.jetbrains.kotlin.types.checker.KotlinTypeChecker",
+      "field": "DEFAULT",
+      "originalInitializer": "NewKotlinTypeChecker.Companion.getDefault()",
+      "commonInitializer": "org.jetbrains.kotlin.types.checker.NewKotlinTypeChecker.Default",
+      "semantics": "eager delegation to the genuine original checker factory"
+    }
+  ],
+  "preservedAnnotations": [
+    {
+      "owner": "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper",
+      "annotation": "@DefaultImplementation(impl = PlatformToKotlinClassMapper.Default.class)",
+      "strategy": "original common KClass annotation preserved"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.types.TypeConstructor",
+      "method": "refine",
+      "annotation": "org.jetbrains.kotlin.types.TypeRefinement",
+      "strategy": "official opt-in annotation preserved"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.types.TypeProjection",
+      "method": "refine",
+      "annotation": "org.jetbrains.kotlin.types.TypeRefinement",
+      "strategy": "official opt-in annotation preserved"
+    }
+  ],
+  "comparisons": [
+    "all source-declared erased method contracts",
+    "generic parameter counts and enum ordering",
+    "genuine immutable empty mapper behavior",
+    "original default checker factory identity and four real type relations",
+    "runtime DefaultImplementation annotation identity",
+    "seven typed getter aliases"
+  ],
+  "compiler": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null
+  },
+  "algorithmExecution": "genuine bootstrap compiler JVM implementation through selected contract APIs; selected-source algorithms not built",
+  "commands": [
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx512m",
+        "-proc:none",
+        "-source",
+        "17",
+        "-target",
+        "17",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/reference-artifacts/kotlin-annotations-jvm-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify/originals",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/builtins/PlatformToKotlinClassMapper.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/annotations/AnnotationArgumentVisitor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/resolve/ExternalOverridabilityCondition.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/receivers/Receiver.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/receivers/ReceiverValue.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeConstructor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeProjection.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/types/checker/KotlinTypeChecker.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/types/checker/TypeCheckingProcedureCallbacks.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx256m",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify/Reference.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify",
+        "Reference",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify/originals:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper",
+        "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper$Default",
+        "org.jetbrains.kotlin.descriptors.annotations.AnnotationArgumentVisitor",
+        "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition",
+        "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Contract",
+        "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Result",
+        "org.jetbrains.kotlin.resolve.scopes.receivers.Receiver",
+        "org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue",
+        "org.jetbrains.kotlin.types.TypeConstructor",
+        "org.jetbrains.kotlin.types.TypeProjection",
+        "org.jetbrains.kotlin.types.checker.KotlinTypeChecker",
+        "org.jetbrains.kotlin.types.checker.KotlinTypeChecker$TypeConstructorEquality",
+        "org.jetbrains.kotlin.types.checker.TypeCheckingProcedureCallbacks"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify",
+        "Reference",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/build/type-contracts.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper",
+        "org.jetbrains.kotlin.builtins.PlatformToKotlinClassMapper$Default",
+        "org.jetbrains.kotlin.descriptors.annotations.AnnotationArgumentVisitor",
+        "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition",
+        "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Contract",
+        "org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition$Result",
+        "org.jetbrains.kotlin.resolve.scopes.receivers.Receiver",
+        "org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue",
+        "org.jetbrains.kotlin.types.TypeConstructor",
+        "org.jetbrains.kotlin.types.TypeProjection",
+        "org.jetbrains.kotlin.types.checker.KotlinTypeChecker",
+        "org.jetbrains.kotlin.types.checker.KotlinTypeChecker$TypeConstructorEquality",
+        "org.jetbrains.kotlin.types.checker.TypeCheckingProcedureCallbacks"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/build/type-contracts.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify/probe.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify/ContractProbe.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/verify/probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-contracts/run-1791449597455/build/type-contracts.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.typecontracts.probe.ContractProbeKt"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "typeCheckingAlgorithmsPorted": false,
+  "wasmBuild": "not-run: real descriptor/type-system closure required",
+  "browserCompilerBuilt": false,
+  "readiness": false
+}
