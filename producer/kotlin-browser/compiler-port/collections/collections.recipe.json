@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "originals": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirNonExpansiveInheritanceRestrictionChecker.kt",
+      "gitBlob": "f8a1dffc2774dedb99969832c6e5143c8daa12f3",
+      "bytes": 9635,
+      "sha256": "c9656d047703b09e20647d8394545a55ed419e30309570229c38973359675d11"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/DFS.java",
+      "gitBlob": "66cbbc62cdd7d6745b8aef8c56029cb04721c2c7",
+      "bytes": 5431,
+      "sha256": "c7140891a2051dcde764f9a7566da08723cda16722257d70ced2f7d8ab375ec4"
+    },
+    {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/SmartList.java",
+      "gitBlob": "2df91020076a404ad883562d5c2763ee6ed43667",
+      "bytes": 9230,
+      "sha256": "0c8cecd1754fcc37b273cee69f7eeb00552ce470e50d634e162b739fe33a42b2"
+    }
+  ],
+  "portable": [
+    {
+      "path": "DFS.kt",
+      "bytes": 3776,
+      "sha256": "f700ccb5b7749b189e7a6f6755f5fa3937552f23cfe1cc4b2c3b0afb0114c345"
+    },
+    {
+      "path": "SmartList.kt",
+      "bytes": 11250,
+      "sha256": "9711db98f6ca145f50afe22152659f2f71f4697024cc204e1983841bc76b2d6c"
+    }
+  ],
+  "callerTransformations": [
+    {
+      "path": "FirNonExpansiveInheritanceRestrictionChecker.kt",
+      "originalPath": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirNonExpansiveInheritanceRestrictionChecker.kt",
+      "bytes": 9634,
+      "sha256": "b4b7d1e3aeda54342ee79ebbe49f3fd8cb4e32fd38de16b7d865011faed0c226",
+      "replacements": [
+        {
+          "from": "override fun afterChildren(current: T?)",
+          "to": "override fun afterChildren(current: T)"
+        }
+      ],
+      "reason": "Java flexible generic T! override becomes common N; Graph<T> remains unbounded, nullable type arguments remain legal and result.add(current) body stays unchanged."
+    }
+  ],
+  "commonBaseSourceProvenance": [
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableList.kt",
+      "bytes": 2580,
+      "gitBlob": "adb75a6a172ed9ed1f704f0f65615040169fa84c",
+      "sha256": "a7776ffe745422435854d06895f1204ca0c810d7d98a8568035b574d1e51339b"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableList.kt",
+      "bytes": 9058,
+      "gitBlob": "4cf1ceacb485a9cf973a288a6a245ae34731b2a8",
+      "sha256": "aba0ccb73b7221f47f07c2d08776b1990526bf97bc6602aba64ff0811b96c57d"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableCollection.kt",
+      "bytes": 1249,
+      "gitBlob": "ec16de7a0a16a6cc7cd2f86e19c7920e238bfee0",
+      "sha256": "b6e893edc1dbbd32df056b3b4817157484280a206573b30194f6d29f1e67a467"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableCollection.kt",
+      "bytes": 2608,
+      "gitBlob": "8e9f3a05cb8c61b435f3ec69daac60195fe40e68",
+      "sha256": "828d303aa4fa8201fbb3be8f82586c29a7ca27ff256d481de1a8936c393e013a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractCollection.kt",
+      "bytes": 2004,
+      "gitBlob": "9f9275435c711629d25e2318c6bf69b5a5f82b80",
+      "sha256": "6cf944e7a688966a5db7a6c362cd297ab9e6ebc62c9c42f4a76ac42afff119c0"
+    }
+  ],
+  "hostProfile": "single-serial-Worker",
+  "preserved": [
+    "DFS visit-before-handler ordering, per-node pruning, callback exceptions, root-loop ifAny policy and visited set equality/identity policy",
+    "SmartList zero/singleton/array transitions, growth, shifted remove, modification counts, iterator invalidation, sort/trim and template array values"
+  ],
+  "hostChanges": [
+    "DFS list-result carrier uses common ArrayDeque instead of JVM LinkedList, retaining prepend and mutable sequence semantics.",
+    "SmartList uses common arrays and collection bases; explicit iterators retain the original zero/singleton/AbstractList state machines.",
+    "Java reflection-based array creation uses the caller-provided array copy; JVM-only component class introspection and invalid typed-array stores are outside the browser host profile.",
+    "The common sort source API has a JVM bytecode name to coexist with Java mapped List.sort; an internal host entry exposes its exact algorithm to the JVM differential observer. Common toArray methods publicly override the real collection base methods."
+  ],
+  "browserCompiler": "not-built",
+  "languageReadiness": false
+}
