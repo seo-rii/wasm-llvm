@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-fir-lazy-resolve-serial-host",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceFile": {
+    "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/symbols/FirLazyDeclarationResolver.kt",
+    "bytes": 10919,
+    "gitBlob": "c357a237c14789deca59191c2c7a9ce595b41c57",
+    "sha256": "8d8e3cef818647d78e5b6bc7691d093fa83eac68bfd6b2ffa5251190537694fb"
+  },
+  "patch": {
+    "path": "patches/serial-resolve.patch",
+    "bytes": 1193,
+    "sha256": "a56c3008ac11322703acde3d2916da64c367ce20b8c7c795de61b6abf5d050a6"
+  },
+  "patchedSource": {
+    "bytes": 11012,
+    "sha256": "f64249b2b64aa4a819793e3173a194759d180abd92430ac84dba078f9ad2f851"
+  },
+  "adapter": {
+    "path": "SerialResolveState.kt",
+    "outputPath": "compiler-port-serial-resolve/SerialResolveState.kt",
+    "bytes": 814,
+    "sha256": "a0b2f5da315f59446caf12cff17c1f2594bf362528f6c4c4b9d94a83653762b6"
+  },
+  "controlFlowSlice": {
+    "start": "    @PrivateForInline\n",
+    "end": "    /**\n     * @see org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase",
+    "sha256": "baf1a58b44716e3f6c0f0d65e49e5dd162e092ba6ac9f9e304838ff602d0b14d",
+    "abstractPhaseSignaturesExcludedFromProbe": 2
+  },
+  "semantics": {
+    "thread": "exactly one serialized compiler Worker thread; no concurrent compiler entry or reentrant host compile",
+    "initialization": "lazy per state object, completed initializer only; original scope bodies and finally restoration unchanged",
+    "scope": "contract checks and lazy-resolution permission; no resolution implementation replaced",
+    "lifetime": "resolver object; no shared state or counter reset",
+    "browserCompilerBuilt": false,
+    "readiness": false
+  },
+  "probeAnnotation": {
+    "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PrivateForInline.kt",
+    "bytes": 447,
+    "gitBlob": "2c916f81935a0925e1d405bfc8e29ae0d5b66fa9",
+    "sha256": "a08ff587f0371f9e10fb8d73be716c4d31dc811d0c32bf589911a726832195a4"
+  }
+}
