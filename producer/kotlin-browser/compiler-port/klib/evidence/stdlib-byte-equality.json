@@ -1,0 +1,695 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-klib-memory-host-jvm-wasmjs-differential",
+  "status": "passed",
+  "gate": "G2-KLIB-container-and-byte-boundary-only",
+  "source": {
+    "repository": "JetBrains/kotlin",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775"
+  },
+  "sourceLockSha256": "bee9de000626d13446e7df50439f82a19f0709979fe21822109467d81ca8f309",
+  "patch": {
+    "path": "patches/in-memory-klib.patch",
+    "bytes": 26477,
+    "sha256": "4f7ce8e9d89a3a9d63db9330f0c3ccea638f2a7988efb8efe62902571ded2652"
+  },
+  "sources": [
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelReaders.kt",
+      "bytes": 12740,
+      "sha256": "ed232721c47e0f70ecf51242b5dbe0deb3c7eb6bdff3ddd3c5227406f6bb2dfd",
+      "originalSha256": "12a325d0831cca8928b9901867dfd2bee560331b393837bf937b957061d29177"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelWriters.kt",
+      "bytes": 3935,
+      "sha256": "018f3680c49384a50f002d618411636c11029bb6b9da4f27e062796b87bf57c1",
+      "originalSha256": "c283ff665fb145b3b2eb44194951c81ffe19464bb3a7cf14040d604bdd568818"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/impl/ReadByteBufferProvider.kt",
+      "bytes": 1815,
+      "sha256": "dc5786fa64272670ed7dffc61581168d428bc664122961c2a227d09d8c05cc7f",
+      "originalSha256": "119d8c0aedb4121ac01cb5dced16a5d566b943592ac2f014fa8fa38e69e34574"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/encodings/WobblyTF8.kt",
+      "bytes": 7427,
+      "sha256": "b77ce87008366a370546d0e2307a4695bb334b711eb2a636cbd7818918630689",
+      "originalSha256": "7590c500252000496de6310e0cb522cd59d97bb49463a7f64bb4e92130d4adb6"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/Klib.kt",
+      "bytes": 3615,
+      "sha256": "6b3b30a0387a4da3c6181a130a24f58657bc9f04dc6a1aadd5fd8b1cab66c91f",
+      "originalSha256": "8cf3e3f719ad8a345252d60ce10eb1ea9788c19dd0b4c768b090fa82adad3405"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibIrComponent.kt",
+      "bytes": 6773,
+      "sha256": "9b6d6feca2bef85868fbfb56e9dfe002f4ab3dfa2c4950048354504ebc00eeba",
+      "originalSha256": "864b218f07ecbde9d967575e57ecf908c3795bdbc15cf7f3bc18e25c1cb29e9e"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibMetadataComponent.kt",
+      "bytes": 3926,
+      "sha256": "5269c59356955ef95e868107d3151f2f9ed2893541786f8098a71fefdbc1fd94",
+      "originalSha256": "22d9cd52e51088b3c212fe79e3b6d38f56a57ba7687956902a5b01bf2a7af294"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentImpl.kt",
+      "bytes": 2263,
+      "sha256": "9d0b6229d2cdde7c975571f2245e09638d6b78505cabaac581aefde90134aafc",
+      "originalSha256": "47b64eb2b3854b9b70495761c7fbcc4ef1c09b94989a27a8753ed35061fdf37c"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibrary.kt",
+      "bytes": 7754,
+      "sha256": "723bf3790a46ad773cee00236200b61d9e6a695f06f260589e00c6acee8cf0f0",
+      "originalSha256": "f39730d28ab780d90155524a3793ac477b93d6aa2032a7894d7171411109511b"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibraryVersioning.kt",
+      "bytes": 2216,
+      "sha256": "608626a663ae628ac18174abd4e6a24b44d41608d3f8bae50bd8c8dca905c118",
+      "originalSha256": "66837c62085e9d7426e18560274e281b3b6ec3bf5a023ec4693c7e9fbfd3911f"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KlibAttributes.kt",
+      "bytes": 3328,
+      "sha256": "6f3a337ee93823b28adfa2c6dad147b53e5e53b22d2476eefc8514ca9f96a17c",
+      "originalSha256": "6f3a337ee93823b28adfa2c6dad147b53e5e53b22d2476eefc8514ca9f96a17c"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KlibConstants.kt",
+      "bytes": 547,
+      "sha256": "9d314c7b7d0d2d293246fea70f7dac180880475bec8335073685c62185613a49",
+      "originalSha256": "9d314c7b7d0d2d293246fea70f7dac180880475bec8335073685c62185613a49"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinAbiVersion.kt",
+      "bytes": 4422,
+      "sha256": "51cf5fa2e44e4414fa333c7611d98f96ea67d6d4bd118830b5201de7b60d8dde",
+      "originalSha256": "51cf5fa2e44e4414fa333c7611d98f96ea67d6d4bd118830b5201de7b60d8dde"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinIrSignatureVersion.kt",
+      "bytes": 1627,
+      "sha256": "6b9c1c556f2686a0e3576dcddeee3e5e02a7fb8f227e29e148f7d8f6b394feec",
+      "originalSha256": "6b9c1c556f2686a0e3576dcddeee3e5e02a7fb8f227e29e148f7d8f6b394feec"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/SerializedDataStructures.kt",
+      "bytes": 1086,
+      "sha256": "fae38df5358d7b3e71864e893a2cee28e7252ae28239afc226450aea6461a280",
+      "originalSha256": "fae38df5358d7b3e71864e893a2cee28e7252ae28239afc226450aea6461a280"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/impl/BuiltInsPlatform.kt",
+      "bytes": 461,
+      "sha256": "60d0134ace13e3bddf8d2e5f6092c48b28fa48212ca43886c851a488afcd9ccd",
+      "originalSha256": "60d0134ace13e3bddf8d2e5f6092c48b28fa48212ca43886c851a488afcd9ccd"
+    },
+    {
+      "path": "compiler/util-io/src/org/jetbrains/kotlin/io/PropertyFileUtils.kt",
+      "bytes": 4882,
+      "sha256": "c562f3031b91265d5f01fca004c9159f9e73a96702febe3f5638d45ed275ebd6",
+      "originalSha256": "1c82eeb48df3e5ddb367b985c75200327d11999941418593afc24edd5cd2cf1a"
+    },
+    {
+      "path": "compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt",
+      "bytes": 1197,
+      "sha256": "c2f61ccbe42e5c7e21a507a558f1e7955ef58d2cc79f52f3952fd27765142b69",
+      "originalSha256": "d266423286e1e7cf893e4d64617680623bccfa28b31df412299e60e7feb56979"
+    },
+    {
+      "path": "compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+      "bytes": 3800,
+      "sha256": "f7584e006617f6437f6dcc1dc1d3d8f7c0a24ba7b044852a7f74672d53b179cc",
+      "originalSha256": "54c9250d7d5d20d37d1b83a71d4cfde4fa647e44ad5a86e43057e01d2f828472"
+    },
+    {
+      "path": "core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt",
+      "bytes": 3880,
+      "sha256": "26e4f7f8b36da489f2e9696d32a303c0a5a2a31bab502522c2c7555dcce18fb5",
+      "originalSha256": "1070806df8e754d6f9c212e83ec7f58f9f878dfd99fe0d378f51443a10723244"
+    },
+    {
+      "path": "core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/MetadataVersion.kt",
+      "bytes": 2832,
+      "sha256": "128779eadd55f9230c745cda346d44decba11ca2ff3f25474a2c9050b384211f",
+      "originalSha256": "d648074f2544eae2b717851b9a8c48abdbaf961576c46ffc297623afcbfbbbf2"
+    },
+    {
+      "path": "compiler-port-klib/PortableBytes.kt",
+      "bytes": 4723,
+      "sha256": "30c76a73fee7de21c447b7316a7a0b04a7bdf266f6fcf421145eb73472a75212",
+      "originalSha256": null
+    },
+    {
+      "path": "compiler-port-klib/ManifestProperties.kt",
+      "bytes": 5882,
+      "sha256": "c17f2e3d01f4466837820495e1f207ec054672f812027e9a37a42fce579f6a73",
+      "originalSha256": null
+    },
+    {
+      "path": "compiler-port-klib/MemoryKotlinLibrary.kt",
+      "bytes": 10035,
+      "sha256": "bb0809c01ded5f3440049c5603bc460a85c7fe478ce4249da70440b414016470",
+      "originalSha256": null
+    },
+    {
+      "path": "compiler-port-klib/LibraryPathOperations.kt",
+      "bytes": 318,
+      "sha256": "05c67d72949581faa0ee5a705372973ec39f1065d1808d9869cd324144bf5279",
+      "originalSha256": null
+    },
+    {
+      "path": "compiler-port-klib/KlibSha256.kt",
+      "bytes": 3405,
+      "sha256": "9afe447d102e5d5645805d24a9208416758d4b16756bdbcaaf754d414f3c525f",
+      "originalSha256": null
+    }
+  ],
+  "referenceOnlySources": [
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibMetadataComponentImpl.kt",
+      "bytes": 2746,
+      "sha256": "92e28b75811bc505c8e3f77fdb7f27167d146560e7467130765a01df2c793609",
+      "gitBlobSha1": "75be4440edcf8288f412a2873f87633aa9ff118a"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KlibLayoutReader.kt",
+      "bytes": 5183,
+      "sha256": "7cdeab2db0379b81fe6a130686a46cf5e23b1094f4725d0908e2cb7da93eb335",
+      "gitBlobSha1": "15c795e57b3616289daecfa8f66e4c29396d8c52"
+    },
+    {
+      "path": "compiler/util-klib/src/org/jetbrains/kotlin/library/KlibFormat.kt",
+      "bytes": 738,
+      "sha256": "4b722c63e3245c8f69faf7f0af5cfe1705706800af50c376ea416a2a212986cc",
+      "gitBlobSha1": "d0b6db31b167b13633bc822b03072aa811ef7dbb"
+    }
+  ],
+  "observerSources": [
+    {
+      "path": "Probe.kt",
+      "bytes": 9759,
+      "sha256": "fa570a3d0b93e22c40a003a7ed49e0b9555315ba5edc2f5477d9caf3035391eb"
+    },
+    {
+      "path": "PortableChecks.kt",
+      "bytes": 4483,
+      "sha256": "c414990394579e943b3d1e35a3eb82f678d6fbfd35354ba948577b45fca82aaa"
+    },
+    {
+      "path": "OriginalJvmEntry.kt",
+      "bytes": 1444,
+      "sha256": "6b4c4cef7102e59c97dedc8e11fe0a67ae4aa183563664c4ee9e956d72048476"
+    },
+    {
+      "path": "PortableJvmEntry.kt",
+      "bytes": 1669,
+      "sha256": "96f0ac49fcb5f4dcb1df1daa545e3912e085ac7f9a3eba0c316dcbd9ea626199"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 2534,
+      "sha256": "77914388a1ebcdfbb0ab44e016124eb0ad09660522fead692dc86d6519fab86e"
+    },
+    {
+      "path": "extract-fixture.py",
+      "bytes": 2868,
+      "sha256": "aacf0b3ee0abefa1500c134653af45c2e0db329da60ded5929c785022bf85ccc"
+    }
+  ],
+  "buildScriptSha256": "abe0846b8c675c116c5ab668162b8ae23bceebfd7a3b91710d3d5cb5281d0431",
+  "browserProbeSha256": "a55728bcf4141298d529d4b098745cd3264b9a2334feb005594642aaadd83bf0",
+  "buildReceiptSha256": "3db0f024d736aad65b900cf0fcf1918a16f4457b7696db721d36344c1041080d",
+  "hostLibraryPathSha256": "79fee25d422285d3008ccd3c39733e9ddd86fa84d6a56161c2d5de8c5e0ca41e",
+  "bootstrapVersion": "2.5.0-dev-10106",
+  "bootstrapCompilerSourceCommit": null,
+  "bootstrapArtifacts": [
+    {
+      "id": "compiler",
+      "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 59164049,
+      "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "build-tools-api",
+      "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+      "bytes": 575844,
+      "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-jvm",
+      "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+      "bytes": 1859448,
+      "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "daemon",
+      "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 372801,
+      "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-wasi",
+      "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+      "bytes": 4044976,
+      "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-js",
+      "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+      "bytes": 4065926,
+      "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "reflect",
+      "file": "kotlin-reflect-1.6.10.jar",
+      "bytes": 3038560,
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+      "version": "1.6.10",
+      "verified": true
+    },
+    {
+      "id": "coroutines",
+      "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+      "bytes": 1548360,
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+      "version": "1.8.0",
+      "verified": true
+    },
+    {
+      "id": "annotations",
+      "file": "annotations-13.0.jar",
+      "bytes": 17536,
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+      "version": "13.0",
+      "verified": true
+    }
+  ],
+  "commands": [
+    {
+      "phase": "extract-real-stdlib-fixture",
+      "argv": [
+        "python3",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/extract-fixture.py",
+        "--klib",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/stdlib/kotlin-stdlib-wasm-wasi.klib",
+        "--output",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/fixture"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 245.58165000000008
+    },
+    {
+      "phase": "original-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelReaders.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelWriters.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/ReadByteBufferProvider.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/encodings/WobblyTF8.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/Klib.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibIrComponent.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibMetadataComponent.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentImpl.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibrary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibraryVersioning.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibAttributes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibConstants.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinAbiVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinIrSignatureVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/SerializedDataStructures.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/BuiltInsPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-io/src/org/jetbrains/kotlin/io/PropertyFileUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/MetadataVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibMetadataComponentImpl.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibLayoutReader.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/OriginalJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 17025.644981999998
+    },
+    {
+      "phase": "portable-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelReaders.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelWriters.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/ReadByteBufferProvider.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/encodings/WobblyTF8.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/Klib.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibIrComponent.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibMetadataComponent.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentImpl.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibrary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibraryVersioning.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibAttributes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibConstants.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinAbiVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinIrSignatureVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/SerializedDataStructures.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/BuiltInsPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-io/src/org/jetbrains/kotlin/io/PropertyFileUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/MetadataVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/PortableBytes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/ManifestProperties.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/MemoryKotlinLibrary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/LibraryPathOperations.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/KlibSha256.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/LibraryPath.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/PortableChecks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/PortableJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 17959.056026000002
+    },
+    {
+      "phase": "original-jvm-observe",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.klibprobe.OriginalJvmEntryKt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/fixture/files",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/original-snapshot.bin"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 723.4122149999966
+    },
+    {
+      "phase": "portable-jvm-observe",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.klibprobe.PortableJvmEntryKt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/fixture/files",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable-snapshot.bin"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1045.4689510000026
+    },
+    {
+      "phase": "portable-wasmjs-klib-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/klib",
+        "-ir-output-name",
+        "klib-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelReaders.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelWriters.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/ReadByteBufferProvider.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/encodings/WobblyTF8.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/Klib.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibIrComponent.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibMetadataComponent.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentImpl.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibrary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibraryVersioning.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibAttributes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KlibConstants.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinAbiVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinIrSignatureVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/SerializedDataStructures.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/BuiltInsPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-io/src/org/jetbrains/kotlin/io/PropertyFileUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/MetadataVersion.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/PortableBytes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/ManifestProperties.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/MemoryKotlinLibrary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/LibraryPathOperations.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/KlibSha256.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/portable/compiler-port-klib/LibraryPath.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/PortableChecks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/WasmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 14983.475074000002
+    },
+    {
+      "phase": "portable-wasmjs-binary-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/klib/klib-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-klib-probe-5/wasm",
+        "-ir-output-name",
+        "klib-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 11234.145606999999
+    }
+  ],
+  "browserCommand": [
+    "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+    "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/klib/browser-probe.mjs",
+    "--output",
+    "out/kotlin-klib-probe-5"
+  ],
+  "targetStdlib": {
+    "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/stdlib/kotlin-stdlib-wasm-wasi.klib",
+    "sha256": "3c97b68581963cf32c18d8b6d93b467f3accc9eae2689c1655e8ed4b31f52d28",
+    "sourceCommit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "fixtureIndexSha256": "337e44728de74702752bd32153606ca928bd438ffb0f9fd384412e51bac77bf3",
+    "files": 519,
+    "decodedBytes": 12112627,
+    "directories": 45
+  },
+  "outputs": [
+    {
+      "path": "jvm/original.jar",
+      "bytes": 189811,
+      "sha256": "78815d9011583180415e46cc764c4701e5c92c7957c1dd991b52a39564ee5098"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 184921,
+      "sha256": "64fb7c4345faec67d8d1834e2fefebe7f84d3a409790055287664602fc4a5881"
+    },
+    {
+      "path": "klib/klib-probe.klib",
+      "bytes": 236089,
+      "sha256": "22eb8bfc4639826168ab94b346340770dd8a76a79c44f17a736feb057a3eeb74"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 268339,
+      "sha256": "83bd6c932dcd22c311eee91c84168018109132b4d62636188147478ff52dd9b8"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 269289,
+      "sha256": "4a94ed26b88e2025c5c8dad5a2a33354aff081494f378ba01395609b9a3bc3fd"
+    },
+    {
+      "path": "original-snapshot.bin",
+      "bytes": 23179085,
+      "sha256": "bce11d15c4b1fe49f1d8d57fad4d7db363f2b4e36ec32195a941c45d10f24e58"
+    },
+    {
+      "path": "portable-snapshot.bin",
+      "bytes": 23179085,
+      "sha256": "bce11d15c4b1fe49f1d8d57fad4d7db363f2b4e36ec32195a941c45d10f24e58"
+    },
+    {
+      "path": "wasm/klib-probe.import-object.mjs",
+      "bytes": 9875,
+      "sha256": "3d20aa08d89ccaee0f30c8a23f9730892626e9b2454455b02175b8005e73239c"
+    },
+    {
+      "path": "wasm/klib-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/klib-probe.mjs",
+      "bytes": 2379,
+      "sha256": "75bb5625b777e42046cfc7b37b9eeef3ee5c76cc56b718f404a2a14df4e08f09"
+    },
+    {
+      "path": "wasm/klib-probe.wasm",
+      "bytes": 1466813,
+      "sha256": "6dc14531e91c0814ce7203eeeabc65adeef80140c89d04e55cbd28d3582a57bb"
+    }
+  ],
+  "corpus": {
+    "required": 76,
+    "unitCases": 31,
+    "manifestCases": 14,
+    "guards": 30,
+    "realStdlibSnapshots": 1,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "passed": 76
+  },
+  "stdlibComparison": {
+    "originalJvmPortableJvmEveryByteEqual": true,
+    "originalJvmBrowserEveryByteEqual": true,
+    "snapshotBytes": 23179085,
+    "snapshotSha256": "bce11d15c4b1fe49f1d8d57fad4d7db363f2b4e36ec32195a941c45d10f24e58",
+    "coverage": "All metadata packages/fragments/header/manifest/version values; main + inlinable IR files, declaration IDs, all individual bodies/types/signatures/strings/debug-info/file-entries and all public raw rows."
+  },
+  "guards": [
+    "truncated-count",
+    "min-count-overflow",
+    "excessive-count",
+    "negative-element-size",
+    "payload-truncation",
+    "unsigned-size-overflow",
+    "leb32-payload-overflow",
+    "leb32-continuation-overflow",
+    "nested-row-header-truncation",
+    "nested-payload-crosses-row",
+    "negative-declaration-count",
+    "declaration-header-overlap",
+    "declaration-range-overflow",
+    "nested-declaration-crosses-row",
+    "output-limit",
+    "failed-output-not-returned",
+    "failed-output-not-reused",
+    "malformed-manifest-unicode",
+    "manifest-immutable",
+    "reentrant-reader",
+    "reader-recovery-after-reentrancy",
+    "sha256-independent-vectors",
+    "library-path-traversal",
+    "library-absolute-path",
+    "library-duplicate-path",
+    "library-file-shadows-directory",
+    "library-hash-mismatch",
+    "verified-files-immutable-ownership",
+    "library-missing-metadata",
+    "library-partial-ir"
+  ],
+  "environment": {
+    "browser": "Chromium",
+    "browserVersion": "153.0.8010.12",
+    "headless": true
+  },
+  "network": {
+    "offlineAfterStaticPreparation": true,
+    "requestsDuringProbe": [],
+    "externalRequests": [],
+    "preparedAssetRequests": 525
+  },
+  "elapsedMs": 2984.800000011921,
+  "languageReadiness": false,
+  "limitations": [
+    "KLIB container/component and byte-encoding boundary only; protobuf decoding, library FIR symbols and linking are separate work.",
+    "The target fixture is the rebuilt selected-source stdlib, produced using the locked official bootstrap compiler; compiler source commit is not proven equal to candidate.",
+    "Finite byte/table limits are explicit new host policy; invalid inputs now fail before allocation or crossing a table row.",
+    "String-only manifest properties do not implement arbitrary Java Properties object values/default property chains.",
+    "No full browser-hosted Kotlin compiler, whole G2 gate, browser matrix or GC heap cap is established by this build.",
+    "Only this Chromium configuration was tested; no performance target or total browser memory measurement.",
+    "Offline begins after hash-verified fixture and loader preparation; app-shell restart and persistent caching were not exercised.",
+    "Source-host paths and immutable file index are new host abstractions; no arbitrary archive/filesystem/third-party KLIB upload support."
+  ],
+  "executionLogs": [
+    {
+      "phase": "build",
+      "pid": 3272077,
+      "exitCode": 0,
+      "path": "/home/seorii/logs/kotlin-klib-build-xlawbx07.log"
+    },
+    {
+      "phase": "browser",
+      "pid": 1409660,
+      "exitCode": 0,
+      "path": "/home/seorii/logs/kotlin-klib-browser-9mzqpulj.log"
+    }
+  ]
+}
