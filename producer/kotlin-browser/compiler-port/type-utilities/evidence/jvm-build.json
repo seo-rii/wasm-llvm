@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-type-utilities-jvm-build",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "preparationSha256": "c377ccb704b8f07b52e606accba55d4836e801c514e57595af955f6aa9e6b3b9",
+  "toolSha256": "89403be831684657b5878bcd51d536c8ab7e6f32c2ddb335dd7067b604ca3979",
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "typeImplementationDependency": {
+    "preparationSha256": "e28148c025e12ff0280ad5d937762d7ba1f978f6b590e334671b507bd538b103",
+    "buildReceiptSha256": "daa51f0649d99274e232bdcd3aacb35e0587cf39bf8aeed7330bd5a737a6d9a2",
+    "jar": {
+      "path": "type-implementation.jar",
+      "bytes": 21398,
+      "sha256": "046be68053fbad0b302bf37c31e676ecf9e438ccb8d2979d72cc5c62e28d461e"
+    }
+  },
+  "compiler": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-implementation/run-1791451530044/build/type-implementation.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/prepared/common/TypeUtils.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/prepared/common/TypeCheckingProcedure.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/prepared/common/TypeCheckerProcedureCallbacksImpl.kt",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/build/type-utilities.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/prepared/common/TypeUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/prepared/common/TypeCheckingProcedure.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-type-utilities/run-1791453096395/prepared/common/TypeCheckerProcedureCallbacksImpl.kt"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "outputs": [
+    {
+      "path": "type-utilities.jar",
+      "bytes": 24458,
+      "sha256": "1165de79a9cf733e41072fd6bb8b15d5ffb708857887a377b60ca668448d709e"
+    }
+  ],
+  "wasmBuild": "not-run: concrete builtins and descriptor helper closure required",
+  "browserCompilerBuilt": false,
+  "readiness": false
+}
