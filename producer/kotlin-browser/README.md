@@ -128,7 +128,7 @@ unpatched. These examples cannot advance G4 or enable public Kotlin support.
 | --- | --- | --- |
 | G0 | Complete source/generated/tool locks, resolved dependency closure, R0/R1 baseline | Blocked; selected source inventory recorded |
 | G1 | Official parser JVM/browser comparison, errors and Unicode | Passed for 17-case standalone parser corpus; old/new parser semantic comparison remains separate |
-| G2 | Portable byte sink/registry/KLIB/writer host comparisons | Not run |
+| G2 | Portable byte sink/registry/KLIB/writer host comparisons | Writer unit passed; registry and KLIB probes remain unrun |
 | G3 | New-parser raw/resolved FIR, builtins, common/target checkers | Not run |
 | G4 | Browser compiler emits a new program using official IR/backend | Not run |
 | G5 | Real Kotlin WASI stdin/EOF/ABI/output/exception execution | Not run |
@@ -149,6 +149,14 @@ Seven file/publication guards passed. The
 [raw-FIR boundary inventory](parser-probe/evidence/raw-fir-boundary.json) preserves
 five exact source pins for the next host port: Java streams and IntelliJ light
 tree types still prevent the new parser from being a complete portable FIR entry.
+
+The [portable writer probe](writer-probe/README.md) isolates the official byte
+writer's Java I/O boundary while preserving its encoding and backpatch bodies.
+Original JVM, portable JVM and actual browser Wasm agree on all 82 byte cases;
+ten bounded sink guards and seventeen fixed byte expectations also pass. The
+[receipt](evidence/writer-byte-equality.json) records verified source/patch hashes,
+offline Worker execution and JVM file-output equality. This is one G2 unit;
+it does not establish KLIB reading, compiler/backend integration or G4.
 
 The next compiler work follows K02–K07: standalone official parser; portable
 source/byte/session boundaries; official-schema KLIB/protobuf strategy; parser

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-byte-writer-unit-port",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "patch": {
+    "path": "writer-portable.patch",
+    "bytes": 1975,
+    "sha256": "d481b6c222163deda86765afbf3d9234986358fb28c138fd735f0cb9f984b47a"
+  },
+  "sources": [
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+      "role": "official-binary-writer",
+      "bytes": 3724,
+      "sha256": "6937f3076da19c460256128f006fc701306427d3194393378154731ee7f7892d",
+      "gitBlobSha1": "b80e9d85ac96630643384f28b8c26803bc705943",
+      "portableBytes": 3641,
+      "portableSha256": "d72bce4887c4abb1220442fa5a87c107f01c6da4696d9c2cb55ac7c3788c21f0"
+    },
+    {
+      "path": "compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+      "role": "official-leb128",
+      "bytes": 3855,
+      "sha256": "54c9250d7d5d20d37d1b83a71d4cfde4fa647e44ad5a86e43057e01d2f828472",
+      "gitBlobSha1": "7ed6f4bddcaded4a484c50c42d774c3a9b5b3fa5",
+      "portableBytes": 3800,
+      "portableSha256": "f7584e006617f6437f6dcc1dc1d3d8f7c0a24ba7b044852a7f74672d53b179cc"
+    },
+    {
+      "path": "compiler/util-io/test/org/jetbrains/kotlin/util/Leb128Test.kt",
+      "role": "upstream-test-reference",
+      "bytes": 1612,
+      "sha256": "31a4b649909392abf1ab8d22d8eaa32aa8f194dda33200cb5237dddf226b75a5",
+      "gitBlobSha1": "3b87f31662e24f0dd62a50049cf893224301a617"
+    }
+  ],
+  "defaultSinkLimitBytes": 8388608,
+  "scope": "G2 ByteWriter and LEB128 unit only; no FIR/IR/compiler completion",
+  "languageReadiness": false
+}
