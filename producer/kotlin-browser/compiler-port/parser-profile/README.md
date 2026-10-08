@@ -1,0 +1,28 @@
+# Official new-parser compiler source profile
+
+This patch family selects the official `MultiplatformParsing2Fir` path at Kotlin source commit `4d78aae1e337cd40f69baa865aed950fe807a775`. It prepares compiler source inputs. Raw FIR, resolved FIR and the complete browser compiler have not executed successfully through this profile; public Kotlin support remains false.
+
+`patches/parser-profile.patch` changes three pinned compiler files. `firUtils.kt` keeps the signatures of `buildFirViaLightTree`, `buildResolveAndCheckFirViaLightTree` and `resolveAndCheckFir`. The selected builder is `MultiplatformParsing2Fir`, the convenience entry requests it explicitly, and an incompatible `useMultiplatformParsing=false` request fails before accessing the session or source files. File registration, source-path registration, file/line reporting and the exact `resolveAndCheckFir` declaration remain. Platform checkers still have to run separately; their source in `analyse.kt` is retained unchanged.
+
+The browser source variant reads `KtSourceFile.getContentsAsText()` from the existing host adapter and uses the original `CharSequence.toSourceLinesMapping()` implementation. It preserves source UTF-16 code units and CRLF. This differs from the original JVM CLI stream convenience reader, which normalizes line separators. The two PSI convenience declarations `buildFirFromKtFiles` and `buildResolveAndCheckFirFromKtFiles` are recorded with exact declaration ranges and hashes and emitted to `JvmFirConvenience.kt.reference`; they are outside the browser source variant. Their remaining selected callers are checked before publishing a preparation receipt.
+
+`ConverterUtil.kt` keeps `nameAsSafeName` and `extractArgumentsFrom`. The former calls `unquoteParserIdentifier`, whose algorithm is extracted from the exact upstream `KtPsiUtil.unquoteIdentifier` and the matching private helper in `AbstractTreeRawFirBuilder`. It strips one enclosing backtick pair when both ends are backticks and the length is at least two. Other strings remain unchanged. `WhenEntry.kt` loses only its three unused legacy carrier imports.
+
+All 17 shared light-tree2fir files and all four official mp-parsing2fir files are retained. The real generic declaration/expression proxies, source conversion, destructuring, constructor and modifier logic stay in the source set. The only file exclusions are the five individually pinned legacy files `LightTree2Fir.kt`, `LightTreeParsingErrorListener.kt`, `AbstractLightTreeRawFirBuilder.kt`, `LightTreeRawFirDeclarationBuilder.kt` and `PsiTokenUtils.kt`. The original compiler closure is checked for references to their declarations and the omitted PSI convenience functions. There are no directory-prefix exclusions.
+
+The host patch owns `MultiplatformParsing2Fir` and its real production-marker syntax diagnostics. This family binds that host source lock and patch hash without replacing those files. It keeps the official new parser's placeholder source-carrier behavior and does not construct a new token mapping or parser.
+
+Use the independent preparation API from `prepare.mjs`:
+
+```js
+const prepared = await prepareParserProfileSources({ sourceRoot, outputRoot });
+// commonSources, replacedOriginalPaths, sourceSetExclusions, receiptPath, receipt
+```
+
+The API checks every original file in the pinned compiler closure, the patch, the pure helper, exact extracted declarations and the retained caller inventory. Its output is a fresh `compiler-port-parser-profile` directory under the producer repository's `out/`; existing output, altered pins and symlink paths fail. The original cache is unchanged. Only the pure helper's missing PSI source is acquired: `prepareParserProfileSourceCache()` in `fetch.mjs` obtains the 54,406-byte pinned `KtPsiUtil.java` into `out/kotlin-parser-profile-sources` and verifies its Git blob and SHA-256. An explicit `supplementalSourceRoot` can use the same already verified input offline.
+
+Run preparation guards with `node --test producer/kotlin-browser/compiler-port/parser-profile/prepare.test.mjs`. Run the component differential with `node producer/kotlin-browser/compiler-port/parser-profile/build.mjs --output /absolute/path/to/wasm-llvm/out/a-fresh-probe-directory`. Use private background logs for this long-running command as required by the workspace. The build uses the hash-verified bootstrap compiler, wasmJs stdlib and the actual compiler source flags, with one sequential JVM capped at 768 MiB.
+
+The reference extracts and executes the exact selected pure Java method in a small generated Java class; only its parameter annotation is omitted. It does not execute the PSI facade. The shared observer compares named backtick/Unicode cases and five deterministic products over all UTF-16 code units with portable JVM and actual Wasm execution. The new parser-selection guard is executed on portable JVM and Wasm. The real parser constructor and checking declarations are source-verified; no fixture substitutes for an actual FIR session. The checked-in evidence records the observed engine and keeps Raw FIR/resolved FIR/full browser compilation explicitly unverified.
+
+`parser-profile-preparation.json` records the actual preparation and 5/5 source/integrity guards. `parser-profile-evidence.json` records the passing original Java method slice, portable JVM and Node wasmJs comparison: 24 named identifier cases, 327,680 UTF-16 observations and two profile guard cases, with zero failures or skips. The Wasm engine was Node with `--experimental-wasm-exnref`; browser comparison and actual FIR execution remain `not-run`. The bootstrap compiler's authoritative source commit remains `null`.

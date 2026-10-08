@@ -1,0 +1,557 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-new-parser-only-source-profile",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "recipeSha256": "764fe55b7382383ad9cb3c25365c834a4d4065edcabfa46ae04fabdcdbb959e0",
+  "sourceClosureLockSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "patch": {
+    "path": "patches/parser-profile.patch",
+    "bytes": 5347,
+    "sha256": "3f123116a340d4b713a881b4781898bdc3cfce24d7bdb966364690bc4fa1b8ad"
+  },
+  "originals": [
+    {
+      "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/analyse.kt",
+      "gitBlob": "13534b4dc8520f50a85a8153e9eecaef3cb11ee4",
+      "bytes": 3089,
+      "sha256": "c39f6eec54f41c553a9e2fea3d252e920ecedbd2b070a3d2c61e560c99a73505"
+    },
+    {
+      "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/firUtils.kt",
+      "gitBlob": "946fb87022b8322b11f8d6427f87fd54921a37b0",
+      "bytes": 4106,
+      "sha256": "02b9c1e712cdc215c122290002e03e354b33ce7da69adb7394c86dbe6a5bad13"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/analysis/Traversals.kt",
+      "gitBlob": "c90e7d9a13d9733cce992d7c93fa80a8af8550e8",
+      "bytes": 1863,
+      "sha256": "6557c5eea9b875c850b172c14a2de1bb3c1cde815707c82724217c357458fa54"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/analysis/TypeUtils.kt",
+      "gitBlob": "6e3ee099af7d63801b66582eae93ea11ba0e43a1",
+      "bytes": 2228,
+      "sha256": "f97ecf0b610209df39819d26d83e1b961215b99c76a93841b3cea21931991799"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt",
+      "gitBlob": "a212a5909c4f6ac19b625bd08beef8a93d4d626c",
+      "bytes": 1182,
+      "sha256": "9174fb7517edc63268ed651dfae6ebb37120e1826bda4eb370d308984b17fe2f"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/LightTree2Fir.kt",
+      "gitBlob": "62ac0c229d5a14588967e1daaf4e7ea9962f1fc7",
+      "bytes": 2006,
+      "sha256": "e717ff9cad0f2ea1278660ae9466fd74a26e590e8b50df1e44059b8ca39c1a39"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/LightTreeParsingErrorListener.kt",
+      "gitBlob": "919cf3ca6b212940c22cb000e8f9117e76e1433e",
+      "bytes": 2190,
+      "sha256": "70fe32e7884221f536c894232e4860fe1146071b29dd47dda94149899be34934"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/AbstractLightTreeRawFirBuilder.kt",
+      "gitBlob": "4b76b1993f761d9d239c24492f45c835caf98a69",
+      "bytes": 3253,
+      "sha256": "01f7bb8e82543532b2fa38951a5768ac96ff47dd37c48deb9ca5fe375c1dd10c"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/AbstractTreeRawFirBuilder.kt",
+      "gitBlob": "b31b5956af1b58bc08241941a47f2a88b1046fab",
+      "bytes": 7877,
+      "sha256": "fa0ee6aeaf6371b0240cffb7edcdf92185f90a592fdfcea635f55f8a4125fc95"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/ConverterUtil.kt",
+      "gitBlob": "6a48d12443a0d9ec69c043a5b6858aa4ee478837",
+      "bytes": 1039,
+      "sha256": "7450a487acca586a27e6a3376190a79176760ebca603cccaf620c48422dc3771"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/LightTreeRawFirDeclarationBuilder.kt",
+      "gitBlob": "56ab9d1cdfe55e495564997dbe7eb621aeb02051",
+      "bytes": 2302,
+      "sha256": "f8b4d5370347eebc2a7c91b3e262e02735374a5f8770955dda8b3b7beb2234e9"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/TreeRawFirDeclarationBuilderProxy.kt",
+      "gitBlob": "cf3cacca505e762a7d422b4d2b1603c65d393752",
+      "bytes": 161653,
+      "sha256": "4f23b2a94672ef1439824a04339bdfc513bf5d562fb448ffaaa86102e4c9bc73"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/TreeRawFirExpressionBuilderProxy.kt",
+      "gitBlob": "458f59ea0c18dafc9806c72d07a757fdaba67615",
+      "bytes": 86177,
+      "sha256": "8f9da9de972fbd17fd11a8192569df7afa7a5741e74fcba7e3b36117423bce0c"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/ClassWrapper.kt",
+      "gitBlob": "13ff826c857df9da96866c71daf731c5b3b60572",
+      "bytes": 2337,
+      "sha256": "ef2c554c4bf700fed56d319ed8546499e913b139fae131872041c478f890b7e8"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/DestructuringDeclaration.kt",
+      "gitBlob": "26f61e4fbe024c5c4e90ec6f045049b3a1320247",
+      "bytes": 4614,
+      "sha256": "d01e9cfeabeed0d2e1e3a2348d2248b94f4454ae508541b684666b7ba028a166"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/PrimaryConstructor.kt",
+      "gitBlob": "cd3d48b26b0e58c6de66f8bf047cd86a503efb82",
+      "bytes": 456,
+      "sha256": "df8ebd24ba7ac313f2534d6472f7d08e74bb952aa540969f2c86a4649e7c1903"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/TypeConstraint.kt",
+      "gitBlob": "c5ff861a2f2ebd39f13e46540b8b4e8b3249c966",
+      "bytes": 523,
+      "sha256": "7f85802258fafad3759f60317392a0c35389407f2e380329a118c61a3bb8a9f4"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/ValueParameter.kt",
+      "gitBlob": "1c125a28aa37f78c032e38c067b5fcfa97b1b236",
+      "bytes": 11007,
+      "sha256": "e46730bcd165a91c779cf9caa3e04b3d6fee8f75adf71be93258b9b5092ba356"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/WhenEntry.kt",
+      "gitBlob": "5aca188e611db8c92c0c16e5fbb5f4e22d4a8592",
+      "bytes": 1495,
+      "sha256": "6e2d6d37905d68156de2f1819cb77238ba4b2449de4f685df9154f69bbdeaf80"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/ModifierFlag.kt",
+      "gitBlob": "0c149edd5a6e5c74e49f97584dc3b651d5ff4c80",
+      "bytes": 3739,
+      "sha256": "f60bf0933430006b39378285fa76e1a1267aba99dd675b89b434f1bc9d87ce32"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/ModifierList.kt",
+      "gitBlob": "7605ec00d7e463005ec4997d939eca35fd832bc4",
+      "bytes": 5635,
+      "sha256": "a4f542c5a1b1389298c0bdf40284c5ddeacc812b7997c087fb11c639b9cd4456"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/TypeParameterModifierList.kt",
+      "gitBlob": "240313f09a706f5b79bca7dde84c5a5f8b1cadbc",
+      "bytes": 466,
+      "sha256": "e027dc49a9f7865c41fc833ad26517b5681a74d3a2082768022b164a4dbc9aaf"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/TypeProjectionModifierList.kt",
+      "gitBlob": "b2e8ae24b9d08323d7ed21afa08cf475a68c2456",
+      "bytes": 445,
+      "sha256": "c3db7517cb30540dd3d7e1e1082bd9013b154934b16d1e3a94ce54a1e66c58f8"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/kmp/utils/PsiTokenUtils.kt",
+      "gitBlob": "0899456d1f54c129a7477b3adc9a9021df02bb7e",
+      "bytes": 1903,
+      "sha256": "7e577bcbc2041282e572ed691d2de6fbd490a5185d492017cf74db64b49c0858"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/AbstractMultiplatformParsingRawFirBuilder.kt",
+      "gitBlob": "ddbe1b8cab177e0ec194fc14cb3f79ed646f5334",
+      "bytes": 4036,
+      "sha256": "ed620e49198f65428b8276ce70741a191689777796ddbcfd7120972ca876c628"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/KotlinLightTreeStructure.kt",
+      "gitBlob": "3974fca2c0b6729ef10a3ff8d2d95e42c8808a79",
+      "bytes": 3902,
+      "sha256": "d4cf9ba8a86a25dbf70e3a65e1a757b1e806d923e8c9e69815d0f3d8d44385fb"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt",
+      "gitBlob": "465789ff75301b9adc5320830facba0b9f4b36ef",
+      "bytes": 3078,
+      "sha256": "a30c6a0c106513587e68def997eecece7800b49eeb77486c955e870723a4914f"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsingRawFirDeclarationBuilder.kt",
+      "gitBlob": "3ac990c52ca1d8da6055cc5666d71c94f8c02dd2",
+      "bytes": 2201,
+      "sha256": "53461fb0ab58b0d674590995eead876f29428c49b60d23298614c1ae725a5244"
+    }
+  ],
+  "supplementalSources": [
+    {
+      "path": "compiler/psi/psi-api/src/org/jetbrains/kotlin/psi/KtPsiUtil.java",
+      "gitBlob": "07834594246491de4d3c6ebd752a0f7f38d75216",
+      "bytes": 54406,
+      "sha256": "ce09c90b15f25fa2cd1483f841e443da0aa92b76e7163cf869d0ae26ecce9d28"
+    }
+  ],
+  "portable": [
+    {
+      "path": "ParserProfile.kt",
+      "bytes": 958,
+      "sha256": "32b8775a574ecb534592469d58b92008ca2781fca654324ad64a0c8786726a67"
+    }
+  ],
+  "transformed": [
+    {
+      "originalPath": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/firUtils.kt",
+      "bytes": 3274,
+      "sha256": "def2ba05dd35dcaf7fae8e3f6aba7d6ed907e99a10ea59270b3ba880f18965dc"
+    },
+    {
+      "originalPath": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/ConverterUtil.kt",
+      "bytes": 993,
+      "sha256": "7c2c41d4623479803721bccb5e257df2ea5176187f4eedd20a413cd0841847e6"
+    },
+    {
+      "originalPath": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/WhenEntry.kt",
+      "bytes": 1344,
+      "sha256": "505b69310fd0bc3f58712bd9fd774b4926656b42b836e371d8c61664ec6fe48d"
+    }
+  ],
+  "retainedSharedSources": [
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/analysis/Traversals.kt",
+      "gitBlob": "c90e7d9a13d9733cce992d7c93fa80a8af8550e8",
+      "bytes": 1863,
+      "sha256": "6557c5eea9b875c850b172c14a2de1bb3c1cde815707c82724217c357458fa54"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/analysis/TypeUtils.kt",
+      "gitBlob": "6e3ee099af7d63801b66582eae93ea11ba0e43a1",
+      "bytes": 2228,
+      "sha256": "f97ecf0b610209df39819d26d83e1b961215b99c76a93841b3cea21931991799"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt",
+      "gitBlob": "a212a5909c4f6ac19b625bd08beef8a93d4d626c",
+      "bytes": 1182,
+      "sha256": "9174fb7517edc63268ed651dfae6ebb37120e1826bda4eb370d308984b17fe2f"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/AbstractTreeRawFirBuilder.kt",
+      "gitBlob": "b31b5956af1b58bc08241941a47f2a88b1046fab",
+      "bytes": 7877,
+      "sha256": "fa0ee6aeaf6371b0240cffb7edcdf92185f90a592fdfcea635f55f8a4125fc95"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/ConverterUtil.kt",
+      "gitBlob": "6a48d12443a0d9ec69c043a5b6858aa4ee478837",
+      "bytes": 1039,
+      "sha256": "7450a487acca586a27e6a3376190a79176760ebca603cccaf620c48422dc3771"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/TreeRawFirDeclarationBuilderProxy.kt",
+      "gitBlob": "cf3cacca505e762a7d422b4d2b1603c65d393752",
+      "bytes": 161653,
+      "sha256": "4f23b2a94672ef1439824a04339bdfc513bf5d562fb448ffaaa86102e4c9bc73"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/TreeRawFirExpressionBuilderProxy.kt",
+      "gitBlob": "458f59ea0c18dafc9806c72d07a757fdaba67615",
+      "bytes": 86177,
+      "sha256": "8f9da9de972fbd17fd11a8192569df7afa7a5741e74fcba7e3b36117423bce0c"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/ClassWrapper.kt",
+      "gitBlob": "13ff826c857df9da96866c71daf731c5b3b60572",
+      "bytes": 2337,
+      "sha256": "ef2c554c4bf700fed56d319ed8546499e913b139fae131872041c478f890b7e8"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/DestructuringDeclaration.kt",
+      "gitBlob": "26f61e4fbe024c5c4e90ec6f045049b3a1320247",
+      "bytes": 4614,
+      "sha256": "d01e9cfeabeed0d2e1e3a2348d2248b94f4454ae508541b684666b7ba028a166"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/PrimaryConstructor.kt",
+      "gitBlob": "cd3d48b26b0e58c6de66f8bf047cd86a503efb82",
+      "bytes": 456,
+      "sha256": "df8ebd24ba7ac313f2534d6472f7d08e74bb952aa540969f2c86a4649e7c1903"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/TypeConstraint.kt",
+      "gitBlob": "c5ff861a2f2ebd39f13e46540b8b4e8b3249c966",
+      "bytes": 523,
+      "sha256": "7f85802258fafad3759f60317392a0c35389407f2e380329a118c61a3bb8a9f4"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/ValueParameter.kt",
+      "gitBlob": "1c125a28aa37f78c032e38c067b5fcfa97b1b236",
+      "bytes": 11007,
+      "sha256": "e46730bcd165a91c779cf9caa3e04b3d6fee8f75adf71be93258b9b5092ba356"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/WhenEntry.kt",
+      "gitBlob": "5aca188e611db8c92c0c16e5fbb5f4e22d4a8592",
+      "bytes": 1495,
+      "sha256": "6e2d6d37905d68156de2f1819cb77238ba4b2449de4f685df9154f69bbdeaf80"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/ModifierFlag.kt",
+      "gitBlob": "0c149edd5a6e5c74e49f97584dc3b651d5ff4c80",
+      "bytes": 3739,
+      "sha256": "f60bf0933430006b39378285fa76e1a1267aba99dd675b89b434f1bc9d87ce32"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/ModifierList.kt",
+      "gitBlob": "7605ec00d7e463005ec4997d939eca35fd832bc4",
+      "bytes": 5635,
+      "sha256": "a4f542c5a1b1389298c0bdf40284c5ddeacc812b7997c087fb11c639b9cd4456"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/TypeParameterModifierList.kt",
+      "gitBlob": "240313f09a706f5b79bca7dde84c5a5f8b1cadbc",
+      "bytes": 466,
+      "sha256": "e027dc49a9f7865c41fc833ad26517b5681a74d3a2082768022b164a4dbc9aaf"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/modifier/TypeProjectionModifierList.kt",
+      "gitBlob": "b2e8ae24b9d08323d7ed21afa08cf475a68c2456",
+      "bytes": 445,
+      "sha256": "c3db7517cb30540dd3d7e1e1082bd9013b154934b16d1e3a94ce54a1e66c58f8"
+    }
+  ],
+  "retainedNewParserSources": [
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/AbstractMultiplatformParsingRawFirBuilder.kt",
+      "gitBlob": "ddbe1b8cab177e0ec194fc14cb3f79ed646f5334",
+      "bytes": 4036,
+      "sha256": "ed620e49198f65428b8276ce70741a191689777796ddbcfd7120972ca876c628"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/KotlinLightTreeStructure.kt",
+      "gitBlob": "3974fca2c0b6729ef10a3ff8d2d95e42c8808a79",
+      "bytes": 3902,
+      "sha256": "d4cf9ba8a86a25dbf70e3a65e1a757b1e806d923e8c9e69815d0f3d8d44385fb"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt",
+      "gitBlob": "465789ff75301b9adc5320830facba0b9f4b36ef",
+      "bytes": 3078,
+      "sha256": "a30c6a0c106513587e68def997eecece7800b49eeb77486c955e870723a4914f"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsingRawFirDeclarationBuilder.kt",
+      "gitBlob": "3ac990c52ca1d8da6055cc5666d71c94f8c02dd2",
+      "bytes": 2201,
+      "sha256": "53461fb0ab58b0d674590995eead876f29428c49b60d23298614c1ae725a5244"
+    }
+  ],
+  "exclusions": [
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/LightTree2Fir.kt",
+      "gitBlob": "62ac0c229d5a14588967e1daaf4e7ea9962f1fc7",
+      "bytes": 2006,
+      "sha256": "e717ff9cad0f2ea1278660ae9466fd74a26e590e8b50df1e44059b8ca39c1a39",
+      "reason": "Legacy KotlinLightParser entry, retained new parser uses MultiplatformParsing2Fir instead."
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/LightTreeParsingErrorListener.kt",
+      "gitBlob": "919cf3ca6b212940c22cb000e8f9117e76e1433e",
+      "bytes": 2190,
+      "sha256": "70fe32e7884221f536c894232e4860fe1146071b29dd47dda94149899be34934",
+      "reason": "Legacy KotlinLightParser/PsiBuilderImpl listener; official new-parser syntax diagnostic host patch is retained."
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/AbstractLightTreeRawFirBuilder.kt",
+      "gitBlob": "4b76b1993f761d9d239c24492f45c835caf98a69",
+      "bytes": 3253,
+      "sha256": "01f7bb8e82543532b2fa38951a5768ac96ff47dd37c48deb9ca5fe375c1dd10c",
+      "reason": "Legacy LighterASTNode/IElementType builder adapter, not the shared generic builder."
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/LightTreeRawFirDeclarationBuilder.kt",
+      "gitBlob": "56ab9d1cdfe55e495564997dbe7eb621aeb02051",
+      "bytes": 2302,
+      "sha256": "f8b4d5370347eebc2a7c91b3e262e02735374a5f8770955dda8b3b7beb2234e9",
+      "reason": "Legacy builder binding for old tree carrier; official new parser binds the shared proxies directly."
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/kmp/utils/PsiTokenUtils.kt",
+      "gitBlob": "0899456d1f54c129a7477b3adc9a9021df02bb7e",
+      "bytes": 1903,
+      "sha256": "7e577bcbc2041282e572ed691d2de6fbd490a5185d492017cf74db64b49c0858",
+      "reason": "Reflective old IElementType.kmpId mapping; official new parser uses syntax API token IDs directly."
+    }
+  ],
+  "declarations": [
+    {
+      "name": "buildFirFromKtFiles/buildResolveAndCheckFirFromKtFiles",
+      "sourcePath": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/firUtils.kt",
+      "startUtf16": 2394,
+      "endUtf16": 3018,
+      "bytes": 624,
+      "sha256": "3e150ce900cffd7796b9576e128f67b5410af5c2be09501b3a79c007df5e7518",
+      "role": "jvm-only-reference"
+    },
+    {
+      "name": "resolveAndCheckFir",
+      "sourcePath": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/firUtils.kt",
+      "startUtf16": 3018,
+      "endUtf16": 3669,
+      "bytes": 651,
+      "sha256": "da39a426f02233ce6b01b23b04d758ea2f7618050d61e1fa13a324e364051ab3",
+      "role": "retained-resolution-and-common-checking"
+    },
+    {
+      "name": "AbstractTreeRawFirBuilder.unquoteIdentifier",
+      "sourcePath": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/AbstractTreeRawFirBuilder.kt",
+      "startUtf16": 6317,
+      "endUtf16": 6653,
+      "bytes": 336,
+      "sha256": "7a4ea2dcd0c98c4538989f60fc9991c23d73fe1a8081983702dc80c07f344670",
+      "role": "pure-helper-origin"
+    },
+    {
+      "name": "KtPsiUtil.unquoteIdentifier",
+      "sourcePath": "compiler/psi/psi-api/src/org/jetbrains/kotlin/psi/KtPsiUtil.java",
+      "startUtf16": 6876,
+      "endUtf16": 7236,
+      "bytes": 360,
+      "sha256": "64dc87db77c612b937e32adbafbdb1a0a0edc1340adc59b516de15ed561cbd6e",
+      "role": "original-jvm-pure-method-slice"
+    }
+  ],
+  "hostContract": {
+    "sourceLockSha256": "e30c161afe09c3dbf1cb9e3c987ca9166ac1525894a2d59804b81f0e5f98a8e1",
+    "patch": {
+      "path": "patches/source-host.patch",
+      "bytes": 28633,
+      "sha256": "da1d9af8cf0be98e9776bef98444707144c59886c68e43fd78b6045063b0393d"
+    },
+    "sources": [
+      {
+        "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFile.kt",
+        "bytes": 1033,
+        "sha256": "da750eafd72456de079ac02083ed1dc8116318e60ce10e6253370376480e1dde"
+      },
+      {
+        "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFileLinesMapping.kt",
+        "bytes": 1715,
+        "sha256": "2c37194022554568b992d1ca6ee6895032b3e394398c8e5b59edac7a38ea93ea"
+      },
+      {
+        "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt",
+        "bytes": 4481,
+        "sha256": "1398bcafc034a6ce9f3f52bf855d659eaf86e1f48b992a071206b6ff3d95518f"
+      },
+      {
+        "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt",
+        "bytes": 644,
+        "sha256": "8e829e9417173777032b57b0155d0803ace311ceaadeade264358f45ad40d84e"
+      }
+    ],
+    "text": "immutable String from getContentsAsText; original CharSequence.toSourceLinesMapping preserves raw UTF-16/CRLF",
+    "syntaxDiagnostics": "official production marker SYNTAX reporting from the existing host patch is untouched"
+  },
+  "replacedOriginalPaths": [
+    "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/firUtils.kt",
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/ConverterUtil.kt",
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/fir/WhenEntry.kt"
+  ],
+  "sourceSetExclusions": [
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/LightTree2Fir.kt",
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/LightTreeParsingErrorListener.kt",
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/AbstractLightTreeRawFirBuilder.kt",
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/LightTreeRawFirDeclarationBuilder.kt",
+    "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/kmp/utils/PsiTokenUtils.kt"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "init",
+        "--quiet"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/parser-profile/patches/parser-profile.patch"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "git",
+        "apply",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/parser-profile/patches/parser-profile.patch"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "git",
+        "apply",
+        "--reverse",
+        "--check",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/parser-profile/patches/parser-profile.patch"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "callerAudit": {
+    "selectedKotlinFiles": 3412,
+    "inventorySha256": "860997172ad285dc8841c6ac6a48adb5c2639976df438c1f3d97575a2a6ff257",
+    "unsupportedRemainingCalls": 0
+  },
+  "resolutionDeclarationPreserved": true,
+  "platformCheckerSourcesUnmodified": true,
+  "syntaxDiagnosticHostPatchUnmodified": true,
+  "originalSourcesUnmodified": true,
+  "resolvedFirExecution": "not-run",
+  "browserCompiler": "not-built",
+  "languageReadiness": false,
+  "preparationToolSources": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 10279,
+      "sha256": "cd157a84e81d97cc43d1adeb840782602bbae897527681323cb99635c951ce75"
+    },
+    {
+      "path": "fetch.mjs",
+      "bytes": 2910,
+      "sha256": "de548648b8fa5a94a33869d368fb0a44804cf15393c94f31b807849d985f4c26"
+    },
+    {
+      "path": "prepare.test.mjs",
+      "bytes": 6358,
+      "sha256": "13de7779374dfbe03bf3bb029a63b58e47c2b2f1aa6d21d08c7beeb0afe78da7"
+    }
+  ],
+  "verification": {
+    "preparationResult": "passed",
+    "guardCommand": [
+      "node",
+      "--test",
+      "producer/kotlin-browser/compiler-port/parser-profile/prepare.test.mjs"
+    ],
+    "required": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "exitCode": 0,
+    "log": "~/logs/kotlin-parser-profile-integrity-ahxzxf_w.log",
+    "logSha256": "6eb31a286968fcec137edc76ca88bb924af7e6ed2cce39c1df1fdda2e4bc67f2",
+    "preparationInvocation": {
+      "module": "compiler-port/parser-profile/prepare.mjs",
+      "api": "prepareParserProfileSources",
+      "sourceRoot": "out/kotlin-compiler-port/sources",
+      "outputRoot": "out/kotlin-parser-profile-preflight-PBeM1n",
+      "supplementalSourceRoot": "default out/kotlin-parser-profile-sources",
+      "executed": true
+    }
+  }
+}
