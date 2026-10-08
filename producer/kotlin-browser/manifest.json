@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-port-candidate",
+  "producerId": "wasm-llvm/kotlin-browser",
+  "compilerHost": "wasmJs",
+  "programTarget": "wasmWasi",
+  "programAbi": "wasi-preview1",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "revisionKind": "development-candidate"
+  },
+  "sourceLock": "sources.lock.json",
+  "auditRoots": [
+    ":compiler:multiplatform-parsing",
+    ":compiler:fir:raw-fir:mp-parsing2fir",
+    ":compiler:fir:resolve",
+    ":compiler:fir:fir2ir",
+    ":compiler:backend.wasm",
+    ":compiler:ir.serialization.common",
+    ":compiler:ir.serialization.js",
+    ":wasm:wasm.ir"
+  ],
+  "patches": [],
+  "outputs": [],
+  "readiness": {
+    "ready": false,
+    "status": "dependency-audit",
+    "G0": "blocked",
+    "browserCompiler": "not-built",
+    "consumerAcceptance": "not-run"
+  },
+  "thirdPartyNotices": "THIRD_PARTY_NOTICES.md",
+  "licenses": [
+    {
+      "path": "LICENSE.kotlin.txt",
+      "upstreamPath": "license/LICENSE.txt",
+      "bytes": 11358,
+      "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  ]
+}

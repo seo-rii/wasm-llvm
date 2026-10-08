@@ -40,6 +40,7 @@ const REQUIRED_PRODUCERS = [
 	'cobol-browser',
 	'crystal-browser',
 	'emscripten-lld-browser',
+	'kotlin-browser',
 	'lfortran-browser',
 	'lldb-browser',
 	'objective-c-browser',
