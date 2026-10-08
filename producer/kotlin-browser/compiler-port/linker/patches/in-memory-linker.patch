@@ -1,0 +1,881 @@
+--- a/compiler/ir/serialization.js/src/org/jetbrains/kotlin/ir/backend/js/klib.kt
++++ b/compiler/ir/serialization.js/src/org/jetbrains/kotlin/ir/backend/js/klib.kt
+@@ -5,7 +5,6 @@
+ 
+ package org.jetbrains.kotlin.ir.backend.js
+ 
+-import org.jetbrains.kotlin.KtPsiSourceFile
+ import org.jetbrains.kotlin.backend.common.*
+ import org.jetbrains.kotlin.backend.common.linkage.partial.partialLinkageConfig
+ import org.jetbrains.kotlin.backend.common.serialization.*
+@@ -15,7 +14,6 @@
+ import org.jetbrains.kotlin.config.KotlinCompilerVersion
+ import org.jetbrains.kotlin.config.languageVersionSettings
+ import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+-import org.jetbrains.kotlin.incremental.js.IncrementalDataProvider
+ import org.jetbrains.kotlin.ir.*
+ import org.jetbrains.kotlin.ir.backend.js.lower.serialization.ir.JsIrLinker
+ import org.jetbrains.kotlin.ir.backend.js.lower.serialization.ir.JsIrModuleSerializer
+@@ -23,7 +21,6 @@
+ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+ import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
+ import org.jetbrains.kotlin.ir.util.SymbolTable
+-import org.jetbrains.kotlin.js.config.JSConfigurationKeys
+ import org.jetbrains.kotlin.library.*
+ import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
+ import org.jetbrains.kotlin.library.metadata.addMetadataFlagsToManifest
+@@ -31,17 +28,15 @@
+ import org.jetbrains.kotlin.library.writer.includeIr
+ import org.jetbrains.kotlin.library.writer.includeMetadata
+ import org.jetbrains.kotlin.platform.wasm.WasmTarget
+-import org.jetbrains.kotlin.psi.KtFile
+ import org.jetbrains.kotlin.util.PerformanceManager
+ import org.jetbrains.kotlin.util.PhaseType
+ import org.jetbrains.kotlin.util.metadataVersion
+ import org.jetbrains.kotlin.util.tryMeasurePhaseTime
+-import java.io.File
+-import java.nio.file.Path
+-import java.util.*
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
+ 
+ val KotlinLibrary.moduleName: String
+-    get() = manifestProperties.getProperty(KLIB_PROPERTY_UNIQUE_NAME)
++    get() = manifestProperties.getProperty(KLIB_PROPERTY_UNIQUE_NAME) ?: error("KLIB manifest has no module name")
+ 
+ val KotlinLibrary.serializedIrFileFingerprints: List<SerializedIrFileFingerprint>?
+     get() = manifestProperties.getProperty(KLIB_PROPERTY_SERIALIZED_IR_FILE_FINGERPRINTS)?.parseSerializedIrFileFingerprints()
+@@ -56,15 +51,12 @@
+ private fun deserializeDependencies(
+     klibs: LoadedKlibs,
+     irLinker: JsIrLinker,
+-    filesToLoad: Set<String>?,
+     mapping: (KotlinLibrary) -> ModuleDescriptor
+ ): IrModuleDependencies {
+     val dependencies = klibs.all.map { klib: KotlinLibrary ->
+         val descriptor: ModuleDescriptor = mapping(klib)
+         when {
+             klibs.included == null -> irLinker.deserializeIrModuleHeader(descriptor, klib, { DeserializationStrategy.EXPLICITLY_EXPORTED })
+-            filesToLoad != null && klib == klibs.included -> irLinker.deserializeDirtyFiles(descriptor, klib, filesToLoad)
+-            filesToLoad != null && klib != klibs.included -> irLinker.deserializeHeadersWithInlineBodies(descriptor, klib)
+             klib == klibs.included -> irLinker.deserializeIrModuleHeader(descriptor, klib, { DeserializationStrategy.ALL })
+             else -> irLinker.deserializeIrModuleHeader(descriptor, klib, { DeserializationStrategy.EXPLICITLY_EXPORTED })
+         }
+@@ -207,7 +199,6 @@
+     val moduleDependencies: IrModuleDependencies = deserializeDependencies(
+         klibs = klibs,
+         irLinker = irLinker,
+-        filesToLoad = configuration[JSConfigurationKeys.IC_FILES_TO_LOAD],
+         mapping = mapping
+     )
+ 
+@@ -236,20 +227,7 @@
+     return split(FILE_FINGERPRINTS_SEPARATOR).mapNotNull(SerializedIrFileFingerprint::fromString)
+ }
+ 
+-private typealias ProcessFun = (
+-    sourceFile: File,
+-    fileData: ByteArray,
+-    types: ByteArray,
+-    signatures: ByteArray,
+-    strings: ByteArray,
+-    declarations: ByteArray,
+-    bodies: ByteArray,
+-    fqn: ByteArray,
+-    debugInfo: ByteArray?,
+-    fileEntries: ByteArray?
+-) -> Unit
+-
+-fun serializeModuleIntoKlib(
++fun serializeModuleIntoMemoryKlib(
+     moduleName: String,
+     configuration: CompilerConfiguration,
+     diagnosticReporter: IrDiagnosticReporter,
+@@ -258,13 +236,12 @@
+     moduleFragment: IrModuleFragment,
+     irBuiltIns: IrBuiltIns,
+     cleanFiles: List<KotlinFileSerializedData>,
+-    nopack: Boolean,
+     jsOutputName: String?,
+     builtInsPlatform: BuiltInsPlatform = BuiltInsPlatform.JS,
+     wasmTarget: WasmTarget? = null,
+     performanceManager: PerformanceManager? = null
+-) {
+-    val incrementalResultsConsumer = configuration.get(JSConfigurationKeys.INCREMENTAL_RESULTS_CONSUMER)
++): KotlinLibrary {
++    require(cleanFiles.isEmpty()) { "Incremental source sessions are excluded from the browser compiler profile" }
+     val serializerOutput = performanceManager.tryMeasurePhaseTime(PhaseType.IrSerialization) {
+         serializeModuleIntoKlib(
+             moduleName = moduleFragment.name.asString(),
+@@ -281,29 +258,7 @@
+                 )
+             },
+             metadataSerializer = metadataSerializer,
+-            processCompiledFileData = incrementalResultsConsumer?.let { icConsumer ->
+-                fun SerializedIrFile.processIrFile(ioFile: File, process: ProcessFun) {
+-                    process(
+-                        ioFile,
+-                        fileData,
+-                        types,
+-                        signatures,
+-                        strings,
+-                        declarations,
+-                        bodies,
+-                        fqName.toByteArray(),
+-                        debugInfo,
+-                        fileEntries,
+-                    )
+-                }
+-
+-                { ioFile, compiledFile, inlineIds ->
+-                    icConsumer.processPackagePart(ioFile, compiledFile.metadata)
+-                    compiledFile.irData!!.processIrFile(ioFile, icConsumer::processIrFile)
+-                    compiledFile.irInlineData?.processIrFile(ioFile, icConsumer::processIrInlineFile)
+-                    icConsumer.processIrInlineIds(ioFile, inlineIds)
+-                }
+-            },
++
+         )
+     }
+     val fullSerializedIr = serializerOutput.serializedIr ?: error("Metadata-only KLIBs are not supported in Kotlin/JS")
+@@ -327,9 +282,8 @@
+         addMetadataFlagsToManifest(p, configuration.languageVersionSettings)
+     }
+ 
+-    performanceManager.tryMeasurePhaseTime(PhaseType.KlibWriting) {
++    return performanceManager.tryMeasurePhaseTime(PhaseType.KlibWriting) {
+         KlibWriter {
+-            format(if (nopack) KlibFormat.Directory else KlibFormat.ZipArchive)
+             manifest {
+                 moduleName(moduleName)
+                 versions(versions)
+@@ -344,83 +298,15 @@
+             }
+             includeMetadata(serializerOutput.serializedMetadata)
+             includeIr(fullSerializedIr)
+-        }.writeTo(klibPath)
++        }.writeIntoMemory(klibPath)
+     }
+ }
+ 
+ const val KLIB_PROPERTY_SERIALIZED_IR_FILE_FINGERPRINTS = "serializedIrFileFingerprints"
+ const val KLIB_PROPERTY_SERIALIZED_KLIB_FINGERPRINT = "serializedKlibFingerprint"
+-
+-fun <SourceFile> shouldGoToNextIcRound(
+-    compilerConfiguration: CompilerConfiguration,
+-    createMetadataSerializer: () -> KlibSingleFileMetadataSerializer<SourceFile>,
+-): Boolean {
+-    val nextRoundChecker = compilerConfiguration.get(JSConfigurationKeys.INCREMENTAL_NEXT_ROUND_CHECKER) ?: return false
+-    createMetadataSerializer().run {
+-        forEachFile { _, ioFile, sourceFile, _, _ ->
+-            val protoBuf = serializeSingleFileMetadata(sourceFile)
+-            // to minimize the number of IC rounds, we should inspect all proto for changes first,
+-            // then go to the next round if needed, with all new dirty files
+-            nextRoundChecker.checkProtoChanges(ioFile, protoBuf.toByteArray())
+-        }
+-    }
+-    return nextRoundChecker.shouldGoToNextRound()
+-}
+ 
+ private fun List<IrModuleFragment>.getUniqueNameForEachFragment(): Map<IrModuleFragment, String> {
+     return this.mapNotNull { moduleFragment ->
+         moduleFragment.kotlinLibrary?.jsOutputName?.let { moduleFragment to it }
+     }.toMap()
+ }
+-
+-fun IncrementalDataProvider.getSerializedData(nonCompiledSources: Set<File>): List<KotlinFileSerializedData> {
+-    val compiledIrFiles = serializedIrFiles
+-    val compiledIrInlineFiles = serializedIrInlineFiles
+-    val compiledMetaFiles = compiledPackageParts
+-
+-    assert(compiledIrFiles.size == compiledMetaFiles.size)
+-
+-    val storage = mutableListOf<KotlinFileSerializedData>()
+-
+-    for (f in compiledIrFiles.keys) {
+-        if (f in nonCompiledSources) continue
+-
+-        val irData = compiledIrFiles[f] ?: error("No Ir Data found for file $f")
+-        val metaFile = compiledMetaFiles[f] ?: error("No Meta Data found for file $f")
+-        val irFile = with(irData) {
+-            SerializedIrFile(
+-                fileData,
+-                String(fqn),
+-                f.path.replace('\\', '/'),
+-                types,
+-                signatures,
+-                strings,
+-                bodies,
+-                declarations,
+-                debugInfo,
+-                fileEntries,
+-            )
+-        }
+-        val irInlineFile = compiledIrInlineFiles[f]?.run {
+-            SerializedIrFile(
+-                fileData,
+-                String(fqn),
+-                f.path.replace('\\', '/'),
+-                types,
+-                signatures,
+-                strings,
+-                bodies,
+-                declarations,
+-                debugInfo,
+-                fileEntries,
+-            )
+-        }
+-        storage.add(KotlinFileSerializedData(metaFile.metadata, irFile, irInlineFile))
+-    }
+-    return storage
+-}
+-
+-
+-@JvmName("getSerializedDataByPsiFiles")
+-fun IncrementalDataProvider.getSerializedData(newSources: List<KtFile>): List<KotlinFileSerializedData> =
+-    getSerializedData(newSources.mapNotNullTo(mutableSetOf()) { KtPsiSourceFile(it).toIoFileOrNull() })
+--- a/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/LoadedKlibs.kt
++++ b/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/LoadedKlibs.kt
+@@ -5,8 +5,6 @@
+ 
+ package org.jetbrains.kotlin.backend.common
+ 
+-import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
+-import org.jetbrains.kotlin.cli.common.arguments.K2NativeCompilerArguments
+ import org.jetbrains.kotlin.library.KotlinLibrary
+ 
+ /**
+@@ -30,33 +28,3 @@
+     val friends: List<KotlinLibrary> = emptyList(),
+     val included: KotlinLibrary? = null
+ )
+-
+-/**
+- * TODO (KT-61096): Consider extracting the base (abstract) class and making this one to be one of the implementations.
+- *
+- * Kotlin libraries (KLIBs) that were loaded from the file system for the use in Kotlin/Native compiler CLI.
+- *
+- * @property all The full list of loaded [KotlinLibrary]s.
+- *  This list consists of KLIBs who's paths were passed via CLI using options [K2NativeCompilerArguments.libraries] and
+- *  [K2NativeCompilerArguments.includes]. The order of elements in the list preserves the order in which KLIBs were
+- *  specified in CLI, with the exception for stdlib, which must go the first in the list. Included libraries go the last.
+- *
+- * @property friends Only KLIBs having status of "friends" ([K2NativeCompilerArguments.friendModules] CLI option).
+- *  Note: All [friends] are also included into [all].
+- *
+- * @property exported Only the "exported" KLIBs ([K2NativeCompilerArguments.exportedLibraries] CLI option), if there were any.
+- *  Note: [exported] is also in [all].
+- *
+- * @property included Only the included KLIBs ([K2NativeCompilerArguments.includes] CLI option), if there were any.
+- *  Note: [included] is also in [all].
+- *
+- * @property toAddToCache A library to add to Kotlin/Native static caches ([K2NativeCompilerArguments.libraryToAddToCache] CLI option), if there was any.
+- *  Note: [toAddToCache] is also in [all].
+- */
+-class LoadedNativeKlibs(
+-    val all: List<KotlinLibrary>,
+-    val friends: List<KotlinLibrary> = emptyList(),
+-    val exported: List<KotlinLibrary> = emptyList(),
+-    val included: List<KotlinLibrary> = emptyList(),
+-    val toAddToCache: KotlinLibrary? = null,
+-)
+--- a/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/serializeModuleIntoKlib.kt
++++ b/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/serializeModuleIntoKlib.kt
+@@ -5,11 +5,7 @@
+ 
+ package org.jetbrains.kotlin.backend.common.serialization
+ 
+-import com.intellij.openapi.vfs.VfsUtilCore
+-import org.jetbrains.kotlin.KtIoFileSourceFile
+-import org.jetbrains.kotlin.KtPsiSourceFile
+ import org.jetbrains.kotlin.KtSourceFile
+-import org.jetbrains.kotlin.KtVirtualFileSourceFile
+ import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibSingleFileMetadataSerializer
+ import org.jetbrains.kotlin.config.*
+ import org.jetbrains.kotlin.ir.IrDiagnosticReporter
+@@ -24,10 +20,11 @@
+ import org.jetbrains.kotlin.library.metadata.addMetadataFlagsToHeader
+ import org.jetbrains.kotlin.name.CallableId
+ import org.jetbrains.kotlin.util.toMetadataVersion
+-import java.io.File
+-import java.util.*
+-import kotlin.io.path.Path
+-import kotlin.io.path.pathString
++import org.jetbrains.kotlin.portable.source.LibraryPath as File
++import org.jetbrains.kotlin.portable.source.path
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.source.pathString
+ 
+ /**
+  * Holds the binary data for a single Kotlin file to be written to a KLIB, i.e., its metadata and IR (unless it's a metadata-only KLIB).
+@@ -78,12 +75,7 @@
+     val neededLibraries: Collection<KotlinLibrary>,
+ )
+ 
+-fun KtSourceFile.toIoFileOrNull(): File? = when (this) {
+-    is KtIoFileSourceFile -> file
+-    is KtVirtualFileSourceFile -> VfsUtilCore.virtualToIoFile(virtualFile)
+-    is KtPsiSourceFile -> VfsUtilCore.virtualToIoFile(psiFile.virtualFile)
+-    else -> path?.let(::File)
+-}
++fun KtSourceFile.toIoFileOrNull(): File? = path?.let(::File)
+ 
+ /**
+  * Produces all the necessary binary data for writing a KLIB for a Kotlin module, including its metadata.
+--- a/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/metadata/KlibSingleFileMetadataSerializer.kt
++++ b/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/metadata/KlibSingleFileMetadataSerializer.kt
+@@ -8,7 +8,8 @@
+ import org.jetbrains.kotlin.KtSourceFile
+ import org.jetbrains.kotlin.metadata.ProtoBuf
+ import org.jetbrains.kotlin.name.FqName
+-import java.io.File
++import org.jetbrains.kotlin.portable.source.LibraryPath as File
++import org.jetbrains.kotlin.portable.source.path
+ 
+ /**
+  * Something capable of serializing the metadata of a source file to a protobuf message, one file at a time.
+--- a/compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/Fir2KlibMetadataSerializer.kt
++++ b/compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/Fir2KlibMetadataSerializer.kt
+@@ -22,7 +22,8 @@
+ import org.jetbrains.kotlin.fir.serialization.serializeSingleFirFile
+ import org.jetbrains.kotlin.metadata.ProtoBuf
+ import org.jetbrains.kotlin.util.metadataVersion
+-import java.io.File
++import org.jetbrains.kotlin.portable.source.LibraryPath as File
++import org.jetbrains.kotlin.portable.source.path
+ 
+ /**
+  * Responsible for serializing a FIR file metadata into a protobuf to be later written to a KLIB.
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/writer/KlibWriter.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/writer/KlibWriter.kt
+@@ -5,8 +5,6 @@
+ 
+ package org.jetbrains.kotlin.library.writer
+ 
+-import org.jetbrains.kotlin.io.zipDirAs
+-import org.jetbrains.kotlin.library.KlibFormat
+ import org.jetbrains.kotlin.library.KotlinLibrary
+ import org.jetbrains.kotlin.library.KotlinLibraryVersioning
+ import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
+@@ -14,18 +12,11 @@
+ import org.jetbrains.kotlin.library.impl.KlibManifestComponentWriterImpl.Companion.NON_CUSTOMIZED_PROPERTY_NAMES
+ import org.jetbrains.kotlin.library.impl.KlibManifestComponentWriterImpl.Companion.getPropertyNameForListOfTargetNames
+ import org.jetbrains.kotlin.library.impl.KlibResourcesComponentWriterImpl
+-import java.nio.file.Files.createTempDirectory
+-import java.nio.file.Path
+-import java.util.*
+-import kotlin.io.path.ExperimentalPathApi
+-import kotlin.io.path.Path
+-import kotlin.io.path.absolute
+-import kotlin.io.path.createDirectories
+-import kotlin.io.path.deleteRecursively
+-import kotlin.io.path.exists
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
+ 
+ /**
+- * The [KlibWriter] component is the unified endpoint for writing [KotlinLibrary] artifacts to the file system.
++ * The [KlibWriter] component is the unified endpoint for writing [KotlinLibrary] artifacts into a bounded logical memory directory.
+  *
+  * It can be configured using the [KlibWriterSpec] and [KlibManifestWriterSpec] DSLs.
+  *
+@@ -35,7 +26,6 @@
+  * - Checking if the list of targets can be written for the specified platform
+  */
+ class KlibWriter(init: KlibWriterSpec.() -> Unit) {
+-    private var format: KlibFormat = KlibFormat.Directory
+     private val componentWriters = mutableListOf<KlibComponentWriter>()
+ 
+     private var moduleName: String? = null
+@@ -48,10 +38,6 @@
+         object : KlibWriterSpec, KlibManifestWriterSpec {
+ 
+             /*** [KlibWriterSpec] ***/
+-
+-            override fun format(format: KlibFormat) {
+-                this@KlibWriter.format = format
+-            }
+ 
+             override fun include(vararg writers: KlibComponentWriter) {
+                 this@KlibWriter.componentWriters += writers
+@@ -87,8 +73,7 @@
+         }.init()
+     }
+ 
+-    @OptIn(ExperimentalPathApi::class)
+-    fun writeTo(destinationPath: Path) {
++    fun writeIntoMemory(destinationPath: Path, limits: MemoryKlibOutputLimits = MemoryKlibOutputLimits()): KotlinLibrary {
+         val allComponentWriters: List<KlibComponentWriter> = buildList {
+             this += componentWriters
+ 
+@@ -99,35 +84,11 @@
+             this += KlibResourcesComponentWriterImpl
+         }
+ 
+-        when {
+-            !destinationPath.exists() -> {
+-                // We need to compute absolute path for the generated KLIB artifact
+-                // in order to be able to create all containing directories beforehand.
+-                //
+-                // Illustrative example:
+-                //   Path(".").parent == null
+-                //   Path(".").absolute().parent != null
+-                destinationPath.absolute().parent.createDirectories()
+-            }
+-            else -> {
+-                destinationPath.deleteRecursively()
+-            }
+-        }
+-
+-        when (format) {
+-            KlibFormat.Directory -> writeComponents(allComponentWriters, root = destinationPath)
+-
+-            KlibFormat.ZipArchive -> {
+-                val temporaryDir = createTempDirectory("klib")
+-                writeComponents(allComponentWriters, root = temporaryDir)
+-                temporaryDir.zipDirAs(destinationPath)
+-                temporaryDir.deleteRecursively()
+-            }
+-        }
+-
++        val output = MemoryKlibOutput(destinationPath, limits)
++        writeComponents(allComponentWriters, output)
++        return output.finish()
+     }
+ 
+-    fun writeTo(destinationPath: String) = writeTo(Path(destinationPath))
+ 
+     private fun validateManifestPropertiesAndCreateComponentWriter(): KlibManifestComponentWriterImpl {
+         val moduleName = checkNotNull(moduleName) {
+@@ -164,16 +125,15 @@
+     }
+ 
+     companion object {
+-        private fun writeComponents(allComponentWriters: List<KlibComponentWriter>, root: Path) {
++        private fun writeComponents(allComponentWriters: List<KlibComponentWriter>, output: MemoryKlibOutput) {
+             for (componentWriter in allComponentWriters) {
+-                componentWriter.writeTo(root)
++                componentWriter.writeTo(output)
+             }
+         }
+     }
+ }
+ 
+ interface KlibWriterSpec {
+-    fun format(format: KlibFormat)
+     fun include(vararg writers: KlibComponentWriter)
+     fun include(writers: Collection<KlibComponentWriter>)
+     fun manifest(init: KlibManifestWriterSpec.() -> Unit)
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/writer/KlibComponentWriter.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/writer/KlibComponentWriter.kt
+@@ -5,7 +5,6 @@
+ 
+ package org.jetbrains.kotlin.library.writer
+ 
+-import java.nio.file.Path
+ 
+ /**
+  * A "writer" of a specific component of the constructed Klib library.
+@@ -15,5 +14,5 @@
+  * and is responsible for writing all the necessary files to the library.
+  */
+ interface KlibComponentWriter {
+-    fun writeTo(root: Path)
++    fun writeTo(output: MemoryKlibOutput)
+ }
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentWriterImpl.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentWriterImpl.kt
+@@ -8,56 +8,59 @@
+ import org.jetbrains.kotlin.library.SerializedIrFile
+ import org.jetbrains.kotlin.library.components.KlibIrComponentLayout
+ import org.jetbrains.kotlin.library.writer.KlibComponentWriter
+-import java.nio.file.Path
+-import kotlin.io.path.absolute
+-import kotlin.io.path.createDirectories
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.library.writer.MemoryKlibOutput
+ 
+ /**
+  * An implementation of [KlibComponentWriter] that writes IR to the constructed Klib library.
+  */
+ internal sealed class KlibIrComponentWriterImpl : KlibComponentWriter {
+     class ForMainIr(private val irFiles: Collection<SerializedIrFile>) : KlibIrComponentWriterImpl() {
+-        override fun writeTo(root: Path) {
++        override fun writeTo(output: MemoryKlibOutput) {
+             writeIrFiles(
+                 irFiles = irFiles,
+-                layout = KlibIrComponentLayout.createForMainIr(root)
++                output = output,
++                layout = KlibIrComponentLayout.createForMainIr(output.root)
+             )
+         }
+     }
+ 
+     class ForInlinableFunctionsIr(private val inlinableFunctionsFiles: Collection<SerializedIrFile>) : KlibIrComponentWriterImpl() {
+-        override fun writeTo(root: Path) {
++        override fun writeTo(output: MemoryKlibOutput) {
+             if (inlinableFunctionsFiles.isEmpty()) return
+             writeIrFiles(
+                 irFiles = inlinableFunctionsFiles,
+-                layout = KlibIrComponentLayout.createForInlinableFunctionsIr(root)
++                output = output,
++                layout = KlibIrComponentLayout.createForInlinableFunctionsIr(output.root)
+             )
+         }
+     }
+ 
+-    protected fun writeIrFiles(irFiles: Collection<SerializedIrFile>, layout: KlibIrComponentLayout) {
+-        layout.irDir.createDirectories()
++    protected fun writeIrFiles(irFiles: Collection<SerializedIrFile>, layout: KlibIrComponentLayout, output: MemoryKlibOutput) {
++        output.createDirectories(layout.irDir)
+ 
+         with(irFiles.sortedBy { it.path }) {
+-            serializeNonNullableEntities(SerializedIrFile::fileData, layout::irFilesFile)
+-            serializeNullableEntries(SerializedIrFile::fileEntries, layout::irFileEntriesFile)
+-            serializeNonNullableEntities(SerializedIrFile::declarations, layout::declarationsFile)
+-            serializeNonNullableEntities(SerializedIrFile::bodies, layout::bodiesFile)
+-            serializeNonNullableEntities(SerializedIrFile::types, layout::typesFile)
+-            serializeNonNullableEntities(SerializedIrFile::signatures, layout::signaturesFile)
+-            serializeNullableEntries(SerializedIrFile::debugInfo, layout::signaturesDebugInfoFile)
+-            serializeNonNullableEntities(SerializedIrFile::strings, layout::stringLiteralsFile)
++            serializeNonNullableEntities(SerializedIrFile::fileData, layout::irFilesFile, output)
++            serializeNullableEntries(SerializedIrFile::fileEntries, layout::irFileEntriesFile, output)
++            serializeNonNullableEntities(SerializedIrFile::declarations, layout::declarationsFile, output)
++            serializeNonNullableEntities(SerializedIrFile::bodies, layout::bodiesFile, output)
++            serializeNonNullableEntities(SerializedIrFile::types, layout::typesFile, output)
++            serializeNonNullableEntities(SerializedIrFile::signatures, layout::signaturesFile, output)
++            serializeNullableEntries(SerializedIrFile::debugInfo, layout::signaturesDebugInfoFile, output)
++            serializeNonNullableEntities(SerializedIrFile::strings, layout::stringLiteralsFile, output)
+         }
+     }
+ 
+     private inline fun List<SerializedIrFile>.serializeNonNullableEntities(
+         accessor: (SerializedIrFile) -> ByteArray,
+         destination: () -> Path,
+-    ): Unit = IrArrayWriter(map { accessor(it) }, false).writeIntoFile(destination().absolute())
++        output: MemoryKlibOutput,
++    ): Unit = output.writeBytes(destination(), IrArrayWriter(map { accessor(it) }, false).writeIntoMemory())
+ 
+     private inline fun List<SerializedIrFile>.serializeNullableEntries(
+         accessor: (SerializedIrFile) -> ByteArray?,
+         destination: () -> Path,
++        output: MemoryKlibOutput,
+     ) {
+         val nonNullEntries: List<ByteArray> = mapNotNull(accessor)
+         if (nonNullEntries.isEmpty()) {
+@@ -72,6 +75,6 @@
+                     "\nOnly ${nonNullEntries.size} out of $size serialized IR files have non-nullable values."
+         }
+ 
+-        IrArrayWriter(nonNullEntries, false).writeIntoFile(destination().absolute())
++        output.writeBytes(destination(), IrArrayWriter(nonNullEntries, false).writeIntoMemory())
+     }
+ }
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibMetadataComponentWriterImpl.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibMetadataComponentWriterImpl.kt
+@@ -8,9 +8,8 @@
+ import org.jetbrains.kotlin.library.SerializedMetadata
+ import org.jetbrains.kotlin.library.components.KlibMetadataComponentLayout
+ import org.jetbrains.kotlin.library.writer.KlibComponentWriter
+-import java.nio.file.Path
+-import kotlin.io.path.createDirectories
+-import kotlin.io.path.writeBytes
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.library.writer.MemoryKlibOutput
+ 
+ /**
+  * An implementation of [KlibComponentWriter] that writes [SerializedMetadata] to the constructed Klib library.
+@@ -18,27 +17,27 @@
+ internal class KlibMetadataComponentWriterImpl(
+     private val metadata: SerializedMetadata,
+ ) : KlibComponentWriter {
+-    override fun writeTo(root: Path) {
+-        val layout = KlibMetadataComponentLayout(root)
+-        layout.metadataDir.createDirectories()
++    override fun writeTo(output: MemoryKlibOutput) {
++        val layout = KlibMetadataComponentLayout(output.root)
++        output.createDirectories(layout.metadataDir)
+ 
+-        metadata.module?.let { layout.moduleHeaderFile.writeBytes(it) }
++        metadata.module?.let { output.writeBytes(layout.moduleHeaderFile, it) }
+ 
+         metadata.fragmentNames.forEachIndexed { index, packageFqName ->
+             val packageFragmentDir: Path = layout.getPackageFragmentsDir(packageFqName)
+-            packageFragmentDir.createDirectories()
++            output.createDirectories(packageFragmentDir)
+ 
+             val shortPackageName: String = packageFqName.substringAfterLast(".")
+             val packageFragmentParts: List<ByteArray> = metadata.fragments[index]
+ 
+             val padding: Int = packageFragmentParts.size.toString().length
+-            fun withPadding(packageFragmentPartIndex: Int) = String.format("%0${padding}d", packageFragmentPartIndex)
++            fun withPadding(packageFragmentPartIndex: Int) = packageFragmentPartIndex.toString().padStart(padding, '0')
+ 
+             packageFragmentParts.forEachIndexed { packageFragmentPartIndex, packageFragmentPart ->
+-                layout.getPackageFragmentFile(
++                output.writeBytes(layout.getPackageFragmentFile(
+                     packageFqName = packageFqName,
+                     partName = "${withPadding(packageFragmentPartIndex)}_$shortPackageName"
+-                ).writeBytes(packageFragmentPart)
++                ), packageFragmentPart)
+             }
+         }
+     }
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibManifestComponentWriterImpl.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibManifestComponentWriterImpl.kt
+@@ -5,7 +5,6 @@
+ 
+ package org.jetbrains.kotlin.library.impl
+ 
+-import org.jetbrains.kotlin.io.writeProperties
+ import org.jetbrains.kotlin.library.KLIB_PROPERTY_ABI_VERSION
+ import org.jetbrains.kotlin.library.KLIB_PROPERTY_BUILTINS_PLATFORM
+ import org.jetbrains.kotlin.library.KLIB_PROPERTY_COMPILER_VERSION
+@@ -18,10 +17,9 @@
+ import org.jetbrains.kotlin.library.writeKonanLibraryVersioning
+ import org.jetbrains.kotlin.library.writer.KlibManifestWriterSpec
+ import org.jetbrains.kotlin.library.writer.KlibComponentWriter
+-import java.nio.file.Path
+-import java.util.Properties
+-import kotlin.collections.plusAssign
+-import kotlin.io.path.createDirectories
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
++import org.jetbrains.kotlin.library.writer.MemoryKlibOutput
+ 
+ /**
+  * An implementation of [KlibComponentWriter] that writes manifest properties to the constructed Klib library.
+@@ -33,12 +31,11 @@
+     val targetNames: List<String>,
+     val customProperties: Properties,
+ ) : KlibComponentWriter {
+-    override fun writeTo(root: Path) {
++    override fun writeTo(output: MemoryKlibOutput) {
+         val properties = assembleProperties()
+ 
+-        val layout = KlibManifestComponentLayout(root)
+-        layout.manifestFile.parent.createDirectories()
+-        layout.manifestFile.writeProperties(properties)
++        val layout = KlibManifestComponentLayout(output.root)
++        output.writeProperties(layout.manifestFile, properties)
+     }
+ 
+     private fun assembleProperties(): Properties = Properties().apply {
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibResourcesComponentWriterImpl.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibResourcesComponentWriterImpl.kt
+@@ -9,15 +9,16 @@
+ import org.jetbrains.kotlin.library.KlibConstants.KLIB_DEFAULT_COMPONENT_NAME
+ import org.jetbrains.kotlin.library.KlibConstants.KLIB_RESOURCES_FOLDER_NAME
+ import org.jetbrains.kotlin.library.writer.KlibComponentWriter
+-import java.nio.file.Path
+-import kotlin.io.path.createDirectories
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.source.resolve
++import org.jetbrains.kotlin.library.writer.MemoryKlibOutput
+ 
+ /**
+  * This is the workaround to create an empty 'resources' directory that is expected inside a KLIB.
+  */
+ internal object KlibResourcesComponentWriterImpl : KlibComponentWriter {
+-    override fun writeTo(root: Path) {
+-        KlibResourcesComponentLayout(root).resourcesDir.createDirectories()
++    override fun writeTo(output: MemoryKlibOutput) {
++        KlibResourcesComponentLayout(output.root).resourcesDir.let(output::createDirectories)
+     }
+ }
+ 
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibImpl.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibImpl.kt
+@@ -5,62 +5,11 @@
+ 
+ package org.jetbrains.kotlin.library.impl
+ 
+-import org.jetbrains.kotlin.io.ZipFileSystemAccessor
+-import org.jetbrains.kotlin.io.readProperties
+-import org.jetbrains.kotlin.library.KLIB_PROPERTY_ABI_VERSION
+-import org.jetbrains.kotlin.library.KLIB_PROPERTY_BUILTINS_PLATFORM
+-import org.jetbrains.kotlin.library.KLIB_PROPERTY_METADATA_VERSION
+-import org.jetbrains.kotlin.library.KlibAttributes
+-import org.jetbrains.kotlin.library.KlibComponent
+ import org.jetbrains.kotlin.library.KlibComponentLayout
+ import org.jetbrains.kotlin.library.KlibConstants.KLIB_DEFAULT_COMPONENT_NAME
+ import org.jetbrains.kotlin.library.KlibConstants.KLIB_MANIFEST_FILE_NAME
+-import org.jetbrains.kotlin.library.KlibLayoutReaderFactory
+-import org.jetbrains.kotlin.library.KotlinLibrary
+-import org.jetbrains.kotlin.library.KotlinLibraryVersioning
+-import org.jetbrains.kotlin.library.builtInsPlatform
+-import org.jetbrains.kotlin.library.loader.KlibManifestTransformer
+-import org.jetbrains.kotlin.library.readKonanLibraryVersioning
+-import java.nio.file.Path
+-import java.util.Properties
+-
+-internal class KlibImpl(
+-    override val path: Path,
+-    override val canonicalPath: Path,
+-    zipFileSystemAccessor: ZipFileSystemAccessor,
+-    manifestTransformer: KlibManifestTransformer?,
+-) : KotlinLibrary {
+-
+-    private val components: KlibComponentsCache
+-    override val manifestProperties: Properties
+-
+-    init {
+-        val layoutReaderFactory = KlibLayoutReaderFactory(
+-            klibFile = path,
+-            zipFileSystemAccessor = zipFileSystemAccessor
+-        )
+-
+-        // Note: readInPlace() will fail in case there is no manifest file or the file is malformed.
+-        manifestProperties = layoutReaderFactory.createLayoutReader(::KlibManifestComponentLayout)
+-            .readInPlace { layout -> layout.manifestFile.readProperties() }
+-            .let { properties -> manifestTransformer?.transform(properties) ?: properties }
+-
+-        components = KlibComponentsCache(layoutReaderFactory)
+-    }
+-
+-    override val versions: KotlinLibraryVersioning = manifestProperties.readKonanLibraryVersioning()
+-
+-    override fun <KC : KlibComponent> getComponent(kind: KlibComponent.Kind<KC, *>) = components.getComponent(kind)
+-
+-    override val attributes = KlibAttributes()
+-
+-    override fun toString() = listOfNotNull(
+-        path,
+-        versions.abiVersion?.let { "$KLIB_PROPERTY_ABI_VERSION=$it" },
+-        versions.metadataVersion?.let { "$KLIB_PROPERTY_METADATA_VERSION=$it" },
+-        builtInsPlatform?.let { "$KLIB_PROPERTY_BUILTINS_PLATFORM=${it.name}" },
+-    ).joinToString("\n")
+-}
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.source.resolve
+ 
+ internal class KlibManifestComponentLayout(root: Path) : KlibComponentLayout(root) {
+     val manifestFile: Path
+--- a/compiler/util-klib-metadata/src/org/jetbrains/kotlin/library/metadata/KlibMetadataHeaderFlags.kt
++++ b/compiler/util-klib-metadata/src/org/jetbrains/kotlin/library/metadata/KlibMetadataHeaderFlags.kt
+@@ -9,7 +9,7 @@
+ import org.jetbrains.kotlin.library.KLIB_PROPERTY_METADATA_FLAGS
+ import org.jetbrains.kotlin.library.writer.KlibManifestWriterSpec
+ import org.jetbrains.kotlin.library.writer.KlibWriter
+-import java.util.Properties
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
+ 
+ /**
+  * Metadata flags are stored in two places (see KT-87443):
+--- a/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/KlibLoaderExtensions.kt
++++ b/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/KlibLoaderExtensions.kt
+@@ -12,17 +12,11 @@
+ import org.jetbrains.kotlin.config.CompilerConfiguration
+ import org.jetbrains.kotlin.config.DuplicatedUniqueNameStrategy
+ import org.jetbrains.kotlin.config.duplicatedUniqueNameStrategy
+-import org.jetbrains.kotlin.io.canonicalPathString
+ import org.jetbrains.kotlin.library.KotlinLibrary
+-import org.jetbrains.kotlin.library.loader.KlibLoader
+ import org.jetbrains.kotlin.library.loader.KlibLoaderResult
+ import org.jetbrains.kotlin.library.loader.reportLoadingProblemsIfAny
+ import org.jetbrains.kotlin.library.uniqueName
+-import java.nio.file.InvalidPathException
+-import java.nio.file.Path
+-import java.nio.file.Paths
+-import kotlin.io.path.exists
+-import kotlin.io.path.pathString
++import org.jetbrains.kotlin.portable.source.pathString
+ 
+ /**
+  * Checks for existence of duplicated [uniqueName]s among [KlibLoaderResult.librariesStdlibFirst].
+@@ -91,36 +85,3 @@
+         configuration.report(factory, message)
+     }
+ }
+-
+-/**
+- * A helper to load the list of libraries that are already present in [KlibLoaderResult] given their paths.
+- *
+- * Note: It is assumed that the paths of the libraries ([libraryPaths])  have already been passed to [KlibLoader],
+- * so the selected libraries should be in [KlibLoaderResult]. All we need is to "look up" them from the result.
+- */
+-fun KlibLoaderResult.selectLibrariesByPaths(libraryPaths: List<String>): List<KotlinLibrary> {
+-    if (libraryPaths.isEmpty() || librariesStdlibFirst.isEmpty()) return emptyList()
+-
+-    val canonicalFriendLibraryPaths: Set<String> = libraryPaths.mapNotNullTo(linkedSetOf()) { rawPath ->
+-        if (rawPath.isEmpty()) return@mapNotNullTo null
+-
+-        val validPath: Path = try {
+-            Paths.get(rawPath)
+-        } catch (_: InvalidPathException) {
+-            return@mapNotNullTo null
+-        }
+-
+-        // First, check if this path exists on the file system.
+-        if (!validPath.exists()) return@mapNotNullTo null
+-
+-        // And only then attempt to resolve it to a canonical path.
+-        // Otherwise, we might end up with a Java IO exception.
+-        validPath.toRealPath().toString()
+-    }
+-
+-    if (canonicalFriendLibraryPaths.isEmpty()) return emptyList()
+-
+-    val canonicalLibraryPathsToLibraries: Map<String, KotlinLibrary> = librariesStdlibFirst.associateBy { it.path.canonicalPathString() }
+-
+-    return canonicalFriendLibraryPaths.mapNotNull { canonicalLibraryPathsToLibraries[it] }
+-}
+--- a/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/diagnostics/LibrarySpecialCompatibilityChecker.kt
++++ b/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/diagnostics/LibrarySpecialCompatibilityChecker.kt
+@@ -5,18 +5,13 @@
+ 
+ package org.jetbrains.kotlin.backend.common.diagnostics
+ 
+-import org.jetbrains.kotlin.backend.common.diagnostics.LibrarySpecialCompatibilityChecker.Companion.KLIB_JAR_MANIFEST_FILE
+ import org.jetbrains.kotlin.cli.report
+ import org.jetbrains.kotlin.config.*
+ import org.jetbrains.kotlin.library.*
++import org.jetbrains.kotlin.portable.linker.memoryJarImplementationVersion
+ import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
+ import org.jetbrains.kotlin.tooling.core.isDev
+ import org.jetbrains.kotlin.tooling.core.isSnapshot
+-import java.io.ByteArrayInputStream
+-import java.nio.file.Path
+-import java.util.jar.Manifest
+-import kotlin.io.path.isRegularFile
+-import kotlin.io.path.readBytes
+ 
+ /** See KT-68322 for details. */
+ abstract class LibrarySpecialCompatibilityChecker {
+@@ -64,9 +59,7 @@
+     }
+ 
+     protected open fun libraryVersion(library: KotlinLibrary): Version? =
+-        library.getComponent(JarManifestComponent.Kind)?.jarManifest?.let { jarManifest ->
+-            Version.parseVersion(jarManifest.mainAttributes.getValue(KLIB_JAR_LIBRARY_VERSION))
+-        }
++        Version.parseVersion(library.memoryJarImplementationVersion())
+ 
+     fun check(
+         libraries: Collection<KotlinLibrary>,
+@@ -163,24 +156,3 @@
+         const val KLIB_JAR_LIBRARY_VERSION = "Implementation-Version"
+     }
+ }
+-
+-private class JarManifestComponent(
+-    private val layoutReader: KlibLayoutReader<JarManifestComponentLayout>
+-) : KlibComponent {
+-    val jarManifest: Manifest?
+-        get() = layoutReader.readInPlaceOrFallback(null) {
+-            ByteArrayInputStream(it.jarManifestFile.readBytes()).use(::Manifest)
+-        }
+-
+-    object Kind : KlibComponent.Kind<JarManifestComponent, JarManifestComponentLayout> {
+-        override fun createLayout(root: Path) = JarManifestComponentLayout(root)
+-
+-        override fun createComponentIfDataInKlibIsAvailable(layoutReader: KlibLayoutReader<JarManifestComponentLayout>) =
+-            if (layoutReader.readInPlaceOrFallback(false) { it.jarManifestFile.isRegularFile() }) JarManifestComponent(layoutReader) else null
+-    }
+-}
+-
+-private class JarManifestComponentLayout(root: Path) : KlibComponentLayout(root) {
+-    val jarManifestFile: Path
+-        get() = root.resolve(KLIB_JAR_MANIFEST_FILE)
+-}
