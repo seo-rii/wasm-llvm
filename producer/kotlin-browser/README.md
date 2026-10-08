@@ -5,7 +5,7 @@ parser → FIR resolution/checking → FIR2IR → KLIB/IR linking → Wasm backe
 The intended compiler host is `wasmJs`; the initial user console target is
 `wasmWasi` with WASI Preview 1. These are separate library/build sets.
 
-**Status: source audit and executed JVM-hosted bootstrap example builds; G0
+**Status: official parser JVM/browser comparison and JVM-hosted example builds; G0
 blocked; browser compiler not built.**
 There is no full compiler Wasm bundle, accepted release receipt, or public Kotlin
 support in this change. GraalVM Web Image, TeaVM hosting, remote
@@ -99,7 +99,10 @@ unpatched. These examples cannot advance G4 or enable public Kotlin support.
 
 - [The official parser build](https://github.com/JetBrains/kotlin/blob/4d78aae1e337cd40f69baa865aed950fe807a775/compiler/multiplatform-parsing/build.gradle.kts)
   declares JVM/wasmJs targets and generated Kotlin lexers. Published syntax API
-  metadata also declares a Wasm JS variant; candidate linkage/execution is untested.
+  artifacts are linked in the [standalone probe](parser-probe/README.md). All 17
+  lexer/production-marker/error cases match JVM and actual Chromium execution,
+  including Unicode/CRLF/BOM, offline parsing and forced-termination recovery.
+  This does not establish parser-to-FIR or resolved compiler semantics.
 - [The parser-to-FIR build](https://github.com/JetBrains/kotlin/blob/4d78aae1e337cd40f69baa865aed950fe807a775/compiler/fir/raw-fir/mp-parsing2fir/build.gradle.kts)
   remains JVM with light-tree and IntelliJ dependencies. Its builder has the
   [KT-89414 error-listener TODO](https://github.com/JetBrains/kotlin/blob/4d78aae1e337cd40f69baa865aed950fe807a775/compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt).
@@ -124,7 +127,7 @@ unpatched. These examples cannot advance G4 or enable public Kotlin support.
 | Gate | Required evidence | Current status |
 | --- | --- | --- |
 | G0 | Complete source/generated/tool locks, resolved dependency closure, R0/R1 baseline | Blocked; selected source inventory recorded |
-| G1 | Official parser JVM/browser comparison, errors and Unicode | Not run |
+| G1 | Official parser JVM/browser comparison, errors and Unicode | Passed for 17-case standalone parser corpus; old/new parser semantic comparison remains separate |
 | G2 | Portable byte sink/registry/KLIB/writer host comparisons | Not run |
 | G3 | New-parser raw/resolved FIR, builtins, common/target checkers | Not run |
 | G4 | Browser compiler emits a new program using official IR/backend | Not run |
@@ -136,6 +139,16 @@ unpatched. These examples cannot advance G4 or enable public Kotlin support.
 The matching wasm-idle candidate provides source/protocol validation and a
 standard WASI ABI microprobe. That probe does not advance Kotlin G5: it executes
 a WAT fixture, not a Kotlin-generated artifact.
+
+The [parser receipt](parser-probe/evidence/g1-parser.json) records the unmodified
+official common sources built with the pinned bootstrap, complete token and
+production-marker snapshots, errors, and browser Worker recovery. Its
+[integrity preflight](parser-probe/evidence/g1-parser-preflight.json) binds the
+final bounded source/tool readers to unchanged executed inputs and outputs.
+Seven file/publication guards passed. The
+[raw-FIR boundary inventory](parser-probe/evidence/raw-fir-boundary.json) preserves
+five exact source pins for the next host port: Java streams and IntelliJ light
+tree types still prevent the new parser from being a complete portable FIR entry.
 
 The next compiler work follows K02–K07: standalone official parser; portable
 source/byte/session boundaries; official-schema KLIB/protobuf strategy; parser

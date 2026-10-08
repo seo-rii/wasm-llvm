@@ -1,0 +1,19 @@
+[
+  {"id":"basic-main","category":"valid","source":"fun main() { println(\"Hello parser\") }\n","expectSyntaxError":false},
+  {"id":"nested-generics","category":"valid","source":"val values: Map<List<Int?>, Pair<String?, List<Int>>> = emptyMap()\n","expectSyntaxError":false},
+  {"id":"nullable-elvis","category":"valid","source":"fun length(value: String?): Int = value?.length ?: 0\n","expectSyntaxError":false},
+  {"id":"trailing-lambda","category":"valid","source":"fun main() { listOf(1, 2).map { it * 2 }.forEach { println(it) } }\n","expectSyntaxError":false},
+  {"id":"string-template","category":"valid","source":"fun main() { val x = 2; println(\"value=$x sum=${x + 1}\") }\n","expectSyntaxError":false},
+  {"id":"multiline-string","category":"valid","source":"val text = \"\"\"first\n한글 😀 ${1 + 2}\nlast\"\"\"\n","expectSyntaxError":false},
+  {"id":"annotations-soft-keywords","category":"valid","source":"annotation class Mark(val value: String)\n@Mark(\"data\") data class Record(val field: String)\nval context = \"soft\"\n","expectSyntaxError":false},
+  {"id":"nested-comments","category":"valid","source":"/** 문서 😀 */\n/* outer /* nested */ end */\nfun main() { // line comment\nprintln(1)\n}\n","expectSyntaxError":false},
+  {"id":"bom-crlf-unicode","category":"unicode","source":"﻿fun main() {\r\nval 한글 = \"😀é\"\r\nprintln(한글)\r\n}\r\n","expectSyntaxError":false},
+  {"id":"supplementary-unicode","category":"unicode","source":"val `𐐀` = \"𐐀😀한글\"\nfun main() { println(`𐐀`) }","expectSyntaxError":false},
+  {"id":"no-final-newline","category":"valid","source":"fun main() = println(1)","expectSyntaxError":false},
+  {"id":"empty-source","category":"valid","source":"","expectSyntaxError":false},
+  {"id":"missing-parenthesis","category":"syntax-error","source":"fun main( { println(\"broken\") }\n","expectSyntaxError":true},
+  {"id":"unterminated-string","category":"syntax-error","source":"fun main() { println(\"unterminated) }\n","expectSyntaxError":true},
+  {"id":"missing-braces","category":"syntax-error","source":"fun main() { if (true) { println(1)\n","expectSyntaxError":true},
+  {"id":"unicode-syntax-error","category":"syntax-error","source":"fun main() { val 문장 = \"😀\"; println(문장 + ) }\r\n","expectSyntaxError":true},
+  {"id":"long-source","category":"long-input","generate":{"kind":"top-level-val","count":2500},"expectSyntaxError":false}
+]

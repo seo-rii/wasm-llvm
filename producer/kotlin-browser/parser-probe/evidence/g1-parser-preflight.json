@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "kind": "post-build-parser-integrity-preflight",
+  "status": "passed",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e",
+    "module": ":compiler:multiplatform-parsing"
+  },
+  "g1EvidenceSha256": "4aef128a277b3076f5a1d891cc0302a8a620017f0e5a7cb7ba1aca3f27a6cbf4",
+  "buildReceiptSha256": "561530142502d6afd02e93437bd9a494d1c19cba25a25679fdda7cdf3121abc5",
+  "recipeSha256": "2a5b91b1cdb07730dc1b94e821dbf3f844e1e252445a6db9bac657f59b153b94",
+  "bootstrapLockSha256": "2575d6d3090f53248cb3ff8707ed9456c7a33cdca785d11b4b8b55b14370b394",
+  "verified": {
+    "sourceFiles": 27,
+    "parserArtifacts": 6,
+    "bootstrapArtifacts": 9,
+    "outputsAndBaselines": 8,
+    "observerSourcesUnchanged": true,
+    "fixturesUnchanged": true,
+    "browserHarnessUnchanged": true
+  },
+  "currentToolSources": [
+    {
+      "path": "prepare.py",
+      "sha256": "fc178b470118851aa23f46cf74ed247be65920c01bf41e4204756135a6ece15a"
+    },
+    {
+      "path": "build.py",
+      "sha256": "4d1d279c609d816822e65f268017066e00c393594daa7ccaf8aaf7868562c752"
+    },
+    {
+      "path": "verify.py",
+      "sha256": "af121abd1f2630960fe0f57b379a56b8a017ffa198250c586eec4fbe9c251cef"
+    },
+    {
+      "path": "integrity_test.py",
+      "sha256": "bdd0ef9eb6776d48339abe1aaa5992173a34c2c9740409f095423b02634a4dfb"
+    }
+  ],
+  "integrityTests": {
+    "command": [
+      "/usr/bin/python3",
+      "-B",
+      "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/parser-probe/integrity_test.py"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "test_completed_receipt_cannot_be_replaced (__main__.IntegrityTests.test_completed_receipt_cannot_be_replaced) ... ok\ntest_invalid_pin_budget_rejected (__main__.IntegrityTests.test_invalid_pin_budget_rejected) ... ok\ntest_leaf_and_parent_symlinks_rejected (__main__.IntegrityTests.test_leaf_and_parent_symlinks_rejected) ... ok\ntest_non_regular_cache_rejected_without_blocking (__main__.IntegrityTests.test_non_regular_cache_rejected_without_blocking) ... ok\ntest_sparse_oversized_cache_rejected_before_read (__main__.IntegrityTests.test_sparse_oversized_cache_rejected_before_read) ... ok\ntest_symlink_output_cannot_overwrite_target (__main__.IntegrityTests.test_symlink_output_cannot_overwrite_target) ... ok\ntest_verified_bytes_and_same_size_tamper (__main__.IntegrityTests.test_verified_bytes_and_same_size_tamper) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.007s\n\nOK\n"
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/parser-probe/verify.py",
+    "--bootstrap",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106",
+    "--evidence",
+    "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/parser-probe/evidence/g1-parser-preflight.json"
+  ],
+  "limitations": [
+    "This post-build check executed final cache/evidence integrity guards, not the changed build driver.",
+    "Compiler inputs, observer sources, fixtures, browser harness and completed output bytes are unchanged.",
+    "No compiler or browser rerun was performed for the guard changes; original G1 evidence remains immutable.",
+    "FIR, backend and public Kotlin readiness are not established by this check."
+  ],
+  "languageReadiness": false
+}
