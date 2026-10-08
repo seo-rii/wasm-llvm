@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-descriptor-utils-common-source-port",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceClosureLockSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "sources": [
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+      "bytes": 28336,
+      "gitBlob": "e58676e36e52583dddc50e2c6650e610dea38df8",
+      "sha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java",
+      "bytes": 21989,
+      "gitBlob": "fc3b0ba3c7be19a14c3cb0773d15222a647ee0d7",
+      "sha256": "f0f93148387927db1b2d6e9ee0049e65ea4134f1c4140c10d6c8e0c0d4685313"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+      "bytes": 39456,
+      "gitBlob": "05740cfda301281e0e8be4386816e31d220cbb35",
+      "sha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+      "bytes": 11370,
+      "gitBlob": "f3691402d755381dd9cffa941604d41ed7a301fa",
+      "sha256": "e15b42bc1164b058fc55a27eb0ce48bfce40c375c00cdbb5f499b40c8e8a5fa4"
+    }
+  ],
+  "originalJavaPath": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+  "methods": [
+    "getDispatchReceiverParameterIfNeeded",
+    "isLocal",
+    "isDescriptorWithLocalVisibility",
+    "getFqName",
+    "getFqNameSafe",
+    "getFqNameSafeIfPossible",
+    "getFqNameUnsafe",
+    "getFqNameFromTopLevelClass",
+    "getClassIdForNonLocalClass",
+    "isTopLevelDeclaration",
+    "isExtension",
+    "isOverride",
+    "isStaticDeclaration",
+    "areInSameModule",
+    "getParentOfType",
+    "getParentOfType",
+    "getContainingModuleOrNull",
+    "getContainingModule",
+    "getContainingModuleOrNull",
+    "getContainingClass",
+    "isAncestor",
+    "isDirectSubclass",
+    "isSubclass",
+    "isSameClass",
+    "isSubtypeOfClass",
+    "isCompanionObject",
+    "isSealedClass",
+    "isAnonymousObject",
+    "isAnonymousFunction",
+    "isNonCompanionObject",
+    "isObject",
+    "isEnumEntry",
+    "isEnumClass",
+    "isAnnotationClass",
+    "isInterface",
+    "isClass",
+    "isClassOrEnumClass",
+    "isKindOf",
+    "hasAbstractMembers",
+    "getSuperclassDescriptors",
+    "getSuperClassType",
+    "getSuperClassDescriptor",
+    "getClassDescriptorForType",
+    "getClassDescriptorForTypeConstructor",
+    "getDefaultConstructorVisibility",
+    "getInnerClassByName",
+    "getReceiverParameterType",
+    "isStaticNestedClass",
+    "unwrapFakeOverride",
+    "unwrapSubstitutionOverride",
+    "unwrapFakeOverrideToAnyDeclaration",
+    "shouldRecordInitializerForProperty",
+    "classCanHaveAbstractFakeOverride",
+    "classCanHaveAbstractDeclaration",
+    "classCanHaveOpenMembers",
+    "getAllOverriddenDescriptors",
+    "collectAllOverriddenDescriptors",
+    "getAllOverriddenDeclarations",
+    "isSingletonOrAnonymousObject",
+    "canHaveDeclaredConstructors",
+    "getJvmName",
+    "getJvmName",
+    "findJvmNameAnnotation",
+    "hasJvmNameAnnotation",
+    "getContainingSourceFile",
+    "getAllDescriptors",
+    "getFunctionByName",
+    "getFunctionByNameOrNull",
+    "getPropertyByName",
+    "getDirectMember"
+  ],
+  "parentTypes": [
+    "ClassDescriptor",
+    "DeclarationDescriptorWithVisibility",
+    "PackageFragmentDescriptor",
+    "BuiltInsPackageFragment"
+  ],
+  "replacedOriginalPaths": [
+    "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+    "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt"
+  ],
+  "callerScan": [
+    {
+      "path": "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/LoopExpressionGenerator.kt",
+      "sourceSha256": "1fafeefc4294d2ba934eefd6050613cc8ac69ec849d9984013a02515c4c53099",
+      "records": [
+        {
+          "line": 27,
+          "text": "import org.jetbrains.kotlin.psi.psiUtil.getParentOfType"
+        },
+        {
+          "line": 126,
+          "text": "finger = finger.getParentOfType<KtLoopExpression>(true)"
+        }
+      ]
+    },
+    {
+      "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt",
+      "sourceSha256": "31dddfaacea8f9936fa989b648f570ad05653f69eddc2ec3b64f5df5e22a79de",
+      "records": [
+        {
+          "line": 44,
+          "text": "PsiTreeUtil.getParentOfType(it, psiElementClass.java, false)"
+        }
+      ]
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+      "sourceSha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1",
+      "records": [
+        {
+          "line": 192,
+          "text": "return DescriptorUtils.getParentOfType(descriptor, BuiltInsPackageFragment.class, false) != null;"
+        }
+      ]
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+      "sourceSha256": "e15b42bc1164b058fc55a27eb0ce48bfce40c375c00cdbb5f499b40c8e8a5fa4",
+      "records": [
+        {
+          "line": 100,
+          "text": "val containingPackage = DescriptorUtils.getParentOfType(descriptor, PackageFragmentDescriptor::class.java)"
+        }
+      ]
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java",
+      "sourceSha256": "f0f93148387927db1b2d6e9ee0049e65ea4134f1c4140c10d6c8e0c0d4685313",
+      "records": [
+        {
+          "line": 120,
+          "text": "DeclarationDescriptor classDescriptor = DescriptorUtils.getParentOfType(what, ClassDescriptor.class);"
+        },
+        {
+          "line": 139,
+          "text": "ClassDescriptor givenDescriptorContainingClass = DescriptorUtils.getParentOfType(what, ClassDescriptor.class);"
+        },
+        {
+          "line": 140,
+          "text": "ClassDescriptor fromClass = DescriptorUtils.getParentOfType(from, ClassDescriptor.class, false);"
+        },
+        {
+          "line": 147,
+          "text": "ClassDescriptor companionOwner = DescriptorUtils.getParentOfType(givenDescriptorContainingClass, ClassDescriptor.class);"
+        },
+        {
+          "line": 156,
+          "text": "ClassDescriptor classDescriptor = DescriptorUtils.getParentOfType(whatDeclaration, ClassDescriptor.class);"
+        },
+        {
+          "line": 344,
+          "text": "parent = DescriptorUtils.getParentOfType(parent, DeclarationDescriptorWithVisibility.class);"
+        }
+      ]
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+      "sourceSha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd",
+      "records": [
+        {
+          "line": 163,
+          "text": "public static <D extends DeclarationDescriptor> D getParentOfType("
+        },
+        {
+          "line": 167,
+          "text": "return getParentOfType(descriptor, aClass, true);"
+        },
+        {
+          "line": 172,
+          "text": "public static <D extends DeclarationDescriptor> D getParentOfType("
+        }
+      ]
+    }
+  ],
+  "callerDisposition": {
+    "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java": "root frozen DescriptorVisibilities port already uses exact typed reified traversal",
+    "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java": "frozen KotlinBuiltIns port already specializes exact non-strict BuiltInsPackageFragment traversal",
+    "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt": "one exact common typed-key caller patch",
+    "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt": "separate PSI TreeUtil host boundary; not DescriptorUtils parent caller",
+    "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/LoopExpressionGenerator.kt": "separate PSI extension host boundary; not DescriptorUtils parent caller"
+  },
+  "portable": {
+    "path": "DescriptorUtils.kt",
+    "bytes": 22949,
+    "sha256": "c29cbe4bee1e652512a7f721655da2b1c247176f6011186a69f3febdc3522f5b",
+    "outputPath": "compiler-port-descriptor-utils/DescriptorUtils.kt",
+    "outputBytes": 22914,
+    "outputSha256": "3c9e8e737e50f38d6cad5e8c2beece4abaf8ffcc63fc0e34c4f22f74fc857e2f"
+  },
+  "typedKey": {
+    "path": "DescriptorType.kt",
+    "bytes": 1261,
+    "sha256": "4b605496ca17895ada2ba5490e0212512330817b3356ecf0f4773738ed93007b"
+  },
+  "jvmAdapter": {
+    "path": "JvmParentAdapter.inc",
+    "bytes": 743,
+    "sha256": "7279065fea73924271360a2c6fb848f1bd178b129a8eaa94c1ca7f86a58a5ee5",
+    "outputBytes": 23660,
+    "outputSha256": "fd5b98793f048c5c38cc03f2448ba655751dd1fd444724fceacdb12fb3c85f83"
+  },
+  "patch": {
+    "path": "patches/typed-parent-caller.patch",
+    "bytes": 643,
+    "sha256": "9df10dc9002bbf3b395e80361da33d4708a172f7499099f671c40e1bc007a4ee",
+    "outputPath": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+    "outputBytes": 11393,
+    "outputSha256": "1cd2ae726b0fe3497038387c7232448a4a563995e22441571b043b8424407006"
+  },
+  "generator": {
+    "path": "update-recipe.py",
+    "sha256": "54711f18ab7d7e4a8ecdce2efbf63529ca15b30f90afdc6c8abe3ab9f58aff08"
+  },
+  "semantics": {
+    "algorithms": "all seventy original static methods retained, including private algorithms",
+    "parentTraversal": "exact strict/non-strict traversal using explicit supported descriptor-kind casts; no unknown-key fallback",
+    "ancestry": "reference identity as original Java ==; constructor/class checks retain original equality semantics",
+    "overrideSets": "original linked postorder for getAllOverriddenDescriptors; original unordered set semantics for getAllOverriddenDeclarations",
+    "source": "actual PropertySetterDescriptor.correspondingProperty and genuine SourceFile.NO_SOURCE_FILE rules",
+    "jvm": "Class overloads available in generated comparison/JVM adapter only, absent from common C source",
+    "assertionText": "getInnerClassByName assertion uses actual KClass text instead of java.lang.Class text; assertion condition unchanged"
+  },
+  "integrationGates": [
+    "complete concrete descriptor/type/visibility helper closure",
+    "separate PSI sources remain explicit unclosed host boundaries",
+    "future Java getParentOfType callers outside selected closure require real typed bindings; no generic fallback"
+  ],
+  "readiness": {
+    "sourcePort": "implemented",
+    "jvmDifferential": "not-run",
+    "wasmDifferential": "not-run",
+    "browserCompiler": false
+  }
+}

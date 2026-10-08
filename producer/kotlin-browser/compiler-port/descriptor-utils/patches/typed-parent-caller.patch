@@ -1,0 +1,11 @@
+--- a/core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt
++++ b/core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt
+@@ -97,7 +97,7 @@
+ 
+     companion object {
+         fun isReflectionClass(descriptor: ClassDescriptor): Boolean {
+-            val containingPackage = DescriptorUtils.getParentOfType(descriptor, PackageFragmentDescriptor::class.java)
++            val containingPackage = DescriptorUtils.getParentOfType(descriptor, org.jetbrains.kotlin.resolve.DescriptorType.PACKAGE_FRAGMENT)
+             return containingPackage != null && containingPackage.fqName == KOTLIN_REFLECT_FQ_NAME
+         }
+ 

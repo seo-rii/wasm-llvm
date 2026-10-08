@@ -1,0 +1,876 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-descriptor-utils-original-common-jvm-differential",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "result": "pass",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "official-descriptor-utils-common-source-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "edab2bbcd776039f0795a269aefe3cadf77390bcd758408f8ed116e008f95f59",
+    "sourceFiles": [
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+        "bytes": 28336,
+        "gitBlob": "e58676e36e52583dddc50e2c6650e610dea38df8",
+        "sha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java",
+        "bytes": 21989,
+        "gitBlob": "fc3b0ba3c7be19a14c3cb0773d15222a647ee0d7",
+        "sha256": "f0f93148387927db1b2d6e9ee0049e65ea4134f1c4140c10d6c8e0c0d4685313"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+        "bytes": 39456,
+        "gitBlob": "05740cfda301281e0e8be4386816e31d220cbb35",
+        "sha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "bytes": 11370,
+        "gitBlob": "f3691402d755381dd9cffa941604d41ed7a301fa",
+        "sha256": "e15b42bc1164b058fc55a27eb0ce48bfce40c375c00cdbb5f499b40c8e8a5fa4"
+      }
+    ],
+    "methods": 70,
+    "jvmAdapter": false,
+    "preparationToolSha256": "687480767b6d368435e2966d3384e46216fb4ca20cb2426401d192900b561240",
+    "callerScan": [
+      {
+        "path": "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/LoopExpressionGenerator.kt",
+        "sourceSha256": "1fafeefc4294d2ba934eefd6050613cc8ac69ec849d9984013a02515c4c53099",
+        "records": [
+          {
+            "line": 27,
+            "text": "import org.jetbrains.kotlin.psi.psiUtil.getParentOfType"
+          },
+          {
+            "line": 126,
+            "text": "finger = finger.getParentOfType<KtLoopExpression>(true)"
+          }
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt",
+        "sourceSha256": "31dddfaacea8f9936fa989b648f570ad05653f69eddc2ec3b64f5df5e22a79de",
+        "records": [
+          {
+            "line": 44,
+            "text": "PsiTreeUtil.getParentOfType(it, psiElementClass.java, false)"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+        "sourceSha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1",
+        "records": [
+          {
+            "line": 192,
+            "text": "return DescriptorUtils.getParentOfType(descriptor, BuiltInsPackageFragment.class, false) != null;"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "sourceSha256": "e15b42bc1164b058fc55a27eb0ce48bfce40c375c00cdbb5f499b40c8e8a5fa4",
+        "records": [
+          {
+            "line": 100,
+            "text": "val containingPackage = DescriptorUtils.getParentOfType(descriptor, PackageFragmentDescriptor::class.java)"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java",
+        "sourceSha256": "f0f93148387927db1b2d6e9ee0049e65ea4134f1c4140c10d6c8e0c0d4685313",
+        "records": [
+          {
+            "line": 120,
+            "text": "DeclarationDescriptor classDescriptor = DescriptorUtils.getParentOfType(what, ClassDescriptor.class);"
+          },
+          {
+            "line": 139,
+            "text": "ClassDescriptor givenDescriptorContainingClass = DescriptorUtils.getParentOfType(what, ClassDescriptor.class);"
+          },
+          {
+            "line": 140,
+            "text": "ClassDescriptor fromClass = DescriptorUtils.getParentOfType(from, ClassDescriptor.class, false);"
+          },
+          {
+            "line": 147,
+            "text": "ClassDescriptor companionOwner = DescriptorUtils.getParentOfType(givenDescriptorContainingClass, ClassDescriptor.class);"
+          },
+          {
+            "line": 156,
+            "text": "ClassDescriptor classDescriptor = DescriptorUtils.getParentOfType(whatDeclaration, ClassDescriptor.class);"
+          },
+          {
+            "line": 344,
+            "text": "parent = DescriptorUtils.getParentOfType(parent, DeclarationDescriptorWithVisibility.class);"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+        "sourceSha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd",
+        "records": [
+          {
+            "line": 163,
+            "text": "public static <D extends DeclarationDescriptor> D getParentOfType("
+          },
+          {
+            "line": 167,
+            "text": "return getParentOfType(descriptor, aClass, true);"
+          },
+          {
+            "line": 172,
+            "text": "public static <D extends DeclarationDescriptor> D getParentOfType("
+          }
+        ]
+      }
+    ],
+    "callerDisposition": {
+      "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java": "root frozen DescriptorVisibilities port already uses exact typed reified traversal",
+      "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java": "frozen KotlinBuiltIns port already specializes exact non-strict BuiltInsPackageFragment traversal",
+      "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt": "one exact common typed-key caller patch",
+      "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt": "separate PSI TreeUtil host boundary; not DescriptorUtils parent caller",
+      "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/LoopExpressionGenerator.kt": "separate PSI extension host boundary; not DescriptorUtils parent caller"
+    },
+    "patch": {
+      "path": "patches/typed-parent-caller.patch",
+      "bytes": 643,
+      "sha256": "9df10dc9002bbf3b395e80361da33d4708a172f7499099f671c40e1bc007a4ee",
+      "outputPath": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+      "outputBytes": 11393,
+      "outputSha256": "1cd2ae726b0fe3497038387c7232448a4a563995e22441571b043b8424407006"
+    },
+    "portable": {
+      "path": "DescriptorUtils.kt",
+      "bytes": 22949,
+      "sha256": "c29cbe4bee1e652512a7f721655da2b1c247176f6011186a69f3febdc3522f5b",
+      "outputPath": "compiler-port-descriptor-utils/DescriptorUtils.kt",
+      "outputBytes": 22914,
+      "outputSha256": "3c9e8e737e50f38d6cad5e8c2beece4abaf8ffcc63fc0e34c4f22f74fc857e2f"
+    },
+    "typedKey": {
+      "path": "DescriptorType.kt",
+      "bytes": 1261,
+      "sha256": "4b605496ca17895ada2ba5490e0212512330817b3356ecf0f4773738ed93007b"
+    },
+    "semantics": {
+      "algorithms": "all seventy original static methods retained, including private algorithms",
+      "parentTraversal": "exact strict/non-strict traversal using explicit supported descriptor-kind casts; no unknown-key fallback",
+      "ancestry": "reference identity as original Java ==; constructor/class checks retain original equality semantics",
+      "overrideSets": "original linked postorder for getAllOverriddenDescriptors; original unordered set semantics for getAllOverriddenDeclarations",
+      "source": "actual PropertySetterDescriptor.correspondingProperty and genuine SourceFile.NO_SOURCE_FILE rules",
+      "jvm": "Class overloads available in generated comparison/JVM adapter only, absent from common C source",
+      "assertionText": "getInnerClassByName assertion uses actual KClass text instead of java.lang.Class text; assertion condition unchanged"
+    },
+    "integrationGates": [
+      "complete concrete descriptor/type/visibility helper closure",
+      "separate PSI sources remain explicit unclosed host boundaries",
+      "future Java getParentOfType callers outside selected closure require real typed bindings; no generic fallback"
+    ],
+    "originalSourceUnmodified": true,
+    "commands": [
+      {
+        "command": "git",
+        "args": [
+          "apply",
+          "--check",
+          "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/descriptor-utils/patches/typed-parent-caller.patch"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "git",
+        "args": [
+          "apply",
+          "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/descriptor-utils/patches/typed-parent-caller.patch"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "git",
+        "args": [
+          "apply",
+          "--reverse",
+          "--check",
+          "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/descriptor-utils/patches/typed-parent-caller.patch"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "files": [
+      {
+        "path": "compiler-port-descriptor-utils/DescriptorUtils.kt",
+        "bytes": 22914,
+        "sha256": "3c9e8e737e50f38d6cad5e8c2beece4abaf8ffcc63fc0e34c4f22f74fc857e2f"
+      },
+      {
+        "path": "compiler-port-descriptor-utils/DescriptorType.kt",
+        "bytes": 1261,
+        "sha256": "4b605496ca17895ada2ba5490e0212512330817b3356ecf0f4773738ed93007b"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "bytes": 11393,
+        "sha256": "1cd2ae726b0fe3497038387c7232448a4a563995e22441571b043b8424407006"
+      }
+    ],
+    "wasmBuild": "not-run: concrete descriptor/type closure required",
+    "browserCompilerBuilt": false,
+    "readiness": false
+  },
+  "jvmPreparation": {
+    "schemaVersion": 1,
+    "kind": "official-descriptor-utils-common-source-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "edab2bbcd776039f0795a269aefe3cadf77390bcd758408f8ed116e008f95f59",
+    "sourceFiles": [
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+        "bytes": 28336,
+        "gitBlob": "e58676e36e52583dddc50e2c6650e610dea38df8",
+        "sha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java",
+        "bytes": 21989,
+        "gitBlob": "fc3b0ba3c7be19a14c3cb0773d15222a647ee0d7",
+        "sha256": "f0f93148387927db1b2d6e9ee0049e65ea4134f1c4140c10d6c8e0c0d4685313"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+        "bytes": 39456,
+        "gitBlob": "05740cfda301281e0e8be4386816e31d220cbb35",
+        "sha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "bytes": 11370,
+        "gitBlob": "f3691402d755381dd9cffa941604d41ed7a301fa",
+        "sha256": "e15b42bc1164b058fc55a27eb0ce48bfce40c375c00cdbb5f499b40c8e8a5fa4"
+      }
+    ],
+    "methods": 70,
+    "jvmAdapter": true,
+    "preparationToolSha256": "687480767b6d368435e2966d3384e46216fb4ca20cb2426401d192900b561240",
+    "callerScan": [
+      {
+        "path": "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/LoopExpressionGenerator.kt",
+        "sourceSha256": "1fafeefc4294d2ba934eefd6050613cc8ac69ec849d9984013a02515c4c53099",
+        "records": [
+          {
+            "line": 27,
+            "text": "import org.jetbrains.kotlin.psi.psiUtil.getParentOfType"
+          },
+          {
+            "line": 126,
+            "text": "finger = finger.getParentOfType<KtLoopExpression>(true)"
+          }
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt",
+        "sourceSha256": "31dddfaacea8f9936fa989b648f570ad05653f69eddc2ec3b64f5df5e22a79de",
+        "records": [
+          {
+            "line": 44,
+            "text": "PsiTreeUtil.getParentOfType(it, psiElementClass.java, false)"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+        "sourceSha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1",
+        "records": [
+          {
+            "line": 192,
+            "text": "return DescriptorUtils.getParentOfType(descriptor, BuiltInsPackageFragment.class, false) != null;"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "sourceSha256": "e15b42bc1164b058fc55a27eb0ce48bfce40c375c00cdbb5f499b40c8e8a5fa4",
+        "records": [
+          {
+            "line": 100,
+            "text": "val containingPackage = DescriptorUtils.getParentOfType(descriptor, PackageFragmentDescriptor::class.java)"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java",
+        "sourceSha256": "f0f93148387927db1b2d6e9ee0049e65ea4134f1c4140c10d6c8e0c0d4685313",
+        "records": [
+          {
+            "line": 120,
+            "text": "DeclarationDescriptor classDescriptor = DescriptorUtils.getParentOfType(what, ClassDescriptor.class);"
+          },
+          {
+            "line": 139,
+            "text": "ClassDescriptor givenDescriptorContainingClass = DescriptorUtils.getParentOfType(what, ClassDescriptor.class);"
+          },
+          {
+            "line": 140,
+            "text": "ClassDescriptor fromClass = DescriptorUtils.getParentOfType(from, ClassDescriptor.class, false);"
+          },
+          {
+            "line": 147,
+            "text": "ClassDescriptor companionOwner = DescriptorUtils.getParentOfType(givenDescriptorContainingClass, ClassDescriptor.class);"
+          },
+          {
+            "line": 156,
+            "text": "ClassDescriptor classDescriptor = DescriptorUtils.getParentOfType(whatDeclaration, ClassDescriptor.class);"
+          },
+          {
+            "line": 344,
+            "text": "parent = DescriptorUtils.getParentOfType(parent, DeclarationDescriptorWithVisibility.class);"
+          }
+        ]
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+        "sourceSha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd",
+        "records": [
+          {
+            "line": 163,
+            "text": "public static <D extends DeclarationDescriptor> D getParentOfType("
+          },
+          {
+            "line": 167,
+            "text": "return getParentOfType(descriptor, aClass, true);"
+          },
+          {
+            "line": 172,
+            "text": "public static <D extends DeclarationDescriptor> D getParentOfType("
+          }
+        ]
+      }
+    ],
+    "callerDisposition": {
+      "core/descriptors/src/org/jetbrains/kotlin/descriptors/DescriptorVisibilities.java": "root frozen DescriptorVisibilities port already uses exact typed reified traversal",
+      "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java": "frozen KotlinBuiltIns port already specializes exact non-strict BuiltInsPackageFragment traversal",
+      "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt": "one exact common typed-key caller patch",
+      "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt": "separate PSI TreeUtil host boundary; not DescriptorUtils parent caller",
+      "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/LoopExpressionGenerator.kt": "separate PSI extension host boundary; not DescriptorUtils parent caller"
+    },
+    "patch": {
+      "path": "patches/typed-parent-caller.patch",
+      "bytes": 643,
+      "sha256": "9df10dc9002bbf3b395e80361da33d4708a172f7499099f671c40e1bc007a4ee",
+      "outputPath": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+      "outputBytes": 11393,
+      "outputSha256": "1cd2ae726b0fe3497038387c7232448a4a563995e22441571b043b8424407006"
+    },
+    "portable": {
+      "path": "DescriptorUtils.kt",
+      "bytes": 22949,
+      "sha256": "c29cbe4bee1e652512a7f721655da2b1c247176f6011186a69f3febdc3522f5b",
+      "outputPath": "compiler-port-descriptor-utils/DescriptorUtils.kt",
+      "outputBytes": 22914,
+      "outputSha256": "3c9e8e737e50f38d6cad5e8c2beece4abaf8ffcc63fc0e34c4f22f74fc857e2f"
+    },
+    "typedKey": {
+      "path": "DescriptorType.kt",
+      "bytes": 1261,
+      "sha256": "4b605496ca17895ada2ba5490e0212512330817b3356ecf0f4773738ed93007b"
+    },
+    "semantics": {
+      "algorithms": "all seventy original static methods retained, including private algorithms",
+      "parentTraversal": "exact strict/non-strict traversal using explicit supported descriptor-kind casts; no unknown-key fallback",
+      "ancestry": "reference identity as original Java ==; constructor/class checks retain original equality semantics",
+      "overrideSets": "original linked postorder for getAllOverriddenDescriptors; original unordered set semantics for getAllOverriddenDeclarations",
+      "source": "actual PropertySetterDescriptor.correspondingProperty and genuine SourceFile.NO_SOURCE_FILE rules",
+      "jvm": "Class overloads available in generated comparison/JVM adapter only, absent from common C source",
+      "assertionText": "getInnerClassByName assertion uses actual KClass text instead of java.lang.Class text; assertion condition unchanged"
+    },
+    "integrationGates": [
+      "complete concrete descriptor/type/visibility helper closure",
+      "separate PSI sources remain explicit unclosed host boundaries",
+      "future Java getParentOfType callers outside selected closure require real typed bindings; no generic fallback"
+    ],
+    "originalSourceUnmodified": true,
+    "commands": [
+      {
+        "command": "git",
+        "args": [
+          "apply",
+          "--check",
+          "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/descriptor-utils/patches/typed-parent-caller.patch"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "git",
+        "args": [
+          "apply",
+          "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/descriptor-utils/patches/typed-parent-caller.patch"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "git",
+        "args": [
+          "apply",
+          "--reverse",
+          "--check",
+          "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/descriptor-utils/patches/typed-parent-caller.patch"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "files": [
+      {
+        "path": "compiler-port-descriptor-utils/DescriptorUtils.kt",
+        "bytes": 23660,
+        "sha256": "fd5b98793f048c5c38cc03f2448ba655751dd1fd444724fceacdb12fb3c85f83"
+      },
+      {
+        "path": "compiler-port-descriptor-utils/DescriptorType.kt",
+        "bytes": 1261,
+        "sha256": "4b605496ca17895ada2ba5490e0212512330817b3356ecf0f4773738ed93007b"
+      },
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "bytes": 11393,
+        "sha256": "1cd2ae726b0fe3497038387c7232448a4a563995e22441571b043b8424407006"
+      }
+    ],
+    "wasmBuild": "not-run: concrete descriptor/type closure required",
+    "browserCompilerBuilt": false,
+    "readiness": false
+  },
+  "sourceLockSha256": "edab2bbcd776039f0795a269aefe3cadf77390bcd758408f8ed116e008f95f59",
+  "verificationToolSha256": "59f6507fbb8a225def0db51a99b6ffab3c869e50f0ca66192fd49ce0ee05a8c3",
+  "probeSourceSha256": "9b0f1b6bb7ee4dd5e4aab7b747a025959be85efaa143822b7c123adf83718e65",
+  "referenceToolSha256": "05d11cc09c428d56e7cca0c284aafb62d88549fcab4e70dc6cafa8c74f39e1f5",
+  "typedParentProbeSha256": "838debeafa95af6d75746904fc05f9cacdb6bf3d0fb3edd49f6b6da422820e29",
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "assertionSourceSha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf",
+  "api": {
+    "originalRecords": 65,
+    "originalSha256": "8f03161be387b70312d1b12aba2281143462c40a82de9cb6d23cbf59b860526d",
+    "portableSha256": "ff5fd7aa4c9f92d6b277f1d40cca2cc354f85ee626faf49db641b49e5fd8e204",
+    "additionalCommonTypeApis": [
+      "method:public static final:getParentOfType:org.jetbrains.kotlin.descriptors.DeclarationDescriptor:org.jetbrains.kotlin.descriptors.DeclarationDescriptor,org.jetbrains.kotlin.resolve.DescriptorType",
+      "method:public static final:getParentOfType:org.jetbrains.kotlin.descriptors.DeclarationDescriptor:org.jetbrains.kotlin.descriptors.DeclarationDescriptor,org.jetbrains.kotlin.resolve.DescriptorType,boolean"
+    ],
+    "companionField": "field:public static final:Companion:org.jetbrains.kotlin.resolve.DescriptorUtils$Companion",
+    "staticBridgeModifiers": "Kotlin static bridges are final",
+    "classModifier": "Common utility class is final with a private constructor; the original private-constructor Java class is non-final"
+  },
+  "comparison": {
+    "required": 47292,
+    "passed": 47292,
+    "failed": 0,
+    "notRun": 0,
+    "skipped": 0,
+    "originalSha256": "d867ec45bc35697889fde835c4dedd3bd09964dac5883a0e3c0a649387b00e17",
+    "portableSha256": "d867ec45bc35697889fde835c4dedd3bd09964dac5883a0e3c0a649387b00e17",
+    "caseIdsSha256": "71f851c4085fa3a3a1e94993a0c6669d222c6a6394c14ef12667f771a34b6fb6",
+    "groups": {
+      "ancestor": 3300,
+      "constructor": 94,
+      "descriptor": 27614,
+      "direct": 2209,
+      "has": 825,
+      "initializer": 234,
+      "inner": 2,
+      "jvm": 1650,
+      "local": 1,
+      "nullable": 10,
+      "parent": 5776,
+      "real": 2,
+      "receiver": 48,
+      "same": 825,
+      "scope": 143,
+      "subclass": 2209,
+      "subtype": 2209,
+      "type": 141
+    },
+    "fullLedger": "out/kotlin-descriptor-utils-probe-1/differential-receipt.json (reproducible generated observation ledger)",
+    "fullReceiptSha256": "8ef218a536b6f35d94fa5919b5a7f77a7d366ad800612e882a591cea98bca9b6"
+  },
+  "typedParentResult": "typed parent identity checks: 114",
+  "normalization": [
+    "descriptor identity hex in exception messages",
+    "only unordered getAllOverriddenDeclarations set results are sorted; linked override postorder is retained"
+  ],
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "helpers": "genuine verified bootstrap JVM descriptor/type/metadata helpers; source revision equality is not proved",
+  "commands": [
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/descriptor-utils.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/jvm/compiler-port-descriptor-utils/DescriptorUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/jvm/compiler-port-descriptor-utils/DescriptorType.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/jvm/core/descriptors/src/org/jetbrains/kotlin/builtins/ReflectionTypes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/assertions/CompilerAssertions.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx512m",
+        "-proc:none",
+        "-source",
+        "17",
+        "-target",
+        "17",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/original-classes",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx256m",
+        "-proc:none",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/Reference.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/original-classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "Reference"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/descriptor-utils.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "Reference"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/original-classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/probe.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/AlgorithmProbe.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/original-classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.descriptorutils.probe.AlgorithmProbeKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/descriptor-utils.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.descriptorutils.probe.AlgorithmProbeKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/descriptor-utils.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/typed-parent.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/TypedParentProbe.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/typed-parent.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-utils-probe-1/descriptor-utils.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.descriptorutils.probe.TypedParentProbeKt"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "outputs": [
+    {
+      "path": "descriptor-utils.jar",
+      "bytes": 33492,
+      "sha256": "7955358b11b93c19faf93828e026e7f25c4b099e566f4b6feb171601234fd6bc"
+    },
+    {
+      "path": "probe.jar",
+      "bytes": 14610,
+      "sha256": "86407a66c634c720d6920b2473a86f59046ad922db5fc2ad3624f60d65b25654"
+    },
+    {
+      "path": "typed-parent.jar",
+      "bytes": 3124,
+      "sha256": "0bc9ed59903d6bdb91d0652c4710d2c0dac7701ccafc92a84a3083b58df30b4b"
+    },
+    {
+      "path": "original-api.txt",
+      "bytes": 8326,
+      "sha256": "8f03161be387b70312d1b12aba2281143462c40a82de9cb6d23cbf59b860526d"
+    },
+    {
+      "path": "portable-api.txt",
+      "bytes": 9203,
+      "sha256": "ff5fd7aa4c9f92d6b277f1d40cca2cc354f85ee626faf49db641b49e5fd8e204"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 2432846,
+      "sha256": "d867ec45bc35697889fde835c4dedd3bd09964dac5883a0e3c0a649387b00e17"
+    },
+    {
+      "path": "portable-observations.txt",
+      "bytes": 2432846,
+      "sha256": "d867ec45bc35697889fde835c4dedd3bd09964dac5883a0e3c0a649387b00e17"
+    }
+  ],
+  "commonClassNameAssertionText": "not-run in Wasm; actual KClass text may differ from Java Class text, invariant predicate is unchanged",
+  "wasmBuild": "not-run: concrete helper/PSI closure required",
+  "browserCompilerBuilt": false,
+  "readiness": false,
+  "actualDescriptorCoverage": {
+    "real-fake-override-count": "168",
+    "real-source-file-count": "0"
+  },
+  "environment": {
+    "os": "Linux",
+    "release": "6.1.0-53-cloud-amd64",
+    "machine": "x86_64",
+    "jvmHeapMaximumBytes": 805306368,
+    "processes": "sequential fresh JVMs",
+    "network": "none; verified local bootstrap compiler and genuine classpath metadata"
+  },
+  "logs": {
+    "pid": 791968,
+    "exitCode": 0,
+    "path": "/home/seorii/logs/kotlin-descriptor-utils-differential-srwl1pwo.log",
+    "statusPath": "/home/seorii/logs/kotlin-descriptor-utils-differential-srwl1pwo.status.json"
+  },
+  "guards": {
+    "command": "node --test producer/kotlin-browser/compiler-port/descriptor-utils/integrity.test.mjs",
+    "exitCode": 0,
+    "required": 4,
+    "passed": 4,
+    "failed": 0,
+    "notRun": 0
+  },
+  "gates": {
+    "originalCommonActualMetadataDescriptors": "pass",
+    "typedParentIdentityStrictNull": "pass",
+    "commonHostInWasm": "not-run",
+    "positiveUserSourceFileObjects": "not-run",
+    "fullCompilerClosure": "not-built",
+    "freshBrowserCompilation": "not-run"
+  },
+  "limitations": [
+    "Actual selected Java source is unchanged; genuine bootstrap helper source revision equality with the selected candidate commit is unproved.",
+    "The actual common DescriptorUtils code contains no java.lang.Class traversal. Two original Class overloads and Java assertion class text are restored only in the explicit generated JVM host variant for legitimate binary helper compatibility.",
+    "Selected DescriptorUtils callers have exact typed traversal, but separate PSI APIs and any future Java caller outside this selected closure remain explicit integration gates.",
+    "Genuine binary builtins metadata exercises SourceFile.NO_SOURCE_FILE. Positive user-source SourceFile objects require the actual frontend/source-host path and are not counted as verified here.",
+    "Common KClass text for an internal getInnerClassByName invariant error is not proven equivalent on Wasm; JVM comparison uses the original real Class text adapter.",
+    "Actual whole compiler, type/descriptor/PSI closure and isolated wasmJs helper execution remain incomplete; no public readiness or browser source compiler claim is made.",
+    "Only unordered getAllOverriddenDeclarations output is sorted; getAllOverriddenDescriptors linked postorder is compared unchanged. Descriptor identity hex in exception messages is normalized, result/type/visibility/source predicates are unchanged.",
+    "The 47292 cases are combinatorial component observations, not Kotlin language conformance or compiler performance measurements."
+  ]
+}
