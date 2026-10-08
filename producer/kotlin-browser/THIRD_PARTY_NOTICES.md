@@ -10,7 +10,8 @@ upstream license text is preserved verbatim in [LICENSE.kotlin.txt](LICENSE.kotl
 `manifest.json` records its original path, Git blob, size, and SHA-256. The fixture
 ledger records each copied fixture's upstream path and exact identity.
 
-The six other `.kt` fixtures are new inputs authored for this producer and use
+The eight other `.kt` fixtures, including Hello World and Fibonacci, are new
+inputs authored for this producer and use
 the repository's MIT license. The build/source inventory scripts do not ship an
 upstream compiler, JDK, stdlib, syntax library, generated runtime, or other binary.
 Their source references and checksums document candidate inputs, not a completed

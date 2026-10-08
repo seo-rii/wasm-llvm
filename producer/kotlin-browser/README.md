@@ -5,9 +5,10 @@ parser → FIR resolution/checking → FIR2IR → KLIB/IR linking → Wasm backe
 The intended compiler host is `wasmJs`; the initial user console target is
 `wasmWasi` with WASI Preview 1. These are separate library/build sets.
 
-**Status: source inventory only; G0 blocked; browser compiler not built.**
-There is no compiler Wasm, generated loader, target stdlib bundle, release receipt,
-or public Kotlin support in this change. GraalVM Web Image, TeaVM hosting, remote
+**Status: source audit and executed JVM-hosted bootstrap example builds; G0
+blocked; browser compiler not built.**
+There is no full compiler Wasm bundle, accepted release receipt, or public Kotlin
+support in this change. GraalVM Web Image, TeaVM hosting, remote
 compilation, and a handwritten Kotlin subset are outside this implementation path.
 
 ## Source and evidence
@@ -22,7 +23,10 @@ The lock records bootstrap Kotlin `2.5.0-dev-10106`, daemon JDK 21, Gradle 9.7.1
 generator inputs/outputs, and relevant upstream dependency declarations. A checksum
 copied from upstream dependency verification is distinguished from downloaded,
 hash-verified artifact bytes. Bootstrap/compiler/JDK/generator artifact closure is
-still incomplete.
+still incomplete. Nine official bootstrap/compiler/support artifacts are now
+downloaded and payload-hash-verified separately in `build/bootstrap.lock.json`.
+The installed JDK 17 direct-CLI host is distinct from the upstream Gradle daemon
+JDK 21 requirement; a full upstream Gradle/tool closure is not claimed.
 
 Reproduce the source audit from pinned remote files into a fresh directory:
 
@@ -56,6 +60,40 @@ Checked-in `evidence/` contains actual source-audit output, not compiler accepta
 The audit process can exit successfully while its G0 result remains blocked.
 Copied upstream fixtures retain their exact bytes and are accompanied by
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the pinned upstream license.
+
+## Real Hello World and Fibonacci builds
+
+The [bootstrap reference recipe](build/README.md) downloads a bounded official
+compiler/stdlib set, verifies every payload, then invokes the official
+`KotlinWasmCompiler` in two stages: source → KLIB → Wasm. It preserves checked
+array access, assertions, and exnref exceptions. Language/API versions are fixed
+to 2.4 for these console inputs; the development compiler is not advertised as a
+stable language release.
+
+```sh
+pnpm prepare:kotlin-bootstrap
+pnpm verify:kotlin-bootstrap
+pnpm build:kotlin-baseline -- --output out/kotlin-browser-baseline/my-run
+```
+
+The output directory must be new. JARs, stdlib KLIBs, source snapshots and generated
+programs stay in ignored `out/`, accompanied by actual command/hash receipts.
+Node 24.1.0 requires `--experimental-wasm-exnref` for engine validation, already
+included in the package command. The browser execution tested separately by
+wasm-idle uses default Chromium flags.
+
+[`evidence/bootstrap-baseline.json`](evidence/bootstrap-baseline.json) records
+successful official builds of `fixtures/hello-world.kt` and `fixtures/fibonacci.kt`.
+The resulting Wasm files are 691,555 and 700,643 bytes and import only Preview 1
+`fd_write`, `poll_oneoff`, `random_get`, plus `fd_read` for Fibonacci. They export
+`memory`/`_start` and contain a Wasm start section. Runtime expectations remain
+expectations in this producer receipt; actual browser execution is recorded in
+the consumer's separate receipt.
+
+This compiler is the official precompiled bootstrap `2.5.0-dev-10106`, with
+`compiler.sourceCommit: null`. It is a **bootstrap reference**, not the selected
+candidate's R0/R1 build and not a browser compiler. The stock target stdlib is
+unpatched. These examples cannot advance G4 or enable public Kotlin support.
 
 ## Verified boundaries
 
