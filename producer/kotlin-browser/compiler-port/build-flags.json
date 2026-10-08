@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "kind": "official-selected-compiler-source-build-flags",
+  "sourceClosureLockSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "helperSources": [
+    {
+      "path": "repo/kotlin-build-helpers/src/dogfoodedExperimentalFeatures.kt",
+      "gitBlob": "a5c51517c8f6cb8341abcb9e0921af75ef63d983",
+      "sha256": "4398cd584580b84cd974ed96982cbb7501f47202097bc54c0d19454c85d675af",
+      "bytes": 1338
+    },
+    {
+      "path": "repo/gradle-build-conventions/buildsrc-compat/src/main/kotlin/common-configuration.gradle.kts",
+      "gitBlob": "03ef6d2392997b697002540850a3ee62e621ca01",
+      "sha256": "ce62a8108088c9063367f4e1979bd10916cb6a5d07e70c84c21000563e0ec80f",
+      "bytes": 23647
+    },
+    {
+      "path": "repo/gradle-build-conventions/buildsrc-compat/src/main/kotlin/tasks.kt",
+      "gitBlob": "39dc4c170d5743cd45ab1b6200b197d96f80a93d",
+      "sha256": "36609a437fb4994f909d35f94f7e4a699fd55114addd1eddd4b0d50c3a1e03cd",
+      "bytes": 5645
+    },
+    {
+      "path": "gradle.properties",
+      "gitBlob": "840b42e783ed8fed80c6e446ebde7f4df9a276ff",
+      "bytes": 11766,
+      "sha256": "6c58b73af160fa03fd1f48f8bd1e66b7dfcbd646cc099b9c2d21bc4e943f6b30"
+    }
+  ],
+  "helperAnnotations": {
+    "optInToExperimentalCompilerApi": "org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+    "optInToUnsafeDuringIrConstructionAPI": "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+    "optInToObsoleteDescriptorBasedAPI": "org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+    "optInToK1Deprecation": "org.jetbrains.kotlin.K1Deprecation"
+  },
+  "moduleDeclarations": [
+    {
+      "path": "compiler/container/build.gradle.kts",
+      "gitBlob": "9197906971db1e1cc8fff6a291cb511a73a98bfe",
+      "sha256": "95cbaffa91d651f9bef895f2dd17b7c98f48701d8dda341197600e7dfab1ac73",
+      "bytes": 744,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.K1Deprecation"
+      ],
+      "helperCalls": [
+        "optInToK1Deprecation"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/fir-deserialization/build.gradle.kts",
+      "gitBlob": "be1ca691ef545e7ac00077adb68a70c3416a8272",
+      "sha256": "673fe72285f7aa32ca5097d54c6a4a7b60a9008218234d209c7b4adcc5c34fcf",
+      "bytes": 866,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/fir-serialization/build.gradle.kts",
+      "gitBlob": "f6b420af2adc37a583fe6b12274902e9859236c5",
+      "sha256": "6c3104ba61b9086549f2cdfb277f1904a377270f19ea278c2d4149c64422f9ad",
+      "bytes": 1136,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/fir2ir/build.gradle.kts",
+      "gitBlob": "5fd480e1ceafd5b55c65a9f176fc4aa637c32f63",
+      "sha256": "a5e05ab82c1d767da859be31c4f63c23c7155a0f14b28b45019011e3393a6fda",
+      "bytes": 5247,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [
+        "optInToObsoleteDescriptorBasedAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/providers/build.gradle.kts",
+      "gitBlob": "1bae75d3d2ba4b8c869a2e91103b86138b3347d4",
+      "sha256": "ac9ef3f423bfbb70c06f4a3145afdff31009255d67a80230df5d41945beef81a",
+      "bytes": 866,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": [
+        "-Xconsistent-data-class-copy-visibility"
+      ]
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/build.gradle.kts",
+      "gitBlob": "6703f7136b1cb843438a893a1db238e75fed118b",
+      "sha256": "d713ba028166c28f35b07ccaa54afda890f9490e4afd50a9eb9ad3619cdbbb1c",
+      "bytes": 1878,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/build.gradle.kts",
+      "gitBlob": "6aa22cf58e819815e1f9163e35405c752d5e4dcf",
+      "sha256": "e8aa45f52f21d6a17eebbbe4f2d4eed8cbd8b87d7b2364621edd6d7c608e0300",
+      "bytes": 1719,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/raw-fir/raw-fir.common/build.gradle.kts",
+      "gitBlob": "c88337913d05b3670565a83582c5baf526a6336d",
+      "sha256": "4c2260411c320d84567371c039eb42e5f8d417c2f93dc5a7453e17706722ba8b",
+      "bytes": 1178,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/resolve/build.gradle.kts",
+      "gitBlob": "ca3cb40fefb8014ced84869d839db30f7eeaab1d",
+      "sha256": "939149ad5362c1e8eea9fbab7138a315463962cb274a4c704c2c5f84f4b1249b",
+      "bytes": 749,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/semantics/build.gradle.kts",
+      "gitBlob": "79f1097c35c442a8e0c9dad32edb2a3cee57eb74",
+      "sha256": "bec8d57ce3ed6a48e7be7280af80e1c24f349bc2fe91b2e20e2c164ca99410b9",
+      "bytes": 629,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/fir/tree/build.gradle.kts",
+      "gitBlob": "159d0fc8777a9aa4b24f61adfb19a21048c5e7eb",
+      "sha256": "df6736a6c958c8cce8dc4d97a2328750e65dc842a4583d5407e8fcf443aa8be4",
+      "bytes": 1162,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "org.jetbrains.kotlin.types.model.K2Only"
+      ],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/backend.common/build.gradle.kts",
+      "gitBlob": "8aade11b963ffecf203bb630b9d62c493ea7eca0",
+      "sha256": "ac7c6077b2d3a729c7e406f35708a23983a33badf822dda1e2f162dfcad8166b",
+      "bytes": 936,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/backend.js/build.gradle.kts",
+      "gitBlob": "7efa5301782c9fc71d5ce44975b68e335930f4af",
+      "sha256": "800ba3532a6747e2cda97059df15ce86169d16023db9b87611df73bdf7411884",
+      "bytes": 1323,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/backend.wasm/build.gradle.kts",
+      "gitBlob": "b7e64598202167d091fa25cb05566e5d8e738800",
+      "sha256": "52b3f51a41c3ab432b7e093edf02c32b19fe05612a06c26b990f314e16ef6b70",
+      "bytes": 1232,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/ir.actualization/build.gradle.kts",
+      "gitBlob": "921691c32ca38c6c30d886b1801be2159a77b056",
+      "sha256": "871039d1e8cebfdb67b05baa40c4f4b0fbd04c784b3f5313ef8a79a0bdaa7f2d",
+      "bytes": 614,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/ir.inline/build.gradle.kts",
+      "gitBlob": "836f4069bbe387b850ab258519c9d96b8c9604a8",
+      "sha256": "24f97bd62deec8942ca4cb4953586bac44cfbdb2b65651ae0554c6de8cf93b6a",
+      "bytes": 531,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/ir.psi2ir/build.gradle.kts",
+      "gitBlob": "2e4ded1d2ba536c94d12325843fb6b9009c4f9a5",
+      "sha256": "7ec04b77730ea014389f1c1dd91e9d45c6b93629c7f8e453a552db78de788776",
+      "bytes": 835,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "org.jetbrains.kotlin.K1Deprecation",
+        "org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToK1Deprecation",
+        "optInToObsoleteDescriptorBasedAPI",
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/ir.tree/build.gradle.kts",
+      "gitBlob": "6a6b4340b21fe5d58ee49a9a2d0e94d977ee5bf9",
+      "sha256": "9a03c7cd08fb78f0e00735dc37a3df9d104595e6cb40b40c108ab00771b70121",
+      "bytes": 1109,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": [
+        "-Xconsistent-data-class-copy-visibility"
+      ]
+    },
+    {
+      "path": "compiler/ir/ir.validation/build.gradle.kts",
+      "gitBlob": "add255f234812b848b5a43f6ba963c89e4391e62",
+      "sha256": "b7a0c7abb3ef9e39bce03aa36866eefd90ada64a4c2a94fac13a37ed1db1accc",
+      "bytes": 1031,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/serialization.common/build.gradle.kts",
+      "gitBlob": "e5986242f1b2965bd33c52a143454baeadfaf328",
+      "sha256": "286fcd73ea2445635571e46b0130451b244e77e6b85ff0acb2d742fb0de13ac3",
+      "bytes": 1590,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToObsoleteDescriptorBasedAPI",
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/ir/serialization.js/build.gradle.kts",
+      "gitBlob": "84d62430ce9d2a71ec2183f721c0de4207964cf2",
+      "sha256": "ab2f6a091cad98c70b29d4cc3cd0fc25d700d7ca8eb8f73525c05ef21eb93e28",
+      "bytes": 1343,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
+      ],
+      "helperCalls": [
+        "optInToUnsafeDuringIrConstructionAPI"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/plugin-api/build.gradle.kts",
+      "gitBlob": "8ae3628e5d92d7c544e0c402b66c477455ede779",
+      "sha256": "0879b2de224033a626d1515fa0e18be7d4eda534c077b664e46f8ab0f9d61cd2",
+      "bytes": 386,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi"
+      ],
+      "helperCalls": [
+        "optInToExperimentalCompilerApi"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "compiler/util/build.gradle.kts",
+      "gitBlob": "a692b95beda364095028a4f142d1ca2ac2154804",
+      "sha256": "09e35dc2f472de0c5005a5313cec1977adf3a7d8ed0e3017e52a46d37dbb0c50",
+      "bytes": 1192,
+      "optInAnnotations": [],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": [
+        "-Xconsistent-data-class-copy-visibility"
+      ]
+    },
+    {
+      "path": "wasm/wasm.frontend/build.gradle.kts",
+      "gitBlob": "425822fe155639b7239b607f4b88e67fdf7bd136",
+      "sha256": "7fb1087fd704caf83626a890722b31025a88a40fb578cfa2235fe4ce354d5711",
+      "bytes": 497,
+      "optInAnnotations": [
+        "org.jetbrains.kotlin.K1Deprecation"
+      ],
+      "helperCalls": [
+        "optInToK1Deprecation"
+      ],
+      "literalFreeCompilerArgs": []
+    },
+    {
+      "path": "wasm/wasm.ir/build.gradle.kts",
+      "gitBlob": "e1d1e4399553a7335623b988178c277e1509c5e6",
+      "sha256": "8aee5003f75cbc4888d0b321db33091c80c55c65b1b986ef031984829eff6526",
+      "bytes": 2771,
+      "optInAnnotations": [],
+      "helperCalls": [],
+      "literalFreeCompilerArgs": [
+        "-Xskip-prerelease-check"
+      ]
+    }
+  ],
+  "languageVersion": "2.5",
+  "apiVersion": "2.5",
+  "limitations": [
+    "Flags are extracted from pinned production build declarations for compiling the compiler itself; these are not options automatically enabled for user Kotlin programs.",
+    "The standalone wasmJs build unions selected module opt-ins into one source set. JVM-only command-line flags, Gradle variants and friend module access still need explicit port/build decisions.",
+    "This is source declaration evidence, not a successful full compiler build."
+  ],
+  "browserCompiler": "not-built",
+  "languageReadiness": false,
+  "compilerFlags": [
+    "-Xcontext-parameters",
+    "-Xexplicit-backing-fields",
+    "-Xname-based-destructuring=complete",
+    "-Xcollection-literals",
+    "-Xcontext-sensitive-resolution",
+    "-Xexplicit-context-arguments",
+    "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+    "-opt-in=kotlin.RequiresOptIn",
+    "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+    "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+    "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+    "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+    "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+    "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+    "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+    "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+    "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+    "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+    "-Xdont-warn-on-error-suppression",
+    "-Xskip-prerelease-check",
+    "-Xconsistent-data-class-copy-visibility"
+  ],
+  "helperSourceTree": {
+    "path": "repo",
+    "gitTree": "e6578e57bc58cee1ad710be6b2c0952bdb2ded40",
+    "rootedAtSelectedCommit": true,
+    "recomputed": true
+  }
+}
