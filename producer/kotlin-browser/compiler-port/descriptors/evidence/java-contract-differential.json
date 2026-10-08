@@ -1,0 +1,647 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-descriptor-contract-differential",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "preparationSha256": "fdaac623e3a08a99131dc91d129e3121c7e298a8d73323ea3c755196418e70de",
+  "buildReceiptSha256": "95c6758739d5b8c39e87c5279e24b25f448fb3669d6dac657a1af61eb52da514",
+  "verificationToolSha256": "ff2a4542931886d01ebf76ea14606b14d1e783b317d37b9544d666cf2b83a3f3",
+  "referenceToolSha256": "e6fb30a412d104f10f1c26c741855156ef2be561a26d767726a053a684c41c98",
+  "referenceArtifactLockSha256": "1ae7281717d4b96c4a22808dec2018d5e7b7f9a6473b2002264b07361511918e",
+  "referenceArtifact": {
+    "id": "read-only-reference-annotations",
+    "version": "2.5.0-dev-10106",
+    "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-annotations-jvm/2.5.0-dev-10106/kotlin-annotations-jvm-2.5.0-dev-10106.jar",
+    "file": "kotlin-annotations-jvm-2.5.0-dev-10106.jar",
+    "bytes": 3096,
+    "sha256": "6054230599c840c69af3657c292b768f2b585c25fba91d26cd5ad8c992757b03"
+  },
+  "probeSourceSha256": "dc2da60c17aba0c4023bd3a34190367e9354a8c8ffe02ede0ce6c6a4c8ed3346",
+  "result": "pass",
+  "originalJavaUnits": 27,
+  "interfaces": 30,
+  "enums": 1,
+  "sourceMethods": 188,
+  "comparedClasses": 31,
+  "classes": [
+    "org.jetbrains.kotlin.descriptors.CallableDescriptor",
+    "org.jetbrains.kotlin.descriptors.CallableDescriptor$UserDataKey",
+    "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+    "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$CopyBuilder",
+    "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$Kind",
+    "org.jetbrains.kotlin.descriptors.ClassDescriptor",
+    "org.jetbrains.kotlin.descriptors.ClassOrPackageFragmentDescriptor",
+    "org.jetbrains.kotlin.descriptors.ClassifierDescriptor",
+    "org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters",
+    "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+    "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+    "org.jetbrains.kotlin.descriptors.DeclarationDescriptorNonRoot",
+    "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+    "org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource",
+    "org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithVisibility",
+    "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+    "org.jetbrains.kotlin.descriptors.FunctionDescriptor$CopyBuilder",
+    "org.jetbrains.kotlin.descriptors.MemberDescriptor",
+    "org.jetbrains.kotlin.descriptors.Named",
+    "org.jetbrains.kotlin.descriptors.ParameterDescriptor",
+    "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+    "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+    "org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor",
+    "org.jetbrains.kotlin.descriptors.PropertySetterDescriptor",
+    "org.jetbrains.kotlin.descriptors.ReceiverParameterDescriptor",
+    "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+    "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+    "org.jetbrains.kotlin.descriptors.TypeParameterDescriptor",
+    "org.jetbrains.kotlin.descriptors.ValidateableDescriptor",
+    "org.jetbrains.kotlin.descriptors.ValueDescriptor",
+    "org.jetbrains.kotlin.descriptors.VariableDescriptor"
+  ],
+  "erasedApiSha256": "8505c2672515db55dfe5ab8baaa8f065a810ba72fd260869f3ff495d71898cb4",
+  "portableApiSha256": "60b9c1fc18ce5c75ea956713f66e785fb97ca3d6cc29825bc462e755d3a4366d",
+  "knownCompilerGeneratedAdditions": [
+    {
+      "className": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$Kind",
+      "method": "getEntries():kotlin.enums.EnumEntries"
+    }
+  ],
+  "comparisons": [
+    "all selected source-declared method names, erased parameters and erased returns",
+    "generic type-parameter counts",
+    "original enum value order and four isReal branches",
+    "genuine original default validation body",
+    "typed getter property aliases"
+  ],
+  "commands": [
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx512m",
+        "-proc:none",
+        "-source",
+        "17",
+        "-target",
+        "17",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/reference-artifacts/kotlin-annotations-jvm-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify/originals",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/CallableDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/CallableMemberDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassOrPackageFragmentDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassifierDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassifierDescriptorWithTypeParameters.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ConstructorDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/DeclarationDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/DeclarationDescriptorNonRoot.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/DeclarationDescriptorVisitor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/DeclarationDescriptorWithSource.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/DeclarationDescriptorWithVisibility.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/FunctionDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/MemberDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/Named.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ParameterDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/PropertyAccessorDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/PropertyDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/PropertyGetterDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/PropertySetterDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ReceiverParameterDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ScriptDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/SimpleFunctionDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/TypeParameterDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ValidateableDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/ValueDescriptor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/prepared/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/VariableDescriptor.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx256m",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify/Reference.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx512m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify",
+        "Reference",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify/originals:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.descriptors.CallableDescriptor",
+        "org.jetbrains.kotlin.descriptors.CallableDescriptor$UserDataKey",
+        "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+        "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$CopyBuilder",
+        "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$Kind",
+        "org.jetbrains.kotlin.descriptors.ClassDescriptor",
+        "org.jetbrains.kotlin.descriptors.ClassOrPackageFragmentDescriptor",
+        "org.jetbrains.kotlin.descriptors.ClassifierDescriptor",
+        "org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters",
+        "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorNonRoot",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithVisibility",
+        "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+        "org.jetbrains.kotlin.descriptors.FunctionDescriptor$CopyBuilder",
+        "org.jetbrains.kotlin.descriptors.MemberDescriptor",
+        "org.jetbrains.kotlin.descriptors.Named",
+        "org.jetbrains.kotlin.descriptors.ParameterDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertySetterDescriptor",
+        "org.jetbrains.kotlin.descriptors.ReceiverParameterDescriptor",
+        "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+        "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+        "org.jetbrains.kotlin.descriptors.TypeParameterDescriptor",
+        "org.jetbrains.kotlin.descriptors.ValidateableDescriptor",
+        "org.jetbrains.kotlin.descriptors.ValueDescriptor",
+        "org.jetbrains.kotlin.descriptors.VariableDescriptor"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx512m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify",
+        "Reference",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/build/descriptor-contracts.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.descriptors.CallableDescriptor",
+        "org.jetbrains.kotlin.descriptors.CallableDescriptor$UserDataKey",
+        "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+        "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$CopyBuilder",
+        "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor$Kind",
+        "org.jetbrains.kotlin.descriptors.ClassDescriptor",
+        "org.jetbrains.kotlin.descriptors.ClassOrPackageFragmentDescriptor",
+        "org.jetbrains.kotlin.descriptors.ClassifierDescriptor",
+        "org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters",
+        "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorNonRoot",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource",
+        "org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithVisibility",
+        "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+        "org.jetbrains.kotlin.descriptors.FunctionDescriptor$CopyBuilder",
+        "org.jetbrains.kotlin.descriptors.MemberDescriptor",
+        "org.jetbrains.kotlin.descriptors.Named",
+        "org.jetbrains.kotlin.descriptors.ParameterDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor",
+        "org.jetbrains.kotlin.descriptors.PropertySetterDescriptor",
+        "org.jetbrains.kotlin.descriptors.ReceiverParameterDescriptor",
+        "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+        "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+        "org.jetbrains.kotlin.descriptors.TypeParameterDescriptor",
+        "org.jetbrains.kotlin.descriptors.ValidateableDescriptor",
+        "org.jetbrains.kotlin.descriptors.ValueDescriptor",
+        "org.jetbrains.kotlin.descriptors.VariableDescriptor"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/build/descriptor-contracts.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify/probe.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify/ContractProbe.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx512m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/verify/probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-descriptors/run-1791448181074/build/descriptor-contracts.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.descriptors.probe.ContractProbeKt"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "compiler": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null
+  },
+  "externalTypes": "verified bootstrap compiler JVM classes",
+  "auditRequired": [
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableDescriptor",
+      "member": "getValueParameters.return",
+      "javaType": "List<ValueParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends CallableDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableDescriptor",
+      "member": "getUserData.key",
+      "javaType": "UserDataKey<V>",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends CallableMemberDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+      "member": "setOverriddenDescriptors.overriddenDescriptors",
+      "javaType": "Collection<? extends CallableMemberDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+      "member": "copy.newOwner",
+      "javaType": "DeclarationDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+      "member": "copy.modality",
+      "javaType": "Modality",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+      "member": "copy.visibility",
+      "javaType": "DescriptorVisibility",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor",
+      "member": "copy.kind",
+      "javaType": "Kind",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.CallableMemberDescriptor.CopyBuilder",
+      "member": "setTypeParameters.parameters",
+      "javaType": "List<TypeParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ClassDescriptor",
+      "member": "getMemberScope.typeArguments",
+      "javaType": "List<? extends TypeProjection>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+      "member": "getTypeParameters.return",
+      "javaType": "List<TypeParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+      "member": "copy.newOwner",
+      "javaType": "DeclarationDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+      "member": "copy.modality",
+      "javaType": "Modality",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+      "member": "copy.visibility",
+      "javaType": "DescriptorVisibility",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ConstructorDescriptor",
+      "member": "copy.kind",
+      "javaType": "Kind",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+      "member": "accept.visitor",
+      "javaType": "DeclarationDescriptorVisitor<R, D>",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+      "member": "acceptVoid.visitor",
+      "javaType": "DeclarationDescriptorVisitor<Void, Void>",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitPackageFragmentDescriptor.descriptor",
+      "javaType": "PackageFragmentDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitPackageViewDescriptor.descriptor",
+      "javaType": "PackageViewDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitVariableDescriptor.descriptor",
+      "javaType": "VariableDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitFunctionDescriptor.descriptor",
+      "javaType": "FunctionDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitTypeParameterDescriptor.descriptor",
+      "javaType": "TypeParameterDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitClassDescriptor.descriptor",
+      "javaType": "ClassDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitTypeAliasDescriptor.descriptor",
+      "javaType": "TypeAliasDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitModuleDeclaration.descriptor",
+      "javaType": "ModuleDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitConstructorDescriptor.constructorDescriptor",
+      "javaType": "ConstructorDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitScriptDescriptor.scriptDescriptor",
+      "javaType": "ScriptDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitPropertyDescriptor.descriptor",
+      "javaType": "PropertyDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitValueParameterDescriptor.descriptor",
+      "javaType": "ValueParameterDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitPropertyGetterDescriptor.descriptor",
+      "javaType": "PropertyGetterDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitPropertySetterDescriptor.descriptor",
+      "javaType": "PropertySetterDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor",
+      "member": "visitReceiverParameterDescriptor.descriptor",
+      "javaType": "ReceiverParameterDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends FunctionDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+      "member": "copy.newOwner",
+      "javaType": "DeclarationDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+      "member": "copy.modality",
+      "javaType": "Modality",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+      "member": "copy.visibility",
+      "javaType": "DescriptorVisibility",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor",
+      "member": "copy.kind",
+      "javaType": "Kind",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor.CopyBuilder",
+      "member": "setValueParameters.parameters",
+      "javaType": "List<ValueParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor.CopyBuilder",
+      "member": "setTypeParameters.parameters",
+      "javaType": "List<TypeParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.FunctionDescriptor.CopyBuilder",
+      "member": "setContextReceiverParameters.contextReceiverParameters",
+      "javaType": "List<ReceiverParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends PropertyAccessorDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+      "member": "copy.newOwner",
+      "javaType": "DeclarationDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+      "member": "copy.modality",
+      "javaType": "Modality",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+      "member": "copy.visibility",
+      "javaType": "DescriptorVisibility",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor",
+      "member": "copy.kind",
+      "javaType": "Kind",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+      "member": "getAccessors.return",
+      "javaType": "List<PropertyAccessorDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends PropertyDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+      "member": "substitute.return",
+      "javaType": "PropertyDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends PropertyGetterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertySetterDescriptor",
+      "member": "getOverriddenDescriptors.return",
+      "javaType": "Collection<? extends PropertySetterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+      "member": "getImplicitReceivers.return",
+      "javaType": "List<ClassDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+      "member": "getScriptProvidedProperties.return",
+      "javaType": "List<PropertyDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+      "member": "getExplicitConstructorParameters.return",
+      "javaType": "List<ValueParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.ScriptDescriptor",
+      "member": "getScriptProvidedPropertiesParameters.return",
+      "javaType": "List<ValueParameterDescriptor>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+      "member": "copy.newOwner",
+      "javaType": "DeclarationDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+      "member": "copy.modality",
+      "javaType": "Modality",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+      "member": "copy.visibility",
+      "javaType": "DescriptorVisibility",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.SimpleFunctionDescriptor",
+      "member": "copy.kind",
+      "javaType": "Kind",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.TypeParameterDescriptor",
+      "member": "getUpperBounds.return",
+      "javaType": "List<KotlinType>",
+      "strategy": "Kotlin read-only collection contract; platform mutability remains audit-required"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.VariableDescriptor",
+      "member": "substitute.return",
+      "javaType": "VariableDescriptor",
+      "strategy": "non-null common reference for fixed compiler call path; unannotated Java platform contract remains audit-required"
+    }
+  ],
+  "commonContractBoundaries": [
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+      "method": "accept",
+      "strategy": "Java platform visitor accepts null; R? permits the pinned ModuleDescriptor nullable-return override"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.DeclarationDescriptor",
+      "method": "acceptVoid",
+      "strategy": "Java platform visitor accepts null; R? permits the pinned ModuleDescriptor nullable-return override"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+      "method": "getGetter",
+      "strategy": "Overrides selected Kotlin VariableDescriptorWithAccessors property; Java getter-call spelling is a typed extension"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.PropertyDescriptor",
+      "method": "getSetter",
+      "strategy": "Overrides selected Kotlin VariableDescriptorWithAccessors property; Java getter-call spelling is a typed extension"
+    },
+    {
+      "owner": "org.jetbrains.kotlin.descriptors.Substitutable",
+      "method": "substitute",
+      "strategy": "T? retains the explicit nullable Java overrides used by FunctionDescriptor and ReceiverParameterDescriptor; unchanged Kotlin implementation bodies remain outside this contract unit"
+    }
+  ],
+  "concreteImplementationsPorted": false,
+  "wasmBuild": "not-run: actual portable descriptor type closure required",
+  "fullCompilerBuilt": false,
+  "readiness": false
+}
