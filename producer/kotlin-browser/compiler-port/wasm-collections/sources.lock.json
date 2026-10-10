@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "kind": "selected-wasm-serial-collections-common-boundary",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sources": [
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt",
+      "gitBlob": "36d821d62538945fb1d28f1f346517e4028753cc",
+      "bytes": 50827,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.wasm",
+      "sha256": "10d237715dd4ee4af9ef9488e32b02034f5ee68ca22cf5928e85f100a0e3e10a",
+      "preparedBytes": 50871,
+      "preparedSha256": "4c0fb252212165ea52a7d8dd88056f75579f3962782de4d9b726868e7acb8b20"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/codegenContexts/WasmTypeCodegenContext.kt",
+      "gitBlob": "71bef73e4c781e52163a8aa4f89c9e709892c3bd",
+      "bytes": 3995,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.wasm",
+      "sha256": "75d84a9cec0201a5306b457ea7e84715672a73a9127f71b0cf87cb27631a21c5",
+      "preparedBytes": 3995,
+      "preparedSha256": "4948b8c3e022c4c085040800dd79e2eb720d974443784e8f0425b576d7c1cd12"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "gitBlob": "3a2782490b7c294b005188dbb57f4c926dbfba84",
+      "bytes": 31066,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "8d97e3d425298d237dea284d30167486cb6c85d30d2350c7a666dd83e802d18b",
+      "preparedBytes": 31159,
+      "preparedSha256": "d6264a698380da755735622a56cc761f927c710ff802efc7309843ba52a9ce2d"
+    }
+  ],
+  "predecessors": [
+    {
+      "component": "identityReceipt",
+      "sourceLockPath": "../identity/sources.lock.json",
+      "sourceLockSha256": "9407a3c86f140bc8d1d397272c8bc7f5a0e8a125daf00f828685a062b7b21695",
+      "prepareToolPath": "../identity/prepare.mjs",
+      "prepareToolSha256": "57ae1708f0d94263d3c7ab6019bf70d9b198965d1eb45d47f95271120d233cd7",
+      "componentRelativePath": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt",
+      "variant": {
+        "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt",
+        "bytes": 50852,
+        "sha256": "ff08089a3d25337ad0270f25c91878bbb7ea57f8f8a2a644fe442d065e3c0be1"
+      }
+    },
+    {
+      "component": "textReceipt",
+      "sourceLockPath": "../text/sources.lock.json",
+      "sourceLockSha256": "72b14e57aecdcd05cc8d92908ad1d854afa3d4da71522dd814f0c6974e2b9c48",
+      "prepareToolPath": "../text/prepare.mjs",
+      "prepareToolSha256": "b22ac2cb0165b6b4fb258b1ae47843ee898b019794aa6bb60ec653e8da31534e",
+      "componentRelativePath": "compiler-port-text/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "variant": {
+        "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+        "bytes": 31142,
+        "sha256": "8d1e2b553dbd0a76688710ede6ba9b8f763627aa04c86c3a147a515a85f5fd1f"
+      }
+    }
+  ],
+  "replacements": {
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt": [
+      [
+        "definedDeclarations.functionTypes.putIfAbsent(funTypeSignature, funType)",
+        "definedDeclarations.functionTypes.getOrPut(funTypeSignature) { funType }"
+      ],
+      [
+        "            for (symbol in linkerData.globalLiterals) {\n                definedDeclarations.globalLiteralGlobals.computeIfAbsent(symbol.value) { string ->",
+        "            for (symbol in linkerData.globalLiterals) {\n                val string = symbol.value\n                definedDeclarations.globalLiteralGlobals.getOrPut(string) {"
+      ]
+    ],
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/codegenContexts/WasmTypeCodegenContext.kt": [
+      [
+        "wasmFileFragment.definedFunctionTypes.putIfAbsent(signature, wasmFunctionType)",
+        "wasmFileFragment.definedFunctionTypes.getOrPut(signature) { wasmFunctionType }"
+      ]
+    ],
+    "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt": [
+      [
+        "                    .toSortedMap()",
+        "                    .toList().sortedBy { it.first }"
+      ]
+    ]
+  },
+  "transformSha256": "db82e0d309c1c1936c1bb8b199f859be3f345642cbd766be7404e941192f25b5",
+  "probeTypes": [
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/Declarations.kt",
+      "gitBlob": "148f9a79ec4cf92dd446a06a32ffbb8d84a80921",
+      "bytes": 6860,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "5828d17a676d9381e6817732f100d13765b0b7e3a87b108dcf125faa64ced2a3"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/Types.kt",
+      "gitBlob": "f710ec492474ee9286076ecdbe398a9136a1791b",
+      "bytes": 3035,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "a0025c478f6de615451d669233060cde880f0f921786570c27bf317f16b91c67"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/Symbol.kt",
+      "gitBlob": "a6020cc7a3e56d0df511f1443a5317ace3ca4423",
+      "bytes": 1187,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "bfc4719a187f7bff324fd5d036fd53d8b3e8965765114b0cf1aef70d7d036950"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/Operators.kt",
+      "gitBlob": "833e608caca5bb277625b945763a610e05d94b5b",
+      "bytes": 18222,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "6cedf300c6a50f91706c5e1ea51cbee2eac7beb588ed84ae9e13ce5fccf31939"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/WasmInstruction.kt",
+      "gitBlob": "04d04cf6ac294afc2ab8b77f00202176d5f3320d",
+      "bytes": 6333,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "5e0c9a8610fb0668d229c596870eef88ebd47d355b4f88b72a733131b3bb658a"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/source/location/SourceLocation.kt",
+      "gitBlob": "6dd3b2984f867d6742677fcf0a47749282e34ad4",
+      "bytes": 1112,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "ecf03ce05696aee6e974d10d586b5a2de47facfc4aa6d3e35eb6331f70bb613a"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/source/location/Box.kt",
+      "gitBlob": "b5cea9dfeab0248f3b14afe2b80f1517f465222b",
+      "bytes": 289,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "235d991e28d6ebdd2a50a1e7197f069ed72ba01c7c3bb675ca76c1cd5c592092"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmIrSymbols.kt",
+      "gitBlob": "4ec0edaedc677f4566b8172d9c8d3eece151d072",
+      "bytes": 2111,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.wasm",
+      "sha256": "1d5898387afc7cd378fd278372ab9b128d661f090f59514fd802eb28e6de755b"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/WasmExpressionBuilder.kt",
+      "gitBlob": "9e31c10d4a0a2b24d3f0f5bba104e2def118c3e8",
+      "bytes": 17571,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "d061dec8406c76cad50177d901499f980051f9a8d084caefcfe465b49dd27da4"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/InstructionsFlowOptimizers.kt",
+      "gitBlob": "f2123824a913a649bfc4e9cc76b66f5f3ac97e79",
+      "bytes": 7599,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "d0690b81cc09ff65b4e03c5fecedbe74beac31f603088500a0b1d64dc377f315"
+    }
+  ],
+  "probeSlices": [
+    {
+      "id": "binary",
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "start": "private object WasmBinary {",
+      "end": "private enum class AnnotationKind",
+      "bytes": 1418,
+      "sha256": "71d445cbb04c4eee6e973e813c0e9429e0957b66ddc334c896dea1673ffa882b"
+    },
+    {
+      "id": "annotations",
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "start": "private enum class AnnotationKind",
+      "end": "class WasmIrToBinary(",
+      "bytes": 682,
+      "sha256": "ca5136fbc9906fde9390ea7c9d0b4357e0aab5abff9cf9bc4842d63a68da03f7"
+    },
+    {
+      "id": "emit",
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "start": "    private fun emitCodeMetadataSections() {",
+      "end": "    private fun appendTextSection",
+      "bytes": 1983,
+      "sha256": "3a8b59c712e77272fd8d8ac95f944fe8a64c64477e4750b64b6b869ba96163bd"
+    },
+    {
+      "id": "payload",
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "start": "    private inline fun appendSection(",
+      "end": "    private fun appendVectorSize",
+      "bytes": 654,
+      "sha256": "992d77de861bf3830c78898fe4153335779b2154ad900dc26c1c5aa551ddd477"
+    },
+    {
+      "id": "strings",
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "start": "    fun ByteWriter.writeVarUInt32(v: Int)",
+      "end": "    private class SourceLocationMappingToBinary",
+      "bytes": 367,
+      "sha256": "e51172626c1d043f6228adaf83c2eb6f0b01bca0497fc57dcf3357a440c6c1f6"
+    },
+    {
+      "id": "literalLoop",
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt",
+      "start": "            for (symbol in linkerData.globalLiterals) {",
+      "end": "            for ([stringValue, literalIdSymbol]",
+      "bytes": 563,
+      "sha256": "190ab8266c881563ad723837b706435e614e3db9cf521d7837fff323b3679c03"
+    },
+    {
+      "id": "contextFunctions",
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/codegenContexts/WasmTypeCodegenContext.kt",
+      "start": "    open fun referenceWasmFunctionType(",
+      "end": "    open fun referenceGcType(",
+      "bytes": 618,
+      "sha256": "15a9f6566c570c6ec22da5fa700e3a9751d59b92d55b1d8ea7ef0c6fc1707ea6"
+    },
+    {
+      "id": "literalSymbol",
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmIrSymbols.kt",
+      "start": "class LiteralGlobalSymbol(",
+      "end": "class GcTypeSymbol(",
+      "bytes": 231,
+      "sha256": "b524b583adb1e5e91857e3fed172b452dd1e4999c824f2e8bda79aa6006b2aec"
+    }
+  ],
+  "writerDependency": {
+    "sourceLockSha256": "d25441072ed5a64361d1613038dcfac78f4854e8beeee93cdea1daeba37184dc",
+    "patchSha256": "d481b6c222163deda86765afbf3d9234986358fb28c138fd735f0cb9f984b47a",
+    "sources": [
+      {
+        "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+        "role": "official-binary-writer",
+        "bytes": 3724,
+        "sha256": "6937f3076da19c460256128f006fc701306427d3194393378154731ee7f7892d",
+        "gitBlobSha1": "b80e9d85ac96630643384f28b8c26803bc705943",
+        "portableBytes": 3641,
+        "portableSha256": "d72bce4887c4abb1220442fa5a87c107f01c6da4696d9c2cb55ac7c3788c21f0"
+      },
+      {
+        "path": "compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "role": "official-leb128",
+        "bytes": 3855,
+        "sha256": "54c9250d7d5d20d37d1b83a71d4cfde4fa647e44ad5a86e43057e01d2f828472",
+        "gitBlobSha1": "7ed6f4bddcaded4a484c50c42d774c3a9b5b3fa5",
+        "portableBytes": 3800,
+        "portableSha256": "f7584e006617f6437f6dcc1dc1d3d8f7c0a24ba7b044852a7f74672d53b179cc"
+      }
+    ],
+    "sinkSha256": "3e950b4622b3ede126791fdebbf162a9734e77b0b3ac2d0afb2cbe10a6acb814"
+  },
+  "serialNonNullValues": true,
+  "genericJvmShim": false,
+  "probeAssertionHelper": {
+    "path": "../assertions/CompilerAssertions.kt",
+    "bytes": 474,
+    "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf"
+  }
+}
