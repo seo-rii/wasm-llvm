@@ -41,6 +41,12 @@ pnpm verify:ecl-artifacts
 `WASM_LLVM_ECL_WORK_DIR` and `WASM_LLVM_ECL_OUT_DIR` override `out/ecl-browser-work` and
 `out/ecl-browser`. `build --keep` retains the host and cross build trees.
 
+Supplemental copyright and license notices are packaged alongside the runtime in
+`artifacts/ecl-browser-notices/THIRD_PARTY_NOTICES.txt` (and `out/ecl-browser-notices`).
+`package:ecl` publishes both directories and `verify:ecl-artifacts` checks both. These include
+ECL, its bundled GMP and Boehm GC, LOOP, CMU code, and Emscripten runtime notices.
+Consumers must deliver the notices with the runtime. The accepted runtime receipt remains unchanged.
+
 The release contains exactly `ecl.mjs`, `ecl.wasm.gz` (the linked `ecl.wasm`, gzip level 9) and
 `producer-receipt.json`; the same files are
 committed under `artifacts/ecl-browser/` so consumers can fetch them from an immutable

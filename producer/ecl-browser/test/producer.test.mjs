@@ -73,3 +73,11 @@ test('fixtures exist for every acceptance input', async () => {
 		assert.ok((await readFile(path.join(producerRoot, 'fixtures', name), 'utf8')).length > 0);
 	}
 });
+
+test('distributes the runtime copyright notices without rewriting build evidence', async () => {
+	const expected = await readFile(path.join(producerRoot, 'THIRD_PARTY_NOTICES.txt'));
+	const delivered = await readFile(path.join(repoRoot, 'artifacts/ecl-browser-notices/THIRD_PARTY_NOTICES.txt'));
+	assert.deepEqual(delivered, expected);
+	for (const notice of ['GNU LESSER GENERAL PUBLIC LICENSE', 'Boehm', 'Symbolics', 'Emscripten'])
+		assert.ok(delivered.toString('utf8').includes(notice), notice);
+});
