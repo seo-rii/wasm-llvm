@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-wasm-liveness-bit-set-preparation",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "a04845ddd38ff1f2b4582ef291a298e17cd4e387635bf35bd1fdb6c4c06c3543",
+  "preparationToolSha256": "f5e52c17aae256a7235eede400e1355d45281762eaa9d3375ac57c59b4bbfd01",
+  "inputPaths": {
+    "sourceRoot": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources",
+    "referenceRoot": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bit-set-reference"
+  },
+  "jdk": {
+    "repository": "https://github.com/openjdk/jdk17u.git",
+    "commit": "162dbac82cf31c6948414944af836187aff9e6ca",
+    "tag": "jdk-17.0.16+8",
+    "sourcePath": "src/java.base/share/classes/java/util/BitSet.java",
+    "path": "BitSet.java",
+    "bytes": 48380,
+    "sha256": "c5640ef08deab2582948e4cdbd0c1deb7cd83a3e404645ba91835bced5287cfc",
+    "gitBlob": "e0dc042bce69ca41af4b47dd256c9f9cc6d741fa"
+  },
+  "portable": {
+    "path": "BitSet.kt",
+    "bytes": 5223,
+    "sha256": "d49ab65618ba2856627bdafa9cd7b3ed9f41afa2ab5bbac1112a32a2f96020df",
+    "gitBlob": "9d3ac3aceeed4414d1c84a3c5a9a1970677ff916"
+  },
+  "licenses": [
+    {
+      "path": "LICENSE.OpenJDK",
+      "bytes": 19274,
+      "sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726",
+      "gitBlob": "8b400c7ab81b7b18baff3f81d597f5e511883134"
+    },
+    {
+      "path": "ASSEMBLY_EXCEPTION.OpenJDK",
+      "bytes": 1522,
+      "sha256": "a44eb7b5caf5534c6ef536b21edb40b4d6babf91bf97d9d45596868618b2c6fb",
+      "gitBlob": "065b8d90239f30b7de3eba350f6446a932d4d131"
+    }
+  ],
+  "selectedApi": [
+    "constructors",
+    "set(Int)",
+    "clear(Int)",
+    "get(Int)",
+    "nextSetBit(Int)",
+    "or(BitSet)",
+    "andNot(BitSet)",
+    "size()",
+    "equals(Any?)",
+    "hashCode()"
+  ],
+  "hostAdaptations": [
+    "LongArray storage and copy operations",
+    "countTrailingZeroBits intrinsic",
+    "enabled word invariants",
+    "common negative-size exception with original message"
+  ],
+  "excludedApi": [
+    "range operations",
+    "stream/serialization",
+    "buffer conversions",
+    "clone and sizeIsSticky (selected utility copy preserves capacity without clone)"
+  ],
+  "consumers": [
+    {
+      "path": "compiler/ir/backend.common/src/org/jetbrains/kotlin/backend/common/lower/optimizations/LivenessAnalysis.kt",
+      "originalSha256": "b35b32a4d55e40568f5be76527ddd55d3df9edea2ddc4efe3f5f976c33c79a38",
+      "bytes": 13161,
+      "sha256": "906ce6d158851928aed04fb6c6777910b8d4506d26f6c303b8435667dbcce2fc",
+      "rule": "import java.util.* -> import org.jetbrains.kotlin.portable.bits.BitSet",
+      "algorithmBodyChanged": false
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/BitSetUtil.kt",
+      "originalSha256": "f41c98f67bab2352a86673ad20d38007b7abfdd9a0f803aae6ed10aeac95b3ae",
+      "bytes": 773,
+      "sha256": "587f4b528855da54a3524b969336361ea9a7d1815b95988be09bedcccd7d30c4",
+      "rule": "import java.util.BitSet -> import org.jetbrains.kotlin.portable.bits.BitSet",
+      "algorithmBodyChanged": false
+    }
+  ],
+  "sources": [
+    {
+      "path": "compiler/ir/backend.common/src/org/jetbrains/kotlin/backend/common/lower/optimizations/LivenessAnalysis.kt",
+      "bytes": 13161,
+      "sha256": "906ce6d158851928aed04fb6c6777910b8d4506d26f6c303b8435667dbcce2fc",
+      "gitBlob": "34ba730e3e0dc3f53398430c1806185c47a7008f"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/BitSetUtil.kt",
+      "bytes": 773,
+      "sha256": "587f4b528855da54a3524b969336361ea9a7d1815b95988be09bedcccd7d30c4",
+      "gitBlob": "1f5e4ce977aa5a7ede6f9da7752759c2ca07cacb"
+    },
+    {
+      "path": "compiler-port-bit-set/BitSet.kt",
+      "bytes": 5223,
+      "sha256": "d49ab65618ba2856627bdafa9cd7b3ed9f41afa2ab5bbac1112a32a2f96020df",
+      "gitBlob": "9d3ac3aceeed4414d1c84a3c5a9a1970677ff916"
+    }
+  ],
+  "originalSourceUnmodified": true,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}
