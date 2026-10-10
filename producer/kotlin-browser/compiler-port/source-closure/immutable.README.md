@@ -39,3 +39,10 @@ Use private background logs for compilation. The probe writes actual command,
 artifact, bootstrap, observer and browser network evidence to `compatibility.json`.
 Only this dependency is accepted by those checks. Full compiler and offline
 browser source compilation readiness remain false.
+
+The checked-in [actual compatibility receipt](evidence/immutable-compatibility.json)
+preserves the completed build commands, observer, artifact hashes and browser
+network observations, plus the private log/status hashes and exit status. It
+accepts this selected dependency consumer only. Its preparation-tool hash is
+historical: the fresh source-reference fetch helper was added after that run.
+Full compiler and browser source compilation readiness remain false.
