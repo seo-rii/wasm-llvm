@@ -102,6 +102,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           assert(component.sourceSetExclusions.every((entry) => typeof entry.path === 'string' && typeof entry.reason === 'string'));
           return { ...component, sourceSetExclusions: component.sourceSetExclusions.map((entry) => relativePath(entry.path)) };
         }],
+        ['firNavigationReceipt', async ({ sourceRoot, outputRoot }) => {
+          const navigation = await import('./fir-navigation/prepare.mjs');
+          const retainedSources = [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+            .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+          const component = await navigation.prepareFirNavigationSources({ sourceRoot, outputRoot, retainedSources,
+            preparedHost: preparedComponents.get('sourceHostReceipt'),
+            preparedPositioning: preparedComponents.get('positioningReceipt') });
+          await navigation.verifyFirNavigation(component.outputRoot);
+          return component;
+        }],
         ['diagnosticFactoriesReceipt', (await import('./diagnostic-factories/prepare.mjs')).prepareDiagnosticFactories],
         ['sourceClosureReceipt', async ({ outputRoot }) => {
           const sources = await import('./source-closure/prepare.mjs');
@@ -658,6 +668,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
       receipt.k1ContainerFinalReceipt = final.receipt;
+    }
+    if (sourceHost === 'portable') {
+      const navigation = await import('./fir-navigation/prepare.mjs');
+      const final = await navigation.verifyFirNavigationFinalSources({
+        profileRoot: path.join(output, 'components', 'firNavigationReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports],
+      });
+      receipt.firNavigationFinalReceipt = final.receipt;
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
