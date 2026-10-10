@@ -96,6 +96,12 @@ serial cache operations and an ascending annotation snapshot over the verified
 identity and UTF-8 variants. The composer verifies and supersedes those exact
 predecessor files once; their original preparation receipts remain recorded.
 
+The pinned [JavaScript AST port](js-ast/) supplies all selected Java nodes and
+their original Kotlin companions. Its typed property imports bind the existing
+compiler consumers, and shared SmartList and assertion sources are verified and
+selected once. The retained host-list factory differences and unbound external
+reader and integer consumers remain separate limits of the whole compiler.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is

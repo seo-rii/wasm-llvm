@@ -220,6 +220,26 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ['klibReceipt', (await import('./klib/prepare.mjs')).prepareKlibSources],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
+        ['jsAstReceipt', async ({ sourceRoot, outputRoot }) => {
+          const ast = await import('./js-ast/prepare.mjs');
+          const component = await ast.prepareJsAstSources({ sourceRoot, outputRoot });
+          await ast.verifyJsAstPreparation(outputRoot, { sourceRoot });
+          const sharedDependencies = [];
+          for (const dependency of component.receipt.commonDependencies) {
+            const owner = { '../collections/SmartList.kt': 'collectionsReceipt',
+              '../assertions/CompilerAssertions.kt': 'assertionReceipt' }[dependency.path];
+            assert(owner && preparedComponents.has(owner), 'Missing genuine shared AST dependency');
+            const candidates = preparedComponents.get(owner).commonSources;
+            const matches = [...files].filter(([, pin]) => pin.compile && candidates.includes(pin.filename)
+              && pin.bytes === dependency.bytes && pin.sha256 === dependency.sha256);
+            assert.equal(matches.length, 1, 'AST dependency must bind one existing compiler source');
+            const [sourcePath, pin] = matches[0];
+            verifyFile(await readRegular(pin.filename, pin.bytes), dependency);
+            sharedDependencies.push({ path: sourcePath, component: owner, bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          receipt.jsAstSharedDependencies = sharedDependencies;
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
@@ -263,6 +283,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         if (component.propertyAliasImport) {
           assert(/^[a-zA-Z0-9_.]+\.\*$/.test(component.propertyAliasImport), 'Invalid compiler property alias import');
           propertyAliasImports.add(component.propertyAliasImport);
+        }
+        if (component.propertyAliasImports) {
+          assert(Array.isArray(component.propertyAliasImports)
+            && new Set(component.propertyAliasImports).size === component.propertyAliasImports.length);
+          for (const name of component.propertyAliasImports) {
+            assert(typeof name === 'string' && /^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+$/.test(name),
+              'Invalid explicit compiler property alias import');
+            propertyAliasImports.add(name);
+          }
         }
         for (const flag of component.requiredFlags ?? []) {
           assert(typeof flag === 'string' && flag.startsWith('-'), 'Invalid compiler host flag');
