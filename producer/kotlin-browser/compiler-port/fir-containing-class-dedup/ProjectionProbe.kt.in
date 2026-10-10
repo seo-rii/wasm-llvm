@@ -1,0 +1,31 @@
+/* Exact selected function algorithm with explicit payload receiver types. Apache-2.0. */
+package org.jetbrains.kotlin.portable.containingclass.probe
+
+data class ClassPayload(val name: String)
+data class SymbolPayload(val fir: ClassPayload)
+data class LookupPayload(val sessionSymbols: Map<Int, SymbolPayload?>) {
+    fun toRegularClassSymbol(session: Int): SymbolPayload? = sessionSymbols[session]
+}
+data class ModulePayload(val session: Int)
+data class DeclarationPayload(val moduleData: ModulePayload, val lookup: LookupPayload?) {
+    fun containingClassLookupTag(): LookupPayload? = lookup
+}
+
+/*SELECTED_DECLARATION*/
+
+fun observation(): String = buildString {
+    repeat(1024) { index ->
+        val first = ClassPayload("first$index")
+        val second = ClassPayload("second$index")
+        val tag = LookupPayload(mapOf(1 to SymbolPayload(first), 2 to SymbolPayload(second), 3 to null))
+        for (session in 1..4) {
+            val receiver = DeclarationPayload(ModulePayload(session), tag)
+            val value = receiver.getContainingClass()
+            check(value === when (session) { 1 -> first; 2 -> second; else -> null })
+            append("session:").append(index).append(':').append(session).append('\t').append(value?.name).append('\n')
+        }
+        val noTag = DeclarationPayload(ModulePayload(1), null)
+        check(noTag.getContainingClass() == null)
+        append("no-tag:").append(index).append('\t').append(true).append('\n')
+    }
+}
