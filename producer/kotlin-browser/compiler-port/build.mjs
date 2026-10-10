@@ -70,6 +70,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   const propertyAliasImports = new Set();
   let assertionImport;
   let sourceMapRuntimeComposition;
+  let sourceMapPathComposition;
   let serializerCommentTypeNamesComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
@@ -94,6 +95,22 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   try {
     if (sourceHost === 'portable') {
       const preparedComponents = new Map();
+      async function bindSourceMapDependencies(component) {
+        const bindings = [];
+        for (const dependency of component.sharedDependencies) {
+          const sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+          const owner = preparedComponents.get(dependency.component);
+          assert(pin?.compile && owner?.commonSources.includes(pin.filename), 'Missing genuine source-map dependency');
+          assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+          const bytes = await readRegular(pin.filename, pin.bytes);
+          assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+          if (dependency.gitBlob) verifyFile(bytes, dependency);
+          assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+          bindings.push({ path: sourcePath, component: dependency.component,
+            filename: pin.filename, bytes: pin.bytes, sha256: pin.sha256 });
+        }
+        return bindings;
+      }
       const preparations = [
         ['sourceHostReceipt', (await import('./host/prepare.mjs')).prepareHostSources],
         ['positioningReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -608,6 +625,22 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             sourceContentComponent: options.sourceContentComponent };
           return component;
         }],
+        ['sourceMapBuilderKernelReceipt', async ({ sourceRoot, outputRoot }) => {
+          const builder = await import('./source-map-builder-kernel/prepare.mjs');
+          const component = await builder.prepareSourceMapBuilder({ sourceRoot, outputRoot });
+          await builder.verifySourceMapBuilder({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          receipt.sourceMapBuilderKernelSharedDependencies = await bindSourceMapDependencies(component);
+          return component;
+        }],
+        ['sourceMapPathConsumerReceipt', async ({ sourceRoot, outputRoot }) => {
+          const paths = await import('./source-map-path-consumer/prepare.mjs');
+          const component = await paths.prepareSourceMapPaths({ sourceRoot, outputRoot });
+          await paths.verifySourceMapPaths({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          receipt.sourceMapPathSharedDependencies = await bindSourceMapDependencies(component);
+          sourceMapPathComposition = { sourceRoot, outputRoot, receiptPath: component.receiptPath,
+            kernelComponent: preparedComponents.get('sourceMapBuilderKernelReceipt') };
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
@@ -1035,6 +1068,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           'compiler-port-entry/BrowserCompilerPipeline.kt'].includes(pin.path)),
       });
       receipt.sourceMapRuntimeFinalReceipt = final.receipt;
+    }
+    if (sourceHost === 'portable') {
+      const paths = await import('./source-map-path-consumer/final.mjs');
+      const retainedSources = [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+        .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+      const final = await paths.verifySourceMapPathFinalSources({ ...sourceMapPathComposition, retainedSources,
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+        allowedRequestHostSources: retainedSources.filter(pin => ['compiler-port-entry/BrowserCompiler.kt',
+          'compiler-port-entry/BrowserCompilerPipeline.kt'].includes(pin.path)),
+      });
+      receipt.sourceMapPathFinalReceipt = final.receipt;
     }
     if (sourceHost === 'portable') {
       const names = await import('./serializer-comment-type-names/prepare.mjs');

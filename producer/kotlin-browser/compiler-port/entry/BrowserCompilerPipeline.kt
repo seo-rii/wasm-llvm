@@ -27,9 +27,11 @@ import org.jetbrains.kotlin.js.config.dce
 import org.jetbrains.kotlin.js.portable.CompilerByteSink
 import org.jetbrains.kotlin.js.portable.installRequestSourceContent
 import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapPrintOutput
+import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapPathHost
 import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapRuntime
 import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapTextStore
 import org.jetbrains.kotlin.js.portable.sourcemap.installRequestSourceMapRuntime
+import org.jetbrains.kotlin.js.portable.sourcemap.installRequestSourceMapPathHost
 import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
 import org.jetbrains.kotlin.platform.wasm.WasmTarget
 import org.jetbrains.kotlin.portable.linker.MemoryKlibInput
@@ -53,6 +55,7 @@ class BrowserCompilerPipeline(
     private val approvedInputs: List<MemoryKlibInput>,
     private val diagnostics: BaseDiagnosticsCollector,
     private val compilerStdout: CompilerByteSink,
+    private val sourceMapPathHost: SourceMapPathHost,
 ) {
     fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary {
         require(configuration.get(WasmConfigurationKeys.WASM_TARGET) == WasmTarget.WASI)
@@ -65,6 +68,7 @@ class BrowserCompilerPipeline(
             KtInMemoryTextSourceFile(it.second, it.third, it.first.getContentsAsText())
         }
         installRequestSourceContent(configuration, requestSources)
+        installRequestSourceMapPathHost(configuration, sourceMapPathHost)
         installRequestSourceMapRuntime(configuration, SourceMapRuntime(
             SourceMapTextStore(requestSources.associate { (it.path ?: it.name) to it.getContentsAsText().compilerUtf8Bytes() }),
             SourceMapPrintOutput(compilerStdout),
