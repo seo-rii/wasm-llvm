@@ -9,12 +9,14 @@ const repository = path.resolve(here, '../../../..');
 export const defaultParserProfileSourceCache = path.join(repository, 'out/kotlin-parser-profile-sources');
 
 /** Fetch only the exact pure-helper source absent from the selected compiler source closure. */
-export async function prepareParserProfileSourceCache({ cache = defaultParserProfileSourceCache, fetcher = fetch } = {}) {
-    cache = path.resolve(cache);
-    assert(cache.startsWith(path.join(repository, 'out') + path.sep), 'Parser profile source cache must stay under repository out/');
-    await assertNoSymlink(cache);
+export async function prepareParserProfileSourceCache({ cache, fetcher = fetch } = {}) {
     const recipeBytes = await readRegular(path.join(here, 'parser-profile.recipe.json'));
     const recipe = JSON.parse(recipeBytes);
+    // A changed host contract gives the whole recipe a new identity. Preserve
+    // the previous immutable cache receipt instead of overwriting its evidence.
+    cache = path.resolve(cache ?? path.join(defaultParserProfileSourceCache, sha256(recipeBytes)));
+    assert(cache.startsWith(path.join(repository, 'out') + path.sep), 'Parser profile source cache must stay under repository out/');
+    await assertNoSymlink(cache);
     const acquired = [];
     for (const pin of recipe.supplementalSources) {
         const filename = path.join(cache, relativePath(pin.path));
