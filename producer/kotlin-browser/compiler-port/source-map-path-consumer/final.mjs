@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {mkdir,mkdtemp,writeFile} from 'node:fs/promises';import path from 'node:path';import {fileURLToPath} from 'node:url';
+import {assertNoSymlink,readRegular,sha256,verifyFile,writeJson} from '../../scripts/source.mjs';
+import {prepareSourceMapPaths,readSourceMapPathLock} from './prepare.mjs';
+import {prepareSourceMapBuilder} from '../source-map-builder-kernel/prepare.mjs';
+const REPO=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../../..');
+const entryPaths=['compiler-port-entry/BrowserCompiler.kt','compiler-port-entry/BrowserCompilerPipeline.kt'];
+const withoutImports=text=>text.replace(/^import [^\r\n]+\r?\n/gm,'').split('\n').filter(line=>line.trim()).join('\n');
+const imports=text=>[...text.matchAll(/^import ([^\r\n]+)\r?\n/gm)].map(match=>match[1]);
+// Conservative constructor/factory and explicit host protocol closure, not resolved IR types.
+const relevant=/\b(?:SourceMap3Builder|SourceMapBuilderConsumer|SourceFilePathResolver|RelativePathCalculator|SourceMapsInfo)\s*(?:\(|\.\s*(?:create|from)\s*\()|\b(?:SourceMapPathHost|SourceMapPosixPath|requestSourceMapPathHost|installRequestSourceMapPathHost)\b/;
+export async function verifySourceMapPathFinalSources({sourceRoot,outputRoot,receiptPath,kernelComponent,retainedSources,allowedAddedImports=[],allowedRequestHostSources=[]}){
+    outputRoot=path.resolve(outputRoot);await assertNoSymlink(outputRoot);
+    assert.equal(path.resolve(receiptPath),path.join(outputRoot,'source-map-path-consumer-inputs.json'));
+    const preparation=JSON.parse(await readRegular(receiptPath));
+    const i=await readSourceMapPathLock(path.join(REPO,'out/kotlin-compiler-port/sources'));
+    const snapshotBytes=await readRegular(path.join(outputRoot,'caller-snapshot.json'));assert.equal(snapshotBytes.length,preparation.callerSnapshot.bytes);assert.equal(sha256(snapshotBytes),preparation.callerSnapshot.sha256);
+    const snapshot=JSON.parse(snapshotBytes);assert.deepEqual(snapshot.map(item=>item.path),i.lock.sources.map(pin=>pin.path));
+    const canonicalInputs=await mkdtemp(path.join(outputRoot,'canonical-inputs-'));
+    for(const [index,pin]of i.lock.sources.entries()){assert.equal(snapshot[index].filename,path.join(path.resolve(sourceRoot),pin.path));const bytes=verifyFile(Buffer.from(snapshot[index].source,'base64'),pin);const filename=path.join(canonicalInputs,pin.path);await mkdir(path.dirname(filename),{recursive:true,mode:0o700});await writeFile(filename,bytes,{flag:'wx',mode:0o600});}
+    const ast=JSON.parse(await readRegular(path.join(path.dirname(fileURLToPath(import.meta.url)),'../js-ast/sources.lock.json')));
+    const config=JSON.parse(await readRegular(path.join(path.dirname(fileURLToPath(import.meta.url)),'../config/sources.lock.json')));
+    for(const pin of [...ast.sources.filter(pin=>pin.language==='kotlin'),...config.sources]){const filename=path.join(canonicalInputs,pin.path);await mkdir(path.dirname(filename),{recursive:true,mode:0o700});await writeFile(filename,verifyFile(await readRegular(path.join(REPO,'out/kotlin-compiler-port/sources',pin.path)),pin),{flag:'wx',mode:0o600});}
+    const canonicalPaths=await prepareSourceMapPaths({sourceRoot:canonicalInputs,outputRoot:await mkdtemp(path.join(outputRoot,'canonical-paths-'))});
+    assert.deepEqual({...canonicalPaths.receipt,callerSnapshot:preparation.callerSnapshot},preparation);
+    const canonicalSnapshot=JSON.parse(await readRegular(path.join(path.dirname(canonicalPaths.receiptPath),'caller-snapshot.json')));assert.deepEqual(canonicalSnapshot.map(item=>({path:item.path,source:item.source})),snapshot.map(item=>({path:item.path,source:item.source})));
+    const kernelReceiptPath=path.resolve(kernelComponent.receiptPath),kernelRoot=path.dirname(kernelReceiptPath);
+    assert.equal(kernelReceiptPath,kernelComponent.receiptPath);assert.equal(kernelReceiptPath,path.join(kernelRoot,'source-map-builder-kernel-inputs.json'));
+    const canonicalKernel=await prepareSourceMapBuilder({sourceRoot:path.join(REPO,'out/kotlin-compiler-port/sources'),outputRoot:await mkdtemp(path.join(outputRoot,'canonical-kernel-'))});
+    const kernel=canonicalKernel.receipt;assert.deepEqual(JSON.parse(await readRegular(kernelReceiptPath)),kernel);
+    assert.deepEqual(kernelComponent.receipt,kernel);assert.deepEqual(kernelComponent.commonSources,kernel.files.map(pin=>path.join(kernelRoot,pin.path)));
+    const expected=new Map();
+    for(const [root,canonicalRoot,receipt]of [[outputRoot,path.dirname(canonicalPaths.receiptPath),preparation],[kernelRoot,path.dirname(canonicalKernel.receiptPath),kernel]])for(const pin of receipt.files){assert(!expected.has(pin.path));const filename=path.join(root,pin.path);const bytes=verifyFile(await readRegular(path.join(canonicalRoot,pin.path)),pin);expected.set(pin.path,{filename,bytes});}
+    assert(Array.isArray(allowedAddedImports)&&new Set(allowedAddedImports).size===allowedAddedImports.length);
+    for(const name of allowedAddedImports)assert(typeof name==='string'&&/^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*(?:\.\*)?(?: as [A-Za-z_]\w*)?$/.test(name));
+    assert(Array.isArray(allowedRequestHostSources)&&allowedRequestHostSources.length<=2);
+    for(const pin of allowedRequestHostSources){assert(entryPaths.includes(pin.path)&&!expected.has(pin.path));assert(path.resolve(pin.filename).startsWith(path.join(REPO,'out')+path.sep));const bytes=await readRegular(pin.filename);assert.equal(bytes.length,pin.bytes);assert.equal(sha256(bytes),pin.sha256);expected.set(pin.path,{filename:path.resolve(pin.filename),bytes});}
+    assert(Array.isArray(retainedSources)&&retainedSources.length>0&&retainedSources.length<=20000);
+    const seen=new Set(),inspected=[],bindings=[];let inspectedBytes=0;
+    for(const item of retainedSources){if(item.compile===false)continue;assert(/^[A-Za-z0-9_./-]+\.kt$/.test(item.path)&&!item.path.split('/').some(part=>part==='..'||part==='.'));assert(!seen.has(item.path));seen.add(item.path);const filename=path.resolve(item.filename);assert(filename.startsWith(path.join(REPO,'out')+path.sep));const bytes=await readRegular(filename);inspectedBytes+=bytes.length;assert(inspectedBytes<=256*1024*1024);if(item.bytes!==undefined)assert.equal(bytes.length,item.bytes);if(item.sha256!==undefined)assert.equal(sha256(bytes),item.sha256);inspected.push({path:item.path,filename,bytes:bytes.length,sha256:sha256(bytes)});const canonical=expected.get(item.path);if(!canonical){assert(!relevant.test(withoutImports(bytes.toString())),'Unexpected selected source-map path constructor/host consumer: '+item.path);continue;}assert.equal(filename,canonical.filename,'Final source-map path filename changed: '+item.path);assert.equal(withoutImports(bytes.toString()),withoutImports(canonical.bytes.toString()),'Final source-map path body changed: '+item.path);const prior=imports(canonical.bytes.toString()),after=imports(bytes.toString());assert.equal(new Set(after).size,after.length);for(const name of prior)assert(after.includes(name));const addedImports=after.filter(name=>!prior.includes(name));for(const name of addedImports)assert(allowedAddedImports.includes(name),'Unknown source-map path assembly import: '+name);bindings.push({path:item.path,filename,bytes:bytes.length,sha256:sha256(bytes),canonicalBytes:canonical.bytes.length,canonicalSha256:sha256(canonical.bytes),addedImports});}
+    assert.deepEqual(bindings.map(pin=>pin.path).sort(),[...expected.keys()].sort(),'Missing canonical source-map path/kernel output or caller');
+    const receipt={schemaVersion:1,kind:'genuine-source-map-path-consumer-final-selection',preparationReceiptSha256:sha256(await readRegular(receiptPath)),kernelReceiptSha256:sha256(await readRegular(kernelReceiptPath)),inspectedKotlinFiles:inspected.length,inspectedBytes,inspected,bindings,allowedAddedImports,allowedRequestHostSources,bodyComparison:'Only import statements and assembly blank lines excluded; all canonical imports retained and unknown added imports rejected.',limitation:'Exact canonical seven path/caller outputs and three kernel outputs plus conservative constructor/factory and explicit host member lexical closure; no resolved IR call graph claim.',entryHostInstalled:false,wholeCallerExecuted:false,generalNativeFileConfiguration:false,fullCompilerBuilt:false,languageReadiness:false};const finalRoot=path.join(outputRoot,'final');await assertNoSymlink(finalRoot);await mkdir(finalRoot,{recursive:true,mode:0o700});const finalReceiptPath=path.join(finalRoot,'source-map-path-consumer-final.json');await writeJson(finalReceiptPath,receipt);return {receipt,receiptPath:finalReceiptPath};
+}
