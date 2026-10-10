@@ -348,6 +348,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       // source porting. Object wildcard imports require explicit members. This
       // changes only compiler-host import spelling; it never touches user text.
       const staticOwners = new Map([
+        ['org.jetbrains.kotlin.name.Name', ['special', 'identifier']],
         ['org.jetbrains.kotlin.resolve.DescriptorUtils', ['getContainingClass', 'isCompanionObject', 'getFqName']],
         ['org.jetbrains.kotlin.builtins.KotlinBuiltIns', ['isAny']],
         ['org.jetbrains.kotlin.types.TypeUtils', ['makeStarProjection', 'CANNOT_INFER_FUNCTION_PARAM_TYPE']],
