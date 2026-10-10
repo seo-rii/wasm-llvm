@@ -1,0 +1,900 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-source-map-json-ecma-original-common-four-host-profile",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "63c6c64e783f930c5385fdd8791cacebf3d593bb3359f0c8dcd2330f8cf08a42",
+  "checkToolSha256": "acd028476face550f08dc3c5f5ffd2bc6c40d5be7102cb38ba5991a39bad1ece",
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-source-map-json-ecma-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "63c6c64e783f930c5385fdd8791cacebf3d593bb3359f0c8dcd2330f8cf08a42",
+    "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+    "jsTree": {
+      "path": "js",
+      "gitTree": "ae7a784be3d55e1496894733ed3ca235321d47c0",
+      "entries": 6312,
+      "recomputed": true
+    },
+    "preparationToolSha256": "bf9b5d8ec560ae414eb70c2f27897adce7a58fbf1db7f35fda9e06410f05caad",
+    "treeMembership": {
+      "root": "ae7a784be3d55e1496894733ed3ca235321d47c0",
+      "branches": 14,
+      "paths": 5
+    },
+    "originalInputs": [
+      {
+        "path": "js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+        "gitBlob": "4a52a76e5cac5851ce977b89d1aecf2ebead187f",
+        "bytes": 11417,
+        "sha256": "db340d087b468046fe94e60e6d8f985af72344bf993d53d341ed38b4cee83dfd",
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "js/js.parser"
+      },
+      {
+        "path": "js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+        "gitBlob": "5008ab789a2fc0e08dc2444065969aa7818a21e0",
+        "bytes": 112454,
+        "sha256": "448c273ae95a5f520bde0c5ac33c6fe6fd261fafc7b5c9197a7023ed692da9d8",
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "js/js.parser"
+      }
+    ],
+    "sharedDependencies": [
+      {
+        "component": "jsAstReceipt",
+        "path": "compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt",
+        "bytes": 18360,
+        "sha256": "97bb0348e9abe06966c785aae1414a7b98899e88c620e4337eeb0e0ed075479b",
+        "gitBlob": "338205e905d78a648b6d81b4558d69e8dfd7c7d8"
+      }
+    ],
+    "files": [
+      {
+        "path": "compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+        "originalPath": "js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+        "bytes": 11493,
+        "sha256": "1b80cd61cf6d768ae6858ab414fc4f4d2eb4b536630c21d62004523891626d7c",
+        "gitBlob": "71974fe50b058e93132a807848e5e2dcf898110e",
+        "changes": [
+          {
+            "before": "import java.io.*",
+            "after": "import org.jetbrains.kotlin.js.util.javaDoubleToString",
+            "count": 1
+          },
+          {
+            "before": "writer: Writer",
+            "after": "writer: Appendable",
+            "count": 7
+          },
+          {
+            "before": "StringWriter()",
+            "after": "StringBuilder()",
+            "count": 1
+          },
+          {
+            "before": "writer.append(value.toString())",
+            "after": "writer.append(javaDoubleToString(value))",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "path": "compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+        "originalPath": "js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+        "bytes": 112482,
+        "sha256": "5fc635d8ead5dd1108b61ed76f9a67d98e880430cfbf4ae2e6f1d16761a30b5a",
+        "gitBlob": "f6747671f594f1a0724856ed6d3ad7fc095c9cce",
+        "changes": [
+          {
+            "before": "import kotlin.contracts.contract",
+            "after": "import kotlin.contracts.contract\nimport kotlin.jvm.JvmInline",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "hostBinding": "Complete genuine JSON Writer-to-Appendable/StringWriter-to-StringBuilder and pinned Java Double text; complete genuine ECMA algorithm with explicit genuine JvmInline annotation import.",
+    "methodsRemoved": false,
+    "originalSourceUnmodified": true,
+    "differentialValidated": false,
+    "originalIndexSectionsSupported": false,
+    "parserRuntimeBuilt": false,
+    "sourceMapBuilderBuilt": false,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "originalTests": {
+    "pins": [
+      {
+        "path": "js/js.parser/test/org/jetbrains/kotlin/sourcemaps/JsSourcemapScopesDecoderErrorsTest.kt",
+        "gitBlob": "29f05e5a238bb549a703877a94d177c3c2b202f0",
+        "bytes": 12281,
+        "sha256": "139d8b5f5e77dae07998b2df3c8c7fd8d4611807309bf3f1db145579e1727e4e"
+      },
+      {
+        "path": "js/js.parser/test/org/jetbrains/kotlin/sourcemaps/JsSourcemapScopesDecoderSuccessTest.kt",
+        "gitBlob": "52787e260670cc2a0a9f614136839eeb1e5f7c14",
+        "bytes": 85172,
+        "sha256": "c13d739ea7e07cb0d3908bd7089be200c8b9860b657243ce7653406a3fdda62f"
+      },
+      {
+        "path": "js/js.parser/test/org/jetbrains/kotlin/sourcemaps/testUtils.kt",
+        "gitBlob": "e38857c51c869d22a70daac6b1d7eeb10eb2baf3",
+        "bytes": 3725,
+        "sha256": "5515ed2dd73790176055a9384f7851e5042ca9d43f78aae77c911f455a7b58c8"
+      }
+    ],
+    "inputs": [
+      {
+        "path": "original-tests/js/js.parser/test/org/jetbrains/kotlin/sourcemaps/JsSourcemapScopesDecoderErrorsTest.kt",
+        "origin": "pinned-primary-upstream-fetch",
+        "bytes": 12281,
+        "sha256": "139d8b5f5e77dae07998b2df3c8c7fd8d4611807309bf3f1db145579e1727e4e",
+        "gitBlob": "29f05e5a238bb549a703877a94d177c3c2b202f0"
+      },
+      {
+        "path": "original-tests/js/js.parser/test/org/jetbrains/kotlin/sourcemaps/JsSourcemapScopesDecoderSuccessTest.kt",
+        "origin": "pinned-primary-upstream-fetch",
+        "bytes": 85172,
+        "sha256": "c13d739ea7e07cb0d3908bd7089be200c8b9860b657243ce7653406a3fdda62f",
+        "gitBlob": "52787e260670cc2a0a9f614136839eeb1e5f7c14"
+      },
+      {
+        "path": "original-tests/js/js.parser/test/org/jetbrains/kotlin/sourcemaps/testUtils.kt",
+        "origin": "pinned-primary-upstream-fetch",
+        "bytes": 3725,
+        "sha256": "5515ed2dd73790176055a9384f7851e5042ca9d43f78aae77c911f455a7b58c8",
+        "gitBlob": "e38857c51c869d22a70daac6b1d7eeb10eb2baf3"
+      }
+    ],
+    "classes": [
+      {
+        "class": "JsSourcemapScopesDecoderErrorsTest",
+        "methods": [
+          "originalScopeEndWithoutStartTest",
+          "unterminatedOriginalScopeTest",
+          "truncatedVlqTest",
+          "generatedRangeEndWithoutStartTest",
+          "unterminatedGeneratedRangeTest",
+          "freeOriginalScopeVariablesTest",
+          "freeGeneratedRangeBindingsTest",
+          "freeSubRangeBindingTest",
+          "freeGeneratedRangeCallSiteTest",
+          "scopeVariableIndexOutOfBoundsTest",
+          "scopeNameIndexOutOfBoundsTest",
+          "scopeKindIndexOutOfBoundsTest",
+          "generatedRangeDefinitionOutOfBoundsTest",
+          "hiddenWithoutStackFrameFlagTest",
+          "nullOriginalScopeTest",
+          "unknownItemTagIsIgnoredTest",
+          "unknownItemTagOfUpstreamVendorExtensionIsIgnoredTest",
+          "vendorExtensionItemIsIgnoredTest",
+          "vendorExtensionItemInsideOriginalScopeTreeIsIgnoredTest",
+          "bindingIndexOutOfBoundsIsNullTest",
+          "multipleSubRangeBindingsTest",
+          "negativeVariableIndexIsClampedTest"
+        ]
+      },
+      {
+        "class": "JsSourcemapScopesDecoderSuccessTest",
+        "methods": [
+          "defaultParameterTest",
+          "variableShadowingTest",
+          "removedScopesTest",
+          "doubleInliningTest",
+          "inlineAcrossModulesTest",
+          "inlineAcrossModules2Test",
+          "inlineIntoFunctionTest",
+          "inlinedDefaultParameterTest",
+          "liveRangeTest",
+          "moveToCallSiteTest",
+          "outlineAndInlineTest",
+          "outlineAndInline2Test",
+          "outlineAsyncAwaitTest",
+          "outlineForLoopTest",
+          "sameSourceRangeDefinitionSequenceTest",
+          "crossSourceRangeDefinitionTest"
+        ]
+      }
+    ],
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0,
+    "assertionLibrary": {
+      "version": "2.5.0-dev-10106",
+      "lockSha256": "c14b83f27c3ffb53f7eda2dad0f9372fe52a81e94c68f1e91a378088ee8bf37c",
+      "artifacts": [
+        {
+          "file": "kotlin-test-2.5.0-dev-10106.jar",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-test/2.5.0-dev-10106/kotlin-test-2.5.0-dev-10106.jar",
+          "bytes": 182269,
+          "sha256": "df3880d9f78111176a38d82bcb3c12c57ac03b15bf31f306d144ed55940f4b22",
+          "publishedChecksum": {
+            "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-test/2.5.0-dev-10106/kotlin-test-2.5.0-dev-10106.jar.sha256",
+            "algorithm": "sha256",
+            "value": "df3880d9f78111176a38d82bcb3c12c57ac03b15bf31f306d144ed55940f4b22"
+          },
+          "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.jar"
+        },
+        {
+          "file": "kotlin-test-wasm-js-2.5.0-dev-10106.klib",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-test-wasm-js/2.5.0-dev-10106/kotlin-test-wasm-js-2.5.0-dev-10106.klib",
+          "bytes": 122038,
+          "sha256": "29c216c791e0e83f9ddbca313a66acccc85e56c5566bcf6ff3833838f2ef93ca",
+          "publishedChecksum": {
+            "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-test-wasm-js/2.5.0-dev-10106/kotlin-test-wasm-js-2.5.0-dev-10106.klib.sha256",
+            "algorithm": "sha256",
+            "value": "29c216c791e0e83f9ddbca313a66acccc85e56c5566bcf6ff3833838f2ef93ca"
+          },
+          "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-wasm-js-2.5.0-dev-10106.klib"
+        },
+        {
+          "file": "kotlin-test-2.5.0-dev-10106.module",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-test/2.5.0-dev-10106/kotlin-test-2.5.0-dev-10106.module",
+          "bytes": 21158,
+          "sha256": "cc7eadc6a688838c2bfece02b168e7b556ed9180f20afdd76a54a0ab1749ed9e",
+          "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.module"
+        },
+        {
+          "file": "kotlin-test-wasm-js-2.5.0-dev-10106.module",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-test-wasm-js/2.5.0-dev-10106/kotlin-test-wasm-js-2.5.0-dev-10106.module",
+          "bytes": 3640,
+          "sha256": "769a22de59fb5c8954cf897551674e7eba3bf1e4e8ecf6154740f54cc68dea86",
+          "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-wasm-js-2.5.0-dev-10106.module"
+        }
+      ],
+      "jvm": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.jar",
+      "wasm": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-wasm-js-2.5.0-dev-10106.klib"
+    },
+    "methodsUnchanged": true,
+    "onlyJUnitDiscoveryRemoved": true
+  },
+  "numericDependency": {
+    "path": "compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt",
+    "bytes": 18360,
+    "sha256": "97bb0348e9abe06966c785aae1414a7b98899e88c620e4337eeb0e0ed075479b",
+    "sourceVerified": true
+  },
+  "commands": [
+    {
+      "phase": "genuine-json-ecma-original-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json-reference/sources/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json-reference/sources/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderErrorsTest.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderSuccessTest.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/testUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/OriginalTestsRunner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "genuine-json-ecma-common-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/js-ast/portable/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderErrorsTest.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderSuccessTest.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/testUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/OriginalTestsRunner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.sourcemapsprobe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.sourcemapsprobe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "genuine-json-ecma-common-wasm-klib",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-wasm-js-2.5.0-dev-10106.klib",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/js-ast/portable/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/Probe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderErrorsTest.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderSuccessTest.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/testUtils.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/OriginalTestsRunner.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/klib",
+        "-ir-output-name",
+        "source-map-json",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/js-ast/portable/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderErrorsTest.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/JsSourcemapScopesDecoderSuccessTest.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/testUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/OriginalTestsRunner.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "genuine-json-ecma-common-wasm-module",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-source-map-audit/test-libraries/kotlin-test-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/klib/source-map-json.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/wasm",
+        "-ir-output-name",
+        "js-ast",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "genuine-json-ecma-node-wasm-observe",
+      "command": [
+        "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);console.log(m.astProbeJson());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ/wasm/js-ast.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "outputs": [
+    {
+      "path": "JsSourcemapScopesDecoderErrorsTest.kt",
+      "bytes": 12027,
+      "sha256": "5f8ace1e17ba8b26643f63c532b9af718adfdd63c04f7422d626bb944d185e8e"
+    },
+    {
+      "path": "JsSourcemapScopesDecoderSuccessTest.kt",
+      "bytes": 84978,
+      "sha256": "aaac55535eb99514d4e2580aa9cb06493b41a5f7074834296113695fb64ee497"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 83,
+      "sha256": "bced9b222be0806b7faa54ce629c1e34707706fd3db5650e257cf4cd7813e8a2"
+    },
+    {
+      "path": "OriginalTestsRunner.kt",
+      "bytes": 5707,
+      "sha256": "fbb07a01d77c2041359dabc9a5f63b3436211aa0989143defaecfbf23a8bd84f"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 8107,
+      "sha256": "94455e974f7466e907e9e7b52399b911020ba6f12f61907311f806d649987a6d"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 154,
+      "sha256": "35d54078bf078ac3fc5a1dd1c467b2551d23fe5737db37e63e2c762f052fdd99"
+    },
+    {
+      "path": "common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/ECMA426BasedSourceMapParser.kt",
+      "bytes": 112482,
+      "sha256": "5fc635d8ead5dd1108b61ed76f9a67d98e880430cfbf4ae2e6f1d16761a30b5a"
+    },
+    {
+      "path": "common/compiler-port-source-map-json/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/JSON.kt",
+      "bytes": 11493,
+      "sha256": "1b80cd61cf6d768ae6858ab414fc4f4d2eb4b536630c21d62004523891626d7c"
+    },
+    {
+      "path": "common/source-map-json-inputs.json",
+      "bytes": 4030,
+      "sha256": "8507acda48b63ace06cb110feb8cb0bf63883b6932033b5f9f2aa454776478b6"
+    },
+    {
+      "path": "klib/source-map-json.klib",
+      "bytes": 265070,
+      "sha256": "957edb8206dcf51d8e3c2b4b35902a074819a00bd649a45ee71f1324511bcdc2"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 2507203,
+      "sha256": "ab4811fd0ce6afbda67d9b6f00d62334e37044ce94ecd549a860a4a45ae578ca"
+    },
+    {
+      "path": "original-tests/js/js.parser/test/org/jetbrains/kotlin/sourcemaps/JsSourcemapScopesDecoderErrorsTest.kt",
+      "bytes": 12281,
+      "sha256": "139d8b5f5e77dae07998b2df3c8c7fd8d4611807309bf3f1db145579e1727e4e"
+    },
+    {
+      "path": "original-tests/js/js.parser/test/org/jetbrains/kotlin/sourcemaps/JsSourcemapScopesDecoderSuccessTest.kt",
+      "bytes": 85172,
+      "sha256": "c13d739ea7e07cb0d3908bd7089be200c8b9860b657243ce7653406a3fdda62f"
+    },
+    {
+      "path": "original-tests/js/js.parser/test/org/jetbrains/kotlin/sourcemaps/testUtils.kt",
+      "bytes": 3725,
+      "sha256": "5515ed2dd73790176055a9384f7851e5042ca9d43f78aae77c911f455a7b58c8"
+    },
+    {
+      "path": "original.jar",
+      "bytes": 193400,
+      "sha256": "81d631b2f4418d5b2bfe815e224ff1ef3ebe2cf94940c135e76674c0825a03a6"
+    },
+    {
+      "path": "portable-chromium.json",
+      "bytes": 2168367,
+      "sha256": "25f7f3c5ea5983bb4bb66a08a176982acdd9561b28a2a8889df4d3e7b52448ff"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 2507203,
+      "sha256": "ab4811fd0ce6afbda67d9b6f00d62334e37044ce94ecd549a860a4a45ae578ca"
+    },
+    {
+      "path": "portable-wasm.json",
+      "bytes": 2507203,
+      "sha256": "ab4811fd0ce6afbda67d9b6f00d62334e37044ce94ecd549a860a4a45ae578ca"
+    },
+    {
+      "path": "portable.jar",
+      "bytes": 205838,
+      "sha256": "95af16bb71fb31955699cefbe69a9f278679e79689651509c26fc6ef78f1e1a7"
+    },
+    {
+      "path": "testUtils.kt",
+      "bytes": 3725,
+      "sha256": "5515ed2dd73790176055a9384f7851e5042ca9d43f78aae77c911f455a7b58c8"
+    },
+    {
+      "path": "wasm/js-ast.import-object.mjs",
+      "bytes": 11334,
+      "sha256": "a327d683cb35452affe45cb558f5c42a9c3db852756225306d3bb826fac674be"
+    },
+    {
+      "path": "wasm/js-ast.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/js-ast.mjs",
+      "bytes": 2258,
+      "sha256": "9c4029f9d1a7e33047c33c85d532c7a3db63fd8039e48ef5507c911d2acef7d6"
+    },
+    {
+      "path": "wasm/js-ast.wasm",
+      "bytes": 1661970,
+      "sha256": "23900530e96de0d3e342c3516173afe030c390706a4615e2f67a69306371cd43"
+    }
+  ],
+  "comparison": {
+    "observations": 67730,
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsNodeWasm": true,
+    "originalJvmEqualsOfflineChromium": true,
+    "rawFailuresEqual": true,
+    "skipped": 0,
+    "normalization": false,
+    "recordsSha256": "42ec02f5221cc76db29cb555bf1e1683f590926e1ee75ec28a8efaa9ed75209c"
+  },
+  "rawFailures": {
+    "originalJvm": [
+      "example.9:JsonSyntaxException:JSON syntax error at 1, 3: Invalid character in string literal",
+      "malformed.0:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.1:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.2:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'null' expected here",
+      "malformed.3:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'true' expected here",
+      "malformed.4:JsonSyntaxException:JSON syntax error at 1, 5: Unexpected char, 'false' expected here",
+      "malformed.5:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.6:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.7:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char",
+      "malformed.8:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.9:JsonSyntaxException:JSON syntax error at 1, 7: Unexpected char, '\"' expected here",
+      "malformed.10:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.11:JsonSyntaxException:JSON syntax error at 1, 9: Duplicate property name: x",
+      "malformed.12:JsonSyntaxException:JSON syntax error at 1, 15: Duplicate property name: x",
+      "malformed.13:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, ',' expected here",
+      "malformed.14:JsonSyntaxException:JSON syntax error at 1, 6: End of input expected",
+      "malformed.15:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected end of file",
+      "malformed.16:JsonSyntaxException:JSON syntax error at 1, 3: Invalid escape sequence",
+      "malformed.17:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.18:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.19:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.20:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.21:JsonSyntaxException:JSON syntax error at 1, 3: Number must not start with zero",
+      "malformed.22:JsonSyntaxException:JSON syntax error at 1, 4: Number must not start with zero",
+      "malformed.23:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.24:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.25:JsonSyntaxException:JSON syntax error at 1, 4: Invalid char, decimal digit expected",
+      "malformed.26:JsonSyntaxException:JSON syntax error at 1, 2: Invalid char, decimal digit expected",
+      "malformed.27:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.28:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.29:JsonSyntaxException:JSON syntax error at 3, 1: Unexpected char",
+      "malformed.30:JsonSyntaxException:JSON syntax error at 2, 2: Unexpected char",
+      "malformed.31:JsonSyntaxException:JSON syntax error at 3, 2: Unexpected char",
+      "ecmaMalformed.7:NotImplementedError:An operation is not implemented: The compiler is not supposed to generate sections, if it started, please implement it based on the Section 10.1"
+    ],
+    "commonJvm": [
+      "example.9:JsonSyntaxException:JSON syntax error at 1, 3: Invalid character in string literal",
+      "malformed.0:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.1:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.2:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'null' expected here",
+      "malformed.3:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'true' expected here",
+      "malformed.4:JsonSyntaxException:JSON syntax error at 1, 5: Unexpected char, 'false' expected here",
+      "malformed.5:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.6:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.7:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char",
+      "malformed.8:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.9:JsonSyntaxException:JSON syntax error at 1, 7: Unexpected char, '\"' expected here",
+      "malformed.10:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.11:JsonSyntaxException:JSON syntax error at 1, 9: Duplicate property name: x",
+      "malformed.12:JsonSyntaxException:JSON syntax error at 1, 15: Duplicate property name: x",
+      "malformed.13:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, ',' expected here",
+      "malformed.14:JsonSyntaxException:JSON syntax error at 1, 6: End of input expected",
+      "malformed.15:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected end of file",
+      "malformed.16:JsonSyntaxException:JSON syntax error at 1, 3: Invalid escape sequence",
+      "malformed.17:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.18:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.19:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.20:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.21:JsonSyntaxException:JSON syntax error at 1, 3: Number must not start with zero",
+      "malformed.22:JsonSyntaxException:JSON syntax error at 1, 4: Number must not start with zero",
+      "malformed.23:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.24:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.25:JsonSyntaxException:JSON syntax error at 1, 4: Invalid char, decimal digit expected",
+      "malformed.26:JsonSyntaxException:JSON syntax error at 1, 2: Invalid char, decimal digit expected",
+      "malformed.27:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.28:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.29:JsonSyntaxException:JSON syntax error at 3, 1: Unexpected char",
+      "malformed.30:JsonSyntaxException:JSON syntax error at 2, 2: Unexpected char",
+      "malformed.31:JsonSyntaxException:JSON syntax error at 3, 2: Unexpected char",
+      "ecmaMalformed.7:NotImplementedError:An operation is not implemented: The compiler is not supposed to generate sections, if it started, please implement it based on the Section 10.1"
+    ],
+    "nodeWasm": [
+      "example.9:JsonSyntaxException:JSON syntax error at 1, 3: Invalid character in string literal",
+      "malformed.0:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.1:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.2:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'null' expected here",
+      "malformed.3:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'true' expected here",
+      "malformed.4:JsonSyntaxException:JSON syntax error at 1, 5: Unexpected char, 'false' expected here",
+      "malformed.5:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.6:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.7:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char",
+      "malformed.8:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.9:JsonSyntaxException:JSON syntax error at 1, 7: Unexpected char, '\"' expected here",
+      "malformed.10:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.11:JsonSyntaxException:JSON syntax error at 1, 9: Duplicate property name: x",
+      "malformed.12:JsonSyntaxException:JSON syntax error at 1, 15: Duplicate property name: x",
+      "malformed.13:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, ',' expected here",
+      "malformed.14:JsonSyntaxException:JSON syntax error at 1, 6: End of input expected",
+      "malformed.15:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected end of file",
+      "malformed.16:JsonSyntaxException:JSON syntax error at 1, 3: Invalid escape sequence",
+      "malformed.17:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.18:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.19:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.20:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.21:JsonSyntaxException:JSON syntax error at 1, 3: Number must not start with zero",
+      "malformed.22:JsonSyntaxException:JSON syntax error at 1, 4: Number must not start with zero",
+      "malformed.23:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.24:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.25:JsonSyntaxException:JSON syntax error at 1, 4: Invalid char, decimal digit expected",
+      "malformed.26:JsonSyntaxException:JSON syntax error at 1, 2: Invalid char, decimal digit expected",
+      "malformed.27:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.28:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.29:JsonSyntaxException:JSON syntax error at 3, 1: Unexpected char",
+      "malformed.30:JsonSyntaxException:JSON syntax error at 2, 2: Unexpected char",
+      "malformed.31:JsonSyntaxException:JSON syntax error at 3, 2: Unexpected char",
+      "ecmaMalformed.7:NotImplementedError:An operation is not implemented: The compiler is not supposed to generate sections, if it started, please implement it based on the Section 10.1"
+    ],
+    "offlineChromium": [
+      "example.9:JsonSyntaxException:JSON syntax error at 1, 3: Invalid character in string literal",
+      "malformed.0:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.1:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.2:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'null' expected here",
+      "malformed.3:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, 'true' expected here",
+      "malformed.4:JsonSyntaxException:JSON syntax error at 1, 5: Unexpected char, 'false' expected here",
+      "malformed.5:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.6:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.7:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char",
+      "malformed.8:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char",
+      "malformed.9:JsonSyntaxException:JSON syntax error at 1, 7: Unexpected char, '\"' expected here",
+      "malformed.10:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected char, '\"' expected here",
+      "malformed.11:JsonSyntaxException:JSON syntax error at 1, 9: Duplicate property name: x",
+      "malformed.12:JsonSyntaxException:JSON syntax error at 1, 15: Duplicate property name: x",
+      "malformed.13:JsonSyntaxException:JSON syntax error at 1, 4: Unexpected char, ',' expected here",
+      "malformed.14:JsonSyntaxException:JSON syntax error at 1, 6: End of input expected",
+      "malformed.15:JsonSyntaxException:JSON syntax error at 1, 2: Unexpected end of file",
+      "malformed.16:JsonSyntaxException:JSON syntax error at 1, 3: Invalid escape sequence",
+      "malformed.17:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.18:JsonSyntaxException:JSON syntax error at 1, 6: Invalid escape sequence, hexadecimal char expected",
+      "malformed.19:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.20:JsonSyntaxException:JSON syntax error at 1, 2: Invalid character in string literal",
+      "malformed.21:JsonSyntaxException:JSON syntax error at 1, 3: Number must not start with zero",
+      "malformed.22:JsonSyntaxException:JSON syntax error at 1, 4: Number must not start with zero",
+      "malformed.23:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.24:JsonSyntaxException:JSON syntax error at 1, 3: Invalid char, decimal digit expected",
+      "malformed.25:JsonSyntaxException:JSON syntax error at 1, 4: Invalid char, decimal digit expected",
+      "malformed.26:JsonSyntaxException:JSON syntax error at 1, 2: Invalid char, decimal digit expected",
+      "malformed.27:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.28:JsonSyntaxException:JSON syntax error at 1, 1: Unexpected char",
+      "malformed.29:JsonSyntaxException:JSON syntax error at 3, 1: Unexpected char",
+      "malformed.30:JsonSyntaxException:JSON syntax error at 2, 2: Unexpected char",
+      "malformed.31:JsonSyntaxException:JSON syntax error at 3, 2: Unexpected char",
+      "ecmaMalformed.7:NotImplementedError:An operation is not implemented: The compiler is not supposed to generate sections, if it started, please implement it based on the Section 10.1"
+    ]
+  },
+  "browser": {
+    "engine": "Chromium",
+    "version": "153.0.8010.12",
+    "moduleWorker": true,
+    "offlineAfterInitialization": true,
+    "assetRequests": [
+      "js-ast.mjs",
+      "js-ast.import-object.mjs",
+      "js-ast.js-builtins.mjs",
+      "js-ast.wasm"
+    ],
+    "externalRequests": [],
+    "offlineRequests": [],
+    "pageErrors": [],
+    "recordsSha256": "42ec02f5221cc76db29cb555bf1e1683f590926e1ee75ec28a8efaa9ed75209c"
+  },
+  "originalIndexSectionsSupported": false,
+  "originalIndexSectionsFailurePreserved": true,
+  "originalMethodsRemoved": false,
+  "algorithmLimits": "Original JSON recursion and ECMA parser algorithms retained. Finite deterministic corpus; no deep-recursion/maximum allocation or whole-compiler resource acceptance claim.",
+  "parserRuntimeBuilt": false,
+  "sourceMapBuilderBuilt": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false,
+  "execution": {
+    "pid": 961843,
+    "log": "/home/seorii/logs/kotlin-source-map-json-repro-check-1791641380504819821.log",
+    "status": "/home/seorii/logs/kotlin-source-map-json-repro-check-1791641380504819821.status",
+    "command": [
+      "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+      "producer/kotlin-browser/compiler-port/source-map-json/check.mjs"
+    ],
+    "exitCode": 0,
+    "logSha256": "6f09edcb9d1fa9a230f870060bc197d622fe86baca9bdb696f85feb84ded92c6",
+    "logBytes": 5340,
+    "statusSha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "statusBytes": 1,
+    "outputRoot": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-json/run-MymuMJ"
+  },
+  "unitFiles": [
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 83,
+      "sha256": "bced9b222be0806b7faa54ce629c1e34707706fd3db5650e257cf4cd7813e8a2"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 8107,
+      "sha256": "94455e974f7466e907e9e7b52399b911020ba6f12f61907311f806d649987a6d"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5364,
+      "sha256": "d34a595f4d1e0d60ccfaa0361c303f7459371a70df7de5db49b21d3deab0f2aa"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 154,
+      "sha256": "35d54078bf078ac3fc5a1dd1c467b2551d23fe5737db37e63e2c762f052fdd99"
+    },
+    {
+      "path": "check.mjs",
+      "bytes": 9725,
+      "sha256": "acd028476face550f08dc3c5f5ffd2bc6c40d5be7102cb38ba5991a39bad1ece"
+    },
+    {
+      "path": "integrity.test.mjs",
+      "bytes": 3170,
+      "sha256": "ac10caa8fb2da81f6b936f0cc7b75dbfdbb19ec6e3a28dfc2ec1a2448afb4744"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 6085,
+      "sha256": "bf9b5d8ec560ae414eb70c2f27897adce7a58fbf1db7f35fda9e06410f05caad"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 17301,
+      "sha256": "63c6c64e783f930c5385fdd8791cacebf3d593bb3359f0c8dcd2330f8cf08a42"
+    },
+    {
+      "path": "test-libraries.lock.json",
+      "bytes": 2071,
+      "sha256": "c14b83f27c3ffb53f7eda2dad0f9372fe52a81e94c68f1e91a378088ee8bf37c"
+    },
+    {
+      "path": "tools.mjs",
+      "bytes": 3179,
+      "sha256": "5789f4755aa251961bf742bb1721aa9cca31a9d7e4f928f0416aace5f5ff56dc"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 1821,
+      "sha256": "633fcb1c0a310cca4b18f9730c526a754c9160a33a8207ca8baeb0e127f0f4e0"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 3789,
+      "sha256": "a78dd6956da2315ceb65276c1c7c9a582993b3f82b2a468d14d0bbcaa19397f1"
+    },
+    {
+      "path": "verify-tree.mjs",
+      "bytes": 2695,
+      "sha256": "ebc59223426d2f762b966d12b60d96ca04e9fbeec204ec20253d74ec77c3999f"
+    }
+  ]
+}
