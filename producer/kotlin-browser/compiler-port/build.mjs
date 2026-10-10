@@ -70,6 +70,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   const propertyAliasImports = new Set();
   let assertionImport;
   let sourceMapRuntimeComposition;
+  let serializerCommentTypeNamesComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -619,7 +620,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         }],
         ['serializerOutputReceipt', async ({ outputRoot }) => {
           const serializer = await import('./serializer-output-bindings/prepare.mjs');
-          const options = { sourceRoot, outputRoot,
+          const options = { sourceRoot: prepared.sourceRoot, outputRoot,
             preparedSerializerNullability: preparedComponents.get('serializerNullabilityReceipt'),
             preparedBackendProfile: preparedComponents.get('backendProfileReceipt'),
             preparedJsAst: preparedComponents.get('jsAstReceipt'),
@@ -643,6 +644,20 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           receipt.serializerOutputSharedDependencies = component.sharedDependencies;
           receipt.serializerOutputInputsSha256 = sha256(await readRegular(component.receiptPath));
+          return { ...component, preparationOptions: options };
+        }],
+        ['serializerCommentTypeNamesReceipt', async ({ outputRoot }) => {
+          const names = await import('./serializer-comment-type-names/prepare.mjs');
+          const serializerOutput = preparedComponents.get('serializerOutputReceipt');
+          const options = { sourceRoot: prepared.sourceRoot, outputRoot,
+            preparedSerializerOutput: serializerOutput,
+            serializerOutputOptions: serializerOutput.preparationOptions,
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) };
+          const component = await names.prepareSerializerCommentTypeNames(options);
+          await names.verifySerializerCommentTypeNames(options);
+          receipt.serializerCommentTypeNamesInputsSha256 = sha256(await readRegular(component.receiptPath));
+          serializerCommentTypeNamesComposition = options;
           return component;
         }],
         ['firStorageSourceProfileReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1022,13 +1037,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.sourceMapRuntimeFinalReceipt = final.receipt;
     }
     if (sourceHost === 'portable') {
-      const serializer = await import('./serializer-output-bindings/prepare.mjs');
+      const names = await import('./serializer-comment-type-names/prepare.mjs');
       const outputRoot = path.join(output, 'components', 'serializerOutputReceipt');
       assert.equal(sha256(await readRegular(path.join(outputRoot, 'serializer-output-inputs.json'))), receipt.serializerOutputInputsSha256);
-      receipt.serializerOutputFinalReceipt = await serializer.verifySerializerOutputSelection({ sourceRoot: prepared.sourceRoot, outputRoot,
+      assert.equal(sha256(await readRegular(path.join(serializerCommentTypeNamesComposition.outputRoot,
+        'serializer-comment-type-names-inputs.json'))), receipt.serializerCommentTypeNamesInputsSha256);
+      const final = await names.reconstructSerializerCommentTypeNamePredecessorSelection({ ...serializerCommentTypeNamesComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
       });
+      receipt.serializerCommentTypeNamesFinalReceipt = final;
+      receipt.serializerOutputFinalReceipt = final.predecessorSelection;
     }
     if (sourceHost === 'portable') {
       const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
