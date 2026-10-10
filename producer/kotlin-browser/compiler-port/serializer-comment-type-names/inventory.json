@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "kind": "serializer",
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstSerializer.kt",
+      "input": {
+        "bytes": 31039,
+        "sha256": "70bd35d21ed1d1b6f9fa33f0061dd230a3062ec8ecd55e68427e60c8112c282f",
+        "gitBlob": "af9c163f6e458319dc6b7d8d80a59d73ff898d4f"
+      },
+      "changes": [
+        {
+          "start": 784,
+          "line": 16,
+          "before": "import org.jetbrains.kotlin.js.portable.CompilerByteSink",
+          "after": "import org.jetbrains.kotlin.js.portable.CompilerByteSink\nimport org.jetbrains.kotlin.js.portable.JsCommentTypeNameReporter"
+        },
+        {
+          "start": 957,
+          "line": 20,
+          "before": "fun JsIrProgramFragments.serializeTo(output: CompilerByteSink)",
+          "after": "fun JsIrProgramFragments.serializeTo(output: CompilerByteSink, commentTypeNames: JsCommentTypeNameReporter)"
+        },
+        {
+          "start": 1026,
+          "line": 21,
+          "before": "JsIrAstSerializer().append(this)",
+          "after": "JsIrAstSerializer(commentTypeNames).append(this)"
+        },
+        {
+          "start": 2487,
+          "line": 83,
+          "before": "private class JsIrAstSerializer {",
+          "after": "private class JsIrAstSerializer(private val commentTypeNames: JsCommentTypeNameReporter) {"
+        },
+        {
+          "start": 29478,
+          "line": 775,
+          "before": "${comment.javaClass.name}",
+          "after": "${commentTypeNames.report(comment)}"
+        }
+      ],
+      "output": {
+        "bytes": 31233,
+        "sha256": "5a665a943b2e792587090d7118fe8eb677fdc9993363108916147fda72fc6594",
+        "gitBlob": "ccbe7e06e2e69bbc6fab1fef2c15c7a4f8891ebe"
+      }
+    },
+    {
+      "kind": "carrier",
+      "path": "compiler-port-backend-profile/compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/CacheUpdater.kt",
+      "input": {
+        "bytes": 1070,
+        "sha256": "6b4fe600cabacf50ed1436ac8bc346e77fcabf5bd5b690f45ae1fb240f06cf78",
+        "gitBlob": "bad6c2fa0ccbdbc709101cf4415ea893c0b7c029"
+      },
+      "changes": [
+        {
+          "start": 369,
+          "line": 10,
+          "before": "import org.jetbrains.kotlin.js.portable.CompilerByteSink",
+          "after": "import org.jetbrains.kotlin.js.portable.CompilerByteSink\nimport org.jetbrains.kotlin.js.portable.JsCommentTypeNameReporter"
+        },
+        {
+          "start": 649,
+          "line": 20,
+          "before": "abstract fun serialize(stream: CompilerByteSink)",
+          "after": "abstract fun serialize(stream: CompilerByteSink, commentTypeNames: JsCommentTypeNameReporter)"
+        }
+      ],
+      "output": {
+        "bytes": 1181,
+        "sha256": "290076e08592af5a3e706f0792bcd7d441da5d2b8b37a87451fc7d829437a185",
+        "gitBlob": "54d21e53ee39d3fa9f97b609bc5e1a23d7027e34"
+      }
+    },
+    {
+      "kind": "fragments",
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/JsIrProgramFragment.kt",
+      "input": {
+        "bytes": 13993,
+        "sha256": "da9ddeeaf203bb680dd14f0dfd016b8bd096bb59b6e8c053457030e8f73fb11a",
+        "gitBlob": "78b5ee060b3ed2c1fbb2b24951710e09e0f3e1b2"
+      },
+      "changes": [
+        {
+          "start": 856,
+          "line": 18,
+          "before": "import org.jetbrains.kotlin.js.portable.CompilerByteSink",
+          "after": "import org.jetbrains.kotlin.js.portable.CompilerByteSink\nimport org.jetbrains.kotlin.js.portable.JsCommentTypeNameReporter"
+        },
+        {
+          "start": 1064,
+          "line": 22,
+          "before": "override fun serialize(stream: CompilerByteSink)",
+          "after": "override fun serialize(stream: CompilerByteSink, commentTypeNames: JsCommentTypeNameReporter)"
+        },
+        {
+          "start": 1123,
+          "line": 23,
+          "before": "serializeTo(stream)",
+          "after": "serializeTo(stream, commentTypeNames)"
+        }
+      ],
+      "output": {
+        "bytes": 14122,
+        "sha256": "e5ef35e55ddd3c3954b37c1cb63479fbeecbab39e437b5d5c6d7be352c41cb83",
+        "gitBlob": "d5d511a07d8553a9e9a4481bc328948e984d22cb"
+      }
+    }
+  ]
+}
