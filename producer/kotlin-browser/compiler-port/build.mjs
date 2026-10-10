@@ -324,7 +324,9 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
               && pin.bytes === dependency.bytes && pin.sha256 === dependency.sha256);
             assert.equal(matches.length, 1, 'AST input must bind one genuine shared text source');
             const [sourcePath, pin] = matches[0];
-            verifyFile(await readRegular(pin.filename), dependency);
+            const bytes = await readRegular(pin.filename, dependency.bytes);
+            assert.equal(bytes.length, dependency.bytes);
+            assert.equal(sha256(bytes), dependency.sha256);
             receipt.jsAstInputSharedDependencies.push({ path: sourcePath, component: 'textReceipt',
               bytes: pin.bytes, sha256: pin.sha256 });
           }
