@@ -68,6 +68,9 @@ default message table is selected once, through
 explicit en-US String/Int profile, recorded in the compiler build receipt.
 The [common diagnostic inputs](diagnostic-common/README.md) retain original
 parameter renderers, language-feature messages and their generated flag map.
+The [source-free diagnostic DSL](diagnostic-dsl/README.md) supplies the original
+property delegates used by CLI and backend containers, retaining actual keys,
+factory identity and lazy renderer lookup.
 The compiler host also uses the source-version-pinned official immutable
 collections wasmJs KLIB; its provenance and bytes are verified before linking.
 

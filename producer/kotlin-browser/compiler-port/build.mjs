@@ -119,6 +119,21 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           return component;
         }],
+        ['diagnosticDslReceipt', async ({ outputRoot }) => {
+          const dsl = await import('./diagnostic-dsl/prepare.mjs');
+          const reference = await dsl.prepareDiagnosticDslReferences();
+          const component = await dsl.prepareDiagnosticDsl({ sourceRoot: reference.sourceRoot, outputRoot });
+          await dsl.verifyDiagnosticDsl(path.dirname(component.receiptPath));
+          assert.deepEqual(component.sourceFiles.map(pin => pin.path), component.additionalOriginalPaths);
+          for (const pin of component.sourceFiles) {
+            const sourcePath = relativePath(pin.path);
+            assert(!files.has(sourcePath), 'Supplemental diagnostic DSL conflicts with primary source: ' + sourcePath);
+            const filename = path.join(component.originalSourceRoot, sourcePath);
+            verifyFile(await readRegular(filename, pin.bytes), pin);
+            files.set(sourcePath, { filename, bytes: pin.bytes, sha256: pin.sha256, compile: false });
+          }
+          return component;
+        }],
         ['diagnosticRenderingReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('sourceClosureReceipt'), 'Supplemental web checkers must be prepared first');
           const rendering = await import('./diagnostic-rendering/prepare.mjs');
