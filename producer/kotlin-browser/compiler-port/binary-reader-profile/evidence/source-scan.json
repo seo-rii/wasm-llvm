@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-wasm-emit-only-binary-reader-source-scan",
+  "result": "pass",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "probeToolSha256": "a3f9c7f20dcc613e6adba27990a0cf4a2a3bc02c975c7ce1f6da78136ef7d0ef",
+  "frozenBuildReceipt": {
+    "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/complete-hosts-1791630387399793081/compiler-build-receipt.json",
+    "sha256": "53e00f754b8ff15d65c253fbe144b074568f463cc55d160722add71c7f26c93e",
+    "status": "failed",
+    "compilerExitCode": 1
+  },
+  "frozenArgumentFileSha256": "a69429eba3fc52818abdda3ee2ddb3cbe05471b50b6e7f830dee8fd441f99c01",
+  "selectedKotlinInputs": 3445,
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "official-wasm-emit-only-binary-reader-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "b79a83eb207a29279cabe36be982373f2f2c16a17ff3c8b1957344f8b3df6359",
+    "preparationToolSha256": "b2f996d61923770f377398381ba571dcb4472c8773ac5669721b8c8429187389",
+    "original": {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmBinaryToIR.kt",
+      "gitBlob": "135f132796618db78736819ae66e27a821e5c143",
+      "bytes": 29244,
+      "language": "kotlin",
+      "role": "source",
+      "module": "wasm/wasm.ir",
+      "sha256": "42a463057c5959d9e8cc7485a12509bb30985751ebac2865ce2379aaa25900e0"
+    },
+    "exportedDeclarations": [
+      "WasmBinaryToIR",
+      "MyByteReader",
+      "twoByteOpcodes",
+      "ByteReader"
+    ],
+    "referencePath": "original/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmBinaryToIR.kt",
+    "selectedSourceInventory": {
+      "count": 3445,
+      "sha256": "89dccdb826001bce5610a9d585fff566cfbf36d0dd82ff4f4aca1055e1f22ce5",
+      "snapshot": {
+        "path": "retained-source-snapshot.json.gz",
+        "bytes": 5656957,
+        "sha256": "65bb4843c57acf33d79a0977f75a693e8b4c3d1f4fcc64899467c428302a16fc"
+      }
+    },
+    "exclusionGuard": {
+      "inspectedKotlinInputs": 3445,
+      "inspectedBytes": 19973413,
+      "originalReaderInputs": 1,
+      "incomingReferences": [],
+      "retainedTokensIncludeCommentsAndStrings": true,
+      "rule": "Reject any exported reader identifier in every other actual selected Kotlin input, including imports and aliases",
+      "limitation": "Conservative lexical source-selection guard; not a resolved compiler call graph or complete Gradle variant closure"
+    },
+    "sourceSetExclusions": [
+      "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmBinaryToIR.kt"
+    ],
+    "profile": "Full-rebuild wasmWasi emission; no input Wasm binary or incremental Wasm cache deserialization",
+    "algorithmsReplaced": false,
+    "compilerSourceBuild": "not-run for this profile",
+    "languageReadiness": false
+  },
+  "preparationReceiptSha256": "a44b81b2a9d56dfeac242ad9da6d07d3a12231a66f7b4db0bf48b3112ce882b8",
+  "selectionExecuted": true,
+  "compilerExecutedWithThisProfile": false,
+  "languageReadiness": false,
+  "guards": {
+    "passed": 6,
+    "failures": 0,
+    "skips": 0
+  },
+  "executedSourceScan": {
+    "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-binary-reader-profile-1791631582289810525/source-scan.json",
+    "sha256": "94f2692513ad6d992ff93483094ad302def4d6e517d349e2c7ba1b99fbbf61e6"
+  },
+  "executionLog": {
+    "path": "/home/seorii/logs/wasm-kotlin-binary-reader-1791631582289810525.log",
+    "bytes": 910,
+    "sha256": "ba4316426ab1c91b89213e1ff5cd1e49b22f0d1130d78da5f6665f659560afec",
+    "exitStatus": {
+      "path": "/home/seorii/logs/wasm-kotlin-binary-reader-1791631582289810525.status.json",
+      "sha256": "c37bc723076e3e4dc917c9332844e0310a1cb67175f2cea6cd077d497fc6b23f",
+      "pid": 2278392,
+      "state": "exited",
+      "commands": [
+        [
+          "node",
+          "--test",
+          "producer/kotlin-browser/compiler-port/binary-reader-profile/prepare.test.mjs"
+        ],
+        [
+          "node",
+          "producer/kotlin-browser/compiler-port/binary-reader-profile/probe.mjs",
+          "--source-root",
+          "out/kotlin-compiler-port/sources",
+          "--frozen-build-root",
+          "out/kotlin-compiler-port/builds/complete-hosts-1791630387399793081",
+          "--output",
+          "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-binary-reader-profile-1791631582289810525"
+        ]
+      ],
+      "output": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-binary-reader-profile-1791631582289810525",
+      "startedAt": 1791631582.366962,
+      "childPid": 2284747,
+      "exitCode": 0,
+      "endedAt": 1791631593.413959,
+      "elapsedSeconds": 11.046997547149658
+    }
+  }
+}

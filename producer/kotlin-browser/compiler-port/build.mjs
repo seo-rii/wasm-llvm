@@ -416,6 +416,19 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
       }
     }
+    if (sourceHost === 'portable') {
+      const readerProfile = await import('./binary-reader-profile/prepare.mjs');
+      const component = await readerProfile.prepareBinaryReaderProfile({ sourceRoot: prepared.sourceRoot,
+        outputRoot: path.join(output, 'components', 'binaryReaderProfileReceipt'),
+        retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      await readerProfile.verifyBinaryReaderProfile(path.dirname(component.receiptPath));
+      receipt.binaryReaderProfileReceipt = component.receipt;
+      for (const excluded of component.sourceSetExclusions) {
+        const sourcePath = relativePath(excluded); assert(files.has(sourcePath));
+        files.set(sourcePath, { ...files.get(sourcePath), compile: false });
+      }
+    }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
     receipt.hostLibraries = [{ role: 'compiler-host-stdlib', file: path.basename(bootstrap.wasmJsStdlib),

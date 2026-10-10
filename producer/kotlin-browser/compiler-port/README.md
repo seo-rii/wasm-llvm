@@ -83,6 +83,11 @@ serialized IR-file and KLIB-list fingerprint algorithms. Its disk-only overload
 is split after scanning and recording every selected compiler input, including
 the actual browser entry. An unknown retained reader rejects that selection.
 
+The [binary reader source profile](binary-reader-profile/README.md) preserves
+the original input-Wasm reader as a reference and omits it from the emit-only
+whole-program compiler only after checking every final selected input. A new
+reader dependency or incremental Wasm deserializer rejects this profile.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is
