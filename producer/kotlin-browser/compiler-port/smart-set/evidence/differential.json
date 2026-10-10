@@ -1,0 +1,553 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-smart-set-host-differential",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "a6e87a9fad12db2b6df584801424daff84eaa7c3c579f2d3e6fae1d57c259e09",
+  "preparationReceiptSha256": "6781832e98ecdcebb57f6941b1e87b98a7912a34be4406ebccacdcb55d59538c",
+  "buildToolSha256": "cacb14549f2f72a9165657a6798642502a8391fcf3c83c2d138dcdacf81a6be1",
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "observerSources": [
+    {
+      "path": "SmartSetProbe.kt",
+      "bytes": 9566,
+      "sha256": "7561f0db1542c606d6604c0657405ac84dc1bacad98f9b022ff0db84b87fb296"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 96,
+      "sha256": "ba3ee3b6d84b83fb5d4230a976ce1e09bde3d63967b661743a0a6e6a371094ff"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 141,
+      "sha256": "969d9b2b8a4464b7c289ea7da4cddffd0d99d3c03f2296172e6f28fd377d199a"
+    },
+    {
+      "path": "Reference.java",
+      "bytes": 1334,
+      "sha256": "d91a977b2b6b918acf970c34386e6b6416369c02e3fa26dbd2ddd933d50dc7d9"
+    }
+  ],
+  "original": {
+    "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/SmartSet.kt",
+    "gitBlob": "71f8657dd82cc899ae20f84a3fea2a1e1e80bd5e",
+    "bytes": 3639,
+    "sha256": "48a9f7bf2ee9bc80871f3b986fc9434f3183f5ad01cb3fb5fdb4a0c7995b1783"
+  },
+  "portable": {
+    "path": "SmartSet.kt",
+    "bytes": 3638,
+    "sha256": "0de6762b1da96319880436436d6c1506b7a1158bd0a070165b60471f81100f2b"
+  },
+  "host": {
+    "path": "SmartSetHost.kt",
+    "bytes": 524,
+    "sha256": "089e908a75f7f662fd52eced4e1caf9a71f1f9349378ac2d6aa56de8c0932d8f"
+  },
+  "sourceBody": "unchanged apart from explicit optional JVM annotation import and JVM empty-iterator host binding",
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "compilerSourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "phase": "exact-original-kotlin-jvm-build",
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/original/core/util.runtime/src/org/jetbrains/kotlin/utils/SmartSet.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/SmartSetProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-common-jvm-build",
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSet.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSetHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/SmartSetProbe.kt",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSet.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSetHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/SmartSetProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "exact-original-jvm-observe",
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx512m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.smartset.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-jvm-observe",
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx512m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.smartset.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "reflection-observer-build",
+      "command": "javac",
+      "args": [
+        "-J-Xmx256m",
+        "-proc:none",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/Reference.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-erased-api",
+      "command": "java",
+      "args": [
+        "-Xmx256m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "Reference"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-erased-api",
+      "command": "java",
+      "args": [
+        "-Xmx256m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "Reference"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-wasmjs-klib-build",
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSet.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSetHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/SmartSetProbe.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/klib",
+        "-ir-output-name",
+        "smart-set-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSet.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSetHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/SmartSetProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-wasmjs-binary-build",
+      "command": "java",
+      "args": [
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/klib/smart-set-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/wasm",
+        "-ir-output-name",
+        "smart-set-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-node-wasmjs-observe",
+      "command": "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+      "args": [
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m = await import(process.argv[1]); console.log(m.smartSetProbe());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/wasm/smart-set-probe.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "outputs": [
+    {
+      "path": "jvm/Reference.class",
+      "bytes": 2929,
+      "sha256": "f4f7465f2c1bb0f57ee6de39c963824790e287e7b2b297fe5fd0822bc71d5103"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 17138,
+      "sha256": "a252a7792b356ba7620ff7b2f0b01efebdb5834de3b74870075d1613c5d08723"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 18724,
+      "sha256": "a2c0f8e413480d3129ca0e55c6ae7bb9994c08d2d12cb13753e26dac72a88322"
+    },
+    {
+      "path": "klib/smart-set-probe.klib",
+      "bytes": 30590,
+      "sha256": "d09adb04bb7fbf8148a5a43b20290dd9d82ce0603d9716fb26fbc889c2dd53eb"
+    },
+    {
+      "path": "original-api.txt",
+      "bytes": 527,
+      "sha256": "87b760d7178c06d8c868b9c8a1f385c8ace9d45e1dc8ee1aaaae2cd2ef924218"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 12297,
+      "sha256": "17815528dc3991779c949086e5316654cc7e92f69a10ba933bb0a67e72bc142a"
+    },
+    {
+      "path": "portable-api.txt",
+      "bytes": 527,
+      "sha256": "87b760d7178c06d8c868b9c8a1f385c8ace9d45e1dc8ee1aaaae2cd2ef924218"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 12297,
+      "sha256": "17815528dc3991779c949086e5316654cc7e92f69a10ba933bb0a67e72bc142a"
+    },
+    {
+      "path": "portable-wasmjs.json",
+      "bytes": 12297,
+      "sha256": "17815528dc3991779c949086e5316654cc7e92f69a10ba933bb0a67e72bc142a"
+    },
+    {
+      "path": "wasm/smart-set-probe.import-object.mjs",
+      "bytes": 9490,
+      "sha256": "fdf2a76ae4a9ee49d45ef0d6bac53e1ead70f805f1677b1eac39b6970e7479a0"
+    },
+    {
+      "path": "wasm/smart-set-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/smart-set-probe.mjs",
+      "bytes": 2275,
+      "sha256": "9ff2ec6cc84f429b073b5065196891e8f66d11fd8e9047ac16645be8548c1a5b"
+    },
+    {
+      "path": "wasm/smart-set-probe.wasm",
+      "bytes": 779750,
+      "sha256": "92b963a31eb837bfebf0ec23c376c4acf40952ae41947380ac0758c733e8ac28"
+    }
+  ],
+  "comparison": {
+    "required": 81,
+    "passed": 81,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "cases": [
+      "transition-0",
+      "duplicates-0",
+      "contains-0",
+      "equality-0",
+      "iterator-exhaustion-0",
+      "clear-reuse-0",
+      "transition-1",
+      "duplicates-1",
+      "contains-1",
+      "equality-1",
+      "iterator-exhaustion-1",
+      "clear-reuse-1",
+      "transition-2",
+      "duplicates-2",
+      "contains-2",
+      "equality-2",
+      "iterator-exhaustion-2",
+      "clear-reuse-2",
+      "transition-3",
+      "duplicates-3",
+      "contains-3",
+      "equality-3",
+      "iterator-exhaustion-3",
+      "clear-reuse-3",
+      "transition-4",
+      "duplicates-4",
+      "contains-4",
+      "equality-4",
+      "iterator-exhaustion-4",
+      "clear-reuse-4",
+      "transition-5",
+      "duplicates-5",
+      "contains-5",
+      "equality-5",
+      "iterator-exhaustion-5",
+      "clear-reuse-5",
+      "transition-6",
+      "duplicates-6",
+      "contains-6",
+      "equality-6",
+      "iterator-exhaustion-6",
+      "clear-reuse-6",
+      "transition-7",
+      "duplicates-7",
+      "contains-7",
+      "equality-7",
+      "iterator-exhaustion-7",
+      "clear-reuse-7",
+      "transition-8",
+      "duplicates-8",
+      "contains-8",
+      "equality-8",
+      "iterator-exhaustion-8",
+      "clear-reuse-8",
+      "collision-growth-and-value-equality",
+      "null-growth",
+      "self-membership-and-rendering",
+      "copy-preserves-first-equal-instance",
+      "numeric-boundaries-and-boxed-equality",
+      "iterator-add-0",
+      "iterator-clear-0",
+      "iterator-duplicate-0",
+      "iterator-add-1",
+      "iterator-clear-1",
+      "iterator-duplicate-1",
+      "iterator-add-2",
+      "iterator-clear-2",
+      "iterator-duplicate-2",
+      "iterator-add-3",
+      "iterator-clear-3",
+      "iterator-duplicate-3",
+      "iterator-add-4",
+      "iterator-clear-4",
+      "iterator-duplicate-4",
+      "iterator-add-5",
+      "iterator-clear-5",
+      "iterator-duplicate-5",
+      "iterator-add-6",
+      "iterator-clear-6",
+      "iterator-duplicate-6",
+      "deterministic-2048-add-contains-clear"
+    ],
+    "originalJvmEqualsPortableJvm": true,
+    "originalJvmEqualsPortableWasm": true,
+    "observationSha256": "d4962c3da955e6d574282e6eedaa7ba1c58b8440ad92c9d56c6555a4bdbcc282",
+    "erasedApiSha256": "87b760d7178c06d8c868b9c8a1f385c8ace9d45e1dc8ee1aaaae2cd2ef924218",
+    "mutationOperations": 2048,
+    "seedHex": "01234567"
+  },
+  "outsideContract": {
+    "originalKdoc": "SmartSet does not support remove/removeAll/retainAll/iterator.remove",
+    "observations": 42,
+    "originalJvmEqualsPortableJvm": true,
+    "wasmDifferences": [],
+    "status": "not counted as supported-operation acceptance"
+  },
+  "wasmEngine": {
+    "kind": "Node",
+    "version": "v24.1.0",
+    "flags": [
+      "--experimental-wasm-exnref"
+    ]
+  },
+  "browserComparison": "not-run",
+  "fullCompilerR0": "not-run",
+  "fullCompilerR1": "not-run",
+  "browserCompilerBuilt": false,
+  "languageReadiness": false
+}

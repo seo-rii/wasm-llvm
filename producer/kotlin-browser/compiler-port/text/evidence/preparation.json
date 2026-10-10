@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-wasm-writer-utf8-common-preparation",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "72b14e57aecdcd05cc8d92908ad1d854afa3d4da71522dd814f0c6974e2b9c48",
+  "preparationToolSha256": "b22ac2cb0165b6b4fb258b1ae47843ee898b019794aa6bb60ec653e8da31534e",
+  "generator": {
+    "path": "generate.mjs",
+    "bytes": 1833,
+    "sha256": "7b3c9b8b04ff163ac052d2fa069262a41f99556254e8e526e09413b3e56dd482"
+  },
+  "algorithm": {
+    "path": "libraries/stdlib/wasm/src/kotlin/text/utf8Encoding.kt",
+    "gitBlob": "c20dac6d784fa4880293860f5581ddd2aff20b77",
+    "bytes": 11199,
+    "sha256": "b5efcefdaafc06966dfc9cd902b0c24bbbb79808f1d4136db4a658f689baf01d"
+  },
+  "stdlibReferences": [
+    {
+      "path": "libraries/stdlib/jvm/src/kotlin/text/StringsJVM.kt",
+      "gitBlob": "4a82bd98ff5d37f5e8342161bb479699932b0f04",
+      "bytes": 38544,
+      "sha256": "fe6a3cd23bbda31862be125cad68d4900765fde118123517cb9d22e6fe09b65f"
+    },
+    {
+      "path": "libraries/stdlib/jvm/test/text/StringEncodingTestJvm.kt",
+      "gitBlob": "ebad75d68c7474add38427f11b319eb14f2fbd75",
+      "bytes": 366,
+      "sha256": "0a5765758cae2f6027e55510ff48553f82a951b248ab52fa9d2f38313f008d7f"
+    },
+    {
+      "path": "libraries/stdlib/test/text/StringEncodingTest.kt",
+      "gitBlob": "f0e078575c64afd7922bff4b1e3bb5876b1f5b7f",
+      "bytes": 19186,
+      "sha256": "2736b504e115e867fe2579e4e972447d6b192190bf6b491853daa165b5ad8146"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/CharacterCodingException.kt",
+      "gitBlob": "5db7f9f1b371aa643fa2424af4bcc6858b287128",
+      "bytes": 399,
+      "sha256": "6081b30bfcafc8b05e55c14af762a4f71589bf3d899c412b69c16a4846aa4d84"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/CharacterCodingExceptionWasm.kt",
+      "gitBlob": "d284874190a9927b474fc41deaa95cbb8d4a6184",
+      "bytes": 473,
+      "sha256": "94004d9325a97720f79d5ae37967ca897c11dbf4861319e73f913938e086ad5e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/utf8Encoding.kt",
+      "gitBlob": "c20dac6d784fa4880293860f5581ddd2aff20b77",
+      "bytes": 11199,
+      "sha256": "b5efcefdaafc06966dfc9cd902b0c24bbbb79808f1d4136db4a658f689baf01d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/StringsWasm.kt",
+      "gitBlob": "56590c8c72ea5049d76d8c84137af6dee69ac408",
+      "bytes": 23706,
+      "sha256": "ffa3b2078b14089b5cf80b341e66c209c395199233feb585f3a7bdacfa538ee6"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractList.kt",
+      "gitBlob": "91ef01c7755c07f9cee2e29a4fe6e2a6e51422b1",
+      "bytes": 6440,
+      "sha256": "f81916c3a94808ab1df9d853c1c63ef9fc9f7ca4b7d382509cc6e4b74b953a10"
+    }
+  ],
+  "replacements": [
+    {
+      "from": "package kotlin.text",
+      "to": "package org.jetbrains.kotlin.portable.text"
+    },
+    {
+      "from": "throw CharacterCodingException(\"Malformed sequence starting at ${index - 1}\")",
+      "to": "throw CompilerMalformedUtf8Exception(size + 1, index - 1)"
+    },
+    {
+      "from": "private val REPLACEMENT_BYTE_SEQUENCE: ByteArray = byteArrayOf(0xEF.toByte(), 0xBF.toByte(), 0xBD.toByte())",
+      "to": "private val REPLACEMENT_BYTE_SEQUENCE: ByteArray = byteArrayOf(0x3F)"
+    },
+    {
+      "from": "                    bytes[byteIndex++] = REPLACEMENT_BYTE_SEQUENCE[0]\n                    bytes[byteIndex++] = REPLACEMENT_BYTE_SEQUENCE[1]\n                    bytes[byteIndex++] = REPLACEMENT_BYTE_SEQUENCE[2]",
+      "to": "                    bytes[byteIndex++] = REPLACEMENT_BYTE_SEQUENCE[0]"
+    },
+    {
+      "from": "    } else if (byte1 and 0xF == 0xD) {\n        if (byte2 and 0xE0 != 0x80) {\n            // Surrogate code point\n            return malformed(0, index, throwOnMalformed)\n        }\n    } else if (byte2 and 0xC0 != 0x80) {",
+      "to": "    } else if (byte2 and 0xC0 != 0x80) {"
+    },
+    {
+      "from": "    return (byte1 shl 12) xor (byte2 shl 6) xor byte3 xor -0x1E080",
+      "to": "    val code = (byte1 shl 12) xor (byte2 shl 6) xor byte3 xor -0x1E080\n    // JVM replaces an encoded surrogate as one three-byte malformed sequence.\n    if (code in 0xD800..0xDFFF) return malformed(2, index, throwOnMalformed)\n    return code"
+    }
+  ],
+  "writers": [
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "gitBlob": "3a2782490b7c294b005188dbb57f4c926dbfba84",
+      "bytes": 31066,
+      "sha256": "8d97e3d425298d237dea284d30167486cb6c85d30d2350c7a666dd83e802d18b",
+      "portableBytes": 31142,
+      "portableSha256": "8d1e2b553dbd0a76688710ede6ba9b8f763627aa04c86c3a147a515a85f5fd1f"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToText.kt",
+      "gitBlob": "ae54ebcf0bfc17d3bd2b57230ed22a993c10aaae",
+      "bytes": 25572,
+      "sha256": "c5b33646a9087eee337883bd0e5080025d7998fb520b40c84d46680cad5a77ff",
+      "portableBytes": 25648,
+      "portableSha256": "21a2b7d2e2dc9bcabf0cbafdbce22011b770f5b3df7f60f5c2382d3d7fd72571"
+    }
+  ],
+  "writerImport": "import org.jetbrains.kotlin.portable.text.compilerUtf8Bytes as toByteArray",
+  "files": [
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+      "bytes": 31142,
+      "sha256": "8d1e2b553dbd0a76688710ede6ba9b8f763627aa04c86c3a147a515a85f5fd1f",
+      "originalSha256": "8d97e3d425298d237dea284d30167486cb6c85d30d2350c7a666dd83e802d18b"
+    },
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToText.kt",
+      "bytes": 25648,
+      "sha256": "21a2b7d2e2dc9bcabf0cbafdbce22011b770f5b3df7f60f5c2382d3d7fd72571",
+      "originalSha256": "c5b33646a9087eee337883bd0e5080025d7998fb520b40c84d46680cad5a77ff"
+    },
+    {
+      "path": "CompilerUtf8Algorithm.kt",
+      "bytes": 11019,
+      "sha256": "fb1d614f38ff66ae1d3f40775137c14e7f3d2a3670420e09784831ab4dbbea2b",
+      "originalSha256": "b5efcefdaafc06966dfc9cd902b0c24bbbb79808f1d4136db4a658f689baf01d"
+    },
+    {
+      "path": "CompilerUtf8Api.kt",
+      "bytes": 1643,
+      "sha256": "02e18fe52cc461610b13f2bde85b4d0c35e8792ef9755b3cde9ee03ec7934f31",
+      "originalSha256": null
+    }
+  ],
+  "commonSources": [
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-text-probe-1791457555517/compiler-port-text/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-text-probe-1791457555517/compiler-port-text/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToText.kt",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-text-probe-1791457555517/compiler-port-text/CompilerUtf8Algorithm.kt",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-text-probe-1791457555517/compiler-port-text/CompilerUtf8Api.kt"
+  ],
+  "replacedOriginalPaths": [
+    "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToBinary.kt",
+    "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/convertors/WasmIrToText.kt"
+  ],
+  "writerAlgorithms": "unchanged; only explicit extension imports inserted",
+  "malformedUtf16Encoding": "one ASCII 0x3f per unpaired UTF-16 surrogate",
+  "malformedUtf8Decoding": "JVM replacement grouping or typed strict rejection; no normalization",
+  "decoderCallerIntegration": "WasmBinaryToIR stream/ByteBuffer boundary remains separate; use compilerUtf8String(throwOnInvalidSequence=true)",
+  "originalSourceUnmodified": true,
+  "browserCompilerBuilt": false,
+  "languageReadiness": false
+}

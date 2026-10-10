@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sources": [
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+      "gitBlob": "b80e9d85ac96630643384f28b8c26803bc705943",
+      "bytes": 3724,
+      "sha256": "6937f3076da19c460256128f006fc701306427d3194393378154731ee7f7892d",
+      "patchedSha256": "d72bce4887c4abb1220442fa5a87c107f01c6da4696d9c2cb55ac7c3788c21f0"
+    },
+    {
+      "path": "compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+      "gitBlob": "7ed6f4bddcaded4a484c50c42d774c3a9b5b3fa5",
+      "bytes": 3855,
+      "sha256": "54c9250d7d5d20d37d1b83a71d4cfde4fa647e44ad5a86e43057e01d2f828472",
+      "patchedSha256": "f7584e006617f6437f6dcc1dc1d3d8f7c0a24ba7b044852a7f74672d53b179cc"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/wasmCompiler.kt",
+      "gitBlob": "16fb53475c9d447eb4199c404ee0348be3c315c7",
+      "bytes": 10441,
+      "sha256": "5cd45fff245d9172e72268a0e9dcadd5dc9b5f91c03331d8bcf836f2cfbd6571",
+      "patchedSha256": "849b9883b6b18a017aac2832a9fef4afb3a8221d27c75734672e4c789ad3dd6b"
+    },
+    {
+      "path": "compiler/cli/cli-js/src/org/jetbrains/kotlin/cli/pipeline/web/wasm/KotlinIr2WasmIrCompiler.kt",
+      "gitBlob": "3fa7709fb175495f5b9241a27bf935e0ae8a278c",
+      "bytes": 7719,
+      "sha256": "9b3c0ab44102a66c29bcf91e3269c978d382dd4da5ef87c4bf9df8d68fff86b5"
+    },
+    {
+      "path": "compiler/cli/cli-js/src/org/jetbrains/kotlin/cli/pipeline/web/wasm/WasmOutputGenerationPipelinePhase.kt",
+      "gitBlob": "d1a54901d853899891295b8119d79df4b9dc1d17",
+      "bytes": 23008,
+      "sha256": "3795fbfe8ce570aa487c7af994f7a917a20d6724be821f4e65105598d864ffe8"
+    }
+  ],
+  "patch": {
+    "path": "backend-host.patch",
+    "bytes": 5516,
+    "sha256": "5fb025ea1801a672208b7af6eaccef04f0d7f200858949230ca485e282ac3548",
+    "writerProbePatchSha256": "d481b6c222163deda86765afbf3d9234986358fb28c138fd735f0cb9f984b47a"
+  },
+  "codegen": {
+    "path": "compiler/cli/cli-js/src/org/jetbrains/kotlin/cli/pipeline/web/wasm/KotlinIr2WasmIrCompiler.kt",
+    "start": "internal fun compileWholeProgramModeToWasmIr(",
+    "end": "@OptIn(UnsafeDuringIrConstructionAPI::class)",
+    "sha256": "d86da60ae4840513a4b457f22b0985c6cf032fc8222e01ea94b7f43da065539d"
+  },
+  "linker": {
+    "path": "compiler/cli/cli-js/src/org/jetbrains/kotlin/cli/pipeline/web/wasm/WasmOutputGenerationPipelinePhase.kt",
+    "start": "    private fun linkWasmIr(",
+    "end": "    private fun String.normalizeEmptyLines(",
+    "sha256": "8ebfe35031a8b162ece1f20ce14348e91d315fc301f53dae8e3fcaec6e97d318"
+  }
+}

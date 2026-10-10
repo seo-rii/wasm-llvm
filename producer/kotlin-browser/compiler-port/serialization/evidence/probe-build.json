@@ -1,0 +1,3021 @@
+{
+  "schemaVersion": 1,
+  "kind": "portable-compiler-protobuf-differential-build",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775"
+  },
+  "preparationDirectory": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/prepared",
+  "codecDirectory": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/codec",
+  "sourceCompilationReused": false,
+  "preparationSha256": "5bb9c69ff6f3bdeaf5ad01bc77e524856fc77f8549a32ac14a725dbf56649513",
+  "codecBuildSha256": "1c7bc1f5ab270b6fa3b45bfb5294679100e24fe317b910eff5845ba39dbdd164",
+  "stdlib": {
+    "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/stdlib/kotlin-stdlib-wasm-wasi.klib",
+    "bytes": 4111645,
+    "sha256": "3c97b68581963cf32c18d8b6d93b467f3accc9eae2689c1655e8ed4b31f52d28"
+  },
+  "inputs": [
+    {
+      "path": "Probe.kt",
+      "bytes": 3722,
+      "sha256": "8130781c38866bb56b93a425d08bc0045452a65a7007a2657deb70b1e7d32713"
+    },
+    {
+      "path": "ProbeJvm.kt",
+      "bytes": 1046,
+      "sha256": "e5d900b0602abc3be5a62ba02075ce529f10127a1b2da04f846d5fdcd2e3b132"
+    },
+    {
+      "path": "ProbeWasm.kt",
+      "bytes": 1277,
+      "sha256": "3613e583aeb0d6dcdbb966dc98f1101f92e5e5150d16f69c19bea4086c3d86df"
+    },
+    {
+      "path": "Reference.java",
+      "bytes": 2296,
+      "sha256": "6397543ff5ad399a31a9cd157c09540a3fb2d305967332bde6ff344467953520"
+    },
+    {
+      "path": "fixtures.py",
+      "bytes": 11910,
+      "sha256": "41adfe7e8bbd662ebee9ae678bd7a9b676bd517fc06db9c0c899db8a942a39df"
+    },
+    {
+      "path": "probe-build.mjs",
+      "bytes": 7473,
+      "sha256": "d06ce6974c96eee3a8d640a311376f76c6c1d6007761e3d54061cc91b967eeb8"
+    }
+  ],
+  "commands": [
+    {
+      "command": "python3",
+      "args": [
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/fixtures.py",
+        "--prepared-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/prepared",
+        "--stdlib",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-stdlib-probe/builds/run-2c71e12f/stdlib/kotlin-stdlib-wasm-wasi.klib",
+        "--stdlib-sha256",
+        "3c97b68581963cf32c18d8b6d93b467f3accc9eae2689c1655e8ed4b31f52d28",
+        "--output",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/fixtures"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "javac",
+      "args": [
+        "-J-Xmx512m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/reference",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/core/metadata/src/org/jetbrains/kotlin/metadata/ProtoBuf.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/core/metadata/src/org/jetbrains/kotlin/metadata/builtins/BuiltInsProtoBuf.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/util-klib/src/org/jetbrains/kotlin/library/metadata/KlibMetadataProtoBuf.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFile.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/AccessorIdSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/AccessorIdSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/CommonIdSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/CommonIdSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/CompositeSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/CompositeSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectActualTable.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectActualTableOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectToActual.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectToActualOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FieldAccessCommon.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FieldAccessCommonOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileEntry.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileEntryOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileLocalIdSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileLocalIdSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileWrappedIdSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/FileWrappedIdSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnnotation.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnnotationOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnonymousInit.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnonymousInitOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlock.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockBody.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockBodyOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBranch.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBranchOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBreak.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrBreakOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrCall.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrCallOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrCatch.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrCatchOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrClass.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassReference.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassReferenceOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrComposite.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrCompositeOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrConst.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorCall.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorCallOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrContinue.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrContinueOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclaration.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationBase.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationBaseOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDefinitelyNotNullType.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDefinitelyNotNullTypeOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDelegatingConstructorCall.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDelegatingConstructorCallOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDoWhile.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDoWhileOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicMemberExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicMemberExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicType.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicTypeOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumConstructorCall.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumConstructorCallOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumEntry.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumEntryOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorCallExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorCallExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorType.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorTypeOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrField.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFieldOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFileOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunction.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionBase.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionBaseOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionReference.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionReferenceOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetClass.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetClassOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetEnumValue.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetEnumValueOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetField.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetFieldOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetObject.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetObjectOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetValue.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetValueOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlineClassRepresentation.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlineClassRepresentationOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlinedFunctionBlock.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlinedFunctionBlockOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrInstanceInitializerCall.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrInstanceInitializerCallOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedProperty.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyReference.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyReferenceOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrMissingExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrMissingExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0OrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrProperty.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyReference.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyReferenceOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturn.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnableBlock.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnableBlockOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichFunctionReference.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichFunctionReferenceOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichPropertyReference.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichPropertyReferenceOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetField.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetFieldOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetValue.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetValueOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleType.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeLegacy.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeLegacyOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeNullability.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSpreadElement.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSpreadElementOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatement.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatementOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrStringConcat.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrStringConcatOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBody.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBodyKind.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBodyOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrThrow.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrThrowOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTry.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTryOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrType.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAbbreviation.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAbbreviationOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAlias.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAliasOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOp.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOpOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOperator.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeParameter.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeParameterOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrValueParameter.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrValueParameterOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrVararg.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElement.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElementOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrVariable.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrVariableOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhen.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhenOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhile.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhileOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/KotlinIr.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/LocalSignature.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/LocalSignatureOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/Loop.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/LoopOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/MemberAccessCommonPre_2_4_0.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/MemberAccessCommonPre_2_4_0OrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/NullableIrExpression.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/proto/NullableIrExpressionOrBuilder.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/core/metadata/src/org/jetbrains/kotlin/metadata/SerializationPluginMetadataExtensions.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/Reference.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/codec/codec.jar",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/Probe.kt",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/probe.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/ProbeJvm.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/codec/wasm/compiler-protobuf.klib",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/Probe.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/probe-klib",
+        "-ir-output-name",
+        "codec-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/serialization/ProbeWasm.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/codec/wasm/compiler-protobuf.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/probe-klib/codec-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/browser",
+        "-ir-output-name",
+        "codec-probe"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "referenceClassPath": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/reference:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+  "portableClassPath": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-serialization/probe-8/codec/codec.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+  "browser": {
+    "module": "browser/codec-probe.mjs",
+    "wasm": "browser/codec-probe.wasm"
+  },
+  "outputs": [
+    {
+      "path": "browser/codec-probe.import-object.mjs",
+      "bytes": 9852,
+      "sha256": "709c3bef7cdaa0e7a0c27769b7f25cb6540bb499de5eaaea3fbec4e81c5af292"
+    },
+    {
+      "path": "browser/codec-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "browser/codec-probe.mjs",
+      "bytes": 2286,
+      "sha256": "9cb8c6f18502f6c7fcd8414261574d99cef917b0860d5f5690504fc7ca77a4e1"
+    },
+    {
+      "path": "browser/codec-probe.wasm",
+      "bytes": 4123536,
+      "sha256": "06ade407887d8b8bfdaf10dd1e155b668a6dfef6adba4484bae344db99fe5cce"
+    },
+    {
+      "path": "probe-klib/codec-probe.klib",
+      "bytes": 16276,
+      "sha256": "98e1e834606de7c361fba0e9558319bfebf211120da72e24fe4d9c256dfedbc5"
+    },
+    {
+      "path": "probe.jar",
+      "bytes": 7395,
+      "sha256": "3143075a2939fe13f85ee20430339d570ea123cf9d487887e282e3b9d706bc2a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/AccessorIdSignature.class",
+      "bytes": 10090,
+      "sha256": "30bac257dc1bd7c5eb7f824bead0a079860b68c0966eb76a6ff1fb1b5eb8ceec"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/AccessorIdSignature$1.class",
+      "bytes": 1250,
+      "sha256": "f66cf03931a40bc36a072455257a6a0ed25fb8cdb0792a975014199a36ebe156"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/AccessorIdSignature$Builder.class",
+      "bytes": 7929,
+      "sha256": "87fcc70bf2d3e9e7e64e0be7c44a63b05b17669088550dfc7c44b0115504d97a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/AccessorIdSignatureOrBuilder.class",
+      "bytes": 507,
+      "sha256": "687606fc602774ab6efe4eaf0ab80d9e2c74a18ce9398b854c950e14b21243ee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CommonIdSignature.class",
+      "bytes": 12226,
+      "sha256": "5b5a3090e0f62e434f7011d214970f2bd328a4dad9ab2c636551df1c816f7ddf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CommonIdSignature$1.class",
+      "bytes": 1240,
+      "sha256": "a8daba9f886b886c543c8bcd16f9783b6985c3fda4541c7e968178ebd412b8b6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CommonIdSignature$Builder.class",
+      "bytes": 10342,
+      "sha256": "6316e9c675801cae50b3937b359c05e056354b7c6789e6feb26cb4e8f033f760"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CommonIdSignatureOrBuilder.class",
+      "bytes": 755,
+      "sha256": "9b4abc3130edd9d89d35b4c16a8ae17ea1ed8f7599ce0384faeebb55d47a1042"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CompositeSignature.class",
+      "bytes": 8929,
+      "sha256": "d530873c8bb9224965945d7116a77817ee1499d58fcf46722e359abf47bb18b8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CompositeSignature$1.class",
+      "bytes": 1245,
+      "sha256": "7cf36cdcad79fc46fc532a750666f350c1098e06b0cda8bbab48f7e8d821506b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CompositeSignature$Builder.class",
+      "bytes": 6438,
+      "sha256": "216fa08de502102260738fd9044c567c8ad41756a2d70acb85c2ee66146e3d31"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/CompositeSignatureOrBuilder.class",
+      "bytes": 357,
+      "sha256": "7c2a0cabc6ee75c3d07a5a7e66f764246f2085987950f33c3afdd54aa4f2f683"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectActualTable.class",
+      "bytes": 10119,
+      "sha256": "ddd732f3f1d963feb494e33965e27dd3dc4674705d78ac3d6da58a9960c146be"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectActualTable$1.class",
+      "bytes": 1240,
+      "sha256": "ca8c86c6c16585072f82f7add143d850778a337955d4b83329e871d1c4e6f5ff"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectActualTable$Builder.class",
+      "bytes": 9009,
+      "sha256": "5c043a1e445859e0376d0fe8c85b6b9241b3a109bbad38dbc8da66a7de7446f0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectActualTableOrBuilder.class",
+      "bytes": 563,
+      "sha256": "8d47e0634d73a308050d5c661219bf447fd015c1bea0a5f422f1ff47b27ac589"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectToActual.class",
+      "bytes": 8784,
+      "sha256": "8a6e3704101e3f123feaac6458f1a5f241a9189a3c42307df4a98bcbd7297630"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectToActual$1.class",
+      "bytes": 1225,
+      "sha256": "08c3ff5f7dfa27b6e4bc0a1330558294a42c53667dbeff89c8b96eab78891ad4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectToActual$Builder.class",
+      "bytes": 6327,
+      "sha256": "c0920a216c9822c3203ea9a440eb66649ec69d5c5fbb6b8753f342a7fb74df17"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/ExpectToActualOrBuilder.class",
+      "bytes": 333,
+      "sha256": "606269ff1079e4d10c2d41d48bfe710d88310addff87490c73e19d745a16b973"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FieldAccessCommon.class",
+      "bytes": 10256,
+      "sha256": "7a56f39a73de8c27bb5c4dd57c47af6e8a4b787c31d9e567e7acb5e6260265cb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FieldAccessCommon$1.class",
+      "bytes": 1240,
+      "sha256": "aa0ef1a9e872ac22f4a0c05fc46e3bbf0c3a7e2e2f562a7fea92a88250334b46"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FieldAccessCommon$Builder.class",
+      "bytes": 7996,
+      "sha256": "1b1c707efb8f5305c0516527bc2c28d967f279656ddb3a53a93162e85ebe3e7f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FieldAccessCommonOrBuilder.class",
+      "bytes": 456,
+      "sha256": "def75e0226290b4e879c049560e75c76d14345226d8a0529613cf19514598bd6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileEntry.class",
+      "bytes": 12201,
+      "sha256": "8f7272d36503b6e4024855d0db4a790c314c83005299086819f43aa6e1699430"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileEntry$1.class",
+      "bytes": 1200,
+      "sha256": "5376b9d04b58a74ee88c915a6a1b43a32a05f1a478ebeba1eb1bb2f1fa829506"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileEntry$Builder.class",
+      "bytes": 10565,
+      "sha256": "e5a7d715c177186dbca145c79a3657ba979b4de00afa77c1250cdc134201092d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileEntryOrBuilder.class",
+      "bytes": 794,
+      "sha256": "32db31cf95316516f5927cc849203e2246c82938e330736e00a66f21a90e503a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileLocalIdSignature.class",
+      "bytes": 9048,
+      "sha256": "c5211c15b3a47f527799b02aa4a3e5270b833067f3f41868d66d720e2b8d06d3"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileLocalIdSignature$1.class",
+      "bytes": 1255,
+      "sha256": "c4f137cc3996e2e91f5dc3c411f98978ba9c093f9aa8b0328f4f89b62e03abe5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileLocalIdSignature$Builder.class",
+      "bytes": 6546,
+      "sha256": "19b0da270261b59dc313c62de8d33e1fbd924905d5dcab8b57b6766ab66d3276"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileLocalIdSignatureOrBuilder.class",
+      "bytes": 359,
+      "sha256": "d1ed80f4955956e196bd3b849dcda1e759c06546a7c946def9b4e28eabc35f7d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileSignature.class",
+      "bytes": 7947,
+      "sha256": "ad9dd87db682179cf3bcb46761633e5c838d647e4711c9b2e0d6347985da7476"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileSignature$1.class",
+      "bytes": 1220,
+      "sha256": "d260dd8ecdb4395d21af2e6b3f5915ab35c05460bc77c1745583b5b3b1aa7700"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileSignature$Builder.class",
+      "bytes": 5251,
+      "sha256": "f1c8c91abf53635ef4ff7c6aa78e1ff2e84702099bd66cd4a7ccea40db0a2522"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileSignatureOrBuilder.class",
+      "bytes": 239,
+      "sha256": "decc00149df36c5fb54d4d49e6438e644239020175a688e9930684185b9b3095"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileWrappedIdSignature.class",
+      "bytes": 10034,
+      "sha256": "425046872f7fe66ed544781d7558a5efd0e5a0a72b14c08cd20e2e9e27672a29"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileWrappedIdSignature$1.class",
+      "bytes": 1265,
+      "sha256": "8e062a198cb605b2656d7b516ba0b12b03a26aa9f3d5f2154cbc39ecd3e729ab"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileWrappedIdSignature$Builder.class",
+      "bytes": 7632,
+      "sha256": "0682db723ce697960065a516b4f9d72ad00e882c6456576c4b080c0d6ada6ddb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/FileWrappedIdSignatureOrBuilder.class",
+      "bytes": 423,
+      "sha256": "e5ac9bcd61c95d5880a2ab2eb91c77fafdf8e3380be923c2c31e2cd093e8c268"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignature.class",
+      "bytes": 15297,
+      "sha256": "d0a1cac65f9dffd2c7796fadb96ddcc139c3d69c86052fc53ba1405aff3ce568"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignature$1.class",
+      "bytes": 1210,
+      "sha256": "496c94442bfbc68fd5e72519b860b5ac14e248a0bbe4784ec49ede88df52d540"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignature$2.class",
+      "bytes": 1310,
+      "sha256": "7b6477cb7997c95128f76ed54a122f10fdb91bd074f420f776746f983137d110"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignature$Builder.class",
+      "bytes": 15528,
+      "sha256": "53f4b8134b255983a5d26779fa2214bc5b5ea1367ee96d58b16866884bfac894"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignature$IdSigCase.class",
+      "bytes": 2481,
+      "sha256": "222c746faf29108e6a71241d0dbe0e53f2e3f22a8ad3330571f61be3d3eab3cc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IdSignatureOrBuilder.class",
+      "bytes": 1064,
+      "sha256": "20cad5862e017af7ba3a0406adece7e8f45cd3d19d4f50841b531ce5cb4cfa0f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnnotation.class",
+      "bytes": 14232,
+      "sha256": "123f005111e06a371a6c1f18b39100ea03338a6c8220a107b9af3d8f05420fde"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnnotation$1.class",
+      "bytes": 1215,
+      "sha256": "9236d1fb45e37383d5cd982a9c5c0bb771c2478b19636a87f84781d9a9c82de7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnnotation$Builder.class",
+      "bytes": 13988,
+      "sha256": "1574b8893674ae4632150bb59f182c61aedb3ce09b11944221b39de10676c3bd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnnotationOrBuilder.class",
+      "bytes": 1072,
+      "sha256": "80939493ebd3c5666e6020019e85fc014d744d7dcffbc16d28db6418d2c63ff4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnonymousInit.class",
+      "bytes": 9920,
+      "sha256": "94b043fc776a72ffa0c989c8e8c3f7234ae517612399b4caf61d7296df803376"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnonymousInit$1.class",
+      "bytes": 1230,
+      "sha256": "f3b4c73aa8e946e65d17f02f20fd135c122f3761aa10ab4d910403b4e8dca1cf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnonymousInit$Builder.class",
+      "bytes": 7551,
+      "sha256": "e54ff49121dedb9d257e96b3cb11f8055fc109f4c7fcbfc83cb9ef1863ac8c1d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrAnonymousInitOrBuilder.class",
+      "bytes": 407,
+      "sha256": "cc9b6ffd66354ffe3835478c2174b04f05014783723da402596d37044d0b17fb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlock.class",
+      "bytes": 10310,
+      "sha256": "f0df4c2cf4ee52457ea12061e26f023216008d9f1c52a355a65878c536fb5b78"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlock$1.class",
+      "bytes": 1190,
+      "sha256": "f6c42585c3be0c9d9adee9569a84dbcc0757cf6477c06e067b96e50eb9899dcc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlock$Builder.class",
+      "bytes": 9196,
+      "sha256": "e7e91384a5b1d8e92bf192235b76b603de92800cc23f4f2690cb77e01fef6aa8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockBody.class",
+      "bytes": 9936,
+      "sha256": "7fe810279803f3ea10a68886a783164afd0e7d0d0fbdb32401838b9d21cb3652"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockBody$1.class",
+      "bytes": 1210,
+      "sha256": "8bf0c6416faa7e7d0de98ec5bcad134d53009599b18c1962c6f6bdfeef10fbae"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockBody$Builder.class",
+      "bytes": 8802,
+      "sha256": "49a969b992672c1329c82911a42ea81c8fb09c69a59a68a41410b4df2ef9edd6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockBodyOrBuilder.class",
+      "bytes": 527,
+      "sha256": "bf3e4c207fe25bfbbc894b0c1fb1f853f3554a09057e91fc4f179e7d9b9a483f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBlockOrBuilder.class",
+      "bytes": 573,
+      "sha256": "3835a58fbdaaa014d435dfce40d072bf329755b3bc5170e6eef38bad479b1bf5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBranch.class",
+      "bytes": 9816,
+      "sha256": "cf7cc72833f5c8e9d254f06e24a0b0b7ac19c77885c8a345ce4d461be18bf483"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBranch$1.class",
+      "bytes": 1195,
+      "sha256": "1985d7e90024b67514cb32b55bff7eb5c19c1b5d80f58fb2c12a5fb38116c2c6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBranch$Builder.class",
+      "bytes": 7640,
+      "sha256": "912e98860b448b8156e003201480ee212458c455296a4559ce4af1eef06d105c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBranchOrBuilder.class",
+      "bytes": 396,
+      "sha256": "3402345105712dc19fdab55c6eab0d1937d47d6b0439ef01ef5851de62a091c0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBreak.class",
+      "bytes": 8635,
+      "sha256": "bd9c06057eb45deb8f82c603db93ec4fee0f7ca8f984ae5fa0536ce8275f0715"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBreak$1.class",
+      "bytes": 1190,
+      "sha256": "2b6563509e48384d9b2353bb51b7f1f57739fcc301c9f88dfefdb141682acec3"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBreak$Builder.class",
+      "bytes": 6227,
+      "sha256": "ed2d3b4402747ca7d6c9359e60eddf0cddc62a89e07ff6c180ed98b241307375"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrBreakOrBuilder.class",
+      "bytes": 317,
+      "sha256": "2886a4af8f49cef57acdde1c3c57e7ead390b41581f61178d500e85dc6babde2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCall.class",
+      "bytes": 13606,
+      "sha256": "d8b83ab2c1a145899e8e9afaf28da554522ba22e426fbc136737506cea17f3de"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCall$1.class",
+      "bytes": 1185,
+      "sha256": "d300fbb7602bced29e93be16f1ca83e3adb39d09c51394cfb4146218425b56d9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCall$Builder.class",
+      "bytes": 13216,
+      "sha256": "a510a053bac8ccca6712de990cb6e2f6064522fd0cdf7e3aa8b01469e836897d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCallOrBuilder.class",
+      "bytes": 952,
+      "sha256": "2e6fa4fe969c6ae5b60cbd1680b60726e55d1c9549bb67b89683152438e6e5f1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCatch.class",
+      "bytes": 10401,
+      "sha256": "9f95f2d23f65b3dc46630c2379adb746d626ed7bdfbbce6aa388d44c4ec5de12"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCatch$1.class",
+      "bytes": 1190,
+      "sha256": "f009a155ff6fb43e35e885a96b8ff5ae2cd60f9631b2895bbf544f25ce439def"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCatch$Builder.class",
+      "bytes": 8464,
+      "sha256": "a089e14780624ff502a8b60ab42861a8dc70620dfc1a5503a0c197e7b23c41d7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCatchOrBuilder.class",
+      "bytes": 477,
+      "sha256": "fa303be4c32e4472102d85aaf0db1b998b68454ea3618c726b61f56c2a6da669"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClass.class",
+      "bytes": 17799,
+      "sha256": "a5372f881ff21299e945931e0806f30b96b5b7b9b51fb65af960e86698fe8b0f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClass$1.class",
+      "bytes": 1190,
+      "sha256": "6ee8d9a0cb989a18355b19d567f6087483c542b088ac4de877510402fa8be766"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClass$Builder.class",
+      "bytes": 19704,
+      "sha256": "780b9972920768656ad8b8f3919b25dcd6e4ed051d3ea75e73de109ec7fcde8f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassOrBuilder.class",
+      "bytes": 1541,
+      "sha256": "cedf0252b4893618a160a2121d051b7021d135b28cb14c47c281e9a588a0d8fc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassReference.class",
+      "bytes": 8985,
+      "sha256": "28ca747039884b620e8ba46e96c7d7c3f7edec2afeb964cd157adb452b9e2084"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassReference$1.class",
+      "bytes": 1235,
+      "sha256": "a580dd4e35eebcbf31c122153490ed13b2fed79d63720998a389c919f508e24f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassReference$Builder.class",
+      "bytes": 6510,
+      "sha256": "91a24e521aaef917785c0017ce2c0e9ee0b7d1cb4353c5601e509dc596673ac8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrClassReferenceOrBuilder.class",
+      "bytes": 359,
+      "sha256": "22a37b8b1449616047eb65c4e951b6281de7b1c34b1740dce8558067a2a6f6b4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrComposite.class",
+      "bytes": 10390,
+      "sha256": "f2bed1f32562e234e53ce1782c530fbc41a828f0a1e7063032f497bda600622b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrComposite$1.class",
+      "bytes": 1210,
+      "sha256": "ca08cd185bf50df767b9b1bf8a03777b34d147ae77077fbbef96d8ba7769eb13"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrComposite$Builder.class",
+      "bytes": 9272,
+      "sha256": "a938eff363c105c84320f6b3946919e442569ed2c1758de7122414a3011161c2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrCompositeOrBuilder.class",
+      "bytes": 581,
+      "sha256": "43169567978d4daf247cb9b2b1be1ccf94b9220266117a1fde018ed7486d76d7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConst.class",
+      "bytes": 12372,
+      "sha256": "28e61686052ccfe0612dd8891d422efd57e0838a12abefc759a3027671c82ef7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConst$1.class",
+      "bytes": 1190,
+      "sha256": "560f933c16cb4918f85873c4e9b1e6eb921ac3addbc04786e4ac0b8bd54ebbe7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConst$2.class",
+      "bytes": 1387,
+      "sha256": "4cbc15a754343cde256d58b38e3d8693ba04172178170211659537a91e16e1fa"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConst$Builder.class",
+      "bytes": 10531,
+      "sha256": "ba7891f2f106fccc63127af292761ad70dc764330ef330983e45229f36fca21e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConst$ValueCase.class",
+      "bytes": 2616,
+      "sha256": "1d4de985301c859704913a9daa658f1b5c54cf6f8c76a8c52544099e9041e2a9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstOrBuilder.class",
+      "bytes": 637,
+      "sha256": "e8c25d2fe2280018196eb81a640ed40010c05a96cdbcf34f47a1d7cc304e6920"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructor.class",
+      "bytes": 9429,
+      "sha256": "4ab79a55280067db73153326f3e6afa0c61a24a9c177c3758089d30457f230cb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructor$1.class",
+      "bytes": 1220,
+      "sha256": "c3b6d8dfbf7b1563aa1411e18295a24ffb41ec7fbbf1b027c0392fc0b2cd8a49"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructor$Builder.class",
+      "bytes": 6964,
+      "sha256": "f2ca7303e06e86f64d2360db91ddca06fa7bae9c28bd8f977b26d9dd1ebded93"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorCall.class",
+      "bytes": 13969,
+      "sha256": "cbc6d7dd7efb9fa1933fc43fdbcf85e16ebbfe51e55e63a336a44760bed7ff75"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorCall$1.class",
+      "bytes": 1240,
+      "sha256": "560ea5bb7661e6f097a16710908cc68f73494b137d45c6728372f90a1bfb64fd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorCall$Builder.class",
+      "bytes": 13623,
+      "sha256": "b6559cbd91eff198084c73ad32dffbc25725b815caca4301e2edd10e3020130d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorCallOrBuilder.class",
+      "bytes": 1022,
+      "sha256": "b5a0fd469f44dfd10e5dd7ac13b0ccec41797e535fe5d442e1dc110180822bf8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrConstructorOrBuilder.class",
+      "bytes": 358,
+      "sha256": "585407bdcbe05f3f0fcc48c1fc1c12e19f6c146b3286785ad83fd0de81e0a385"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrContinue.class",
+      "bytes": 8695,
+      "sha256": "52332da1eced6b44d6660525576cebd37f8cf026229fc5b662bced9bf6f17e99"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrContinue$1.class",
+      "bytes": 1205,
+      "sha256": "4522259a0267073011912bb29eedc4624ebe61e7726984f2f4d936d2c8c58854"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrContinue$Builder.class",
+      "bytes": 6266,
+      "sha256": "f2264c1cf8c3fbde9c23a5eebc1f2b646063d7527ebdc1a0d1801a528732da1a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrContinueOrBuilder.class",
+      "bytes": 323,
+      "sha256": "ebe575f7aba279a0c28aeb763e9c47194dc96e4919957b84fb821f0da419b664"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclaration.class",
+      "bytes": 21006,
+      "sha256": "25a9580233e768659f67a63c98bc798da8efd381e703667e059a4b12de28b8e6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclaration$1.class",
+      "bytes": 1220,
+      "sha256": "c65f2b089b00510b833e99cd52938ff1b980bda415cb318c2ff3de2dbb31fbb4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclaration$2.class",
+      "bytes": 1653,
+      "sha256": "2ed9f7f14959efc95bc441da64192d43f55e80dace5de630f487726cd4dafb8b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclaration$Builder.class",
+      "bytes": 23958,
+      "sha256": "124996a7096ce0ae92a6bc6f87fe7190a7e5d6e1f0b045e90ed345e151eb5f5f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclaration$DeclaratorCase.class",
+      "bytes": 2955,
+      "sha256": "3b66eafb2c26d1e5e5440e93cc3af150f47da3ed3667588c0da889d532c8bcbc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationBase.class",
+      "bytes": 12074,
+      "sha256": "f6d4091e6e72da1fca8821258a72048a9b5e5cfcfdc466a00833b72d1c5bc354"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationBase$1.class",
+      "bytes": 1240,
+      "sha256": "5aa23f09eca57c158785c25f9c82f3482024aab7c4d82746dfb02081dda537eb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationBase$Builder.class",
+      "bytes": 11409,
+      "sha256": "7800bdb925529dabbf87c3e0bd800a8cd727ad92e2f2a1a7482199305d0016fb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationBaseOrBuilder.class",
+      "bytes": 804,
+      "sha256": "69c534f4a2fdd68f1513e546b7db17f4a8d4993b4b24be4b9035a8e42da06b6a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDeclarationOrBuilder.class",
+      "bytes": 1784,
+      "sha256": "4eb011afaca91086384290f94a1096dd415e96ea0d8dd8186cd826620f3d6bb4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDefinitelyNotNullType.class",
+      "bytes": 9735,
+      "sha256": "e9bd165d2eff5ae4a1b52d4708764301a00a09e41fc61971f64d84abc587e8c4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDefinitelyNotNullType$1.class",
+      "bytes": 1270,
+      "sha256": "c7542e44997193969dc0ffdae5b872832ada9286228314e5e7e03b56abbea8ef"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDefinitelyNotNullType$Builder.class",
+      "bytes": 7439,
+      "sha256": "037ef44dd467180dbdfdb0860def53d970415f0f18405c3a7d3296b1759d9b46"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDefinitelyNotNullTypeOrBuilder.class",
+      "bytes": 421,
+      "sha256": "f7183d5b6b19ec6bc1a3710112c8c52f5fb29ed7bc3ad7a260fa3f721eb0cf60"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDelegatingConstructorCall.class",
+      "bytes": 13306,
+      "sha256": "17362ee95c1eb52aaecdf0d675e3fb905e73f4e71bc0524e6e8d4b26e20e0722"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDelegatingConstructorCall$1.class",
+      "bytes": 1290,
+      "sha256": "bcdefec56eb5b5afebd4d43e8fb18cad461a9e95c4defaa06015a32bfaa1f6af"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDelegatingConstructorCall$Builder.class",
+      "bytes": 12836,
+      "sha256": "cbd0588ca97c682821611823d96245f2ae693b678dc2cb987d84e637c6bc8bd2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDelegatingConstructorCallOrBuilder.class",
+      "bytes": 908,
+      "sha256": "2f204662e6b765e422153f97714abe6a5b5560d16ae1a330fa2b98b9c911d8ac"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDoWhile.class",
+      "bytes": 9279,
+      "sha256": "b32adf3f0b0520a14fb91fa50db3a4f3b0b44bd16f2f01994cc81d70fa769824"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDoWhile$1.class",
+      "bytes": 1200,
+      "sha256": "dc1ee81b374e8b9a05ef277f058d8ecf5dfb28d731e8815aa5f44e778e49c85a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDoWhile$Builder.class",
+      "bytes": 6828,
+      "sha256": "8e3d33faaf4a91753f7fcd74b2992180d462efd1d3e741f73b9ed24ddc386c25"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDoWhileOrBuilder.class",
+      "bytes": 340,
+      "sha256": "0537bed9abcb81223c5a1d21155eaac22874ff178641756c2aba4e7e7cc88473"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicMemberExpression.class",
+      "bytes": 10131,
+      "sha256": "83ea16acf057daf8bce9314daa0b3f9b3276ae1194940aa5a131cfb001c4a02b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicMemberExpression$1.class",
+      "bytes": 1280,
+      "sha256": "baa1533a3274859e567a277925fb9068d9a65fb3f224e31d30850c90de96162b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicMemberExpression$Builder.class",
+      "bytes": 7715,
+      "sha256": "7b8f82464eb9a67f2b1948ca3da9ce9c9078ededfd36ca718daf3a2115b1a9ef"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicMemberExpressionOrBuilder.class",
+      "bytes": 442,
+      "sha256": "c2f759bf3c7e0d35b44d348d265a3cc92df45f4d9fa8a36c50db68024ae5ffd2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpression.class",
+      "bytes": 12505,
+      "sha256": "977187f175a76c14044830364bf9de541ddd42a1043cfee17fe5615770141c0b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpression$1.class",
+      "bytes": 1290,
+      "sha256": "36f2ba01e64b4fb32dd9be0a1f9c101a4e90695b028f0adcf104c3a0983ba7b9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpression$Builder.class",
+      "bytes": 11230,
+      "sha256": "9ab90523be620fe52ae976b23ae8e2eb926c50a26e71a2897eaf86d55cf347c9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpression$IrDynamicOperator.class",
+      "bytes": 6041,
+      "sha256": "f044d5ff4559fa7356378a282b7c80b43175cd3217473c394fbfb8837049e547"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpression$IrDynamicOperator$1.class",
+      "bytes": 1301,
+      "sha256": "3117ba71fc7b5134129ea2e031427ddc7eb15620d744fdf40d79515ac873c0c5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicOperatorExpressionOrBuilder.class",
+      "bytes": 1082,
+      "sha256": "db291cc4d5783b0be8a3c83ec63281ff3d2bb044fc6315f300eac4a6d0734d86"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicType.class",
+      "bytes": 9990,
+      "sha256": "e0f2785f523280cd5d74a083518b542ae8e51f1a89735768a6472817ad3acf0d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicType$1.class",
+      "bytes": 1220,
+      "sha256": "b7a590cef5daaf4a209e820b690345e1359169b1dfa464f7fd8afc0f18659cb0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicType$Builder.class",
+      "bytes": 8861,
+      "sha256": "08d67803debf694bce5fb1cfd67b9d1ee324939eb74d98c8337179bb73d58b2f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrDynamicTypeOrBuilder.class",
+      "bytes": 536,
+      "sha256": "9720f7955774e9dfb52793861638a06793b82486604acac360242c865ff30cbc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumConstructorCall.class",
+      "bytes": 13186,
+      "sha256": "0301239e7b600438616650c1a88163120a7666b33b1d9faa1306fd02ac7bad35"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumConstructorCall$1.class",
+      "bytes": 1260,
+      "sha256": "a658c5bf7aaa0d5f258cfc885f8fc0c175c28093a9da2033f9f8d2ef9ccf5b8c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumConstructorCall$Builder.class",
+      "bytes": 12692,
+      "sha256": "a3dc3555cdbb5176416e3aa79c113be674fb8c541c5918a4ede305a24fe041f2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumConstructorCallOrBuilder.class",
+      "bytes": 896,
+      "sha256": "2cabf092f5f87bc2368e6dec0d787f3472589aa6879bba25fb89d296d54a7915"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumEntry.class",
+      "bytes": 11267,
+      "sha256": "74aa2efb80de351c0ac611066305e1df06a777382dcb60b1c9fe9f54009175ad"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumEntry$1.class",
+      "bytes": 1210,
+      "sha256": "17831cb0e65e603613705a4386d93660f11774e0316b6356059461b03eb9381b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumEntry$Builder.class",
+      "bytes": 9544,
+      "sha256": "31ad6bf0fdbd03aa8ccb13b7addacff0a3398e1cd5b7bc1c91fa5c411b9a958f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrEnumEntryOrBuilder.class",
+      "bytes": 583,
+      "sha256": "8d05f9b38740809cd08cd92684c64f594669021e34406d104ce9bd534d54bfb9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorCallExpression.class",
+      "bytes": 11669,
+      "sha256": "ccb788af747d88a583da0b88caea6f2d6bdd615a73270f600cabbbe90c43fa2f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorCallExpression$1.class",
+      "bytes": 1260,
+      "sha256": "c062a29aa392b41c1b11d7596ef2d2bb55607f78a8d8694954c987bf05913653"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorCallExpression$Builder.class",
+      "bytes": 10557,
+      "sha256": "f6d3d3842ca804e00e2cc4218574a1d2528aca3ef55df02fcbc5cdc96285f069"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorCallExpressionOrBuilder.class",
+      "bytes": 736,
+      "sha256": "3d07364be843974097cf60f802336ea821b34fa886fb2954a4373f5b4a29cd96"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorExpression.class",
+      "bytes": 8542,
+      "sha256": "559a53bee2a709ee8c2b60738357274ebe3a0e6f08686bc3b922699d6bbe31b2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorExpression$1.class",
+      "bytes": 1240,
+      "sha256": "0b26af1b954c7ed45a787eb2f9a1a4ae9139c6c592fc2749bb4d6d013ad22c4c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorExpression$Builder.class",
+      "bytes": 5958,
+      "sha256": "e5f597a960f3e42d09671fbe00528edb07b21f3e5afdabbd771fd71b120ec1ce"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorExpressionOrBuilder.class",
+      "bytes": 309,
+      "sha256": "77c25a8d80ba2a4d5fc0761e1830bbe76d6104703e8c3668ae3ff9f1d91ec8fc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorType.class",
+      "bytes": 9950,
+      "sha256": "44df447140146d586d3bb69fe59f09c13fa79e277f28cc655b8a3ce5788793b0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorType$1.class",
+      "bytes": 1210,
+      "sha256": "542ead826fb715cabf2111c6e37cf32ad8c26094986a1bb463feb831b06f6883"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorType$Builder.class",
+      "bytes": 8823,
+      "sha256": "1006c71236e0b7249d889f0c780832b60dc03dc34981a283c950922d84052074"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrErrorTypeOrBuilder.class",
+      "bytes": 532,
+      "sha256": "95066a635b3eeefdc9ca0f99174b9dfaf645f61362c5039995ae214fe7d8f95f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpression.class",
+      "bytes": 52407,
+      "sha256": "e84162b5752012c6a468d215823a82620b7bfedcb4f56ae1510ad1cbc236f039"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpression$1.class",
+      "bytes": 1215,
+      "sha256": "a993eaa1a9a8e75dfc8d5785f504fbecf5966536e746359552cd6e6748ae7a71"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpression$2.class",
+      "bytes": 3292,
+      "sha256": "324d0e355b4771feae3a825b6ac0e87857abc23c90862a3a3081f0ef7d1f73c4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpression$Builder.class",
+      "bytes": 69551,
+      "sha256": "783a29248500b4e6f22fad013e450327d2954c7a394f4fe6d3fc52be627b324a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpression$OperationCase.class",
+      "bytes": 5225,
+      "sha256": "56927161989c5fa68f59daed3f5924ed600f278092b8f6b8e2e60d0721516bbb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrExpressionOrBuilder.class",
+      "bytes": 5912,
+      "sha256": "49a35a26a2eef55af13c384c2b33744a23454f685b97a1e30f52ef6a5b30a678"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrField.class",
+      "bytes": 10209,
+      "sha256": "3551b3a30f6617e02645ea46d29c68f6a5de96353c2f9236a75c7538c8063d4e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrField$1.class",
+      "bytes": 1190,
+      "sha256": "588eacbad7d746c3c91ded0b7be320860b3da9ee7b330780158325a332e482fb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrField$Builder.class",
+      "bytes": 7994,
+      "sha256": "0fbc26545269568e3bbf3ee8a33aefba623f862fe0fc6874e987be8b583a9236"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFieldOrBuilder.class",
+      "bytes": 455,
+      "sha256": "408ac22230e8909eae315c37ce96ed6a4f147efc794f738d62bbd33a04aac2a5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFile.class",
+      "bytes": 14767,
+      "sha256": "84ac94621008436519540566f1bca8b2f4b6832d6f9ca2f0a9bc01d627c5cbe4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFile$1.class",
+      "bytes": 1185,
+      "sha256": "e2b292d41700dd4c3005781844d70afaeecdbe3cc15e1bc8185947b7a5a6b0c6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFile$Builder.class",
+      "bytes": 14426,
+      "sha256": "8f2587289b8a98cd38ebb658cf299b9b2de5b8a9d13f7cb0d42b15f7bdf5ef27"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFileOrBuilder.class",
+      "bytes": 1109,
+      "sha256": "b899344320e8db8c9d5de3c04de9e34844498dfdeee859298f42a00f483f5d44"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunction.class",
+      "bytes": 11526,
+      "sha256": "e252c86b1cee8cee05046fece3e8a7638bbcb0d291d69d8205e93f7d60460aca"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunction$1.class",
+      "bytes": 1205,
+      "sha256": "951fd18e3e9d372726ca366a90d328dd291a73f669ac48e42176d682f6e2b9d1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunction$Builder.class",
+      "bytes": 9563,
+      "sha256": "ffa545651833f827ee7bbda495e14510da7c2b1349ac1da4ccb7ad4c48ad92e7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionBase.class",
+      "bytes": 16368,
+      "sha256": "7867b8a64fc2f12d1ef1fbff318dd27eb5e4dc5acec14b869991d3680e4c69c2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionBase$1.class",
+      "bytes": 1225,
+      "sha256": "14d6f753b323afa823a77fe5b0af2bb14f5f91df7e6a97d5b67497977e885eb2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionBase$Builder.class",
+      "bytes": 18291,
+      "sha256": "27a0ac9c5e24fd2bdd8a7728e9f011f160216302129dff50b3fec9f45df8d483"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionBaseOrBuilder.class",
+      "bytes": 1427,
+      "sha256": "223a0776c69276a9acf53aebc3c09df2d5defcb941cec5e0b9fd1f988cca424c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionExpression.class",
+      "bytes": 10012,
+      "sha256": "840cd0be67eb878e57f2eccb8e63b1e21afdedcbac7f0870d38aad13a4a5a5cc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionExpression$1.class",
+      "bytes": 1255,
+      "sha256": "25f575462dc618c52b14736dcb033807a6c97f3730fc188f31bf0d517beea6a1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionExpression$Builder.class",
+      "bytes": 7624,
+      "sha256": "e1998ce0381a307f3e742ff3edd5caf2e85930d8e804a63e1aadeb66db7b9414"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionExpressionOrBuilder.class",
+      "bytes": 430,
+      "sha256": "5ccb838d0858a5174677293e02e69fd55839b5adfdc405f2fd57ec13b08b4dee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionOrBuilder.class",
+      "bytes": 620,
+      "sha256": "6f59c79fee7a345e04895043b9813006b8d7e43ddaf687628d86cbca6354805a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionReference.class",
+      "bytes": 13943,
+      "sha256": "c9b5691f9738ebbecf3dd2536ed99f2be39b33137945e854a4f36d09ba8454e4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionReference$1.class",
+      "bytes": 1250,
+      "sha256": "c01a7bd5dbc61f676a765d1a2c1c894974f1218f9a89d52477843658e4be847f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionReference$Builder.class",
+      "bytes": 13613,
+      "sha256": "4f10c800d0c4c945dfd8a155477f8dc20f761cb4c9341efa4c4cde1650799acd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrFunctionReferenceOrBuilder.class",
+      "bytes": 1012,
+      "sha256": "159fd8b52c903fa9a476c3da3d25255092210bba38a4f0c37ab84e0261d1adfb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetClass.class",
+      "bytes": 9371,
+      "sha256": "fc7c6dfb41f393688d6802ae6dc14fee20b007b09396d6d840ad0673c7aea213"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetClass$1.class",
+      "bytes": 1205,
+      "sha256": "ec6e51d31d36f62e77f38450b229e8037333f58cf605770fc119cd39742be325"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetClass$Builder.class",
+      "bytes": 6930,
+      "sha256": "23c28822bab301c5cc383cf8d101d6562f11855b2a05e25d34275f1199759b66"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetClassOrBuilder.class",
+      "bytes": 358,
+      "sha256": "0aae1d5b1142dd464241b19220d5ba252e9e8d8be2a635d4444ef6d0ca0b2ee9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetEnumValue.class",
+      "bytes": 8468,
+      "sha256": "8b5b302ed9dd91d2f06e373819b2f3ef8ecab4c1db393fc94fedc4a02ba14afa"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetEnumValue$1.class",
+      "bytes": 1225,
+      "sha256": "31986c9aaacb3f9ec94da09b42b85cff7155ba3b971ce1d914b7ec2bbdce158f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetEnumValue$Builder.class",
+      "bytes": 5898,
+      "sha256": "b139fb290e30e03262c4fbba06dc7c2bd6caa3db50dd916d56d153db602c0ef6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetEnumValueOrBuilder.class",
+      "bytes": 293,
+      "sha256": "51d4ef779d7964e141b93a6c417015e59db60a2ce21db2d5439fbf0542911dbd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetField.class",
+      "bytes": 9837,
+      "sha256": "0954b7853810e337e54d595a60c5a22e15fd4a48b039f32d19e2b154b86c9690"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetField$1.class",
+      "bytes": 1205,
+      "sha256": "fd74e60ffabb2f723343a16efc9c0016961db3012ed3eb86829ad41eeaf9e664"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetField$Builder.class",
+      "bytes": 7525,
+      "sha256": "fccab8271686731b3c970d853ad29d0add99c65d81c66c75d3e66ec24708d11a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetFieldOrBuilder.class",
+      "bytes": 423,
+      "sha256": "d2b9edf5ba4522150c8290f89e7e1b56583dae432cec2c266688f6363cdeb064"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetObject.class",
+      "bytes": 8408,
+      "sha256": "e61d7407284a8cbb0684bc8d1d0172d6b3147f78fc239543ee2737d02cf2321e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetObject$1.class",
+      "bytes": 1210,
+      "sha256": "4aa3cbc4eab9760c5bc4cb0aea85bcb804172c61d6f8bd39f27064b5c5eebd00"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetObject$Builder.class",
+      "bytes": 5859,
+      "sha256": "03e7d58d120634412df2d58f6522963e7e76de417d8aa6761f8b9f1a896de003"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetObjectOrBuilder.class",
+      "bytes": 287,
+      "sha256": "4cecdd76ac1e0483c087127a26ad04f78d6bfa1390dc72067f13370aac7731e1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetValue.class",
+      "bytes": 8811,
+      "sha256": "b1b671021b331b2fdf5130f6890ec2b3fd25da93feda92674e85c4c8ffbfbc79"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetValue$1.class",
+      "bytes": 1205,
+      "sha256": "58effe89257f3f9097f9d4a1584c9dfe2574ed14f3d0fdb03b1437f733669b9f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetValue$Builder.class",
+      "bytes": 6383,
+      "sha256": "a6c80fc183fdc29b6e408aca89c1980f03971b46ed5429687d7263e12de98e6b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrGetValueOrBuilder.class",
+      "bytes": 339,
+      "sha256": "8fb327ab792ea7c14d92763f5978c4fffaee071c97227dcb65a87e2664bdba59"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlineClassRepresentation.class",
+      "bytes": 9207,
+      "sha256": "f9baf9a9e195882fe7a80395854a06351e55f388cd9cf113e013c3b49242dc9b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlineClassRepresentation$1.class",
+      "bytes": 1290,
+      "sha256": "9b380c0dae2c4e7192ffc0901e864264309d500325a600c78c97a1c96162acc5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlineClassRepresentation$Builder.class",
+      "bytes": 6675,
+      "sha256": "cd760aea330c75ab9750e0e5482943c00ecca73661b996dc76a417c5d9b30e90"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlineClassRepresentationOrBuilder.class",
+      "bytes": 423,
+      "sha256": "4a03c514cf668f6eec549f284e6ce4363ad97f9e78254d5e571191e87fe50cab"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlinedFunctionBlock.class",
+      "bytes": 12457,
+      "sha256": "3b693bf85e49aacfa7c2e2c28eb4a170206612cb79597e30549f1f15f2b55072"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlinedFunctionBlock$1.class",
+      "bytes": 1265,
+      "sha256": "0ad09772f07712793e935bdfe3348746b8518974463023b1fcde155314e88ae2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlinedFunctionBlock$Builder.class",
+      "bytes": 10999,
+      "sha256": "4e9b795c0ef66e9b4bc5d9b7782d7bebddb441c98c5c0aafc5731603415f5cd2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInlinedFunctionBlockOrBuilder.class",
+      "bytes": 835,
+      "sha256": "8ec94d521d042f24d058c9c2f169d10023d670e17d8fcb468715f15444d7d981"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInstanceInitializerCall.class",
+      "bytes": 8688,
+      "sha256": "7a62d895d1a1de793d0c589d4d3b1c86a996a33edfbedc5887c4d6c32cec153d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInstanceInitializerCall$1.class",
+      "bytes": 1280,
+      "sha256": "18d093be4c95f7487b3d5ffcc425a906ada9033c90efa4c7c7063cd7edb4ff9d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInstanceInitializerCall$Builder.class",
+      "bytes": 6041,
+      "sha256": "92ed1a8db9eefcb057143f5d395f2aac1c2b244cd23e323e1b3eb4a99f9efbdd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrInstanceInitializerCallOrBuilder.class",
+      "bytes": 315,
+      "sha256": "297caefe940353775e21575b24be98efa370348414e9e6d2afd8604b3cd960bf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedProperty.class",
+      "bytes": 12717,
+      "sha256": "0aa9ea85e333fcf7eedab51f17918de11554a58d965a3d3265f36414c7c0be77"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedProperty$1.class",
+      "bytes": 1275,
+      "sha256": "0b0c599c6832e6a4b6c853d3c7b0573871976987f5f398c4c9f795ef569bf69f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedProperty$Builder.class",
+      "bytes": 11601,
+      "sha256": "7f5fd9faf540f7aa5c86856d10f17f0512eb534063fb90c1e56b503d48742b20"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyOrBuilder.class",
+      "bytes": 703,
+      "sha256": "b2e837e1c4e1c75ade7f3313cbb46b83bed44351780161afd90f09500e64af34"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyReference.class",
+      "bytes": 10241,
+      "sha256": "ecad68e20dd37a23b8421fda0e43fe60b03b0a9d3418dbf327ce3d34373de83e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyReference$1.class",
+      "bytes": 1320,
+      "sha256": "a69def6c978224d52620f2d51e8f8c4b9866120677982e53a19cd9953d0bb8bf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyReference$Builder.class",
+      "bytes": 8014,
+      "sha256": "4ad41771f27c015db3d1f8279910117bbd363257b0ec7b904608c0f2c186044f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrLocalDelegatedPropertyReferenceOrBuilder.class",
+      "bytes": 509,
+      "sha256": "a022fc636673dcc1d6720aa9f2c6ced6bc1aadf78a6247088fa06fa63270983f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrMissingExpression.class",
+      "bytes": 8067,
+      "sha256": "3cb5c9fbef1fadcf5b1a18e7cbd28378352a95d491b510fbe42d4a4b3fcf6242"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrMissingExpression$1.class",
+      "bytes": 1250,
+      "sha256": "af93d5edc6ec2c660b077c8b08416483347deeb48563e1550222943f682738a2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrMissingExpression$Builder.class",
+      "bytes": 5323,
+      "sha256": "f40ac4f3135df2eeb60ca0cf3592eeffaad1c0d35064236a3e8e0489d6945f78"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrMissingExpressionOrBuilder.class",
+      "bytes": 251,
+      "sha256": "a302362b25ff1ca4f94591241d0ff8b3e020319cf4bdb4f4f600dce648301570"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0.class",
+      "bytes": 48838,
+      "sha256": "2c65541d8d3b5ff471be9d245c83d13309d244bb802e3d19c7ee656f3667754e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0$1.class",
+      "bytes": 1255,
+      "sha256": "d934f96106f0f9e67532ace9f26df609cbde22cce0b5425b02586af330fae2bd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0$2.class",
+      "bytes": 3168,
+      "sha256": "e497329fa988564e8405d4222f627afedb6873461188591eb4cad89c22ea1f3f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0$Builder.class",
+      "bytes": 65044,
+      "sha256": "6681ffead9ddbf0e89cb1c17f97368c22bbdc582ae2c467ff3cc1b80a6774b88"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0$OperationCase.class",
+      "bytes": 5075,
+      "sha256": "82b8a2f95b4d3cb36e47b0033e411c271f248dd46785e03ab0249f1b6942f589"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrOperationPre_2_4_0OrBuilder.class",
+      "bytes": 5313,
+      "sha256": "02679cce504d72a4094160c6d3b7053462efda55287d511c4eb1eeaead25758a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrProperty.class",
+      "bytes": 12410,
+      "sha256": "fd32980ed3ae42eacfaed83e2b5cb8b4d2417c11655487faabc5589c0aa80a7c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrProperty$1.class",
+      "bytes": 1205,
+      "sha256": "4bed1d326b76f3f6c5fa220c68b94e56aaa6a840f52f7e72163713b5f5ee6906"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrProperty$Builder.class",
+      "bytes": 11311,
+      "sha256": "e8bcfbdc8cbfac4a17436674e5bfde728e9435350e2757e54cfdb0a498409aa9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyOrBuilder.class",
+      "bytes": 672,
+      "sha256": "f9cdeae7cf8a7a080110af438d6c19bb2e938c87939e56c0c0f95b6c32c894e4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyReference.class",
+      "bytes": 14525,
+      "sha256": "31061f321e961b54625012d2d8f66aec5cafe2c824784763b4b01d17d798f027"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyReference$1.class",
+      "bytes": 1250,
+      "sha256": "e233287656325a0b1a08665babf7eb41926df81df3f632276d97b86a26aa0adc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyReference$Builder.class",
+      "bytes": 14409,
+      "sha256": "cc1a35238ef1ba5e263b30c115fe91282a1a2805a6c836f21031cd6c31e43d0f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrPropertyReferenceOrBuilder.class",
+      "bytes": 1058,
+      "sha256": "a92a8449aaa4c908741298934a3f84d9158524075fda0e2517cdd650248fa34d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturn.class",
+      "bytes": 9793,
+      "sha256": "bbc9aff5a2267fbbe2b3fcb38439cf7c13329fe051bf0ad3b5d4f04725da9c9c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturn$1.class",
+      "bytes": 1195,
+      "sha256": "c1b7a28e301ed218e4a786019f59e14ac3535c67a7dc577d8c14cd0ab56130ed"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturn$Builder.class",
+      "bytes": 7456,
+      "sha256": "8e66fe12d25de25dae840e1f73769334f31a676ebb2c00ecdf47ccc3562a731e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnableBlock.class",
+      "bytes": 9909,
+      "sha256": "d5c6924f4b214891023f517c3a8df7794041d09ea8783046d495a45327e75abb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnableBlock$1.class",
+      "bytes": 1240,
+      "sha256": "0ac4a107b2274e905399a85dd95acae2c1bcc8a9cfe420ea7672acd03dcf747d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnableBlock$Builder.class",
+      "bytes": 7515,
+      "sha256": "758087f2f0b5fcc0aebbb1a2ed2c32edb10fe45384d5f976d849fee4d1860e10"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnableBlockOrBuilder.class",
+      "bytes": 405,
+      "sha256": "c3d86a0dd1cd577e0bc0d6fc97976aefd5e2d92c77d01c7736cd0c253bcf10ab"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrReturnOrBuilder.class",
+      "bytes": 406,
+      "sha256": "9c56694ff1c967b9fde04c4de745741310b8708140559d206b3d4aab968c9792"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichFunctionReference.class",
+      "bytes": 12999,
+      "sha256": "eb66d8769b0300fe99006c56507b11511e81efeb3cc6a06a21d6850137ebba1c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichFunctionReference$1.class",
+      "bytes": 1270,
+      "sha256": "2137434369b8a8d32bbab6fec597616562ae8d63c50607e5a4c2fab2af7413ed"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichFunctionReference$Builder.class",
+      "bytes": 12765,
+      "sha256": "28d259e9cd98c96b638cb455a7814ec1d1c1437aecb828f5098d2694541c9544"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichFunctionReferenceOrBuilder.class",
+      "bytes": 934,
+      "sha256": "9ad8ce90c8ff352867d7caf457e3b584c57bceccdb67228f32ee73d3318ab3b8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichPropertyReference.class",
+      "bytes": 12749,
+      "sha256": "037fd3ee55a039823a81f2cced4e159cd69201915a1664dba5dfc8cc3bc4356f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichPropertyReference$1.class",
+      "bytes": 1270,
+      "sha256": "5d1f742c948f600b2b3186d2eb7690e07058d44306a640b597e4e8e362023a16"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichPropertyReference$Builder.class",
+      "bytes": 12566,
+      "sha256": "a4754a2e7865b25bc4ac3bd762838d33b3771e48b3d9cc0a8c790b6baaa6ad48"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrRichPropertyReferenceOrBuilder.class",
+      "bytes": 876,
+      "sha256": "c1c16187416c2935e5c4e5461e7f1bdf933fc61b4dc7b95f15f7bb6a609a991d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetField.class",
+      "bytes": 10912,
+      "sha256": "bf0bb6343e28f66e9c487bab099e82d7d2a613ff654181b8ee7412962e626b06"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetField$1.class",
+      "bytes": 1205,
+      "sha256": "48a3b09201650de8099cf6d078d5f151e9454204a74f79425bec0d4066f35838"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetField$Builder.class",
+      "bytes": 9081,
+      "sha256": "4e9b829e61e26adb9a313e24c99d7769b79970dc5254a429598a27cdc88f9984"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetFieldOrBuilder.class",
+      "bytes": 536,
+      "sha256": "2bfcdd0037bf970a378f4cd16692eeb1ec305dd798463df102ceeaabf6ca1f27"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetValue.class",
+      "bytes": 10226,
+      "sha256": "67de6c0276298619085e3e98a7b2ec6c3eb6d6008bbce544ea40f943deed3b5c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetValue$1.class",
+      "bytes": 1205,
+      "sha256": "e63302ef7194623042a26339da16bdf20915692f10c340e359d24654e2a817fa"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetValue$Builder.class",
+      "bytes": 7993,
+      "sha256": "fd70ff46f8efb4d44d62459016cb4fda2f5ac4f53eb227623de5576f1d3c5911"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSetValueOrBuilder.class",
+      "bytes": 452,
+      "sha256": "fad46b6eb69c0fc197cd392d14be858d310b602dba30fd369f6973b84a46b558"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleType.class",
+      "bytes": 12690,
+      "sha256": "9ce536799e6d7ec3fae5cdd484f80ba9b77a36d0ced0e5dbe37b60be885fb08c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleType$1.class",
+      "bytes": 1215,
+      "sha256": "450e60d0a6f67ce0d62175a0f03390a98247a5d2142c4db39331ccf92133ece5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleType$Builder.class",
+      "bytes": 11645,
+      "sha256": "548b701055598e78a79303d7908ef34dcc4ac54114caefa7a069a70bc87e1130"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeLegacy.class",
+      "bytes": 12399,
+      "sha256": "90af096f6310e57e7e1f001baab731c85b5409696aafcdcb5ddfb3855d65a873"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeLegacy$1.class",
+      "bytes": 1245,
+      "sha256": "4cfc03882d329c2d481673e1195ce063242e1ad06eaac06bfdab690c4448f55c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeLegacy$Builder.class",
+      "bytes": 11425,
+      "sha256": "16acda3564049bcbcf1adfb214ef1bf9612419a3e9323ce3eeabc64294fd8bc2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeLegacyOrBuilder.class",
+      "bytes": 793,
+      "sha256": "d74e2ba2bde6c88bd38e67be06e0418e8f8361e57b022380c1a8c30a29c2520a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeNullability.class",
+      "bytes": 2789,
+      "sha256": "dce7405b8c939e1ddecef18d68aa49643f2f3c0715f6c52ea7878ca33a429c5b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeNullability$1.class",
+      "bytes": 1092,
+      "sha256": "5e45d382a4de1f142b8caa136b108d98c7a56706e92c325eac5285a321a7b6bd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSimpleTypeOrBuilder.class",
+      "bytes": 859,
+      "sha256": "3a68a7739139ce76fa817500d5a90acf6f6e995c0405489c702ab99c0a93de1b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSpreadElement.class",
+      "bytes": 10299,
+      "sha256": "e25623f86122bdae3820f6fac31a022fd5f79c94ffd6f7511b8d427f4e4daeaf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSpreadElement$1.class",
+      "bytes": 1230,
+      "sha256": "0d06671903a08ebf3e52e41847f5f24da6f78825518f4d27443bb48edab51fa4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSpreadElement$Builder.class",
+      "bytes": 8096,
+      "sha256": "857559a7692bc7805d7cfd10fda0fc80e89621c56576c07c67a338f66a4f7109"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSpreadElementOrBuilder.class",
+      "bytes": 500,
+      "sha256": "9a0e7c1a2c7b92bbf37dd7a9f71a534459ea12accc7bf4d525ba2ea52ab0f934"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatement.class",
+      "bytes": 15609,
+      "sha256": "4040f270dd9008e9ee9c3c19fe2fe79c80e696ea0eb54f56644fa877647dec47"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatement$1.class",
+      "bytes": 1210,
+      "sha256": "300e3568a2f602dd83f4198e8c4547a2f2eef1fb0026968082b6330e8e34756d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatement$2.class",
+      "bytes": 1269,
+      "sha256": "9b02e3e4de7b261559775fe4c298d84c934d43d463a409cd85405ca75b92069a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatement$Builder.class",
+      "bytes": 15947,
+      "sha256": "e558aa4cac4a3e94eb56af703be13f0161de94a36c773b9253d5d948827163fd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatement$StatementCase.class",
+      "bytes": 2435,
+      "sha256": "48e39670e98bf9b6db3972fa3a4e37125ee29e7373ac75ca6979383d1ac61b68"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStatementOrBuilder.class",
+      "bytes": 1089,
+      "sha256": "3603fdb24dd87705526a592726c7b38032a93f8157aa4f842d0382eb536dc5ae"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStringConcat.class",
+      "bytes": 9996,
+      "sha256": "a06b224ada91ca2f31664233cec40469a44606f4193a415d86ccd71b15c19798"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStringConcat$1.class",
+      "bytes": 1225,
+      "sha256": "cceb80097cf101acc85cf06a2314c34b941fedb223d44b1925c1aaa1af56865c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStringConcat$Builder.class",
+      "bytes": 8860,
+      "sha256": "05daa9f94dfee7fda1a91d8f580baa388ca54064d09830b3cd4ccedeabb5b9a2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrStringConcatOrBuilder.class",
+      "bytes": 532,
+      "sha256": "a873f882c959fc6c13b37cbed267b230b36050212c88d6332ea1b13ed8ff01e0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBody.class",
+      "bytes": 8976,
+      "sha256": "d49ee846a1779eb0f4e385593159798bd7e976ed9e82cccb4664d929b0285970"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBody$1.class",
+      "bytes": 1230,
+      "sha256": "f734bff168679f8c337efe014fdf29b17bdc8719e69bc3e11226443d7ceeb781"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBody$Builder.class",
+      "bytes": 6319,
+      "sha256": "ff25aad534a9cb87c83f4f56e24a94775e6bb440102b796f9f59f5986a9eabe7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBodyKind.class",
+      "bytes": 2721,
+      "sha256": "30aa9a4d5284534d09394e13b9efdcd54bf9f0f5aadbdc23fc2ae92ee628d515"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBodyKind$1.class",
+      "bytes": 1072,
+      "sha256": "f578684b1e85035b171fe5a0db30dad16d344ee9443e42a2191469a650266e68"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrSyntheticBodyOrBuilder.class",
+      "bytes": 367,
+      "sha256": "a4b1bff0b33dde8126b0f679ddcda3e03a8f3aac2b40b7ad97912eaacbfa94b5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrThrow.class",
+      "bytes": 9299,
+      "sha256": "aab8391825044d3db0cdd3100d3c8a4264fefe307db04ec452f6eabb044001e5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrThrow$1.class",
+      "bytes": 1190,
+      "sha256": "e9f5da0282c83acc73a7efd560aed2fed9ed1ecf694c6fe2e38f4c303dd8174a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrThrow$Builder.class",
+      "bytes": 6870,
+      "sha256": "c580647c8c63bcef52570cc012c60b323e3f943c87b24b385b0223ce95c10b02"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrThrowOrBuilder.class",
+      "bytes": 346,
+      "sha256": "9e27fc0174fdd1b06c680e13496ada1604f0931364bf5a0422e2632ae08f7fda"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTry.class",
+      "bytes": 11388,
+      "sha256": "a5c5d043a1db993a12371da4dc84114acfd2e6708a54771abd3fb93243852108"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTry$1.class",
+      "bytes": 1180,
+      "sha256": "3abfe731ba6f688df424a630a79db9c9bc5bd223fe1e7682f1e5aa1220bae2d5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTry$Builder.class",
+      "bytes": 10965,
+      "sha256": "00f137b7665d97d33e50e5cc940a80b8d3238eeca8b8cd93e4f48d057f983e85"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTryOrBuilder.class",
+      "bytes": 666,
+      "sha256": "2be55d267e63cd6ce3d734c1ed26ec0ab0fbcf5e827052fb034536c38a9edb8b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrType.class",
+      "bytes": 13652,
+      "sha256": "0d8fe47dd2c24e6f93d5c3ae77357c2aea19605bcf59c377e8373600a9eaccda"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrType$1.class",
+      "bytes": 1185,
+      "sha256": "1e709844799b85d8c5fab77579fb9ec60675fbb4ad03036c5632ce3331360b01"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrType$2.class",
+      "bytes": 1139,
+      "sha256": "0fc81ec4c1d3412b4e9152235f58a6989c0aa5ce05102a3fe9b1e115c8544575"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrType$Builder.class",
+      "bytes": 13274,
+      "sha256": "ba06bab7624a604926ce24b34184e73172ec1f232c2d0e2289d6246d5d150bc4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrType$KindCase.class",
+      "bytes": 2253,
+      "sha256": "abe8dd9aaba0ef02a5e6e07bc8e1856a9f4a6abe1dae191778470f538712f773"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAbbreviation.class",
+      "bytes": 12431,
+      "sha256": "46ae65e353e0bbfa5881fc76c34389b5a4ffd2cf3dd6dde4ef7afeb8c43607e9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAbbreviation$1.class",
+      "bytes": 1245,
+      "sha256": "df22a4a4db736e8a8323f948e5ec69b0be2b860076fb68ad29aabeb23e6fa77f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAbbreviation$Builder.class",
+      "bytes": 11475,
+      "sha256": "4598ab1853b52391f40625783ff23b0241ed8063c668f6c2883a7e855f61a34e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAbbreviationOrBuilder.class",
+      "bytes": 801,
+      "sha256": "580edeaaabcb04581c82e6084d633430cffec602ba7ef7c5a93c63c5033f2ac1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAlias.class",
+      "bytes": 11604,
+      "sha256": "1d8437834ec1978f4636ffeabd0d0fa8b4cc393a37303b25859c37b5eea85f0a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAlias$1.class",
+      "bytes": 1210,
+      "sha256": "8832faec2b0722dfc86e499a5d08a00358870e0bd030ac68b85f8d9975c3203a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAlias$Builder.class",
+      "bytes": 11067,
+      "sha256": "8d31eb1a5cdfd3bcef41ffe424d9d184ddff5615953d344fe2c498cf192ca58a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeAliasOrBuilder.class",
+      "bytes": 719,
+      "sha256": "e37e16001ef9806a6326920cceb91ea94baccdae5cd1de58ddc8a53742d91f07"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOp.class",
+      "bytes": 10682,
+      "sha256": "56275802ab6658178623a0e383713f220a7f0f48b5d1b79439c32cbc88277252"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOp$1.class",
+      "bytes": 1195,
+      "sha256": "e0b0a88061dd30407eb5c776e8484dce9fb9536eb8c47b556dddd9b21521c490"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOp$Builder.class",
+      "bytes": 8347,
+      "sha256": "860af37f638a8b559eb4f8e26d1b8e46fcd9f245bb250c57ba163813797debaf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOperator.class",
+      "bytes": 3688,
+      "sha256": "768e63f3b8abb7cb28b37d8a125de0750e8fa18603d27224048e52a91e193011"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOperator$1.class",
+      "bytes": 1047,
+      "sha256": "ab98ec7f2ccdf7161f178133303cf1f1af1209bf7a0768a498043abba09b40ea"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOpOrBuilder.class",
+      "bytes": 523,
+      "sha256": "d2352bd642e7986ac2ee21aa2c1d91dd2164c3a4e1ce26523330e299afd7b693"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeOrBuilder.class",
+      "bytes": 829,
+      "sha256": "aff80856ad7d0a458fcb5864412bf824505779d264b26f5f01aadda191bf7f3b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeParameter.class",
+      "bytes": 11489,
+      "sha256": "688b1ace5977b25ce51ac3f41bc8bfd9ce38b77e9acf742903427d31853ee746"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeParameter$1.class",
+      "bytes": 1230,
+      "sha256": "c18e2f0405ac2372f0fd9c5a9230e9c7ced7817f57147907e37e071a5c730d1d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeParameter$Builder.class",
+      "bytes": 9472,
+      "sha256": "263716a543bd135e71f33f00d065543ed8d61ca3c3c45904d64ae809e282016b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrTypeParameterOrBuilder.class",
+      "bytes": 575,
+      "sha256": "48ef8f00abeae7b787d8f99cc474d1d7b0d53fc0fd9fabe0492c90560e383ae5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrValueParameter.class",
+      "bytes": 10763,
+      "sha256": "d1c986064b94e09635462b22281f5a255b71fa31a69e7ef1f4dcbec55322d8d7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrValueParameter$1.class",
+      "bytes": 1235,
+      "sha256": "d2c3ce955318cb60c80db0f3eaa76c5a3978d3b9eaf268f55bfec7145dcb4f4a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrValueParameter$Builder.class",
+      "bytes": 8633,
+      "sha256": "e893cd2a4aca02da67860bd4951a182b2ac098b13a79d852873784dc03a9e42a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrValueParameterOrBuilder.class",
+      "bytes": 537,
+      "sha256": "235d03a7136ebf529c37badad0a65d10c9a39f8859ab09cbed163a51742f6419"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVararg.class",
+      "bytes": 10385,
+      "sha256": "61ed5bfee25c08f746ca3ccc57fc66c3488687748546c56a42db77dcfa933f8f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVararg$1.class",
+      "bytes": 1195,
+      "sha256": "9e52318d708759628a7fdd23453b1537e505d4628b738bb8a7d3dd6c7c415296"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVararg$Builder.class",
+      "bytes": 9267,
+      "sha256": "c4b6290f7cd50d03f47d840f4e59d2f5962dbaf3a97cb699c1f5a5c06ab55c77"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElement.class",
+      "bytes": 11001,
+      "sha256": "bfe2327a7446f549eaaaadd0b260d8b99772227ed2337c795fa1c6006b3ef3b7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElement$1.class",
+      "bytes": 1230,
+      "sha256": "f565a6911bdf76fd49a15904d394644a8dcae77b28be5a57f81625a5dccdfc99"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElement$2.class",
+      "bytes": 1123,
+      "sha256": "a285d8c3dd11b557a454e41bbc9c1fb83aa6c35d48fb914a88b8f801a2d81a99"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElement$Builder.class",
+      "bytes": 9275,
+      "sha256": "f58153536c2a8f9ad038a4aef0a2c0f64952134c5da06ca1fbfa88fd63a0e944"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElement$VarargElementCase.class",
+      "bytes": 2222,
+      "sha256": "b1d9e8993cf3e9840b5f13fb015878210fb7467b59cebeb7419afdaeeae5e6ea"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargElementOrBuilder.class",
+      "bytes": 504,
+      "sha256": "e55139f8a63a7df9bf62bac45dd1476271f3cb9ca8c3d27e313b81791d44e9fd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVarargOrBuilder.class",
+      "bytes": 579,
+      "sha256": "7327c6f46b084b8290e5e242121a1e6855830a5c78e62663688bfb5056c1417a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVariable.class",
+      "bytes": 10931,
+      "sha256": "af9f0244abb6f192d88338f1cc3ecd71e8c5b227a707679d59c727768ebeceee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVariable$1.class",
+      "bytes": 1205,
+      "sha256": "fefee185438d49e4711f349c78e3b00a64ceb74da490c29b5667ce67b070c750"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVariable$Builder.class",
+      "bytes": 9085,
+      "sha256": "4686087b2db980c78237d820cc4e80e8f93b47a3f7cf32701e22d1e2a316d6b6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrVariableOrBuilder.class",
+      "bytes": 530,
+      "sha256": "7b66988b393dbe344b948ebd647f10a73453f08b6781ab7d49a38acb0c12da65"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhen.class",
+      "bytes": 10269,
+      "sha256": "20eab38a95f5fe8eb846db563c1dcfe05d1837c01535717d3702db369226f6a0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhen$1.class",
+      "bytes": 1185,
+      "sha256": "1c683f424a77d23e7d59aebf14e83d1f606d8b91ced80c83fa5e0d6b4b0dabfc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhen$Builder.class",
+      "bytes": 9147,
+      "sha256": "4571362f4a335d934a9615959e9c487c405434ea98c5e2aa342576b472ebe0e8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhenOrBuilder.class",
+      "bytes": 562,
+      "sha256": "fcc4a5751792ef1ea4f726ebc3a7665ef751dadb4c08177bf69ed471eb52d5f4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhile.class",
+      "bytes": 9239,
+      "sha256": "283dc26d731bd9122d8faaee1092f2324f897a477eeaa9b568d4789ee9b8646c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhile$1.class",
+      "bytes": 1190,
+      "sha256": "c0b20c1bba90953cea35865a1ed2d8e9becdedbc0554b7310a58c02dc9ddb0a1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhile$Builder.class",
+      "bytes": 6800,
+      "sha256": "de3f9ca8e6915cff5eea5ee50b00168d0ee98614358d2f0e5a7aed4cbd317f6a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/IrWhileOrBuilder.class",
+      "bytes": 336,
+      "sha256": "e9a21b27e3e990eb87c66f5ef957a8b2a8c1fa35056da8113960496fd29b41b9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/KotlinIr.class",
+      "bytes": 418,
+      "sha256": "1be0ce4d2b007e6169c97b77fab77c1e103bcffe355b725b7ea3be7ed1a04bba"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/LocalSignature.class",
+      "bytes": 10046,
+      "sha256": "8152e4eae3e55e9d58b1b760f67b76a2c44a810a3003173f507678f887847729"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/LocalSignature$1.class",
+      "bytes": 1225,
+      "sha256": "1c9e933de91bc27849223b5392f5c9d6ed6095090e62fb3500f278a97ac3a797"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/LocalSignature$Builder.class",
+      "bytes": 7910,
+      "sha256": "5b0160552fa79f23c3819d74bfea388d3e7338a4924abd176a8940d703de4fa9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/LocalSignatureOrBuilder.class",
+      "bytes": 479,
+      "sha256": "7a21a05798945cce9af5e462500b3720abbe45ff601cd8e3104975b78a442d27"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/Loop.class",
+      "bytes": 10812,
+      "sha256": "041a7d87fa8e74d70c1fd578ef3c4200c79084a8abc2e3bb8e7ad72342102a35"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/Loop$1.class",
+      "bytes": 1175,
+      "sha256": "6367b4a92fc45b67f11cb08d81f7ecd874575b973bd37694de02f587090d7d57"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/Loop$Builder.class",
+      "bytes": 8988,
+      "sha256": "81f6f229043668acf63667e97a494ccecfe0cf35e1dc3827786ba82bf3c8b5bc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/LoopOrBuilder.class",
+      "bytes": 516,
+      "sha256": "8fa7c50a646317408620e27e383fed0057dd8f6b084487b327fd1e1877ac311a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/MemberAccessCommonPre_2_4_0.class",
+      "bytes": 14186,
+      "sha256": "c4aa6593e42ed92d088acbf9f170b931178afb1a327e50a8ba75ff27cc78d5e4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/MemberAccessCommonPre_2_4_0$1.class",
+      "bytes": 1290,
+      "sha256": "049d52e2e346caee950357117dfd1e4442f19d04fdc8804bf02e911f09e76678"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/MemberAccessCommonPre_2_4_0$Builder.class",
+      "bytes": 14548,
+      "sha256": "507603f7998e927726816b8577c69e94f9940aafd356f35b0598ca1f62db0799"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/MemberAccessCommonPre_2_4_0OrBuilder.class",
+      "bytes": 1043,
+      "sha256": "417344e63a7a7163aa7961e1835916d2e605e0dfde1caa4b8702df0276fb686f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/NullableIrExpression.class",
+      "bytes": 9563,
+      "sha256": "51b8060a467cba8ae7ed3b9a8399b3063b1a61ed39c2650c0cd74ef99d2ef87f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/NullableIrExpression$1.class",
+      "bytes": 1255,
+      "sha256": "0444b454424b3fac3083fd6ed05c246fddfdd356a434707c6bc79e3825d83843"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/NullableIrExpression$Builder.class",
+      "bytes": 7075,
+      "sha256": "770b3bba906ff41eca30387ab05cb7b322c8b4622f77f71997c6ff2fce6acd24"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/backend/common/serialization/proto/NullableIrExpressionOrBuilder.class",
+      "bytes": 382,
+      "sha256": "d3b22592ca4ef79b59fb471a1c592288b266a3c10e053fecb2f68df862947476"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/library/metadata/KlibMetadataProtoBuf.class",
+      "bytes": 12151,
+      "sha256": "254fa12f9c277b0f48c8a8dd11f1b101bd1259729895ff337545c0eba414a041"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/library/metadata/KlibMetadataProtoBuf$Header.class",
+      "bytes": 11423,
+      "sha256": "6f15a8951947680b495f0a226e29769458463145443318dfbb18e28df3379f99"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/library/metadata/KlibMetadataProtoBuf$Header$1.class",
+      "bytes": 1292,
+      "sha256": "0ffb4cfa8ba1df14cf45ee9b6d290e4e42b853a1881a6837d5c0129b2e5af1d7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/library/metadata/KlibMetadataProtoBuf$Header$Builder.class",
+      "bytes": 10777,
+      "sha256": "8fa041e3ef7f1638129d0648a7753924707509595eedf3fbd1bc2474711cd60f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/library/metadata/KlibMetadataProtoBuf$HeaderOrBuilder.class",
+      "bytes": 953,
+      "sha256": "e35e6bef20a001c31c9b0a53332fa2102ab399dd5541995a778e5434071f2674"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/builtins/BuiltInsProtoBuf.class",
+      "bytes": 7293,
+      "sha256": "80a2e61235a66beeac8f864b739462acba30186bbc57e3ee9892c535552fd255"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf.class",
+      "bytes": 11072,
+      "sha256": "b4e856d67b4ec1a827ddd1f4e0a51df4750f90c0b676d1f65b304023dc792144"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation.class",
+      "bytes": 10114,
+      "sha256": "c6b1b7adc8d2dd7ff69b73dd7e20c5d4496918458b7c7699e69da5a658f48fee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$1.class",
+      "bytes": 1200,
+      "sha256": "0d91a23b821cac76e105b1fbc60b3f72ad4097da9d478f2fef5dfa29d6bca980"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument.class",
+      "bytes": 9901,
+      "sha256": "19704e9f214d0ce076f05b6cc48e67060ac7996be7531ad0706d86836e9f1ac2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$1.class",
+      "bytes": 1310,
+      "sha256": "25b73b9d9da504afc46ff19f47e8e98bf2a27ae7127f10c387672418d159c1f9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$Builder.class",
+      "bytes": 7489,
+      "sha256": "998db55ec9221f2dc72979047ef5b877e1fd6cb4aadef3180e6b0f9914c4ae91"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$Value.class",
+      "bytes": 14925,
+      "sha256": "09f21cafad3b601930129b75ba51c0239b8e7e98648214c28cd16e425fc3948a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$Value$1.class",
+      "bytes": 1414,
+      "sha256": "f43872d572f5c2edd6dda8fc3b1d7634e77f39a5f31697a48b00909ec9d3c538"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$Value$Builder.class",
+      "bytes": 14831,
+      "sha256": "49cfb66566bc11aa44520ece263a1ede0063f02ba238640ca30ac728c8deaca1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$Value$Type.class",
+      "bytes": 3966,
+      "sha256": "379779a933b6b34ab9a4062702da7d2f3eae47075db2eedffb90da8df5dbe89e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$Value$Type$1.class",
+      "bytes": 1341,
+      "sha256": "1a0c582d71666e86cd6dcbb3c1247c1b2aecb4cec861440235dc03217ad5b908"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Argument$ValueOrBuilder.class",
+      "bytes": 1589,
+      "sha256": "ccfa3629a3bde761351d3d841e4feeae407d7b4d0a3568476d7b25abf945077a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$ArgumentOrBuilder.class",
+      "bytes": 734,
+      "sha256": "a6ac5a8e1b8551213c454c9351e0118e67d4062b2586d28d2abc7129dd7dea8f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Annotation$Builder.class",
+      "bytes": 8933,
+      "sha256": "9b0df023b30208adc014a9bbb45bb208e25c2129b850870a0c5130f091512cee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$AnnotationOrBuilder.class",
+      "bytes": 789,
+      "sha256": "412079803c6f1a3b56b8440dfc0d622e892a57653c1819a825d993aaeff50af5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Class.class",
+      "bytes": 32131,
+      "sha256": "13bf0c2b7c69315256edc33ab93673ff1286d13e801fe8e5cdd7d5cb46c92dff"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Class$1.class",
+      "bytes": 1175,
+      "sha256": "b3977c9dbb6edd0bc0e188c5eef100ec51572c5d9f1b832d0f0cac66b71164fc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Class$Builder.class",
+      "bytes": 41766,
+      "sha256": "664ac7fdf16f4f09a0e385267b8b49bc2e09feceb2d721f34e306fb8d41ca176"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Class$Kind.class",
+      "bytes": 3017,
+      "sha256": "2db77e548d205636f735f94d807b63d280b37b4041759b471251886403223774"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Class$Kind$1.class",
+      "bytes": 1082,
+      "sha256": "03448bb1cf5877f0b0ceb372f23921bd45fc7964e175c40506bd00f1cb14f0eb"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ClassOrBuilder.class",
+      "bytes": 4960,
+      "sha256": "d2fe1735cea8acd63714867be5fcc491b0257dd9791b3c3a58510988e30c4621"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$CompilerPluginData.class",
+      "bytes": 8841,
+      "sha256": "0574e352b2408b37efe7f94a1652b43b14ee7d7bebabcbef8b1706dc85864ef8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$CompilerPluginData$1.class",
+      "bytes": 1240,
+      "sha256": "3c4e49130a92b572904cf5544a7c4e488c7607a6ecd914bf214382a13c97e103"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$CompilerPluginData$Builder.class",
+      "bytes": 6515,
+      "sha256": "df1e7a183fda2454db12b3a9f927f932acde8b32e88c28c01566987ff5146330"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$CompilerPluginDataOrBuilder.class",
+      "bytes": 476,
+      "sha256": "2ff6f43b75c44353687fdef39291963ab49b3812290bdf13393d4fddc69e412c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Constructor.class",
+      "bytes": 14972,
+      "sha256": "6b8195dd0287ec3a7cb157286efd73cc4094de93a5148f6c5e7216680fea91dc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Constructor$1.class",
+      "bytes": 1205,
+      "sha256": "2b630f11c2f3f4837e544e61e51985370e41f59313b6dd21b4cec0a39807dedf"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Constructor$Builder.class",
+      "bytes": 15954,
+      "sha256": "174bb2066f5a6fba3379992c29f2fc5afb48412d4f798af8f1f908c981a09f1e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ConstructorOrBuilder.class",
+      "bytes": 1900,
+      "sha256": "83afe1669c5d2bd0b8d60e7eef0418161479088f1bdc13b1c2a9a9d6d19f9489"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Contract.class",
+      "bytes": 9505,
+      "sha256": "65eb54f95ba374816d5bbded48bd58d4f570736f9fbc65916cd720696d049124"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Contract$1.class",
+      "bytes": 1190,
+      "sha256": "ca52f36d4b4e2b85c6a31aee3d6819507406df198c419c1bef960d677c4c67fc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Contract$Builder.class",
+      "bytes": 8275,
+      "sha256": "6e64b20fac943485ffb81a8a8ea58807192d6128d2b281b2b6db231470ac5be8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ContractOrBuilder.class",
+      "bytes": 624,
+      "sha256": "cece0e55304e946493909860e47bcdd53e92c417e80fc00b3aa80e785dc7341d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect.class",
+      "bytes": 13010,
+      "sha256": "390cbc5141d091dd511b30d955b70964d99e20eea9aff1aacaad6aecec164c59"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$1.class",
+      "bytes": 1180,
+      "sha256": "e57369f648a676cb0408b077198ba80f56de191daf3fada0f13226f2b5f131da"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$Builder.class",
+      "bytes": 12181,
+      "sha256": "d55b58be49d168980b1e6910df608f961e52864806b3b675f8b58e49e215ce1b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$EffectConditionKind.class",
+      "bytes": 2785,
+      "sha256": "4dd5404497af65e58a750dbd6513c8fdaa353c59d4f8057bca12e70c706eb97b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$EffectConditionKind$1.class",
+      "bytes": 1163,
+      "sha256": "f37ce53d18356c8d25d1e33ad0c81dc6c14b0be607305cb1a1d167cb5e99cd06"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$EffectType.class",
+      "bytes": 2904,
+      "sha256": "6b293dee8dd3e0284c432c9e5cc96fc5ff312e2ae1f802d198c60f5e03244cde"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$EffectType$1.class",
+      "bytes": 1118,
+      "sha256": "d8b25aef8f7235b3198a7079a3653740efac5a9336283e4acce8ff7c8656749b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$InvocationKind.class",
+      "bytes": 2696,
+      "sha256": "3dd3e9999a4350e8e4a94136c611708f8288590def8757a10e5951eea5a1dbc1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Effect$InvocationKind$1.class",
+      "bytes": 1138,
+      "sha256": "79815cb3b8971afaf76f979b7d7404a6e2fcb1816260c1a3257622a35a44df88"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$EffectOrBuilder.class",
+      "bytes": 1524,
+      "sha256": "7866f025dca55ddd3070c7831fe66de35224cc4e2095225a9a84b3a664c5e3d1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$EnumEntry.class",
+      "bytes": 10949,
+      "sha256": "4b0713844c3239bf2d0de78c9551449c620898f52eb91126175a7e80c1622abd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$EnumEntry$1.class",
+      "bytes": 1195,
+      "sha256": "8a4d1e9bc8a0643fbdaaa128b7942d6381bb1e054aa990dfd586cbf931da3a8a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$EnumEntry$Builder.class",
+      "bytes": 9381,
+      "sha256": "d5fb28858f54ab8fb5b72092e2cd8ec5367039e4893c51a31197db0c99dae3e8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$EnumEntryOrBuilder.class",
+      "bytes": 1050,
+      "sha256": "ec17054eb387b4b811e172e4059fcd5f6006ccdc996c9ca2b87fd83979a86374"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Expression.class",
+      "bytes": 13275,
+      "sha256": "98ef6e9fc0210458342385a03545918c5fe7f43d48e8adbccf47ae960e366673"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Expression$1.class",
+      "bytes": 1200,
+      "sha256": "766b60bc142bf266b407e8af5a43ecc38824635ecf786a4ca424fb864a3f78b9"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Expression$Builder.class",
+      "bytes": 13237,
+      "sha256": "9baaa31cba92b66fe8b877b053e46fdb8998de9deaa24d0d1d7006e20a13f278"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Expression$ConstantValue.class",
+      "bytes": 2669,
+      "sha256": "7920455286e0db63c29f9480ec476d8bb2ab3e5e4a11b3533813c2713103958e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Expression$ConstantValue$1.class",
+      "bytes": 1157,
+      "sha256": "09839d4c538df3ca7195b79152e5aa7e0b6c6e0c7f10daee4ffec66e78e1180b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ExpressionOrBuilder.class",
+      "bytes": 1313,
+      "sha256": "d30aeeab7281a3aafc22a350f4c9abca78cfbc8baf61e3086e21b6c09e3f52d6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Function.class",
+      "bytes": 26241,
+      "sha256": "490cfa717f2ad1917a62545ea7cce5214e61a42632eeb9d8c327223ea83ab4bd"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Function$1.class",
+      "bytes": 1190,
+      "sha256": "752a2efa57d1a2ce80f8ca13b249a3a528b50fa1ae6a7734eb6782d9911a1d42"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Function$Builder.class",
+      "bytes": 32848,
+      "sha256": "a8d9cd3070d22c0a52cc3f457057d1cb452bb4055a8a381d02145f414861c406"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$FunctionOrBuilder.class",
+      "bytes": 3733,
+      "sha256": "b16dc5eced3519893eb6a29f260b34111e7e45b839fd61794563726131eeb18d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$MemberKind.class",
+      "bytes": 2622,
+      "sha256": "9b32c403319393ab27686873a104988104efc34eeb19582882fdf9651ca0c95f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$MemberKind$1.class",
+      "bytes": 1022,
+      "sha256": "cfddb3e18706d6b2262bf8101b16e24a87eea354e3bb00c628052e6cb784f25b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Modality.class",
+      "bytes": 2556,
+      "sha256": "be84ddced8a3aed548eb78e79c38652baae1900cf701b0b74d353319250b8bee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Modality$1.class",
+      "bytes": 1012,
+      "sha256": "676c426d48ea595fcb56ba2d187ed0b1b9e17f7dafb1451df2a1f37ac51f94ec"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Package.class",
+      "bytes": 15122,
+      "sha256": "59a8ad8bdee603e16ecbf391e6d75d4d1e15f8cfb289593910dbf55cd36fcd9b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Package$1.class",
+      "bytes": 1185,
+      "sha256": "bb35836275941e5eba2bbe30211894f34c86fec6788db35e80e9e9e63d76b61c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Package$Builder.class",
+      "bytes": 16658,
+      "sha256": "a0aec634d20dd0dcbb2f93e9d166b0153b0828aec03655509d21561e16265cd6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$PackageFragment.class",
+      "bytes": 14886,
+      "sha256": "5743cf5c28e472c7160bfba3e78a6756941729af9670799a53b0167a8ee961ad"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$PackageFragment$1.class",
+      "bytes": 1225,
+      "sha256": "0f9dd3652e612fddcc96c952d80d242cb73f5aa45833da72c7b99a03aff4e1c6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$PackageFragment$Builder.class",
+      "bytes": 15785,
+      "sha256": "76af6da678cd643dbd8a8374d1d4294047fd0aed726f1dcaa56f76e1f43f0f1a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$PackageFragmentOrBuilder.class",
+      "bytes": 1874,
+      "sha256": "2811d0e0796df6e22c27cc92b8f20b835f766da6a985c1f1dcd6e012553a8696"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$PackageOrBuilder.class",
+      "bytes": 1981,
+      "sha256": "584900b2aa91143b0fae289023663f6742020d59279c6833da989ed5e8d6870c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Property.class",
+      "bytes": 30148,
+      "sha256": "2586bb512ff3c5ee4702bda0a447dfcfc5bf66d4c170c61683172b5d34cd1503"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Property$1.class",
+      "bytes": 1190,
+      "sha256": "f2f72c7fd2ff47c133c1c8aa2cf8c962deaf1ee2ce5ab25fc3482e6d14150602"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Property$Builder.class",
+      "bytes": 38867,
+      "sha256": "7bc69cb3b3976453ec985473c2bd2ebbefeeb9c1ccbfd6e3e62fa7cdab5d0062"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$PropertyOrBuilder.class",
+      "bytes": 4220,
+      "sha256": "e260676600fc9cc93ed20140a697c2e1806281bfe1ff0e2d772d12e6f3f100ad"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable.class",
+      "bytes": 9961,
+      "sha256": "e56343457b29ae5e5ea37e56f0ad5c609d32821a06a9271629dca289e8c45419"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$1.class",
+      "bytes": 1240,
+      "sha256": "2986f89786d0fb242ce91bb6eefad8c93b4d0677a8f619afde0fe77900634226"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$Builder.class",
+      "bytes": 8838,
+      "sha256": "d5176636a56ef5b36ecdf5170f85fd9bec053737ed3294bf4413c7972a4a12bc"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$QualifiedName.class",
+      "bytes": 9943,
+      "sha256": "dca045775371cfcc148dbf6adf78916b9d1632f04d87c8d20a545af7ecb29951"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$QualifiedName$1.class",
+      "bytes": 1383,
+      "sha256": "d106d01e9f895358c7522c1a40c1df3bc5cdbf2fb868b11851552c55293c90ed"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$QualifiedName$Builder.class",
+      "bytes": 7560,
+      "sha256": "19ab450a095e5162cf6c61f07bdfb22a08a1b796f0e7d4d6710e2de17ed3b2ca"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$QualifiedName$Kind.class",
+      "bytes": 2931,
+      "sha256": "dacba9fdaa04a9e3339323e6e031d2a70cb422e42440cd5eebb816a162bcc9a8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$QualifiedName$Kind$1.class",
+      "bytes": 1317,
+      "sha256": "f307a591e8464a55f557e4eaa43fafb8dcefe988b34c297c5b10afa6a2ece17a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTable$QualifiedNameOrBuilder.class",
+      "bytes": 879,
+      "sha256": "6a6ac53dd251915e0d669e0196e21a24265295bd7aa2e26eec80b1453ef0cdaa"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$QualifiedNameTableOrBuilder.class",
+      "bytes": 842,
+      "sha256": "cc78df77e2e739cf159c02b6d4ca4ec524907a8c0640a01538877fa27cdde6ae"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ReturnValueStatus.class",
+      "bytes": 2595,
+      "sha256": "2fa1ef87f3131f53580bbee9c8a7958eef32e71565090d4321cae9737321fdc2"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ReturnValueStatus$1.class",
+      "bytes": 1057,
+      "sha256": "36edbca262010b698d8be8f01dae9ebcf8e948fa320b77c80f283f88bcc4eef0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$StringTable.class",
+      "bytes": 9052,
+      "sha256": "e50c715ba55ec00de55a53ccccbbdcd330a016b1833be83ef368df2cdc07a44d"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$StringTable$1.class",
+      "bytes": 1205,
+      "sha256": "f6519b7f8346264c721079d443020cbdbf9f83987312948ae110294a95b3a9ee"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$StringTable$Builder.class",
+      "bytes": 7620,
+      "sha256": "f8c713431c5dd89851e69a659e61632b1ea1930ce346689d3a198cb0423e237a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$StringTableOrBuilder.class",
+      "bytes": 550,
+      "sha256": "11433ef4fc3115d9de638153ad490d7f80153f93a0e1bc30a309c5b44ca081f1"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type.class",
+      "bytes": 17127,
+      "sha256": "28b7ed2b411d24ff8825557ef4e79bc81626fd975552248cced82f75ce7114b7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$1.class",
+      "bytes": 1170,
+      "sha256": "d3d34a92120b4e71811cf02babad123959fb0784508f6da8cc9940d50020ac0f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$Argument.class",
+      "bytes": 10264,
+      "sha256": "97530e3242c5f9584a8fb37777b7cf8b25159d7bc453fbc945b6b81901e8f47f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$Argument$1.class",
+      "bytes": 1274,
+      "sha256": "e67eccbb5d2560cc41b54c322823eb54c5ab20fc7c3d29a6cb966313c79cea8c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$Argument$Builder.class",
+      "bytes": 7993,
+      "sha256": "05c36ec947ce5d5d94d4b99e0fab755b4e57aa45ca05715e4c6eaae1c0ba1dc8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$Argument$Projection.class",
+      "bytes": 2837,
+      "sha256": "8a1f4d2f46d9ecbdad39af983d4140efadfd5da6d36c52fcf3e0bf028974c658"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$Argument$Projection$1.class",
+      "bytes": 1219,
+      "sha256": "68612f629ec1eb94945f52becc507564d91284b8ae4a45cb8a356ce37d4e9482"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$ArgumentOrBuilder.class",
+      "bytes": 809,
+      "sha256": "bec159cf0d0eafe06fbda9e9b98eced0befec5f730fb4880cf54bc14fa680f6e"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Type$Builder.class",
+      "bytes": 18694,
+      "sha256": "bbf244bac13b83f10e022a13061fc26f622d1aad7f8f49c005e5ddd8aa4cbd29"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeAlias.class",
+      "bytes": 17465,
+      "sha256": "46711832f96bcbc44a0df2d5270ddebe3209efe98f31125e1fa53b6ce843bf2a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeAlias$1.class",
+      "bytes": 1195,
+      "sha256": "1e78d80de5f43b2d10b05bbaea996bafd13cce78e852bb2c23f3ec726a8529c8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeAlias$Builder.class",
+      "bytes": 19477,
+      "sha256": "abfafc106f0d0962950119dfe2d835a229f94b4a3b0d339cbaee1a54981479c5"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeAliasOrBuilder.class",
+      "bytes": 2257,
+      "sha256": "ec917f53d52d45bd4d11e6e4d427446201e7e5abf44f0ebec9e0bea0065d576b"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeOrBuilder.class",
+      "bytes": 2062,
+      "sha256": "bb64b6bbd102d33579c9c41d1310507e9b789db91992122339e9254e3a30b036"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeParameter.class",
+      "bytes": 15237,
+      "sha256": "8e4899d5cadb5326e0e3219bf8ae22940aef398c4e4ac1cccf05ee6f6f426d1f"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeParameter$1.class",
+      "bytes": 1215,
+      "sha256": "4860b8e1b75f6ba96ca30cfec135d7348f92b1026d7612186c630e3082f40a61"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeParameter$Builder.class",
+      "bytes": 14969,
+      "sha256": "38c4acb0c38e6e04e8a49e6bad0a7ea92e624e6e9cb0049e5d017de80a5cb35c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeParameter$Variance.class",
+      "bytes": 2656,
+      "sha256": "54eed62ebe369792758976c8358242d5bce4fe3ef0309333ccd9d0de056b1334"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeParameter$Variance$1.class",
+      "bytes": 1150,
+      "sha256": "1e43c2dd21d8c7c523defcad75e32744bf74b5605ac459a026a24a97c21c0436"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeParameterOrBuilder.class",
+      "bytes": 1758,
+      "sha256": "4d257f678e0f9aa06493d8d3da202dc56c2f0e2259e4e88249411263abc12731"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeTable.class",
+      "bytes": 9960,
+      "sha256": "a1980e34b94aee293cc4bb5e22cff54cc777238c943f1f525d5b305883207f64"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeTable$1.class",
+      "bytes": 1195,
+      "sha256": "64d949a7de9c9f82b678c65bb4fe2796c052eb85e088c588b25bd729c1293817"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeTable$Builder.class",
+      "bytes": 8745,
+      "sha256": "a369f49d94e13b691e66bf06156f1f1564f6e0a8ee9690ff0e65e7dd68ea60e7"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$TypeTableOrBuilder.class",
+      "bytes": 672,
+      "sha256": "cfcdc09d5cd55d9e3ed403d8f400c0f9e2e5b946adf9af812ac729ed161ca38c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ValueParameter.class",
+      "bytes": 15728,
+      "sha256": "2c27dc5abe76ebff5385fa011c7872082328e9adec6040679a26dd88fb1092f6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ValueParameter$1.class",
+      "bytes": 1220,
+      "sha256": "c45f1833813280d69e376fc41f349e73a01d3dfff578f9d93b8ba16fa7baad97"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ValueParameter$Builder.class",
+      "bytes": 16102,
+      "sha256": "21321d54c7d790fa4ae927fcd8ffbbdfd246ba31567afe729583ba620c9af585"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$ValueParameterOrBuilder.class",
+      "bytes": 1889,
+      "sha256": "b507124cd768a142b8aba5ded84fb5200bdfc4026edf789bc94e94c10810d7b6"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement.class",
+      "bytes": 10901,
+      "sha256": "fa0af386a1cf15fa9307f779484f8ceb5a300cec4de36f37e8eef9f6b5f12253"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement$1.class",
+      "bytes": 1240,
+      "sha256": "e47e54b6d31a6c66a617804f7cff2851ea626e812dc7cae25ad1fac4c52544c0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement$Builder.class",
+      "bytes": 8971,
+      "sha256": "ee07d5ba5341c0bc600ce1abce205ae0756f0ad1ec6b724618aec2df6d9817f0"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement$Level.class",
+      "bytes": 2703,
+      "sha256": "62b1b9116231ab12098e8b09a991a6756d6ffdd7b3051aaea9f274586e246353"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement$Level$1.class",
+      "bytes": 1165,
+      "sha256": "91c9d11ed676d58fbe26aafb5a3bede81b881ed1bdceed65016abb9cc601f6c8"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement$VersionKind.class",
+      "bytes": 2819,
+      "sha256": "02b03459ee88176510cb915b1a7778f6a21c16cf65d453910e5413a0e2418243"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirement$VersionKind$1.class",
+      "bytes": 1195,
+      "sha256": "98471375eb7d4ea785af28f205df752ed2f34bbda54ecd33edccd7731a4da31c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirementOrBuilder.class",
+      "bytes": 1037,
+      "sha256": "44a65dc93431b3df5413b4eefbb19cfac6124584cbabe4a878a73fbaf8844f9a"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirementTable.class",
+      "bytes": 9871,
+      "sha256": "1e9624ef89294aa735f73d05ec88ad63befb486063772736ff83efa2f7c4226c"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirementTable$1.class",
+      "bytes": 1265,
+      "sha256": "ae3b21a71f15b952b315dab17bfa23141cfa6de7fcf8c0184248120a4dddf915"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirementTable$Builder.class",
+      "bytes": 8683,
+      "sha256": "9dd9b1d25230d9964987c537cc1e40bf806ad6cf2ca9d8e1f90f0f891024ae59"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$VersionRequirementTableOrBuilder.class",
+      "bytes": 717,
+      "sha256": "189d5ac67ad900141dd475032866c29340bd8cfc531609cde746f76a40b5d2e4"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Visibility.class",
+      "bytes": 2817,
+      "sha256": "78c229e1aff90dc41542ee309d670029c01a79780d2b92faca2965c409a8cfea"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/ProtoBuf$Visibility$1.class",
+      "bytes": 1022,
+      "sha256": "69f21a9e5adb2cd937894cfa2ca021b6846ed4b59dc5330fad885809b39b1537"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/metadata/SerializationPluginMetadataExtensions.class",
+      "bytes": 2074,
+      "sha256": "9d4ccd5119086f3103e92b230660dd9e06829865db567213935b56d90b776217"
+    },
+    {
+      "path": "reference/org/jetbrains/kotlin/protobuf/probe/Reference.class",
+      "bytes": 4314,
+      "sha256": "1b97b905de84d57b47509fe316634ed2ca4bb430b7367bcc871972cd9f3b8ec0"
+    }
+  ],
+  "bootstrapArtifacts": [
+    {
+      "id": "compiler",
+      "bytes": 59164049,
+      "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+      "version": "2.5.0-dev-10106"
+    },
+    {
+      "id": "build-tools-api",
+      "bytes": 575844,
+      "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+      "version": "2.5.0-dev-10106"
+    },
+    {
+      "id": "stdlib-jvm",
+      "bytes": 1859448,
+      "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+      "version": "2.5.0-dev-10106"
+    },
+    {
+      "id": "daemon",
+      "bytes": 372801,
+      "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+      "version": "2.5.0-dev-10106"
+    },
+    {
+      "id": "stdlib-wasi",
+      "bytes": 4044976,
+      "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+      "version": "2.5.0-dev-10106"
+    },
+    {
+      "id": "stdlib-js",
+      "bytes": 4065926,
+      "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+      "version": "2.5.0-dev-10106"
+    },
+    {
+      "id": "reflect",
+      "bytes": 3038560,
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+      "version": "1.6.10"
+    },
+    {
+      "id": "coroutines",
+      "bytes": 1548360,
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+      "version": "1.8.0"
+    },
+    {
+      "id": "annotations",
+      "bytes": 17536,
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+      "version": "13.0"
+    }
+  ],
+  "actualCompilerSourceBuilt": false,
+  "readiness": false
+}

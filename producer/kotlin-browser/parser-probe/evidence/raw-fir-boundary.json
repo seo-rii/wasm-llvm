@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "kind": "next-raw-fir-port-boundary-source-review",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "status": "source-reviewed-only",
+  "verification": "Raw bytes matched SHA-256 and Git blob SHA-1 from the pinned Git tree snapshots.",
+  "files": [
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt",
+      "gitBlob": "a212a5909c4f6ac19b625bd08beef8a93d4d626c",
+      "bytes": 1182,
+      "sha256": "9174fb7517edc63268ed651dfae6ebb37120e1826bda4eb370d308984b17fe2f",
+      "declarations": [
+        { "line": 14, "symbol": "java.io.File / java.nio.file.Path" },
+        { "line": 20, "symbol": "AbstractTree2Fir.buildFirFile(Path)" },
+        { "line": 24, "symbol": "AbstractTree2Fir.buildFirFile(File)" },
+        { "line": 32, "symbol": "AbstractTree2Fir.buildFirFile(CharSequence, KtSourceFile, KtSourceFileLinesMapping)" }
+      ]
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/AbstractMultiplatformParsingRawFirBuilder.kt",
+      "gitBlob": "ddbe1b8cab177e0ec194fc14cb3f79ed646f5334",
+      "bytes": 4036,
+      "sha256": "ed620e49198f65428b8276ce70741a191689777796ddbcfd7120972ca876c628",
+      "declarations": [
+        { "line": 29, "symbol": "AbstractMultiplatformParsingRawFirBuilder : AbstractTreeRawFirBuilder<LightNode, SyntaxElementType>" },
+        { "line": 45, "symbol": "LightNode.toFirSourceElement" },
+        { "line": 49, "symbol": "KtLightSourceElement construction" }
+      ]
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/KotlinLightTreeStructure.kt",
+      "gitBlob": "3974fca2c0b6729ef10a3ff8d2d95e42c8808a79",
+      "bytes": 3902,
+      "sha256": "d4cf9ba8a86a25dbf70e3a65e1a757b1e806d923e8c9e69815d0f3d8d44385fb",
+      "declarations": [
+        { "line": 27, "symbol": "KotlinDirectPlaceholderElementType : IElementType" },
+        { "line": 37, "symbol": "KotlinLightAstNode : LighterASTNode" },
+        { "line": 61, "symbol": "KotlinLightTreeStructure : FlyweightCapableTreeStructure<LighterASTNode>" }
+      ]
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt",
+      "gitBlob": "5e9048389b714a824de95ab1a52511749f369c4d",
+      "bytes": 57810,
+      "sha256": "e230598b517ba8dc5e83a18e60c2257e9c3ba2cc8d441d43b2631b7d8fcdfbd7",
+      "declarations": [
+        { "line": 23, "symbol": "java.util.Objects / java.util.concurrent.atomic.AtomicReferenceFieldUpdater" },
+        { "line": 1358, "symbol": "KtLightSourceElement" },
+        { "line": 1359, "symbol": "KtLightSourceElement.lighterASTNode: LighterASTNode" },
+        { "line": 1362, "symbol": "KtLightSourceElement.treeStructure: FlyweightCapableTreeStructure<LighterASTNode>" }
+      ]
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFile.kt",
+      "gitBlob": "ec00e6f567dc3c2f815ec7a7ed4f647da6e8efe7",
+      "bytes": 3045,
+      "sha256": "d712f97e259f73dd261e4632dad8d53d5ca750ce3940f3a6ad034220c556a2a0",
+      "declarations": [
+        { "line": 15, "symbol": "KtSourceFile" },
+        { "line": 20, "symbol": "KtSourceFile.getContentsAsStream(): java.io.InputStream" }
+      ]
+    }
+  ],
+  "nextBoundary": "Extract the source and light-tree host interfaces while preserving official Raw-FIR builders; mp-parsing2fir, light-tree2fir, raw-fir.common and frontend.common are currently JVM modules.",
+  "limitations": [
+    "These five files were reviewed and hash-verified, not compiled for wasmJs or executed.",
+    "The G1 parser corpus does not validate these adapters, Raw FIR, resolution, diagnostics or checkers.",
+    "This is a selected declaration boundary, not a complete Gradle, generated-source or symbol closure audit.",
+    "Portable com.intellij.platform.syntax variants used by G1 are distinct from these Java light-tree interfaces."
+  ],
+  "languageReadiness": false
+}

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "serialization-integration-status",
+  "status": "microprobe-passed",
+  "receipts": [
+    {
+      "path": "evidence/g2-metadata-ir.json",
+      "bytes": 804105,
+      "sha256": "d92a7f4e60c4614073122456355abd1da886a12a0b9214ef3c7c5455c6d0be2f"
+    },
+    {
+      "path": "evidence/probe-build.json",
+      "bytes": 163527,
+      "sha256": "7c0b5dd91ed38ed248db34cbe9aeaba95a0f70d1ce25dffc0d007697e6c7fb15"
+    },
+    {
+      "path": "evidence/preparation.json",
+      "bytes": 5836,
+      "sha256": "5bb9c69ff6f3bdeaf5ad01bc77e524856fc77f8549a32ac14a725dbf56649513"
+    },
+    {
+      "path": "evidence/codec-build.json",
+      "bytes": 10884,
+      "sha256": "1c7bc1f5ab270b6fa3b45bfb5294679100e24fe317b910eff5845ba39dbdd164"
+    }
+  ],
+  "languageReadiness": false,
+  "browserCompiler": "not-built",
+  "integrationApi": {
+    "prepare": "prepareSerialization(sourceRoot,newOutputRoot).sourceFiles",
+    "compilerDependencyTarget": "wasmJs",
+    "streamInput": "org.jetbrains.kotlin.protobuf.ProtoInput",
+    "streamOutput": "org.jetbrains.kotlin.protobuf.ProtoOutput"
+  },
+  "tests": {
+    "fixtureExtractorGuards": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "preparationIntegrityGuards": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    "actualJvmChromiumDifferential": {
+      "passed": 2436,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "unimplementedApi": [
+    {
+      "api": "java.io InputStream/OutputStream overloads",
+      "reason": "Actual library adapters must supply ProtoInput/ProtoOutput; no Java filesystem is linked."
+    },
+    {
+      "api": "Whole reflective protobuf descriptor/runtime API",
+      "reason": "Generated typed schema methods cover the selected compiler metadata/IR call path; unsupported reflection APIs remain compile blockers."
+    },
+    {
+      "api": "ExtensionRegistry.unmodifiable view observes later mutation of original registry",
+      "reason": "This codec returns a snapshot. The selected compiler factories discard the mutable registry after registration. Generic mutation-after-view semantics are not established."
+    },
+    {
+      "api": "Conflicting extension registration replaces previous value",
+      "reason": "This codec rejects collisions. Fixed official extension sets passed; arbitrary plugin registry collision behavior is not supported."
+    }
+  ],
+  "limitations": [
+    "No whole-compiler build, FIR resolution, external-inline linking or fresh-source browser compilation acceptance is claimed.",
+    "The original Java reference uses selected generated sources and bootstrap relocated runtime with unknown source commit."
+  ],
+  "logs": [
+    {
+      "path": "/home/seorii/logs/kotlin-serialization-probe-1791445692757.log",
+      "pid": 2756844,
+      "exitCode": 0
+    },
+    {
+      "path": "/home/seorii/logs/kotlin-serialization-verify-1791445866904.log",
+      "pid": 3918037,
+      "exitCode": 0
+    }
+  ]
+}

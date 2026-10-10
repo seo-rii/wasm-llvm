@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 1,
+  "kind": "kotlin-browser-baseline-ledger",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "target": "wasmWasi / WASI Preview 1 (candidate, not executed)",
+  "cases": [
+    {
+      "id": "KT-CONSOLE-EXCEPTION",
+      "category": "exceptions-bounds",
+      "origin": "product-console",
+      "input": {
+        "path": "fixtures/exception-bounds.kt",
+        "bytes": 186,
+        "sha256": "f095963e96afa4fa3981e57fee791304f6332952034ae9d26a2670a63860fa43"
+      },
+      "upstream": null,
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "single-file fun main(); compiler and run harness not built",
+      "intendedAssertions": [
+        "An out-of-bounds access is catchable and subsequent output runs."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-CONSOLE-INLINE",
+      "category": "generic-inline-reified",
+      "origin": "product-console",
+      "input": {
+        "path": "fixtures/generics-inline.kt",
+        "bytes": 321,
+        "sha256": "17e1cc762754b1e2d893dfe11052edba211b28af0f6cd7e16ec7d92edd566813"
+      },
+      "upstream": null,
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "single-file fun main(); compiler and run harness not built",
+      "intendedAssertions": [
+        "Official overload, generic inference, stdlib inline body, reified types, data classes, and sorted collections retain their semantics."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-CONSOLE-NULLABLE",
+      "category": "nullable-smart-cast",
+      "origin": "product-console",
+      "input": {
+        "path": "fixtures/nullable-smart-cast.kt",
+        "bytes": 182,
+        "sha256": "a21d5af489dd5dc6dc74b33e0fbb6a84c219230f269e0e530f18195543c6dd28"
+      },
+      "upstream": null,
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "single-file fun main(); compiler and run harness not built",
+      "intendedAssertions": [
+        "Non-null input narrows the nullable value; empty stdin reaches readlnOrNull EOF."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-CONSOLE-STDIN",
+      "category": "stdin-utf8-eof",
+      "origin": "product-console",
+      "input": {
+        "path": "fixtures/stdin-unicode.kt",
+        "bytes": 110,
+        "sha256": "5c23998b643464b953662a6c8bd278c17ebb5600b11d2907a9890f2d1476a8e0"
+      },
+      "upstream": null,
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "single-file fun main(); compiler and run harness not built",
+      "intendedAssertions": [
+        "Preset stdin includes empty lines, Korean, supplementary Unicode, CRLF, and a final line without LF; repeated runs must use fresh input."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-ERROR-SYNTAX",
+      "category": "syntax-diagnostic",
+      "origin": "product-console",
+      "input": {
+        "path": "fixtures/syntax-error.kt",
+        "bytes": 53,
+        "sha256": "f844e472de6a8f2905b344bd7ec2912553e8e9f3d904e33a6e7fb7e33e68d3f5"
+      },
+      "upstream": null,
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "single-file fun main(); compiler and run harness not built",
+      "intendedAssertions": [
+        "Invalid syntax yields diagnostics and no program artifact; subsequent valid compilation recovers."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-ERROR-TYPE",
+      "category": "type-diagnostic",
+      "origin": "product-console",
+      "input": {
+        "path": "fixtures/type-error.kt",
+        "bytes": 72,
+        "sha256": "d360bf3e0b0786f605ffe8cd31314732b772f63136ced4156943a9c428eadde7"
+      },
+      "upstream": null,
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "single-file fun main(); compiler and run harness not built",
+      "intendedAssertions": [
+        "Type mismatch yields diagnostics and no program artifact."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-PARSER-COMPLEX-TYPES",
+      "category": "nested-nullable-types",
+      "origin": "upstream-parser",
+      "input": {
+        "path": "fixtures/upstream-complex-types.kt",
+        "bytes": 145,
+        "sha256": "4cb6a95b2332f12a77e168e1d518a9d21c1b96a5360aa67d9cf8becc4694241f"
+      },
+      "upstream": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+        "path": "compiler/fir/raw-fir/testData/rawBuilder/declarations/complexTypes.kt",
+        "gitBlob": "4ff9238e2a4c83dee7bdfa954cce02267fcfaede",
+        "sha256": "4cb6a95b2332f12a77e168e1d518a9d21c1b96a5360aa67d9cf8becc4694241f"
+      },
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "parser-and-raw-fir; no console entry is claimed",
+      "intendedAssertions": [
+        "Compare parser/tree/error behavior against the same pinned JVM implementation; no result has been observed."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-PARSER-DATA-CLASS",
+      "category": "data-class-annotations",
+      "origin": "upstream-parser",
+      "input": {
+        "path": "fixtures/upstream-data-class.kt",
+        "bytes": 680,
+        "sha256": "912586d555a4e22dad29f56af65feba4881294eb257adb8cc9bca27ca9e9d699"
+      },
+      "upstream": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+        "path": "compiler/fir/raw-fir/testData/rawBuilder/declarations/dataClassWithAnnotations.kt",
+        "gitBlob": "6d65ec7fe698f888a9961fc6f2a295777f8ff5ae",
+        "sha256": "912586d555a4e22dad29f56af65feba4881294eb257adb8cc9bca27ca9e9d699"
+      },
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "parser-and-raw-fir; no console entry is claimed",
+      "intendedAssertions": [
+        "Compare parser/tree/error behavior against the same pinned JVM implementation; no result has been observed."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-PARSER-GENERICS",
+      "category": "generic-signatures",
+      "origin": "upstream-parser",
+      "input": {
+        "path": "fixtures/upstream-generic-functions.kt",
+        "bytes": 152,
+        "sha256": "170f96ee279d45d7667ae725a75dcd357a86c393fc6ab7593eb59e86b3cbd482"
+      },
+      "upstream": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+        "path": "compiler/fir/raw-fir/testData/rawBuilder/declarations/genericFunctions.kt",
+        "gitBlob": "a88e9c41a82a71829e6c05baa699a25158de9cd3",
+        "sha256": "170f96ee279d45d7667ae725a75dcd357a86c393fc6ab7593eb59e86b3cbd482"
+      },
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "parser-and-raw-fir; no console entry is claimed",
+      "intendedAssertions": [
+        "Compare parser/tree/error behavior against the same pinned JVM implementation; no result has been observed."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    },
+    {
+      "id": "KT-PARSER-INCOMPLETE",
+      "category": "syntax-recovery",
+      "origin": "upstream-parser",
+      "input": {
+        "path": "fixtures/upstream-incomplete.kt",
+        "bytes": 101,
+        "sha256": "8ddd37d8e93a9f699dfe7eccddc17beb3403e6c4137a2941969f970114c56384"
+      },
+      "upstream": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+        "path": "compiler/fir/raw-fir/testData/rawBuilder/declarations/incompletePropertyWithDelegate.kt",
+        "gitBlob": "c9fb0edc011c3bf10754b83a6093e2cbf1e8a9c3",
+        "sha256": "8ddd37d8e93a9f699dfe7eccddc17beb3403e6c4137a2941969f970114c56384"
+      },
+      "profile": "kotlin-wasm-wasi-p1-candidate",
+      "harness": "parser-and-raw-fir; no console entry is claimed",
+      "intendedAssertions": [
+        "Compare parser/tree/error behavior against the same pinned JVM implementation; no result has been observed."
+      ],
+      "observedBaseline": null,
+      "executions": {
+        "R0": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream existing parser",
+          "result": null
+        },
+        "R1": {
+          "status": "not-run",
+          "configuration": "JVM host, upstream multiplatform parser explicitly selected",
+          "result": null
+        },
+        "R2": {
+          "status": "not-run",
+          "configuration": "JVM host, portable compiler source",
+          "result": null
+        },
+        "R3": {
+          "status": "not-run",
+          "configuration": "browser Wasm host, portable compiler source",
+          "result": null
+        }
+      },
+      "exclusion": null
+    }
+  ],
+  "totals": {
+    "required": 10,
+    "passed": 0,
+    "failed": 0,
+    "notRun": 10,
+    "skipped": 0,
+    "excluded": 0
+  },
+  "readiness": {
+    "ready": false,
+    "baselineExecuted": false,
+    "browserCompiler": "not-built"
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "originals": [
+    {
+      "path": "compiler/fir/cones/src/org/jetbrains/kotlin/fir/util/ConeTypeRegistry.kt",
+      "gitBlob": "8fe9e499a9b80424d3d933a1bdcf71acd6732eb5",
+      "bytes": 613,
+      "sha256": "45f8c60a4b94ba2023b47438a39616053f76ee693f13545f15a092f5f00da815"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMap.kt",
+      "gitBlob": "63434ab2e80555c152d71f209b4eac7614a27539",
+      "bytes": 3844,
+      "sha256": "b0b1c24b2713820b00a7fe4685f3c28b02761b3c829cc531d2fe32ce2fd9c14d"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMapOwner.kt",
+      "gitBlob": "ec0f2859e16dd64d8cafe36063bf140b3ffe55b9",
+      "bytes": 4151,
+      "sha256": "d6e0bf6cf59286c07e2bacf6813dec518c9a5e085f4e44efd787507854628527"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/AttributeArrayOwner.kt",
+      "gitBlob": "c06a28b3889beb358e130895477b2d8271c70f6e",
+      "bytes": 3988,
+      "sha256": "7b6c782bc6b0c618353df82df40ac1fac907b44afb3f8e4bd95ca3c396a5df1f"
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/ComponentArrayOwner.kt",
+      "gitBlob": "76d921bc82482290c47ee9a689e5bfedd9c3e126",
+      "bytes": 1961,
+      "sha256": "807e4ab32e8e18b1efdec1027c039c65dd09e19ce55e6f161e67e9e8a2ba1e43"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/types/TypeAttributes.kt",
+      "gitBlob": "2ba8ed9b98253426c0e2ee85ad2343348894d34a",
+      "bytes": 5059,
+      "sha256": "de947f4730e75eba663149be981e1992a6853c361c6e0ba185f51fa7694db321"
+    }
+  ],
+  "portable": [
+    {
+      "path": "RegistryHost.kt",
+      "bytes": 2083,
+      "sha256": "dda07110ff80ef453287de144d8e773ed4982846666fba60a652cf3df8a484ad"
+    }
+  ],
+  "transformations": [
+    {
+      "path": "ConeTypeRegistry.kt",
+      "originalPath": "compiler/fir/cones/src/org/jetbrains/kotlin/fir/util/ConeTypeRegistry.kt",
+      "bytes": 646,
+      "sha256": "dc6ce4e465cb84b04a0d3e96e6494ab3663f116b8677f4f5c0eb8c2dae005ea3",
+      "replacements": [
+        {
+          "from": "import java.util.concurrent.ConcurrentHashMap",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryMap as ConcurrentHashMap"
+        }
+      ]
+    },
+    {
+      "path": "ArrayMapOwner.kt",
+      "originalPath": "core/compiler.common/src/org/jetbrains/kotlin/util/ArrayMapOwner.kt",
+      "bytes": 4214,
+      "sha256": "1bafb1975c379356a97197d9dd4c21acdd401de1de0f628e4a085005fdae919f",
+      "replacements": [
+        {
+          "from": "import java.util.concurrent.ConcurrentHashMap",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryMap as ConcurrentHashMap"
+        },
+        {
+          "from": "import java.util.concurrent.atomic.AtomicInteger",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryCounter as AtomicInteger"
+        }
+      ]
+    },
+    {
+      "path": "AttributeArrayOwner.kt",
+      "originalPath": "core/compiler.common/src/org/jetbrains/kotlin/util/AttributeArrayOwner.kt",
+      "bytes": 3983,
+      "sha256": "8aaf99dc8aad14c362e1dc255f908648ba77b3329494f015f03936446b8d7e03",
+      "replacements": [
+        {
+          "from": "${map::class.java}",
+          "to": "${map::class}"
+        }
+      ]
+    },
+    {
+      "path": "TypeAttributes.kt",
+      "originalPath": "core/descriptors/src/org/jetbrains/kotlin/types/TypeAttributes.kt",
+      "bytes": 5159,
+      "sha256": "3430ce60443701c02ebe9941e23d60fb079f6632642bbb60f98dcce0020e68e4",
+      "replacements": [
+        {
+          "from": "import java.util.concurrent.ConcurrentHashMap",
+          "to": "import org.jetbrains.kotlin.portable.registry.RegistryMap as ConcurrentHashMap"
+        },
+        {
+          "from": "import kotlin.properties.ReadOnlyProperty",
+          "to": "import org.jetbrains.kotlin.portable.registry.withRegistryLock\nimport kotlin.properties.ReadOnlyProperty"
+        },
+        {
+          "from": "synchronized(this)",
+          "to": "withRegistryLock(this)"
+        }
+      ]
+    }
+  ],
+  "requiredFlags": [
+    "-Xwasm-kclass-fqn"
+  ],
+  "flagProvenance": [
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClass.kt",
+      "gitBlob": "cb98048a8a6081010849ad34ffdf40c8739025ac",
+      "bytes": 1620,
+      "sha256": "4a758c1be048bb5eba845afdd671aa7015f66688d92d6d15d1ceb3af114a9fcb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClassImpl.kt",
+      "gitBlob": "ecbdc5ef10eacda4bd7439badb4be64774c85730",
+      "bytes": 1439,
+      "sha256": "311f78cfaf7daabe88831b2a3fee2984efc5b3fd597cbf1187ccf4188e5b6d70"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClassInterfaceImpl.kt",
+      "gitBlob": "b273fec97dd25553630182b0d717a3e8b02f5336",
+      "bytes": 1146,
+      "sha256": "54e73511f2cf67f131e46a3150d965d81ae32a98a4c7a0140a8c1ebd15cf9565"
+    }
+  ],
+  "hostProfile": "single-serial-Worker",
+  "keyPolicy": "Retain official qualifiedName!! and explicit string keys; named class/interface/private/nested names use official RTTI, anonymous/local null keys retain original failure.",
+  "statePolicy": "One map/counter lifetime per registry; no reset API or persisted ID contract.",
+  "limits": [
+    "Only selected TypeRegistry get/computeIfAbsent/putIfAbsent operations are supplied; this is not a general concurrent collection replacement.",
+    "Cross-thread scheduling is excluded; render-map iteration order and JVM class diagnostic rendering are host-specific.",
+    "Production compute callbacks are the original non-reentrant getAndIncrement; same-key recursive compute is rejected and failure cleanup is retained."
+  ],
+  "browserCompiler": "not-built",
+  "languageReadiness": false
+}

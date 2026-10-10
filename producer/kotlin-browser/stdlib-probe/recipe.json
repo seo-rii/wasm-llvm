@@ -1,0 +1,4178 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e",
+    "stdlibTreeSha": "739294c5d27641fa0672194e6184f406ad2b7780"
+  },
+  "bootstrapVersion": "2.5.0-dev-10106",
+  "kotlinVersion": "2.5.255-SNAPSHOT",
+  "languageVersion": "2.5",
+  "apiVersion": "2.5",
+  "fragments": [
+    {
+      "name": "commonMain",
+      "refines": [],
+      "roots": [
+        "common/src",
+        "src",
+        "unsigned/src"
+      ]
+    },
+    {
+      "name": "commonNonJvmMain",
+      "refines": [
+        "commonMain"
+      ],
+      "roots": [
+        "common-non-jvm/src"
+      ]
+    },
+    {
+      "name": "nativeWasmMain",
+      "refines": [
+        "commonNonJvmMain"
+      ],
+      "roots": [
+        "native-wasm/src"
+      ]
+    },
+    {
+      "name": "nativeWasmWasiMain",
+      "refines": [
+        "nativeWasmMain"
+      ],
+      "roots": [
+        "native-wasm/wasi"
+      ]
+    },
+    {
+      "name": "wasmCommonMain",
+      "refines": [
+        "nativeWasmMain"
+      ],
+      "roots": [
+        "wasm/builtins",
+        "wasm/internal",
+        "wasm/runtime",
+        "wasm/src",
+        "wasm/stubs"
+      ]
+    },
+    {
+      "name": "wasmWasiMain",
+      "refines": [
+        "wasmCommonMain",
+        "nativeWasmWasiMain"
+      ],
+      "roots": [
+        "wasm/wasi/builtins",
+        "wasm/wasi/internal",
+        "wasm/wasi/src"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "gradle.properties",
+      "gitBlob": "840b42e783ed8fed80c6e446ebde7f4df9a276ff",
+      "bytes": 11766,
+      "kind": "build-input",
+      "sha256": "6c58b73af160fa03fd1f48f8bd1e66b7dfcbd646cc099b9c2d21bc4e943f6b30"
+    },
+    {
+      "path": "libraries/stdlib/build.gradle.kts",
+      "gitBlob": "9d1a32fa9ef5e1e0ab5f1a62f051839aa0ac1a83",
+      "bytes": 45605,
+      "kind": "build-input",
+      "sha256": "2c795ec85a8e2649f81fd46bcb834bdc56d41265589e0e050079827a95f1afc8"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/Exceptions.kt",
+      "gitBlob": "fa00e1b8107d557214ef1760d640a5c65a58f6ad",
+      "bytes": 4004,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "13b16a21c6e698938b318d5d4b96bc1ed1dfc803809befa45a6d56fa4080667f"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/coroutines/cancellation/CancellationException.kt",
+      "gitBlob": "7c0d252223725e94c5f381597ebf48f91640c617",
+      "bytes": 1315,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "298434882a84c92e588a94ff954ea87624bccec87faa68ea34aec404bf470578"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/internal/DoNotInlineOnFirstStage.kt",
+      "gitBlob": "88d0a0f40243a7d25198507c085c4cf826fd4176",
+      "bytes": 605,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "4f5dbc28f2ceffba1d328780a5b844d5bfed36fb65c7e253435aaf5fcae2c0bc"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/internal/IrLinkageError.kt",
+      "gitBlob": "8ca3b011d060a094488edab35a4b25fce22aa8a0",
+      "bytes": 430,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "dd5d45234c82afabbd45fbc2519b985bdb1642833fbcdcca4aeaadaea17703ea"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/internal/ReflectionPackageName.kt",
+      "gitBlob": "41f5d7e0d6ef33843596fdd0a8fd0a4d9f6b48f2",
+      "bytes": 840,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "b05e9b077122816507b941991d1ada8e3b8bd874c0e88b9c662f05e0895b747d"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/internal/SharedVariableBox.kt",
+      "gitBlob": "8182cc04a394b85d61c8a35fd3147688e8fb0701",
+      "bytes": 1423,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "9b4a98dc80de759a6a114600c482987577181c7b824e54058b69b2690faaeffe"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/internal/SyntheticConstructorMarker.kt",
+      "gitBlob": "10b059004353a75d2a3100f81c9e66ac43854a57",
+      "bytes": 658,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "4256fb6b5929a86d7e14cfd8da7f9d7b0f1a0f736a462cbb4092fd370ff1ad2c"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/internal/ThrowHelpers.kt",
+      "gitBlob": "cc64e24c8087fd81913121dda52a28c6e870f730",
+      "bytes": 1139,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "0fd649e2ab877e9ec4c94dc38f9f1ed7d2e8a799e4030915686ece06f8295717"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/reflect/AssociatedObjects.kt",
+      "gitBlob": "94ad69fd8c46678db87880ee62b12fabf970b08b",
+      "bytes": 1263,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "2c6e8a45cb754dafc93f4bfab1838757a9ff70a77f10aba348e0f67dd4c7c81a"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/reflect/KTypeImpl.kt",
+      "gitBlob": "18fb39ffb8624bcd6b8fe66168f30837d6dc7788",
+      "bytes": 1512,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "8891c803c72a056ad6f840d43ce53e0535eef984c55183a8b980fd082afff3a5"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/reflect/KTypeParameterBase.kt",
+      "gitBlob": "4bfaf244cc64f34a3088bff2fd78c90c7f7efade",
+      "bytes": 756,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "c5aa828c1244c73a18066cefcbff49991c34bf7d63df9f5eea88144299e2d8af"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/reflect/findAssociatedObject.kt",
+      "gitBlob": "6a76fec576058ce419db46a3511a4e144b324d15",
+      "bytes": 353,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "f48fd4414f05265be78c6e9a43b621aac6541c138fe46fd96c355eba03fcb0ba"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/text/Char.kt",
+      "gitBlob": "639993ded026287082bf3ce509335b5375513ada",
+      "bytes": 4145,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "f36e285bbd79a83ae5cbc341b3eaba4d549c3eeb02ab9d68edbe2b62e538c3d4"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/text/CharCategory.kt",
+      "gitBlob": "6c3bce924b73c28fbdbf403d0842db96579fc15b",
+      "bytes": 4153,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "84035b4ec034336d1263a8a0146178058bfeb7b046fc3acd2e23c9377e1596d9"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/text/UnicodeProperties.kt",
+      "gitBlob": "f8440413347acd54799d701c4a56f60cac66eacd",
+      "bytes": 1595,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "528a29192fbfbd01b4e622415445687cb59144e0e0772a4109b8f01ca30c3015"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/text/unicode/CodePointCasing.kt",
+      "gitBlob": "e4c5d44660132096dfd0e67d4fb3bd1599816c27",
+      "bytes": 568,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "fbe3f796ccda999504266ed5ee53a9f98a98e9ace91b63782d6847a83c7b806b"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/text/unicode/CodePointIteration.kt",
+      "gitBlob": "90c339ecd2f8f3824fa09aa2f603adb51104ef07",
+      "bytes": 7603,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "993236f884466eb36a78010d7c273b55518f0a7c913297392b7390caf265c260"
+    },
+    {
+      "path": "libraries/stdlib/common-non-jvm/src/kotlin/text/unicode/CodePointProperties.kt",
+      "gitBlob": "8f6f5d069ab9118f81684b26d2bd08013dd619d2",
+      "bytes": 1917,
+      "sourceSet": "commonNonJvmMain",
+      "kind": "compile",
+      "sha256": "e86148da68b636356d900e718cb12853c8564c20073d8232fa25720f05c52574"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Arrays.kt",
+      "gitBlob": "a8ae60eb27092ce1ad3abe920b4fdd1e076a56f5",
+      "bytes": 985220,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "bd7867c3aacb9f5de402182a3867b48e5f0cdc1eb8c851f06afc6303df56008a"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Collections.kt",
+      "gitBlob": "4586c551c2b6eb1031dbcba7f8e84addfd6dd1cd",
+      "bytes": 143100,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "9e372dcd7450393c548584de9cf214f8a5346aa451c3dd45cf92f7d33cda8bb1"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Comparisons.kt",
+      "gitBlob": "e2dd3110d475437e600075dcb73758547ba04d49",
+      "bytes": 9435,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a1be1bfe0a33eb874be99565aebe8b82477601da9242024c8e6d4a9515bc3770"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Maps.kt",
+      "gitBlob": "c5c65189112366c606cfa9b026381e1ae59daadf",
+      "bytes": 25235,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ff9e7a624131f00164563bd126404d61a8487998441e42aaf41262d71b9b7e0e"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_OneToManyTitlecaseMappings.kt",
+      "gitBlob": "3efa98d9e74bf31248e8c982b7a8ab7945760a66",
+      "bytes": 657,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d2a8e64fa8aa2511025249e5ab0fcb661b84816f54c1744861265b80c4502f91"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Ranges.kt",
+      "gitBlob": "94959dcabc88e46b209b143a2d8da73de5280f32",
+      "bytes": 54414,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "11c996b7bff0d15e753c58c32c84e6be6c8683e94251b3e8827fcca632ff0900"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Sequences.kt",
+      "gitBlob": "406d994a163c0c6a4108f30ad168c6a8cfb2f088",
+      "bytes": 120760,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "49f0351d83e383ab33579fcf15a99ae32b7028ec0271767eda7ab94cd827182a"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Sets.kt",
+      "gitBlob": "3136f583868df70fa47c83f7411dd9c1e8009868",
+      "bytes": 4756,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "fdc5faf99d283f8c4446bb93eee6cad55aeff6c4dc3c94f7044a45b8428e9df8"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_Strings.kt",
+      "gitBlob": "32b9ab9b675a4b6e0ab0976b1a7527f6942a9980",
+      "bytes": 93926,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f7c4ca543f176af8f08f1532744197f80b2366a281d321dc51f6e669dcd95db9"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_UArrays.kt",
+      "gitBlob": "fc8e4c64a5ca42c3a4d484cfae62e79b998dcb32",
+      "bytes": 413285,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "cb2dc50d5296585e863da1a8efbce997c0db3f14e7e0d434809b0f12675da741"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_UCollections.kt",
+      "gitBlob": "57aac76c967371d692edea97c41284ab2f431cb0",
+      "bytes": 2955,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ae801a132f65d9ac377be2943af529a787a07616b0ed61062b1a3895832e65d7"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_UComparisons.kt",
+      "gitBlob": "36ef59351f04d099e29c84c3ab57bd92149ec7df",
+      "bytes": 5152,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ade182a38953226c3b7a4796a4a002c1324c72b633a43c9dab3e42d09f93c702"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_URanges.kt",
+      "gitBlob": "92a290911e58dbbd30a98b519e3a5fa3b941b842",
+      "bytes": 18960,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "391d3335d92d1e987a825c963a1b7a6065a2e3722419b51fd480c30cd7311931"
+    },
+    {
+      "path": "libraries/stdlib/common/src/generated/_USequences.kt",
+      "gitBlob": "2b5ff6b50e6d7805f9a9771ea587f13a3000d3a6",
+      "bytes": 1719,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "9245ea3b792c4ac4d7fe76aad63ef21a19c6e27c18c05a2071b8d251a3f8896e"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/Comparator.kt",
+      "gitBlob": "6b4c935ee7f4b402a48c41dbc246ddefa90d037b",
+      "bytes": 670,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d1d9bacefcc0373926b54aceb27447629c0e85af7028ca862913c31538a74309"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/ExceptionsH.kt",
+      "gitBlob": "575185762a4152b35ce58bcc8207bd4bab021633",
+      "bytes": 5729,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6632c8c2226fd6149a64cde795f2439652ea80cc38dbf8e889582a1206ab259b"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/JsAnnotationsH.kt",
+      "gitBlob": "6968f7ff664df6b4b7de0567baf0809ff77501ab",
+      "bytes": 10623,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a359c9e121bdb601c078772d77885900ab5cc600feca91752412aab8b0296824"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/JvmAnnotationsH.kt",
+      "gitBlob": "c5800ef386f46b43e1896009cdb40a3e876713cf",
+      "bytes": 11231,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ad91a0347fb1e4a8d0796a402566ce98e19d939fa88ee89153517094dfee6b30"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/KotlinH.kt",
+      "gitBlob": "8b946a417d6fc92fc136efab55945098de720d7c",
+      "bytes": 3913,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "657866b4fe159db36673195e1b66959b60ca7218194567cf65e0e86ca6948386"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/MathH.kt",
+      "gitBlob": "2b0a855bbfdbe7fe6e016f99544d7f1a7730cfb1",
+      "bytes": 33708,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "369fe255cc1ee821e65a23ae2b2492b6d2b5e800dd2b1d4a70f7cb5ac01be806"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/SequencesH.kt",
+      "gitBlob": "f0b1843a4391d3a7c455fafc6498ad6a704c3c72",
+      "bytes": 384,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "0823961734139742e3dd36787412b9984bddb0b8672b5f132aafd417d17b1b86"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/TextH.kt",
+      "gitBlob": "2928eee49a7a798528863cd58e757d7194844886",
+      "bytes": 30533,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "2e90c3b189a11668494a0b573011383f70ba6250a3499439124396af109aaff4"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableCollection.kt",
+      "gitBlob": "ec16de7a0a16a6cc7cd2f86e19c7920e238bfee0",
+      "bytes": 1249,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b6e893edc1dbbd32df056b3b4817157484280a206573b30194f6d29f1e67a467"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableList.kt",
+      "gitBlob": "adb75a6a172ed9ed1f704f0f65615040169fa84c",
+      "bytes": 2580,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a7776ffe745422435854d06895f1204ca0c810d7d98a8568035b574d1e51339b"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableMap.kt",
+      "gitBlob": "c2fbe04388238d59a2a0839d700ded218380f396",
+      "bytes": 1861,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "7854c9fc26d65f340a0f5303cdc76da28c80c77dbcc6c897823f339fee7f6c68"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableSet.kt",
+      "gitBlob": "a95e11760e6938151f8300b20c7970137dadfd1d",
+      "bytes": 1213,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e2ca9037f3eed7e77955b220ec4ad2132cbca3de8ccee24d39e02baddb65af82"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/ArrayList.kt",
+      "gitBlob": "f158ee3c18512cb26ab810ec8b117c6fbf8dbeab",
+      "bytes": 6277,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3de5ee1fe9bd064c58bdb792660db6a5a32cadf60fa8160047d40fc1352bc600"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/CollectionsH.kt",
+      "gitBlob": "351418da4ba7f2d4cd89816d336a51e411b1f39c",
+      "bytes": 3286,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "4b0d3fc0fdc57643aaf5851c43f3206917387f7db77a463049e4ecd8e0793fd9"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/HashMap.kt",
+      "gitBlob": "7fa794b9ff9de559c3c2a030aaf262c04f7f56d2",
+      "bytes": 6828,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "02809b40f581dac2ff7b58270396c7f7e827a52fb3d205781e29b4d1381f53e9"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/HashSet.kt",
+      "gitBlob": "b2c01e1e78c0cf23e240b0092c1c53bb64f0e66b",
+      "bytes": 6743,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6635f7cd0d62e54bb8a877db3c9bdc0f0730a6a6967030eb49ab15920d5797bd"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/LinkedHashMap.kt",
+      "gitBlob": "62b1b0ffc7018bf214379b3591e3d81d5720ca65",
+      "bytes": 7363,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b09250c6e05ba02c0fdd6e8542e9d508f3fa40029b1ea47839bda39a4add54d1"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/LinkedHashSet.kt",
+      "gitBlob": "ab4db930ed90e3800fe7dd9b2d645071ef45252e",
+      "bytes": 7298,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5df2450ef5313c74260c8394a2a5406ad2f3d76c5d9d7a072b3a44cf5ca91926"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/UByteValueSet.kt",
+      "gitBlob": "7bf0115cecff88f17113d448b04400c4e52536a9",
+      "bytes": 851,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "bdef9a28707a8a18dc08fbe70a25aebc31ddbf73d4709a1f0614a4fd21605c5a"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/ioH.kt",
+      "gitBlob": "43b24f41bc7d7e26109e37c0ae00accea6404916",
+      "bytes": 1603,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3d3c8e9b23719b70f8729451475885e81eefbd5a8d33e8fce30e672218fb8040"
+    },
+    {
+      "path": "libraries/stdlib/jvm/builtins/Annotation.kt",
+      "gitBlob": "83824a45aa7506ab66e7e919d9195809a6b00dbc",
+      "bytes": 557,
+      "sourceSet": "wasmCommonMain",
+      "kind": "builtin-copy",
+      "generatedPath": "generated/wasm-builtin-sources/kotlin/Annotation.kt",
+      "sha256": "d03b97c1aa090c96d7e9556d2348ecb3a6d819a6a4c3911e48060d8e49fe2066"
+    },
+    {
+      "path": "libraries/stdlib/jvm/builtins/CharSequence.kt",
+      "gitBlob": "76765e1e504f96643c2deeaa3d3a0303ecd7b207",
+      "bytes": 1776,
+      "sourceSet": "wasmCommonMain",
+      "kind": "builtin-copy",
+      "generatedPath": "generated/wasm-builtin-sources/kotlin/CharSequence.kt",
+      "sha256": "88ac72188d2c066ef21eda55a5702c7413eb0c5efbad2807add7f1494b0a6568"
+    },
+    {
+      "path": "libraries/stdlib/jvm/builtins/Comparable.kt",
+      "gitBlob": "e0caacbd8adef564d3b6236ddb72f299ce19e4b2",
+      "bytes": 779,
+      "sourceSet": "wasmCommonMain",
+      "kind": "builtin-copy",
+      "generatedPath": "generated/wasm-builtin-sources/kotlin/Comparable.kt",
+      "sha256": "8f900a52901bea336d8d595a3c9f53ad79fc76d78798ee479b2edf118c54e001"
+    },
+    {
+      "path": "libraries/stdlib/jvm/builtins/Coroutines.kt",
+      "gitBlob": "f1bd023d0fbde56007d4126378e4dc23ea516102",
+      "bytes": 625,
+      "sourceSet": "wasmCommonMain",
+      "kind": "builtin-copy",
+      "generatedPath": "generated/wasm-builtin-sources/kotlin/Coroutines.kt",
+      "sha256": "263aaabbb884a8ba5a3ef265ec3f1ee9ed70532ad92067436754ad77803b0cdd"
+    },
+    {
+      "path": "libraries/stdlib/jvm/builtins/Number.kt",
+      "gitBlob": "ee65bb81eac0d54d0ef63ba5ad135e8108610525",
+      "bytes": 2007,
+      "sourceSet": "wasmCommonMain",
+      "kind": "builtin-copy",
+      "generatedPath": "generated/wasm-builtin-sources/kotlin/Number.kt",
+      "sha256": "2fa1c05a53ecc302c080aa3268645223d9bc5f69b0a0bd4684dc0c2498ab9877"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_CharCategories.kt",
+      "gitBlob": "ed882a5e40c2a2981fb88ba0566a3196bfdf9390",
+      "bytes": 38382,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a785a89a69a8179d2c444447647fc994dce4da98493c2377573bae71a6c491da"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_DigitChars.kt",
+      "gitBlob": "8fdc6feddaa7a78980f8c015cc390a326a3677d7",
+      "bytes": 2114,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "22ccea6b8cd66cceb43c7a24fed3d5be44a47cd831f3954029190d4ac8d5710e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_LetterChars.kt",
+      "gitBlob": "3dcbee4bf2ac92407db4a7c394bd43c1c034f6dc",
+      "bytes": 11576,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "3de8b866109b541540f791fc650427c09b37c50ea2c29fcd2a72f1c9e6a43f01"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_LowercaseMappings.kt",
+      "gitBlob": "78a94aebd9dfafdb9ec2678c5814fdbb33ab0bfd",
+      "bytes": 3958,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a3b3ed82a53ef92c179755aa2cfcd7a47cd022e81ffa18ff183df462167b4107"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_OneToManyLowercaseMappings.kt",
+      "gitBlob": "d2d9dea5ae7c669a407838b64db444dfad58f140",
+      "bytes": 552,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "4c146f92e9fd0205c7a15e6c6beca7f99bc5efda411e125c7c9ecc873c1a971a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_OneToManyUppercaseMappings.kt",
+      "gitBlob": "fe96e57b28cace909de675d48223bdadd051fe9c",
+      "bytes": 3444,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d9742f8833ad2dd5ac946878a6b852ffccf6f82a1e56c7f036f50a19925a284a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_OtherLowercaseChars.kt",
+      "gitBlob": "8e00f521df650100ae0ef583cf728ee9af6da486",
+      "bytes": 902,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "59f3c9e8d4d7f4f0f0d3e92d4b1a1769831efd4ef95debeded99eb720699e8f2"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_OtherUppercaseChars.kt",
+      "gitBlob": "12958bbf4e77fbd896155b9ab4acacfcf46b38ff",
+      "bytes": 631,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "5ecba98b5246ec0b8de0b9ef6245f1813731cf6b851248342e96b1d0a06e74b1"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_StringLowercase.kt",
+      "gitBlob": "cd5a2edaaeffb1a284f2d1aa9a8bf560db089203",
+      "bytes": 5199,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "6346a3d7338902e2a27d338bc505cdc2a6f9fe8698e0d1524fac389d0d84f739"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_TitlecaseMappings.kt",
+      "gitBlob": "1df616422a81db590695d8330d08e228857a2e2f",
+      "bytes": 894,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "fb64a8889bd47e0e9a1448826b3788077e3fc27a1b5c2cffe95694cf1b78cc04"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_UppercaseMappings.kt",
+      "gitBlob": "d50d11a50fde76c7b1ad481f2a71160a89b604e0",
+      "bytes": 4665,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "c523a3988d50a332f49d1c48d83c732e49020c89ac75fcfa06237fac9d0e7860"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/generated/_WhitespaceChars.kt",
+      "gitBlob": "51ac44b38302c9dd33861e43b07b16bcefabefbb",
+      "bytes": 913,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "e059077986e06de947178351a88fb1fb99e85ff6e8dbb67904ed3a57c065dd0e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/Assertions.kt",
+      "gitBlob": "52137f441577b2d3efc5e738595bf7b8245f70e9",
+      "bytes": 866,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "3113d46b0137e8ec4deed79ba812f377829a775adfdb379d31fd7615ef86cf81"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/AutoCloseable.kt",
+      "gitBlob": "c96e77817b93e8240d370f8d1a6e933735629158",
+      "bytes": 1826,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "bd57cd70f1baacda0f64660e376c47b795e05dfe2bb0a6f1c43d805b7af248d5"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/Exceptions.kt",
+      "gitBlob": "c2c37fb4d09e5508fa3840fc966d7a15323412be",
+      "bytes": 345,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "f6746c932189673f8d10fa2d73a1e42288374158b98c89d16d94f09fb31e37de"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableCollection.kt",
+      "gitBlob": "8e9f3a05cb8c61b435f3ec69daac60195fe40e68",
+      "bytes": 2608,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "828d303aa4fa8201fbb3be8f82586c29a7ca27ff256d481de1a8936c393e013a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableList.kt",
+      "gitBlob": "4cf1ceacb485a9cf973a288a6a245ae34731b2a8",
+      "bytes": 9058,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "aba0ccb73b7221f47f07c2d08776b1990526bf97bc6602aba64ff0811b96c57d"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableMap.kt",
+      "gitBlob": "1dbf5aacddbc45c3c112c80b3a49a72d2e3b9480",
+      "bytes": 4252,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "71c05c02cacafee0d5c43bd1386d86b364c529696fdf5ae88231a0e5b45d0989"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableSet.kt",
+      "gitBlob": "3ad99ce1900dadd9746934519cc69a56ead17dea",
+      "bytes": 1332,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "3632e444c6351ec410473552034b68b04af0bd65f6177e1119b1139eb07c806f"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/ArrayList.kt",
+      "gitBlob": "371382682af625d33f9543d8489f724e134faacc",
+      "bytes": 25286,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "c2f0557ce779ace6ba08b9bc40f6291c512b555e7d31d3e02715c019bcf21c32"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/ArraySorting.kt",
+      "gitBlob": "1646c0121d6ef5ad1d8ced75eb78093ba9eafffc",
+      "bytes": 11809,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "f2c3a298874ee7efeb1a79ce6eae49a38318eb63a6413be3463d0c3512b9b0a9"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Arrays.kt",
+      "gitBlob": "4d3acbe77282414db1dd9cd9caeea6f87f523192",
+      "bytes": 4220,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "43bff5af57a410db26a0f826454f883906fa2c98712c32d3b15b67d66da3dd4c"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Collection.kt",
+      "gitBlob": "08633a3a1da0a6186cd8f9d66ecf216dcbeccdb1",
+      "bytes": 7198,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "02a93939149ef6def18c1539b9270bc1a86999d65d193cb3862339aaf5545d08"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Collections.kt",
+      "gitBlob": "4e23585b4494d5e1749f5868c21c51b92cfdec19",
+      "bytes": 4421,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "13e44d68408eccf6b16b319789241a36be186fea1289eadef5e8fc69b071319c"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/HashMap.kt",
+      "gitBlob": "b935fe0262a1e921d9fc9c6cc7b5e7d342f63313",
+      "bytes": 34910,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "9c0f7c31ab894a0391dde2b81d83e7296f5ebdb51c87f84ba56df7fdd11fd626"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/HashSet.kt",
+      "gitBlob": "ac174c707808bfdb65a7ed2139be1deb0bc12aeb",
+      "bytes": 11112,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "4fa5e400dec28a2d13a3ef49f23f2b9b25134b9b7a55ee6b766b4b65d5223375"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Iterator.kt",
+      "gitBlob": "a3901f1a388ad76bc56258c03a235590a77e9fc0",
+      "bytes": 4226,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "9e14585c7fe7285fbce80d6545a1460273dc905b42fa3dde99412e5aa83a0a45"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/List.kt",
+      "gitBlob": "e029cd21988ba1d92b482b6317735b99c1e2fa7d",
+      "bytes": 10828,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "4c16e058effb10aa9ec718690453dc24a6d9ee56742541b066c8844a6fd84a40"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Map.kt",
+      "gitBlob": "0fd0e14eece346d784e6f9f161b96446b6443afc",
+      "bytes": 10769,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d5cf0366a197278848df10e1491b7b8d579f433b6f0b25c17693b8ea40e1af61"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Maps.kt",
+      "gitBlob": "b3397f261c32ecc101c1f7457838823019f0bdcf",
+      "bytes": 1528,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a6f9061f7ad525437878c28cddad3cda1c9e24e75fc404b0049c75f859982748"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/MutableCollections.kt",
+      "gitBlob": "972b1db3b9c216462c191bece0937d3e0f4645c4",
+      "bytes": 1194,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "851c2235512cf4b84941ec9f8274037b87a73d0ae58700736ffb97402ddf6859"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/RandomAccess.kt",
+      "gitBlob": "f2af9906f1a80be34f87d9638010239a9d6eb600",
+      "bytes": 317,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a95b4d4f1f59eeeeb0a5ea2fdb958bc231355a79870c745b86d6ffc94426496d"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Set.kt",
+      "gitBlob": "a3bd9a054bb8eda7d15f5a023cc62eac91bc7f51",
+      "bytes": 4727,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "cc4542a063de46444c6fd2785a0a1fd3c9ec49dcee6ba8e4a1ae4d81a6e4395e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/Sets.kt",
+      "gitBlob": "eaa6c24f50cdb326a837149945b47938536f54ae",
+      "bytes": 897,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "7ffa113bd0dde218a67d8eac0703fd234ff803019828b87901eeb1e0f7a8a203"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/enums/EnumEntriesSerializationProxy.kt",
+      "gitBlob": "65ab65c3d542d8abd130a7749f20a3ced4e20a13",
+      "bytes": 350,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "8ca42ae29c547d4220708e25625844fae6bfa48581fa5c3d96aa704d51c4f6e5"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/NumberConverter.kt",
+      "gitBlob": "612e3c32bc4597c4dc7bc2a357434eda8e1ae01e",
+      "bytes": 10412,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "66471555498ed4fcc2c06e751d8e235990b1ef3f0e18d842a12cf2bf54215dfd"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/dtoa/UnsafeArrays.kt",
+      "gitBlob": "2823c94059a724e58d10fd35b7b1f366860d4fbe",
+      "bytes": 3525,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "dccdd8f52e624dadc96a1ed5850c01a29f112f25a9522de94cc4f9e723ef87c5"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/dtoa/cbigint.kt",
+      "gitBlob": "b6944f3116c48ca04377a564d6b62d00e0c5be52",
+      "bytes": 18885,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ce1f18106aef1a69542afe0f7bb8b03eaddce3d700275fdd1c0745d82fc9a26b"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/dtoa/dblparse.kt",
+      "gitBlob": "049f4682f0df48f565e1049ae35eefbf0037bc16",
+      "bytes": 22169,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "1f340b18fdd043a843431cec85ead7e9c7b63827fb3a3f90c4b296467e9775e5"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/dtoa/fltparse.kt",
+      "gitBlob": "2d6d84c8b1157f0fbcfeb3d172b722d022668d12",
+      "bytes": 17024,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d32f92dd1f5263a9f0443867cea44e91b21c20277cacb2c8a3aaa4250df027f7"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/serializationUtil.kt",
+      "gitBlob": "e2e6a23bdd4c449ac37600834baa1e9b4371d07d",
+      "bytes": 564,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ab778a07b2b865b54b6260395e1cd887feb9620108de9928761001c845a9f41a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/internal/throwNoWhenBranchMatchedException.kt",
+      "gitBlob": "e871f65f07d3326e31e551f7a28b94afbf4a2a4f",
+      "bytes": 494,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "7f609568974a91bac98637c67f11d69bc15067e1804a193283c0d4a0aaffe5cd"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/io/encoding/Base64.kt",
+      "gitBlob": "4eb21a3c1d289e15962b6360ee8e9b7a19eec955",
+      "bytes": 1341,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "65d0e57a87994649ab4928048449f39205f9c6c07af293c2eebc190ee9005c12"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/math.kt",
+      "gitBlob": "e4799ef33805d81e07dccc943f46d1ad3c563bd7",
+      "bytes": 7506,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d68da9127990dd9e1330124a4838bb872a006d38f150fcdb215b644ed63d886e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/native/BitSet.kt",
+      "gitBlob": "77d0228db27b43ef7498ca6848535e61d12fc203",
+      "bytes": 2850,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "064327ecd2f3050d1f0d81affb745c232df0eb8dd33c005e8334054c053a4838"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/native/FreezingIsDeprecated.kt",
+      "gitBlob": "f7915b49e38d6c11c73ce2a7ef12bc11b1924a49",
+      "bytes": 1411,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ab782bf496f9de0256ce1612bd5d724583aa99aa01e6744e510f0266bb2b710a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/native/ObsoleteNativeApi.kt",
+      "gitBlob": "911d43af68cc542dfbd83881c10acb742012c5fb",
+      "bytes": 1276,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "3a147cd4c6e36ce5351b5452a3c4a0836c2414b76d10fee5b52f6a4a8ba9983e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/native/concurrent/ObsoleteWorkersApi.kt",
+      "gitBlob": "53eec0d5e43b4692ddaecad4070aa2ca8e75bdad",
+      "bytes": 1507,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "e56de3e0f56d9508f21b0eb6d0bfeeaf822ea9020678d339d3b0c1df8527c244"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/native/internal.kt",
+      "gitBlob": "6fd9c0118fc2c5736ab9eb5b58be99200b737ccd",
+      "bytes": 470,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "e8fc1ef727e559e298af0b027b85cd69f30f752e5abf315ee791a595ed0e0b2b"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/Appendable.kt",
+      "gitBlob": "7778ca92d54b697578374f58d76cd36110e61102",
+      "bytes": 1697,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "09cfe1b8c632e400b39d9a019dca5a139ac17ec79ba8e39d43796ae7601c3ca1"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/Char.kt",
+      "gitBlob": "1d853a207377d6e5dd35a9e49a4ceebb477c6a6c",
+      "bytes": 5117,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "70e9e111136911c82306295d6cf7ee86af04fc6bf5e806f183017ca60867876d"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/FloatingPointParser.kt",
+      "gitBlob": "80c48388711e6352fd94d83902b8b0fdb9ef9804",
+      "bytes": 14472,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "c07a8723d09ee8c029b20b4f7c10df99c9ebb35af1269b147a885e863fb37c82"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/HexStringParser.kt",
+      "gitBlob": "196d11e0efceef08e62003619f4f0537a0cafb79",
+      "bytes": 10133,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "32bfa95eda1f3f568e3b6ddf2aa057e590edfcafc62a5a0b16b6b64789cfbd10"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/PatternSyntaxException.kt",
+      "gitBlob": "8dd59bd287ecdfdd0718a6207937c6e754085d30",
+      "bytes": 1027,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "453051b7d477a09d5da2d7a82e68162452f4dd0fcd2a075dbba3eb75fee8acd8"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/Regex.kt",
+      "gitBlob": "b28857e77304801b07a75d9697f10fe954dea5ce",
+      "bytes": 21970,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "740bc470f92b7ce5edcce9232d7f628023ab36b96cad9918d607737b9f662a91"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/StringCasing.kt",
+      "gitBlob": "cffa5d774a76d1b41ad55145abdd5b41c2266f34",
+      "bytes": 3701,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "5147784e76574e9226284cb5135821e63bf7705f5a4d472fb277beba4151ccf9"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/AbstractCharClass.kt",
+      "gitBlob": "4c1deb380b40ab38132fb4336a63f0cabe92eefc",
+      "bytes": 41375,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "049d5f03ae80eecd42cef7bccc93ca6c1b65a6ebfc9a77b1a4604f9495f10004"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/AbstractLineTerminator.kt",
+      "gitBlob": "aab8b1fdcd09d0ab5702d1522bb596aad66caaa1",
+      "bytes": 3002,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "7b9841c9ebd985f1d45bc93b65683d4f60473f283fb2bce8340a7f0a1b83314e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/CharClass.kt",
+      "gitBlob": "e933f12a28af2f25d3d8473a0cdeaa2526253376",
+      "bytes": 19221,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "1f58c74d7229897217f9d44420d7e691be8dd01469559da2352b5380e74cc029"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/DecompositionHelpers.kt",
+      "gitBlob": "31c08d5b4cbe127d79e886cbbc9542d6ee8cdbc7",
+      "bytes": 1097,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "17b081093b278a493fefa24c521b9e34986b3775675076210cb63a11df922e58"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/Lexer.kt",
+      "gitBlob": "4c6cf1d9152e8fea5eddb045f977988309c7c2e8",
+      "bytes": 39366,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "4481e2de369fa642452375320182a33a23afdfb377761585cd8643ac1f51b072"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/MatchResultImpl.kt",
+      "gitBlob": "24a337a73730622a276f46086150e601cd270a03",
+      "bytes": 9371,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "59d56f2b59e175256fe763d085ef9c06f6036b6a93faabf7312892343eedd35a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/NamedGroup.kt",
+      "gitBlob": "89fd38283e4aae8e4e7b4b6506c6cbc4c24ef1f3",
+      "bytes": 418,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "42fb301fb2d5d0614ca821678259f5360763c5f77d84af02b610cda9fcda0b2f"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/Pattern.kt",
+      "gitBlob": "6013dac8aa4a2398c791f81877817c4be45ba2db",
+      "bytes": 35392,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "561ab0010bb25d239dbab5278149a527c2b5b482c11098fa3df880989ba7a708"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/Quantifier.kt",
+      "gitBlob": "8532dcd51bab77235792424a69dfb555918f59f3",
+      "bytes": 2172,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "cbba2afe7c0038a7d3465cec7d7b835cf36656d3b8a731517e67e62474a60665"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/AbstractSet.kt",
+      "gitBlob": "7b37fa965789909ff2e650fd89cfa4bdce4dda88",
+      "bytes": 11258,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a0ad9703a942d6df8257c7abdf60a6cf5c147f59b9d95328026b927aa815f552"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/AtomicJointSet.kt",
+      "gitBlob": "00cb77ae078f64fb572ec8f2433c58596588e3b4",
+      "bytes": 2070,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "1c33825e7b6018677c07463f6ec69ff6004a1f18252b6cab0d96bf755021da36"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/BackReferenceSet.kt",
+      "gitBlob": "72730cb0d505065def70af0c0d56f604393fd29f",
+      "bytes": 3843,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "e556315ec654f1557363ad5aaf312701c232c99bf746b55238fbb2c8aa12cb17"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/CharSet.kt",
+      "gitBlob": "0fdeb8a6a1d91e3cdee5cea1205b610da49c30f6",
+      "bytes": 3125,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "10ed227fe86d2624be57fb2ff3c7330a3897af94adaafe697a1b07fe06e3e759"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/CompositeRangeSet.kt",
+      "gitBlob": "77db88c3ed308f2aedb38cdf37cdc772f1e75699",
+      "bytes": 6536,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "f80330cb2e86ed348f8ee5381e4edceada1bfb9a80060b5c1cf6e763703088aa"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/DecomposedCharSet.kt",
+      "gitBlob": "f7093f2f0b8be32a26696ae97654e0b33e3ed5b4",
+      "bytes": 6444,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "96bc6ad206da150469d5827c211afef3cc46a3cf3774585495fe6706c6f2e3ea"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/DotQuantifierSet.kt",
+      "gitBlob": "b9a4c222a4936d7b5b9a5274e5db3ac6b2d96528",
+      "bytes": 4522,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "3a9ea7a28687d5ccb84d916cf25a1e5c8480cd00550352d5ac59f28e29de1639"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/DotSet.kt",
+      "gitBlob": "485de10af2db244f931b8a7446573d5fa8cc2f9d",
+      "bytes": 2742,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "b64a3c7bb65ed2aaee26dacca0193d2053ed6e996839d2572df31276c4666225"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/EOISet.kt",
+      "gitBlob": "c001f0fae5f6f252fb845bd7b11f937a826a68e5",
+      "bytes": 1619,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d482e1ce278ac6993a0297b7b3e4fa34c9e8cb803409055d0d53aa9345db3edb"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/EOLSet.kt",
+      "gitBlob": "82341ac59e32aeeaadb0cc6dc087da67ff66e8d8",
+      "bytes": 2462,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "935bba761ddfa7a384cb0303256841efea8e99bc605dd67278e3e87ac61bc472"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/EmptySet.kt",
+      "gitBlob": "35e98414dee1ff36368170cae6b2af02fa38a5d0",
+      "bytes": 2013,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ad8cf464f8c84df84e4ffc9ab3d0f73c5461862fc375713198bda396db03ef7e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/FSets.kt",
+      "gitBlob": "122412a8356d7e21a3fbc2ebf6e761129cd140f1",
+      "bytes": 5644,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "00e0354f0db9c83fbef95c2df916071fa60971b7a6fa8228a7aad2ec98a34d2a"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/FixedLengthQuantifierSet.kt",
+      "gitBlob": "edacb64c3bcce479eeb76a7d4039e022d8675b03",
+      "bytes": 2226,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "c453ad26942328b0e910f80272a8fda8fe9625f153014634ff5565f62de7a104"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/GroupQuantifierSet.kt",
+      "gitBlob": "dfcbbfb52a3ea7dda6e97f2671e122a96c981132",
+      "bytes": 3736,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "426afe285cefeeac0713fb32576c3a2b0eab300d673d8808ce4b9667494283ed"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/HangulDecomposedCharSet.kt",
+      "gitBlob": "3c720a552b167a7364e56c3f723868818b1935fe",
+      "bytes": 6045,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "b55960d8d4d6c6d17fd5b5a69fe67cc0352ee14581d327db7ee96f1ca111fac9"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/JointSet.kt",
+      "gitBlob": "e325ffb1b66f41a583ce135e2af2c995374f0f4a",
+      "bytes": 3922,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "74ec36609f0b5679beed6455b3a5f5a892dec522146f43cd71f2b5525338804d"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/LeafQuantifierSet.kt",
+      "gitBlob": "73773867f92d7b998bb891b53db22678bc954b35",
+      "bytes": 3642,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "4b00a0e40be103465f29864aa5b322070b5de6ed0696ad02c6b2ea402469368e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/LeafSet.kt",
+      "gitBlob": "0cca0cd12cef51355b9e61605914f63c0e134e86",
+      "bytes": 2274,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "61c9e62bfc25fc08f21f32074fcc7d579d0e09a703d1f6f757cd9b3316ca8d70"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/LookAheadSets.kt",
+      "gitBlob": "c6503f3401110f011ede3485525966076cca9b16",
+      "bytes": 2942,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d6021b77392c55f86ca0168709d69abfa7fa67cb945ed01af6e4420e06cadbf5"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/LookAroundSet.kt",
+      "gitBlob": "b0678563ac6aa6c620810573f490d1697f8616ab",
+      "bytes": 882,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "dc18896798e434ed681cb513125517830ee85146bcbcf27f4729e4b2ab1aa9c1"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/LookBehindSets.kt",
+      "gitBlob": "414748db108c14224111a3aab13362d3d2351397",
+      "bytes": 4937,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a3dc0694e9152fcf80c4d19208f26ad4399984cbc096a02e67b75feb3c6c026e"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/NonCapturingJointSet.kt",
+      "gitBlob": "236e9b55f2c45d01d04eebdd28c60d41fca2ab4f",
+      "bytes": 2340,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "d5aff18bf568abd2d7f46753154009ee851362536cc332e997450e32cbeb9f27"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/PossessiveFixedLengthQuantifierSet.kt",
+      "gitBlob": "c0af8bbdba548289cdc643ee0c14af8c6c3e7c7b",
+      "bytes": 1102,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "fac2280f285a3dd0a9ca665fb529f578653cc7c306c778205ba83c532ba6f5b7"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/PossessiveGroupQuantifierSet.kt",
+      "gitBlob": "66f3d9768591085ba8b287eab4a77105ee56eafe",
+      "bytes": 2320,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ae2d6cb6e366433b6a929aada7fa4c2f565acddb47fae498cd4358f778370b88"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/PossessiveLeafQuantifierSet.kt",
+      "gitBlob": "f8f5169bfedce1d24cca15289870ce39c5016a88",
+      "bytes": 2186,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "440536829b284734eab6560ab5d9b83cc9b9c4c0bfb0ed779c4bb68b1962aff2"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/PreviousMatchSet.kt",
+      "gitBlob": "6a3e4c0424d9ae3b18d246ee355f45fbde46c893",
+      "bytes": 1611,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "cc1146f29cf8260b6ff2fdaa45b41fe3934bfddbb28243ab1ab4f843a0118332"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/QuantifierSet.kt",
+      "gitBlob": "ac965b81da9764dc4289426415fcbbf85bd14be0",
+      "bytes": 1610,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "0f8e22eab45cfd76355818993f6b4afdab2f7fe09147ab9fc2418395c763fbb2"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/RangeSet.kt",
+      "gitBlob": "4b173a79d308b8c0a6e6d6ce477dfb90e0633acb",
+      "bytes": 2106,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "07b8ec84a9c5f7c6a27d31b34c0cecea5bcb72a00b8da9ef216cb30a2da6b5d3"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/ReluctantFixedLengthQuantifierSet.kt",
+      "gitBlob": "63929f648e63a0376e536c64db35e9a06faa198b",
+      "bytes": 1526,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "f56b47dfa96cf88b7cdc73c6a4118c4b980af2526bd64dbec83a4c273301cc14"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/ReluctantGroupQuantifierSet.kt",
+      "gitBlob": "a6da1602cd21b1a33288067815c05b1e4c40b7a0",
+      "bytes": 2839,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "21f7c4c367653ebb88e23a25400192dd6cbecb032c7da583f0231b276db8eb1f"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/ReluctantLeafQuantifierSet.kt",
+      "gitBlob": "33ce43b13a6b27cbfb8b23ecefdf420e81c7ba0c",
+      "bytes": 2285,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "650f4bf7d9a524bbf7bb35387044b05f150ed5b4288b85b31562b915ad6f4762"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/ReluctantTrivialGroupQuantifierSet.kt",
+      "gitBlob": "2166a85c7da0a09221de752b2ae155ffcfa52292",
+      "bytes": 3516,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "91cb9e2c526899bff34e10e7c2e3f772ef43e02c0bea7befb07d918be662f239"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/SOLSet.kt",
+      "gitBlob": "f353b9dba9017e4ab4b40c99cce1740100f36f45",
+      "bytes": 2167,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "b2a7d03956d1a5f6fa78e316d16a9a69dc1e162b0f6d2c2e74ac8a754dddad07"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/SequenceSet.kt",
+      "gitBlob": "053f084a77931f4f2e9984859f928adf24d7015f",
+      "bytes": 4570,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "a1f9f580a504f70ae4cae49d7864fc425a53e81cffeb76f219255e61c031bec1"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/SingleSet.kt",
+      "gitBlob": "cf5fa5d51f5997c8941c7488e96ee53787c1f12e",
+      "bytes": 6494,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "3311de44c3b42af341e3d95b8cc525d3c628211dc16bcaf44ee9330bba954479"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/SupplementaryRangeSet.kt",
+      "gitBlob": "7a2c5106b0abfbffc8e401fd5e22191f14e41b6c",
+      "bytes": 7172,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "81ed7387e65e446b5a4e8721fea68721f4dca753e4c96f1e02abed6ef7ebda22"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/SurrogateCharSets.kt",
+      "gitBlob": "552a4d8a0494dc7a33cb4d03bae90c1e69d91a7d",
+      "bytes": 9091,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "6c4ecd9d6dc2410784a58f9e907b6e4b97ec9b58d4ce57fc97928edbec0ace65"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/SurrogateRangeSet.kt",
+      "gitBlob": "cdb7c92683b012ab8214ef32f06ef28574b1c4fa",
+      "bytes": 5942,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ff7039d528938684ca96579fbc249aa51ad56853b3d6e45e997dd729d57e9875"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/TrivialGroupQuantifierSet.kt",
+      "gitBlob": "fa166ba93b60f8edcfa03076ee7c1cfad13771b6",
+      "bytes": 4946,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "40b1670d0920b1735723a1aea86ad2033adecee96ea337a9d8c87956d3cf242c"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/UnifiedQuantifierSet.kt",
+      "gitBlob": "6d02c6e1bef146daf1c3c3bff99113b4f791c373",
+      "bytes": 2584,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "ef53e2fc3327547268a0c9bd60678fdaab318a800d2020e8ea8b990ef2bbf065"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/regex/sets/WordBoundarySet.kt",
+      "gitBlob": "b767a664774ab7ac73ba505c4608ef3294b8871d",
+      "bytes": 2719,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "032ba635c22d2e12365181dd1c70294a88e85eb2959be38363675e258bd35931"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/text/unicode/CodePointCasing.kt",
+      "gitBlob": "7c8ebd6aadaf1e318d17c3295fb6cc06a4b48af6",
+      "bytes": 897,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "b278bc275716e64adfec8b946aa0d0e5c9cb60d1229d7820ebfa6f8917123680"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/uuid/UuidNativeWasm.kt",
+      "gitBlob": "04b6311f229943c3a871d8f8f4c5215a599fe6f9",
+      "bytes": 1244,
+      "sourceSet": "nativeWasmMain",
+      "kind": "compile",
+      "sha256": "434df7e588c0a2707df15d5c8bcd45cd6e606a3f768246dfccefd771d5baaddb"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/wasi/kotlin/text/StringBuilder.kt",
+      "gitBlob": "4c510f86467651f77cfbda69b88e2aa9984d9e8c",
+      "bytes": 47279,
+      "sourceSet": "nativeWasmWasiMain",
+      "kind": "compile",
+      "sha256": "1370be179e2b96a017011938609aebb19c5f902b1ddab184ff58d7c5700f22d1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Annotation.kt",
+      "gitBlob": "36dc07b65a985b8da65a02b5424f3baadfbd60fc",
+      "bytes": 476,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3a622f1f104bd4229d5b6abd7af36506f09e05391a893747eb382bd374f55c22"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Annotations.kt",
+      "gitBlob": "8f39d7fb1e66e21ac7bd53f5791a0bbb2f08f1c5",
+      "bytes": 9251,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3809e147ba670c1e935d613ce69fa4918fb71717f8771fd7b593f5c8dfee3d7a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Any.kt",
+      "gitBlob": "e5748443a5529a6be9c246f9b84ea81df336e9bc",
+      "bytes": 2030,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5ff6496e89a71f46f82e6be64e38af27c6a92fcdcc2b22187fd2c96614d4d7ac"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Array.kt",
+      "gitBlob": "16df1c2019aaa98cf459386aa8479c64d21a8066",
+      "bytes": 2734,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3a2182cb68379203249a225913c56a0b0701e76c64a0ca4d0cda4ec94c3dc673"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/ArrayIntrinsics.kt",
+      "gitBlob": "3cfb39355451f852a5ebe549f04b91a4aa7ad833",
+      "bytes": 386,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "02b2ea7fae6a8d242cbea1fe76a02cb103f3640ea9cc5f3751233e8c96f926d0"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Arrays.kt",
+      "gitBlob": "fd0446c414d85acf90a12015267879867c015014",
+      "bytes": 20239,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e57e1b75f78bb42f4f5ff2a6c01602450b78e0a420af155c1d1704abe6b8a49e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/AutoCloseable.kt",
+      "gitBlob": "c45889eb7765073b9c109e4a926262a17b999161",
+      "bytes": 3551,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "457f25dc150480704a6714418640d55221f26845e8a9e328d8b04281ed34093c"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Boolean.kt",
+      "gitBlob": "a0d1e3b6408af85b2b4654e3ffc01a830373586b",
+      "bytes": 2294,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "984881836ae67d1f95fdf180fe130707b25b4d0429e93c8aee4f29b7b1e43619"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Char.kt",
+      "gitBlob": "121c177d9a63cecfcdd8cf67822e48f2768c3598",
+      "bytes": 6019,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "8de611fdebae5ce241def71d494687fd673d1377ad05f1315ed0a4e055de39d3"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/CharCode.kt",
+      "gitBlob": "3212400e662c895245ba61bbdbf648f76914fccc",
+      "bytes": 1560,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "20d4b3ef95f035422d5f710dc0c34944110bd806541dfb50b904bd1dbbe65b8d"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/CharSequence.kt",
+      "gitBlob": "6eafdb63f44152eaedab5bcc65baea2a8c482b31",
+      "bytes": 1673,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5438bbea9537dafb972c5c5a0172b9356b8711879663e205f95f74d9e66186c5"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Collections.kt",
+      "gitBlob": "34c5a10a9e42e7bf050808fd31d5276ad253acf9",
+      "bytes": 33643,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "139026ac7c591dacca632144e42ae8a57e1f5aee5b59da43b45ac35bfdbcf91a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Comparable.kt",
+      "gitBlob": "54d10d6cfbe7e48a5db2f0eb9e5aee4f771db90a",
+      "bytes": 690,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "9f9d052b83b3ab85276c245bd8ac90eb50aaf014cf608d3711d4837bde3edeaf"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Enum.kt",
+      "gitBlob": "a3813e1740ed9a16453ee0f78da0054b2b8321a7",
+      "bytes": 2155,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6a3ae467143d4405efe209ae73a896a7084d6307033e2b6078a1829d9fdfbcd3"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Function.kt",
+      "gitBlob": "6c9592076a38b660398cdfc60bc82a3f407a1c62",
+      "bytes": 454,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "0b30adcc7bf3581a1fbd841c489d3aed812bc3f1c35344ae4de2a9284b129c1b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Iterator.kt",
+      "gitBlob": "108be9e8e92f67fdc5662a9ecc7bed24a14ddee0",
+      "bytes": 4129,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "0e800b778e136b028689849f503abebeb900ae72538755bde76efb0182703a06"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Library.kt",
+      "gitBlob": "fe1c7fa1220f0d40b974074e8e5f798250ec4e03",
+      "bytes": 3729,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6b8ac9203a92cecd328ed48f677ccabf32c68fff21fabe46f614a078a620294b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Nothing.kt",
+      "gitBlob": "cb58c7f65e0513f052aad452f7829856edcf17da",
+      "bytes": 495,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "7e097d1296d544b489c977e721f93bf47c403a0deb42a540363b11efe39cd52a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Number.kt",
+      "gitBlob": "411196f9ee256006e69f85d65e4456efa110b1ba",
+      "bytes": 1882,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "8c1a7a09be565617d333a256c07896e6b899eb0dd9323a489563c97262b8fad0"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Primitives.kt",
+      "gitBlob": "d138a45cd243d2be72c8b3deb5e032964f3e71cb",
+      "bytes": 86912,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "0a70201e18d4f267a65f565985260fe3be2a252cc1177c9f944869d001dadf36"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/String.kt",
+      "gitBlob": "d5757d20b1486d13b43cb4eb52de3e087519996b",
+      "bytes": 2173,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1ba27215f131d3fec0e45e3a1deec9fd82401ee59e221a34cb3302f48e38a1fd"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Throwable.kt",
+      "gitBlob": "a215369d755cb453fcff122393d817c781041afe",
+      "bytes": 714,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "59723ccb38bc7531fcb88c98546daf4a5a11002142da2b3029fbf1d3b1453d07"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/Unit.kt",
+      "gitBlob": "36688d6f2b79aa9d6425cef4c62e1ec4ee6e6352",
+      "bytes": 362,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3a4b6049afd00c15e75566a88fa9da83898c9edc3c1579896f163e612b8687f5"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotation/Annotations.kt",
+      "gitBlob": "2f3c9f44ce3a7d339b77444ab7c3473323d99f7a",
+      "bytes": 3136,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "839a718b60811e99363fdb739bf4ae3090a2941a32ca8c76a8f4fb71bdaf2a6f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/ConsistentCopyVisibility.kt",
+      "gitBlob": "283847515f777482da389fb5804010f6e2703af3",
+      "bytes": 7604,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b7a9f3e5c0dfdef47f61fdd0d321c806025251759d2c51d43041bf4269abf2a7"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/EqualityBound.kt",
+      "gitBlob": "4985ad5220f28ac1be89cadd81fcb9509d6b5ecb",
+      "bytes": 1141,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5f633b9528cdfb60051aa4c0f4cb508d376d40099c4255355c8fbba8c13622ca"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/ExperimentalCollectionLiteralsApi.kt",
+      "gitBlob": "769cfe68f4ab8e5f883968732f5ff0faf9dab8bc",
+      "bytes": 1550,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "baa77c5389d370f936fec68b8d770328a0915330db2918936c00a5518488f70e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/ExperimentalStdlibApi.kt",
+      "gitBlob": "3b7e1f8793e8b8304cde4c1564cb4faff88eaf5c",
+      "bytes": 1293,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ac06e329addb7d458189b10bc3a6bf090c7689d66087fe0b89849f0f876f8034"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/ExperimentalValueClassesApi.kt",
+      "gitBlob": "cf868f300d3812b9f2b20a9f229d8056c2604362",
+      "bytes": 1021,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "85c618f142ef1df655b76eb3e1114ccd0bc3db94bb48cdbb4afe5bdfcbb3f721"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/Inference.kt",
+      "gitBlob": "9d983a1433333a84fc33563bcde411fbdafdcc3e",
+      "bytes": 3089,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "01122309aa5daf0b40fb410919e57933bdc69a3a833b11ba18b11415c10cd4fc"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/Multiplatform.kt",
+      "gitBlob": "c89ec3a8e3b671b85981787791e206ce4cf64122",
+      "bytes": 1872,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "4211c0f9a507478d50641dcd62b7489c8404f9de2e49d07a337f5fdf117429bf"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/NativeAnnotations.kt",
+      "gitBlob": "bf15e5f6e71d4d046a7cdadfea700f3ef835ceaf",
+      "bytes": 7086,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "90013da9000a74b3f56f93e78b450f8dc59ed5cfb323d1fc0122bdee46f6751c"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/NativeConcurrentAnnotations.kt",
+      "gitBlob": "7d5f5f82b217d1c318de6db95adba065bc722114",
+      "bytes": 1309,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "8229e767563516184df8b022a1e7b78f181c9f7a3886afdf544485689cd0b9d1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/OptIn.kt",
+      "gitBlob": "a62b65de3ea769f96305a6cd9ad5f99b3992deda",
+      "bytes": 8317,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d2eda188e05ce7bb8b2bdf5818a12e0fd8cc9245a053e524549f3e5daed07e97"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/ReturnValue.kt",
+      "gitBlob": "b2f6cc55544007a3a33abef8df780057901a119c",
+      "bytes": 1772,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e0e4c311c7f47c92582a37ddd7b231c96b374c0dbc06fb57b4c604f227be198f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/Throws.kt",
+      "gitBlob": "16769cf16f48d263a173918d4b49592a123287f6",
+      "bytes": 823,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6168229dd2574c33527d1d6469ba46c9bfdc570fcf0f0bf5d95e3ccbcd047784"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/VersionOverloads.kt",
+      "gitBlob": "cd88188e2ae0728a976238c2513dabc98428679f",
+      "bytes": 4340,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f5773738474b2c2e27d20e8f5b8c8b6815cf1b1d542f1f9eae6a62674965c54a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/WasExperimental.kt",
+      "gitBlob": "10f89ffc1d1a81f4cdc0435568fdfe752514d9f1",
+      "bytes": 561,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a8e9eabf7fec6daad3effa3edb129eb63e34497cd9f0649d694ac5f0060fd411"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/annotations/WillBecomeValue.kt",
+      "gitBlob": "ffffe0888a06cd948fa75aac1e6ccb104e50f2a5",
+      "bytes": 2131,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "448fb3bd66e3b16e06eb12ed1dbe4f043a975a6c2483c219d5834c39ee356824"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractCollection.kt",
+      "gitBlob": "9f9275435c711629d25e2318c6bf69b5a5f82b80",
+      "bytes": 2004,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6cf944e7a688966a5db7a6c362cd297ab9e6ebc62c9c42f4a76ac42afff119c0"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractIterator.kt",
+      "gitBlob": "a85cbe1253b881adb336da0efd843f9c9dd0839b",
+      "bytes": 3005,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "02a88d01560e559d182f46f264bf8373f5c0db1c1e681473898fed4640e9d6cf"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractList.kt",
+      "gitBlob": "91ef01c7755c07f9cee2e29a4fe6e2a6e51422b1",
+      "bytes": 6440,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f81916c3a94808ab1df9d853c1c63ef9fc9f7ca4b7d382509cc6e4b74b953a10"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractMap.kt",
+      "gitBlob": "ac5ec1ba7fcdbebd9e01ba019e7efaa1f7e73d6c",
+      "bytes": 5389,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "21309988b541e460b4de3c7c7b2b752cce1c29e33f1b33eefe9581ea5cb4fb6e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractSet.kt",
+      "gitBlob": "ef7cfa61a5aceb432d120b25c37f300ec33a259e",
+      "bytes": 1635,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "51ef8ac320c294a512bebaa60a3a590da5e8414adc58653531cf2982fd6849e5"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/ArrayDeque.kt",
+      "gitBlob": "59d4e5cf4e4b66aac4f76ac0f20e8167025533b3",
+      "bytes": 25716,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f3e36a5b0de2122aa87c5f2c6b4ffa3936c507e260bf1bc3a760ceb5da317065"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Arrays.kt",
+      "gitBlob": "411c7a86f1833afdb37c8325378bd31b7e321349",
+      "bytes": 6429,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1f427a2250dd3ef5b73ee8c9b8b21fe872d832fa3656e8f2aa089301d132ec01"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Collections.kt",
+      "gitBlob": "687372e091df7359ae3b30fa51e7c3bfca795cdd",
+      "bytes": 22139,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6534b218d083d0a59b12d4f1c2276a92ee23cf3c1ec8d9a1e9157ae744dcf06d"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Grouping.kt",
+      "gitBlob": "a281fcfb099c753a3165c4d7437272abda24d693",
+      "bytes": 14200,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "2c1bb6c5a99bc5ab71fc84c9207a939c27f9927f9ff14a4a35b4e2414cc603a6"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/IndexedValue.kt",
+      "gitBlob": "ee41b1284d97053c239f486ae528067e7cea7820",
+      "bytes": 564,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3578a1e43a4f04120827f932eb578924f05b9d01ce1e009cf98cdb567be4f6c8"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Iterables.kt",
+      "gitBlob": "404353a75ef2b72c8f7a882ed5c7fec34ecc30dd",
+      "bytes": 2458,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "db36d783a35dc062366af184d7e54cbc70f57e3cf570329696931c7008c1e244"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Iterators.kt",
+      "gitBlob": "3f6deb54178194847798e009f054dc43bbd0c6f5",
+      "bytes": 1580,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "04902b5056696394cfeb2fc500ce4d5a9dcf01307d72f8841a1b49a13e44ef14"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/MapAccessors.kt",
+      "gitBlob": "ad8f63471681f420afeff7a5068adac1ab5272d7",
+      "bytes": 2336,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6e84d50e79295b2975c56631f869f5bf9d2e6a52bcc1a4cb9ca639c6f9109ffd"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/MapWithDefault.kt",
+      "gitBlob": "83e1ec6326d3337230b70032370574209f7ccb69",
+      "bytes": 5368,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "0e5d5a773033dec8bc5b0f54f860d73737e0dae96f8c976035119972e2e7246e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Maps.kt",
+      "gitBlob": "68206defa6f2e58d2fa16e38336b3570f19612b3",
+      "bytes": 35894,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5619558161c5bef36e82118cd2659a4a97d987b258586ce8413eaf7c9ff39173"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/MutableCollections.kt",
+      "gitBlob": "93d70986543516996189ac0ba12496ca0d2f2534",
+      "bytes": 11360,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b5c2598fb89cc8caab34a83ebb07a7ead0b8f07fb5bc78ddbe6c6dfbe79470f9"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/PrimitiveIterators.kt",
+      "gitBlob": "37f7f33c0a947cf56ec76a0cda5343e602279456",
+      "bytes": 11484,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "7c7ab81738d145223f86f2acdd5627287aed341ff5779be4be3049a3efc5ffe1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/ReversedViews.kt",
+      "gitBlob": "66d43595c756e5b26087ad93178027ffc8fcaf9f",
+      "bytes": 4202,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6e58617dc5d89ca8c80e7cda01d6673b648bceb13f10f3ff80326bfc7d8a22b2"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Sequence.kt",
+      "gitBlob": "66ddfc5feaefd6b8f6c78f894aa3d9c7074b5a98",
+      "bytes": 2477,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "dc516fabfbce2c22f9cacd9c317f09e6e7249ff9f32a4ac0ea75cd8e35a8856a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/SequenceBuilder.kt",
+      "gitBlob": "d5dddaf5ae4bcb144b302a39b29971a6692e3642",
+      "bytes": 7623,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "c347592a8b42dd4a74796f192d2ab94e114a2c73bd554e584fbc6a475d9b3b57"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Sequences.kt",
+      "gitBlob": "481d4408d843b7b8e308356846e7beb1ed2f4e81",
+      "bytes": 24037,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "bce3f0b4a2673f660ab54a0c047b688f22a366da1b5985232f72669c7bc5a9a0"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Sets.kt",
+      "gitBlob": "f58ffbaecda6fb5b91b072def4b4323a87aac0d9",
+      "bytes": 6921,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e12d14089537d62e303d27f7c7de6a9017abdec4fda0f77c2ce08ee9aa5e4936"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/SlidingWindow.kt",
+      "gitBlob": "b14511c6542e0e45c5c96dec2f2d09bb9ee9e5e7",
+      "bytes": 6715,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "04d6bbececece2b07672446fd5145c55d5cff5bf2db62419d53d278d417aed60"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/UArraySorting.kt",
+      "gitBlob": "0dedaec846043b48272f603ce4590bcfda0532af",
+      "bytes": 4356,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "87f743f0489466d18c5fc2fce52bae9aecb6862d0bae86a73052ba1d2c16289b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/comparisons/Comparisons.kt",
+      "gitBlob": "80af79b4ec04cca3fbc3a85229f25d48f136dfb1",
+      "bytes": 13372,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "874ccda5aa86fb554273231b5a9322b77993d2ae5bbdea9c38605d9a4efe56d8"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/comparisons/compareTo.kt",
+      "gitBlob": "a72237b466fbe15738f866b7efc9d6a218f71e55",
+      "bytes": 722,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b421958d442821df51bcc2552f6d6718146d1ca4c6d3dd2c0e0adfa0744eb34f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/concurrent/Volatile.kt",
+      "gitBlob": "de4e22cb47250f0751acdd0f3f4bab518ee79a8e",
+      "bytes": 1320,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "26d47ebaf4399b154fadc8400f2ad313c852e66db5218cb259a3550a5b7bf3ad"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/concurrent/atomics/AtomicArrays.common.kt",
+      "gitBlob": "91fd3436359ee3c28febd9397916923a80e9bd7d",
+      "bytes": 31329,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "02f1da6b4f2e12d03589dab944e6d6d26860adccfe90ea20dd1aa253b51666de"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/concurrent/atomics/Atomics.common.kt",
+      "gitBlob": "7621c975c3b544c615bd70e08dc75f6d84b2ed48",
+      "bytes": 26309,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ef1e16f27e1809674afc5a2eb9fc3b43554f2ea3a0891c775111d87c188bb37e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/concurrent/atomics/ExperimentalAtomicApi.kt",
+      "gitBlob": "170a838a9f61990e67222d84d01fa59ec7bb70dc",
+      "bytes": 1245,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d6e4caf4888499d1b34a482f844d10969cf0f77ad3343b2166e79894c70f537e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/contextParameters/Context.kt",
+      "gitBlob": "3b39141721957dc3762578841656e5d8acf883af",
+      "bytes": 4024,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d14180a299772884bf5df0fb5571474aba66cfc60814b2dc8e0ce875676be101"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/contextParameters/ContextOf.kt",
+      "gitBlob": "7a77e40fc1c38ce96b36e5e597c53c345279a615",
+      "bytes": 1052,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "db2df20f1534559660251500de534ecfc80e0387b7932a2a52871fdefc9898db"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/contextParameters/ExperimentalContextParameters.kt",
+      "gitBlob": "b7f061e087615928223d985e28ec005a16d258c0",
+      "bytes": 908,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6fa60b97557a711d2e7cfd477164dc7c6967b304fead9172f02baee4d3b6ce75"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/contracts/ContractBuilder.kt",
+      "gitBlob": "02b367f5e3027c788c2db32692c4f2bed9ccdc3c",
+      "bytes": 10092,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "4e91c03032ba1932e2f63d0d4b3016c1163bdd9e507371211f0fb6caa867b7a9"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/contracts/Effect.kt",
+      "gitBlob": "f4c01913cd0a7cc107485611934c3ec13cdd0ce7",
+      "bytes": 3223,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "c3223090d3898cbb954487a99f8b00fe19759f8cbfda497b290ff544c469cdb7"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/Continuation.kt",
+      "gitBlob": "375cec539a5fcfe59e6c85db22aa720c8a818aad",
+      "bytes": 6076,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "7bbf6ee19310a904b0fe55e3b4476472a3556add516ac13b926c8ad2bea7d317"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/ContinuationInterceptor.kt",
+      "gitBlob": "065873c63428789899bf84d599474fbeb18a70fa",
+      "bytes": 3693,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1ca4ca96bc0fb7b0cda50af7b889aa5cead3f272498be3585d2dda7da44d5dfe"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/CoroutineContext.kt",
+      "gitBlob": "2580c00ab3f97ae6e489d810b5af6e9d28532eb2",
+      "bytes": 3119,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "11925f7743820f3adfc0d76fc7cd2ebe94bdb6d854113e67a5f31d8dd9bfc6ef"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/CoroutineContextImpl.kt",
+      "gitBlob": "d52d7b27f2a1af4645879e559b3c40aab5ed5f6c",
+      "bytes": 9148,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e8a01ff92657a0f01b5e27870134be304b693775719b28c8a5114988713bbf02"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/CoroutinesH.kt",
+      "gitBlob": "87b071cbd10b3490add155725782fb2ed418e259",
+      "bytes": 634,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "7c388b055ff858ff23adf3879406d6de9b2821c6590d14d3c59b44f55c8113f3"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/CoroutinesIntrinsicsH.kt",
+      "gitBlob": "c779c810e3e1d0713c30f69b7f2e88d772a3073a",
+      "bytes": 3606,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "bf9d21e7a062bb86d8838c4c9cbc597e3361f12beb7b63c1f4a38c5eed6a14e9"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/ExperimentalStdlibCoroutineSupportApi.kt",
+      "gitBlob": "e35d094ab2802aa6d8bc3cb058f53199f2014f02",
+      "bytes": 1091,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "34330f21d86b0e6419e7d761537ee8d9c2a9de9df15d4dedc345dc8bc2d6cb90"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/cancellation/CancellationExceptionH.kt",
+      "gitBlob": "066ce42a24a4ac4cb042af02f2654abc261b70bd",
+      "bytes": 973,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3277f2a0c31eec9bae0bf7c2780fa5fb88eeda442cbf49bff5cba4ee3bd58e1a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/debug/StackTraceRecoverable.kt",
+      "gitBlob": "e4b483268bc4fe47518b373aaa61a65460e032ce",
+      "bytes": 4387,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "643aff356f8ddb34c250043355ce78812eb0712a2128691d35c80be446f787f3"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/coroutines/intrinsics/Intrinsics.kt",
+      "gitBlob": "ac7a67e7405eb249d6e3055cd68202e7ab4044f4",
+      "bytes": 3765,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "2b9bbfb4fb16a9a3d31a73ec9ab423633b932222b7cf2dcdc677c47aecea38ec"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/enums/EnumEntries.kt",
+      "gitBlob": "db7be26f41dc25a40002cbae255c8b63318260e1",
+      "bytes": 4090,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "877ef097e308459bfa293b19e82db1a08ad652544aaab7a40cf0faa8805c3f06"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/ExpectRefinement.kt",
+      "gitBlob": "04397d8677fabc2fcd33ab87a4fe9b2034058700",
+      "bytes": 2362,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "2b80fc65a5f41f0c589ba0649aee7bfe8318222bc60eb7294eeeddb479f62b59"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/ExperimentalNativeApi.kt",
+      "gitBlob": "ed71ec64a50993c8451087de20c85198a4ac319c",
+      "bytes": 1680,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "c6f1d4d3e4aa28ee75b5664ceee65704429f6378a7dac6fe8e89f32b3797caf9"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/ExperimentalObjCEnum.kt",
+      "gitBlob": "2836ad38398d7233dda4711baa022c526ad26d00",
+      "bytes": 1030,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "576807fe9a1e1fd2db21194f0271a3958f4e2bbc239428958371eca5c46c2006"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/ExperimentalObjCName.kt",
+      "gitBlob": "ae53d7e9273774d4d362efd8c69f43228c7b448d",
+      "bytes": 516,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a5fccf7bedff88972dc4d86a8591f0f9184d7f9704e7020bd797964ed5044f6b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/ExperimentalObjCRefinement.kt",
+      "gitBlob": "d8164e9bee86d609f979626c782125280f63f4f2",
+      "bytes": 518,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b822d6e3d28b4cf0a3f4b65c72f1b55e9ae7584e3cc963dfc230e2a0e865aca6"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/bitwiseOperations.kt",
+      "gitBlob": "2efe5dadf57d67dc7a7fc098fff7ac14ebaa1318",
+      "bytes": 1814,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "886858b67f551c7d00b2671568d27347d09d0df655910b098b27314b851e823d"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/experimental/inferenceMarker.kt",
+      "gitBlob": "fa38536b30a1283eb19fba90a7a242d1587ea847",
+      "bytes": 838,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1c5bcc0c779b54865ae5254f7d8a9e9f58667e94da40398716723932a4502f04"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/internal/Annotations.kt",
+      "gitBlob": "5cb018188689d34cf36fcbe83e21ca3df0ec2a46",
+      "bytes": 5899,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a27f59a715f8641bea2874bda7bd8eb407848959631df6d4a09323f73c0e45d1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/internal/AnnotationsBuiltin.kt",
+      "gitBlob": "2a368cca314e524652ddc46cbe90cb8373ad2472",
+      "bytes": 1503,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "879fb54cc3a3bfc32df895f386084826fff1edc20d507db02bc2467b1135516f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/internal/progressionUtil.kt",
+      "gitBlob": "1455e00dfe27913f3f84958180892bffbb774f80",
+      "bytes": 2825,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5a9d0ee3757abf450d8b7c5491571496867912e03542413ff5a1b06b066e45f0"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/internal/serializationUtil.kt",
+      "gitBlob": "b9336109fa8958e21c4101831cc8d061b8a21f76",
+      "bytes": 731,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "fccd211d9b9ce62b38bbe9908808371457c5693a76f23ef9c9215ac3fc585764"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/internal/throwNoWhenBranchMatchedException.kt",
+      "gitBlob": "f5987a5ab74633bd2f6e85cd9eeb67fb1a8407e4",
+      "bytes": 377,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "eeba79353a615e37715dcbfe63abf0aa4d840d7ad00c4dcc433aa662bfdc12eb"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/io/encoding/Base64.kt",
+      "gitBlob": "22fe9508559dfd15dd44b738a0b6b824db804673",
+      "bytes": 39539,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "26e5b72016b427fa78c96683ce12d0b268eaad95786e021d131badfc6aa7d054"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/io/encoding/ExperimentalEncodingApi.kt",
+      "gitBlob": "c2638b0a8fa640b41e55212b7688ded04da840dd",
+      "bytes": 1276,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "cc0acf938228cee1acbc80f4b9ad548c5e36e08f71067724dc442a110e83596f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/properties/Delegates.kt",
+      "gitBlob": "e38e6cb5073cda2256c5ef60d43a5d931b82e19b",
+      "bytes": 3327,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "bf949cdd6726f9a37ba087b5ad1baebb461e33a65ab761f5f261e5d9acf7c2ef"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/properties/Interfaces.kt",
+      "gitBlob": "a8e9ea9b3d73733258db60e45c1bf69594e852e8",
+      "bytes": 3070,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "c876f12398fa7b14d2b684857d3ff400178525f9f327e51c2d752e5af077f5e1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/properties/ObservableProperty.kt",
+      "gitBlob": "4a9e1161e2257ca1d25b2f4aeeeb79056edbf367",
+      "bytes": 1834,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "07de7a3c8a01aced99928e2c55841a2f93bec0c0dcf562dd6adbbbbeb6296cb3"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/properties/PropertyReferenceDelegates.kt",
+      "gitBlob": "f15e8419fc7f56e6afc2cc2c6a39ed822cd0c5f6",
+      "bytes": 3529,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e69ba931465d71c544e3bcca4afa7c31450f7aa34807c013e0688fa95f418bbe"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/random/Random.kt",
+      "gitBlob": "18d737276ca4f1f2d756bcffbe1ef9e5323f4faa",
+      "bytes": 15511,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "2323b257fda19c3928ca2bd528bfbe6bee6761cb3a7d6dba6db4e462f8f7fa6b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/random/URandom.kt",
+      "gitBlob": "0c555de381a793027ac533a1ac576213de3af336",
+      "bytes": 5483,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "66d8e83e1fe923c9d9747a3d0b58ffb0f178ad27b7714dac1d9b8eab1aea57b6"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/random/XorWowRandom.kt",
+      "gitBlob": "76d770859f1ba1a47d3cad7c7853644a63942ce5",
+      "bytes": 2010,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "67fe88b9b54bc5d3e4eca79a665fcc71ed7c97eb1b5fc24a2435475b9bff28df"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/ranges/PrimitiveRanges.kt",
+      "gitBlob": "5efb5b21a030bdfeb58d6bf0dcc5439d0044565f",
+      "bytes": 6031,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5ecf6a3644eb5562debd0551f870632f3b952204fc7aed9d3f92fca259a17486"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/ranges/ProgressionIterators.kt",
+      "gitBlob": "62b919ec910dbd93e6e0e83e0b03313a74bbf667",
+      "bytes": 2704,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "9c76d57c9e9fe7064a9e744ec1d2f285ec44f1fe9148f14740b31362b7af4e22"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/ranges/Progressions.kt",
+      "gitBlob": "a02a13680c4658c340b27fe72aaa20ec2426b23e",
+      "bytes": 9474,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f6cc7d58271c287ee6d6ed68fb2e68a03561eba24da3f9a92390cc4efbc56f5d"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/ranges/Range.kt",
+      "gitBlob": "162bf2d9c399fab014bab28374d7f383dbccd303",
+      "bytes": 2997,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6cd435b46d0060ea361912e8bb0e9039ee7b5852cf952d59df3697ce5e8aa8cf"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/ranges/Ranges.kt",
+      "gitBlob": "f9e8331804515711708f461d6ccd2465277a7377",
+      "bytes": 12630,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e5842a67553784ba6ab82d0d4b6681bc60c8ab40ff212cacbad7a1a3115c40da"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KCallable.kt",
+      "gitBlob": "d834f524af109c14973fb228500b28a48f89f98e",
+      "bytes": 910,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d3a74e85c9b9063cda9fffdad3ad0052d536980280e754a04ef2ca5dbf631f1f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KClass.kt",
+      "gitBlob": "0b095cdc3e9131d4fe7e4e688ecea21989c25822",
+      "bytes": 1571,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b14128c7a608f95c558a909cb190df6311d1e2eb6015e9c857353ecae8a5fb9c"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KClasses.kt",
+      "gitBlob": "72b18358782a290628b23964ea88136a404e9ca6",
+      "bytes": 1565,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "286a4c36f222b724c2253621a01d95f5d6835874d9b77e3b731b7b60f46669ea"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KClassifier.kt",
+      "gitBlob": "4e7b1b84f89e589bf855875152233feeff162199",
+      "bytes": 424,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e9379ed8fcf20029cee8bd343f4b6994f233e809ba9acbc154111572a61f8452"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KFunction.kt",
+      "gitBlob": "1c3c5bcd5d9d5174e20c9eb4d7cd8c41363e6e33",
+      "bytes": 402,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "4b9eb3fda968f2075c85965155058e15e13b2049c38e3596f4fd005ccfbbc282"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KProperty.kt",
+      "gitBlob": "0257f24e17a2a2392069ca4e9aea58fa199c4fbc",
+      "bytes": 4337,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "7f3606f200750c536b11a2deb36ede81ac1e46c21ddeefaaa86a034dafb5f6e3"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KType.kt",
+      "gitBlob": "b3fda52a9dec42aa810528c5879044be9795b36b",
+      "bytes": 2220,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "4ac6b4af53af2ab6fb95bd48d947a563acebd11a5632a9a0048d7a65aa2d26cb"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KTypeParameter.kt",
+      "gitBlob": "5dc8de27d0dcce028e51cfac6627b179f5be515d",
+      "bytes": 1473,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a8c800dae49241df337ac9512a7ec34000b80200b064fd4e5972ed7f5d1ed84f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KTypeProjection.kt",
+      "gitBlob": "c5096a6344c7e21e30f250d4a9c42b22dc9f0609",
+      "bytes": 3489,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5c21833722a664291f2778f434af47137a1dd372fe997f5353c408312c7ce879"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/KVariance.kt",
+      "gitBlob": "874d61302244520299feaee59f3c0622f1b765f2",
+      "bytes": 1092,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ddb8ebafb1561759da8cd085f1118fc870d30f04881645d44e6337e09627abac"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/reflect/typeOf.kt",
+      "gitBlob": "ecbdedbeb7f8827071022690d9aae7f4dcbf1345",
+      "bytes": 741,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "0483a043f7619998dceaa54e9b458d7b746a2037a0893bef1ea0101327281e37"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/Appendable.kt",
+      "gitBlob": "c4b5bfa7cec207d85492cf2846f003cdacc7dd70",
+      "bytes": 3821,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f710b0ca5ff4802b52b2228759cd7279e17335ee5dc38ab6094100d3fcd195e7"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/Char.kt",
+      "gitBlob": "fdc659f069160776de50b5821a1d7b7ec2cd1509",
+      "bytes": 13542,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e9b27fed9b23d10acf965dc8dd29b8988b9d105af5986df31ca1c040e8acdf8f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/CharCategory.kt",
+      "gitBlob": "a91075fcb5f354d89129577c77340e6ea724662b",
+      "bytes": 3547,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "30e37a1e9b5caad4e81a7d4dfb6c61d75f4655f4d351ed30b6737f6549bedccb"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/CharacterCodingException.kt",
+      "gitBlob": "5db7f9f1b371aa643fa2424af4bcc6858b287128",
+      "bytes": 399,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6081b30bfcafc8b05e55c14af762a4f71589bf3d899c412b69c16a4846aa4d84"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/HexExtensions.kt",
+      "gitBlob": "ff203de0032d974586e46463139a11dee4450f2c",
+      "bytes": 56269,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e37bbabacd6e6f0d4b0f9dcec860f0108171ae6298b1becf1827f800d05989ee"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/HexFormat.kt",
+      "gitBlob": "5648fce042215ff085b6a3ab960d7218686a441a",
+      "bytes": 42299,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "34379ba97040f9c8c5e9f1c1287fd0c4ef20d419007702cb6a39c9f7cf5a502b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/Indent.kt",
+      "gitBlob": "8414881252e5f7b7e075260862876bf5f2055c37",
+      "bytes": 5056,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ab6b25c264c76b26e80b2ffcd50631e1a66ef2a59078a82f8dc82dd6b5120b7e"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/StringBuilder.kt",
+      "gitBlob": "92609cd3b2866fa8e12921145722f40292e38f55",
+      "bytes": 28996,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "10f42e2efc663f472955eeab69cefd618a65d7cc6f6c97bc18374edf8e377c9f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/StringNumberConversions.kt",
+      "gitBlob": "34a749a34fcf552874004491b7c765bd17c4db66",
+      "bytes": 6699,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "275c91e8aae6b048c0ec61d2e930deeb7b1e5dbe3ebe314eafb30cf6da7789cc"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/Strings.kt",
+      "gitBlob": "825ba7276be0cb08433c66245f61e0aaf0450615",
+      "bytes": 70480,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "12be6c955d7ab31a705abe296b4733f3883468c8566ca823537a2642932e6b82"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/Typography.kt",
+      "gitBlob": "6569a2a06e9a6404100f487ab9816be035606755",
+      "bytes": 4114,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5b955067eaff984aeb6ff6963c50b6a0acacf60c10bdf95d3beea1533aa0801c"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/UHexExtensions.kt",
+      "gitBlob": "e110d671875098967abb97090fc4e69d737e1ea6",
+      "bytes": 16537,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "6f774927b6f4f0136b7e49e656c662e9f6e95495b763b29fe99e89db3e3c913b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/regex/MatchResult.kt",
+      "gitBlob": "2aa3cb54ea8ab77572c293a98ae0d968b08d5bc9",
+      "bytes": 5936,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d544b79962fa7de28a64295dd714c0818aab7a7a134ca6ae5f04a2225abd37e6"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/regex/RegexExtensions.kt",
+      "gitBlob": "ef36de79ff713771980d817e6bd5fa72b99e822a",
+      "bytes": 1483,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "189672e4986db474c72507abed5e6f1326f325dc8a080c7a3edb9d249fb5470a"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/unicode/CodePoint.kt",
+      "gitBlob": "102e0dc4fcfc6463e010343f0a7ceac61d42fd29",
+      "bytes": 21021,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "c85a5326cc5e99a92c6041ac8a9d096002a959e1db63b96b835ba34e113164b6"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/unicode/CodePointCasing.kt",
+      "gitBlob": "7f1c8fec5ac13f5ff2fe39ba56ad1f81f83272df",
+      "bytes": 3815,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "666a616c17078ca05797cc1e599d266dccf1a73dad1989de15060fc402fd6d91"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/unicode/CodePointIteration.kt",
+      "gitBlob": "c0ea2c6733a25344e1f837da98d83f0cea517ffb",
+      "bytes": 33426,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d462bb2ce1d9942835d0b82454d89f33ec090e74d9e22a3c2be00b5c7c0172c1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/unicode/CodePointProperties.kt",
+      "gitBlob": "59c77e1a637bf0b35c30651725875dd494442121",
+      "bytes": 4625,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5c0474256fc30d6e424b1bce98a7f204955384475673b35e454b4b8433b242c9"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/unicode/CodePointRange.kt",
+      "gitBlob": "ca4a8845ebb01693ee112dac90632b954d2b960e",
+      "bytes": 9039,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "797184fe63fb8c47c54e7ba8cdc58bf5fe5e66d5922f225d2f35820364674ee0"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/text/unicode/ExperimentalUnicodeApi.kt",
+      "gitBlob": "5d635aa53d179b4dbab6d726579efd9f7af5540b",
+      "bytes": 1159,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "86e1cd9eaee83a5427be5c2c4287b1561137f877c17a73f690ab00d333d16d4b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/Clock.kt",
+      "gitBlob": "fd2d66c8454cdeabf9cd7dd3800de6e42dd69d5a",
+      "bytes": 2828,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "250f8cb3949b1e17a06609b8db49777dbe499342f3d4c76948843d19e044d6b8"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/Clocks.kt",
+      "gitBlob": "43c8d859c0f9a363eeb86648d8edbba4f73bd3bc",
+      "bytes": 1032,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "8e32802eece9b786687e57f756544148bce81cc476f6ec729a470a9c4bf30021"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/Duration.kt",
+      "gitBlob": "cdc542b72b4514c1d36707de0bfc512bfe88cb89",
+      "bytes": 71648,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "71a02c19b199d7cff8614b426bf74065606b47182fc6fac04e55d1a3db7aa9a1"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/DurationUnit.kt",
+      "gitBlob": "799970b7f1b507012469d2245f76c22f3edd5e1c",
+      "bytes": 4350,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a744ec45e38c448bf3135dd263a8d0342755b9c8a3ce9947ef162d959956dc66"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/ExperimentalTime.kt",
+      "gitBlob": "479fbbd25495c7ceddd35893ebae4484d07cf29d",
+      "bytes": 1294,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e7a07236989e90f61b965b215e006da1ca80d582a61280d34bde475d4a01c51f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/Instant.kt",
+      "gitBlob": "4ec8933e9ce3ea5335b4b6c7b35446e05ae524d9",
+      "bytes": 38171,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e43a901782b623d25b30b2ba9f2d51be630977ac4d666a54eb6c74870d356ee9"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/TimeSource.kt",
+      "gitBlob": "62c9ae6f852de7bd8995ce4ba7df4b0d1717db40",
+      "bytes": 12741,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "9172e674e254412985d3497ddb87e3b56ea33fcdca4944ab118490eda7b9ffae"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/TimeSources.kt",
+      "gitBlob": "4116341fb828614849c678b633b77bf0b5ecbd3a",
+      "bytes": 9720,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "86968c875f71324cded4bb17c11663ab670e51d6247c3ec62b77c8425cb79613"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/longSaturatedMath.kt",
+      "gitBlob": "dc10fa3de313bca168e11dfb8d37696f4c0ae84b",
+      "bytes": 3232,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a2b55c20ad835ceac34551e26bbc925a32b9d4883d0555f6c42339dbefdd9550"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/time/measureTime.kt",
+      "gitBlob": "1e9b3bf836e58d296096cfc7dc4758d8e8802b9e",
+      "bytes": 4594,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "2b356b61637fefa52554d904f73f2ef470283f7e21ef4094841e96fab54e4b49"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Boolean.kt",
+      "gitBlob": "04e678d3bfbcb17a828f5ce2a3ec64547fdadc2b",
+      "bytes": 4255,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1f74fffd1ff850dcb6ddab43759b2711c0c7b19d1a22ddc50c21e0f0505afe52"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/DeepRecursive.kt",
+      "gitBlob": "6e360d82c5c51c87a452b583b1074d3646a7d56a",
+      "bytes": 9008,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "374a7a3620bd51c7d437b9c4cd3195628affefce5b36f47d45c4cca257e7870c"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/FloorDivMod.kt",
+      "gitBlob": "20829be4d8c6929c83a61b51dbf9e47649dcca66",
+      "bytes": 16522,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "f4666237d7c53d48749e413d57e43bd7993562827ff9a7f4bb756833f58d0827"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/HashCode.kt",
+      "gitBlob": "22874cbe7120ada8d0b200694be73f8c3db141c9",
+      "bytes": 466,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ae5782989e25d6037cf270cfe581958cfcdc348db2693c59b9bf9836c63b1b33"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/KotlinVersion.kt",
+      "gitBlob": "08a0ec6e1f06a4a5cde05ee914e57056ded4d07b",
+      "bytes": 3307,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "d0f6cac93cb1d3ed6252e6444ca18e57a06c20bbfcd6f654a09ae367eb6a946b"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Lateinit.kt",
+      "gitBlob": "9faacadb3609de8a7043bd5aa2db1c968c694b84",
+      "bytes": 800,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "546fca85ee2732544b2be22957f9fbb515ef1620fd9496978d7b71d769a8c600"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Lazy.kt",
+      "gitBlob": "d4304c4d1eda186d2f89fba55d44fbdf0c276bd2",
+      "bytes": 4207,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "248af46f14372d1930e370127200bdea624947b2e87689373f37317e04c78905"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Numbers.kt",
+      "gitBlob": "8ed791c553c7b682b3cc8a1092eaff5d983d47ef",
+      "bytes": 10661,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "44c2c1361e24e5e85679f66f22ec669109e3dc582953d04237cc38bf9348e222"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Preconditions.kt",
+      "gitBlob": "efbff87ff6271ed0876c816c2e3e04035147801b",
+      "bytes": 4090,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "ef8d572032476eafa187f03c2575e6d0d7e0b87852642106e55ca9ceb724595c"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Result.kt",
+      "gitBlob": "904bc8c9df154090eacf8c6ddc064ff7e32599b1",
+      "bytes": 11593,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b2d0e436bfb906a40211008237c2147c0c5178451f3d9e64224db15d38dd0d61"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Standard.kt",
+      "gitBlob": "b69517b677d04d82f121d34156e62deba93da9fa",
+      "bytes": 5371,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "bf8b3c6060528edc4637ca4a32498d468b4ccd44e3625f1f11589bee8d4803eb"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Suspend.kt",
+      "gitBlob": "3d0888fed9973c9c4c0df4e9de2214a222786786",
+      "bytes": 945,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "a65ad31d5e727348372c892a1b0f002982da81123df59e6aa83b9ae3d5165f23"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/util/Tuples.kt",
+      "gitBlob": "b6854b48afddb102655e0a5d459202b68160d27f",
+      "bytes": 2692,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1eaf3b3334dbd646a6b93dbe31db7adba72fdb92e8a5d3ea6b249aff5a7d9e9f"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/uuid/ExperimentalUuidApi.kt",
+      "gitBlob": "faadf00b67d1b861c74b658e890b26519913e5a8",
+      "bytes": 1172,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "294d8392a5960ab5363e4ff1b5c997c901748b3907c5a4dbb08442c4a408f554"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/uuid/Uuid.kt",
+      "gitBlob": "990b89f4e1983216bd83cc282555071a53c90d26",
+      "bytes": 53081,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "14e12ccafd8e14a9757b480b08b98f36d338032760e4dbcd1c5c30679d210290"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UByte.kt",
+      "gitBlob": "8c3ab304cb699e20f0f9224411ef003546965e12",
+      "bytes": 20012,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "b0ecd8da28b8aeb1726adb05f103dc7ca8ee6fbe5901049b96f2af68c5349320"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UByteArray.kt",
+      "gitBlob": "741bafda747db3714852190ce2a9bb8f3d1f6def",
+      "bytes": 3101,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "c87e32fc8ce733021cff2c68d8aa63a3cd8aa5dfbd882cac2debf14d81b96d2f"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UInt.kt",
+      "gitBlob": "08d414e9721e5dd7df0e47cd49d16e12e9600730",
+      "bytes": 21636,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "5d3813a5a56ab3b386854806a248dd3ae4cd7502b3254f202bcdbb276c30736c"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UIntArray.kt",
+      "gitBlob": "be378db8a734a41243e8491847026a65a243719a",
+      "bytes": 3075,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "37e20bf8f2771749de755678863f0314d475da710e4064c4e18fb91e3f09bc8d"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UIntRange.kt",
+      "gitBlob": "103eabed8ef67de797ea53a549634f9751b85f00",
+      "bytes": 6168,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "3e2b4574abf98b083dfd4403f65e04391d96751562768466b9f99501bf15867c"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/ULong.kt",
+      "gitBlob": "e55157c71df03d08a3c89d92fa65ceae99ede47f",
+      "bytes": 21991,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "8fc498b0f4c76790f13851411b1f56ed03f871093a437b01adc3d63de6040471"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/ULongArray.kt",
+      "gitBlob": "e605f3b238809e95bbaf2346d8a4a920bf51c2f1",
+      "bytes": 3101,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "1814e9eb1449e24853ef8f6fbde11da0a5767e7965d22af3a78e228f1798e22d"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/ULongRange.kt",
+      "gitBlob": "69e5f1e333dfa634bc483a6a2a03514cf94b2ba7",
+      "bytes": 6284,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "72a47198c81b3a6384a0545a089beee8c48d8b38b6dfad8f5913c7b87f696632"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UMath.kt",
+      "gitBlob": "7a8019a15cbaea92543d93030263453acb586a8a",
+      "bytes": 907,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "01ec5ba767e4d5babee1e68d94f47c1373d3a53978de1239a6983bc7d920eee9"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UNumbers.kt",
+      "gitBlob": "3d7ce7e73cd60027bbabe08e7676804cc227f84e",
+      "bytes": 11377,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "16030213310e124396096df958bd511960f9090f49fc52e353cff595f3d0fa69"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UProgressionUtil.kt",
+      "gitBlob": "34bf602b170e48c8f88ce299ca047aca3c77e25f",
+      "bytes": 2769,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "e57bda84333e0bf9205d8423334bcc3d4794f97b02fd678027ee35d0a5d6bb11"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UShort.kt",
+      "gitBlob": "3b05deca2020c2b92dcb027a011f2193c315d497",
+      "bytes": 20165,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "52d0be7f6ce27ac0fa8ae52d76f32c731d9543de1de48e99ef5f621fbc4cb79e"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UShortArray.kt",
+      "gitBlob": "6c2c80cd8c26215467d6ddae8e4c0b2821dd1597",
+      "bytes": 3127,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "593a30eea7bbf0a793fc692cc5e76fb84a1b98e0e45ce41a5da5f0a39fda8b84"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UStrings.kt",
+      "gitBlob": "90fe3b139bcae5a91be309ee71fb2c83821cb425",
+      "bytes": 8917,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "69f862ebb2ff63a886ef1d1275d37c39dbb45a5b9016b38d163fc80f45153d2c"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/UnsignedCommon.kt",
+      "gitBlob": "d05928aa8d80822c43c74089c945dc423042c90a",
+      "bytes": 1590,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "83e211e535a140122068e54e739404a682e21ee91cf7c8052e19e9a92df209d3"
+    },
+    {
+      "path": "libraries/stdlib/unsigned/src/kotlin/annotations/Unsigned.kt",
+      "gitBlob": "81a4ad3ebb01e4122277159577e66a3ec02b2b29",
+      "bytes": 1223,
+      "sourceSet": "commonMain",
+      "kind": "compile",
+      "sha256": "37137f1ceadbaba3bb65ceaa2256dee700f50cb2173988abdfbe40061f3abad7"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Any.kt",
+      "gitBlob": "61b2c824c23e49115881729a39958fe152847709",
+      "bytes": 2764,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "89b613d4d245aaf5e40350af4df78c93226514cacf2ada399bc347dddc65b322"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Array.kt",
+      "gitBlob": "28661c3b0e2670521b135ddea04ca2d7ae8cd76f",
+      "bytes": 3842,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ea10336733584f88655de8025b76c7d09ee2af1825d2efe2a7ebc9c54c5253ac"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Arrays.kt",
+      "gitBlob": "e45db46a7b6ab70b9f1cea7a49caad9c2e9df213",
+      "bytes": 28219,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "f2f28b09b310126766458c46388927e78b35aaeb83f6b906577c56533953c166"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Boolean.kt",
+      "gitBlob": "9f5e5c56113c210a59a6cdf3005eb969c1d374d6",
+      "bytes": 3089,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "d10e2545b7fca3e3c4beb48337bd866e4c7a328d0c37b48fdf7ec48a6b6a9840"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Char.kt",
+      "gitBlob": "234f6e98b2ed95601a4afafbaa6e08b3bff0ea3e",
+      "bytes": 7867,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "e13551508def33e634501fef3e88c1bcfb47677ed398d53df2b13436d5bcbf6d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Enum.kt",
+      "gitBlob": "e857af6a6951bd2e28558e3ce25a564f38b7390f",
+      "bytes": 1353,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "024b9594a7cad0108885e61281d086f14450919b7c4b9bab8be7b3050805e371"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Library.kt",
+      "gitBlob": "ead886285951926526d62e8b69516f9ed7bb7bc9",
+      "bytes": 4257,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4629d739d8f7e0f54c09e6937ccd9d37e86089ddb6aad08e2ce87d2b1b7f452e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Nothing.kt",
+      "gitBlob": "7b0c09366aca3364134ac27f7074926d42e21124",
+      "bytes": 498,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "74aaa6da98293ff4f79ac60cac1bd8efd46361414f4ab5f6d294d4c4a17e9a1a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Primitives.kt",
+      "gitBlob": "fdc4c8b1a011ade281cec4246b614b1b4f264e6b",
+      "bytes": 106434,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "62e94dfb9555e68ae247758a569f90edc9679e081a19d3528efdd1a35a0a020a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/String.kt",
+      "gitBlob": "fc743c582411534b95da7926c045f25d5e9cbb16",
+      "bytes": 381,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "57e906c514d3f5884f81ea8dbc9321d21d8264484300e41e3cb3b3288d81d5b3"
+    },
+    {
+      "path": "libraries/stdlib/wasm/builtins/kotlin/Throwable.kt",
+      "gitBlob": "50919e6a08a87076d678a16d37aa0fe6371b109a",
+      "bytes": 224,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "be6bde77bc657911248fe36c6c5390011e12284d73aa660f0d8f280b18df5e2c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/ExceptionHelpers.kt",
+      "gitBlob": "079b3e75d1b84661dc6476ab4ad9a64f3d9546b2",
+      "bytes": 379,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "d29c90737390b8e01db7a406f62f637e8944e14d892f2c197e0028225718eeb0"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/ExternalWrapper.kt",
+      "gitBlob": "a3c0049d61f006faf128258f27129449c465798b",
+      "bytes": 817,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2a3fc9d49d8749515636057621f2df50d26d7995dd7158a3662a590d5b4f3e20"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/KFunctionImpl.kt",
+      "gitBlob": "a9457fe75da9fba73b37cb3a5ae9932f14f25e2b",
+      "bytes": 2755,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2a3765a8a98e18e450b0369cea25270ae53a1d790a816361d582a0f320147c95"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/Coroutines.kt",
+      "gitBlob": "1fcdef0b06d218c0e19de6e21ec3ce41963bb0ab",
+      "bytes": 2507,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "e4b4ccebd26fd9a6f0884877a3138ea5704a32a4b7d9e70d96ff083feb0a4e48"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/CoroutinesStackSwitching.kt",
+      "gitBlob": "8025428311e75705e47acb81e2f011cfd3fa7a12",
+      "bytes": 4867,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "fc42b856daddc48c1221350ab80584ef1bffe882ed6f10de94bca06aef3bf95c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/CoroutinesStateMachine.kt",
+      "gitBlob": "4f91e0d8283d2ca6d305a83c3f5a1e33a1e03923",
+      "bytes": 689,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ced3070fdb12e280241c8e4dee51383229b28f01f638cba9fbcc1f034e218fad"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/DefaultConstructorMarker.kt",
+      "gitBlob": "765ee7840d9503b3915db98952dde3c7a1aa62be",
+      "bytes": 365,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "18b5fe128eac455ba6ed2242c4f8dcfa416d38cb75fb0b0f6a189bf1354dc8cb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/EnumIntrinsics.kt",
+      "gitBlob": "dd7933905d317353940ed6fa064b407e7545b5f2",
+      "bytes": 638,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "7d59fdf9a306facded4e4f12610c18ced7059b665df4c01b9ea966f4c2ea8fdd"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/FunctionAdapter.kt",
+      "gitBlob": "78b93a19c550e83a64973270ae9c2e97bb1d7b2e",
+      "bytes": 371,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "7d3042e223c64d50642525dec6eff39534d5d7418b8cad6f60770ea46b66d6ce"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/JsInteropAnnotations.kt",
+      "gitBlob": "1b6e9bf0ecc0cdd078cca4b1431836a67b1c2920",
+      "bytes": 471,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "65abae86a4afeb9653d87c393a6a399b35180de6e342bf4d557d69b95f1d5742"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/KPropertyImpl.kt",
+      "gitBlob": "308f68ed77492c0f3778ef30b62640fc4987a1eb",
+      "bytes": 8761,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "d1594120cd4ae6489804615b37f0939825ffb66bbcedd6d7932201e23c2732f4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/Number2String.kt",
+      "gitBlob": "972f009dae0a55274c4c5a0b51948e1d6d80ed12",
+      "bytes": 1081,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "b748b8e7b6ed3edd9658a5a90f7f7dd7ae9ef32e472999cdffc29698bbc98ad7"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/Runtime.kt",
+      "gitBlob": "0e572b4d1d61be7e0999244b7c8b372e9d4084e0",
+      "bytes": 8124,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ecfe9212a966f98028f50cc9fbb45b9a2d429ff0cf6bc342837818bf9827f294"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/ThrowHelpers.kt",
+      "gitBlob": "7cb066206054ff03d562352152fb08af8ecf8cc6",
+      "bytes": 3002,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a50d545a0028e3897b0d0a7cda2e2cbd0d3f2a5033008d768480616a0a7a306f"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/TypeInfo.kt",
+      "gitBlob": "2364c681d962f8f850e579b6f8967ca9f805a567",
+      "bytes": 4850,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "5806dc78d49fe8005085ee5d599366079938d5bfaccbae093081d979a62230bc"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/WasmAnnotations.kt",
+      "gitBlob": "9a3a97a489566d2bdd99a71fed8babccd6165e0f",
+      "bytes": 2821,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "bda7a303e563c513fe26a5df46d12fba0ae109d177100a5f9f4d1dc308b18f0e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/WasmInstructions.kt",
+      "gitBlob": "7b8d4e954e72b83dd72406ba29ded15cdf18165a",
+      "bytes": 15895,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2ca3e74a77160e848259df9867ad30a23fe85566530a4d28f621745642bda4ba"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/WasmMath.kt",
+      "gitBlob": "1c944b10a67b6db86bc1f1c35a4d77ee2f8ee61b",
+      "bytes": 926,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "defc85f363384ea122f42a0bac602ee4b095f21c85e3724af307f31e95819538"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/WasmNewData.kt",
+      "gitBlob": "2f9158d84bd1da323be8a5459c8f76c2b28784d5",
+      "bytes": 699,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "91b327d01eaaac331fc25712ca09de2dc205574f3bad0ae166100f33dae94e18"
+    },
+    {
+      "path": "libraries/stdlib/wasm/internal/kotlin/wasm/internal/reftypes/WasmReferenceTypes.kt",
+      "gitBlob": "bbe5894382ccb2bb0db68d23ec81bd61799e3857",
+      "bytes": 1395,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "969603d47566c080aead4491eac845537abcac8d6d860d0b2b7d6555e9726256"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/_ArraysWasm.kt",
+      "gitBlob": "2f9c30e985b485989449e0074ecdcaada9313b8a",
+      "bytes": 97375,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "b487bf9ab9aefc73d67979e57a2978a165436a85dd307addb731cabc5dfd736b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/_CollectionsWasm.kt",
+      "gitBlob": "28101233c28ab004a6efed2cbe9a4c0c8698f147",
+      "bytes": 817,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "37a94503feb057f5af0fd62687336417234d60baa27093711ceeac1724736cbc"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/_ComparisonsWasm.kt",
+      "gitBlob": "0d33078d7f1a73fc004b767c7c9b5a3d75c59576",
+      "bytes": 10022,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "506ea5063cc972ba713bf0a2d80d64497e961dcadd43b397e81d7ccaeccc0b24"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/_StringsWasm.kt",
+      "gitBlob": "05236795682e625e1fe8723561f4fe7fdaceebd2",
+      "bytes": 777,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2332597ef9ac741b93068175cac16f6102c5e9c2ca18f293243691896c06557f"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/_UArraysWasm.kt",
+      "gitBlob": "ac7947e616d3c5a6c42a6f5778fe139d3654fad8",
+      "bytes": 6434,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a81f5beac04b452ab75d028d00046b3959fa894ce5238e2f4b64a15d86ef1958"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/wasm/internal/_WasmArrays.kt",
+      "gitBlob": "35a39b1096350fd1011592e328510e79cef34b4b",
+      "bytes": 6991,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "828148508d2d0a484ee63d082daf5347cc35a3fd474c03c40e2d6867d54faa5c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/generated/wasm/internal/_WasmOp.kt",
+      "gitBlob": "fbf26e868e0fd5957c39f96a7ef9d5bf2c5301e7",
+      "bytes": 11960,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "e803e3663915177201d352f6d6892e7afb6758c3999b6e5ceb28d1e06bb87fbe"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Assertions.kt",
+      "gitBlob": "a1033f488a0162e150463f07c20d49cb30981d2f",
+      "bytes": 869,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "df43a2d259753a950491d4b28be0d0af85dc6649399afd5433e2ea09d7d5929a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/CharCode.kt",
+      "gitBlob": "a1bce0906a1e5f0a9826bb9ee3bb62c7a482028b",
+      "bytes": 459,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "fca8f32d72b8ffb385e17c92dd969e3a232c17c904d3710011566187ac77846f"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Comparator.kt",
+      "gitBlob": "da9c4bee5a92865fdad21fd0e6b1e95f74394baf",
+      "bytes": 677,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2b7db69726874b004195d16b68b68280119e5133560e690e72982bb2245af668"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Exceptions.kt",
+      "gitBlob": "9a52b37dd642458bff4cab236a1e3736c91f3440",
+      "bytes": 1546,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "556c4a2630ea63238f439df6f96d566ca92c6584125890743b8346b84269a5c0"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Lazy.kt",
+      "gitBlob": "1e7044a2384d39b80b3f1a52859d1cc0a8614ba7",
+      "bytes": 1104,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "6d197f26836cd94e248d17c2ef35a79c853017e3929bfae410c0480669517bf1"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Numbers.kt",
+      "gitBlob": "532b7cdfc23e902a16fa8a8744494e0c6304a46b",
+      "bytes": 8186,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a4fd90f48d28b771c7e80b737491bee5242e4a1e2bdfe22ce4e429ac3fcf512d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Sequences.kt",
+      "gitBlob": "e8306fe4273df7f6356c024764a5460a0d3b4177",
+      "bytes": 627,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "c458701a8db3c8045503c9c2b07113e6a0032774d12f4cffcd746647cbf7fd03"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Serializable.kt",
+      "gitBlob": "cde7b7ce3b37b8967d99ad2e47546d525242526e",
+      "bytes": 267,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "8991fd5536a8d44c0cdb4df0a834681af2019995a5e1270751ebace1d6668c3e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/Unit.kt",
+      "gitBlob": "bc9b6502b4f7a35588c6af117a3a0a93fb210ab7",
+      "bytes": 368,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "632dbb8b6e4d217822cf3fe86253f46bcd8b766e63b503e3a71b2d8ad6b31cbb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/annotations.kt",
+      "gitBlob": "de6f517c1a086acd31710c50be5903f10c0e4564",
+      "bytes": 690,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a0199018dfda02d5dcda010262a6a6b3822f4cd9a3b0e6385b31fbd9e17ca12c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/collections/ArraysWasm.kt",
+      "gitBlob": "63660ddfa12d02b9f7e1a7c653cc5a64b3d6ae81",
+      "bytes": 1134,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "73c3d936878058736dc0072eb167d1f03ac9b41b5f14f522128421b97ba8689b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/collections/CollectionsWasm.kt",
+      "gitBlob": "8a95939416b6f6b77e0262e0f0634cf251d294ae",
+      "bytes": 540,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a1e0f9cd517c12fdf9090394a0bbdde6bd0932bdf1f810bf15206031656b8034"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/collections/Helpers.kt",
+      "gitBlob": "7242c657f0062a97201da0daf0ae46803b1754d1",
+      "bytes": 1097,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "dcb5856358f3a509e55486c65347a21229a5be45adf5cff18aaecc56ee7872a6"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/concurrent/atomics/AtomicArrays.wasm.kt",
+      "gitBlob": "aecf071aaeaa94cbdae9101de072ac43031f4789",
+      "bytes": 22022,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "0a49eda627905074f1ff5c5d3cc3e55db92abe124d93523fb25ae70527da44a2"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/concurrent/atomics/Atomics.wasm.kt",
+      "gitBlob": "5d38c65e3a873a8411256c638df2054cb931aa57",
+      "bytes": 17660,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "f1205bbb9d90c1958da86194849ba3b7f821c8fd5dbf4013b81cda94e4400ae8"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/coroutines/CoroutineImpl.kt",
+      "gitBlob": "3837c19a42c3f84b0e121a802b3bad7af36fd351",
+      "bytes": 3559,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "9b528d9bfd836ed9024d6d658a0cbb8d098464840f5462fae9c8414029358ceb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/coroutines/CoroutineImplStackSwitching.kt",
+      "gitBlob": "10595d53fbec7ce2e7a2f8b0b29a5a06792ff870",
+      "bytes": 3075,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "1789d168ef21b64654371f01d0792e1491b7c356eb6fd7adbf3265b39f4a42c6"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/coroutines/Coroutines.kt",
+      "gitBlob": "cd91bb6c88d4d53477d87326ff122073ab2a5b7e",
+      "bytes": 1730,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "43f265f32f6a82f0730871dd7bc57b340fc69724a7ffc698cd311eadf3f9fba0"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/coroutines/CoroutinesIntrinsics.kt",
+      "gitBlob": "05fc7aa3316b316be5e6177e729dac8c4048e3ee",
+      "bytes": 6823,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "bb4c3462c5778f9ef8b29384deaf74bd7ad71b52ec972287dbcece4930a56114"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/coroutines/CoroutinesIntrinsicsStackSwitching.kt",
+      "gitBlob": "f30be67ef8d2f04aceb0d5e8e3d682825910c7c3",
+      "bytes": 1153,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "c5d99605685d93030c0c64aba2287817814738e844f37bd07c8afb388c1d3a58"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/coroutines/CoroutinesIntrinsicsStateMachine.kt",
+      "gitBlob": "fd2678b66a564688b9c518b5776c9b2ec9703c0b",
+      "bytes": 2071,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "8dd4583b24dfb5bbbe68d4f70eff7328ed8c898ae12ec005abee16a6f5594577"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/enums/EnumEntriesWasm.kt",
+      "gitBlob": "14d7806e130fd1d8669abeb9e1e9e71b5d9ae4cb",
+      "bytes": 487,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "6d96fa7326e26023f53d1fe762b7af01fbee70bcb17ae899357e5f61446f618f"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/function-type-interface/kotlin-coroutines-package.kt",
+      "gitBlob": "9bfec66c83602e35f4b5ec1ba1d2a263ee9793b8",
+      "bytes": 415,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "95fcf2f4ca0695494cc38817b9c47f1944d654fc797b7bf9787621baddad99f8"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/function-type-interface/kotlin-package.kt",
+      "gitBlob": "aa8d4287ca269faeff7d4b7571baaa1e42247fa3",
+      "bytes": 404,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "49845af62791e876ed135e1d0a0310ba7982f0dcc21b9e86bbcdf23b8d36cbbe"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/function-type-interface/kotlin-reflect-package.kt",
+      "gitBlob": "7e3eca8202b72708d9b644c1d38695a592635174",
+      "bytes": 412,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "be40fba9fcbc95393a44308982186d8567607d55212fcea48fa097238dfdd8eb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/internal/dtoa/UnsafeArrays.kt",
+      "gitBlob": "5a88b2e43953c58dfcaa1732131962b3bda46bc5",
+      "bytes": 1238,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a9655d77de6b48d9b02a628f415256c48deb07f037134b6adf72b8789f40ab92"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_acos.kt",
+      "gitBlob": "65c9646e8e1b46cc49a423c97cbdf32552639163",
+      "bytes": 3976,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "8bff220214dcd7bf549c01f468a987d44c24792a8637bf084b78542dc00ab06f"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_acosh.kt",
+      "gitBlob": "7dc251caf92d79168c6eb0349fcbfba853e126e5",
+      "bytes": 1723,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "058116c86141a2b1e6e8c87e0a4deacff06564d92f10556cf10d52aafffed3d4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_asin.kt",
+      "gitBlob": "a64698a168be822adc43e174c794f6145ee8c52a",
+      "bytes": 4154,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "9b07e92d8e98d5cf93d1e39f18f89f8f4c270a13caa465f92fbf573c6635b74b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_atan2.kt",
+      "gitBlob": "54e5a9328ef10d3a97531fe4b3787e4b8582719c",
+      "bytes": 4239,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "c48457efcc5f798db43a0d3fe8f83f4f364e4ad71275209de07ace2c2a81fb2a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_atanh.kt",
+      "gitBlob": "37cbf2769955117b77cb83d40aed092d10ec8a1d",
+      "bytes": 1804,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "adccbcd6f35427c714ed4d4cd7d1a61baa76405f57a85d7b3985354fc51c860d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_cosh.kt",
+      "gitBlob": "8ecd111141d6c8b2a986b96e77c9e23122395bcb",
+      "bytes": 2481,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "0d05640ef45f3c72f9fec5d9ce049c8e6c772e91f27cf96aaa076e87bcd5e035"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_exp.kt",
+      "gitBlob": "92205d6d3bb22a3ebe8c3e3d139d27eb6e4d5856",
+      "bytes": 5632,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "1366d85662c9f8a4a3c878eec7d2c13d479325db331cc593ba998c4877f8354c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_fmod.kt",
+      "gitBlob": "66cd00d3f6ed5f0a2f9325743ee191f9297576b8",
+      "bytes": 5190,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "9e2a89bfea0d284cbc610252ef8846067b81d887255d0a116b1fe5abba97ecb3"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_fmodf.kt",
+      "gitBlob": "5d7c442274f8ef17581996bd9df1ca534e7e0278",
+      "bytes": 3437,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ae2c5497d7f49de995401288fe649ea03a90180c753c3bdc65a01d8def13989c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_hypot.kt",
+      "gitBlob": "b0bfa20a5d2505fe748b9c42e8faf0beb31873fe",
+      "bytes": 3808,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4ac2b769171aaa0703c2f3a33facac7e593bc3f5a50672c8dcc31d82a9b512d3"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_log.kt",
+      "gitBlob": "c1c86af6b42815201d00c50784f529044700f5ec",
+      "bytes": 5154,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "f1be6f21f11d34a6aba63dfde34f31d1cf67c943370fbba43c2c7a70e51176b3"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_log10.kt",
+      "gitBlob": "2e27a4345b40edc01e0d09317c4b4f585333e62b",
+      "bytes": 2845,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "f568faac36203926aad31d1dcc57c887bd5b74f7e77200739cf3cd239155dc1f"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_log2.kt",
+      "gitBlob": "ff69fddc7cb6f43ed14b6c554519dcdb0296f9ca",
+      "bytes": 2273,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4ee1246a657a1cd435085bba5f9b863f2b1598071ef5605ea67d7ac5dc01b730"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_pow.kt",
+      "gitBlob": "cffd9e540da04e71f0aaa0e17e0876331784de1d",
+      "bytes": 12262,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "b6512ba87d4afc7a6a2e7562ed922c809480cbc9318436bdcc06a1ac3ef7372e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_rem_pio2.kt",
+      "gitBlob": "b5c6afc7ba06338d5b40f22e81b64e1b0a8d59a3",
+      "bytes": 6294,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ef383f91037b35cfcc7b8347409dae320503c491baae29a25abd953ba1fe72b4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/e_sinh.kt",
+      "gitBlob": "8665e8ffec834546994f8490f2277e80513bb518",
+      "bytes": 2324,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "1649c252bc32f33b784309546c6aa09f9f4ceb2b22e1f9db68bcb3abd042d55e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/k_cos.kt",
+      "gitBlob": "6ec59d2fe829beb8adc25be47bf4c98257328a88",
+      "bytes": 3272,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a8e5490918e6e6ca70a87aefbc2c97510655fc0f7cbc04fd2a119c39a1ac9576"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/k_rem_pio2.kt",
+      "gitBlob": "d11d1d80fe14cabf3fb9d9cd68892ff27315eaf5",
+      "bytes": 11768,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "57fef4e8ed9ed360f721d78701917ce5badc8c4013d2b5044ba4160fe5946e15"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/k_sin.kt",
+      "gitBlob": "a5724d6ce4465442de343b6efe65ea0faabce20d",
+      "bytes": 2493,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "89f3bcf086d253583e3897cf918769046afa90d1afde48f2933beb9d67fb86d1"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/k_tan.kt",
+      "gitBlob": "ef370876723f7c6ec809183f303024e392d2da09",
+      "bytes": 5211,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "d93725bea663d86c43b7ec36376819ec01789103917f51d0bee595c7b57ad376"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_asinh.kt",
+      "gitBlob": "7cfd902ba8e28d6bc917ed1064450405fff7eef1",
+      "bytes": 1752,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2b004a65f0501d52f00f1d76c2761de5fd39ac10ded07fa812308574bcdbdd4a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_atan.kt",
+      "gitBlob": "d14880fc0795bfff55a069119a937939066c408b",
+      "bytes": 4503,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ca6b895f8b54066aaf0cdfdee3208eed735c418c60fd9cd23f16cc893fccaf33"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_cbrt.kt",
+      "gitBlob": "b600ffbf37a169db61f96bbc6af491a494111945",
+      "bytes": 2478,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "b8e561617bfd90b97cfbaf7e417905f4120a0e8b0800f2379b04f2f92fc41a0c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_cos.kt",
+      "gitBlob": "d358feb2ad443f98a421e8c6f03f73e67c3da0ce",
+      "bytes": 2062,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "dd128cb2b33c63edd19f28b2f4fda64a84e58daa3dd66d743858e02659fd195c"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_expm1.kt",
+      "gitBlob": "18732571091480b72ec78228ead2bcfb3390196b",
+      "bytes": 8153,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "c0ab3cee9b4be4d3983e4036496897bfd265b413606dc96c6985c699e38683d7"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_fabs.kt",
+      "gitBlob": "c8a5d811280e819f15bcf2b7ed63b4a1633d46ba",
+      "bytes": 625,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "8faf5b8cf33b66819f1118924b581ba344559d5de8ace8a9908091c953a3c954"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_ilogb.kt",
+      "gitBlob": "1460afc728f645ba63a0d9fd5d2449b620d61075",
+      "bytes": 1546,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "79be30e677a6ad854b7d2872eb4b5df93c7e28940ddd150d7c27b615f40977d8"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_log1p.kt",
+      "gitBlob": "90d1679f8c969279b6eed0bb0df7841167380e55",
+      "bytes": 6111,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "081aee6d99b01a018c23344be8ad5ed3fea847025b578354c90af0bb6a3604e4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_nextafter.kt",
+      "gitBlob": "67a4f0ab3445b978d63dc80fd39b6d0fe7de3df6",
+      "bytes": 2594,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4a693251640742b6ca905a528988837ecc721351e7751cfac16b20486b0440e4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_rint.kt",
+      "gitBlob": "ef166444935d6ecf22035785b9a6633eae78d9f9",
+      "bytes": 2476,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "508f398750505738476d293ba6d34e1eccd79e8d3a76d5ae0b2dc5d1b560e35a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_scalbn.kt",
+      "gitBlob": "ea0fb27b24c965a8b1d39fd5534e34d220db1880",
+      "bytes": 2060,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "60c147ec315eff20f5102f026ee7a15544ac5a691bd3302bafbf69e6caff2c2a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_sin.kt",
+      "gitBlob": "10d7628b2c5933efa96236d2d1f3f1c9bd5a59c8",
+      "bytes": 2061,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "44935c66ab69ff6736f32cfe880231b9c229c856cc5bdbd02c2a042ce2ee5092"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_tan.kt",
+      "gitBlob": "3f1790c796b86b5a03a911a94b47695616e06975",
+      "bytes": 1893,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "fa38e72a3c64f134afbb1ae5e5a938abc906bb4b0712eb2da9dcade6b0022fe6"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/s_tanh.kt",
+      "gitBlob": "5d7f48b93b1027e03d572acf64fbd5d039868b22",
+      "bytes": 2087,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "3f8ba8f442af05d184a3b7672fd57074b7497ccb3135ef3c5177b5f9aa5608ad"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/fdlibm/utils.kt",
+      "gitBlob": "b1306d23a0651699d3d2052886a5781d4a082a7c",
+      "bytes": 804,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ccd7aa63c96d54aab667a67db491415470e51752ebde3ad885376e4114cc6745"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/math/math.kt",
+      "gitBlob": "38da7585b0f4dc8f23e4b457cc2ec085a1cb1fbc",
+      "bytes": 31898,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "e9b05573e68d760486021e18863b4e800d4c2f6dea88b0d342a6e07790f50c54"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/random/PlatformRandom.kt",
+      "gitBlob": "87454ca7ece994fb94850772ce4aa8d3cf46da02",
+      "bytes": 363,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "0568b50e6cc939ba9e369cb969017e2ec1c3e754379f6f421df4a9a3ca86450b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/AssociatedObjects.kt",
+      "gitBlob": "8fb0fa0c5e41e2c73e68ecfd512f27209a72ba09",
+      "bytes": 629,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "33ff1b54b24ca1ef4b14f86b9cc1a89455ad13523a3f325389f61bdaa6ca46e5"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KCallable.kt",
+      "gitBlob": "f35305ebf48ef09d41278dbd5241c29ef933d314",
+      "bytes": 883,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "0c6fa6a416f1209618c3220be939e1b03fa9fea8f4f438350ad54a4e486e840d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClass.kt",
+      "gitBlob": "cb98048a8a6081010849ad34ffdf40c8739025ac",
+      "bytes": 1620,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4a758c1be048bb5eba845afdd671aa7015f66688d92d6d15d1ceb3af114a9fcb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClassImpl.kt",
+      "gitBlob": "ecbdc5ef10eacda4bd7439badb4be64774c85730",
+      "bytes": 1439,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "311f78cfaf7daabe88831b2a3fee2984efc5b3fd597cbf1187ccf4188e5b6d70"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClassInterfaceImpl.kt",
+      "gitBlob": "b273fec97dd25553630182b0d717a3e8b02f5336",
+      "bytes": 1146,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "54e73511f2cf67f131e46a3150d965d81ae32a98a4c7a0140a8c1ebd15cf9565"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KClasses.kt",
+      "gitBlob": "0ac8d68bdf4d2c4a010744d9b21568f3617cd25c",
+      "bytes": 317,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "00876e153579eb66915cb086279eefbc5a9a28fdbc5150fcd390a1c49b2bac12"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KFunction.kt",
+      "gitBlob": "9810f3d56535662d1fd0334d88b271beca3b9a60",
+      "bytes": 368,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "6e760f652bfef338cead327108fb18629b8a3382c020324fa09e7897e3a22bd5"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KProperty.kt",
+      "gitBlob": "7a61840a1ee3f1acf34dd5086806af5e5a285272",
+      "bytes": 4328,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "97d53c70bd7c303ed9790264bad29fcd55af9006a6e9122c2e7aa74ab50f4f3d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KType.kt",
+      "gitBlob": "b3a1926acc90a6eb73d29fc674020acaafd46256",
+      "bytes": 2205,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "1d08f8e28f9d6f6d14bb835be8543c7d69b168d40a04733df3c29a8861702dfe"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/KTypeParameterImpl.kt",
+      "gitBlob": "1a8e1d8ed8626cabbc15c6af10ce6c6e3436696e",
+      "bytes": 516,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "f97443ea9b16d3e4025be3f7b3d2cff30634edc06afed2b40daf7da4915e1370"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/associatedObjectsImpl.kt",
+      "gitBlob": "0a6f15f1bc05d2a93330949b2e63b306163427e7",
+      "bytes": 1011,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "9f9846c75bafa05a8378ed956061eda82c46001e2df58e89d8860ec352a43907"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/primitives.kt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/reflect/reflection.kt",
+      "gitBlob": "ca89147d0331448c2dc0e8745ac92b2f5a24a49d",
+      "bytes": 1854,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "26529c63ea1d30d199cc50e4c6e522eb21d2c3ba29f4559cf3ab79866ee50c28"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/CharWasm.kt",
+      "gitBlob": "c1ea280d60b251af11fa6d2cb68d8376e4a7db5f",
+      "bytes": 3130,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "15e65de7a68ac476a6b10b9e875838668ce01ce999156a011b014bb8e9b720a7"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/CharacterCodingExceptionWasm.kt",
+      "gitBlob": "d284874190a9927b474fc41deaa95cbb8d4a6184",
+      "bytes": 473,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "94004d9325a97720f79d5ae37967ca897c11dbf4861319e73f913938e086ad5e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/StringBuilderWasm.kt",
+      "gitBlob": "72b5b2456d384ef18685f5eb2bce497e6cd8d992",
+      "bytes": 1872,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "755cb6b27cc0066eb030a15014765a4ddce52c47afa5be196127a90d6c6d2011"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/StringNumberConversionsWasm.kt",
+      "gitBlob": "a5bde222a1b2dd6908fad4337a1d81c765914e0c",
+      "bytes": 6740,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "eec17f5b2f6163bd180427e2c0cda194c912fe779e860aee79f0c1622fc9b363"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/StringsWasm.kt",
+      "gitBlob": "56590c8c72ea5049d76d8c84137af6dee69ac408",
+      "bytes": 23706,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "ffa3b2078b14089b5cf80b341e66c209c395199233feb585f3a7bdacfa538ee6"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/regex/BitSet.kt",
+      "gitBlob": "d1e23495a8b0bc6620a91c190247f97bfd9ce8c8",
+      "bytes": 11071,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "51fbef3454f18cc0b706d8a4209e7e76e233d74458d2b26a0e73458b4dbbab2a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/regex/DecompositionHelpers.kt",
+      "gitBlob": "3c4efc9b0855aa3fe7e99981d7fbdf636e914cf8",
+      "bytes": 28583,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4d419e0ccc87447537926b3fe184e6469895fcb08f1f3f3665b23b47c2b1b30b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/regex/DecompositionValues.kt",
+      "gitBlob": "6fa169a9a956db4ef3fc408e63b761cf284b47b5",
+      "bytes": 32930,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "cdfefe00bea5581f119e0b48e9df1d24dac26680d926dbb64995ca2c3386536a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/regex/ObsoleteNativeApi.kt",
+      "gitBlob": "ff75b8aa3a2824302be551f03b7e2c6d96e1aa3f",
+      "bytes": 1187,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "850a4cdc03a106ae7e619d12ce0dfa222b87b19143b4da489481510471f57bfb"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/text/utf8Encoding.kt",
+      "gitBlob": "c20dac6d784fa4880293860f5581ddd2aff20b77",
+      "bytes": 11199,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "b5efcefdaafc06966dfc9cd902b0c24bbbb79808f1d4136db4a658f689baf01d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/throwableExtensions.kt",
+      "gitBlob": "e760dea87819c2f12086f6d4a75160ca843f77fb",
+      "bytes": 4701,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "2432f7d35b5818bd85e523e747d51babc5877bf09e9558305f7e0da04d4e3b3d"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/time/DurationUnit.kt",
+      "gitBlob": "8c1e0b17166a550f7807c0a7586c9d1da6e5f77f",
+      "bytes": 2548,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "160b7a4e1c64133aa694b1f5ba5f941a2570f9cf4bf222f5f8ead013f6027bcf"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/util/PreconditionsWasm.kt",
+      "gitBlob": "95f7c6f6b62d4709d88caaec4557988b20444686",
+      "bytes": 1027,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "b75d98e2e90baf59051d789e7141e0b6aa28dded4f2b1b423e9e3f26f52aff1a"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/util/StringWasmCharArray.kt",
+      "gitBlob": "7dc2768ec5d2e6e3a3f1e11c9fd57a014ede1462",
+      "bytes": 814,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "a94c3622704d15689cac85c3e8fea6aa3332048c5c04658a0cb46e2576eaa929"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/util/UnsignedWasm.kt",
+      "gitBlob": "8297c7fe8bf111ffa7af74d2d89144e41b75014c",
+      "bytes": 4992,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "31fe05d655f4635d4f05c3c53b6b89f6c97cdb8cd629ea21e26f780be89dc422"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/util/io.kt",
+      "gitBlob": "75b9893dc75c20614dcbfca97b8134f7d24b1625",
+      "bytes": 275,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "1656421493faa82d247c968fa36c3fd699b537ef72d51e10fab70effbc889bc2"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/wasm/Annotations.kt",
+      "gitBlob": "7f4bbc965a0125b96c817df03f56b6e9c7373656",
+      "bytes": 1688,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "4c8078d6c67d1498faa89a704461cc2dab805d48a18715f531bfb955c94324d7"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/wasm/unsafe/Annotations.kt",
+      "gitBlob": "ca6bd2efc686ca5902336e457fd603486dde1207",
+      "bytes": 1306,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "1748997b913eb99840c1a1f8d3cd189975d91a201d18dc50c17c040249c009b4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/wasm/unsafe/MemoryAccess.kt",
+      "gitBlob": "8b810618b6c8f52e5286f60437ea149f83a5ceb5",
+      "bytes": 2143,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "fb3a681b69d1bbb8b7f69e753a0e3bc33a2b6ab112ad459cb21d2d226f069b06"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/wasm/unsafe/MemoryAllocation.kt",
+      "gitBlob": "c924241099baf9cf073529fbd17fc767b192e73e",
+      "bytes": 23735,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "aa492bfb78de89a71e3da8a1b08d02f9d5d0b4a50895779617eecd5d88429e2b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/src/kotlin/wasmModule.kt",
+      "gitBlob": "36e4c99c3101d950c0a23d6003c9c65e190d92cd",
+      "bytes": 1248,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "82a296c0e7d6fe1fa909ddb95f049e82b40474e93a633b8be509511ea3db2ff2"
+    },
+    {
+      "path": "libraries/stdlib/wasm/stubs/native/internal.kt",
+      "gitBlob": "be82ab746a31810106b33b10776015d58238b0a0",
+      "bytes": 531,
+      "sourceSet": "wasmCommonMain",
+      "kind": "compile",
+      "sha256": "fb50078f987242c48f2ee7e01d6641365a492fedbcb5e73e085f747b9c34d680"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/builtins/kotlin/String.kt",
+      "gitBlob": "20343b4291a025572041d50f56d5ec3fd3fe6477",
+      "bytes": 5592,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "d9f4cd1ed783eab3d6865f188ad221becc65135d1a680246cdb4cb301231288e"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/builtins/kotlin/Throwable.kt",
+      "gitBlob": "74a0605379d0cbae6e34f1be442369cc8c122eb5",
+      "bytes": 1605,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "98f88008c515367b7ef0c9e5ff8ae1b4937e58f71918c61905e21569331ef542"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/internal/Number2String.kt",
+      "gitBlob": "6d7e214107f3436e05ca160111028dd292237ff4",
+      "bytes": 3237,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "30f6957f397bd45745e472fe4bf38fc4f4f24f0391f48b5558c06df4969906a9"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/WasiError.kt",
+      "gitBlob": "ead5bbbac801e35b22753b71ca8b42d56da91125",
+      "bytes": 5133,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "6fd1e516fa9b16a1189a0a9646c7cf03a738701d9f62558ff908e08bbfad1692"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/internal/internalCallback.kt",
+      "gitBlob": "42ab521458bc1295aea15d12c52d15b1dee13ef0",
+      "bytes": 646,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "39ac4d45c445d5268f14523067227dc1203c03f416f06490573d0ad47b189041"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/io.kt",
+      "gitBlob": "54e71e8cd135f904f516893517626d6f7d8c17b6",
+      "bytes": 8555,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "86a8ef9ba4971704ac49113c6124c63b8625dd9fda3c39b6fa2650bcc42ae040"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/random/PlatformRandom.kt",
+      "gitBlob": "62b13fc7fef3b9da9a12afe2039b5355104d731c",
+      "bytes": 1434,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "a53f2c61d839a051d82c2c8a4eb6a2743311d99bfd2842ca02ad4882dc943426"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/reflect/reflection.kt",
+      "gitBlob": "5a6e4bc17436e1cd85f72936c2c2008cf6b4c510",
+      "bytes": 445,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "edad6cb317e19bb97cdf86ea919c037366c162feec1826d298ad6b76c6d88408"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/text/StringBuilderWasm.kt",
+      "gitBlob": "3c91f4142dadab1d361478e68dc8dfa944274847",
+      "bytes": 954,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "afbc362628b545904ce0a7a1aa126034560827206c7a1c0b51e571e042d03747"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/time/Duration.kt",
+      "gitBlob": "51878a6f2cb04af795ef4034b1202404b9113e8b",
+      "bytes": 626,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "d3ac178c677cb37f53a08e2879b909ca9e2c1dd9a3b9eebbdf4ba3d6cf1ae635"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/time/InstantWasmWasi.kt",
+      "gitBlob": "3c0e9ebd95b4369aa4971775b380f2b92152771d",
+      "bytes": 678,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "1202a8efdf77b3d6bc6013645b8f3bff655b7156db2a9220bc72069b08594cc5"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/time/TimeSources.kt",
+      "gitBlob": "8e6163384b67483c2de1ff9cfe80e3706c1d9618",
+      "bytes": 2849,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "8ddb71a2acd530048fd20fbfb196221d07c098d26d6db78d3940aaceed7189b5"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/util/StringWasmCharArray.kt",
+      "gitBlob": "b0ab19453fe1b749dd5640cee5daaff6938dc77d",
+      "bytes": 525,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "310e2cf60fab228a7c5c05974b171fe47b22d4b4a67a8eb80821cd6c99af31d7"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/uuid/UuidWasmWasi.kt",
+      "gitBlob": "2672c96739acf247ae34f9189dad12032e1cfc77",
+      "bytes": 1014,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "db4e3a27b0daad70fdd804b307341af7761172c4972307ec56984553a0c9392b"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/wasm/internal/reallocExport.kt",
+      "gitBlob": "c9d257e9e24611fc8a2b14996c93683ace9388b5",
+      "bytes": 788,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "0355956210bb7eeb017af60964fda4efec6337b9bfc565cd62d644e9ed3acea4"
+    },
+    {
+      "path": "libraries/stdlib/wasm/wasi/src/kotlin/wasm/wasi/Wasi.kt",
+      "gitBlob": "a4f879a2f4e7087fcee32d71f125bdf5bb4c8e38",
+      "bytes": 390,
+      "sourceSet": "wasmWasiMain",
+      "kind": "compile",
+      "sha256": "29b43961dd6ac679a3dae35bc7089801cc662473d22946be09cbc46dc0dea6c0"
+    },
+    {
+      "path": "prepare/build.version/build.gradle.kts",
+      "gitBlob": "ca721ddff8cc91514d7b7594c4a46d1c0aeb149f",
+      "bytes": 2499,
+      "kind": "generator-input",
+      "sha256": "aee1660dc050104e18e8584dfa64e5d330084483402abe213c4264664ab89bda"
+    },
+    {
+      "path": "repo/gradle-build-conventions/buildsrc-compat/src/main/kotlin/common-configuration.gradle.kts",
+      "gitBlob": "03ef6d2392997b697002540850a3ee62e621ca01",
+      "bytes": 23647,
+      "kind": "build-input",
+      "sha256": "ce62a8108088c9063367f4e1979bd10916cb6a5d07e70c84c21000563e0ec80f"
+    },
+    {
+      "path": "repo/kotlin-build-helpers/src/BuildProperties.kt",
+      "gitBlob": "b78e66ba5eb832f08a74f7c5a1e24a90b1d6bdc5",
+      "bytes": 6543,
+      "kind": "build-input",
+      "sha256": "308fea0be6d91d61400f3044e4ae7c76c7461e88dda7a47f0b8eaae7be511959"
+    },
+    {
+      "path": "repo/kotlin-build-helpers/src/dogfoodedExperimentalFeatures.kt",
+      "gitBlob": "a5c51517c8f6cb8341abcb9e0921af75ef63d983",
+      "bytes": 1338,
+      "kind": "build-input",
+      "sha256": "4398cd584580b84cd974ed96982cbb7501f47202097bc54c0d19454c85d675af"
+    }
+  ],
+  "treeVerification": {
+    "kind": "computed Git tree SHA-1 from complete cached entries; root immediate tree",
+    "root": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e",
+    "repo": "e6578e57bc58cee1ad710be6b2c0952bdb2ded40",
+    "stdlib": "739294c5d27641fa0672194e6184f406ad2b7780",
+    "prepare": "c83f17f736a15f67a6185232149a7d47d11a9ded"
+  },
+  "moduleName": "kotlin",
+  "gradleResolution": "not-run: standalone source adapter preserves inspected declarations",
+  "flags": [
+    "-Xmulti-platform",
+    "-Xstdlib-compilation",
+    "-Xallow-kotlin-package",
+    "-Xexpect-actual-classes",
+    "-Xexplicit-api=strict",
+    "-Xdont-warn-on-error-suppression",
+    "-Xreturn-value-checker=full",
+    "-Xcompanion-blocks",
+    "-Xir-module-name=kotlin",
+    "-opt-in=kotlin.RequiresOptIn",
+    "-opt-in=kotlin.ExperimentalMultiplatform",
+    "-opt-in=kotlin.contracts.ExperimentalContracts",
+    "-opt-in=kotlin.wasm.unsafe.UnsafeWasmMemoryApi",
+    "-opt-in=kotlin.wasm.ExperimentalWasmInterop",
+    "-Xcontext-parameters",
+    "-Xexplicit-backing-fields",
+    "-Xname-based-destructuring=complete",
+    "-Xcollection-literals",
+    "-Xcontext-sensitive-resolution",
+    "-Xexplicit-context-arguments",
+    "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+    "-Xskip-prerelease-check",
+    "-Werror"
+  ],
+  "generator": {
+    "sourcePath": "prepare/build.version/build.gradle.kts",
+    "inputProperty": "defaultSnapshotVersion",
+    "inputValue": "2.5.255-SNAPSHOT",
+    "logicExecution": "extract unchanged replaceVersion and doLast logic into a JVM adapter with explicit version input and real logging; Gradle task itself is not run"
+  },
+  "patch": {
+    "metadataPath": "patches/wasi-preview1-io.json",
+    "metadataSha256": "d057b1e80af1fbc47e58f4235e8fa4acba12c59db654c61613833830d7acd648",
+    "sha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede"
+  }
+}

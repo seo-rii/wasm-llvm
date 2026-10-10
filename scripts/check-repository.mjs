@@ -41,6 +41,7 @@ const REQUIRED_PRODUCERS = [
 	'crystal-browser',
 	'ecl-browser',
 	'emscripten-lld-browser',
+	'kotlin-browser',
 	'lean-browser',
 	'lfortran-browser',
 	'lldb-browser',

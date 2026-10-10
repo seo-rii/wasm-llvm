@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-type-utilities-integration-status",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "17e3709b7df78611416b64e316510dd46753c0836a2049101cbb2f4837e08abf",
+  "originalSourceFiles": 27,
+  "originalSourceBytes": 244256,
+  "portedSourceBodies": [
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeUtils.java",
+    "core/descriptors/src/org/jetbrains/kotlin/types/checker/TypeCheckingProcedure.java",
+    "core/descriptors/src/org/jetbrains/kotlin/types/checker/TypeCheckerProcedureCallbacksImpl.java"
+  ],
+  "portableSourceFiles": [
+    {
+      "path": "TypeUtils.kt",
+      "bytes": 17113,
+      "sha256": "f31d49b07b9465722bf98b2148470665b4af7243c47b930a6a0473cfee120ef4",
+      "originalPath": "core/descriptors/src/org/jetbrains/kotlin/types/TypeUtils.java"
+    },
+    {
+      "path": "TypeCheckingProcedure.kt",
+      "bytes": 7965,
+      "sha256": "a08c9e3d19d899c8e9ba47e764a50cdab62e7f561784a3036a07a6a10ccdc2b8",
+      "originalPath": "core/descriptors/src/org/jetbrains/kotlin/types/checker/TypeCheckingProcedure.java"
+    },
+    {
+      "path": "TypeCheckerProcedureCallbacksImpl.kt",
+      "bytes": 1071,
+      "sha256": "c89b8d6d02a31d6e1ded3f363b08abe84d664d3f9a6bc318d1add2dcbcb95776",
+      "originalPath": "core/descriptors/src/org/jetbrains/kotlin/types/checker/TypeCheckerProcedureCallbacksImpl.java"
+    }
+  ],
+  "hostDependencies": [
+    {
+      "path": "assertions/CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf"
+    }
+  ],
+  "predecessorSourceLockSha256": "917ef4e40b07faf5bf73800cda13bea9a832dcaa0f459cecb8f031dca27bbaaf",
+  "receipts": {
+    "preparation.json": {
+      "path": "preparation.json",
+      "bytes": 11817,
+      "sha256": "c377ccb704b8f07b52e606accba55d4836e801c514e57595af955f6aa9e6b3b9"
+    },
+    "jvm-build.json": {
+      "path": "jvm-build.json",
+      "bytes": 6476,
+      "sha256": "2f250736d29e9241286e0c72072424895e735ec7f1b7e86cd23b3612e3812b5c"
+    },
+    "java-algorithm-differential.json": {
+      "path": "java-algorithm-differential.json",
+      "bytes": 45145,
+      "sha256": "dacbd65879a6b417b5472665becf03ac75d7727b2ff0baf2792f84f0d45ce07c"
+    }
+  },
+  "jvmDifferential": {
+    "required": 207,
+    "passed": 205,
+    "failed": 0,
+    "notRun": 2,
+    "notRunCases": [
+      "number-default-unsigned-int",
+      "number-default-unsigned-long"
+    ],
+    "observationSha256": "e1a9612668b61ec190e286cc6a4d254e58710b88235b1422351e175d3ab7bbb2",
+    "typePairCases": 144,
+    "helperImplementation": "genuine verified bootstrap compiler classes; helper source commit unknown",
+    "fullSelectedCompilerR0": "not-run",
+    "R1": "not-run"
+  },
+  "sourceApiAdjustments": [
+    {
+      "method": "TypeUtils.substituteProjectionsForParameters",
+      "original": "@NotNull KotlinType return can directly return nullable TypeSubstitutor.substitute result",
+      "portable": "KotlinType?; retains actual returned value without inserting a null assertion"
+    },
+    {
+      "method": "TypeUtils.substituteParameters",
+      "original": "@NotNull KotlinType delegates directly to nullable-producing method",
+      "portable": "KotlinType?; retains actual returned value"
+    },
+    {
+      "method": "TypeUtils.makeUnsubstitutedType refinement callback",
+      "original": "Java Function1<KotlinTypeRefiner, SimpleType> has platform-nullable function result",
+      "portable": "(KotlinTypeRefiner) -> SimpleType?; genuine factory accepts null refinement"
+    },
+    {
+      "class": "TypeCheckerProcedureCallbacksImpl",
+      "original": "package-private Java class",
+      "portable": "internal common Kotlin class; same-module only"
+    },
+    {
+      "method": "TypeUtils.getImmediateSupertypes/getAllSupertypes",
+      "original": "Java List/Set return fresh mutable ArrayList/LinkedHashSet instances",
+      "portable": "MutableList/MutableSet; preserves actual caller-visible mutable result collections"
+    }
+  ],
+  "generatedJvmApiDifferences": [
+    {
+      "kind": "companion-field",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tfield:public static final:Companion:org.jetbrains.kotlin.types.TypeUtils$Companion"
+    },
+    {
+      "kind": "companion-field",
+      "portable": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tfield:public static final:Companion:org.jetbrains.kotlin.types.checker.TypeCheckingProcedure$Companion"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:acceptsNullable(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:acceptsNullable(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:canHaveSubtypes(org.jetbrains.kotlin.types.checker.KotlinTypeChecker,org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:canHaveSubtypes(org.jetbrains.kotlin.types.checker.KotlinTypeChecker,org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:contains(org.jetbrains.kotlin.types.KotlinType,kotlin.jvm.functions.Function1):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:contains(org.jetbrains.kotlin.types.KotlinType,kotlin.jvm.functions.Function1):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:contains(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:contains(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:createSubstitutedSupertype(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.TypeSubstitutor):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:createSubstitutedSupertype(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.TypeSubstitutor):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:dependsOnTypeConstructors(org.jetbrains.kotlin.types.KotlinType,java.util.Collection):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:dependsOnTypeConstructors(org.jetbrains.kotlin.types.KotlinType,java.util.Collection):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:dependsOnTypeParameters(org.jetbrains.kotlin.types.KotlinType,java.util.Collection):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:dependsOnTypeParameters(org.jetbrains.kotlin.types.KotlinType,java.util.Collection):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:equalTypes(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:equalTypes(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getAllSupertypes(org.jetbrains.kotlin.types.KotlinType):java.util.Set",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getAllSupertypes(org.jetbrains.kotlin.types.KotlinType):java.util.Set"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getClassDescriptor(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.descriptors.ClassDescriptor",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getClassDescriptor(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.descriptors.ClassDescriptor"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getDefaultPrimitiveNumberType(java.util.Collection):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getDefaultPrimitiveNumberType(java.util.Collection):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getDefaultPrimitiveNumberType(org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getDefaultPrimitiveNumberType(org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getDefaultTypeProjections(java.util.List):java.util.List",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getDefaultTypeProjections(java.util.List):java.util.List"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getImmediateSupertypes(org.jetbrains.kotlin.types.KotlinType):java.util.List",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getImmediateSupertypes(org.jetbrains.kotlin.types.KotlinType):java.util.List"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getPrimitiveNumberType(org.jetbrains.kotlin.resolve.constants.IntegerLiteralTypeConstructor,org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getPrimitiveNumberType(org.jetbrains.kotlin.resolve.constants.IntegerLiteralTypeConstructor,org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getPrimitiveNumberType(org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor,org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getPrimitiveNumberType(org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor,org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:getTypeParameterDescriptorOrNull(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.descriptors.TypeParameterDescriptor",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:getTypeParameterDescriptorOrNull(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.descriptors.TypeParameterDescriptor"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:hasNullableSuperType(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:hasNullableSuperType(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:isDontCarePlaceholder(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:isDontCarePlaceholder(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:isNonReifiedTypeParameter(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:isNonReifiedTypeParameter(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:isNullableType(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:isNullableType(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:isReifiedTypeParameter(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:isReifiedTypeParameter(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:isTypeParameter(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:isTypeParameter(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeNotNullable(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeNotNullable(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeNullable(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeNullable(org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeNullableAsSpecified(org.jetbrains.kotlin.types.KotlinType,boolean):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeNullableAsSpecified(org.jetbrains.kotlin.types.KotlinType,boolean):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeNullableIfNeeded(org.jetbrains.kotlin.types.KotlinType,boolean):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeNullableIfNeeded(org.jetbrains.kotlin.types.KotlinType,boolean):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeNullableIfNeeded(org.jetbrains.kotlin.types.SimpleType,boolean):org.jetbrains.kotlin.types.SimpleType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeNullableIfNeeded(org.jetbrains.kotlin.types.SimpleType,boolean):org.jetbrains.kotlin.types.SimpleType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeStarProjection(org.jetbrains.kotlin.descriptors.TypeParameterDescriptor):org.jetbrains.kotlin.types.TypeProjection",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeStarProjection(org.jetbrains.kotlin.descriptors.TypeParameterDescriptor):org.jetbrains.kotlin.types.TypeProjection"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeStarProjection(org.jetbrains.kotlin.descriptors.TypeParameterDescriptor,org.jetbrains.kotlin.types.ErasureTypeAttributes):org.jetbrains.kotlin.types.TypeProjection",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeStarProjection(org.jetbrains.kotlin.descriptors.TypeParameterDescriptor,org.jetbrains.kotlin.types.ErasureTypeAttributes):org.jetbrains.kotlin.types.TypeProjection"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeUnsubstitutedType(org.jetbrains.kotlin.descriptors.ClassifierDescriptor,org.jetbrains.kotlin.resolve.scopes.MemberScope,kotlin.jvm.functions.Function1):org.jetbrains.kotlin.types.SimpleType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeUnsubstitutedType(org.jetbrains.kotlin.descriptors.ClassifierDescriptor,org.jetbrains.kotlin.resolve.scopes.MemberScope,kotlin.jvm.functions.Function1):org.jetbrains.kotlin.types.SimpleType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:makeUnsubstitutedType(org.jetbrains.kotlin.types.TypeConstructor,org.jetbrains.kotlin.resolve.scopes.MemberScope,kotlin.jvm.functions.Function1):org.jetbrains.kotlin.types.SimpleType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:makeUnsubstitutedType(org.jetbrains.kotlin.types.TypeConstructor,org.jetbrains.kotlin.resolve.scopes.MemberScope,kotlin.jvm.functions.Function1):org.jetbrains.kotlin.types.SimpleType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:noExpectedType(org.jetbrains.kotlin.types.KotlinType):boolean",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:noExpectedType(org.jetbrains.kotlin.types.KotlinType):boolean"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:substituteParameters(org.jetbrains.kotlin.descriptors.ClassDescriptor,java.util.List):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:substituteParameters(org.jetbrains.kotlin.descriptors.ClassDescriptor,java.util.List):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static:substituteProjectionsForParameters(org.jetbrains.kotlin.descriptors.ClassDescriptor,java.util.List):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.TypeUtils\tmethod:public static final:substituteProjectionsForParameters(org.jetbrains.kotlin.descriptors.ClassDescriptor,java.util.List):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static:findCorrespondingSupertype(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static final:findCorrespondingSupertype(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static:findCorrespondingSupertype(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.checker.TypeCheckingProcedureCallbacks):org.jetbrains.kotlin.types.KotlinType",
+      "portable": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static final:findCorrespondingSupertype(org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.KotlinType,org.jetbrains.kotlin.types.checker.TypeCheckingProcedureCallbacks):org.jetbrains.kotlin.types.KotlinType"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static:getEffectiveProjectionKind(org.jetbrains.kotlin.descriptors.TypeParameterDescriptor,org.jetbrains.kotlin.types.TypeProjection):org.jetbrains.kotlin.types.EnrichedProjectionKind",
+      "portable": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static final:getEffectiveProjectionKind(org.jetbrains.kotlin.descriptors.TypeParameterDescriptor,org.jetbrains.kotlin.types.TypeProjection):org.jetbrains.kotlin.types.EnrichedProjectionKind"
+    },
+    {
+      "kind": "static-bridge-final",
+      "original": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static:getEffectiveProjectionKind(org.jetbrains.kotlin.types.Variance,org.jetbrains.kotlin.types.Variance):org.jetbrains.kotlin.types.EnrichedProjectionKind",
+      "portable": "org.jetbrains.kotlin.types.checker.TypeCheckingProcedure\tmethod:public static final:getEffectiveProjectionKind(org.jetbrains.kotlin.types.Variance,org.jetbrains.kotlin.types.Variance):org.jetbrains.kotlin.types.EnrichedProjectionKind"
+    },
+    {
+      "kind": "internal-kotlin-class-jvm-visibility",
+      "original": "org.jetbrains.kotlin.types.checker.TypeCheckerProcedureCallbacksImpl\tclass::java.lang.Object",
+      "portable": "org.jetbrains.kotlin.types.checker.TypeCheckerProcedureCallbacksImpl\tclass:public:java.lang.Object",
+      "constructor": "org.jetbrains.kotlin.types.checker.TypeCheckerProcedureCallbacksImpl\tconstructor:public:()"
+    }
+  ],
+  "requiredConcreteDependencies": [
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+      "methods": [
+        "getFqName"
+      ],
+      "implementation": "not supplied by this unit; genuine descriptor helper required by compiler C"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+      "implementation": "full source-body port owned by builtins unit; no replacement implementation"
+    }
+  ],
+  "integrationRequires": [
+    "the real TypeSubstitutor/TypeProjection implementations from the previous source unit",
+    "genuine TypeConstructor/TypeProjection/descriptor contracts and typed aliases",
+    "selected Kotlin type factories, substitutions, captured/star/flexible/error/annotation helpers",
+    "exact DescriptorUtils and KotlinBuiltIns implementations",
+    "selected checker/utils.kt corresponding-supertype algorithm and real common collections",
+    "one shared enabled compiler assertion input, without duplicate declarations"
+  ],
+  "unsignedPositiveCases": {
+    "status": "not-run",
+    "reason": "Genuine bootstrap DefaultBuiltIns .kotlin_builtins resources lack UInt and ULong descriptors. Positive unsigned number selection requires the real KLIB descriptor/type provider; no descriptors were invented."
+  },
+  "execution": {
+    "pid": 1584561,
+    "exitCode": 0,
+    "log": "/home/seorii/logs/kotlin-type-utilities-differential-nz9fskpb.log",
+    "exitStatus": "/home/seorii/logs/kotlin-type-utilities-differential-nz9fskpb.log.exit"
+  },
+  "wasmBuild": "not-run: real compiler source dependency closure required",
+  "browserCompilerBuilt": false,
+  "readiness": false
+}

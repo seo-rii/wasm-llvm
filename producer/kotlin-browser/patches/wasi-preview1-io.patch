@@ -1,0 +1,18 @@
+diff --git a/libraries/stdlib/wasm/wasi/src/kotlin/io.kt b/libraries/stdlib/wasm/wasi/src/kotlin/io.kt
+--- a/libraries/stdlib/wasm/wasi/src/kotlin/io.kt
++++ b/libraries/stdlib/wasm/wasi/src/kotlin/io.kt
+@@ -129,12 +129,12 @@
+ 
+ @OptIn(ExperimentalWasmInterop::class)
+ private fun wasiWaitUntilEventImpl(allocator: MemoryAllocator, descriptor: Int, fdEvent: Int) {
+-    val subscriptionPtr = allocator.allocate(20)
++    val subscriptionPtr = allocator.allocate(48)
+     (subscriptionPtr + 0).storeLong(USER_DATA)
+     (subscriptionPtr + 8).storeByte(fdEvent.toByte())
+     (subscriptionPtr + 16).storeInt(descriptor)
+ 
+-    val eventSize = 26
++    val eventSize = 32
+     val eventPtr = allocator.allocate(eventSize)
+ 
+     val rp0 = allocator.allocate(4)

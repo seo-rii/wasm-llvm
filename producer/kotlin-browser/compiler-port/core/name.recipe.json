@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "original": {
+    "path": "core/names/src/org/jetbrains/kotlin/name/Name.java",
+    "bytes": 3663,
+    "gitBlob": "8964a082d3231d4fb4f8954bbbccfa40964793f9",
+    "sha256": "59433f2581c41f9e289d7c4dda241c9b143a55291bed656a9af05fa458f53b2a"
+  },
+  "portable": {
+    "path": "Name.kt",
+    "outputPath": "compiler-port-core/Name.kt",
+    "bytes": 3862,
+    "sha256": "5fc21e3d5e56fc5e6177dfab7c37c179f2d9482284cf60a9fc9dc492b63ccf2d"
+  },
+  "operation": "java-to-common-kotlin",
+  "preservedMethods": [
+    "asString",
+    "getIdentifier",
+    "isSpecial",
+    "asStringStripSpecialMarkers",
+    "compareTo",
+    "identifier",
+    "isValidIdentifier",
+    "identifierIfValid",
+    "special",
+    "guessByFirstCharacter",
+    "getIdentifierOrNullIfSpecial",
+    "toString",
+    "equals",
+    "hashCode"
+  ],
+  "semantics": {
+    "stringUnits": "UTF-16 code units",
+    "comparison": "exact java.lang.String.compareTo integer, independent of special flag",
+    "identifierConstruction": "no additional validation; validation only in isValidIdentifier/identifierIfValid",
+    "specialValidation": "startsWith(<) only; no added closing marker rule",
+    "equality": "string and special flag",
+    "hash": "31 * Java-compatible Kotlin string hash + special flag, Int overflow",
+    "syntheticProperties": "explicit Kotlin properties plus original JVM method names",
+    "exceptionComparison": "IllegalArgumentException/IllegalStateException code/message exact; substring bounds exception family compared, host-specific subclass/message retained as runtime behavior"
+  },
+  "readiness": {
+    "sourcePort": "implemented",
+    "jvmDifferential": "not-run",
+    "wasmDifferential": "not-run",
+    "browserCompiler": "not-built",
+    "languageReadiness": false
+  }
+}

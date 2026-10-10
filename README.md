@@ -20,6 +20,7 @@ hosting and loaded by URL from the consuming application.
 | Crystal        | Crystal 1.21.0, verified native bootstrap, markd 0.5.0                                          | WASI object and compiler-host portability receipts; browser host blocked | [`producer/crystal-browser`](producer/crystal-browser/README.md)             |
 | ECL (Common Lisp) | ECL 26.5.5, emsdk 6.0.0 | Emscripten ES module runtime (`ecl.mjs`/gzip `ecl.wasm.gz`), receipt, Node and Chromium stdin/condition acceptance | [`producer/ecl-browser`](producer/ecl-browser/README.md) |
 | Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
+| Kotlin candidate | Official Kotlin development source `4d78aae1e337cd40f69baa865aed950fe807a775` | Source/dependency inventory and fixture ledger; browser compiler not built, G0 blocked | [`producer/kotlin-browser`](producer/kotlin-browser/README.md) |
 | Lean 4 | Lean 4.34.1 source and release bootstrap, libuv 1.48.0, emsdk 6.0.0 | `lean --run` JS/Wasm module, wasm32 `Init` library, Node acceptance receipt | [`producer/lean-browser`](producer/lean-browser/README.md) |
 | LFortran       | LFortran source snapshot, LLVM 22.1.8 Emscripten package, emsdk 4.0.9                              | LLVM-enabled compiler producer and real Fortran input validation     | [`producer/lfortran-browser`](producer/lfortran-browser/README.md)             |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
@@ -113,6 +114,11 @@ pnpm verify:lean-artifacts
 pnpm prepare:odin -- --work out/odin-browser
 pnpm verify:odin-source -- --source out/odin-browser/source
 # See producer/odin-browser/README.md for the explicit linker and host probe inputs.
+
+# Kotlin official compiler direct source-port inventory (G0 remains blocked)
+pnpm audit:kotlin-source -- --output out/kotlin-browser-audit
+pnpm ledger:kotlin-fixtures -- --output out/kotlin-browser-fixtures.json
+pnpm test:kotlin-producer
 
 # Swift
 pnpm probe:swift-browser-target

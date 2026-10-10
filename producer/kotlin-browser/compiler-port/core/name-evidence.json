@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-compiler-core-name-differential",
+  "status": "passed",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "original": {
+    "path": "core/names/src/org/jetbrains/kotlin/name/Name.java",
+    "bytes": 3663,
+    "gitBlob": "8964a082d3231d4fb4f8954bbbccfa40964793f9",
+    "sha256": "59433f2581c41f9e289d7c4dda241c9b143a55291bed656a9af05fa458f53b2a"
+  },
+  "portable": {
+    "path": "Name.kt",
+    "outputPath": "compiler-port-core/Name.kt",
+    "bytes": 3862,
+    "sha256": "5fc21e3d5e56fc5e6177dfab7c37c179f2d9482284cf60a9fc9dc492b63ccf2d"
+  },
+  "recipeSha256": "002ae1deceb4f2e9fe1242a09ddf81de97a07e72bf698d9dd5cc2413d21ec70c",
+  "observerSources": [
+    {
+      "path": "NameProbe.kt",
+      "bytes": 3578,
+      "sha256": "592668ee79e6258dd765f586b9404f95ec9726ed44dada2baba2c30692e90a2f"
+    },
+    {
+      "path": "NameJvmEntry.kt",
+      "bytes": 83,
+      "sha256": "f8e2380b3a3366f4d7bdc20c60140e736b7cba1951086ab306e50535efd8bc35"
+    },
+    {
+      "path": "NameWasmEntry.kt",
+      "bytes": 128,
+      "sha256": "78c9453dc53937c14f13f5149b015a549d81375f841295c766405bfa1c1a7498"
+    }
+  ],
+  "buildScriptSha256": "a4e7a424eedbe05aa6b07b828441535cdccf451cd4339fd10bf237a555ea222c",
+  "prepareScriptSha256": "6a19ea7f59da66a6aad794d50f7d27875f6adf638e86e06a86850da65e39e9c6",
+  "bootstrapVersion": "2.5.0-dev-10106",
+  "bootstrapCompilerSourceCommit": null,
+  "bootstrapArtifacts": [
+    {
+      "id": "compiler",
+      "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 59164049,
+      "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "build-tools-api",
+      "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+      "bytes": 575844,
+      "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-jvm",
+      "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+      "bytes": 1859448,
+      "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "daemon",
+      "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 372801,
+      "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-wasi",
+      "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+      "bytes": 4044976,
+      "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-js",
+      "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+      "bytes": 4065926,
+      "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "reflect",
+      "file": "kotlin-reflect-1.6.10.jar",
+      "bytes": 3038560,
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+      "version": "1.6.10",
+      "verified": true
+    },
+    {
+      "id": "coroutines",
+      "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+      "bytes": 1548360,
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+      "version": "1.8.0",
+      "verified": true
+    },
+    {
+      "id": "annotations",
+      "file": "annotations-13.0.jar",
+      "bytes": 17536,
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+      "version": "13.0",
+      "verified": true
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-name-javac",
+      "argv": [
+        "javac",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/original/classes",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/original/Name.java"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1120.701919
+    },
+    {
+      "phase": "original-name-jvm-observer-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/original/classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 7655.035449999999
+    },
+    {
+      "phase": "portable-name-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/compiler-port-core/Name.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameProbe.kt",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/compiler-port-core/Name.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 8439.341169000001
+    },
+    {
+      "phase": "original-name-jvm-observe",
+      "argv": [
+        "java",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/original/classes:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.nameprobe.NameJvmEntryKt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 281.28014500000063
+    },
+    {
+      "phase": "portable-name-jvm-observe",
+      "argv": [
+        "java",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.nameprobe.NameJvmEntryKt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 232.83129399999962
+    },
+    {
+      "phase": "portable-name-wasmjs-klib-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/compiler-port-core/Name.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameProbe.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/klib",
+        "-ir-output-name",
+        "name-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/compiler-port-core/Name.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/core/NameWasmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 6958.072920999999
+    },
+    {
+      "phase": "portable-name-wasmjs-binary-build",
+      "argv": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/klib/name-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/wasm",
+        "-ir-output-name",
+        "name-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 7941.578343000001
+    },
+    {
+      "phase": "portable-name-wasmjs-observe",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const module = await import(process.argv[1]); console.log(module.nameProbeJson());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-name-probe/wasm/name-probe.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 163.08593200000178
+    }
+  ],
+  "outputs": [
+    {
+      "path": "jvm/original.jar",
+      "bytes": 6180,
+      "sha256": "c79b2376d388ddfbee6b11cafc3320c98f553c1d36a7976c8fd4cd6e32382fb8"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 10409,
+      "sha256": "4b634d484fa428b92106394528c702ce7aa7e9c2920f63b66b498f6c299de2bf"
+    },
+    {
+      "path": "klib/name-probe.klib",
+      "bytes": 20107,
+      "sha256": "5d3b1cfdadd651b1de5842438b3596857786a9e29ea163c42a6bc76496bc4c5e"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 70515,
+      "sha256": "dc15163e19d55918210374c92095287f2c3cee5c75ffb679a042ad0af6cb5a54"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 70515,
+      "sha256": "dc15163e19d55918210374c92095287f2c3cee5c75ffb679a042ad0af6cb5a54"
+    },
+    {
+      "path": "portable-wasmjs.json",
+      "bytes": 70515,
+      "sha256": "dc15163e19d55918210374c92095287f2c3cee5c75ffb679a042ad0af6cb5a54"
+    },
+    {
+      "path": "wasm/name-probe.import-object.mjs",
+      "bytes": 9485,
+      "sha256": "f40cb8c8d4eed172a8af94891d15cf6e5f7fc202d5c46c726a568e5ff8678d3b"
+    },
+    {
+      "path": "wasm/name-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/name-probe.mjs",
+      "bytes": 2255,
+      "sha256": "13fd75e883dd54830b007dd16d3031ab2ea1da20dc47bb85d17644b8cce5cdaa"
+    },
+    {
+      "path": "wasm/name-probe.wasm",
+      "bytes": 710730,
+      "sha256": "dadcbf9890bad513fbd57097e36a4849ce40885f88746c9397bfa0710fbd1635"
+    }
+  ],
+  "comparison": {
+    "namedCases": 32,
+    "orderingCases": 1024,
+    "utf16Cases": 65536,
+    "required": 66592,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "originalJavaEqualsPortableJvm": true,
+    "originalJavaEqualsPortableWasm": true
+  },
+  "wasmEngine": {
+    "kind": "Node",
+    "version": "v24.1.0",
+    "flags": [
+      "--experimental-wasm-exnref"
+    ]
+  },
+  "browserComparison": "not-run",
+  "limitations": [
+    "Tests the actual Name dependency, not the full browser compiler.",
+    "IndexOutOfBoundsException family is compared; runtime-specific substring exception subclass/messages are not claimed identical.",
+    "UTF-16 and ordering exhaustive products use a deterministic digest alongside detailed named case results.",
+    "Inputs respect the original @NotNull contract; Java calls that violate it with null are excluded."
+  ],
+  "browserCompiler": "not-built",
+  "languageReadiness": false
+}

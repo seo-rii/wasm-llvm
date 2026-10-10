@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-smart-set-host-preparation",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "a6e87a9fad12db2b6df584801424daff84eaa7c3c579f2d3e6fae1d57c259e09",
+  "preparationToolSha256": "b7117255ee97bf6c57e76aa7fe465cb0bcfecc17d3e3e7dde99cd595a1d1a7ad",
+  "original": {
+    "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/SmartSet.kt",
+    "gitBlob": "71f8657dd82cc899ae20f84a3fea2a1e1e80bd5e",
+    "bytes": 3639,
+    "sha256": "48a9f7bf2ee9bc80871f3b986fc9434f3183f5ad01cb3fb5fdb4a0c7995b1783"
+  },
+  "portable": {
+    "path": "SmartSet.kt",
+    "bytes": 3638,
+    "sha256": "0de6762b1da96319880436436d6c1506b7a1158bd0a070165b60471f81100f2b"
+  },
+  "host": {
+    "path": "SmartSetHost.kt",
+    "bytes": 524,
+    "sha256": "089e908a75f7f662fd52eced4e1caf9a71f1f9349378ac2d6aa56de8c0932d8f"
+  },
+  "replacements": [
+    {
+      "from": "import java.util.*",
+      "to": "import kotlin.jvm.JvmStatic"
+    },
+    {
+      "from": "Collections.emptySet<T>().iterator()",
+      "to": "emptySmartSetIterator<T>()"
+    }
+  ],
+  "sourceBody": "unchanged apart from explicit optional JVM annotation import and JVM empty-iterator host binding",
+  "stdlibSourceProvenance": [
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableCollection.kt",
+      "gitBlob": "ec16de7a0a16a6cc7cd2f86e19c7920e238bfee0",
+      "bytes": 1249,
+      "sha256": "b6e893edc1dbbd32df056b3b4817157484280a206573b30194f6d29f1e67a467",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/common/src/kotlin/collections/AbstractMutableSet.kt",
+      "gitBlob": "a95e11760e6938151f8300b20c7970137dadfd1d",
+      "bytes": 1213,
+      "sha256": "e2ca9037f3eed7e77955b220ec4ad2132cbca3de8ccee24d39e02baddb65af82",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableCollection.kt",
+      "gitBlob": "8e9f3a05cb8c61b435f3ec69daac60195fe40e68",
+      "bytes": 2608,
+      "sha256": "828d303aa4fa8201fbb3be8f82586c29a7ca27ff256d481de1a8936c393e013a",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/AbstractMutableSet.kt",
+      "gitBlob": "3ad99ce1900dadd9746934519cc69a56ead17dea",
+      "bytes": 1332,
+      "sha256": "3632e444c6351ec410473552034b68b04af0bd65f6177e1119b1139eb07c806f",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/HashMap.kt",
+      "gitBlob": "b935fe0262a1e921d9fc9c6cc7b5e7d342f63313",
+      "bytes": 34910,
+      "sha256": "9c0f7c31ab894a0391dde2b81d83e7296f5ebdb51c87f84ba56df7fdd11fd626",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/native-wasm/src/kotlin/collections/HashSet.kt",
+      "gitBlob": "ac174c707808bfdb65a7ed2139be1deb0bc12aeb",
+      "bytes": 11112,
+      "sha256": "4fa5e400dec28a2d13a3ef49f23f2b9b25134b9b7a55ee6b766b4b65d5223375",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractCollection.kt",
+      "gitBlob": "9f9275435c711629d25e2318c6bf69b5a5f82b80",
+      "bytes": 2004,
+      "sha256": "6cf944e7a688966a5db7a6c362cd297ab9e6ebc62c9c42f4a76ac42afff119c0",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/AbstractSet.kt",
+      "gitBlob": "ef7cfa61a5aceb432d120b25c37f300ec33a259e",
+      "bytes": 1635,
+      "sha256": "51ef8ac320c294a512bebaa60a3a590da5e8414adc58653531cf2982fd6849e5",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    },
+    {
+      "path": "libraries/stdlib/src/kotlin/collections/Sets.kt",
+      "gitBlob": "f58ffbaecda6fb5b91b072def4b4323a87aac0d9",
+      "bytes": 6921,
+      "sha256": "e12d14089537d62e303d27f7c7de6a9017abdec4fda0f77c2ce08ee9aa5e4936",
+      "status": "source verified; actual probe stdlib artifact version/provenance recorded separately"
+    }
+  ],
+  "upstreamTestDiscovery": {
+    "status": "no matching SmartSet test filename found in four selected complete compiler test subtree listings; no test contents were searched and this is not a repository-wide absence claim",
+    "trees": [
+      {
+        "path": "compiler/tests-common",
+        "gitTree": "c5a77ea31d7ecd1dc7d1ceec538aed812d9f3d2a",
+        "truncated": false,
+        "matchingPaths": []
+      },
+      {
+        "path": "compiler/tests",
+        "gitTree": "1afad1a022910045c6b96824c815613294a14670",
+        "truncated": false,
+        "matchingPaths": []
+      },
+      {
+        "path": "compiler/tests-common-new",
+        "gitTree": "6dfcd7b58413b44bc3901f1ba2b9b76fcd4259a1",
+        "truncated": false,
+        "matchingPaths": []
+      },
+      {
+        "path": "compiler/tests-compiler-utils",
+        "gitTree": "3867fe1f39e5ec8c64c0fedc413bd3f7540e6fe6",
+        "truncated": false,
+        "matchingPaths": []
+      }
+    ]
+  },
+  "commonSources": [
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSet.kt",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-smart-set-probe-1791454914752/compiler-port-smart-set/SmartSetHost.kt"
+  ],
+  "replacedOriginalPaths": [
+    "core/util.runtime/src/org/jetbrains/kotlin/utils/SmartSet.kt"
+  ],
+  "originalSourceUnmodified": true,
+  "browserCompilerBuilt": false,
+  "languageReadiness": false
+}

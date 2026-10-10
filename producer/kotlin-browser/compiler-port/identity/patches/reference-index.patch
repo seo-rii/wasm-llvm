@@ -1,0 +1,169 @@
+--- a/compiler/util/src/org/jetbrains/kotlin/utils/SmartIdentityTable.kt
++++ b/compiler/util/src/org/jetbrains/kotlin/utils/SmartIdentityTable.kt
+@@ -5,12 +5,11 @@
+ 
+ package org.jetbrains.kotlin.utils
+ 
+-import java.util.IdentityHashMap
+ 
+ /**
+  * [SmartIdentityTable] is a Map like structure that uses reference identity for keys.
+  * It uses 2 arrays to store keys & values until the number of entries stored is larger than [ARRAY_UNTIL_SIZE].
+- * At that point it switches to using an IdentityHashMap.
++ * At that point it switches to the per-owner common IdentityIndex (linear lookup).
+  *
+  * This structure can be used instead of [HashMap] when reference identity can be used and
+  * the number of entries inserted is small (<= [ARRAY_UNTIL_SIZE]) on average, drastically reducing the overhead
+@@ -22,7 +21,7 @@
+ 
+     private var keysArray: MutableList<K>? = ArrayList(ARRAY_UNTIL_SIZE)
+     private var valuesArray: MutableList<V>? = ArrayList(ARRAY_UNTIL_SIZE)
+-    private var largeMap: IdentityHashMap<K, V>? = null
++    private var largeMap: IdentityIndex<K, V>? = null
+ 
+     val size: Int
+         get() = keysArray?.size ?: largeMap!!.size
+@@ -58,12 +57,12 @@
+             }
+             convertToHashMap()
+         }
+-        // all other cases, fallback to IdentityHashMap implementation
++        // all other cases, fallback to IdentityIndex implementation
+         return largeMap!!.put(key, value)
+     }
+ 
+     private fun convertToHashMap() {
+-        val map = IdentityHashMap<K, V>()
++        val map = IdentityIndex<K, V>()
+         val ka = keysArray!!
+         val va = valuesArray!!
+         for (i in 0 until ka.size) {
+--- a/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/IrElementBase.kt
++++ b/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/IrElementBase.kt
+@@ -18,7 +18,7 @@
+ 
+ import org.jetbrains.kotlin.ir.visitors.IrTransformer
+ import org.jetbrains.kotlin.ir.visitors.IrVisitor
+-import java.util.IdentityHashMap
++import org.jetbrains.kotlin.utils.IdentityIndex
+ 
+ abstract class IrElementBase : IrElement {
+     /**
+@@ -156,7 +156,7 @@
+     internal fun copyAttributesFrom(other: IrElementBase, includeAll: Boolean) {
+         val srcAttributes = other._attributes ?: return
+         var dstAttributes = _attributes
+-        val mergedAttributes = IdentityHashMap<IrAttribute<*, *>, Any?>((srcAttributes.size + (dstAttributes?.size ?: 0)) / 2)
++        val mergedAttributes = IdentityIndex<IrAttribute<*, *>, Any?>((srcAttributes.size + (dstAttributes?.size ?: 0)) / 2)
+ 
+         if (dstAttributes != null) {
+             for (i in dstAttributes.indices step 2) {
+--- a/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt
++++ b/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledModuleFragment.kt
+@@ -16,7 +16,7 @@
+ import org.jetbrains.kotlin.utils.addToStdlib.ifTrue
+ import org.jetbrains.kotlin.wasm.ir.*
+ import org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation
+-import java.util.*
++import org.jetbrains.kotlin.utils.IdentityIndex
+ 
+ enum class ExceptionTagType { WASM_TAG, JS_TAG, TRAP }
+ 
+@@ -351,12 +351,12 @@
+             build()
+         }
+ 
+-        val gcTypesReversed = IdentityHashMap<WasmTypeDeclaration, IdSignature>()
++        val gcTypesReversed = IdentityIndex<WasmTypeDeclaration, IdSignature>()
+         for (gcType in definedDeclarations.gcTypes) {
+             gcTypesReversed[gcType.value] = gcType.key
+         }
+ 
+-        val vtTypeReversed = IdentityHashMap<WasmTypeDeclaration, IdSignature>()
++        val vtTypeReversed = IdentityIndex<WasmTypeDeclaration, IdSignature>()
+         for (vtableType in definedDeclarations.vTableGcTypes) {
+             vtTypeReversed[vtableType.value] = vtableType.key
+         }
+--- a/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/serialization/WasmSerializer.kt
++++ b/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/serialization/WasmSerializer.kt
+@@ -13,7 +13,7 @@
+ import org.jetbrains.kotlin.wasm.ir.ByteWriter
+ import org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation
+ import java.io.OutputStream
+-import java.util.*
++import org.jetbrains.kotlin.utils.IdentityIndex
+ 
+ /**
+  * Each polymorphic type is prepended by a type tag byte, so that we know the type of the object to
+@@ -45,7 +45,7 @@
+ 
+ class WasmSerializer(outputStream: OutputStream) {
+     private val body = ByteWriter(outputStream)
+-    private val serializedReferenceIndexes = IdentityHashMap<Any, Int>()
++    private val serializedReferenceIndexes = IdentityIndex<Any, Int>()
+ 
+     fun serialize(data: WasmIrProgramFragmentsSingleModule.SingleModuleFragmentData) {
+         when (data) {
+--- a/compiler/fir/cones/src/org/jetbrains/kotlin/fir/types/ConeTypes.kt
++++ b/compiler/fir/cones/src/org/jetbrains/kotlin/fir/types/ConeTypes.kt
+@@ -102,7 +102,9 @@
+     val delegatedType: ConeKotlinType? get() = lookupTag.delegatedType
+ 
+     override fun equals(other: Any?): Boolean = this === other
+-    override fun hashCode(): Int = System.identityHashCode(this)
++    private val identityHashToken = Any()
++
++    override fun hashCode(): Int = identityHashToken.hashCode()
+ }
+ 
+ sealed class ConeLookupTagBasedType : ConeSimpleKotlinType() {
+--- a/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/types/impl/IrTypeBase.kt
++++ b/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/types/impl/IrTypeBase.kt
+@@ -24,7 +24,7 @@
+ ) : IrErrorType(IrErrorClassImpl.symbol, isMarkedNullable) {
+     override fun equals(other: Any?): Boolean = other is IrErrorTypeImpl
+ 
+-    override fun hashCode(): Int = IrErrorTypeImpl::class.java.hashCode()
++    override fun hashCode(): Int = IrErrorTypeImpl::class.hashCode()
+ }
+ 
+ open class IrDynamicTypeImpl(
+@@ -33,7 +33,7 @@
+ ) : IrDynamicType() {
+     override fun equals(other: Any?): Boolean = other is IrDynamicTypeImpl
+ 
+-    override fun hashCode(): Int = IrDynamicTypeImpl::class.java.hashCode()
++    override fun hashCode(): Int = IrDynamicTypeImpl::class.hashCode()
+ }
+ 
+ class IrDynamicTypeWithOriginalKotlinTypeImpl(
+@@ -70,7 +70,9 @@
+ 
+     override fun equals(other: Any?): Boolean = this === other
+ 
+-    override fun hashCode(): Int = System.identityHashCode(this)
++    private val identityHashToken = Any()
++
++    override fun hashCode(): Int = identityHashToken.hashCode()
+ 
+     override fun toString(): String = render()
+ }
+--- a/core/descriptors/src/org/jetbrains/kotlin/types/ClassifierBasedTypeConstructor.kt
++++ b/core/descriptors/src/org/jetbrains/kotlin/types/ClassifierBasedTypeConstructor.kt
+@@ -14,6 +14,7 @@
+ 
+ abstract class ClassifierBasedTypeConstructor : TypeConstructor {
+     private var hashCode = 0
++    private val identityHashToken = Any()
+ 
+     abstract override fun getDeclarationDescriptor(): ClassifierDescriptor
+ 
+@@ -25,7 +26,7 @@
+         val computedHashCode = if (hasMeaningfulFqName(descriptor)) {
+             DescriptorUtils.getFqName(descriptor).hashCode()
+         } else {
+-            System.identityHashCode(this)
++            identityHashToken.hashCode()
+         }
+ 
+         return computedHashCode.also { hashCode = it }

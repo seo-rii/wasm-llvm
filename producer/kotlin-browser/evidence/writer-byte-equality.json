@@ -1,0 +1,1241 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-byte-writer-jvm-wasmjs-unit-comparison",
+  "gate": "G2-writer-unit-only",
+  "status": "passed",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "d25441072ed5a64361d1613038dcfac78f4854e8beeee93cdea1daeba37184dc",
+  "patch": {
+    "path": "writer-portable.patch",
+    "bytes": 1975,
+    "sha256": "d481b6c222163deda86765afbf3d9234986358fb28c138fd735f0cb9f984b47a"
+  },
+  "sourceVerification": [
+    {
+      "path": "wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+      "role": "official-binary-writer",
+      "bytes": 3724,
+      "sha256": "6937f3076da19c460256128f006fc701306427d3194393378154731ee7f7892d",
+      "gitBlobSha1": "b80e9d85ac96630643384f28b8c26803bc705943",
+      "portableBytes": 3641,
+      "portableSha256": "d72bce4887c4abb1220442fa5a87c107f01c6da4696d9c2cb55ac7c3788c21f0",
+      "originalUnmodified": true,
+      "transformedVerified": true
+    },
+    {
+      "path": "compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+      "role": "official-leb128",
+      "bytes": 3855,
+      "sha256": "54c9250d7d5d20d37d1b83a71d4cfde4fa647e44ad5a86e43057e01d2f828472",
+      "gitBlobSha1": "7ed6f4bddcaded4a484c50c42d774c3a9b5b3fa5",
+      "portableBytes": 3800,
+      "portableSha256": "f7584e006617f6437f6dcc1dc1d3d8f7c0a24ba7b044852a7f74672d53b179cc",
+      "originalUnmodified": true,
+      "transformedVerified": true
+    },
+    {
+      "path": "compiler/util-io/test/org/jetbrains/kotlin/util/Leb128Test.kt",
+      "role": "upstream-test-reference",
+      "bytes": 1612,
+      "sha256": "31a4b649909392abf1ab8d22d8eaa32aa8f194dda33200cb5237dddf226b75a5",
+      "gitBlobSha1": "3b87f31662e24f0dd62a50049cf893224301a617",
+      "originalUnmodified": true,
+      "transformedVerified": true
+    }
+  ],
+  "observerSources": [
+    {
+      "path": "BoundedByteSink.kt",
+      "bytes": 1697,
+      "sha256": "3e950b4622b3ede126791fdebbf162a9734e77b0b3ac2d0afb2cbe10a6acb814"
+    },
+    {
+      "path": "JvmByteSink.kt",
+      "bytes": 695,
+      "sha256": "40418c91ab3e9eed115a7c828459f37fbd62ed88258fa30591b26eec1b2daaf5"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 6344,
+      "sha256": "a0ca86a97010ac383ffebfcdbf355966dee5cd8e846945a8b62bb45c80ad7075"
+    },
+    {
+      "path": "PortableChecks.kt",
+      "bytes": 2149,
+      "sha256": "70358cd961ea0ed3a5d1c94de7b6f88d15702da5f3e4488507a68345031ebe7d"
+    },
+    {
+      "path": "OriginalJvmEntry.kt",
+      "bytes": 250,
+      "sha256": "bb7df03650b13ff537b12f227f82ab291dddffe910730a3196e52226fd663ed3"
+    },
+    {
+      "path": "PortableJvmEntry.kt",
+      "bytes": 273,
+      "sha256": "a951a2fbfc39ee73d33a12eb851428e156db755ee6ec433c973bb4fb0295eeda"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 259,
+      "sha256": "88dcc02c45bd957761c608cd8b5cd8a46a24d26dfbdb53f6d14792af55d88674"
+    }
+  ],
+  "buildScriptSha256": "db845586c4cede0e6038de870189418c3c358a00993be6a5c06b633369b9dd79",
+  "buildReceiptSha256": "2854cf7db5ef8c9095b4a56965b237702610a5158890ce922dbb8713c0d45dd2",
+  "browserProbeSha256": "c218dc6389d55333affe2f4c524e2515d6167e87b7e511178a613ea13d8379de",
+  "bootstrapLockSha256": "2575d6d3090f53248cb3ff8707ed9456c7a33cdca785d11b4b8b55b14370b394",
+  "bootstrapVersion": "2.5.0-dev-10106",
+  "bootstrapCompilerSourceCommit": null,
+  "bootstrapArtifacts": [
+    {
+      "id": "compiler",
+      "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 59164049,
+      "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "build-tools-api",
+      "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+      "bytes": 575844,
+      "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-jvm",
+      "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+      "bytes": 1859448,
+      "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "daemon",
+      "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+      "bytes": 372801,
+      "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-wasi",
+      "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+      "bytes": 4044976,
+      "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "stdlib-js",
+      "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+      "bytes": 4065926,
+      "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+      "version": "2.5.0-dev-10106",
+      "verified": true
+    },
+    {
+      "id": "reflect",
+      "file": "kotlin-reflect-1.6.10.jar",
+      "bytes": 3038560,
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+      "version": "1.6.10",
+      "verified": true
+    },
+    {
+      "id": "coroutines",
+      "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+      "bytes": 1548360,
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+      "version": "1.8.0",
+      "verified": true
+    },
+    {
+      "id": "annotations",
+      "file": "annotations-13.0.jar",
+      "bytes": 17536,
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+      "version": "13.0",
+      "verified": true
+    }
+  ],
+  "buildCommands": [
+    {
+      "phase": "patch-check",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/writer-portable.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 12.978391000000045
+    },
+    {
+      "phase": "patch-apply",
+      "argv": [
+        "git",
+        "apply",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/writer-portable.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 8.858811000000003
+    },
+    {
+      "phase": "patch-reverse-check",
+      "argv": [
+        "git",
+        "apply",
+        "--reverse",
+        "--check",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/writer-portable.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 7.88581099999999
+    },
+    {
+      "phase": "original-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/original/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/original/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/OriginalJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 10545.886125
+    },
+    {
+      "phase": "portable-jvm-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/portable/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/portable/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/BoundedByteSink.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/JvmByteSink.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/PortableChecks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/PortableJvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 10678.761116999998
+    },
+    {
+      "phase": "original-jvm-observe",
+      "argv": [
+        "java",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.wasm.writerprobe.OriginalJvmEntryKt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/original-file.bin"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 204.9514969999982
+    },
+    {
+      "phase": "portable-jvm-observe",
+      "argv": [
+        "java",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.wasm.writerprobe.PortableJvmEntryKt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/portable-file.bin"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 241.4944800000012
+    },
+    {
+      "phase": "portable-wasmjs-klib-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/klib",
+        "-ir-output-name",
+        "writer-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/portable/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/portable/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/BoundedByteSink.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/PortableChecks.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/WasmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 8354.505333000001
+    },
+    {
+      "phase": "portable-wasmjs-binary-build",
+      "argv": [
+        "java",
+        "-Xmx1024m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/klib/writer-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/wasm",
+        "-ir-output-name",
+        "writer-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 8203.602588999998
+    }
+  ],
+  "browserCommand": [
+    "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+    "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/writer-probe/browser-probe.mjs",
+    "--output",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe",
+    "--evidence",
+    "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-bytewriter-probe/writer-browser.json"
+  ],
+  "java": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment (build 17.0.20.1+1-1-deb12u1-Debian)\nOpenJDK 64-Bit Server VM (build 17.0.20.1+1-1-deb12u1-Debian, mixed mode, sharing)",
+  "environment": {
+    "os": "linux",
+    "release": "6.1.0-53-cloud-amd64",
+    "arch": "x64",
+    "cpu": "AMD EPYC 7B12",
+    "browser": "Chromium",
+    "browserVersion": "153.0.8010.12",
+    "headless": true,
+    "browserFlags": []
+  },
+  "outputs": [
+    {
+      "path": "jvm/original.jar",
+      "bytes": 26380,
+      "sha256": "2d5ba76afc0c72901dd2d40e60d61dd37d7112e2c649263b3794146cb7f2a273"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 35674,
+      "sha256": "e8c327d0612bd8bfe2743064b00c18c550418ea54e515d68296c5dc0bd1fd4cd"
+    },
+    {
+      "path": "klib/writer-probe.klib",
+      "bytes": 50943,
+      "sha256": "14f0c204768ee72ddb3061798906c5cbc2fc6a5d41549ea933d019992bc6aa4f"
+    },
+    {
+      "path": "original-jvm.json",
+      "bytes": 18630,
+      "sha256": "9343c1d06a535106ca76176905f0d7bca480921e88c75cb4bf807b58ca439556"
+    },
+    {
+      "path": "portable-jvm.json",
+      "bytes": 18630,
+      "sha256": "9343c1d06a535106ca76176905f0d7bca480921e88c75cb4bf807b58ca439556"
+    },
+    {
+      "path": "portable-checks-jvm.json",
+      "bytes": 308,
+      "sha256": "c42e810b0419a7a2d048a83e84b31de3f7e4f5fe00f1964b9aeabf7bed757bba"
+    },
+    {
+      "path": "original-file.bin",
+      "bytes": 65,
+      "sha256": "2f5a402d3bb44b232bdbe7f6bdf7f30b8bcd787a20372a937f77491ec4d7eb45"
+    },
+    {
+      "path": "portable-file.bin",
+      "bytes": 65,
+      "sha256": "2f5a402d3bb44b232bdbe7f6bdf7f30b8bcd787a20372a937f77491ec4d7eb45"
+    },
+    {
+      "path": "wasm/writer-probe.import-object.mjs",
+      "bytes": 9487,
+      "sha256": "9c91255466feaf8fc133e9438e2356deaea1009562497da984266b3eb15f2476"
+    },
+    {
+      "path": "wasm/writer-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/writer-probe.mjs",
+      "bytes": 2300,
+      "sha256": "eaa8850ba0833b36317c4b81e3cb3943768dcbcf2dcc394818deb6910a197453"
+    },
+    {
+      "path": "wasm/writer-probe.wasm",
+      "bytes": 744164,
+      "sha256": "59bd286cded68ad38ea4374bc063b43f2673d8039e1638c151c57f94460361d0"
+    }
+  ],
+  "network": {
+    "offlineAfterInitialization": true,
+    "requestsDuringProbe": [],
+    "externalRequests": [],
+    "localStaticAssetRequests": [
+      "writer-probe.mjs",
+      "writer-probe.import-object.mjs",
+      "writer-probe.js-builtins.mjs",
+      "writer-probe.wasm"
+    ],
+    "assetDelivery": "Playwright fulfillment from hash-verified prepared files"
+  },
+  "corpus": {
+    "required": 82,
+    "passed": 82,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0
+  },
+  "cases": [
+    {
+      "id": "uleb-0",
+      "category": "unsigned-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "portableJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "browserWasmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-0",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "cc2e59e1d3eea570a8cb7a90d283b9517af05abeda3fd7bc97f2f633e27f6b30",
+      "portableJvmSha256": "cc2e59e1d3eea570a8cb7a90d283b9517af05abeda3fd7bc97f2f633e27f6b30",
+      "browserWasmSha256": "cc2e59e1d3eea570a8cb7a90d283b9517af05abeda3fd7bc97f2f633e27f6b30",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-1",
+      "category": "unsigned-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "portableJvmSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "browserWasmSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-1",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "29841b8878c967b8221937fce4730bad532ecf74a674d4b02e91c75d1279f5b8",
+      "portableJvmSha256": "29841b8878c967b8221937fce4730bad532ecf74a674d4b02e91c75d1279f5b8",
+      "browserWasmSha256": "29841b8878c967b8221937fce4730bad532ecf74a674d4b02e91c75d1279f5b8",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-127",
+      "category": "unsigned-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "portableJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "browserWasmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-127",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "3cf087908b6daef61eff287f4ef3f168b9587f7da894d3a054f57a1fa10d36e4",
+      "portableJvmSha256": "3cf087908b6daef61eff287f4ef3f168b9587f7da894d3a054f57a1fa10d36e4",
+      "browserWasmSha256": "3cf087908b6daef61eff287f4ef3f168b9587f7da894d3a054f57a1fa10d36e4",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-128",
+      "category": "unsigned-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "portableJvmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "browserWasmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-128",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "add7905e89bfa843e20f3c6b0f4dcaebe213e07489de948811e7499990cfdb88",
+      "portableJvmSha256": "add7905e89bfa843e20f3c6b0f4dcaebe213e07489de948811e7499990cfdb88",
+      "browserWasmSha256": "add7905e89bfa843e20f3c6b0f4dcaebe213e07489de948811e7499990cfdb88",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-16383",
+      "category": "unsigned-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "8f96c15501bef61baf5bd943201979595736b66b6a7e3b35c353729ab8d9a561",
+      "portableJvmSha256": "8f96c15501bef61baf5bd943201979595736b66b6a7e3b35c353729ab8d9a561",
+      "browserWasmSha256": "8f96c15501bef61baf5bd943201979595736b66b6a7e3b35c353729ab8d9a561",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-16383",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "56f9b8a3e3fe4214c8ec22ca31718d607d34839d897877b2cb977ce42e5e9ca2",
+      "portableJvmSha256": "56f9b8a3e3fe4214c8ec22ca31718d607d34839d897877b2cb977ce42e5e9ca2",
+      "browserWasmSha256": "56f9b8a3e3fe4214c8ec22ca31718d607d34839d897877b2cb977ce42e5e9ca2",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-16384",
+      "category": "unsigned-leb128",
+      "bytes": 3,
+      "originalJvmSha256": "893f4b7cac0109bc10726e833dbff4747decd8bf08d141bda3b237aaa60bc0bc",
+      "portableJvmSha256": "893f4b7cac0109bc10726e833dbff4747decd8bf08d141bda3b237aaa60bc0bc",
+      "browserWasmSha256": "893f4b7cac0109bc10726e833dbff4747decd8bf08d141bda3b237aaa60bc0bc",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-16384",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "f2e466006c303519eb3a0edf1565c69e84bfc5815e70cf2bebc63b25c0daafc6",
+      "portableJvmSha256": "f2e466006c303519eb3a0edf1565c69e84bfc5815e70cf2bebc63b25c0daafc6",
+      "browserWasmSha256": "f2e466006c303519eb3a0edf1565c69e84bfc5815e70cf2bebc63b25c0daafc6",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-268435455",
+      "category": "unsigned-leb128",
+      "bytes": 4,
+      "originalJvmSha256": "a2c70538651a7e9296b097e8c3dfc1b195a945802ffe45aa471868fba6f1042e",
+      "portableJvmSha256": "a2c70538651a7e9296b097e8c3dfc1b195a945802ffe45aa471868fba6f1042e",
+      "browserWasmSha256": "a2c70538651a7e9296b097e8c3dfc1b195a945802ffe45aa471868fba6f1042e",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-268435455",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "eed37189a108c4fcf83a77d93e43d7186d3e37f4ea555eb6c54cc887d2387b93",
+      "portableJvmSha256": "eed37189a108c4fcf83a77d93e43d7186d3e37f4ea555eb6c54cc887d2387b93",
+      "browserWasmSha256": "eed37189a108c4fcf83a77d93e43d7186d3e37f4ea555eb6c54cc887d2387b93",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-268435456",
+      "category": "unsigned-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "4c1d7398f19403b14d483ba54b4ba34400648ffdf94339b48bc1d1a9eceda771",
+      "portableJvmSha256": "4c1d7398f19403b14d483ba54b4ba34400648ffdf94339b48bc1d1a9eceda771",
+      "browserWasmSha256": "4c1d7398f19403b14d483ba54b4ba34400648ffdf94339b48bc1d1a9eceda771",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-268435456",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "4c1d7398f19403b14d483ba54b4ba34400648ffdf94339b48bc1d1a9eceda771",
+      "portableJvmSha256": "4c1d7398f19403b14d483ba54b4ba34400648ffdf94339b48bc1d1a9eceda771",
+      "browserWasmSha256": "4c1d7398f19403b14d483ba54b4ba34400648ffdf94339b48bc1d1a9eceda771",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb-4294967295",
+      "category": "unsigned-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "portableJvmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "browserWasmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-uleb-4294967295",
+      "category": "fixed-five-byte-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "portableJvmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "browserWasmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--9223372036854775808",
+      "category": "signed-leb128",
+      "bytes": 10,
+      "originalJvmSha256": "0aca886e4cf13047755d6c35176fe20bdacefa33251f24ee1843dd83b1640f39",
+      "portableJvmSha256": "0aca886e4cf13047755d6c35176fe20bdacefa33251f24ee1843dd83b1640f39",
+      "browserWasmSha256": "0aca886e4cf13047755d6c35176fe20bdacefa33251f24ee1843dd83b1640f39",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--2147483648",
+      "category": "signed-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "6f458e96b9b4ac8f1d91e5dea8a7146926886ee634cf09da99f2356d5276c0b3",
+      "portableJvmSha256": "6f458e96b9b4ac8f1d91e5dea8a7146926886ee634cf09da99f2356d5276c0b3",
+      "browserWasmSha256": "6f458e96b9b4ac8f1d91e5dea8a7146926886ee634cf09da99f2356d5276c0b3",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--8193",
+      "category": "signed-leb128",
+      "bytes": 3,
+      "originalJvmSha256": "b876f70a523579c84ffdedcd6fe1fcc14fd655650188a620c2b9a73eca86216c",
+      "portableJvmSha256": "b876f70a523579c84ffdedcd6fe1fcc14fd655650188a620c2b9a73eca86216c",
+      "browserWasmSha256": "b876f70a523579c84ffdedcd6fe1fcc14fd655650188a620c2b9a73eca86216c",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--8192",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "607b306244cab5c6e8670d7525e1af04304b5d2c3a8a1ad791cb01de20e22117",
+      "portableJvmSha256": "607b306244cab5c6e8670d7525e1af04304b5d2c3a8a1ad791cb01de20e22117",
+      "browserWasmSha256": "607b306244cab5c6e8670d7525e1af04304b5d2c3a8a1ad791cb01de20e22117",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--129",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "b42ceeeb185973f3f4d2a706e3a688209ddbb210acb0482aa490e97791836916",
+      "portableJvmSha256": "b42ceeeb185973f3f4d2a706e3a688209ddbb210acb0482aa490e97791836916",
+      "browserWasmSha256": "b42ceeeb185973f3f4d2a706e3a688209ddbb210acb0482aa490e97791836916",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--128",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+      "portableJvmSha256": "e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+      "browserWasmSha256": "e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--65",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "portableJvmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "browserWasmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--64",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "portableJvmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "browserWasmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--63",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "portableJvmSha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "browserWasmSha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64--1",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "portableJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "browserWasmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-0",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "portableJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "browserWasmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-1",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "portableJvmSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "browserWasmSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-63",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "portableJvmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "browserWasmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-64",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "portableJvmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "browserWasmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-127",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+      "portableJvmSha256": "ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+      "browserWasmSha256": "ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-128",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "portableJvmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "browserWasmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-8191",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "b376c8a5599eb3a86f9871bc068743c7cff18ab5bd2ef212f85a3c9bd81a3200",
+      "portableJvmSha256": "b376c8a5599eb3a86f9871bc068743c7cff18ab5bd2ef212f85a3c9bd81a3200",
+      "browserWasmSha256": "b376c8a5599eb3a86f9871bc068743c7cff18ab5bd2ef212f85a3c9bd81a3200",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-8192",
+      "category": "signed-leb128",
+      "bytes": 3,
+      "originalJvmSha256": "db64f065746b0d0010a4d6242786938eb46616ec2de56b3a1f46e8d31976df1c",
+      "portableJvmSha256": "db64f065746b0d0010a4d6242786938eb46616ec2de56b3a1f46e8d31976df1c",
+      "browserWasmSha256": "db64f065746b0d0010a4d6242786938eb46616ec2de56b3a1f46e8d31976df1c",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-2147483647",
+      "category": "signed-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "380b00b781cbd123cc00d2b18931f4bd906f6df3d8523108c5d56df6058a16df",
+      "portableJvmSha256": "380b00b781cbd123cc00d2b18931f4bd906f6df3d8523108c5d56df6058a16df",
+      "browserWasmSha256": "380b00b781cbd123cc00d2b18931f4bd906f6df3d8523108c5d56df6058a16df",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb64-9223372036854775807",
+      "category": "signed-leb128",
+      "bytes": 10,
+      "originalJvmSha256": "cb295fa26b8ac2494ba7ec9a3cc789628abfe5f4ee3488902285604297ef7869",
+      "portableJvmSha256": "cb295fa26b8ac2494ba7ec9a3cc789628abfe5f4ee3488902285604297ef7869",
+      "browserWasmSha256": "cb295fa26b8ac2494ba7ec9a3cc789628abfe5f4ee3488902285604297ef7869",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32--2147483648",
+      "category": "signed-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "6f458e96b9b4ac8f1d91e5dea8a7146926886ee634cf09da99f2356d5276c0b3",
+      "portableJvmSha256": "6f458e96b9b4ac8f1d91e5dea8a7146926886ee634cf09da99f2356d5276c0b3",
+      "browserWasmSha256": "6f458e96b9b4ac8f1d91e5dea8a7146926886ee634cf09da99f2356d5276c0b3",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32--65",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "portableJvmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "browserWasmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32--64",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "portableJvmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "browserWasmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32--1",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "portableJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "browserWasmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32-0",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "portableJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "browserWasmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32-63",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "portableJvmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "browserWasmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32-64",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "portableJvmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "browserWasmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb32-2147483647",
+      "category": "signed-leb128",
+      "bytes": 5,
+      "originalJvmSha256": "380b00b781cbd123cc00d2b18931f4bd906f6df3d8523108c5d56df6058a16df",
+      "portableJvmSha256": "380b00b781cbd123cc00d2b18931f4bd906f6df3d8523108c5d56df6058a16df",
+      "browserWasmSha256": "380b00b781cbd123cc00d2b18931f4bd906f6df3d8523108c5d56df6058a16df",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7--128",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+      "portableJvmSha256": "e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+      "browserWasmSha256": "e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7--65",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "portableJvmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "browserWasmSha256": "6771eabe2def4d7c1a0d718afa73826f4224573f57d546518a5a6e6baa5806f5",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7--64",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "portableJvmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "browserWasmSha256": "c3641f8544d7c02f3580b07c0f9887f0c6a27ff5ab1d4a3e29caf197cfc299ae",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7--1",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "portableJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "browserWasmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7-0",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "portableJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "browserWasmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7-63",
+      "category": "signed-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "portableJvmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "browserWasmSha256": "8a8de823d5ed3e12746a62ef169bcf372be0ca44f0a1236abc35df05d96928e1",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7-64",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "portableJvmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "browserWasmSha256": "e9aff84fdb699ca706c0a1fed47bb095cb25e3c95aa5d1c5d216ff2cfbcd4998",
+      "byteEquivalent": true
+    },
+    {
+      "id": "sleb7-127",
+      "category": "signed-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+      "portableJvmSha256": "ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+      "browserWasmSha256": "ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb7-0",
+      "category": "unsigned-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "portableJvmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "browserWasmSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb7-127",
+      "category": "unsigned-leb128",
+      "bytes": 1,
+      "originalJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "portableJvmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "browserWasmSha256": "620bfdaa346b088fb49998d92f19a7eaf6bfc2fb0aee015753966da1028cb731",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb7-128",
+      "category": "unsigned-leb128",
+      "bytes": 2,
+      "originalJvmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "portableJvmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "browserWasmSha256": "4f2e968b543c835e6648ddcc49faeb6987b4c293d8cd50a2db5d109741007579",
+      "byteEquivalent": true
+    },
+    {
+      "id": "uleb7-65535",
+      "category": "unsigned-leb128",
+      "bytes": 3,
+      "originalJvmSha256": "00f1e9196ea861e2985fbdf1ebf4b7f39364b794ccd11ff9f88b0a976b0fd831",
+      "portableJvmSha256": "00f1e9196ea861e2985fbdf1ebf4b7f39364b794ccd11ff9f88b0a976b0fd831",
+      "browserWasmSha256": "00f1e9196ea861e2985fbdf1ebf4b7f39364b794ccd11ff9f88b0a976b0fd831",
+      "byteEquivalent": true
+    },
+    {
+      "id": "booleans",
+      "category": "boolean",
+      "bytes": 4,
+      "originalJvmSha256": "76cc5805dab9b4eacefdb477f498020fd82bccdbc9c6a2d9ce10586ac85512b4",
+      "portableJvmSha256": "76cc5805dab9b4eacefdb477f498020fd82bccdbc9c6a2d9ce10586ac85512b4",
+      "browserWasmSha256": "76cc5805dab9b4eacefdb477f498020fd82bccdbc9c6a2d9ce10586ac85512b4",
+      "byteEquivalent": true
+    },
+    {
+      "id": "fixed-widths",
+      "category": "little-endian",
+      "bytes": 31,
+      "originalJvmSha256": "424a178496a8da5f991537ff6223426425a82d6080a46f2a7e5eb59ed98c5bd7",
+      "portableJvmSha256": "424a178496a8da5f991537ff6223426425a82d6080a46f2a7e5eb59ed98c5bd7",
+      "browserWasmSha256": "424a178496a8da5f991537ff6223426425a82d6080a46f2a7e5eb59ed98c5bd7",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-0",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+      "portableJvmSha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+      "browserWasmSha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-2147483648",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "6d58692645c9d1cfaf13541cbd258f86193ef63c2f1d38f6bbca9617372d7bd6",
+      "portableJvmSha256": "6d58692645c9d1cfaf13541cbd258f86193ef63c2f1d38f6bbca9617372d7bd6",
+      "browserWasmSha256": "6d58692645c9d1cfaf13541cbd258f86193ef63c2f1d38f6bbca9617372d7bd6",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-1065353216",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c",
+      "portableJvmSha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c",
+      "browserWasmSha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-2139095040",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "d7173dd8a9e81deded3f2e4719ef149effbd21afd81da9d10ed50b5dff69a708",
+      "portableJvmSha256": "d7173dd8a9e81deded3f2e4719ef149effbd21afd81da9d10ed50b5dff69a708",
+      "browserWasmSha256": "d7173dd8a9e81deded3f2e4719ef149effbd21afd81da9d10ed50b5dff69a708",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-4286578688",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "d9265d7acb11b75517ee713afcd928260e65557829bab071f03d67ee93edb8ea",
+      "portableJvmSha256": "d9265d7acb11b75517ee713afcd928260e65557829bab071f03d67ee93edb8ea",
+      "browserWasmSha256": "d9265d7acb11b75517ee713afcd928260e65557829bab071f03d67ee93edb8ea",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-2143294004",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "03b8384eb50bb4c977615b483ee3d4bdc148aa642d4ec6b07552ad8fd598d5d5",
+      "portableJvmSha256": "03b8384eb50bb4c977615b483ee3d4bdc148aa642d4ec6b07552ad8fd598d5d5",
+      "browserWasmSha256": "03b8384eb50bb4c977615b483ee3d4bdc148aa642d4ec6b07552ad8fd598d5d5",
+      "byteEquivalent": true
+    },
+    {
+      "id": "float-bits-2139095041",
+      "category": "float-bit-pattern",
+      "bytes": 4,
+      "originalJvmSha256": "742ba9773da40ba268dfe2061d64317df961d06fe9e35a6289640b2e1b21e830",
+      "portableJvmSha256": "742ba9773da40ba268dfe2061d64317df961d06fe9e35a6289640b2e1b21e830",
+      "browserWasmSha256": "742ba9773da40ba268dfe2061d64317df961d06fe9e35a6289640b2e1b21e830",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-0",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+      "portableJvmSha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+      "browserWasmSha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-9223372036854775808",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "e6ad6c9a3a3b7658c35bacf6553fcb8ffe34387534a648fe18f875b8f7a86ddb",
+      "portableJvmSha256": "e6ad6c9a3a3b7658c35bacf6553fcb8ffe34387534a648fe18f875b8f7a86ddb",
+      "browserWasmSha256": "e6ad6c9a3a3b7658c35bacf6553fcb8ffe34387534a648fe18f875b8f7a86ddb",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-4607182418800017408",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "6c3c396ed6b5c36dcae172271f462051b1266b851e92df3deea8ac65478fd712",
+      "portableJvmSha256": "6c3c396ed6b5c36dcae172271f462051b1266b851e92df3deea8ac65478fd712",
+      "browserWasmSha256": "6c3c396ed6b5c36dcae172271f462051b1266b851e92df3deea8ac65478fd712",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-9218868437227405312",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "9402bb655bc3b7331a00f1219ef647565bbe517c74aa0e41026885785867d1cd",
+      "portableJvmSha256": "9402bb655bc3b7331a00f1219ef647565bbe517c74aa0e41026885785867d1cd",
+      "browserWasmSha256": "9402bb655bc3b7331a00f1219ef647565bbe517c74aa0e41026885785867d1cd",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-18442240474082181120",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "fbe5a2ddf969fe14ff680099eb64d04d8220edf49de234cbeb925f46e218c90b",
+      "portableJvmSha256": "fbe5a2ddf969fe14ff680099eb64d04d8220edf49de234cbeb925f46e218c90b",
+      "browserWasmSha256": "fbe5a2ddf969fe14ff680099eb64d04d8220edf49de234cbeb925f46e218c90b",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-9221120237041095220",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "bc43cdc32db51db392274661cf6038f9659f8a70d1e56f8fe2ee69401c460560",
+      "portableJvmSha256": "bc43cdc32db51db392274661cf6038f9659f8a70d1e56f8fe2ee69401c460560",
+      "browserWasmSha256": "bc43cdc32db51db392274661cf6038f9659f8a70d1e56f8fe2ee69401c460560",
+      "byteEquivalent": true
+    },
+    {
+      "id": "double-bits-9218868437227405313",
+      "category": "double-bit-pattern",
+      "bytes": 8,
+      "originalJvmSha256": "de26df7643bff31d2a62a0a4f3b18947950c37fd740f4ac417fe0d163338b625",
+      "portableJvmSha256": "de26df7643bff31d2a62a0a4f3b18947950c37fd740f4ac417fe0d163338b625",
+      "browserWasmSha256": "de26df7643bff31d2a62a0a4f3b18947950c37fd740f4ac417fe0d163338b625",
+      "byteEquivalent": true
+    },
+    {
+      "id": "growth",
+      "category": "buffer-growth",
+      "bytes": 4162,
+      "originalJvmSha256": "d124de9106ef7327a1dc8f09e9532b699da3d11cf3e24e7ff0c0ff299d82995a",
+      "portableJvmSha256": "d124de9106ef7327a1dc8f09e9532b699da3d11cf3e24e7ff0c0ff299d82995a",
+      "browserWasmSha256": "d124de9106ef7327a1dc8f09e9532b699da3d11cf3e24e7ff0c0ff299d82995a",
+      "byteEquivalent": true
+    },
+    {
+      "id": "backpatch-existing",
+      "category": "backpatch",
+      "bytes": 8,
+      "originalJvmSha256": "e5c8a50ebcaf095d2406a00ea01093152fda8010dcf7f9e0c8483f00aa8c3191",
+      "portableJvmSha256": "e5c8a50ebcaf095d2406a00ea01093152fda8010dcf7f9e0c8483f00aa8c3191",
+      "browserWasmSha256": "e5c8a50ebcaf095d2406a00ea01093152fda8010dcf7f9e0c8483f00aa8c3191",
+      "byteEquivalent": true
+    },
+    {
+      "id": "backpatch-extends",
+      "category": "backpatch",
+      "bytes": 10,
+      "originalJvmSha256": "5e1e0aa71f0859cf13f0e4d2ef9376e340788108a53e20904745e90580ca9f40",
+      "portableJvmSha256": "5e1e0aa71f0859cf13f0e4d2ef9376e340788108a53e20904745e90580ca9f40",
+      "browserWasmSha256": "5e1e0aa71f0859cf13f0e4d2ef9376e340788108a53e20904745e90580ca9f40",
+      "byteEquivalent": true
+    },
+    {
+      "id": "backpatch-widths",
+      "category": "backpatch",
+      "bytes": 16,
+      "originalJvmSha256": "f004f97a289915e0218be2132f7dc2e2cd8884f80cd8559833114c3cc9e7be08",
+      "portableJvmSha256": "f004f97a289915e0218be2132f7dc2e2cd8884f80cd8559833114c3cc9e7be08",
+      "browserWasmSha256": "f004f97a289915e0218be2132f7dc2e2cd8884f80cd8559833114c3cc9e7be08",
+      "byteEquivalent": true
+    },
+    {
+      "id": "backpatch-unsigned-int",
+      "category": "backpatch",
+      "bytes": 5,
+      "originalJvmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "portableJvmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "browserWasmSha256": "d47715dab05e27d5b308b3b64d231d6c1bdba682f9251eb1d132f8aa1300d5be",
+      "byteEquivalent": true
+    },
+    {
+      "id": "snapshot-before-growth",
+      "category": "binary-data-ownership",
+      "bytes": 3,
+      "originalJvmSha256": "20b2ac748a121e751b79bee698900bc8001a3d8c2fc343f21fa1e21780c2dd52",
+      "portableJvmSha256": "20b2ac748a121e751b79bee698900bc8001a3d8c2fc343f21fa1e21780c2dd52",
+      "browserWasmSha256": "20b2ac748a121e751b79bee698900bc8001a3d8c2fc343f21fa1e21780c2dd52",
+      "byteEquivalent": true
+    },
+    {
+      "id": "snapshot-after-growth",
+      "category": "binary-data-ownership",
+      "bytes": 3,
+      "originalJvmSha256": "20b2ac748a121e751b79bee698900bc8001a3d8c2fc343f21fa1e21780c2dd52",
+      "portableJvmSha256": "20b2ac748a121e751b79bee698900bc8001a3d8c2fc343f21fa1e21780c2dd52",
+      "browserWasmSha256": "20b2ac748a121e751b79bee698900bc8001a3d8c2fc343f21fa1e21780c2dd52",
+      "byteEquivalent": true
+    },
+    {
+      "id": "file-adapter-bytes",
+      "category": "file-adapter",
+      "bytes": 65,
+      "originalJvmSha256": "2f5a402d3bb44b232bdbe7f6bdf7f30b8bcd787a20372a937f77491ec4d7eb45",
+      "portableJvmSha256": "2f5a402d3bb44b232bdbe7f6bdf7f30b8bcd787a20372a937f77491ec4d7eb45",
+      "browserWasmSha256": "2f5a402d3bb44b232bdbe7f6bdf7f30b8bcd787a20372a937f77491ec4d7eb45",
+      "byteEquivalent": true
+    }
+  ],
+  "independentExamples": {
+    "required": 17,
+    "passed": 17,
+    "expectedHex": {
+      "uleb-0": "00",
+      "uleb-127": "7f",
+      "uleb-128": "8001",
+      "uleb-4294967295": "ffffffff0f",
+      "fixed-uleb-0": "8080808000",
+      "fixed-uleb-4294967295": "ffffffff0f",
+      "sleb64--64": "40",
+      "sleb64-63": "3f",
+      "sleb64-64": "c000",
+      "sleb64--9223372036854775808": "8080808080808080807f",
+      "sleb64-9223372036854775807": "ffffffffffffffffff00",
+      "float-bits-2147483648": "00000080",
+      "float-bits-2139095041": "0100807f",
+      "double-bits-9221120237041095220": "341200000000f87f",
+      "backpatch-extends": "01020300000000003412",
+      "snapshot-before-growth": "ab0203",
+      "snapshot-after-growth": "ab0203"
+    }
+  },
+  "checks": {
+    "unsignedRoundTrips": 9,
+    "invalidUnsignedRejected": 2,
+    "invalidWidthRejected": true
+  },
+  "portableGuards": {
+    "passed": [
+      "bulk-write-limit-before-mutation",
+      "single-write-limit",
+      "negative-input-offset",
+      "oversized-input-range",
+      "negative-seek",
+      "seek-past-limit",
+      "negative-limit",
+      "zero-limit-write",
+      "bounded-writer-append",
+      "bounded-writer-offset"
+    ],
+    "failed": 0
+  },
+  "fileAdapterByteEquality": true,
+  "repeatedBrowserInvocationByteEquality": true,
+  "browserProbeElapsedMs": 19,
+  "languageReadiness": false,
+  "limitations": [
+    "Official writer and LEB128 unit only; no FIR, IR construction, full KLIB reader, lowering or Kotlin source compilation.",
+    "Host compiler is the official pinned bootstrap artifact; its source commit is not proven to equal the candidate commit.",
+    "Finite sink policy is an explicit new host limit. Composite writer operations are not transactional after a sink error; failed writers must be discarded.",
+    "The JVM file extension moves to JvmWasmBinaryData. Updating actual backend call sites is outside this isolated probe.",
+    "Float/Double fixtures test integer raw-bit payload encoding, not floating-point arithmetic or toRawBits conversion.",
+    "Only the listed writer unit corpus ran. This does not complete the whole G2 gate or provide a browser Kotlin compiler.",
+    "Only this Chromium configuration was tested. No browser matrix, performance target or GC heap hard cap is claimed.",
+    "Offline applies after static loader/Wasm initialization; app-shell restart, asset cache persistence and offline compiler loading were not tested."
+  ]
+}

@@ -1,0 +1,36 @@
+--- a/core/descriptors/src/org/jetbrains/kotlin/builtins/BuiltInsLoader.kt
++++ b/core/descriptors/src/org/jetbrains/kotlin/builtins/BuiltInsLoader.kt
+@@ -22,7 +22,6 @@
+ import org.jetbrains.kotlin.descriptors.deserialization.ClassDescriptorFactory
+ import org.jetbrains.kotlin.descriptors.deserialization.PlatformDependentDeclarationFilter
+ import org.jetbrains.kotlin.storage.StorageManager
+-import java.util.*
+ 
+ interface BuiltInsLoader {
+     fun createPackageFragmentProvider(
+@@ -35,12 +34,19 @@
+     ): PackageFragmentProvider
+ 
+     companion object {
+-        val Instance: BuiltInsLoader by lazy(LazyThreadSafetyMode.PUBLICATION) {
+-            val implementations = ServiceLoader.load(BuiltInsLoader::class.java, BuiltInsLoader::class.java.classLoader)
+-            implementations.firstOrNull() ?: throw IllegalStateException(
+-                "No BuiltInsLoader implementation was found. Please ensure that the META-INF/services/ is not stripped " +
+-                        "from your application and that the Java virtual machine is not running under a security manager"
+-            )
++        private var factory: (() -> BuiltInsLoader)? = null
++        private var initializationStarted = false
++
++        /** Register the legitimate profile loader before its first use. One registry per compiler Worker. */
++        fun registerFactory(create: () -> BuiltInsLoader) {
++            check(factory == null && !initializationStarted) { "BuiltInsLoader factory is already registered or initialization has started" }
++            factory = create
++        }
++
++        val Instance: BuiltInsLoader by lazy(LazyThreadSafetyMode.NONE) {
++            initializationStarted = true
++            val create = factory ?: throw IllegalStateException("No BuiltInsLoader factory was registered for the browser compiler profile")
++            create()
+         }
+     }
+ }

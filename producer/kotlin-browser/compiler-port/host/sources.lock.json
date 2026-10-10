@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775"
+  },
+  "patch": {
+    "path": "patches/source-host.patch",
+    "bytes": 28633,
+    "sha256": "da1d9af8cf0be98e9776bef98444707144c59886c68e43fd78b6045063b0393d"
+  },
+  "sources": [
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt",
+      "bytes": 57810,
+      "sha256": "e230598b517ba8dc5e83a18e60c2257e9c3ba2cc8d441d43b2631b7d8fcdfbd7",
+      "gitBlobSha1": "5e9048389b714a824de95ab1a52511749f369c4d",
+      "portableBytes": 49077,
+      "portableSha256": "bbebaa31911d666c97bd1f59e0bb98d9ca19cc596c25e1cc64bd45bdae543fd2"
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFile.kt",
+      "bytes": 3045,
+      "sha256": "d712f97e259f73dd261e4632dad8d53d5ca750ce3940f3a6ad034220c556a2a0",
+      "gitBlobSha1": "ec00e6f567dc3c2f815ec7a7ed4f647da6e8efe7",
+      "portableBytes": 1033,
+      "portableSha256": "da750eafd72456de079ac02083ed1dc8116318e60ce10e6253370376480e1dde"
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFileLinesMapping.kt",
+      "bytes": 4227,
+      "sha256": "b1c209799d65e9effbae6703b9e26891d396c3fc3f103718028a6302bb594db9",
+      "gitBlobSha1": "66ae3b0901bcdb0af780b4af3287ca8b5e49b3c7",
+      "portableBytes": 1715,
+      "portableSha256": "2c37194022554568b992d1ca6ee6895032b3e394398c8e5b59edac7a38ea93ea"
+    },
+    {
+      "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt",
+      "bytes": 1182,
+      "sha256": "9174fb7517edc63268ed651dfae6ebb37120e1826bda4eb370d308984b17fe2f",
+      "gitBlobSha1": "a212a5909c4f6ac19b625bd08beef8a93d4d626c",
+      "portableBytes": 644,
+      "portableSha256": "8e829e9417173777032b57b0155d0803ace311ceaadeade264358f45ad40d84e"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/KotlinLightTreeStructure.kt",
+      "bytes": 3902,
+      "sha256": "d4cf9ba8a86a25dbf70e3a65e1a757b1e806d923e8c9e69815d0f3d8d44385fb",
+      "gitBlobSha1": "3974fca2c0b6729ef10a3ff8d2d95e42c8808a79",
+      "portableBytes": 3909,
+      "portableSha256": "421361ed799cde379478eda648ad03ee95849f016e21244d18e550b9be7191f2"
+    },
+    {
+      "path": "compiler/fir/fir-deserialization/src/org/jetbrains/kotlin/fir/deserialization/ModuleDataProvider.kt",
+      "bytes": 1898,
+      "sha256": "39aeb8d8770aa8327d3270850f349a683760ecea120e11d721210b630788e9c5",
+      "gitBlobSha1": "6ff25062ed8a563abd3e6d2228f2a62b01aabbac",
+      "portableBytes": 1936,
+      "portableSha256": "55f20fbc2b8aa1321c682c8639a12a030cfe60bac999a9f7da2531dfe6c42e49"
+    },
+    {
+      "path": "compiler/fir/fir-deserialization/src/org/jetbrains/kotlin/fir/deserialization/AbstractFirDeserializedSymbolProvider.kt",
+      "bytes": 22598,
+      "sha256": "611fbafa925e8d5d399a9935c5750c247406cdbd1c73496f1208733d9f137358",
+      "gitBlobSha1": "c6faf9f4a32e856c264c93933a0c6ab1279bbfab",
+      "portableBytes": 22636,
+      "portableSha256": "30d79de046ff877ba5e3d1e0baaabb129ed07d33dd21d1047382d36887268766"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt",
+      "bytes": 3078,
+      "sha256": "a30c6a0c106513587e68def997eecece7800b49eeb77486c955e870723a4914f",
+      "gitBlobSha1": "465789ff75301b9adc5320830facba0b9f4b36ef",
+      "portableBytes": 4481,
+      "portableSha256": "1398bcafc034a6ce9f3f52bf855d659eaf86e1f48b992a071206b6ff3d95518f"
+    }
+  ],
+  "fakeKindsSha256": "e3d080f44a5957b376ea7f707d40be7b6609e171ecf049eeb9ae8d52926ad934",
+  "retained": {
+    "fakeSourceKindLeafTypes": 136,
+    "rawFirBuilderBody": "unchanged",
+    "newParserEntryBody": "official parser and Raw FIR delegation preserved; real SYNTAX reports added from production markers",
+    "moduleRoutingBody": "unchanged; canonical logical library Path carrier only"
+  },
+  "excluded": [
+    "KtPsiSourceElement and PSI helper functions",
+    "KtIoFileSourceFile/KtVirtualFileSourceFile/KtPsiSourceFile",
+    "KtPsiSourceFileLinesMapping and InputStreamReader line separator conversion",
+    "File/Path AbstractTree2Fir convenience methods"
+  ],
+  "readiness": {
+    "rawFir": "not-built",
+    "resolvedFir": "not-built",
+    "browserCompiler": false
+  }
+}

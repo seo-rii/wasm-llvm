@@ -1,0 +1,88 @@
+--- a/libraries/tools/kotlin-tooling-core/src/main/kotlin/org/jetbrains/kotlin/tooling/core/KotlinToolingVersion.kt
++++ b/libraries/tools/kotlin-tooling-core/src/main/kotlin/org/jetbrains/kotlin/tooling/core/KotlinToolingVersion.kt
+@@ -7,7 +7,8 @@
+ 
+ package org.jetbrains.kotlin.tooling.core
+ 
+-import java.io.Serializable
++import org.jetbrains.kotlin.portable.versions.versionIntOrNull
++import org.jetbrains.kotlin.portable.versions.versionLowercase
+ 
+ fun KotlinToolingVersion(kotlinVersionString: String): KotlinToolingVersion {
+     val baseVersion = kotlinVersionString.split("-", limit = 2)[0]
+@@ -15,8 +16,8 @@
+ 
+     val baseVersionSplit = baseVersion.split(".")
+ 
+-    val majorVersion = baseVersionSplit[0].toIntOrNull()
+-    val minorVersion = baseVersionSplit.getOrNull(1)?.toIntOrNull()
++    val majorVersion = baseVersionSplit[0].let { versionIntOrNull(it) }
++    val minorVersion = baseVersionSplit.getOrNull(1)?.let { versionIntOrNull(it) }
+ 
+     if (majorVersion == null || minorVersion == null) {
+         throw IllegalArgumentException("Invalid Kotlin version: $kotlinVersionString (Failed parsing major/minor version)")
+@@ -25,7 +26,7 @@
+     return KotlinToolingVersion(
+         major = majorVersion,
+         minor = minorVersion,
+-        patch = baseVersionSplit.getOrNull(2)?.toIntOrNull() ?: 0,
++        patch = baseVersionSplit.getOrNull(2)?.let { versionIntOrNull(it) } ?: 0,
+         classifier = classifier
+     )
+ }
+@@ -39,14 +40,14 @@
+     val minor: Int,
+     val patch: Int,
+     val classifier: String?
+-) : Comparable<KotlinToolingVersion>, Serializable {
++) : Comparable<KotlinToolingVersion> {
+ 
+     enum class Maturity {
+         SNAPSHOT, DEV, MILESTONE, ALPHA, BETA, RC, STABLE
+     }
+ 
+     val maturity: Maturity = run {
+-        val classifier = this.classifier?.lowercase()
++        val classifier = this.classifier?.let { versionLowercase(it) }
+         when {
+             classifier == null || classifier.matches(Regex("""(release-)?\d+""")) -> Maturity.STABLE
+             classifier == "snapshot" -> Maturity.SNAPSHOT
+@@ -116,7 +117,7 @@
+         if (this.major != other.major) return false
+         if (this.minor != other.minor) return false
+         if (this.patch != other.patch) return false
+-        if (this.classifier?.lowercase() != other.classifier?.lowercase()) return false
++        if (this.classifier?.let { versionLowercase(it) } != other.classifier?.let { versionLowercase(it) }) return false
+         return true
+     }
+ 
+@@ -175,12 +176,12 @@
+          */
+         val buildNumberOnlyClassifierRegex = Regex("\\d+")
+         if (buildNumberOnlyClassifierRegex.matches(classifier)) {
+-            return classifier.toIntOrNull()
+-        }
+-
+-        val classifierRegex = Regex("""(.+?)(\d*)?(-release)?-?(\d*)?""")
++            return classifier.let { versionIntOrNull(it) }
++        }
++
++        val classifierRegex = Regex("""([^\n\r\u0085\u2028\u2029]+?)(\d*)?(-release)?-?(\d*)?""")
+         val classifierMatch = classifierRegex.matchEntire(classifier) ?: return null
+-        return classifierMatch.groupValues.getOrNull(4)?.toIntOrNull()
++        return classifierMatch.groupValues.getOrNull(4)?.let { versionIntOrNull(it) }
+     }
+ 
+ val KotlinToolingVersion.classifierNumber: Int?
+@@ -204,9 +205,9 @@
+         }
+ 
+ 
+-        val classifierRegex = Regex("""(.+?)(\d*)?(-release)?-?(\d*)?""")
++        val classifierRegex = Regex("""([^\n\r\u0085\u2028\u2029]+?)(\d*)?(-release)?-?(\d*)?""")
+         val classifierMatch = classifierRegex.matchEntire(classifier) ?: return null
+-        return classifierMatch.groupValues.getOrNull(2)?.toIntOrNull()
++        return classifierMatch.groupValues.getOrNull(2)?.let { versionIntOrNull(it) }
+     }
+ 
+ operator fun String.compareTo(version: KotlinToolingVersion): Int {

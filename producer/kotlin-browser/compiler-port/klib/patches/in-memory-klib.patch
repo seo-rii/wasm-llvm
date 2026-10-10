@@ -1,0 +1,619 @@
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelReaders.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelReaders.kt
+@@ -5,12 +5,8 @@
+ 
+ package org.jetbrains.kotlin.library.impl
+ 
+-import org.jetbrains.kotlin.library.KlibComponentLayout
+-import org.jetbrains.kotlin.library.KlibLayoutReader
+ import org.jetbrains.kotlin.utils.readUnsignedLeb128
+-import java.nio.ByteBuffer
+-import java.nio.file.Path
+-import kotlin.io.path.readBytes
++import org.jetbrains.kotlin.portable.klib.PortableByteCursor as ByteBuffer
+ 
+ /******************************************************************************/
+ /** [ByteArray] readers                                                       */
+@@ -23,12 +19,6 @@
+ fun IrArrayReader(loadBytes: () -> ByteArray): IrArrayReader = IrArrayReaderFromBuffer(ReadByteBufferProvider.OnDemandMemoryBuffer(loadBytes))
+ 
+ fun IrArrayReader(bytes: List<ByteArray>): IrArrayReader = IrArrayReaderFromMemory(bytes)
+-
+-/** On-demand read from a file (potentially inside a KLIB archive file). */
+-inline fun <KCL : KlibComponentLayout> IrArrayReader(
+-    layoutReader: KlibLayoutReader<KCL>,
+-    crossinline getFile: KCL.() -> Path,
+-): IrArrayReader = IrArrayReader { layoutReader.readInPlace { it.getFile().readBytes() } }
+ 
+ interface IrArrayReader {
+     fun entryCount(): Int
+@@ -55,12 +45,6 @@
+ 
+ fun IrMultiArrayReader(bytes: List<ByteArray>): IrMultiArrayReader = IrMultiArrayReaderFromMemory(bytes)
+ 
+-/** On-demand read from a file (potentially inside a KLIB archive file). */
+-inline fun <KCL : KlibComponentLayout> IrMultiArrayReader(
+-    layoutReader: KlibLayoutReader<KCL>,
+-    crossinline getFile: KCL.() -> Path,
+-): IrMultiArrayReader = IrMultiArrayReader { layoutReader.readInPlace { it.getFile().readBytes() } }
+-
+ interface IrMultiArrayReader {
+     fun rowCount(): Int
+     fun columnCount(rowIndex: Int): Int
+@@ -135,12 +119,6 @@
+ 
+ fun DeclarationIdMultiTableReader(bytes: List<ByteArray>): DeclarationIdMultiTableReader =
+     DeclarationIdMultiTableReaderFromMemory(bytes)
+-
+-/** On-demand read from a file (potentially inside a KLIB archive file). */
+-inline fun <KCL : KlibComponentLayout> DeclarationIdMultiTableReader(
+-    layoutReader: KlibLayoutReader<KCL>,
+-    crossinline getFile: KCL.() -> Path,
+-): DeclarationIdMultiTableReader = DeclarationIdMultiTableReader { layoutReader.readInPlace { it.getFile().readBytes() } }
+ 
+ interface DeclarationIdMultiTableReader {
+     fun tableItemBytes(index: Int): ByteArray
+@@ -182,10 +160,11 @@
+ private typealias DeclarationIdToCoordinates = MutableMap<DeclarationId, DeclarationCoordinates>
+ private typealias IndexToDeclarationIdToCoordinates = MutableMap<Int, DeclarationIdToCoordinates>
+ 
+-private fun ByteBuffer.readIndexToOffset(position: Int): IndexToOffset {
++private fun ByteBuffer.readIndexToOffset(position: Int, endPosition: Int = limit()): IndexToOffset {
+     this.position(position)
+ 
+-    var count = this.int
++    var count = this.readInt(endPosition)
++    require(count != Int.MIN_VALUE) { "Invalid KLIB table count" }
+     var usesVarInt = false
+     if (count < 0) {
+         // Negative count of elements means that element sizes use var-int encoding (available since 2.4.0).
+@@ -193,30 +172,40 @@
+         usesVarInt = true
+     }
+ 
++    checkTableCount(count, if (usesVarInt) 1 else 4, endPosition)
+     val elementSizes = IntArray(count) {
+-        if (usesVarInt) readUnsignedLeb128(this::get).toInt() else this.int
++        val size = if (usesVarInt) readUnsignedLeb128({ readByte(endPosition) }).toLong() else readInt(endPosition).toLong()
++        require(size in 0..Int.MAX_VALUE.toLong()) { "Invalid KLIB element size" }
++        size.toInt()
+     }
+ 
+     val indexToOffset = IndexToOffset(count + 1)
+     // After reading all element sizes, we know at which position the element values start.
+     indexToOffset[0] = this.position() - position
+     for (i in 0 until count) {
+-        indexToOffset[i + 1] = indexToOffset[i] + elementSizes[i]
++        val nextOffset = indexToOffset[i].toLong() + elementSizes[i]
++        require(nextOffset <= endPosition.toLong() - position) { "KLIB table exceeds its byte range" }
++        indexToOffset[i + 1] = nextOffset.toInt()
+     }
+ 
+     return indexToOffset
+ }
+ 
+-private fun ByteBuffer.readDeclarationIdToCoordinates(position: Int): DeclarationIdToCoordinates {
++private fun ByteBuffer.readDeclarationIdToCoordinates(position: Int, endPosition: Int = limit()): DeclarationIdToCoordinates {
+     this.position(position)
+ 
+-    val count = this.int
++    val count = this.readInt(endPosition)
++    checkTableCount(count, 12, endPosition)
++    val headerSize = 4 + count * 12
+     val declarationIdToCoordinates: DeclarationIdToCoordinates = mutableMapOf()
+ 
+     for (i in 0 until count) {
+-        val declarationId = DeclarationId(this.int)
+-        val offset = this.int
+-        val size = this.int
++        val declarationId = DeclarationId(this.readInt(endPosition))
++        val offset = this.readInt(endPosition)
++        val size = this.readInt(endPosition)
++        require(offset >= headerSize) { "KLIB declaration overlaps its table index" }
++        checkRange(position, offset, endPosition)
++        checkRange(position + offset, size, endPosition)
+         declarationIdToCoordinates[declarationId] = DeclarationCoordinates(offset, size)
+     }
+ 
+@@ -253,7 +242,7 @@
+     indexToOffset: IndexToOffset,
+     indexToIndexToOffset: IndexToIndexToOffset,
+     rowIndex: Int,
+-): IndexToOffset = indexToIndexToOffset.getOrPut(rowIndex) { readIndexToOffset(indexToOffset[rowIndex]) }
++): IndexToOffset = indexToIndexToOffset.getOrPut(rowIndex) { readIndexToOffset(indexToOffset[rowIndex], indexToOffset[rowIndex + 1]) }
+ 
+ private fun ByteBuffer.readTableItemBytes(
+     indexToOffset: IndexToOffset,
+@@ -263,7 +252,7 @@
+ ): ByteArray {
+     val rowOffset = indexToOffset[rowIndex]
+     val declarationIdToCoordinates: DeclarationIdToCoordinates = indexToDeclarationIdToCoordinates.getOrPut(rowIndex) {
+-        readDeclarationIdToCoordinates(rowOffset)
++        readDeclarationIdToCoordinates(rowOffset, indexToOffset[rowIndex + 1])
+     }
+ 
+     val (offset, size) = declarationIdToCoordinates[declarationId] ?: error("No coordinates found for $declarationId")
+@@ -272,6 +261,7 @@
+ }
+ 
+ private fun ByteBuffer.readTableItemBytes(offset: Int, size: Int): ByteArray {
++    checkRange(offset, size)
+     val result = ByteArray(size)
+     this.position(offset)
+     this.get(result, 0, size)
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelWriters.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/lowLevelWriters.kt
+@@ -8,29 +8,25 @@
+ import org.jetbrains.kotlin.library.SerializedDeclaration
+ import org.jetbrains.kotlin.library.encodings.WobblyTF8
+ import org.jetbrains.kotlin.utils.writeUnsignedLeb128
+-import java.io.ByteArrayOutputStream
+-import java.io.DataOutput
+-import java.io.DataOutputStream
+-import java.nio.file.Path
+-import kotlin.io.path.outputStream
++import org.jetbrains.kotlin.portable.klib.PortableDataOutput as DataOutput
++import org.jetbrains.kotlin.portable.klib.KlibByteLimits
+ 
+ sealed class IrDataWriter {
+     protected abstract fun writeData(dataOutput: DataOutput)
+ 
+-    fun writeIntoFile(path: Path) {
+-        path.outputStream().use { fos ->
+-            DataOutputStream(fos).use { dos -> writeData(dos) }
+-        }
+-    }
+-
+-    fun writeIntoMemory(): ByteArray {
+-        return ByteArrayOutputStream().also { baos ->
+-            DataOutputStream(baos).use { dos -> writeData(dos) }
+-        }.toByteArray()
++    fun writeIntoMemory(maximumBytes: Int = KlibByteLimits.MAX_BUFFER_BYTES): ByteArray {
++        val output = DataOutput(maximumBytes)
++        writeData(output)
++        return output.toByteArray()
+     }
+ }
+ 
+ class IrArrayWriter(private val data: List<ByteArray>, private val useVarInt: Boolean) : IrDataWriter() {
++    init {
++        require(data.size <= KlibByteLimits.MAX_TABLE_ENTRIES) { "Excessive KLIB table count" }
++        require(4L + 5L * data.size + data.sumOf { it.size.toLong() } <= KlibByteLimits.MAX_BUFFER_BYTES) { "KLIB writer input exceeds the byte limit" }
++    }
++
+     override fun writeData(dataOutput: DataOutput) {
+         if (useVarInt) {
+             // Designate that var-int encoding is used for sizes of elements by writing the number of elements as negative number.
+@@ -51,6 +47,11 @@
+ }
+ 
+ class IrStringWriter(private val data: List<String>, private val useVarInt: Boolean) : IrDataWriter() {
++    init {
++        require(data.size <= KlibByteLimits.MAX_TABLE_ENTRIES) { "Excessive KLIB table count" }
++        require(4L + 5L * data.size + data.sumOf { it.length.toLong() * 3 } <= KlibByteLimits.MAX_BUFFER_BYTES) { "KLIB writer input exceeds the byte limit" }
++    }
++
+     override fun writeData(dataOutput: DataOutput) {
+         if (useVarInt) {
+             // Designate that var-int encoding is used for sizes of elements by writing the number of elements as negative number.
+@@ -73,6 +74,11 @@
+ }
+ 
+ class IrDeclarationWriter(private val declarations: List<SerializedDeclaration>) : IrDataWriter() {
++    init {
++        require(declarations.size <= KlibByteLimits.MAX_TABLE_ENTRIES) { "Excessive KLIB table count" }
++        require(4L + 12L * declarations.size + declarations.sumOf { it.size.toLong() } <= KlibByteLimits.MAX_BUFFER_BYTES) { "KLIB writer input exceeds the byte limit" }
++    }
++
+     override fun writeData(dataOutput: DataOutput) {
+         dataOutput.writeInt(declarations.size)
+ 
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/ReadByteBufferProvider.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/ReadByteBufferProvider.kt
+@@ -5,8 +5,7 @@
+ 
+ package org.jetbrains.kotlin.library.impl
+ 
+-import java.lang.ref.SoftReference
+-import java.nio.ByteBuffer
++import org.jetbrains.kotlin.portable.klib.PortableByteCursor as ByteBuffer
+ 
+ sealed class ReadByteBufferProvider {
+     private var lastPosition: Int = 0
+@@ -39,27 +38,17 @@
+         override fun ensureBuffer() = buffer
+     }
+ 
+-    /**
+-     * Allows reading data from the byte array that is obtained though [loadBytes].
+-     *
+-     * The byte array may not be known at the time of [OnDemandMemoryBuffer] creation.
+-     * It will be created later, on the first call to use {}.
+-     * The byte array is cached using [SoftReference], which means that it can be potentially
+-     * released (garbage collected) in-between the [use] blocks, in case of JVM heap memory deficit.
+-     *
+-     * This implementation allows having lesser memory consumption than [MemoryBuffer] in case
+-     * of occasional reads from [ReadByteBufferProvider].
+-     */
++    /** Request-local immutable cache; no JVM SoftReference or global retention. */
+     class OnDemandMemoryBuffer(private val loadBytes: () -> ByteArray) : ReadByteBufferProvider() {
+-        private var cachedBuffer: SoftReference<ByteBuffer?> = SoftReference(null)
++        private var cachedBuffer: ByteBuffer? = null
+ 
+         override fun ensureBuffer(): ByteBuffer {
+-            var buffer = cachedBuffer.get()
++            var buffer = cachedBuffer
+             if (buffer != null) {
+                 return buffer
+             }
+             buffer = ByteBuffer.wrap(loadBytes())
+-            cachedBuffer = SoftReference(buffer)
++            cachedBuffer = buffer
+             return buffer
+         }
+     }
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/encodings/WobblyTF8.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/encodings/WobblyTF8.kt
+@@ -6,6 +6,8 @@
+ @file:Suppress("NOTHING_TO_INLINE")
+ 
+ package org.jetbrains.kotlin.library.encodings
++
++import org.jetbrains.kotlin.portable.klib.PortableCharacter as Character
+ 
+ /**
+  * Implementation of Wobbly Transformation Format 8, a superset of UTF-8
+@@ -145,7 +147,7 @@
+             buffer[charsWritten++] = REPLACEMENT_CHAR
+         }
+ 
+-        return if (buffer.size == charsWritten) String(buffer) else String(buffer, 0, charsWritten)
++        return if (buffer.size == charsWritten) buffer.concatToString() else buffer.concatToString(0, charsWritten)
+     }
+ 
+     private fun ByteArray.readByteAsInt(index: Int): Int = this[index].toInt() and 0b1111_1111
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/Klib.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/Klib.kt
+@@ -7,7 +7,7 @@
+ 
+ import org.jetbrains.kotlin.library.components.KlibIrComponent
+ import org.jetbrains.kotlin.library.components.KlibMetadataComponent
+-import java.nio.file.Path
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
+ 
+ /**
+  * [Klib] represents an instance of Kotlin library (Klib) that can be read by the compiler or any other tools.
+@@ -60,7 +60,7 @@
+  * A representation of a certain slice of the Klib library that can be read.
+  *
+  * Note: The component is not available in the library if there is no data that it can read. The creation of the component and
+- * the corresponding data presence check are performed in the [KlibComponent.Kind.createComponentIfDataInKlibIsAvailable].
++ * the corresponding data presence check are performed by the approved in-memory library host.
+  */
+ interface KlibComponent {
+     /**
+@@ -72,12 +72,7 @@
+          */
+         fun createLayout(root: Path): KCL
+ 
+-        /**
+-         * Create an instance of the component.
+-         *
+-         * Note: If there is no data to be read by the component, no component instance is created and `null` is returned.
+-         */
+-        fun createComponentIfDataInKlibIsAvailable(layoutReader: KlibLayoutReader<KCL>): KC?
++
+     }
+ }
+ 
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibIrComponent.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibIrComponent.kt
+@@ -10,7 +10,6 @@
+ import org.jetbrains.kotlin.library.KlibComponentLayout
+ import org.jetbrains.kotlin.library.KlibComponentsContainer
+ import org.jetbrains.kotlin.library.KlibConstants.KLIB_DEFAULT_COMPONENT_NAME
+-import org.jetbrains.kotlin.library.KlibLayoutReader
+ import org.jetbrains.kotlin.library.components.KlibIrConstants.KLIB_IR_FOLDER_NAME
+ import org.jetbrains.kotlin.library.components.KlibIrConstants.KLIB_IR_INLINABLE_FUNCTIONS_FOLDER_NAME
+ import org.jetbrains.kotlin.library.components.KlibIrConstants.KLIB_IR_DECLARATIONS_FILE_NAME
+@@ -21,9 +20,8 @@
+ import org.jetbrains.kotlin.library.components.KlibIrConstants.KLIB_IR_STRINGS_FILE_NAME
+ import org.jetbrains.kotlin.library.components.KlibIrConstants.KLIB_IR_FILES_FILE_NAME
+ import org.jetbrains.kotlin.library.components.KlibIrConstants.KLIB_IR_FILE_ENTRIES_FILE_NAME
+-import org.jetbrains.kotlin.library.impl.KlibIrComponentImpl
+-import java.nio.file.Path
+-import kotlin.io.path.exists
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.source.resolve
+ 
+ /**
+  * This component that provides read access to Klib IR. It can be used for two purposes:
+@@ -58,8 +56,6 @@
+             override fun createLayout(root: Path) = KlibIrComponentLayout.createForInlinableFunctionsIr(root)
+         }
+ 
+-        override fun createComponentIfDataInKlibIsAvailable(layoutReader: KlibLayoutReader<KlibIrComponentLayout>): KlibIrComponent? =
+-            if (layoutReader.readInPlaceOrFallback(false) { it.irDir.exists() }) KlibIrComponentImpl(layoutReader) else null
+     }
+ }
+ 
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibMetadataComponent.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/components/KlibMetadataComponent.kt
+@@ -10,28 +10,25 @@
+ import org.jetbrains.kotlin.library.KlibComponentLayout
+ import org.jetbrains.kotlin.library.KlibComponentsContainer
+ import org.jetbrains.kotlin.library.KlibConstants.KLIB_DEFAULT_COMPONENT_NAME
+-import org.jetbrains.kotlin.library.KlibLayoutReader
+ import org.jetbrains.kotlin.library.components.KlibMetadataConstants.KLIB_METADATA_FILE_EXTENSION
+ import org.jetbrains.kotlin.library.components.KlibMetadataConstants.KLIB_METADATA_FOLDER_NAME
+ import org.jetbrains.kotlin.library.components.KlibMetadataConstants.KLIB_MODULE_METADATA_FILE_NAME
+ import org.jetbrains.kotlin.library.components.KlibMetadataConstants.KLIB_NONROOT_PACKAGE_FRAGMENT_FOLDER_PREFIX
+ import org.jetbrains.kotlin.library.components.KlibMetadataConstants.KLIB_ROOT_PACKAGE_FRAGMENT_FOLDER_NAME
+-import org.jetbrains.kotlin.library.impl.KlibMetadataComponentImpl
+-import org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf
+-import org.jetbrains.kotlin.metadata.ProtoBuf
+-import java.nio.file.Path
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
++import org.jetbrains.kotlin.portable.source.resolve
+ 
+ /**
+  * This component provides read access to Klib metadata.
+  */
+ interface KlibMetadataComponent : KlibComponent {
+-    /** The metadata header in the raw form (bytes, yet to be deserialized to [KlibMetadataProtoBuf.Header]). */
++    /** The metadata header in the raw form (bytes, yet to be deserialized to `KlibMetadataProtoBuf.Header`). */
+     val moduleHeaderData: ByteArray?
+ 
+     /** Names of package fragments for the fully qualified package name [packageFqName]. */
+     fun getPackageFragmentNames(packageFqName: String): Set<String>
+ 
+-    /** The concrete package fragment in the raw form (bytes, yet to be deserialized to [ProtoBuf.PackageFragment]). */
++    /** The concrete package fragment in the raw form (bytes, yet to be deserialized to `ProtoBuf.PackageFragment`). */
+     fun getPackageFragment(packageFqName: String, fragmentName: String): ByteArray
+ 
+     /** The names of all packages inside given klib. */
+@@ -40,12 +37,6 @@
+     companion object Kind : KlibComponent.Kind<KlibMetadataComponent, KlibMetadataComponentLayout> {
+         override fun createLayout(root: Path) = KlibMetadataComponentLayout(root)
+ 
+-        /**
+-         * Note: It is expected that every correct Klib has metadata files.
+-         * Therefore, no data availability check is performed in this method and the component is always created unconditionally.
+-         */
+-        override fun createComponentIfDataInKlibIsAvailable(layoutReader: KlibLayoutReader<KlibMetadataComponentLayout>): KlibMetadataComponent =
+-            KlibMetadataComponentImpl(layoutReader)
+     }
+ }
+ 
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentImpl.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/impl/KlibIrComponentImpl.kt
+@@ -5,10 +5,7 @@
+ 
+ package org.jetbrains.kotlin.library.impl
+ 
+-import org.jetbrains.kotlin.library.KlibLayoutReader
+ import org.jetbrains.kotlin.library.components.KlibIrComponent
+-import org.jetbrains.kotlin.library.components.KlibIrComponentLayout
+-import kotlin.io.path.exists
+ 
+ internal abstract class AbstractKlibIrComponentImpl() : KlibIrComponent {
+     protected abstract val irFiles: IrArrayReader
+@@ -38,49 +35,3 @@
+     override fun signatures(fileIndex: Int) = signatures.tableItemBytes(fileIndex)
+     override fun stringLiterals(fileIndex: Int) = stringLiterals.tableItemBytes(fileIndex)
+ }
+-
+-/**
+- * The default implementation of [KlibIrComponent].
+- */
+-internal class KlibIrComponentImpl(
+-    private val layoutReader: KlibLayoutReader<KlibIrComponentLayout>
+-) : AbstractKlibIrComponentImpl() {
+-
+-    override val irFiles: IrArrayReader by lazy {
+-        IrArrayReader(layoutReader, KlibIrComponentLayout::irFilesFile)
+-    }
+-
+-    override val irFileEntries: IrMultiArrayReader? by lazy {
+-        if (layoutReader.readInPlace { it.irFileEntriesFile.exists() })
+-            IrMultiArrayReader(layoutReader, KlibIrComponentLayout::irFileEntriesFile)
+-        else
+-            null
+-    }
+-
+-    override val combinedDeclarations: DeclarationIdMultiTableReader by lazy {
+-        DeclarationIdMultiTableReader(layoutReader, KlibIrComponentLayout::declarationsFile)
+-    }
+-
+-    override val bodies: IrMultiArrayReader by lazy {
+-        IrMultiArrayReader(layoutReader, KlibIrComponentLayout::bodiesFile)
+-    }
+-
+-    override val types: IrMultiArrayReader by lazy {
+-        IrMultiArrayReader(layoutReader, KlibIrComponentLayout::typesFile)
+-    }
+-
+-    override val signatures: IrMultiArrayReader by lazy {
+-        IrMultiArrayReader(layoutReader, KlibIrComponentLayout::signaturesFile)
+-    }
+-
+-    override val signatureDebugInfos: IrMultiArrayReader? by lazy {
+-        if (layoutReader.readInPlace { it.signaturesDebugInfoFile.exists() })
+-            IrMultiArrayReader(layoutReader, KlibIrComponentLayout::signaturesDebugInfoFile)
+-        else
+-            null
+-    }
+-
+-    override val stringLiterals: IrMultiArrayReader by lazy {
+-        IrMultiArrayReader(layoutReader, KlibIrComponentLayout::stringLiteralsFile)
+-    }
+-}
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibrary.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibrary.kt
+@@ -10,7 +10,7 @@
+ import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
+ import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion
+ import org.jetbrains.kotlin.metadata.deserialization.MetadataVersion
+-import java.util.*
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
+ 
+ /**
+  * Some well-known constants:
+--- a/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibraryVersioning.kt
++++ b/compiler/util-klib/src/org/jetbrains/kotlin/library/KotlinLibraryVersioning.kt
+@@ -2,7 +2,7 @@
+ 
+ import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion
+ import org.jetbrains.kotlin.metadata.deserialization.MetadataVersion
+-import java.util.Properties
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
+ 
+ data class KotlinLibraryVersioning(
+     val compilerVersion: String?,
+--- a/compiler/util-io/src/org/jetbrains/kotlin/io/PropertyFileUtils.kt
++++ b/compiler/util-io/src/org/jetbrains/kotlin/io/PropertyFileUtils.kt
+@@ -6,37 +6,7 @@
+ package org.jetbrains.kotlin.io
+ 
+ import org.jetbrains.kotlin.util.parseSpaceSeparatedArgs
+-import java.io.StringWriter
+-import java.nio.file.Path
+-import java.util.Properties
+-import kotlin.io.path.bufferedReader
+-import kotlin.io.path.bufferedWriter
+-
+-/**
+- * Reads a properties file by the given [Path].
+- */
+-fun Path.readProperties(): Properties {
+-    val properties = Properties()
+-    bufferedReader().use { reader -> properties.load(reader) }
+-    return properties
+-}
+-
+-/**
+- * Writes the given [properties] to the file.
+- * - No comments are written.
+- * - All properties are stored in the alphabetical order by their names.
+- */
+-fun Path.writeProperties(properties: Properties) {
+-    val rawPropertiesText: String = StringWriter().apply { properties.store(this, null) }.toString()
+-
+-    val filteredPropertiesText = rawPropertiesText
+-        .split(System.lineSeparator())
+-        .filterNot { it.isBlank() || it.startsWith("#") }
+-        .sorted()
+-        .joinToString("\n", postfix = "\n")
+-
+-    bufferedWriter().use { writer -> writer.write(filteredPropertiesText) }
+-}
++import org.jetbrains.kotlin.portable.klib.ManifestProperties as Properties
+ 
+ /**
+  * TODO: this method working with suffixes should be replaced with
+@@ -100,7 +70,7 @@
+             val prefix = substring(0, sigil)
+             val afterSigil = substring(sigil + 1)
+ 
+-            val (property, rest) = if (afterSigil.startsWith('{')) {
++            val [property, rest] = if (afterSigil.startsWith('{')) {
+                 val endBrace = afterSigil.indexOf('}')
+                 require(endBrace != -1) { "Unclosed '{' in: $this" }
+                 Pair(afterSigil.substring(1, endBrace), afterSigil.substring(endBrace + 1))
+--- a/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt
++++ b/compiler/util-io/src/org/jetbrains/kotlin/util/Util.kt
+@@ -4,48 +4,6 @@
+  */
+ 
+ package org.jetbrains.kotlin.util
+-
+-import java.nio.file.Path
+-import kotlin.io.path.Path
+-import kotlin.io.path.absolute
+-import kotlin.io.path.name
+-import kotlin.io.path.pathString
+-import kotlin.system.measureTimeMillis
+-
+-private fun printMilliseconds(message: String, body: () -> Unit) {
+-    val time = measureTimeMillis(body)
+-    println("$message: $time ms")
+-}
+-
+-fun profile(message: String, body: () -> Unit) = profileIf(
+-    System.getProperty("konan.profile")?.equals("true") ?: false,
+-    message, body
+-)
+-
+-private fun profileIf(condition: Boolean, message: String, body: () -> Unit) =
+-    if (condition) printMilliseconds(message, body) else body()
+-
+-fun nTabs(amount: Int): String {
+-    return String.format("%1$-${(amount+1)*4}s", "")
+-}
+-
+-fun String.prefixIfNot(prefix: String) =
+-    if (this.startsWith(prefix)) this else "$prefix$this"
+-
+-fun String.prefixBaseNameIfNot(prefix: String): String {
+-    val absolutePath: Path = Path(this).absolute()
+-    val name: String = absolutePath.name
+-    val directory: Path = absolutePath.parent
+-    return directory.resolve(name.prefixIfNot(prefix)).pathString
+-}
+-
+-fun String.suffixIfNot(suffix: String) =
+-    if (this.endsWith(suffix)) this else "$this$suffix"
+-
+-fun String.removeSuffixIfPresent(suffix: String) =
+-    if (this.endsWith(suffix)) this.dropLast(suffix.length) else this
+-
+-fun <T> Lazy<T>.getValueOrNull(): T? = if (isInitialized()) value else null
+ 
+ fun parseSpaceSeparatedArgs(argsString: String): List<String> {
+     val parsedArgs = mutableListOf<String>()
+--- a/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt
++++ b/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt
+@@ -16,8 +16,6 @@
+ 
+ package org.jetbrains.kotlin.utils
+ 
+-import java.io.InputStream
+-import java.io.OutputStream
+ import kotlin.experimental.and
+ 
+ fun writeUnsignedLeb128Fixed(v: UInt, writeNextByte: (Byte) -> Unit) {
+--- a/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt
++++ b/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt
+@@ -73,7 +73,7 @@
+ 
+     override fun equals(other: Any?) =
+         other != null &&
+-                this::class.java == other::class.java &&
++                this::class == other::class &&
+                 major == (other as BinaryVersion).major && minor == other.minor && patch == other.patch && rest == other.rest
+ 
+     override fun hashCode(): Int {
+@@ -88,7 +88,6 @@
+         const val MAX_LENGTH = 1024
+         private const val UNKNOWN = -1
+ 
+-        @JvmStatic
+         fun parseVersionArray(string: String): IntArray? =
+             string.split(".")
+                 .map { part -> part.toIntOrNull() ?: return null }
+--- a/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/MetadataVersion.kt
++++ b/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/MetadataVersion.kt
+@@ -54,13 +54,10 @@
+     }
+ 
+     companion object {
+-        @JvmField
+         val INSTANCE = MetadataVersion(2, 5, 0)
+ 
+-        @JvmField
+         val INSTANCE_NEXT = INSTANCE.next()
+ 
+-        @JvmField
+         val INVALID_VERSION = MetadataVersion()
+     }
+ }

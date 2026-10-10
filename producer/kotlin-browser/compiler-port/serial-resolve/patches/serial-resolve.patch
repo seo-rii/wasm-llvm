@@ -1,0 +1,29 @@
+--- a/compiler/fir/tree/src/org/jetbrains/kotlin/fir/symbols/FirLazyDeclarationResolver.kt
++++ b/compiler/fir/tree/src/org/jetbrains/kotlin/fir/symbols/FirLazyDeclarationResolver.kt
+@@ -4,6 +4,8 @@
+  */
+ 
+ package org.jetbrains.kotlin.fir.symbols
++
++import org.jetbrains.kotlin.portable.resolve.SerialResolveState
+ 
+ import org.jetbrains.kotlin.fir.FirElementWithResolveState
+ import org.jetbrains.kotlin.fir.FirSession
+@@ -27,7 +29,7 @@
+ abstract class FirLazyDeclarationResolver : FirSessionComponent {
+     @PrivateForInline
+     @Suppress("PropertyName")
+-    val _lazyResolveContractChecksEnabled: ThreadLocal<Boolean> = ThreadLocal.withInitial { true }
++    val _lazyResolveContractChecksEnabled: SerialResolveState<Boolean> = SerialResolveState.withInitial { true }
+ 
+     @OptIn(PrivateForInline::class)
+     val lazyResolveContractChecksEnabled: Boolean
+@@ -36,7 +38,7 @@
+ 
+     @PrivateForInline
+     @Suppress("PropertyName")
+-    val _lazyResolveIsAllowed: ThreadLocal<Boolean> = ThreadLocal.withInitial { true }
++    val _lazyResolveIsAllowed: SerialResolveState<Boolean> = SerialResolveState.withInitial { true }
+ 
+     abstract fun startResolvingPhase(phase: FirResolvePhase)
+ 

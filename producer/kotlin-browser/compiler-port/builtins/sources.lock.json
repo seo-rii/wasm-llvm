@@ -1,0 +1,2319 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-kotlin-builtins-common-source-port",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sources": [
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+      "bytes": 39456,
+      "gitBlob": "05740cfda301281e0e8be4386816e31d220cbb35",
+      "sha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/BuiltInsLoader.kt",
+      "bytes": 2088,
+      "gitBlob": "7124d945c96d88d9013f949a3419828f6d5458a7",
+      "sha256": "24c6c55549e39aaa04d79cec0afef0a9076e5ce475b9ccefd50427a869496011"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.java",
+      "bytes": 28336,
+      "gitBlob": "e58676e36e52583dddc50e2c6650e610dea38df8",
+      "sha256": "feece34e34774197e55fb7d93816779581f00c36a105859878ca4da0b6f645dd"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorUtils.kt",
+      "bytes": 19256,
+      "gitBlob": "2d326559b6904e374c7bda5d9e595d6bcaec5892",
+      "sha256": "7bce09509f909b56de15294674ead2b6f609cfe9cff782bed91fa6b2153d3b99"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/descriptorUtil.kt",
+      "bytes": 5008,
+      "gitBlob": "d7bb6573c73dd89cffe39ee281a92e7fe8f6ca8a",
+      "sha256": "9f1c53345f298d33666dfffb8e580d9b416679277d809b7bb1190ce88f1d50bb"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/findClassInModule.kt",
+      "bytes": 3037,
+      "gitBlob": "5bb721bd8fa9e2995c000f1966e6db0b0f7a2941",
+      "sha256": "bdea0ae5c93297ce250f03159d11fddb2492b667992c465a5bc33c01032ec1ba"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/ModuleDescriptorImpl.kt",
+      "bytes": 7831,
+      "gitBlob": "951732bc23c1dd7729326ea573c42064cb8a449a",
+      "sha256": "49b07531dae45fa29def5fa9f38ba2ec806cb81d6bd51e81414a0096b0c9819b"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/functions/BuiltInFictitiousFunctionClassFactory.kt",
+      "bytes": 3315,
+      "gitBlob": "d5dbc567fdf950ceb4a11a7520e21b7314881eec",
+      "sha256": "12b4d55623d7f3e227ec8df68e2099d27bfae7b9872fea788c418199977113b3"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/UnsignedType.kt",
+      "bytes": 5243,
+      "gitBlob": "1d2c41e38692df8a704e4d96b7db6dc6dbff45de",
+      "sha256": "44cfe98a7953b183de1fdf046815e72d75e43f99d22f9f4e7f63bac54a982b91"
+    },
+    {
+      "path": "core/deserialization/src/org/jetbrains/kotlin/serialization/deserialization/builtins/BuiltInsLoaderImpl.kt",
+      "bytes": 4166,
+      "gitBlob": "95fe59e58c5d74d9a342c241c2da33de074d67c4",
+      "sha256": "4f22340132458fa1b7b146f75c6b0edcfea4473ce5f7e9220e019515cbdc249e"
+    }
+  ],
+  "originalJavaPath": "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+  "replacedOriginalPaths": [
+    "core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+    "core/descriptors/src/org/jetbrains/kotlin/builtins/BuiltInsLoader.kt"
+  ],
+  "portable": {
+    "path": "KotlinBuiltIns.kt",
+    "bytes": 33190,
+    "sha256": "c9d7d8bc2e3c08c7fde9ed9095bfb9788cff205ec5b3b81ad4f08347fb9fde1d",
+    "outputPath": "compiler-port-builtins/KotlinBuiltIns.kt",
+    "outputBytes": 39155,
+    "outputSha256": "e09cc7dc6297439cb4355c2c17afc34ab60411eadab22596bdd0c636cc062f27"
+  },
+  "patch": {
+    "path": "patches/explicit-builtins-loader.patch",
+    "bytes": 1875,
+    "sha256": "bfc1a95603c272165833bfd2e8b23c16a26636564f0023584d1fe9f3284ca230"
+  },
+  "patchedLoader": {
+    "path": "core/descriptors/src/org/jetbrains/kotlin/builtins/BuiltInsLoader.kt",
+    "bytes": 2274,
+    "sha256": "a2957cab00992b612ed51ba570b0fb9453f65df2f4878f18638a7b98d5ecb22e"
+  },
+  "generator": {
+    "path": "update-recipe.py",
+    "sha256": "77f7262efb7e534bfce1d42d93f62f51aca6b458e56a07e9f6f3045c7fff08f2"
+  },
+  "methods": [
+    {
+      "name": "KotlinBuiltIns",
+      "visibility": "protected",
+      "static": false,
+      "returnType": null,
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "StorageManager",
+          "name": "storageManager"
+        }
+      ]
+    },
+    {
+      "name": "createBuiltInsModule",
+      "visibility": "protected",
+      "static": false,
+      "returnType": "void",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "boolean",
+          "name": "isFallback"
+        }
+      ]
+    },
+    {
+      "name": "setBuiltInsModule",
+      "visibility": "public",
+      "static": false,
+      "returnType": "void",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ModuleDescriptorImpl",
+          "name": "module"
+        }
+      ]
+    },
+    {
+      "name": "setPostponedBuiltinsModuleComputation",
+      "visibility": "public",
+      "static": false,
+      "returnType": "void",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "Function0<ModuleDescriptorImpl>",
+          "name": "computation"
+        }
+      ]
+    },
+    {
+      "name": "getAdditionalClassPartsProvider",
+      "visibility": "protected",
+      "static": false,
+      "returnType": "AdditionalClassPartsProvider",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getPlatformDependentDeclarationFilter",
+      "visibility": "protected",
+      "static": false,
+      "returnType": "PlatformDependentDeclarationFilter",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getClassDescriptorFactories",
+      "visibility": "protected",
+      "static": false,
+      "returnType": "Iterable<ClassDescriptorFactory>",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getStorageManager",
+      "visibility": "protected",
+      "static": false,
+      "returnType": "StorageManager",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getBuiltInsModule",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ModuleDescriptorImpl",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getBuiltInPackagesImportedByDefault",
+      "visibility": "public",
+      "static": false,
+      "returnType": "Collection<PackageViewDescriptor>",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "isBuiltIn",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "DeclarationDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isUnderKotlinPackage",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "DeclarationDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "getBuiltInsPackageScope",
+      "visibility": "public",
+      "static": false,
+      "returnType": "MemberScope",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getBuiltInClassByFqName",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "FqName",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "getBuiltInClassByName",
+      "visibility": "private",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "String",
+          "name": "simpleName"
+        }
+      ]
+    },
+    {
+      "name": "getAny",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getNothing",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getPrimitiveClassDescriptor",
+      "visibility": "private",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "PrimitiveType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "getByte",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getShort",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getInt",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getLong",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getFloat",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getDouble",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getChar",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getBoolean",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getArray",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getPrimitiveArrayClassDescriptor",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "PrimitiveType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "getNumber",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getUnit",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getFunction",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "int",
+          "name": "parameterCount"
+        }
+      ]
+    },
+    {
+      "name": "getSuspendFunction",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "int",
+          "name": "parameterCount"
+        }
+      ]
+    },
+    {
+      "name": "getKFunction",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "int",
+          "name": "parameterCount"
+        }
+      ]
+    },
+    {
+      "name": "getKSuspendFunction",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "int",
+          "name": "parameterCount"
+        }
+      ]
+    },
+    {
+      "name": "getThrowable",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getString",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getCharSequence",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getComparable",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getEnum",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getAnnotation",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKClass",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKCallable",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKProperty",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKProperty0",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKProperty1",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKProperty2",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKMutableProperty0",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKMutableProperty1",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getKMutableProperty2",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getIterator",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getIterable",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableIterable",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableIterator",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getCollection",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableCollection",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getList",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableList",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getSet",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableSet",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMap",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableMap",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMapEntry",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableMapEntry",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getListIterator",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getMutableListIterator",
+      "visibility": "public",
+      "static": false,
+      "returnType": "ClassDescriptor",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getBuiltInTypeByClassName",
+      "visibility": "private",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "String",
+          "name": "classSimpleName"
+        }
+      ]
+    },
+    {
+      "name": "getNothingType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getNullableNothingType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getAnyType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getNullableAnyType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getDefaultBound",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getPrimitiveKotlinType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "PrimitiveType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "getNumberType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getByteType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getShortType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getIntType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getLongType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getFloatType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getDoubleType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getCharType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getBooleanType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getUnitType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getStringType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getIterableType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "KotlinType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "getArrayElementType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "KotlinType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "arrayType"
+        }
+      ]
+    },
+    {
+      "name": "getArrayElementTypeOrNull",
+      "visibility": "public",
+      "static": false,
+      "returnType": "KotlinType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "arrayType"
+        }
+      ]
+    },
+    {
+      "name": "getElementTypeForUnsignedArray",
+      "visibility": "private",
+      "static": true,
+      "returnType": "KotlinType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "notNullArrayType"
+        },
+        {
+          "type": "ModuleDescriptor",
+          "name": "module"
+        }
+      ]
+    },
+    {
+      "name": "getPrimitiveArrayKotlinType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "PrimitiveType",
+          "name": "primitiveType"
+        }
+      ]
+    },
+    {
+      "name": "getPrimitiveArrayKotlinTypeByPrimitiveKotlinType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "kotlinType"
+        }
+      ]
+    },
+    {
+      "name": "getPrimitiveType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "PrimitiveType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "DeclarationDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "getPrimitiveArrayType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "PrimitiveType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "DeclarationDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "getArrayType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "Variance",
+          "name": "projectionType"
+        },
+        {
+          "type": "KotlinType",
+          "name": "argument"
+        },
+        {
+          "type": "Annotations",
+          "name": "annotations"
+        }
+      ]
+    },
+    {
+      "name": "getArrayType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "Variance",
+          "name": "projectionType"
+        },
+        {
+          "type": "KotlinType",
+          "name": "argument"
+        }
+      ]
+    },
+    {
+      "name": "getEnumType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "SimpleType",
+          "name": "argument"
+        }
+      ]
+    },
+    {
+      "name": "getAnnotationType",
+      "visibility": "public",
+      "static": false,
+      "returnType": "SimpleType",
+      "nullable": false,
+      "parameters": []
+    },
+    {
+      "name": "isArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isArrayOrPrimitiveArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isArrayOrPrimitiveArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isPrimitiveArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "getPrimitiveArrayElementType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "PrimitiveType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "getPrimitiveType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "PrimitiveType",
+      "nullable": true,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isPrimitiveType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isPrimitiveTypeOrNullablePrimitiveType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isPrimitiveClass",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isConstructedFromGivenClass",
+      "visibility": "private",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        },
+        {
+          "type": "FqNameUnsafe",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "isConstructedFromGivenClass",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        },
+        {
+          "type": "FqName",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "isTypeConstructorForGivenClass",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "TypeConstructor",
+          "name": "typeConstructor"
+        },
+        {
+          "type": "FqNameUnsafe",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "classFqNameEquals",
+      "visibility": "private",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassifierDescriptor",
+          "name": "descriptor"
+        },
+        {
+          "type": "FqNameUnsafe",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "isNotNullConstructedFromGivenClass",
+      "visibility": "private",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        },
+        {
+          "type": "FqNameUnsafe",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "isSpecialClassWithNoSupertypes",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isAny",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isAny",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isBoolean",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isBooleanOrNullableBoolean",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isBoolean",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "classDescriptor"
+        }
+      ]
+    },
+    {
+      "name": "isNumber",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isChar",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isCharOrNullableChar",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isInt",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isByte",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isLong",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isLongOrNullableLong",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isShort",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isFloat",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isFloatOrNullableFloat",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isDouble",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUByte",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUShort",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUInt",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isULong",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUByteArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUShortArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUIntArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isULongArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUnsignedArrayType",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isDoubleOrNullableDouble",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isConstructedFromGivenClassAndNotNullable",
+      "visibility": "private",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        },
+        {
+          "type": "FqNameUnsafe",
+          "name": "fqName"
+        }
+      ]
+    },
+    {
+      "name": "isNothing",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isNullableNothing",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isNothingOrNullableNothing",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isAnyOrNullableAny",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isNullableAny",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isDefaultBound",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUnit",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "mayReturnNonUnitValue",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "FunctionDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isUnitOrNullableUnit",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isBooleanOrSubtype",
+      "visibility": "public",
+      "static": false,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isMemberOfAny",
+      "visibility": "public",
+      "static": false,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "DeclarationDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isEnum",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isEnum",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isComparable",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isComparable",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isCharSequence",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isString",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isUnsignedNumber",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isCharSequenceOrNullableCharSequence",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isStringOrNullableString",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isCollectionOrNullableCollection",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isListOrNullableList",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isSetOrNullableSet",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isMapOrNullableMap",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isIterableOrNullableIterable",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isThrowableOrNullableThrowable",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "name": "isThrowable",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isKClass",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isNonPrimitiveArray",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "ClassDescriptor",
+          "name": "descriptor"
+        }
+      ]
+    },
+    {
+      "name": "isDeprecated",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "DeclarationDescriptor",
+          "name": "declarationDescriptor"
+        }
+      ]
+    },
+    {
+      "name": "isNotNullOrNullableFunctionSupertype",
+      "visibility": "public",
+      "static": true,
+      "returnType": "boolean",
+      "nullable": false,
+      "parameters": [
+        {
+          "type": "KotlinType",
+          "name": "type"
+        }
+      ]
+    }
+  ],
+  "getterAliases": [
+    {
+      "method": "getAny",
+      "property": "any",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getNothing",
+      "property": "nothing",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getByte",
+      "property": "byte",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getShort",
+      "property": "short",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getInt",
+      "property": "int",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getLong",
+      "property": "long",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getFloat",
+      "property": "float",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getDouble",
+      "property": "double",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getChar",
+      "property": "char",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getBoolean",
+      "property": "boolean",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getArray",
+      "property": "array",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getNumber",
+      "property": "number",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getUnit",
+      "property": "unit",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getThrowable",
+      "property": "throwable",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getString",
+      "property": "string",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getCharSequence",
+      "property": "charSequence",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getComparable",
+      "property": "comparable",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getEnum",
+      "property": "enum",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getAnnotation",
+      "property": "annotation",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKClass",
+      "property": "kClass",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKType",
+      "property": "kType",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKCallable",
+      "property": "kCallable",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKProperty",
+      "property": "kProperty",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKProperty0",
+      "property": "kProperty0",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKProperty1",
+      "property": "kProperty1",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKProperty2",
+      "property": "kProperty2",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKMutableProperty0",
+      "property": "kMutableProperty0",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKMutableProperty1",
+      "property": "kMutableProperty1",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getKMutableProperty2",
+      "property": "kMutableProperty2",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getIterator",
+      "property": "iterator",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getIterable",
+      "property": "iterable",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableIterable",
+      "property": "mutableIterable",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableIterator",
+      "property": "mutableIterator",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getCollection",
+      "property": "collection",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableCollection",
+      "property": "mutableCollection",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getList",
+      "property": "list",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableList",
+      "property": "mutableList",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getSet",
+      "property": "set",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableSet",
+      "property": "mutableSet",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMap",
+      "property": "map",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableMap",
+      "property": "mutableMap",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMapEntry",
+      "property": "mapEntry",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableMapEntry",
+      "property": "mutableMapEntry",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getListIterator",
+      "property": "listIterator",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getMutableListIterator",
+      "property": "mutableListIterator",
+      "type": "ClassDescriptor"
+    },
+    {
+      "method": "getNothingType",
+      "property": "nothingType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getNullableNothingType",
+      "property": "nullableNothingType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getAnyType",
+      "property": "anyType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getNullableAnyType",
+      "property": "nullableAnyType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getDefaultBound",
+      "property": "defaultBound",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getNumberType",
+      "property": "numberType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getByteType",
+      "property": "byteType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getShortType",
+      "property": "shortType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getIntType",
+      "property": "intType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getLongType",
+      "property": "longType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getFloatType",
+      "property": "floatType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getDoubleType",
+      "property": "doubleType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getCharType",
+      "property": "charType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getBooleanType",
+      "property": "booleanType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getUnitType",
+      "property": "unitType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getStringType",
+      "property": "stringType",
+      "type": "SimpleType"
+    },
+    {
+      "method": "getIterableType",
+      "property": "iterableType",
+      "type": "KotlinType"
+    },
+    {
+      "method": "getAnnotationType",
+      "property": "annotationType",
+      "type": "SimpleType"
+    }
+  ],
+  "semantics": {
+    "methodCoverage": "all 168 methods and protected constructor; original private algorithms retained",
+    "maps": "request-local equality-key maps; original EnumMap has no externally observed iteration",
+    "module": "real ModuleDescriptorImpl initialized by real provider, or explicit existing module",
+    "caches": "real StorageManager lazy/memoized functions; no independent global reset",
+    "assertions": "enabled official compiler invariant policy; original JVM reference uses -ea",
+    "loader": "one explicit legitimate factory per Worker; no absent-resource or empty-provider fallback",
+    "parentTraversal": "exact non-strict DescriptorUtils.getParentOfType loop specialized to BuiltInsPackageFragment"
+  },
+  "readiness": {
+    "sourcePort": "implemented",
+    "jvmDifferential": "not-run",
+    "wasmDifferential": "not-run",
+    "browserCompiler": false
+  }
+}

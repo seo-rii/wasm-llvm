@@ -1,0 +1,745 @@
+--- a/compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt
++++ b/compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt
+@@ -7,21 +7,13 @@
+ 
+ package org.jetbrains.kotlin
+ 
+-import com.intellij.lang.LighterASTNode
+-import com.intellij.lang.TreeBackedLighterAST
+-import com.intellij.openapi.util.Ref
+-import com.intellij.psi.PsiComment
+-import com.intellij.psi.PsiElement
+-import com.intellij.psi.PsiFile
+-import com.intellij.psi.PsiWhiteSpace
+-import com.intellij.psi.tree.IElementType
+-import com.intellij.util.diff.FlyweightCapableTreeStructure
+ import org.jetbrains.kotlin.name.Name
++import org.jetbrains.kotlin.portable.source.FlyweightCapableTreeStructure
++import org.jetbrains.kotlin.portable.source.IElementType
++import org.jetbrains.kotlin.portable.source.LighterASTNode
++import org.jetbrains.kotlin.portable.source.portableObjectsHash
+ import org.jetbrains.kotlin.util.ArrayLiteralResolution
+ import org.jetbrains.kotlin.util.OperatorNameConventions
+-import org.jetbrains.kotlin.utils.getElementTextWithContext
+-import java.util.Objects
+-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+ 
+ /**
+  * The kind of a [KtSourceElement], used to distinguish different source elements backed by the same real source.
+@@ -55,7 +47,7 @@
+      * For example, [EnumGeneratedDeclaration.ValuesFunction.ReturnType] has the full name
+      * `EnumGeneratedDeclaration.ValuesFunction.ReturnType`.
+      */
+-    private val fullName: String = javaClass.name.substringAfter('$').replace('$', '.')
++    private val fullName: String = portableFakeSourceElementKindName(this)
+ 
+     override fun toString(): String = fullName
+ 
+@@ -503,7 +495,7 @@
+                 this::class == other::class &&
+                 generatedElementKind == other.generatedElementKind
+ 
+-        override fun hashCode(): Int = Objects.hash(this::class, generatedElementKind)
++        override fun hashCode(): Int = portableObjectsHash(this::class, generatedElementKind)
+ 
+         override fun toString(): String = "${super.toString()}($generatedElementKind)"
+     }
+@@ -665,7 +657,7 @@
+      */
+     class LambdaContextParameter(private val index: Int) : KtFakeSourceElementKind() {
+         override fun equals(other: Any?): Boolean = this === other || other is LambdaContextParameter && index == other.index
+-        override fun hashCode(): Int = Objects.hash(this::class, index.hashCode())
++        override fun hashCode(): Int = portableObjectsHash(this::class, index.hashCode())
+         override fun toString(): String = "${super.toString()}($index)"
+     }
+ 
+@@ -824,7 +816,7 @@
+             override fun equals(other: Any?): Boolean =
+                 this === other || other is BaseClassConstructorParameter && index == other.index
+ 
+-            override fun hashCode(): Int = Objects.hash(this::class, index)
++            override fun hashCode(): Int = portableObjectsHash(this::class, index)
+ 
+             override fun toString(): String = "${super.toString()}($index)"
+         }
+@@ -836,7 +828,7 @@
+             override fun equals(other: Any?): Boolean =
+                 this === other || other is ImplicitReceiver && index == other.index
+ 
+-            override fun hashCode(): Int = Objects.hash(this::class, index)
++            override fun hashCode(): Int = portableObjectsHash(this::class, index)
+ 
+             override fun toString(): String = "${super.toString()}($index)"
+         }
+@@ -848,7 +840,7 @@
+             override fun equals(other: Any?): Boolean =
+                 this === other || other is ProvidedProperty && index == other.index
+ 
+-            override fun hashCode(): Int = Objects.hash(this::class, index)
++            override fun hashCode(): Int = portableObjectsHash(this::class, index)
+ 
+             override fun toString(): String = "${super.toString()}($index)"
+         }
+@@ -935,7 +927,7 @@
+             override fun equals(other: Any?): Boolean =
+                 this === other || other is Custom && marker == other.marker
+ 
+-            override fun hashCode(): Int = Objects.hash(this::class, marker)
++            override fun hashCode(): Int = portableObjectsHash(this::class, marker)
+ 
+             override fun toString(): String = "${super.toString()}($marker)"
+         }
+@@ -1089,227 +1081,8 @@
+     abstract val text: CharSequence
+ }
+ 
+-// NB: in certain situations, psi.node could be null (see e.g. KT-44152)
+-// Potentially exceptions can be provoked by elementType / lighterASTNode
+-sealed class KtPsiSourceElement(val psi: PsiElement) : KtSourceElement() {
+-    companion object {
+-        @JvmStatic
+-        private val lighterASTNodeUpdater = AtomicReferenceFieldUpdater.newUpdater(
+-            KtPsiSourceElement::class.java,
+-            LighterASTNode::class.java,
+-            "_lighterASTNode"
+-        )
+-
+-        @JvmStatic
+-        private val treeStructureNodeUpdater = AtomicReferenceFieldUpdater.newUpdater(
+-            KtPsiSourceElement::class.java,
+-            FlyweightCapableTreeStructure::class.java,
+-            "_treeStructure"
+-        )
+-    }
+-
+-    override val elementType: IElementType?
+-        get() = psi.node?.elementType
+-
+-    override val startOffset: Int
+-        get() = psi.textRange.startOffset
+-
+-    override val endOffset: Int
+-        get() = psi.textRange.endOffset
+-
+-    @Volatile
+-    private var _lighterASTNode: LighterASTNode? = null
+-    final override val lighterASTNode: LighterASTNode
+-        get() {
+-            _lighterASTNode?.let { return it }
+-            lighterASTNodeUpdater.compareAndSet(
+-                /* obj = */ this,
+-                /* expect = */ null,
+-                /* update = */ TreeBackedLighterAST.wrap(psi.node)
+-            )
+-            return _lighterASTNode!!
+-        }
+-
+-    @Volatile
+-    private var _treeStructure: FlyweightCapableTreeStructure<LighterASTNode>? = null
+-    final override val treeStructure: FlyweightCapableTreeStructure<LighterASTNode>
+-        get() {
+-            _treeStructure?.let { return it }
+-            treeStructureNodeUpdater.compareAndSet(
+-                /* obj = */ this,
+-                /* expect = */ null,
+-                /* update = */ WrappedTreeStructure(psi.containingFile)
+-            )
+-            return _treeStructure!!
+-        }
+-
+-    override fun getElementTextInContextForDebug(): String {
+-        return getElementTextWithContext(psi)
+-    }
+-
+-    internal class WrappedTreeStructure(file: PsiFile) : FlyweightCapableTreeStructure<LighterASTNode> {
+-        private val lighterAST = TreeBackedLighterAST(file.node)
+-
+-        fun unwrap(node: LighterASTNode) = lighterAST.unwrap(node)
+-
+-        override fun toString(node: LighterASTNode): CharSequence = unwrap(node).text
+-
+-        override fun getRoot(): LighterASTNode = lighterAST.root
+-
+-        override fun getParent(node: LighterASTNode): LighterASTNode? =
+-            unwrap(node).psi.parent?.node?.let { TreeBackedLighterAST.wrap(it) }
+-
+-        override fun getChildren(node: LighterASTNode, nodesRef: Ref<Array<LighterASTNode>>): Int {
+-            val psi = unwrap(node).psi
+-            val children = mutableListOf<PsiElement>()
+-            var child = psi.firstChild
+-            while (child != null) {
+-                children += child
+-                child = child.nextSibling
+-            }
+-            if (children.isEmpty()) {
+-                nodesRef.set(LighterASTNode.EMPTY_ARRAY)
+-            } else {
+-                nodesRef.set(children.map { TreeBackedLighterAST.wrap(it.node) }.toTypedArray())
+-            }
+-            return children.size
+-        }
+-
+-        override fun disposeChildren(p0: Array<out LighterASTNode>?, p1: Int) {
+-        }
+-
+-        override fun getStartOffset(node: LighterASTNode): Int {
+-            return getStartOffset(unwrap(node).psi)
+-        }
+-
+-        private fun getStartOffset(element: PsiElement): Int {
+-            var child = element.firstChild
+-            if (child != null) {
+-                while (child is PsiComment || child is PsiWhiteSpace) {
+-                    child = child.nextSibling
+-                }
+-                if (child != null) {
+-                    return getStartOffset(child)
+-                }
+-            }
+-            return element.textRange.startOffset
+-        }
+-
+-        override fun getEndOffset(node: LighterASTNode): Int {
+-            return getEndOffset(unwrap(node).psi)
+-        }
+-
+-        private fun getEndOffset(element: PsiElement): Int {
+-            var child = element.lastChild
+-            if (child != null) {
+-                while (child is PsiComment || child is PsiWhiteSpace) {
+-                    child = child.prevSibling
+-                }
+-                if (child != null) {
+-                    return getEndOffset(child)
+-                }
+-            }
+-            return element.textRange.endOffset
+-        }
+-    }
+-
+-    override fun equals(other: Any?): Boolean {
+-        if (this === other) return true
+-        if (javaClass != other?.javaClass) return false
+-
+-        other as KtPsiSourceElement
+-
+-        if (psi != other.psi) return false
+-
+-        return true
+-    }
+-
+-    override fun hashCode(): Int {
+-        return psi.hashCode()
+-    }
+-
+-    override fun toString(): String = buildString {
+-        append(this@KtPsiSourceElement::class.simpleName)
+-        append('(')
+-        append(psi::class.simpleName)
+-        if (kind is KtFakeSourceElementKind) {
+-            append(", ").append(kind)
+-        }
+-        append(", ").append(startOffset).append("..").append(endOffset)
+-        append(')')
+-    }
+-
+-    override fun fakeElement(newKind: KtFakeSourceElementKind, offsetStrategy: KtSourceElementOffsetStrategy): KtSourceElement {
+-        if (kind == newKind) return this
+-        return when (offsetStrategy) {
+-            is KtSourceElementOffsetStrategy.Default -> KtFakePsiSourceElement(psi, newKind)
+-            is KtSourceElementOffsetStrategy.Custom -> KtFakePsiSourceElementWithCustomOffsetStrategy(psi, newKind, offsetStrategy)
+-        }
+-    }
+-
+-    override fun realElement(): KtSourceElement {
+-        return KtRealPsiSourceElement(psi)
+-    }
+-
+-    override val text: CharSequence
+-        get() = psi.text
+-}
+-
+-class KtRealPsiSourceElement(psi: PsiElement) : KtPsiSourceElement(psi) {
+-    override val kind: KtSourceElementKind get() = KtRealSourceElementKind
+-}
+-
+-/**
+- * Checking for [KtFakePsiSourceElement] only works for PSI sources.
+- *
+- * To check for a fake source regardless of source type, check if [KtSourceElement.kind] is a [KtFakeSourceElementKind].
+- */
+ @RequiresOptIn
+ annotation class SuspiciousFakeSourceCheck
+-
+-@SuspiciousFakeSourceCheck
+-open class KtFakePsiSourceElement(
+-    psi: PsiElement,
+-    override val kind: KtFakeSourceElementKind,
+-) : KtPsiSourceElement(psi) {
+-    override fun equals(other: Any?): Boolean {
+-        if (this === other) return true
+-        if (javaClass != other?.javaClass) return false
+-        if (!super.equals(other)) return false
+-
+-        other as KtFakePsiSourceElement
+-
+-        if (kind != other.kind) return false
+-
+-        return true
+-    }
+-
+-    override fun hashCode(): Int {
+-        var result = super.hashCode()
+-        result = 31 * result + kind.hashCode()
+-        return result
+-    }
+-}
+-
+-@SuspiciousFakeSourceCheck
+-class KtFakePsiSourceElementWithCustomOffsetStrategy(
+-    psi: PsiElement,
+-    kind: KtFakeSourceElementKind,
+-    val strategy: KtSourceElementOffsetStrategy.Custom,
+-) : KtFakePsiSourceElement(psi, kind) {
+-    override val startOffset: Int
+-        get() = strategy.startOffset
+-
+-    override val endOffset: Int
+-        get() = strategy.endOffset
+-
+-    override fun equals(other: Any?): Boolean = this === other ||
+-            other is KtFakePsiSourceElementWithCustomOffsetStrategy &&
+-            super.equals(other) &&
+-            strategy == other.strategy
+-
+-    override fun hashCode(): Int = 31 * super.hashCode() + strategy.hashCode()
+-}
+ 
+ /**
+  * Represents a strategy for getting offsets for [KtSourceElement]s.
+@@ -1365,28 +1138,13 @@
+     override val elementType: IElementType
+         get() = lighterASTNode.tokenType
+ 
+-    /**
+-     * We can create a [KtLightSourceElement] from a [KtPsiSourceElement] by using [KtPsiSourceElement.lighterASTNode];
+-     * [unwrapToKtPsiSourceElement] allows to get original [KtPsiSourceElement] in such case.
+-     *
+-     * If it is `pure` [KtLightSourceElement], i.e, compiler created it in light tree mode, then return [unwrapToKtPsiSourceElement] `null`.
+-     * Otherwise, return some not-null result.
+-     */
+-    fun unwrapToKtPsiSourceElement(): KtPsiSourceElement? {
+-        if (treeStructure !is KtPsiSourceElement.WrappedTreeStructure) return null
+-        val node = treeStructure.unwrap(lighterASTNode)
+-        return node.psi?.toKtPsiSourceElement(kind)
+-    }
+-
+     override fun getElementTextInContextForDebug(): String {
+         return treeStructure.toString(lighterASTNode).toString()
+     }
+ 
+     override fun equals(other: Any?): Boolean {
+         if (this === other) return true
+-        if (javaClass != other?.javaClass) return false
+-
+-        other as KtLightSourceElement
++        if (other !is KtLightSourceElement) return false
+ 
+         if (lighterASTNode != other.lighterASTNode) return false
+         if (startOffset != other.startOffset) return false
+@@ -1407,7 +1165,7 @@
+     }
+ 
+     override fun toString(): String = buildString {
+-        append(this@KtLightSourceElement::class.simpleName)
++        append("KtLightSourceElement")
+         append("(")
+         append(elementType)
+         if (kind is KtFakeSourceElementKind) {
+@@ -1445,14 +1203,6 @@
+         get() = treeStructure.toString(lighterASTNode)
+ }
+ 
+-val AbstractKtSourceElement?.psi: PsiElement? get() = (this as? KtPsiSourceElement)?.psi
+-
+-@Suppress("NOTHING_TO_INLINE")
+-inline fun PsiElement.toKtPsiSourceElement(kind: KtSourceElementKind = KtRealSourceElementKind): KtPsiSourceElement = when (kind) {
+-    is KtRealSourceElementKind -> KtRealPsiSourceElement(this)
+-    is KtFakeSourceElementKind -> KtFakePsiSourceElement(this, kind)
+-}
+-
+ val KtSourceElement?.text: CharSequence?
+     get() = this?.text
+ 
+--- a/compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFile.kt
++++ b/compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFile.kt
+@@ -5,94 +5,26 @@
+ 
+ package org.jetbrains.kotlin
+ 
+-import com.intellij.openapi.util.io.FileUtilRt
+-import com.intellij.openapi.vfs.VirtualFile
+-import com.intellij.psi.PsiFile
+-import java.io.ByteArrayInputStream
+-import java.io.File
+-import java.io.InputStream
+-
+ interface KtSourceFile {
+     val name: String
+     val path: String?
+     val extension: String
+ 
+-    fun getContentsAsStream(): InputStream
++    fun getContentsAsText(): String
+ 
+     abstract override fun equals(other: Any?): Boolean
+     abstract override fun hashCode(): Int
+ }
+ 
+-class KtPsiSourceFile(val psiFile: PsiFile) : KtSourceFile {
+-    override val name: String
+-        get() = psiFile.name
+-
+-    override val path: String?
+-        get() = psiFile.virtualFile?.path
+-
+-    override val extension: String
+-        get() = psiFile.virtualFile?.extension ?: ""
+-
+-    override fun getContentsAsStream(): InputStream = psiFile.virtualFile.inputStream
+-
+-    override fun equals(other: Any?): Boolean {
+-        return this === other || (other as? KtPsiSourceFile)?.psiFile == psiFile
+-    }
+-
+-    override fun hashCode(): Int {
+-        return psiFile.hashCode()
+-    }
+-}
+-
+-class KtVirtualFileSourceFile(val virtualFile: VirtualFile) : KtSourceFile {
+-    override val name: String
+-        get() = virtualFile.name
+-
+-    override val path: String
+-        get() = virtualFile.path
+-
+-    override val extension: String
+-        get() = virtualFile.extension ?: ""
+-
+-    override fun getContentsAsStream(): InputStream = virtualFile.inputStream
+-
+-    override fun equals(other: Any?): Boolean {
+-        return this === other || (other as? KtVirtualFileSourceFile)?.virtualFile == virtualFile
+-    }
+-
+-    override fun hashCode(): Int {
+-        return virtualFile.hashCode()
+-    }
+-}
+-
+-class KtIoFileSourceFile(val file: File) : KtSourceFile {
+-    override val name: String
+-        get() = file.name
+-    override val path: String
+-        get() = FileUtilRt.toSystemIndependentName(file.path)
+-    override val extension: String
+-        get() = file.extension
+-
+-    override fun getContentsAsStream(): InputStream = file.inputStream()
+-
+-    override fun equals(other: Any?): Boolean {
+-        return this === other || (other as? KtIoFileSourceFile)?.file == file
+-    }
+-
+-    override fun hashCode(): Int {
+-        return file.hashCode()
+-    }
+-}
+-
+ class KtInMemoryTextSourceFile(
+     override val name: String,
+     override val path: String?,
+-    val text: CharSequence
++    val text: String
+ ) : KtSourceFile {
+     override val extension: String
+         get() = ""
+ 
+-    override fun getContentsAsStream(): InputStream = ByteArrayInputStream(text.toString().toByteArray())
++    override fun getContentsAsText(): String = text
+ 
+     override fun equals(other: Any?): Boolean {
+         return this === other || (other is KtInMemoryTextSourceFile && other.text == text && other.name == name && other.path == path)
+--- a/compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFileLinesMapping.kt
++++ b/compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceFileLinesMapping.kt
+@@ -4,10 +4,6 @@
+  */
+ 
+ package org.jetbrains.kotlin
+-
+-import com.intellij.openapi.editor.Document
+-import com.intellij.psi.PsiFile
+-import java.io.InputStreamReader
+ 
+ interface KtSourceFileLinesMapping {
+     fun getLineStartOffset(line: Int): Int
+@@ -16,29 +12,6 @@
+ 
+     val lastOffset: Int
+     val linesCount: Int
+-}
+-
+-class KtPsiSourceFileLinesMapping(val psiFile: PsiFile) : KtSourceFileLinesMapping {
+-    private val document: Document? by lazy { psiFile.viewProvider.document }
+-
+-    override fun getLineStartOffset(line: Int): Int =
+-        document?.getLineStartOffset(line) ?: -1
+-
+-    override fun getLineAndColumnByOffset(offset: Int): Pair<Int, Int> =
+-        document?.let {
+-            val lineNumber = it.getLineNumber(offset)
+-            val lineStartOffset = it.getLineStartOffset(lineNumber)
+-            lineNumber to offset - lineStartOffset
+-        } ?: (-1 to -1)
+-
+-    override fun getLineByOffset(offset: Int): Int =
+-        document?.getLineNumber(offset) ?: -1
+-
+-    override val lastOffset: Int
+-        get() = document?.textLength ?: -1
+-
+-    override val linesCount: Int
+-        get() = document?.lineCount ?: 0
+ }
+ 
+ open class KtSourceFileLinesMappingFromLineStartOffsets(
+@@ -63,54 +36,6 @@
+ }
+ 
+ /**
+- *  Reads file contents from reader, converts line separators and calculates source lines to file offsets mapping
+- *
+- *  Returns KtSourceFileLinesMapping and char sequence (StringBuilder to avoid premature copying) containing converted text
+- *  The separators are converted similarly to the com.intellij.openapi.util.text.StringUtilRt algorithms
+- */
+-fun InputStreamReader.readSourceFileWithMapping(): Pair<CharSequence, KtSourceFileLinesMapping> {
+-    val buffer = CharArray(255)
+-    var bufLength = -1
+-    var bufPos = 0
+-    var skipNextLf = false
+-
+-    var charsRead = 0
+-
+-    val lineOffsets = mutableListOf(0) // TODO: consider using implicit first line offset (needs to be handled properly in IR)
+-    val sb = StringBuilder()
+-
+-    while (true) {
+-        if (bufPos >= bufLength) {
+-            bufLength = read(buffer)
+-            bufPos = 0
+-            if (bufLength < 0) {
+-                break
+-            }
+-        } else {
+-            val c = buffer[bufPos++]
+-            charsRead++
+-            when {
+-                c == '\n' && skipNextLf -> {
+-                    charsRead--
+-                    skipNextLf = false
+-                }
+-                c == '\n' || c == '\r' -> {
+-                    sb.append('\n')
+-                    lineOffsets.add(charsRead)
+-                    skipNextLf = c == '\r'
+-                }
+-                else -> {
+-                    sb.append(c)
+-                    skipNextLf = false
+-                }
+-            }
+-        }
+-    }
+-
+-    return sb to KtSourceFileLinesMappingFromLineStartOffsets(lineOffsets.toIntArray(), charsRead)
+-}
+-
+-/**
+  * Extracts source lines to offsets mapping from text
+  *
+  * intended for using mainly in tests, so no care is taken about performance or possible corner cases
+--- a/compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt
++++ b/compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt
+@@ -5,29 +5,13 @@
+ 
+ package org.jetbrains.kotlin.fir.lightTree
+ 
+-import org.jetbrains.kotlin.KtIoFileSourceFile
+ import org.jetbrains.kotlin.KtSourceFile
+ import org.jetbrains.kotlin.KtSourceFileLinesMapping
+ import org.jetbrains.kotlin.fir.FirSession
+ import org.jetbrains.kotlin.fir.declarations.FirFile
+-import org.jetbrains.kotlin.readSourceFileWithMapping
+-import java.io.File
+-import java.nio.file.Path
+ 
+ abstract class AbstractTree2Fir {
+     abstract val session: FirSession
+ 
+-    fun buildFirFile(path: Path): FirFile {
+-        return buildFirFile(path.toFile())
+-    }
+-
+-    fun buildFirFile(file: File): FirFile {
+-        val sourceFile = KtIoFileSourceFile(file)
+-        val [code, linesMapping] = file.inputStream().reader(Charsets.UTF_8).use {
+-            it.readSourceFileWithMapping()
+-        }
+-        return buildFirFile(code, sourceFile, linesMapping)
+-    }
+-
+     abstract fun buildFirFile(code: CharSequence, sourceFile: KtSourceFile, linesMapping: KtSourceFileLinesMapping): FirFile
+ }
+--- a/compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/KotlinLightTreeStructure.kt
++++ b/compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/KotlinLightTreeStructure.kt
+@@ -7,13 +7,12 @@
+ 
+ package org.jetbrains.kotlin.fir.builder
+ 
+-import com.intellij.lang.Language
+-import com.intellij.lang.LighterASTNode
+-import com.intellij.openapi.util.Ref
+ import com.intellij.platform.syntax.SyntaxElementType
+-import com.intellij.psi.tree.IElementType
+-import com.intellij.util.diff.FlyweightCapableTreeStructure
+ import org.jetbrains.kotlin.kmp.tree.LightNode
++import org.jetbrains.kotlin.portable.source.FlyweightCapableTreeStructure
++import org.jetbrains.kotlin.portable.source.IElementType
++import org.jetbrains.kotlin.portable.source.LighterASTNode
++import org.jetbrains.kotlin.portable.source.Ref
+ import org.jetbrains.kotlin.kmp.tree.LightSyntaxTree
+ 
+ /**
+@@ -24,7 +23,7 @@
+  * (non-registering) [IElementType] constructor is `protected`, so it is reached via a private subclass; this
+  * keeps the placeholder out of the global [IElementType] registry.
+  */
+-private object KotlinDirectPlaceholderElementType : IElementType("KOTLIN_DIRECT_PLACEHOLDER", Language.ANY, false)
++private object KotlinDirectPlaceholderElementType : IElementType("KOTLIN_DIRECT_PLACEHOLDER")
+ 
+ val KOTLIN_DIRECT_PLACEHOLDER_TYPE: IElementType = KotlinDirectPlaceholderElementType
+ 
+@@ -38,11 +37,11 @@
+     val tree: LightSyntaxTree,
+     val node: LightNode,
+ ) : LighterASTNode {
+-    override fun getTokenType(): IElementType = KOTLIN_DIRECT_PLACEHOLDER_TYPE
++    override val tokenType: IElementType get() = KOTLIN_DIRECT_PLACEHOLDER_TYPE
+ 
+-    override fun getStartOffset(): Int = tree.getStartOffset(node)
++    override val startOffset: Int get() = tree.getStartOffset(node)
+ 
+-    override fun getEndOffset(): Int = tree.getEndOffset(node)
++    override val endOffset: Int get() = tree.getEndOffset(node)
+ 
+     // mirrors [org.jetbrains.kotlin.java.direct.model.JavaElementOverAst]
+     // semantics, so that distinct java-direct nodes yield distinct source elements.
+--- a/compiler/fir/fir-deserialization/src/org/jetbrains/kotlin/fir/deserialization/ModuleDataProvider.kt
++++ b/compiler/fir/fir-deserialization/src/org/jetbrains/kotlin/fir/deserialization/ModuleDataProvider.kt
+@@ -6,7 +6,7 @@
+ package org.jetbrains.kotlin.fir.deserialization
+ 
+ import org.jetbrains.kotlin.fir.FirModuleData
+-import java.nio.file.Path
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
+ 
+ abstract class ModuleDataProvider {
+     abstract val allModuleData: Collection<FirModuleData>
+--- a/compiler/fir/fir-deserialization/src/org/jetbrains/kotlin/fir/deserialization/AbstractFirDeserializedSymbolProvider.kt
++++ b/compiler/fir/fir-deserialization/src/org/jetbrains/kotlin/fir/deserialization/AbstractFirDeserializedSymbolProvider.kt
+@@ -36,7 +36,7 @@
+ import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedContainerSource
+ import org.jetbrains.kotlin.serialization.deserialization.getName
+ import org.jetbrains.kotlin.utils.mapToSetOrEmpty
+-import java.nio.file.Path
++import org.jetbrains.kotlin.portable.source.LibraryPath as Path
+ 
+ class PackagePartsCacheData(
+     val proto: ProtoBuf.Package,
+--- a/compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt
++++ b/compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt
+@@ -8,9 +8,16 @@
+ import com.intellij.platform.syntax.lexer.Lexer
+ import com.intellij.platform.syntax.lexer.performLexing
+ import com.intellij.platform.syntax.parser.SyntaxTreeBuilderFactory
++import com.intellij.platform.syntax.parser.SyntaxTreeBuilder
++import com.intellij.platform.syntax.parser.prepareProduction
+ import org.jetbrains.kotlin.KtSourceFile
++import org.jetbrains.kotlin.KtOffsetsOnlySourceElement
+ import org.jetbrains.kotlin.KtSourceFileLinesMapping
+ import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
++import org.jetbrains.kotlin.diagnostics.DiagnosticContext
++import org.jetbrains.kotlin.diagnostics.KtDiagnostic
++import org.jetbrains.kotlin.diagnostics.reportOn
++import org.jetbrains.kotlin.fir.languageVersionSettings
+ import org.jetbrains.kotlin.fir.FirSession
+ import org.jetbrains.kotlin.fir.declarations.FirFile
+ import org.jetbrains.kotlin.fir.lightTree.AbstractTree2Fir
+@@ -25,13 +32,11 @@
+ class MultiplatformParsing2Fir(
+     override val session: FirSession,
+     private val scopeProvider: FirScopeProvider,
+-    // TODO: KT-89414 (currently KMP parser does not implement error listening, so we can't use diagnosticReporter properly
+-    @Suppress("unused")
+     private val diagnosticsReporter: DiagnosticReporter? = null,
+ ) : AbstractTree2Fir() {
+     override fun buildFirFile(code: CharSequence, sourceFile: KtSourceFile, linesMapping: KtSourceFileLinesMapping): FirFile {
+         val parser = KotlinParser(isScript = sourceFile.extension == "kts", isLazy = false)
+-        val lightTree = buildLightTree(code, KotlinLexer(), parser)
++        val lightTree = buildLightTree(code, KotlinLexer(), parser, sourceFile)
+         return buildFirFile(lightTree, sourceFile, linesMapping)
+     }
+ 
+@@ -51,6 +56,7 @@
+         charSequence: CharSequence,
+         lexer: Lexer,
+         parser: AbstractParser,
++        sourceFile: KtSourceFile,
+     ): LightSyntaxTree {
+         val syntaxTreeBuilder = SyntaxTreeBuilderFactory.builder(
+             charSequence,
+@@ -62,10 +68,33 @@
+             .build()
+ 
+         parser.parse(syntaxTreeBuilder)
++        reportSyntaxErrors(syntaxTreeBuilder, sourceFile)
+         return buildLanguageSpecificLightTree(
+             syntaxTreeBuilder, charSequence,
+             buildLanguageSpecificTreeStructure = { KotlinLightTreeStructure(it) },
+             isComment = { false },
+         )
+     }
++
++    private fun reportSyntaxErrors(builder: SyntaxTreeBuilder, sourceFile: KtSourceFile) {
++        val reporter = diagnosticsReporter ?: return
++        val languageSettings = session.languageVersionSettings
++        val context = object : DiagnosticContext {
++            override val containingFile: KtSourceFile = sourceFile
++            override val languageVersionSettings get() = languageSettings
++            override fun isDiagnosticSuppressed(diagnostic: KtDiagnostic): Boolean = false
++        }
++        val productions = prepareProduction(builder).productionMarkers
++        for (index in 0 until productions.size) {
++            if (productions.isDoneMarker(index)) continue
++            val marker = productions.getMarker(index)
++            if (!marker.isErrorMarker()) continue
++            reporter.reportOn(
++                KtOffsetsOnlySourceElement(marker.getStartOffset(), marker.getEndOffset()),
++                FirSyntaxErrors.SYNTAX,
++                marker.getErrorMessage().orEmpty(),
++                context,
++            )
++        }
++    }
+ }

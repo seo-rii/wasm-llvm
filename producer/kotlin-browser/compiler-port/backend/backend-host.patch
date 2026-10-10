@@ -1,0 +1,130 @@
+--- a/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt
++++ b/wasm/wasm.ir/src/org/jetbrains/kotlin/wasm/ir/ByteWriter.kt
+@@ -8,11 +8,8 @@
+ import org.jetbrains.kotlin.utils.writeSignedLeb128
+ import org.jetbrains.kotlin.utils.writeUnsignedLeb128
+ import org.jetbrains.kotlin.utils.writeUnsignedLeb128Fixed
+-import java.io.ByteArrayOutputStream
+-import java.io.File
+-import java.io.OutputStream
+ 
+-open class ByteWriter(private val os: OutputStream) {
++open class ByteWriter(private val os: ByteSink) {
+     fun writeByte(v: Byte) {
+         os.write(v.toInt())
+     }
+@@ -92,10 +89,8 @@
+ 
+ class WasmBinaryData(private val data: ByteArray, private val size: Int) {
+     companion object {
+-        fun WasmBinaryData.writeTo(file: File) {
+-            file.outputStream().use {
+-                it.write(data, 0, size)
+-            }
++        fun WasmBinaryData.writeTo(sink: ByteSink) {
++            sink.write(data, 0, size)
+         }
+ 
+         fun WasmBinaryData.toByteArray(): ByteArray = data.copyOf(size)
+@@ -103,9 +98,9 @@
+ }
+ 
+ class ByteWriterWithOffsetWrite private constructor(private val os: ByteArrayOutputStreamWithInternals) : ByteWriter(os) {
+-    constructor() : this(ByteArrayOutputStreamWithInternals())
++    constructor(maxBytes: Int = 8 * 1024 * 1024) : this(ByteArrayOutputStreamWithInternals(maxBytes))
+ 
+-    private class ByteArrayOutputStreamWithInternals : ByteArrayOutputStream() {
++    private class ByteArrayOutputStreamWithInternals(maxBytes: Int) : BoundedByteSink(maxBytes) {
+         val streamBuffer: ByteArray get() = this.buf
+         var offset
+             get() = this.count
+--- a/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt
++++ b/compiler/util-io/src/org/jetbrains/kotlin/util/Leb128.kt
+@@ -16,8 +16,6 @@
+ 
+ package org.jetbrains.kotlin.utils
+ 
+-import java.io.InputStream
+-import java.io.OutputStream
+ import kotlin.experimental.and
+ 
+ fun writeUnsignedLeb128Fixed(v: UInt, writeNextByte: (Byte) -> Unit) {
+--- a/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/wasmCompiler.kt
++++ b/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/wasmCompiler.kt
+@@ -8,14 +8,12 @@
+ import org.jetbrains.kotlin.backend.common.serialization.IrModuleDependencyTrackerImpl
+ import org.jetbrains.kotlin.backend.common.serialization.KotlinIrLinker
+ import org.jetbrains.kotlin.backend.common.serialization.kotlinLibrary
+-import org.jetbrains.kotlin.backend.wasm.WasmBackendErrors.WASM_BACKEND_MISSING_CUSTOM_FORMATTERS
+ import org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator
+ import org.jetbrains.kotlin.backend.wasm.ic.overrideBuiltInsSignatures
+ import org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment
+ import org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmServiceImportExportKind
+ import org.jetbrains.kotlin.backend.wasm.lower.JsInteropFunctionsLowering
+ import org.jetbrains.kotlin.backend.wasm.lower.markFunctionToExport
+-import org.jetbrains.kotlin.cli.report
+ import org.jetbrains.kotlin.config.CompilerConfiguration
+ import org.jetbrains.kotlin.config.phaser.PhaserState
+ import org.jetbrains.kotlin.ir.backend.js.WholeWorldStageController
+@@ -32,13 +30,8 @@
+ import org.jetbrains.kotlin.utils.addToStdlib.runIf
+ import org.jetbrains.kotlin.wasm.config.wasmTestBoxFunctionToExport
+ import org.jetbrains.kotlin.wasm.ir.WasmBinaryData
+-import org.jetbrains.kotlin.wasm.ir.WasmBinaryData.Companion.writeTo
+ import org.jetbrains.kotlin.wasm.ir.WasmExport
+ import org.jetbrains.kotlin.wasm.ir.WasmModule
+-import java.io.File
+-import java.nio.file.Files
+-import java.nio.file.Paths
+-import java.nio.file.StandardCopyOption
+ 
+ data class DynamicJsModule(
+     val name: String,
+@@ -166,47 +159,6 @@
+     val multimoduleOptions: MultimoduleCompileOptions?,
+ )
+ 
+-fun writeCompilationResult(
+-    result: WasmCompilerResult,
+-    dir: File,
+-    fileNameBase: String,
+-    configuration: CompilerConfiguration? = null
+-) {
+-    dir.mkdirs()
+-    if (result.wat != null) {
+-        File(dir, "$fileNameBase.wat").writeText(result.wat)
+-    }
+-    result.wasm.writeTo(File(dir, "$fileNameBase.wasm"))
+-
+-    File(dir, "$fileNameBase.mjs").writeText(result.jsWrapper)
+-
+-    result.debugInformation?.sourceMapForBinary?.let {
+-        File(dir, "$fileNameBase.wasm.map").writeText(it)
+-    }
+-    result.debugInformation?.sourceMapForText?.let {
+-        File(dir, "$fileNameBase.wat.map").writeText(it)
+-    }
+-    if (result.useDebuggerCustomFormatters) {
+-        val fileName = "custom-formatters.js"
+-        val classLoader = WasmCompilerResult::class.java.classLoader
+-        val customFormattersInputStream = classLoader.getResourceAsStream(fileName) ?: run {
+-            val message = "Custom formatters won't work because a required resource is missing from the compiler: $fileName"
+-            configuration?.report(WASM_BACKEND_MISSING_CUSTOM_FORMATTERS, message)
+-            "console.warn(\"$message\");".byteInputStream()
+-        }
+-
+-        Files.copy(customFormattersInputStream, Paths.get(dir.path, fileName), StandardCopyOption.REPLACE_EXISTING)
+-    }
+-
+-    if (result.dts != null) {
+-        File(dir, "$fileNameBase.d.mts").writeText(result.dts)
+-    }
+-
+-    for (dynamicJsModule in result.dynamicJsModules) {
+-        File(dir, "${fileNameBase}.${dynamicJsModule.name}.mjs").writeText(dynamicJsModule.content)
+-    }
+-}
+-
+ private val WasmExport<*>.isWasmInternalUsageExport
+     get() = name.startsWith(JsInteropFunctionsLowering.CALL_FUNCTION) ||
+             name == "memory" ||

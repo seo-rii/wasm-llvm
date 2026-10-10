@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-port-candidate",
+  "producerId": "wasm-llvm/kotlin-browser",
+  "compilerHost": "wasmJs",
+  "programTarget": "wasmWasi",
+  "programAbi": "wasi-preview1",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "revisionKind": "development-candidate"
+  },
+  "sourceLock": "sources.lock.json",
+  "auditRoots": [
+    ":compiler:multiplatform-parsing",
+    ":compiler:fir:raw-fir:mp-parsing2fir",
+    ":compiler:fir:resolve",
+    ":compiler:fir:fir2ir",
+    ":compiler:backend.wasm",
+    ":compiler:ir.serialization.common",
+    ":compiler:ir.serialization.js",
+    ":wasm:wasm.ir"
+  ],
+  "patches": [
+    {
+      "id": "kotlin-wasi-preview1-full-poll-allocations",
+      "path": "patches/wasi-preview1-io.patch",
+      "sha256": "6994f87ecccf1de6abc06c01f8fe35018be5ebf1595cf9d9f127a8416e01fede",
+      "metadata": "patches/wasi-preview1-io.json",
+      "scope": "target-stdlib-source",
+      "buildStatus": "source-probe-built",
+      "buildEvidence": "evidence/stdlib-source-build.json"
+    }
+  ],
+  "outputs": [],
+  "readiness": {
+    "ready": false,
+    "status": "dependency-audit",
+    "G0": "blocked",
+    "browserCompiler": "not-built",
+    "consumerAcceptance": "not-run"
+  },
+  "thirdPartyNotices": "THIRD_PARTY_NOTICES.md",
+  "licenses": [
+    {
+      "path": "LICENSE.kotlin.txt",
+      "upstreamPath": "license/LICENSE.txt",
+      "bytes": 11358,
+      "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  ]
+}
