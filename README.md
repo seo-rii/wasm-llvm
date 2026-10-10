@@ -27,10 +27,12 @@ hosting and loaded by URL from the consuming application.
 | Rust           | Rust 1.99.0, rust-lang LLVM 22.1.8, wasi-libc and libstdc++ commits                              | Full `rustc.wasm`, target libraries, receipt                        | [`producer/rust-browser`](producer/rust-browser/README.md)                     |
 | Swift          | Swift 6.3.3, official Wasm SDK, pinned LLVM/Swift/SwiftSyntax patches                            | Swift compiler modules, SDK bundle, manifests and receipts          | [`producer/swift-browser`](producer/swift-browser/README.md)                   |
 | TinyGo         | TinyGo 0.40.1, pinned go-llvm, TinyGo LLVM 20.1.1                                                | Upstream compiler, reduced root, strict receipt, Chromium consumer acceptance | [`producer/tinygo-browser`](producer/tinygo-browser/README.md)                 |
+| V              | V 0.5.2 (`vlang/vc` bootstrap `v.c`), WASI SDK 33 | WASI compiler, vlib root, C sysroot with WASI compatibility archive, compile/run acceptance receipt | [`producer/v-browser`](producer/v-browser/README.md) |
 | WAMR           | WAMR 2.4.5, emsdk 6.0.0, browser RSP transport patch                                            | Interpreter/debug-stub JS/Wasm/pthread worker and receipt           | [`producer/wamr-browser`](producer/wamr-browser/README.md)                     |
 
-`artifacts/clang-browser`, `artifacts/cobol-browser`, and `artifacts/lean-browser` hold verified
-producer outputs currently tracked for deployment. The Emscripten LLD canonical import remains next to its producer at
+`artifacts/clang-browser`, `artifacts/cobol-browser`, `artifacts/lean-browser` and
+`artifacts/v-browser` hold verified producer outputs currently tracked for deployment.
+The Emscripten LLD canonical import remains next to its producer at
 `producer/emscripten-lld-browser/artifacts`. None of these paths are npm package contents.
 
 ## Setup and focused checks
@@ -42,6 +44,7 @@ pnpm test
 pnpm verify:clang-artifacts
 pnpm smoke:clang-artifacts
 pnpm verify:cobol-artifacts
+pnpm verify:v-artifacts
 pnpm verify:emscripten-lld-artifacts
 pnpm producer:rust:verify
 pnpm swift:doctor
@@ -79,6 +82,10 @@ pnpm prepare:cobol-release
 # Crystal portability probe (currently exits 1 at the compiler-host gate)
 pnpm probe:crystal-browser -- prepare
 pnpm probe:crystal-browser -- probe --llvm-config /path/to/llvm-config
+
+# V
+WASI_SDK_PATH=/opt/wasi-sdk pnpm build:v
+pnpm prepare:v-release
 
 # Objective-C
 WASI_SDK_PATH=/opt/wasi-sdk pnpm build:objective-c

@@ -28,6 +28,9 @@
 		"build:cobol": "bash ./producer/cobol-browser/scripts/build.sh",
 		"prepare:cobol-release": "node ./producer/cobol-browser/scripts/package-release.mjs",
 		"verify:cobol-artifacts": "node ./producer/cobol-browser/scripts/verify-artifacts.mjs",
+		"build:v": "bash ./producer/v-browser/scripts/build.sh",
+		"prepare:v-release": "node ./producer/v-browser/scripts/package-release.mjs",
+		"verify:v-artifacts": "node ./producer/v-browser/scripts/verify-artifacts.mjs",
 		"verify:emscripten-lld-artifacts": "node ./producer/emscripten-lld-browser/scripts/verify-artifacts.mjs",
 		"build:objective-c": "node ./producer/objective-c-browser/scripts/build.mjs",
 		"probe:objective-c:foundation": "node ./producer/objective-c-browser/scripts/probe-foundation.mjs",
@@ -75,10 +78,10 @@
 		"probe:swift-browser-target": "node ./producer/swift-browser/scripts/probe-browser-target.mjs"
 	},
 	"devDependencies": {
-		"@zip.js/zip.js": "^2.8.23",
-		"playwright-core": "^1.59.1",
 		"@bjorn3/browser_wasi_shim": "0.4.2",
-		"acorn": "8.15.0"
+		"@zip.js/zip.js": "^2.23.0",
+		"acorn": "8.19.0",
+		"playwright-core": "^1.63.0"
 	},
 	"engines": {
 		"node": ">=20"
