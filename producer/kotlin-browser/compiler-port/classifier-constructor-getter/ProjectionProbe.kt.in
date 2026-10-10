@@ -1,0 +1,112 @@
+package org.jetbrains.kotlin.portable.classifiergetter.probe
+
+// Explicit payloads for an isolated class-body boundary, outside compiler
+// namespaces. They are not shipping ClassifierDescriptor/TypeConstructor models.
+open class DeclarationPayload(val name: String, val containingDeclaration: DeclarationPayload?)
+class ModulePayload(name: String) : DeclarationPayload(name, null)
+class PackagePayload(val fqName: String, module: ModulePayload) : DeclarationPayload(fqName, module)
+class ClassifierPayload(name: String, parent: DeclarationPayload?, val isError: Boolean = false, val isLocal: Boolean = false) :
+    DeclarationPayload(name, parent)
+interface ConstructorPayload {
+    fun getDeclarationDescriptor(): ClassifierPayload?
+    fun getParameters(): List<Int>
+}
+val ConstructorPayload.declarationDescriptor: ClassifierPayload? get() = getDeclarationDescriptor()
+val ConstructorPayload.parameters: List<Int> get() = getParameters()
+object DescriptorBoundary {
+    var fqNameCalls = 0
+    var localCalls = 0
+    fun isLocal(descriptor: ClassifierPayload): Boolean { localCalls++; return descriptor.isLocal }
+    fun getFqName(descriptor: ClassifierPayload): String {
+        fqNameCalls++
+        val names = mutableListOf<String>()
+        var current: DeclarationPayload? = descriptor
+        while (current != null && current !is ModulePayload) {
+            if (current is PackagePayload) { if (current.fqName.isNotEmpty()) names += current.fqName; break }
+            names += current.name; current = current.containingDeclaration
+        }
+        return names.asReversed().joinToString(".")
+    }
+}
+object ErrorBoundary {
+    var calls = 0
+    fun isError(descriptor: ClassifierPayload): Boolean { calls++; return descriptor.isError }
+}
+class ProbeConstructor(var descriptor: ClassifierPayload, var parameterValues: List<Int> = emptyList()) : ConstructorBoundary() {
+    var getterCalls = 0
+    override fun getDeclarationDescriptor(): ClassifierPayload { getterCalls++; return descriptor }
+    override fun getParameters(): List<Int> = parameterValues
+    override fun isSameClassifier(classifier: ClassifierPayload): Boolean = areFqNamesEqual(descriptor, classifier)
+    fun same(first: ClassifierPayload, second: ClassifierPayload): Boolean = areFqNamesEqual(first, second)
+}
+class OtherConstructor(private val descriptor: ClassifierPayload?, private val hash: Int, private val count: Int = 0) : ConstructorPayload {
+    override fun getDeclarationDescriptor(): ClassifierPayload? = descriptor
+    override fun getParameters(): List<Int> = List(count) { it }
+    override fun hashCode(): Int = hash
+}
+
+fun classifierGetterSnapshot(): String = buildString {
+    val ids = mutableSetOf<String>()
+    fun record(id: String, value: Any?) { check(ids.add(id)); append(id).append('\t').append(value).append('\n') }
+    val modules = listOf(ModulePayload("module-A"), ModulePayload("module-B"))
+    val descriptors = mutableListOf<ClassifierPayload>()
+    for (module in modules) {
+        for (pkg in listOf("", "same", "different")) {
+            val parent = PackagePayload(pkg, module)
+            for (name in listOf("Same", "Other", "Aa", "BB", "한글")) {
+                val outer = ClassifierPayload(name, parent); descriptors += outer
+                descriptors += ClassifierPayload("Inner", outer)
+            }
+        }
+    }
+    descriptors += ClassifierPayload("error", modules[0], isError = true)
+    descriptors += ClassifierPayload("local", modules[0], isLocal = true)
+    descriptors += ClassifierPayload("orphan", null)
+    val values = descriptors.map { ProbeConstructor(it) }.toMutableList()
+    values += values.first()
+    values += ProbeConstructor(descriptors.first(), listOf(1))
+    for ([index, value] in values.withIndex()) {
+        val hash = value.hashCode()
+        record("own-nonnull-$index", value.getDeclarationDescriptor() === value.descriptor)
+        record("base-nullability-$index", (value as ConstructorPayload).declarationDescriptor === value.descriptor)
+        record("hash-stable-$index", (0 until 16).all { value.hashCode() == hash })
+        record("null-$index", value.equals(null)); record("wrong-type-$index", value.equals("unrelated"))
+        record("nullable-other-$index", value.equals(OtherConstructor(null, hash)))
+        record("different-parameters-$index", value.equals(OtherConstructor(value.descriptor, hash, value.getParameters().size + 1)))
+        for ([oi, other] in values.withIndex()) {
+            record("equals-$index-$oi", value == other)
+            record("equal-hash-$index-$oi", value != other || value.hashCode() == other.hashCode())
+        }
+    }
+    val exposing = ProbeConstructor(descriptors.first())
+    for ([i, first] in descriptors.withIndex()) for ([j, second] in descriptors.withIndex()) {
+        record("fqname-parents-$i-$j", exposing.same(first, second))
+    }
+    // Observe getter/cache branch counts without comparing numeric identity hashes.
+    for (mode in listOf("meaningful", "error", "local", "zero")) {
+        val descriptor = when (mode) {
+            "error" -> ClassifierPayload("error", modules[0], isError = true)
+            "local" -> ClassifierPayload("local", modules[0], isLocal = true)
+            "zero" -> ClassifierPayload("", null)
+            else -> ClassifierPayload("NonZero", null)
+        }
+        val value = ProbeConstructor(descriptor)
+        DescriptorBoundary.fqNameCalls = 0; DescriptorBoundary.localCalls = 0; ErrorBoundary.calls = 0
+        val before = value.getterCalls
+        repeat(32) { value.hashCode() }
+        record("cache-getters-$mode", value.getterCalls - before)
+        record("cache-fqname-$mode", DescriptorBoundary.fqNameCalls)
+        record("cache-local-$mode", DescriptorBoundary.localCalls)
+        record("cache-error-$mode", ErrorBoundary.calls)
+        if (mode == "zero") record("zero-recomputed", value.getterCalls - before == 32)
+        else record("nonzero-cached-$mode", value.getterCalls - before == 1)
+    }
+    val mutable = ProbeConstructor(ClassifierPayload("Before", null))
+    val cached = mutable.hashCode(); mutable.descriptor = ClassifierPayload("After", null)
+    record("cached-after-descriptor-mutation", mutable.hashCode() == cached)
+    record("same-fqname-collision-names", exposing.same(ClassifierPayload("Aa", null), ClassifierPayload("BB", null)))
+    record("other-wrong-hash", exposing.equals(OtherConstructor(exposing.descriptor, exposing.hashCode() + 1)))
+    // The original loop returns true if either chain ends; preserve that exact
+    // source behavior even for malformed explicit fixture parent chains.
+    record("unequal-parent-depth", exposing.same(ClassifierPayload("Same", null), ClassifierPayload("Same", DeclarationPayload("Parent", null))))
+}

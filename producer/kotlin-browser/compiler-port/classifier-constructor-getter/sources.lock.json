@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-classifier-constructor-covariant-getter-port",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sources": [
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/types/ClassifierBasedTypeConstructor.kt",
+      "gitBlob": "f121a7fce016229fa41589591d11d95b0642f8b4",
+      "bytes": 3426,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "5ce71780fee40ff865ffaf7d7898251ddf5dc4408e91d3ffa441bce62fb206c2"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/types/TypeConstructor.java",
+      "gitBlob": "25aa0c168beb0d71129ed826f15e3463f56d9e34",
+      "bytes": 3442,
+      "language": "java",
+      "compile": false,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "47db3f31eaa66220f796f90fccc255cc91463fdd136b12ac4dd4ee650838c0e9"
+    }
+  ],
+  "predecessor": {
+    "component": "identityReceipt",
+    "path": "core/descriptors/src/org/jetbrains/kotlin/types/ClassifierBasedTypeConstructor.kt",
+    "bytes": 3467,
+    "sha256": "e394ee8a8daeab20f64737f7d38259c2298382d70a2436ab66b0ee84dd17e4cb",
+    "tools": {
+      "../identity/sources.lock.json": "9407a3c86f140bc8d1d397272c8bc7f5a0e8a125daf00f828685a062b7b21695",
+      "../identity/prepare.mjs": "57ae1708f0d94263d3c7ab6019bf70d9b198965d1eb45d47f95271120d233cd7",
+      "../identity/patches/reference-index.patch": "c7f9b83867a11328b7642a222c3b27e98be70d28b3b50537466e2e452c932ca9",
+      "../identity/IdentityIndex.kt": "4b1999d0e28f3cbde4ba5ba7401676ba93b07922b0cabf134b29250767b711f7",
+      "../identity/update-recipe.py": "6e8e6d4b6f65daa333a76fe9e77a7f2bc9b65b7de546bacfd12e4acba33b0138"
+    }
+  },
+  "output": {
+    "bytes": 3477,
+    "sha256": "46c74dd40d220452905f8899828c412171182a1a838f4b991b54cc7e80d90a17"
+  },
+  "changes": [
+    {
+      "variable": "descriptor",
+      "startUtf16": 939,
+      "endUtf16": 986,
+      "originalBytes": 47,
+      "originalSha256": "db19740dad8d9134f04372613bce27dd2b1ea80ce0018b91831782a781852f5f",
+      "replacementBytes": 52,
+      "replacementSha256": "43515042ff197ab589be5dd4ad203e503264f9166d035612cd4dbceadabf995d"
+    },
+    {
+      "variable": "myDescriptor",
+      "startUtf16": 1859,
+      "endUtf16": 1908,
+      "originalBytes": 49,
+      "originalSha256": "5a74c3e7103e72b9123da373c9acc13d59cc658a10d1df0122c5485bdde66ff2",
+      "replacementBytes": 54,
+      "replacementSha256": "4f0cc3bd599e48d58d33783d7f2a377bf5d86e804ef7adb7ce258b4c51b9f5b3"
+    }
+  ],
+  "transformSha256": "0853128159f1587617f3e8a99df947214e1ccbd6796d36124e633833593b1ce1",
+  "semanticBoundary": {
+    "baseGetter": "@Nullable ClassifierDescriptor TypeConstructor.getDeclarationDescriptor()",
+    "ownOverride": "abstract override fun getDeclarationDescriptor(): ClassifierDescriptor",
+    "ownBindings": [
+      "descriptor",
+      "myDescriptor"
+    ],
+    "otherReceiverNullablePreserved": true,
+    "getterOrPropertyApiAdded": false
+  }
+}
