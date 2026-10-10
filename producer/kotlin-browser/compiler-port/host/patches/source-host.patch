@@ -484,12 +484,10 @@
  
  interface KtSourceFileLinesMapping {
      fun getLineStartOffset(line: Int): Int
-@@ -16,29 +12,6 @@
- 
-     val lastOffset: Int
+@@ -18,32 +14,12 @@
      val linesCount: Int
--}
--
+ }
+ 
 -class KtPsiSourceFileLinesMapping(val psiFile: PsiFile) : KtSourceFileLinesMapping {
 -    private val document: Document? by lazy { psiFile.viewProvider.document }
 -
@@ -511,13 +509,31 @@
 -
 -    override val linesCount: Int
 -        get() = document?.lineCount ?: 0
- }
- 
+-}
+-
  open class KtSourceFileLinesMappingFromLineStartOffsets(
-@@ -63,54 +36,6 @@
- }
+     val lineStartOffsets: IntArray, override val lastOffset: Int
+ ) : KtSourceFileLinesMapping {
++    // Official common List search over a live array view; no copied offsets or per-query view.
++    private val lineStartOffsetsView: List<Int> = lineStartOffsets.asList()
++
+     override fun getLineStartOffset(line: Int): Int = lineStartOffsets[line]
  
- /**
+     override fun getLineAndColumnByOffset(offset: Int): Pair<Int, Int> {
+@@ -54,60 +30,12 @@
+     }
+ 
+     override fun getLineByOffset(offset: Int): Int {
+-        val index = lineStartOffsets.binarySearch(offset)
++        val index = lineStartOffsetsView.binarySearch(offset)
+         return if (index >= 0) index else -index - 2
+     }
+ 
+     override val linesCount: Int
+         get() = lineStartOffsets.size
+-}
+-
+-/**
 - *  Reads file contents from reader, converts line separators and calculates source lines to file offsets mapping
 - *
 - *  Returns KtSourceFileLinesMapping and char sequence (StringBuilder to avoid premature copying) containing converted text
@@ -563,12 +579,9 @@
 -    }
 -
 -    return sb to KtSourceFileLinesMappingFromLineStartOffsets(lineOffsets.toIntArray(), charsRead)
--}
--
--/**
-  * Extracts source lines to offsets mapping from text
-  *
-  * intended for using mainly in tests, so no care is taken about performance or possible corner cases
+ }
+ 
+ /**
 --- a/compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt
 +++ b/compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/AbstractTree2Fir.kt
 @@ -5,29 +5,13 @@

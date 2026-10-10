@@ -35,6 +35,37 @@ data/equality, error-reporting flags, fake/real source behavior and offset
 strategies remain upstream code. `portableObjectsHash` uses the same ordered,
 null-aware 31-folding algorithm as `java.util.Objects.hash`.
 
+The source-lines mapping uses the official common `List.binarySearch` over a
+cached `IntArray.asList()` view. The bootstrap's common Wasm stdlib has no
+`IntArray.binarySearch` overload, including with an explicit import. The view
+preserves mutations of the upstream public offsets array and avoids copying
+offsets or creating a view per lookup. The mapping's exact-match, duplicate
+midpoint, insertion-point and negative-offset behavior remains upstream code.
+`sources.lock.json` pins the original common search and Wasm array-view sources
+from the same Kotlin commit; no search algorithm is rewritten.
+
+`source-lines-probe.mjs` compiles the whole original JVM mapping file, relocating
+only its two IntelliJ imports to the genuine bootstrap distribution. It then
+compares that mapping with the prepared common code on JVM, Node Wasm and an
+offline Chromium module Worker. The committed
+`evidence/source-lines.json` records 16,524 identical observations, including
+empty and large arrays, duplicate starts, array mutation, raw CR/LF, UTF-16
+surrogate/combining text, NUL, integer limits and offsets beyond the input.
+Chromium 153.0.8010.12 made no external or offline requests. The original stream
+reader and PSI declarations are compiled for the JVM reference but are not
+executed; no normalization is introduced in the browser's text mapping.
+
+```sh
+node --test producer/kotlin-browser/compiler-port/host/source-lines.test.mjs
+node producer/kotlin-browser/compiler-port/host/source-lines-probe.mjs \
+  out/kotlin-compiler-port/sources out/kotlin-source-lines-probe-NEW
+```
+
+The probe uses the already verified bootstrap and the pinned stdlib source cache
+at `out/kotlin-stdlib-probe/builds/run-c4fcdcdc/sources`. Its output directory must
+be fresh. These focused results prove the source-location boundary; they do not
+claim execution of actual FIR diagnostics or a complete browser compiler.
+
 `MultiplatformParsing2Fir` now reports real error production markers to the
 existing `FirSyntaxErrors.SYNTAX` factory with `KtOffsetsOnlySourceElement` and
 the same per-file diagnostic context used by the old parser error listener.
