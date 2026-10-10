@@ -1009,7 +1009,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const serializer = await import('./serializer-output-bindings/prepare.mjs');
       const outputRoot = path.join(output, 'components', 'serializerOutputReceipt');
       assert.equal(sha256(await readRegular(path.join(outputRoot, 'serializer-output-inputs.json'))), receipt.serializerOutputInputsSha256);
-      receipt.serializerOutputFinalReceipt = await serializer.verifySerializerOutputSelection({ sourceRoot, outputRoot,
+      receipt.serializerOutputFinalReceipt = await serializer.verifySerializerOutputSelection({ sourceRoot: prepared.sourceRoot, outputRoot,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
       });
