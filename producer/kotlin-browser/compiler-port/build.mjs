@@ -247,6 +247,12 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await signatures.verifyDescriptorPlatformSignatures(outputRoot);
           return component;
         }],
+        ['annotationImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const annotations = await import('./annotation-implementations/prepare.mjs');
+          const component = await annotations.prepareAnnotationImplementations({ sourceRoot, outputRoot });
+          await annotations.verifyAnnotationImplementations(outputRoot);
+          return component;
+        }],
         ['typeContractReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./type-contracts/prepare.mjs')).prepareTypeContracts(
             sourceRoot, path.join(outputRoot, 'compiler-port-type-contracts'));
