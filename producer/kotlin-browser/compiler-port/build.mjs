@@ -236,6 +236,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ['collectionsReceipt', (await import('./collections/prepare.mjs')).prepareCollectionsSources],
         ['smartSetReceipt', (await import('./smart-set/prepare.mjs')).prepareSmartSetSources],
         ['identityReceipt', (await import('./identity/prepare.mjs')).prepareIdentitySources],
+        ['classifierConstructorGetterReceipt', async ({ sourceRoot, outputRoot }) => {
+          const getter = await import('./classifier-constructor-getter/prepare.mjs');
+          const component = await getter.prepareClassifierConstructorGetter({ sourceRoot, outputRoot,
+            preparedIdentity: preparedComponents.get('identityReceipt') });
+          await getter.verifyClassifierConstructorGetter(outputRoot);
+          return component;
+        }],
         ['coneClassIdentityReceipt', async ({ sourceRoot, outputRoot }) => {
           const cone = await import('./cone-class-identity/prepare.mjs');
           const component = await cone.prepareConeClassIdentitySources({ sourceRoot, outputRoot,
