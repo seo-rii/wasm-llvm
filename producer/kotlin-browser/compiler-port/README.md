@@ -122,6 +122,12 @@ overflow case has different failure categories. ByteBuffer, external readers,
 full arithmetic consumers and retained host-list factory differences remain
 separate limits of the whole compiler.
 
+The separate [AST byte-length layer](js-ast-consumer-bindings/integer-bounds/)
+verifies that exact integer predecessor and guards its real shared `readBytes`
+before copying or allocating. Negative, overflow and truncated payload lengths
+now have one explicit rejection contract. Normal serialized bytes remain exact;
+this does not supply ByteBuffer or close the full deserializer.
+
 The [backend exception-name boundary](backend-exception-text/) preserves the
 existing JVM-qualified String protocol using the original two literal names.
 It verifies and replaces the sourced-DSL backend table once before annotation

@@ -291,6 +291,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             verifyFile(await readRegular(pin.filename), dependency);
             receipt.jsAstIntegerSharedDependencies.push({ path: sourcePath, bytes: pin.bytes, sha256: pin.sha256 });
           }
+          return { ...component, retainedSources };
+        }],
+        ['jsAstIntegerBoundsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const bounds = await import('./js-ast-consumer-bindings/integer-bounds/prepare.mjs');
+          const preparedInteger = preparedComponents.get('jsAstIntegerConsumerReceipt');
+          assert(Array.isArray(preparedInteger?.retainedSources), 'Missing integer consumer input snapshot');
+          const options = { sourceRoot, outputRoot, preparedInteger, retainedSources: preparedInteger.retainedSources };
+          const component = await bounds.prepareAstIntegerBounds(options);
+          await bounds.verifyAstIntegerBounds({ ...options, receiptPath: component.receiptPath });
           return component;
         }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
