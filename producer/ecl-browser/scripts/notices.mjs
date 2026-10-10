@@ -10,7 +10,7 @@ const name = 'THIRD_PARTY_NOTICES.txt';
 const expected = await readFile(path.join(producer, name));
 const directories = process.argv.includes('--verify')
 	? [path.join(repo, 'artifacts/ecl-browser-notices')]
-	: [path.join(repo, 'artifacts/ecl-browser-notices'), path.join(repo, 'out/ecl-browser-notices')];
+	: [path.join(repo, 'artifacts/ecl-browser-notices'), `${path.resolve(process.env.WASM_LLVM_ECL_OUT_DIR || path.join(repo, 'out/ecl-browser'))}-notices`];
 for (const directory of directories) {
 	if (!process.argv.includes('--verify')) {
 		await mkdir(directory, { recursive: true });
