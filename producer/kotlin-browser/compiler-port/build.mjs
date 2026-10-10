@@ -211,6 +211,12 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           return bitSet.prepareBitSetSources({ sourceRoot, outputRoot });
         }],
         ['textReceipt', (await import('./text/prepare.mjs')).prepareCompilerTextSources],
+        ['wasmCollectionsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const collections = await import('./wasm-collections/prepare.mjs');
+          return collections.prepareWasmCollectionsSources({ sourceRoot, outputRoot,
+            preparedIdentity: preparedComponents.get('identityReceipt'),
+            preparedText: preparedComponents.get('textReceipt') });
+        }],
         ['klibReceipt', (await import('./klib/prepare.mjs')).prepareKlibSources],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
@@ -236,6 +242,19 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         const component = await prepare({ sourceRoot: prepared.sourceRoot, outputRoot: componentRoot });
         preparedComponents.set(key, component);
         receipt[key] = component.receipt;
+        for (const binding of component.predecessorBindings ?? []) {
+          assert(preparedComponents.has(binding.component), 'Missing predecessor component');
+          const sourcePath = relativePath(binding.componentRelativePath);
+          const previous = replacements.get(sourcePath);
+          assert(previous && files.has(sourcePath), 'Missing predecessor source binding: ' + sourcePath);
+          assert.equal(previous.filename, binding.filename);
+          assert.equal(previous.bytes, binding.bytes); assert.equal(previous.sha256, binding.sha256);
+          assert.equal(files.get(sourcePath), previous, 'Predecessor source was replaced before the audited layer');
+          const bytes = await readRegular(previous.filename, previous.bytes);
+          assert.equal(bytes.length, binding.bytes); assert.equal(sha256(bytes), binding.sha256);
+          files.set(sourcePath, { ...previous, compile: false });
+          replacements.delete(sourcePath);
+        }
         if (component.assertionImport) {
           assert.equal(component.assertionImport, 'org.jetbrains.kotlin.portable.assertions.compilerAssert as assert');
           assert(!assertionImport, 'Duplicate compiler assertion adapter');

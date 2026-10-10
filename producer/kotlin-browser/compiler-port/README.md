@@ -91,6 +91,11 @@ the original input-Wasm reader as a reference and omits it from the emit-only
 whole-program compiler only after checking every final selected input. A new
 reader dependency or incremental Wasm deserializer rejects this profile.
 
+The [Wasm collection bindings](wasm-collections/README.md) layer three audited
+serial cache operations and an ascending annotation snapshot over the verified
+identity and UTF-8 variants. The composer verifies and supersedes those exact
+predecessor files once; their original preparation receipts remain recorded.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is
