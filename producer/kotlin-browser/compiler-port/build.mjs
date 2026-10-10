@@ -216,6 +216,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await visitor.verifyDescriptorVisitorContracts({ ...options, profileRoot: outputRoot });
           return component;
         }],
+        ['descriptorVisitorVoidReceipt', async ({ outputRoot }) => {
+          const module = await import('./visitor-void-profile/prepare.mjs');
+          const options = { sourceRoot, outputRoot, preparedDescriptors: preparedComponents.get('descriptorReceipt'),
+            descriptorVisitorComponent: preparedComponents.get('descriptorVisitorReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) };
+          const component = await module.prepareVisitorVoidProfile(options);
+          await module.verifyVisitorVoidProfile(options);
+          return component;
+        }],
         ['typeContractReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./type-contracts/prepare.mjs')).prepareTypeContracts(
             sourceRoot, path.join(outputRoot, 'compiler-port-type-contracts'));
