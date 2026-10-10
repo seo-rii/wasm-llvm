@@ -583,6 +583,34 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
               .map((pin) => pin.filename),
           });
         }],
+        ['serializerOutputReceipt', async ({ outputRoot }) => {
+          const serializer = await import('./serializer-output-bindings/prepare.mjs');
+          const options = { sourceRoot, outputRoot,
+            preparedSerializerNullability: preparedComponents.get('serializerNullabilityReceipt'),
+            preparedBackendProfile: preparedComponents.get('backendProfileReceipt'),
+            preparedJsAst: preparedComponents.get('jsAstReceipt'),
+            preparedOutputCodec: preparedComponents.get('jsAstOutputReceipt'),
+            preparedOutputStream: preparedComponents.get('jsAstOutputStreamReceipt'),
+            preparedText: preparedComponents.get('textReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) };
+          const component = await serializer.prepareSerializerOutputBindings(options);
+          await serializer.verifySerializerOutputBindings(options);
+          assert.equal(component.sharedDependencies.length, 4);
+          for (const dependency of component.sharedDependencies) {
+            const sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+            const owner = preparedComponents.get(dependency.component);
+            assert.equal(dependency.componentRelativePath, sourcePath);
+            assert(pin?.compile && owner?.commonSources.includes(pin.filename), 'Missing genuine serializer output dependency');
+            assert.equal(pin.filename, dependency.filename); assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            const bytes = await readRegular(pin.filename, pin.bytes);
+            assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+            assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+          }
+          receipt.serializerOutputSharedDependencies = component.sharedDependencies;
+          receipt.serializerOutputInputsSha256 = sha256(await readRegular(component.receiptPath));
+          return component;
+        }],
         ['firStorageSourceProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           const profile = await import('./fir-storage-source-profile/prepare.mjs');
           const forwardSources = await Promise.all(['BrowserCompiler.kt', 'BrowserCompilerPipeline.kt'].map(async name => {
@@ -955,6 +983,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           'compiler-port-entry/BrowserCompilerPipeline.kt'].includes(pin.path)),
       });
       receipt.sourceMapRuntimeFinalReceipt = final.receipt;
+    }
+    if (sourceHost === 'portable') {
+      const serializer = await import('./serializer-output-bindings/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'serializerOutputReceipt');
+      assert.equal(sha256(await readRegular(path.join(outputRoot, 'serializer-output-inputs.json'))), receipt.serializerOutputInputsSha256);
+      receipt.serializerOutputFinalReceipt = await serializer.verifySerializerOutputSelection({ sourceRoot, outputRoot,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
