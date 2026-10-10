@@ -215,6 +215,12 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ['visibilityReceipt', (await import('./visibility/prepare.mjs')).prepareVisibilitySources],
         ['builtInsReceipt', (await import('./builtins/prepare.mjs')).prepareBuiltInsSources],
         ['descriptorUtilsReceipt', (await import('./descriptor-utils/prepare.mjs')).prepareDescriptorUtilsSources],
+        ['memberComparatorReceipt', async ({ sourceRoot, outputRoot }) => {
+          const members = await import('./member-comparator/prepare.mjs');
+          const component = await members.prepareMemberComparatorSources({ sourceRoot, outputRoot });
+          await members.verifyMemberComparator(outputRoot);
+          return component;
+        }],
         ['assertionReceipt', (await import('./assertions/prepare.mjs')).prepareAssertionSources],
         ['storageReceipt', (await import('./storage/prepare.mjs')).prepareStorageSources],
         ['collectionsReceipt', (await import('./collections/prepare.mjs')).prepareCollectionsSources],

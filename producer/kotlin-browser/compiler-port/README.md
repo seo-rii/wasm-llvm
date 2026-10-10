@@ -129,6 +129,11 @@ imports. Its full JVM table and exact-lambda Wasm evidence retain the original
 message-first behavior; they do not establish host exception-to-protocol
 generation or full diagnostic-table Wasm closure.
 
+The [full descriptor member comparator](member-comparator/) supplies both
+original ordering algorithms, using genuine descriptor and renderer APIs. Its
+full JVM differential covers 38,090 raw observations, while closure of the
+common descriptor and renderer graph remains a whole-build requirement.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is
