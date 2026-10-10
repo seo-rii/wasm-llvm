@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-pinned-openjdk17-common-double-formatter",
+  "source": {
+    "repository": "https://github.com/openjdk/jdk17u.git",
+    "commit": "162dbac82cf31c6948414944af836187aff9e6ca",
+    "tag": "jdk-17.0.16+8"
+  },
+  "consumerSource": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "consumerOriginals": [
+    {
+      "path": "js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsDoubleLiteral.java",
+      "gitBlob": "c87c0a733df38baa461a8cd410724a805f6ff2cd",
+      "bytes": 937,
+      "language": "java",
+      "compile": false,
+      "role": "source",
+      "module": "js/js.ast",
+      "sha256": "5fed7f4a8becf950ed59d94b1c93104dd671e256c71253acfc4c3220b19dd142"
+    },
+    {
+      "path": "js/js.ast/src/org/jetbrains/kotlin/js/util/TextOutputImpl.java",
+      "gitBlob": "1ad17df978bafec96bd78e6cd324d0929132c845",
+      "bytes": 3093,
+      "language": "java",
+      "compile": false,
+      "role": "source",
+      "module": "js/js.ast",
+      "sha256": "bb42a1be7a14850e8cf608a5c33662b638032f118de9c810124bd771ffd47897"
+    }
+  ],
+  "references": [
+    {
+      "path": "FloatingDecimal.java",
+      "bytes": 111430,
+      "sha256": "3bdf29124dd5f43fa01ea82a552d2ff9db1fc39bbc1e929888bb664fe4bf8d8b",
+      "gitBlob": "95ecb299fe9c3c0089a6a337c7337f0b5d498e7c",
+      "originalPath": "src/java.base/share/classes/jdk/internal/math/FloatingDecimal.java"
+    },
+    {
+      "path": "FDBigInteger.java",
+      "bytes": 55882,
+      "sha256": "0f24de911fd5b635826b702455040570aa9f172028844ecd7d88ed4f5763a8f0",
+      "gitBlob": "f6d868dfcc2810e9bcf74872b31ea018c24c4f07",
+      "originalPath": "src/java.base/share/classes/jdk/internal/math/FDBigInteger.java"
+    },
+    {
+      "path": "Double.java",
+      "bytes": 49193,
+      "sha256": "5db931464cde092ba06d8dd11fcb61b5177a64169a9f2b55f27aaa2442b098be",
+      "gitBlob": "9d57960d0c7c6618458f0d8afd87da0942e346c8",
+      "originalPath": "src/java.base/share/classes/java/lang/Double.java"
+    }
+  ],
+  "license": {
+    "path": "LICENSE.OpenJDK",
+    "bytes": 19274,
+    "sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726",
+    "gitBlob": "8b400c7ab81b7b18baff3f81d597f5e511883134"
+  },
+  "portedSource": {
+    "path": "../portable/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt",
+    "bytes": 18360,
+    "sha256": "97bb0348e9abe06966c785aae1414a7b98899e88c620e4337eeb0e0ed075479b",
+    "gitBlob": "338205e905d78a648b6d81b4558d69e8dfd7c7d8"
+  },
+  "entry": "javaDoubleToString(value: Double): String",
+  "algorithm": "FloatingDecimal compatible binary64 conversion: integer fast path, distinct overflowing Int/Long loops, positive big-integer branch, ties-to-even roundup, Java text rendering",
+  "integerBoundary": "Private exact nonnegative base-2^30 kernel realizes the required FDBigInteger operation contracts; full FDBigInteger API not ported",
+  "excluded": [
+    "String-to-floating parser",
+    "Float conversion",
+    "ThreadLocal and CDS caches",
+    "FloatingDecimal public conversion-status API"
+  ],
+  "hostFormatterFallback": false,
+  "rawComparisonRequired": true
+}
