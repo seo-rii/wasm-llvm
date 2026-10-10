@@ -1,0 +1,60 @@
+{
+	"schemaVersion": 1,
+	"producerId": "wasm-llvm/lean-browser",
+	"compilerHost": "wasm32-emscripten",
+	"execution": "lean --run interpreter",
+	"sources": {
+		"lean4": {
+			"repository": "https://github.com/leanprover/lean4.git",
+			"version": "4.34.1",
+			"tag": "v4.34.1",
+			"commit": "5045d0056413266e57c625dcd7c365b10e377c52",
+			"license": "Apache-2.0"
+		},
+		"libuv": {
+			"repository": "https://github.com/libuv/libuv",
+			"version": "1.48.0",
+			"tag": "v1.48.0",
+			"commit": "e9f29cb984231524e3931aa0ae2c5dae1a32884e",
+			"license": "MIT",
+			"note": "fetched by the upstream Lean CMake ExternalProject for Emscripten builds"
+		},
+		"emsdk": {
+			"repository": "https://github.com/emscripten-core/emsdk.git",
+			"version": "6.0.0",
+			"commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+		}
+	},
+	"bootstrap": {
+		"description": "official native Lean release used to emit C for Init, Std, and Lean and to compute Init module dependencies",
+		"url": "https://github.com/leanprover/lean4/releases/download/v4.34.1/lean-4.34.1-linux.tar.zst",
+		"bytes": 580432872,
+		"sha256": "47bf4bbd78f70c2e9670598ab7124d92b6efb7330ff33e5fbb4030f6fd72e4e4"
+	},
+	"patches": [
+		{
+			"path": "patches/0001-lean-browser-emscripten.patch",
+			"sha256": "4b005fb22fd796280b2cb2f283e3f237715f15f374b3944093e6f3fbbe630cd3"
+		}
+	],
+	"runtime": {
+		"moduleFactory": "createLean",
+		"toolchainPrefix": "/lean",
+		"libraryRoot": "/lean/lib/lean",
+		"library": "Init",
+		"pthreadPoolSize": 4,
+		"initialMemoryBytes": 268435456,
+		"maximumMemoryBytes": 4294967296,
+		"requiredBrowserFeatures": ["wasm-exceptions", "shared-array-buffer", "cross-origin-isolation"],
+		"invocation": ["-j1", "--run", "/work/Main.lean"]
+	},
+	"outputs": [
+		"LICENSE",
+		"LICENSE.libuv",
+		"lean.mjs",
+		"lean.wasm.gz",
+		"lean-init.index.json",
+		"lean-init-NN.pack.gz",
+		"producer-receipt.json"
+	]
+}

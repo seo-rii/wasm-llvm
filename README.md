@@ -18,8 +18,10 @@ hosting and loaded by URL from the consuming application.
 | Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
 | COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
 | Crystal        | Crystal 1.21.0, verified native bootstrap, markd 0.5.0                                          | WASI object and compiler-host portability receipts; browser host blocked | [`producer/crystal-browser`](producer/crystal-browser/README.md)             |
+| ECL (Common Lisp) | ECL 26.5.5, emsdk 6.0.0 | Emscripten ES module runtime (`ecl.mjs`/gzip `ecl.wasm.gz`), receipt, Node and Chromium stdin/condition acceptance | [`producer/ecl-browser`](producer/ecl-browser/README.md) |
 | Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
 | Kotlin candidate | Official Kotlin development source `4d78aae1e337cd40f69baa865aed950fe807a775` | Source/dependency inventory and fixture ledger; browser compiler not built, G0 blocked | [`producer/kotlin-browser`](producer/kotlin-browser/README.md) |
+| Lean 4 | Lean 4.34.1 source and release bootstrap, libuv 1.48.0, emsdk 6.0.0 | `lean --run` JS/Wasm module, wasm32 `Init` library, Node acceptance receipt | [`producer/lean-browser`](producer/lean-browser/README.md) |
 | LFortran       | LFortran source snapshot, LLVM 22.1.8 Emscripten package, emsdk 4.0.9                              | LLVM-enabled compiler producer and real Fortran input validation     | [`producer/lfortran-browser`](producer/lfortran-browser/README.md)             |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
 | Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
@@ -30,8 +32,9 @@ hosting and loaded by URL from the consuming application.
 | V              | V 0.5.2 (`vlang/vc` bootstrap `v.c`), WASI SDK 33 | WASI compiler, vlib root, C sysroot with WASI compatibility archive, compile/run acceptance receipt | [`producer/v-browser`](producer/v-browser/README.md) |
 | WAMR           | WAMR 2.4.5, emsdk 6.0.0, browser RSP transport patch                                            | Interpreter/debug-stub JS/Wasm/pthread worker and receipt           | [`producer/wamr-browser`](producer/wamr-browser/README.md)                     |
 
-`artifacts/clang-browser`, `artifacts/cobol-browser` and `artifacts/v-browser` hold verified producer outputs currently
-tracked for deployment. The Emscripten LLD canonical import remains next to its producer at
+`artifacts/clang-browser`, `artifacts/cobol-browser`, `artifacts/lean-browser` and
+`artifacts/v-browser` hold verified producer outputs currently tracked for deployment.
+The Emscripten LLD canonical import remains next to its producer at
 `producer/emscripten-lld-browser/artifacts`. None of these paths are npm package contents.
 
 ## Setup and focused checks
@@ -74,6 +77,13 @@ pnpm prepare:wamr -- --source /path/to/wasm-micro-runtime
 pnpm build:wamr -- --source /path/to/wasm-micro-runtime --build /path/to/build --emsdk /path/to/emsdk
 pnpm package:wamr -- --build /path/to/build --output /path/to/wamr-artifacts
 
+# ECL (Common Lisp) runtime
+pnpm prepare:ecl
+pnpm build:ecl
+pnpm smoke:ecl && pnpm smoke:ecl:browser
+pnpm package:ecl
+pnpm verify:ecl-artifacts
+
 # GnuCOBOL
 WASI_SDK_PATH=/opt/wasi-sdk pnpm build:cobol
 pnpm prepare:cobol-release
@@ -94,6 +104,11 @@ WASI_SDK_PATH=/opt/wasi-sdk pnpm probe:objective-c:libffi
 # Rust
 pnpm producer:rust:prepare
 pnpm producer:rust:build
+
+# Lean 4 (at most three jobs; the Init library build takes about two hours)
+pnpm build:lean
+pnpm package:lean
+pnpm verify:lean-artifacts
 
 # Odin native WASI baseline and compiler-host portability investigation
 pnpm prepare:odin -- --work out/odin-browser

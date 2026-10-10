@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"check": "node ./scripts/check-repository.mjs",
-		"test": "node --test ./producer/c3-browser/test/*.test.mjs ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
+		"test": "node --test ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs ./producer/lean-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
 		"audit:kotlin-source": "node ./producer/kotlin-browser/scripts/audit.mjs",
 		"ledger:kotlin-fixtures": "node ./producer/kotlin-browser/scripts/fixtures.mjs",
 		"test:kotlin-producer": "node --test ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs",
@@ -86,7 +86,17 @@
 		"probe:odin-native": "node ./producer/odin-browser/scripts/producer.mjs baseline",
 		"probe:odin-host": "node ./producer/odin-browser/scripts/producer.mjs probe-host",
 		"verify:odin-baseline": "node ./producer/odin-browser/scripts/producer.mjs verify-baseline",
-		"probe:swift-browser-target": "node ./producer/swift-browser/scripts/probe-browser-target.mjs"
+		"probe:swift-browser-target": "node ./producer/swift-browser/scripts/probe-browser-target.mjs",
+		"prepare:ecl": "node ./producer/ecl-browser/scripts/producer.mjs prepare",
+		"build:ecl": "node ./producer/ecl-browser/scripts/producer.mjs build",
+		"smoke:ecl": "node ./producer/ecl-browser/scripts/producer.mjs smoke",
+		"smoke:ecl:browser": "node ./producer/ecl-browser/scripts/producer.mjs browser-smoke",
+		"package:ecl": "node ./producer/ecl-browser/scripts/producer.mjs package && node ./producer/ecl-browser/scripts/notices.mjs",
+		"verify:ecl-artifacts": "node ./producer/ecl-browser/scripts/producer.mjs verify artifacts/ecl-browser && node ./producer/ecl-browser/scripts/notices.mjs --verify",
+		"build:lean": "bash ./producer/lean-browser/scripts/build.sh",
+		"package:lean": "node ./producer/lean-browser/scripts/package.mjs",
+		"smoke:lean": "node ./producer/lean-browser/scripts/smoke.mjs",
+		"verify:lean-artifacts": "node ./producer/lean-browser/scripts/package.mjs --verify"
 	},
 	"devDependencies": {
 		"@bjorn3/browser_wasi_shim": "0.4.2",
