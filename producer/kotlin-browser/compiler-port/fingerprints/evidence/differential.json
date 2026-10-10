@@ -1,0 +1,518 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-memory-compiler-fingerprints-differential",
+  "result": "pass",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "991cbc1097e06972c44938de4297f3e54fe377d0176e9f5ec4268fc37dd5b9f5",
+  "buildToolSha256": "94b1054a7b62fa09416e32737c9dde7e1fb32c89dd4adb63b3e813cfd96917d0",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "official-memory-compiler-fingerprints-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "991cbc1097e06972c44938de4297f3e54fe377d0176e9f5ec4268fc37dd5b9f5",
+    "preparationToolSha256": "29e8052dcb1c5a8cdffaf3e4e382c72497d3b0712128eab813b10f4fb399f8b7",
+    "sources": [
+      {
+        "path": "compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/CityHash.kt",
+        "bytes": 10766,
+        "sha256": "2222d136f952b640c0ad21171530ea7708828c3be4ba21d1164353537d483d7d"
+      },
+      {
+        "path": "compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/FileFingerprints.kt",
+        "bytes": 4625,
+        "sha256": "efb47da4bdcd225cb021a918bc9977500ef92563214fe221b003cf56152ae922"
+      },
+      {
+        "path": "FingerprintByteBuffer.kt",
+        "bytes": 1431,
+        "sha256": "b9f5475335702420e4889a67b6e52c0a088e622524bf41917b27ec24aa49d363"
+      }
+    ],
+    "selectedSourceInventory": {
+      "count": 3441,
+      "sha256": "e37c2f6e712430337dc13284d8017acb25238635625a608f971b3dee4a17eb8d",
+      "snapshot": {
+        "path": "retained-source-snapshot.json.gz",
+        "bytes": 5652918,
+        "sha256": "ae0dd5cd12d79b609a3ff37c0a7b7161b6e98b32b041022bd9d268fa4257cd0e"
+      }
+    },
+    "diskExclusionGuard": {
+      "policy": "reject every unknown reference, alias import or disk API token",
+      "readers": [
+        {
+          "path": "compiler/ir/serialization.js/src/org/jetbrains/kotlin/ir/backend/js/klib.kt",
+          "line": 47,
+          "statement": "val KotlinLibrary.serializedKlibFingerprint: SerializedKlibFingerprint?"
+        },
+        {
+          "path": "compiler/ir/serialization.js/src/org/jetbrains/kotlin/ir/backend/js/klib.kt",
+          "line": 48,
+          "statement": "get() = manifestProperties.getProperty(KLIB_PROPERTY_SERIALIZED_KLIB_FINGERPRINT)?.let { SerializedKlibFingerprint.fromString(it) }"
+        },
+        {
+          "path": "compiler/ir/serialization.js/src/org/jetbrains/kotlin/ir/backend/js/klib.kt",
+          "line": 282,
+          "statement": "p.setProperty(KLIB_PROPERTY_SERIALIZED_KLIB_FINGERPRINT, SerializedKlibFingerprint(fingerprints).klibFingerprint.toString())"
+        }
+      ],
+      "diskReaders": [],
+      "algorithmExclusions": []
+    },
+    "excludedDiskDeclarationSha256": [
+      "96167d55cac370ec1dfa102c41b5390af9a3ebe3204f56987010997a4cbf925d",
+      "4b06c136408bdcec75ae7d513fa4689c251146cb7d837c997cd1307deb7f5a66"
+    ],
+    "substitutions": [
+      "ByteBuffer import -> private big-endian selected operation adapter",
+      "Character.MAX_RADIX -> 36",
+      "import org.jetbrains.kotlin.portable.text.compilerUtf8Bytes as toByteArray",
+      "explicit kotlin.jvm.JvmInline import"
+    ],
+    "commonSources": [
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/CityHash.kt",
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/FileFingerprints.kt",
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/FingerprintByteBuffer.kt"
+    ],
+    "replacedOriginalPaths": [
+      "compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/CityHash.kt",
+      "compiler/ir/serialization.common/src/org/jetbrains/kotlin/backend/common/serialization/FileFingerprints.kt"
+    ],
+    "hashAndCombinationAlgorithmsChanged": false,
+    "byteOrder": "big endian, low word first",
+    "shortInput": "IndexOutOfBoundsException",
+    "oversizedInput": "first 16 bytes only",
+    "parseBehavior": "original mapNotNull accepts two valid base-36 segments even with invalid segments present",
+    "originalSourceUnmodified": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "preparationReceiptSha256": "8aa07819048194b6ce2aecf6026396a3f49f6400ef6dd2dbb06f979ce8cee7fa",
+  "actualFrozenBuildReceiptSha256": "0d6e0164e9979dec34129f3fd3e3cb58fc58afaec78e08c428cda058be77b8e0",
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "compilerSourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "observer": [
+    {
+      "path": "FingerprintsProbe.kt",
+      "bytes": 3586,
+      "sha256": "ebcd2fe1be7079522ebb032ec4a195be6ed80a9e55cd9b398e347d87669cd9eb"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 112,
+      "sha256": "d394be9cc547b95d79fff7eda1dff50c56fd9cf74a2cc88c9b7d964afdd34e55"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 195,
+      "sha256": "ce43d02b4aee04ed3b60449749d4911dc9214800e58568308d3393d704d4468f"
+    }
+  ],
+  "projections": [
+    {
+      "path": "original/CityHash.kt",
+      "bytes": 10707,
+      "sha256": "32b90865ac9e2864573e373217146805f91ad47e0d332af4facec914272e613f"
+    },
+    {
+      "path": "original/FileFingerprints.kt",
+      "bytes": 4467,
+      "sha256": "b731b07a00765bf276b608fd5f1281d6524eb2c1d71058c2539e3cefc620b7e1"
+    },
+    {
+      "path": "portable/CityHash.kt",
+      "bytes": 10766,
+      "sha256": "2222d136f952b640c0ad21171530ea7708828c3be4ba21d1164353537d483d7d"
+    },
+    {
+      "path": "portable/FileFingerprints.kt",
+      "bytes": 3552,
+      "sha256": "2919e1423c51cfa8ec3d3da67f3bc91f36a31a063f88d52477451041b16fefd6"
+    }
+  ],
+  "projectionScope": "Actual SerializedIrFile carrier and complete file/list/hash algorithms; only KotlinLibrary reader overload omitted from probe. Shipping source retains it. Disk APIs are not exercised.",
+  "commands": [
+    {
+      "phase": "original-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/SerializedDataStructures.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/FingerprintsProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/original/CityHash.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/original/FileFingerprints.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.backend.common.serialization.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/SerializedDataStructures.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/FingerprintsProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/CityHash.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/FileFingerprints.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Algorithm.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Api.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/FingerprintByteBuffer.kt",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/jvm/portable.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/SerializedDataStructures.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/FingerprintsProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/CityHash.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/FileFingerprints.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Algorithm.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Api.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/FingerprintByteBuffer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/jvm/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.backend.common.serialization.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-wasm-klib-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/SerializedDataStructures.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/FingerprintsProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/CityHash.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/FileFingerprints.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Algorithm.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Api.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/FingerprintByteBuffer.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/klib",
+        "-ir-output-name",
+        "fingerprints-probe",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/SerializedDataStructures.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/FingerprintsProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/CityHash.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/portable/FileFingerprints.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Algorithm.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-text/CompilerUtf8Api.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/compiler-port-fingerprints/FingerprintByteBuffer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-wasm-link",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/klib/fingerprints-probe.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/wasm",
+        "-ir-output-name",
+        "fingerprints-probe",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "portable-node-observe",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);process.stdout.write(m.fingerprintsProbe());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/wasm/fingerprints-probe.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "outputs": [
+    {
+      "path": "original-observations.txt",
+      "bytes": 5574,
+      "sha256": "a06a20275e907b88ec6f74e25fa06846fad53181632a1b9f302e2b8da9ca753a"
+    },
+    {
+      "path": "portable-observations.txt",
+      "bytes": 5574,
+      "sha256": "a06a20275e907b88ec6f74e25fa06846fad53181632a1b9f302e2b8da9ca753a"
+    },
+    {
+      "path": "wasm-observations.txt",
+      "bytes": 5574,
+      "sha256": "a06a20275e907b88ec6f74e25fa06846fad53181632a1b9f302e2b8da9ca753a"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 36570,
+      "sha256": "c7091029dd7f732dce69107ae517118491e6692a42ed74546136143493ef7c4b"
+    },
+    {
+      "path": "jvm/portable.jar",
+      "bytes": 41879,
+      "sha256": "e1db0d614feb49e172f86ae31116130dac22bc908811bc1d57a3e8e1042d7c19"
+    },
+    {
+      "path": "klib/fingerprints-probe.klib",
+      "bytes": 84391,
+      "sha256": "5a4a4fb7b9d57e770b473a9c0cede263fdece2aa9777fc357432e2e7b796e4c0"
+    },
+    {
+      "path": "wasm/fingerprints-probe.import-object.mjs",
+      "bytes": 9493,
+      "sha256": "6b9c873f9f124445d21d81aac554f46620deca0860d8cdedd71fe9ba06e047c5"
+    },
+    {
+      "path": "wasm/fingerprints-probe.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/fingerprints-probe.mjs",
+      "bytes": 2291,
+      "sha256": "0e4c0d755ec85c645492d0075ed7afe6d7b1dec5a48dc45f4e4cea88bc0a19c0"
+    },
+    {
+      "path": "wasm/fingerprints-probe.wasm",
+      "bytes": 791871,
+      "sha256": "e9fd73f51cb4f90b2417727421388431b77ba15b645872c17b8142e0676e3091"
+    }
+  ],
+  "cases": 99,
+  "comparison": {
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsWasm": true,
+    "exceptions": "IndexOutOfBoundsException with exact message comparison",
+    "observationSha256": "a06a20275e907b88ec6f74e25fa06846fad53181632a1b9f302e2b8da9ca753a"
+  },
+  "wasmEngine": {
+    "kind": "Node",
+    "version": "v24.1.0"
+  },
+  "browserComparison": "not-run",
+  "fullCompilerBuilt": false,
+  "languageReadiness": false,
+  "evidenceCapture": {
+    "originalReceipt": {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fingerprints-probe-1134939/differential.json",
+      "bytes": 26159,
+      "sha256": "4c7981f535b129f69e50e0fa06006c77f9e5b2477d900d94a5249dd6a987e269"
+    },
+    "log": {
+      "path": "/home/seorii/logs/wasm-review-kotlin-fingerprints-differential-dwxh6s1u.log",
+      "bytes": 5196,
+      "sha256": "842f21ec6540fea73510e0e7346b8ba2f9ec14869acc0f7aff205261af77b478"
+    },
+    "status": {
+      "path": "/home/seorii/logs/wasm-review-kotlin-fingerprints-differential-dwxh6s1u.log.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "exitCode": 0,
+    "scope": "99 exact hash/byte/IR-file/list observations; full compiler and browser comparison not run"
+  }
+}
