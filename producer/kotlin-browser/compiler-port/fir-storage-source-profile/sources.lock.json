@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-fir-storage-lighttree-source-profile",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sources": [
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrDeclarationStorage.kt",
+      "gitBlob": "e1dd5c8e4632fc597a3cc2ec260944eeb07cab18",
+      "bytes": 69925,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/fir2ir",
+      "sha256": "efe19a8a39014be4a097117d6092e645f8d732df890719f1419f848b96649a0d"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConfiguration.kt",
+      "gitBlob": "8586f3aeeaac6351368b6e089ddc10dd850f54c3",
+      "bytes": 7650,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/fir2ir",
+      "sha256": "9c9dbcb3d6be0920f6d577ae35fd3a804d7851a708e779929a3f9e3c0c826aa7"
+    },
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "gitBlob": "dbdb2f4c3974f247e195732888f121096166fe24",
+      "bytes": 19011,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/tree",
+      "sha256": "32036fe91eeeb25d6b76135e4ab25319e702aacb7af307f0c46ffb11b83f2efa"
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt",
+      "gitBlob": "5e9048389b714a824de95ab1a52511749f369c4d",
+      "bytes": 57810,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/frontend.common",
+      "sha256": "e230598b517ba8dc5e83a18e60c2257e9c3ba2cc8d441d43b2631b7d8fcdfbd7"
+    },
+    {
+      "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/FirElement.kt",
+      "gitBlob": "9c49659e4bb01244f2f30830207147240b6b0c1d",
+      "bytes": 3264,
+      "language": "kotlin",
+      "compile": true,
+      "role": "checked-in-generated",
+      "module": "compiler/fir/tree",
+      "sha256": "649484ea058da20f548f375d0238f15cdb888c8edebbdd07a4758e48cdd0363d"
+    }
+  ],
+  "references": [
+    {
+      "path": "compiler/fir/fir2ir/build.gradle.kts",
+      "gitBlob": "5fd480e1ceafd5b55c65a9f176fc4aa637c32f63",
+      "bytes": 5247,
+      "language": "build",
+      "compile": false,
+      "role": "source",
+      "module": "compiler/fir/fir2ir",
+      "sha256": "a5e05ab82c1d767da859be31c4f63c23c7155a0f14b28b45019011e3393a6fda"
+    }
+  ],
+  "predecessors": {
+    "storage": {
+      "bytes": 69931,
+      "sha256": "696467468d388e3b67fb4768df28dc7db3d5df6999a56b23a084291c209ffab6",
+      "tools": {
+        "prepare.mjs": "471a38a840ab0aab48a091c751614033f55b785867379970019daaf470a32f9f",
+        "sources.lock.json": "bc9a371640400bf316d853385a4d83fc1bc75c54d2e2e3d05d438f4068966ba5"
+      },
+      "source": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+        "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+      }
+    },
+    "host": {
+      "bytes": 49077,
+      "sha256": "bbebaa31911d666c97bd1f59e0bb98d9ca19cc596c25e1cc64bd45bdae543fd2",
+      "tools": {
+        "prepare.mjs": "d47bc0f4ec8230fd1b95a21d601baab11aaa99e6d716a7794171df2d59ab820f",
+        "sources.lock.json": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94"
+      },
+      "source": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775"
+      }
+    }
+  },
+  "exclusions": [
+    {
+      "kind": "private-class",
+      "text": "    private class NonCachedSourceFacadeContainerSource(\n        override val className: JvmClassName,\n        override val facadeClassName: JvmClassName?,\n    ) : DeserializedContainerSource, FacadeClassSource {\n        override val incompatibility get() = null\n        override val preReleaseInfo: PreReleaseInfo get() = PreReleaseInfo.DEFAULT_VISIBLE\n        override val abiStability get() = DeserializedContainerAbiStability.STABLE\n        override val presentableString get() = className.internalName\n        override val jvmClassName: JvmClassName? get() = null\n\n        override fun getContainingFile(): SourceFile = SourceFile.NO_SOURCE_FILE\n    }",
+      "bytes": 655,
+      "sha256": "50662a1d7408e33e800a5e382c25bfb67e9d098055980c3043d48dc30677bdbb"
+    },
+    {
+      "kind": "psi-only-branch",
+      "text": "            if (configuration.allowNonCachedDeclarations && firBasedSymbol is FirCallableSymbol<*>) {\n                val psiFile = containerFile.psi?.containingFile\n                if (psiFile is KtFile) {\n                    val fileClassInfo = JvmFileClassUtil.getFileClassInfoNoResolve(psiFile)\n                    val className = JvmClassName.byFqNameWithoutInnerClasses(fileClassInfo.fileClassFqName)\n\n                    val facadeClassName: JvmClassName?\n                    val declarationOrigin: IrDeclarationOrigin\n\n                    if (fileClassInfo.withJvmMultifileClass) {\n                        facadeClassName = JvmClassName.byFqNameWithoutInnerClasses(fileClassInfo.facadeClassFqName)\n                        declarationOrigin = IrDeclarationOrigin.JVM_MULTIFILE_CLASS\n                    } else {\n                        facadeClassName = null\n                        declarationOrigin = IrDeclarationOrigin.FILE_CLASS\n                    }\n\n                    val facadeShortName = className.fqNameForClassNameWithoutDollars.shortName()\n                    val containerSource = NonCachedSourceFacadeContainerSource(className, facadeClassName)\n                    return IrFactoryImpl.createClass(\n                        startOffset = UNDEFINED_OFFSET,\n                        endOffset = UNDEFINED_OFFSET,\n                        origin = declarationOrigin,\n                        symbol = IrClassSymbolImpl(),\n                        name = facadeShortName,\n                        kind = ClassKind.CLASS,\n                        visibility = DescriptorVisibilities.PUBLIC,\n                        modality = Modality.FINAL,\n                        source = containerSource\n                    ).apply {\n                        parent = parentPackage\n                        createThisReceiverParameter()\n                        this.isNonCachedSourceFileFacade = true\n                    }\n                }\n            }",
+      "bytes": 1950,
+      "sha256": "ab5a4ce6078e4f357e54f06880dc60f9d91921b8c193361d491cadd8a3db0594"
+    },
+    {
+      "kind": "unused-import",
+      "text": "import org.jetbrains.kotlin.fileClasses.JvmFileClassUtil\n",
+      "bytes": 57,
+      "sha256": "7d9518d222e41143bd7e468dcf62dca507d399b71870829890298c1bbc4b5951"
+    },
+    {
+      "kind": "unused-import",
+      "text": "import org.jetbrains.kotlin.load.kotlin.FacadeClassSource\n",
+      "bytes": 58,
+      "sha256": "fd853847e72d61bffc6208f4bf7b00952cc92f69628fd290608b2f254aeb4ea7"
+    },
+    {
+      "kind": "unused-import",
+      "text": "import org.jetbrains.kotlin.psi.KtFile\n",
+      "bytes": 39,
+      "sha256": "fe4bbb1ed2d1afa35abd2f39f52164c7bfed371fd019981787703ddec33e0bdc"
+    },
+    {
+      "kind": "unused-import",
+      "text": "import org.jetbrains.kotlin.resolve.jvm.JvmClassName\n",
+      "bytes": 53,
+      "sha256": "9c45f48831adb9f83541c7e40c94f03c7a6e94e64d4bdc4189042febe1294e67"
+    }
+  ],
+  "psiGetter": {
+    "text": "val FirElement.psi: PsiElement? get() = (source as? KtPsiSourceElement)?.psi",
+    "bytes": 76,
+    "sha256": "25e0453fc6456bb1c632e84d16e05898ca87a6c664b63d987c2d5e582d6eb107"
+  },
+  "output": {
+    "bytes": 67119,
+    "sha256": "8220f3ea715088ff01b5e9548b8f004c432a449d59d26e707e04ac0930c28d2e"
+  },
+  "transformSha256": "c6bae1ccc77a8b5c6d75eb457065f4d66e2b9596d828219957aba92dcd8b88b4",
+  "entries": [
+    {
+      "path": "compiler-port-entry/BrowserCompiler.kt",
+      "repositoryPath": "../entry/BrowserCompiler.kt",
+      "bytes": 8242,
+      "sha256": "069d7052f7111011dc4fa215c7950f9bb3e61ec0df0dd4e529af8a2a487f39d1"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompilerPipeline.kt",
+      "repositoryPath": "../entry/BrowserCompilerPipeline.kt",
+      "bytes": 7674,
+      "sha256": "3ef8f26b0169d07d001423c57c2690c2d05d6e771dbc3610b1c1c0b4223a2f8a"
+    }
+  ],
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d"
+}
