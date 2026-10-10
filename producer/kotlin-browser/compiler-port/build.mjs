@@ -207,6 +207,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             sourceRoot, path.join(outputRoot, 'compiler-port-descriptors'));
           return { ...component, commonSources: component.sourceFiles };
         }],
+        ['descriptorVisitorReceipt', async ({ sourceRoot, outputRoot }) => {
+          const visitor = await import('./descriptor-visitor-contract/prepare.mjs');
+          const retainedSources = [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+            .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+          const options = { sourceRoot, outputRoot, preparedDescriptors: preparedComponents.get('descriptorReceipt'), retainedSources };
+          const component = await visitor.prepareDescriptorVisitorContracts(options);
+          await visitor.verifyDescriptorVisitorContracts({ ...options, profileRoot: outputRoot });
+          return component;
+        }],
         ['typeContractReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./type-contracts/prepare.mjs')).prepareTypeContracts(
             sourceRoot, path.join(outputRoot, 'compiler-port-type-contracts'));
