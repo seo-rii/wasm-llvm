@@ -290,6 +290,30 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           receipt.jsAstSharedDependencies = sharedDependencies;
           return component;
         }],
+        ['constantsArithmeticReceipt', async ({ sourceRoot, outputRoot }) => {
+          const arithmetic = await import('./constants-arithmetic/prepare.mjs');
+          const retainedSources = [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+            .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+          const component = await arithmetic.prepareConstantsArithmetic({ sourceRoot, outputRoot, retainedSources });
+          await arithmetic.verifyConstantsArithmetic({ sourceRoot, outputRoot, retainedSources, receiptPath: component.receiptPath });
+          receipt.constantsArithmeticSharedDependencies = [];
+          for (const dependency of component.sharedDependencies) {
+            const sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+            assert(pin?.compile, 'Missing selected constant arithmetic dependency');
+            assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            if (dependency.component === 'jsAstReceipt') {
+              assert(preparedComponents.get('jsAstReceipt').commonSources.includes(pin.filename));
+            } else {
+              assert.equal(dependency.component, 'retainedOriginal');
+              assert.equal(pin.filename, path.join(output, 'sources', sourcePath));
+            }
+            assert.equal([...files.values()].filter((selected) => selected.compile && selected.filename === pin.filename).length, 1);
+            verifyFile(await readRegular(pin.filename, pin.bytes), dependency);
+            receipt.constantsArithmeticSharedDependencies.push({ path: sourcePath, component: dependency.component,
+              bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['jsAstIntegerConsumerReceipt', async ({ sourceRoot, outputRoot }) => {
           const integer = await import('./js-ast-consumer-bindings/integer/prepare.mjs');
           const verifier = await import('./js-ast-consumer-bindings/integer/verify.mjs');
