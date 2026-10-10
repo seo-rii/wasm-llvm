@@ -2,6 +2,7 @@
 package org.jetbrains.kotlin.browser.compiler
 
 import org.jetbrains.kotlin.KtSourceFile
+import org.jetbrains.kotlin.KtInMemoryTextSourceFile
 import org.jetbrains.kotlin.backend.common.linkage.issues.checkNoUnboundSymbols
 import org.jetbrains.kotlin.backend.wasm.WasmBackendContext
 import org.jetbrains.kotlin.backend.wasm.compileToLoweredIr
@@ -23,6 +24,7 @@ import org.jetbrains.kotlin.ir.backend.js.utils.JsMainFunctionDetector
 import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.js.config.dce
+import org.jetbrains.kotlin.js.portable.installRequestSourceContent
 import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
 import org.jetbrains.kotlin.platform.wasm.WasmTarget
 import org.jetbrains.kotlin.portable.linker.MemoryKlibInput
@@ -48,9 +50,16 @@ class BrowserCompilerPipeline(
         require(configuration.get(WasmConfigurationKeys.WASM_TARGET) == WasmTarget.WASI)
         require(maximumArtifactBytes > 0)
         val moduleName = requireNotNull(configuration[CommonConfigurationKeys.MODULE_NAME])
+        require(sources.isNotEmpty()) { "At least one source file is required" }
+        val sourceMetadata = sources.map { Triple(it, it.name, it.path) }
+        require(sourceMetadata.map { it.third ?: it.second }.toSet().size == sourceMetadata.size) { "Duplicate source path" }
+        val requestSources = sourceMetadata.map {
+            KtInMemoryTextSourceFile(it.second, it.third, it.first.getContentsAsText())
+        }
+        installRequestSourceContent(configuration, requestSources)
         val loadedInputs = loadMemoryWebKlibs(configuration, approvedInputs, target = "wasm-wasi")
         if (diagnostics.hasErrors) throw SourceCompilationFailed(diagnostics)
-        val frontend = BrowserCompilerFrontend(configuration, loadedInputs.all).compileFrontend(sources, diagnostics)
+        val frontend = BrowserCompilerFrontend(configuration, loadedInputs.all).compileFrontend(requestSources, diagnostics)
 
         // Keep the complete official source -> KLIB -> linked IR boundary. FIR
         // metadata needs the actual frontend files, not an empty placeholder.

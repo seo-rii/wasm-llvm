@@ -128,6 +128,15 @@ before copying or allocating. Negative, overflow and truncated payload lengths
 now have one explicit rejection contract. Normal serialized bytes remain exact;
 this does not supply ByteBuffer or close the full deserializer.
 
+The [request source-content binding](js-ast-consumer-bindings/source-content/)
+replaces the embedded-location filesystem supplier with a captured immutable
+request value. The pipeline captures source metadata, rejects empty/duplicate
+input lists before text reads, reads each original source once, installs the
+raw-text provider and gives those same genuine in-memory source objects to the
+frontend. Retained callbacks keep their request's content. The shared real
+configuration and AST reader sources are selected once; full source-map and
+pipeline execution remain unverified.
+
 The [backend exception-name boundary](backend-exception-text/) preserves the
 existing JVM-qualified String protocol using the original two literal names.
 It verifies and replaces the sourced-DSL backend table once before annotation

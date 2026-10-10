@@ -302,6 +302,21 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await bounds.verifyAstIntegerBounds({ ...options, receiptPath: component.receiptPath });
           return component;
         }],
+        ['jsSourceContentReceipt', async ({ sourceRoot, outputRoot }) => {
+          const sourceContent = await import('./js-ast-consumer-bindings/source-content/prepare.mjs');
+          const component = await sourceContent.prepareSourceContentBindings({ sourceRoot, outputRoot });
+          await sourceContent.verifySourceContentBindings({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          receipt.jsSourceContentSharedDependencies = [];
+          for (const dependency of component.receipt.dependencyPins.filter(pin => pin.path.endsWith('.kt'))) {
+            const matches = [...files].filter(([, pin]) => pin.compile
+              && pin.bytes === dependency.bytes && pin.sha256 === dependency.sha256);
+            assert.equal(matches.length, 1, 'Source content must bind one genuine shared compiler source');
+            const [sourcePath, pin] = matches[0];
+            verifyFile(await readRegular(pin.filename), dependency);
+            receipt.jsSourceContentSharedDependencies.push({ path: sourcePath, bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
