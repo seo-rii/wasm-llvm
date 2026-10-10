@@ -302,6 +302,24 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await bounds.verifyAstIntegerBounds({ ...options, receiptPath: component.receiptPath });
           return component;
         }],
+        ['jsAstInputReceipt', async ({ sourceRoot, outputRoot }) => {
+          const input = await import('./js-ast-consumer-bindings/input-codec/prepare.mjs');
+          const component = await input.prepareJsAstInput({ sourceRoot, outputRoot });
+          await input.verifyJsAstInput({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          const textSources = preparedComponents.get('textReceipt').commonSources;
+          receipt.jsAstInputSharedDependencies = [];
+          for (const dependency of component.sharedDependencies) {
+            const matches = [...files].filter(([, pin]) => pin.compile && textSources.includes(pin.filename)
+              && pin.filename.endsWith('/' + dependency.path)
+              && pin.bytes === dependency.bytes && pin.sha256 === dependency.sha256);
+            assert.equal(matches.length, 1, 'AST input must bind one genuine shared text source');
+            const [sourcePath, pin] = matches[0];
+            verifyFile(await readRegular(pin.filename), dependency);
+            receipt.jsAstInputSharedDependencies.push({ path: sourcePath, component: 'textReceipt',
+              bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['jsSourceContentReceipt', async ({ sourceRoot, outputRoot }) => {
           const sourceContent = await import('./js-ast-consumer-bindings/source-content/prepare.mjs');
           const component = await sourceContent.prepareSourceContentBindings({ sourceRoot, outputRoot });
