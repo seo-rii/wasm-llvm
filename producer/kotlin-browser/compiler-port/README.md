@@ -95,6 +95,11 @@ the original input-Wasm reader as a reference and omits it from the emit-only
 whole-program compiler only after checking every final selected input. A new
 reader dependency or incremental Wasm deserializer rejects this profile.
 
+The [K1 reflection-container profile](k1-container-profile/README.md) verifies
+every final compiler input before excluding eleven unused DI sources. It keeps
+the real marker, annotation, remaining analyzer services and ModuleInfo, and
+rechecks the complete selected source list after the three exact splits.
+
 The [Wasm collection bindings](wasm-collections/README.md) layer three audited
 serial cache operations and an ascending annotation snapshot over the verified
 identity and UTF-8 variants. The composer verifies and supersedes those exact

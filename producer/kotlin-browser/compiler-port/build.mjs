@@ -524,6 +524,41 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         files.set(sourcePath, { ...files.get(sourcePath), compile: false });
       }
     }
+    if (sourceHost === 'portable') {
+      const profile = await import('./k1-container-profile/prepare.mjs');
+      const componentRoot = path.join(output, 'components', 'k1ContainerProfileReceipt');
+      const component = await profile.prepareK1ContainerProfile({ sourceRoot: prepared.sourceRoot,
+        outputRoot: componentRoot,
+        retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      await profile.verifyK1ContainerProfile(componentRoot);
+      receipt.k1ContainerProfileReceipt = component.receipt;
+      const replaced = new Set(component.replacedOriginalPaths.map(relativePath));
+      assert.equal(replaced.size, component.replacedOriginalPaths.length);
+      for (const sourcePath of replaced) {
+        assert(files.get(sourcePath)?.compile, 'Missing selected K1 contract: ' + sourcePath);
+        files.set(sourcePath, { ...files.get(sourcePath), compile: false });
+      }
+      for (const filename of component.commonSources) {
+        assert(filename.startsWith(componentRoot + path.sep));
+        const sourcePath = relativePath(path.relative(componentRoot, filename));
+        assert(replaced.has(sourcePath) && files.get(sourcePath)?.compile === false,
+          'Unexpected K1 contract replacement: ' + sourcePath);
+        const bytes = await readRegular(filename); const digest = sha256(bytes);
+        files.set(sourcePath, { filename, bytes: bytes.length, sha256: digest, compile: true });
+        receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
+        replaced.delete(sourcePath);
+      }
+      assert.equal(replaced.size, 0, 'Missing prepared K1 contract');
+      for (const excluded of component.sourceSetExclusions) {
+        const sourcePath = relativePath(excluded); assert(files.get(sourcePath)?.compile);
+        files.set(sourcePath, { ...files.get(sourcePath), compile: false });
+      }
+      const final = await profile.verifyK1ContainerProfileComposition({ profileRoot: componentRoot,
+        retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.k1ContainerFinalReceipt = final.receipt;
+    }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
     receipt.hostLibraries = [{ role: 'compiler-host-stdlib', file: path.basename(bootstrap.wasmJsStdlib),
