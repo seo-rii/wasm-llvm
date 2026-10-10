@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-serializer-output-host-spans",
+  "files": [
+    {
+      "kind": "serializer",
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstSerializer.kt",
+      "input": {
+        "bytes": 30850,
+        "sha256": "294fc9fe75e371f40d919f61fe74937be9de7dd33507b6c9fdba9e2856d7d69c",
+        "gitBlob": "0fdd0970a29a176a49acfce2bb95f588c3a512c0"
+      },
+      "output": {
+        "bytes": 31039,
+        "sha256": "70bd35d21ed1d1b6f9fa33f0061dd230a3062ec8ecd55e68427e60c8112c282f",
+        "gitBlob": "af9c163f6e458319dc6b7d8d80a59d73ff898d4f"
+      },
+      "changes": [
+        {
+          "start": 670,
+          "line": 14,
+          "before": "import java.io.ByteArrayOutputStream",
+          "after": "import org.jetbrains.kotlin.js.portable.JsAstByteWriter"
+        },
+        {
+          "start": 707,
+          "line": 15,
+          "before": "import java.io.DataOutputStream",
+          "after": "import org.jetbrains.kotlin.js.portable.JsAstStreamOutput"
+        },
+        {
+          "start": 739,
+          "line": 16,
+          "before": "import java.io.OutputStream",
+          "after": "import org.jetbrains.kotlin.js.portable.CompilerByteSink\nimport org.jetbrains.kotlin.js.portable.useJsAstOutput\nimport org.jetbrains.kotlin.portable.text.compilerUtf8Bytes"
+        },
+        {
+          "start": 767,
+          "line": 17,
+          "before": "import java.util.*\n",
+          "after": ""
+        },
+        {
+          "start": 787,
+          "line": 19,
+          "before": "fun JsIrProgramFragments.serializeTo(output: OutputStream)",
+          "after": "fun JsIrProgramFragments.serializeTo(output: CompilerByteSink)"
+        },
+        {
+          "start": 935,
+          "line": 25,
+          "before": "val data = ByteArrayOutputStream()",
+          "after": "val data = JsAstByteWriter()"
+        },
+        {
+          "start": 974,
+          "line": 26,
+          "before": "private val output = DataOutputStream(data)",
+          "after": "private val output = data"
+        },
+        {
+          "start": 1023,
+          "line": 28,
+          "before": "fun saveTo(output: DataOutputStream)",
+          "after": "fun saveTo(output: JsAstStreamOutput)"
+        },
+        {
+          "start": 1095,
+          "line": 30,
+          "before": "data.writeTo(it)",
+          "after": "it.write(data.toByteArray())"
+        },
+        {
+          "start": 1538,
+          "line": 46,
+          "before": "string.toByteArray(SerializationCharset)",
+          "after": "string.compilerUtf8Bytes()"
+        },
+        {
+          "start": 2632,
+          "line": 90,
+          "before": "private val fileStack: Deque<String> = ArrayDeque()",
+          "after": "private val fileStack: ArrayDeque<String> = ArrayDeque()"
+        },
+        {
+          "start": 3218,
+          "line": 105,
+          "before": "fun saveTo(rawOutput: OutputStream)",
+          "after": "fun saveTo(rawOutput: CompilerByteSink)"
+        },
+        {
+          "start": 3264,
+          "line": 106,
+          "before": "DataOutputStream(rawOutput).use {",
+          "after": "JsAstStreamOutput(rawOutput).useJsAstOutput {"
+        },
+        {
+          "start": 29578,
+          "line": 781,
+          "before": "fileStack.peek()",
+          "after": "fileStack.firstOrNull()"
+        },
+        {
+          "start": 29782,
+          "line": 786,
+          "before": "fileStack.push(it.file)",
+          "after": "fileStack.addFirst(it.file)"
+        },
+        {
+          "start": 29959,
+          "line": 794,
+          "before": "fileStack.pop()",
+          "after": "fileStack.removeFirst()"
+        }
+      ]
+    },
+    {
+      "kind": "carrier",
+      "path": "compiler-port-backend-profile/compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/CacheUpdater.kt",
+      "input": {
+        "bytes": 1037,
+        "sha256": "2d8915e2c93e81ef495288fd7d63cf4fde0712849383c952e5589bb50e6cd0f6",
+        "gitBlob": "e7185e57e728cfb7f5d9d2fdf8dfbe2e7f1167fc"
+      },
+      "output": {
+        "bytes": 1070,
+        "sha256": "6b4fe600cabacf50ed1436ac8bc346e77fcabf5bd5b690f45ae1fb240f06cf78",
+        "gitBlob": "bad6c2fa0ccbdbc709101cf4415ea893c0b7c029"
+      },
+      "changes": [
+        {
+          "start": 369,
+          "line": 10,
+          "before": "import java.io.OutputStream",
+          "after": "import org.jetbrains.kotlin.js.portable.CompilerByteSink"
+        },
+        {
+          "start": 620,
+          "line": 20,
+          "before": "abstract fun serialize(stream: OutputStream)",
+          "after": "abstract fun serialize(stream: CompilerByteSink)"
+        }
+      ]
+    },
+    {
+      "kind": "fragments",
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/JsIrProgramFragment.kt",
+      "input": {
+        "bytes": 13960,
+        "sha256": "d784685eb3d7a25ebf4c785711075a0f67623e9c6cfd9370018a815d5bf7d95c",
+        "gitBlob": "4fab897ab7c46a4d82ac2774d2144ea2280ca3f3"
+      },
+      "output": {
+        "bytes": 13993,
+        "sha256": "da9ddeeaf203bb680dd14f0dfd016b8bd096bb59b6e8c053457030e8f73fb11a",
+        "gitBlob": "78b5ee060b3ed2c1fbb2b24951710e09e0f3e1b2"
+      },
+      "changes": [
+        {
+          "start": 856,
+          "line": 18,
+          "before": "import java.io.OutputStream",
+          "after": "import org.jetbrains.kotlin.js.portable.CompilerByteSink"
+        },
+        {
+          "start": 1035,
+          "line": 22,
+          "before": "override fun serialize(stream: OutputStream)",
+          "after": "override fun serialize(stream: CompilerByteSink)"
+        }
+      ]
+    }
+  ]
+}

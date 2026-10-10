@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {readRegular,sha256,writeJson} from '../../scripts/source.mjs';
+import {applyExact} from './transform.mjs';
+import {prepareSerializerOutputBindings,verifySerializerOutputBindings,verifySerializerOutputSelection,auditSerializerOutputHierarchy} from './prepare.mjs';
+const HERE=path.dirname(fileURLToPath(import.meta.url)),REPO=path.resolve(HERE,'../../../..'),root=path.resolve(process.argv[3]);assert(root.startsWith(path.join(REPO,'out')+path.sep));await mkdir(root,{mode:0o700});
+const fixture=JSON.parse(await readRegular(path.join(path.resolve(process.argv[2]),'fixture.json'),8*1024*1024)),options={...fixture.options,outputRoot:path.join(root,'profile')};
+const lockBytes=await readRegular(path.join(HERE,'sources.lock.json')),lock=JSON.parse(lockBytes),inventory=JSON.parse(await readRegular(path.join(HERE,'inventory.json'))),results=[];
+const component=await prepareSerializerOutputBindings(options);await verifySerializerOutputBindings(options);
+const selected=options.retainedSources.map(pin=>{const row=inventory.files.find(x=>x.path===pin.path);return row?{path:row.path,filename:path.join(options.outputRoot,row.path),bytes:row.output.bytes,sha256:row.output.sha256}:pin;});
+await verifySerializerOutputSelection({sourceRoot:options.sourceRoot,outputRoot:options.outputRoot,retainedSources:selected});
+async function reject(name,action,message){await assert.rejects(action,message);results.push({name,rejected:true});}
+async function sample(name,bytes,key){const filename=path.join(root,name);await writeFile(filename,bytes,{mode:0o600,flag:'wx'});return {path:key,filename,bytes:bytes.length,sha256:sha256(bytes)};}
+const audit=(pins,phase)=>auditSerializerOutputHierarchy({retainedSources:pins,phase,lock,inventory});
+const unknown=await sample('NewConsumer.kt',Buffer.from('package guard\nfun incoming(value: org.jetbrains.kotlin.ir.backend.js.ic.IrICProgramFragments) = value\n'),'guard/NewConsumer.kt');
+await reject('new-hierarchy-consumer-before',()=>audit([...options.retainedSources,unknown],'before'),/New selected serializer/);
+await reject('new-hierarchy-consumer-after',()=>verifySerializerOutputSelection({sourceRoot:options.sourceRoot,outputRoot:options.outputRoot,retainedSources:[...selected,unknown]}),/New selected serializer/);
+const reference=await sample('NewCallableReference.kt',Buffer.from('package guard\nfun reference(value: Any) = value::serialize\n'),'guard/NewCallableReference.kt');
+await reject('new-member-callable-reference',()=>audit([...selected,reference],'after'),/New selected serializer/);
+const fragment=inventory.files.find(x=>x.kind==='fragments'),original=await readRegular(path.join(options.sourceRoot,fragment.path));
+const changed=await sample('ChangedKnown.kt',Buffer.concat([original,Buffer.from('\n// changed selected body\n')]),fragment.path);
+await reject('changed-known-consumer-body',()=>audit(options.retainedSources.map(pin=>pin.path===fragment.path?changed:pin),'before'),/Changed selected serializer/);
+const added=await sample('AddedClassImport.kt',Buffer.from(original.toString().replace(/^(package[^\n]*)/m,'$1\nimport org.jetbrains.kotlin.js.backend.ast.JsExport')),fragment.path);
+await reject('unrecorded-ast-class-import',()=>audit(options.retainedSources.map(pin=>pin.path===fragment.path?added:pin),'before'),/Changed selected serializer/);
+const excluded=lock.sourceSetExclusions.find(x=>x.endsWith('WasmModuleFragments.kt')),excludedBytes=await readRegular(path.join(options.sourceRoot,excluded)),excludedPin=await sample('WasmModuleFragments.kt',excludedBytes,excluded);
+await reject('excluded-real-wasm-override-reintroduced',()=>audit([...selected,excludedPin],'after'),/Excluded IC source reintroduced/);
+await reject('missing-known-consumer',()=>audit(selected.filter(pin=>pin.path!==fragment.path),'after'),/Changed selected serializer consumer closure/);
+await reject('duplicate-logical-source',()=>audit([...selected,selected[0]],'after'),/Duplicate selected logical source/);
+const row=inventory.files.find(x=>x.kind==='serializer'),wrongFile=await sample('SameBytesWrongFile.kt',await readRegular(path.join(options.outputRoot,row.path)),row.path);
+await reject('noncanonical-prepared-output-filename',()=>verifySerializerOutputSelection({sourceRoot:options.sourceRoot,outputRoot:options.outputRoot,retainedSources:selected.map(pin=>pin.path===row.path?wrongFile:pin)}));
+await reject('wrong-nullable-predecessor-component',()=>verifySerializerOutputBindings({...options,preparedSerializerNullability:{...options.preparedSerializerNullability,receiptPath:options.preparedBackendProfile.receiptPath}}));
+await reject('noncanonical-nullable-predecessor-sources',()=>verifySerializerOutputBindings({...options,preparedSerializerNullability:{...options.preparedSerializerNullability,commonSources:[path.join(options.sourceRoot,row.path)]}}),/Noncanonical nullable predecessor sources/);
+const before=await readRegular(path.join(options.outputRoot,'reference',row.path)),badRows=structuredClone(row.changes);badRows[0].before+='x';
+assert.throws(()=>applyExact(before,badRows),/Changed transport span/);results.push({name:'changed-exact-recipe-span',rejected:true});
+const receiptFile=component.receiptPath,saved=await readRegular(receiptFile),tampered=JSON.parse(saved);tampered.fullSerializerWasmExecuted=true;
+try{await writeFile(receiptFile,JSON.stringify(tampered));await reject('false-full-wasm-receipt-claim',()=>verifySerializerOutputSelection({sourceRoot:options.sourceRoot,outputRoot:options.outputRoot,retainedSources:selected}));}finally{await writeFile(receiptFile,saved);}
+await verifySerializerOutputSelection({sourceRoot:options.sourceRoot,outputRoot:options.outputRoot,retainedSources:selected});
+await writeJson(path.join(root,'fixture.json'),{options,component,selected,reconstruction:fixture.reconstruction});
+await writeJson(path.join(root,'integrity.json'),{schemaVersion:1,kind:'serializer-output-preparation-and-final-selection-guards',sourceLockSha256:sha256(lockBytes),artifactRoot:path.relative(REPO,root),fixturesSelectedSources:options.retainedSources.length,guards:results,commonSources:component.commonSources,options,selected,preparation:component.receipt,fullCompilerBuilt:false,languageReadiness:false});
+console.log(JSON.stringify({guards:results.length,selectedSources:options.retainedSources.length}));
