@@ -235,6 +235,18 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await module.verifyVisitorVoidProfile(options);
           return component;
         }],
+        ['descriptorPlatformSignaturesReceipt', async ({ outputRoot }) => {
+          const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
+          const component = await signatures.prepareDescriptorPlatformSignatures({ sourceRoot, outputRoot,
+            preparedDescriptors: preparedComponents.get('descriptorReceipt'),
+            descriptorVisitorComponent: preparedComponents.get('descriptorVisitorReceipt'),
+            visitorVoidComponent: preparedComponents.get('descriptorVisitorVoidReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+          });
+          await signatures.verifyDescriptorPlatformSignatures(outputRoot);
+          return component;
+        }],
         ['typeContractReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./type-contracts/prepare.mjs')).prepareTypeContracts(
             sourceRoot, path.join(outputRoot, 'compiler-port-type-contracts'));
@@ -994,6 +1006,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.serializerOutputFinalReceipt = await serializer.verifySerializerOutputSelection({ sourceRoot, outputRoot,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
+    }
+    if (sourceHost === 'portable') {
+      const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
+      receipt.descriptorPlatformSignaturesFinalReceipt = await signatures.verifyFinalDescriptorPlatformSignatures({
+        profileRoot: path.join(output, 'components', 'descriptorPlatformSignaturesReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
