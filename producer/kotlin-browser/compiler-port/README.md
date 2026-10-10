@@ -179,13 +179,21 @@ and byte writing, with bounded memory output. Their source preparations are
 connected to the whole compiler build. A source hash or a compilable helper does
 not establish source-to-program correctness.
 
-The [backend source profile](backend-profile/README.md) is applied last, against
+The [backend source profile](backend-profile/README.md) is applied against
 the actual prepared whole-program driver, browser entry and composed compiler
 inputs. It splits shared declarations from JS executable and incremental-cache
 shells and rejects retained references to any declaration it excludes. The
 official Wasm phase order, shared JS lowerings and configuration predicates remain
 selected. Shared JS context/AST and stream dependencies that this profile does
 not close remain explicit build blockers.
+
+The [native JS output profile](native-js-output-profile/README.md) follows that
+profile and excludes only `CompilationOutputs.kt`, whose retained incoming
+references must be empty. It preserves the prior 21 exclusions and four splits,
+and checks 21 required source boundaries. Its final guard runs after the module
+path reconstruction, checking the actual selected sources and the verified
+module fragment owner. This source-selection proof does not implement native
+filesystem output or establish a working browser compiler.
 
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB

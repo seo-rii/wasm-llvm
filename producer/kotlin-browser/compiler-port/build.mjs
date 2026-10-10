@@ -73,6 +73,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let sourceMapPathComposition;
   let serializerCommentTypeNamesComposition;
   let moduleRequirePathsComposition;
+  let nativeJsOutputProfileComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -673,6 +674,18 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
               .map((pin) => pin.filename),
           });
         }],
+        ['nativeJsOutputProfileReceipt', async ({ sourceRoot, outputRoot }) => {
+          const profile = await import('./native-js-output-profile/prepare.mjs');
+          const options = { sourceRoot, outputRoot,
+            preparedBackendProfile: preparedComponents.get('backendProfileReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) };
+          const component = await profile.prepareNativeJsOutputProfile(options);
+          await profile.verifyNativeJsOutputProfile({ ...options, receiptPath: component.receiptPath });
+          nativeJsOutputProfileComposition = { sourceRoot, outputRoot, receiptPath: component.receiptPath,
+            preparedBackendProfile: options.preparedBackendProfile, preparedProfile: component };
+          return component;
+        }],
         ['serializerOutputReceipt', async ({ outputRoot }) => {
           const serializer = await import('./serializer-output-bindings/prepare.mjs');
           const options = { sourceRoot: prepared.sourceRoot, outputRoot,
@@ -1130,6 +1143,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.moduleRequirePathsFinalReceipt = final;
       receipt.serializerCommentTypeNamesFinalReceipt = final.commentFinal;
       receipt.serializerOutputFinalReceipt = final.commentFinal.predecessorSelection;
+      const profile = await import('./native-js-output-profile/final.mjs');
+      const nativeFinal = await profile.verifyNativeJsOutputFinalSources({ ...nativeJsOutputProfileComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+      });
+      receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
     }
     if (sourceHost === 'portable') {
       const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
