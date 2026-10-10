@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "kind": "compiler-source-assembly-negative-evidence",
+  "headAtLaunch": "5297833478ad8b259e0253a04319fbe6580bc758",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "compilerInvoked": false,
+  "compilerDiagnosticCount": null,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false,
+  "failure": "Duplicate final source-map import\n\n83 !== 84\n",
+  "explanation": "The canonical SourceMap source already imports the verified assertion adapter. Generic assembly appended the identical import, and final source validation rejected the duplicate before compiler invocation.",
+  "expectedAssertionImport": "import org.jetbrains.kotlin.portable.assertions.compilerAssert as assert",
+  "actualOccurrences": 2,
+  "job": {
+    "pid": 4061733,
+    "log": "/home/seorii/logs/wasm-kotlin-source-map-serializer-whole-1791647490724798416.log",
+    "status": "/home/seorii/logs/wasm-kotlin-source-map-serializer-whole-1791647490724798416.status.json",
+    "output": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/source-map-serializer-whole-1791647490724798416",
+    "runner": "/tmp/wasm-kotlin-source-map-serializer-whole-1791647490724798416.py",
+    "argv": [
+      "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+      "producer/kotlin-browser/compiler-port/build.mjs",
+      "--input",
+      "out/kotlin-compiler-port",
+      "--protobuf-build",
+      "out/kotlin-compiler-serialization/probe-8/codec",
+      "--output",
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/source-map-serializer-whole-1791647490724798416"
+    ],
+    "head": "5297833478ad8b259e0253a04319fbe6580bc758"
+  },
+  "status": {
+    "state": "exited",
+    "exitCode": 1,
+    "durationSeconds": 510.0014388561249
+  },
+  "pins": {
+    "receipt": {
+      "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/source-map-serializer-whole-1791647490724798416/compiler-build-receipt.json",
+      "bytes": 8299568,
+      "sha256": "2b2a3dc9ebd222357e4b6efd310b5e4f109bcec1d709763cb7bad7c49d9cae83"
+    },
+    "log": {
+      "filename": "/home/seorii/logs/wasm-kotlin-source-map-serializer-whole-1791647490724798416.log",
+      "bytes": 170,
+      "sha256": "5d053823feef6cf3ab7e6588d617882957701ee52809729fd6536b441a34012f"
+    },
+    "status": {
+      "filename": "/home/seorii/logs/wasm-kotlin-source-map-serializer-whole-1791647490724798416.status.json",
+      "bytes": 73,
+      "sha256": "bd5a1f2bc48cd8010df204436b920708a5d4edd0287403d8d275edf0b4ca7aab"
+    },
+    "failingSource": {
+      "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/source-map-serializer-whole-1791647490724798416/components/sourceMapRuntimeReceipt/compiler-port-source-map-runtime/js/js.parser/src/org/jetbrains/kotlin/js/parser/sourcemaps/SourceMap.kt",
+      "bytes": 10357,
+      "sha256": "9ee381370a6a7eba3115ceec78e4229c89b60a6297d232be4641f0743807e959"
+    }
+  },
+  "buildToolSha256": "163988b8beecde8e52b07eecb48b07b8c7ba396a89ecc4bb4c037c50d3609189",
+  "correctionValidation": {
+    "receipt": {
+      "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-assertion-assembly-1791648313790736372/receipt.json",
+      "bytes": 4114,
+      "sha256": "d1558d649108f912bd0cdd3364a26f540d17433f261dff0a1a46fc2b33d8073f"
+    },
+    "seal": {
+      "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-source-map-assertion-assembly-1791648313790736372/seal.json",
+      "bytes": 1510,
+      "sha256": "523f2a2221d8d88d17d552b3dac6abbf04ce950e813c6e2e8ea4e79044848e18"
+    },
+    "cases": 13,
+    "copiedSelectedSources": 3519,
+    "existingDuplicateRejected": true,
+    "correctedFinalGuardPassed": true,
+    "originalFailurePreserved": true,
+    "status": {
+      "exitCode": 0,
+      "elapsedSeconds": 20.516251789999842
+    }
+  }
+}

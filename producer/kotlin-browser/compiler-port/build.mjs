@@ -780,7 +780,10 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         const rebound = code.replace(/^import kotlin\.assert[ \t]*\r?\n/gm, '');
         const packageLine = /^package[ \t]+[^\r\n]+/m.exec(rebound);
         const end = packageLine.index + packageLine[0].length;
-        const bytes = Buffer.from(rebound.slice(0, end) + '\nimport ' + assertionImport + '\n' + rebound.slice(end));
+        const hasAssertionImport = rebound.split(/\r?\n/).some(line => line.trimEnd() === 'import ' + assertionImport);
+        const bound = hasAssertionImport ? rebound : rebound.slice(0, end) + '\nimport ' + assertionImport + '\n' + rebound.slice(end);
+        if (bound === code) continue;
+        const bytes = Buffer.from(bound);
         await writeFile(pin.filename, bytes, { mode: 0o600 });
         assertionBindings.push({ path: sourcePath, originalSha256: pin.sha256, bytes: bytes.length, sha256: sha256(bytes) });
         files.set(sourcePath, { ...pin, bytes: bytes.length, sha256: sha256(bytes) });
