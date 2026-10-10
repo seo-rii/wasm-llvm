@@ -456,6 +456,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await constants.verifyNullConstantValue(outputRoot);
           return component;
         }],
+        ['serializerNullabilityReceipt', async ({ sourceRoot, outputRoot }) => {
+          const serializer = await import('./serializer-nullability/prepare.mjs');
+          const options = { sourceRoot, outputRoot, preparedJsAst: preparedComponents.get('jsAstReceipt') };
+          const component = await serializer.prepareSerializerNullability(options);
+          await serializer.verifySerializerNullability(options);
+          return component;
+        }],
         ['jsAstOutputReceipt', async ({ sourceRoot, outputRoot }) => {
           const module = await import('./js-ast-consumer-bindings/output-codec/prepare.mjs');
           const component = await module.prepareJsAstOutput({ sourceRoot, outputRoot });
