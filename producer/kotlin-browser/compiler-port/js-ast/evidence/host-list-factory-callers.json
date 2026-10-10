@@ -1,0 +1,54 @@
+{
+  "kind": "bounded-original-ast-list-factory-caller-audit",
+  "sourceCommit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+  "callers": [
+    {
+      "source": {
+        "path": "js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsExport.kt",
+        "gitBlob": "7290147397ae92318778459b6c0ec66e884d2b11",
+        "bytes": 1375,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "js/js.ast",
+        "sha256": "5e7a2e6344076f575d0e99cff3e18ee0211dcf3f7a25e04241ca865b8241c9a2"
+      },
+      "line": 13,
+      "shape": "singleton listOf(element)",
+      "observation": "Children are visited by forEach; context traverse is deliberately empty; deepCopy shares Subject. No internal collection mutation."
+    },
+    {
+      "source": {
+        "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/JsIntrinsicTransformers.kt",
+        "gitBlob": "2cbba2ab82948d1f31f145d7b02553a4f58313c5",
+        "bytes": 21640,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/ir/backend.js",
+        "sha256": "588c41d851b6b27bbdeaff7993967a2edcada9390e5fb24d8efc5c61cb6fabd8"
+      },
+      "line": 301,
+      "shape": "JsObjectLiteral(listOf(KeyValue(...)))",
+      "observation": "Property-list add/remove/replace is externally observable. Original singleton list blocks mutations; common listOf can permit them. AstUtil.deepCopy allocates a new mutable ArrayList on both hosts."
+    },
+    {
+      "source": {
+        "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/ModuleWrapperTranslation.kt",
+        "gitBlob": "d7ea987717e02a9c35c0e32054e777acdc3e7dcf",
+        "bytes": 9337,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/ir/backend.js",
+        "sha256": "9f6718a26340d98aaa8413625912142cbd89be69e2df139d209ea7fb8b45b259"
+      },
+      "line": 109,
+      "shape": "JsArrayLiteral(listOf(exports) + importedModules.map(...))",
+      "observation": "Plus allocates a new list on both hosts; not the singleton-factory mutability difference. Invocation/New copy input argument lists. Both files are retained in frozen whole-source compiler inputs."
+    }
+  ],
+  "scope": "Original44 AST Kotlin plus retained JS/Wasm compiler AST constructor sites; no whole compiler execution claim. No direct factory argument to ArrayLiteral/ObjectLiteral/Block/Try/Switch found in backend.wasm source scan.",
+  "remainingBoundary": "Explicit compiler-host singleton/fixed-size factory bindings at genuine producing sites would be required for full JVM factory mutation parity; declared List type alone cannot identify physical immutability.",
+  "fullCompilerBuilt": false
+}

@@ -1,0 +1,55 @@
+{
+  "kind": "retained-negative-host-list-factory-differential",
+  "artifacts": [
+    {
+      "path": "out/kotlin-js-ast/differential-u2jc5s/original-jvm.json",
+      "bytes": 181785,
+      "sha256": "f6d8674b44679f0e12c52e3d8287ab38f1d24a4a6dfae9723d6b36c65d0e4cf3"
+    },
+    {
+      "path": "out/kotlin-js-ast/differential-u2jc5s/portable-jvm.json",
+      "bytes": 181439,
+      "sha256": "99025e3bee727dfd90c0ce5144008c54a506b21c193ce36547a26f69d775e3a1"
+    },
+    {
+      "path": "out/kotlin-js-ast/differential-u2jc5s/portable-wasmjs.json",
+      "bytes": 181166,
+      "sha256": "db0d43df83c3e53ff01a2ef8f8a6cd0d67b0427b09061b47af34288a041b8ce1"
+    }
+  ],
+  "observerSha256": "cdd3be70402ee67da32ec71f82082b1b4900bfa19067c5fe57de83546c2c4b68",
+  "observations": 994,
+  "rawDifferences": [
+    {
+      "index": 26,
+      "originalJvm": "list.array-readonly-mutation=UnsupportedOperationException",
+      "nodeWasm": "list.array-readonly-mutation=NO_EXCEPTION"
+    },
+    {
+      "index": 38,
+      "originalJvm": "list.object-readonly-mutation=UnsupportedOperationException",
+      "nodeWasm": "list.object-readonly-mutation=NO_EXCEPTION"
+    },
+    {
+      "index": 51,
+      "originalJvm": "list.block-readonly-mutation=UnsupportedOperationException",
+      "nodeWasm": "list.block-readonly-mutation=NO_EXCEPTION"
+    },
+    {
+      "index": 53,
+      "originalJvm": "list.try-readonly-mutation=UnsupportedOperationException",
+      "nodeWasm": "list.try-readonly-mutation=NO_EXCEPTION"
+    },
+    {
+      "index": 248,
+      "originalJvm": "statement.9.render=try {\n} catch (value) {\n}\n",
+      "nodeWasm": "statement.9.render=try {\n} catch (value) {\n}\n catch (value) {\n}\n"
+    },
+    {
+      "index": 249,
+      "originalJvm": "statement.9.copy-render=try {\n} catch (value) {\n}\n",
+      "nodeWasm": "statement.9.copy-render=try {\n} catch (value) {\n}\n catch (value) {\n}\n"
+    }
+  ],
+  "scope": "Kotlin listOf physical mutability differs by host; portable Java-list alias adapter reflects actual supplied input mutability. This is not whole AST parity."
+}
