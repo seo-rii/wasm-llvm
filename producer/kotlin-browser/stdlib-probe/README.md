@@ -71,5 +71,10 @@ attempts are preserved separately and are not counted as successful builds.
 The [console runtime corpus](console-runtime/README.md) additionally executes
 24 real Kotlin EOF, Unicode, stderr, exception, output-budget and fresh-state
 cases through the existing wasm-idle runner in Node and 24 fresh offline
-Chromium Workers. All raw results match. Cancellation, full WASI acceptance and
-browser Kotlin source compilation remain separate requirements.
+Chromium Workers. All raw results match. The separate [Worker lifecycle
+probe](console-lifecycle/README.md) terminates three requests using the real
+Kotlin infinite-loop fixture and successfully executes fresh state after each
+in offline Chromium. Two requests record stdout before termination; the third
+uses an unmodified Worker whose loop entry is not directly observed. Its
+external cancellation/deadline controller is test-only. Full WASI acceptance
+and browser Kotlin source compilation remain separate requirements.
