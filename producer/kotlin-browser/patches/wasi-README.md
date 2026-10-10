@@ -14,8 +14,10 @@ guarantees pointers aligned to 8 bytes. Its scoped allocator delegates to an are
 allocator backed by a free list, which rounds each allocation up to a multiple of
 8. Therefore the original 26-byte event already receives a 32-byte physical slot;
 the original 20-byte subscription receives 24 bytes, below the standard 48-byte
-structure. This is source inspection. Actual Kotlin allocation addresses and
-memory corruption have not been measured. The patch uses the existing allocator
+structure. [Actual Kotlin allocator observations](../stdlib-probe/allocator-canary/README.md)
+now confirm these extents and alignment with the source-built patched library.
+The original-size subscription probe only reads the 48-byte span; it does not
+execute the unpatched stdlib or demonstrate corruption in it. The patch uses the existing allocator
 contract and does not add a separate alignment adapter.
 
 Verify against a source directory containing the three pinned source files and
@@ -68,5 +70,7 @@ copied builtin inputs. The upstream Gradle task above is still unrun. Its
 [source-build receipt](../evidence/stdlib-source-build.json) records the actual
 patched KLIB hash, commands and exit status. Hello World and stdin-driven Fibonacci
 built with that KLIB run in Chromium; their execution receipt is maintained in
-wasm-idle. Actual allocator alignment and full-sized poll canaries, complete
-stdin/EOF/Unicode/stderr coverage and the remaining G5 checks are still required.
+wasm-idle. Actual allocator alignment and full-sized patched poll canaries now
+pass in Node and two fresh offline Chromium Workers, including `AGAIN` followed
+by partial UTF-8 output. Complete stdin/EOF/Unicode/stderr coverage and the
+remaining G5 checks are still required.

@@ -146,8 +146,9 @@ language/API 2.5 settings are separate from the original 2.4 example profile.
   [stdlib source patch](patches/wasi-README.md) changes the requested sizes to
   48/32 without changing the official I/O logic. Git apply/reverse and seven
   integrity/application guards passed. The complete patched target stdlib now
-  builds and runs both examples in Chromium; actual Kotlin allocator canaries
-  and the full G5 corpus remain untested.
+  builds and runs both examples in Chromium. [Actual allocator canaries](stdlib-probe/allocator-canary/README.md)
+  pass 81 allocation cases and the real patched poll path in Node and two fresh
+  offline Chromium Workers. The complete G5 corpus remains untested.
 
 ## Gate progression
 
@@ -158,7 +159,7 @@ language/API 2.5 settings are separate from the original 2.4 example profile.
 | G2 | Portable byte sink/registry/KLIB/writer host comparisons | Individual writer, registry, protobuf and KLIB probes passed for their recorded corpora; full compiler dependency closure remains incomplete |
 | G3 | New-parser raw/resolved FIR, builtins, common/target checkers | Not run |
 | G4 | Browser compiler emits a new program using official IR/backend | Not run |
-| G5 | Real Kotlin WASI stdin/EOF/ABI/output/exception execution | Hello/Fibonacci, stdin, output-limit and fresh-instance recovery pass; allocator canaries and full corpus remain unrun |
+| G5 | Real Kotlin WASI stdin/EOF/ABI/output/exception execution | Hello/Fibonacci, stdin, output-limit, fresh-instance recovery and actual allocator/patched-poll canaries pass; full corpus remains unrun |
 | G6 | Consumer compile/run, cancellation/recovery/offline/cache | Not run |
 | G7 | Required corpus, browser matrix, measured resource/performance profile | Not run |
 | G8 | Clean reproducible release, licenses, immutable receipts and rollback | Not run |
