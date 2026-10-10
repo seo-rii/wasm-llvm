@@ -1,0 +1,505 @@
+--- a/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrCommonMemberStorage.kt
++++ b/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrCommonMemberStorage.kt
+@@ -16,7 +16,7 @@
+ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+ import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
+ import org.jetbrains.kotlin.ir.symbols.*
+-import java.util.concurrent.ConcurrentHashMap
++import org.jetbrains.kotlin.utils.SerialFirCacheMap
+ 
+ /**
+  * This storage contains the shared state of FIR2IR.
+@@ -29,7 +29,7 @@
+     val lock: IrLock = IrLock()
+ 
+     val classCache: MutableMap<FirRegularClass, IrClassSymbol> = mutableMapOf()
+-    val notFoundClassCache: ConcurrentHashMap<ConeClassLikeLookupTag, IrClass> = ConcurrentHashMap()
++    val notFoundClassCache: SerialFirCacheMap<ConeClassLikeLookupTag, IrClass> = SerialFirCacheMap()
+ 
+     val typeParameterCache: MutableMap<FirTypeParameter, IrTypeParameter> = mutableMapOf()
+ 
+@@ -38,19 +38,19 @@
+     val localClassCache: MutableMap<FirClass, IrClass> = mutableMapOf()
+     val localCallableCache: MutableList<Fir2IrScopeCache> = mutableListOf()
+ 
+-    val functionCache: ConcurrentHashMap<FirFunction, IrSimpleFunctionSymbol> = ConcurrentHashMap()
+-    val dataClassGeneratedFunctionsCache: ConcurrentHashMap<FirClass, Fir2IrDeclarationStorage.DataClassGeneratedFunctionsStorage> =
+-        ConcurrentHashMap()
++    val functionCache: SerialFirCacheMap<FirFunction, IrSimpleFunctionSymbol> = SerialFirCacheMap()
++    val dataClassGeneratedFunctionsCache: SerialFirCacheMap<FirClass, Fir2IrDeclarationStorage.DataClassGeneratedFunctionsStorage> =
++        SerialFirCacheMap()
+ 
+-    val constructorCache: ConcurrentHashMap<FirConstructor, IrConstructorSymbol> = ConcurrentHashMap()
++    val constructorCache: SerialFirCacheMap<FirConstructor, IrConstructorSymbol> = SerialFirCacheMap()
+ 
+-    val propertyCache: ConcurrentHashMap<FirProperty, IrPropertySymbol> = ConcurrentHashMap()
+-    val syntheticPropertyCache: ConcurrentHashMap<SyntheticPropertyKey, IrPropertySymbol> = ConcurrentHashMap()
+-    val getterForPropertyCache: ConcurrentHashMap<IrSymbol, IrSimpleFunctionSymbol> = ConcurrentHashMap()
+-    val setterForPropertyCache: ConcurrentHashMap<IrSymbol, IrSimpleFunctionSymbol> = ConcurrentHashMap()
+-    val backingFieldForPropertyCache: ConcurrentHashMap<IrPropertySymbol, IrFieldSymbol> = ConcurrentHashMap()
+-    val propertyForBackingFieldCache: ConcurrentHashMap<IrFieldSymbol, IrPropertySymbol> = ConcurrentHashMap()
+-    val delegateVariableForPropertyCache: ConcurrentHashMap<IrLocalDelegatedPropertySymbol, IrVariableSymbol> = ConcurrentHashMap()
++    val propertyCache: SerialFirCacheMap<FirProperty, IrPropertySymbol> = SerialFirCacheMap()
++    val syntheticPropertyCache: SerialFirCacheMap<SyntheticPropertyKey, IrPropertySymbol> = SerialFirCacheMap()
++    val getterForPropertyCache: SerialFirCacheMap<IrSymbol, IrSimpleFunctionSymbol> = SerialFirCacheMap()
++    val setterForPropertyCache: SerialFirCacheMap<IrSymbol, IrSimpleFunctionSymbol> = SerialFirCacheMap()
++    val backingFieldForPropertyCache: SerialFirCacheMap<IrPropertySymbol, IrFieldSymbol> = SerialFirCacheMap()
++    val propertyForBackingFieldCache: SerialFirCacheMap<IrFieldSymbol, IrPropertySymbol> = SerialFirCacheMap()
++    val delegateVariableForPropertyCache: SerialFirCacheMap<IrLocalDelegatedPropertySymbol, IrVariableSymbol> = SerialFirCacheMap()
+ 
+     val irForFirSessionDependantDeclarationMap: MutableMap<Fir2IrDeclarationStorage.FakeOverrideIdentifier, IrSymbol> = mutableMapOf()
+ 
+--- a/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrDeclarationStorage.kt
++++ b/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrDeclarationStorage.kt
+@@ -63,7 +63,7 @@
+ import org.jetbrains.kotlin.utils.exceptions.errorWithAttachment
+ import org.jetbrains.kotlin.utils.exceptions.requireWithAttachment
+ import org.jetbrains.kotlin.utils.threadLocal
+-import java.util.concurrent.ConcurrentHashMap
++import org.jetbrains.kotlin.utils.SerialFirCacheMap
+ 
+ class Fir2IrDeclarationStorage(
+     private val c: Fir2IrComponents,
+@@ -71,20 +71,20 @@
+     commonMemberStorage: Fir2IrCommonMemberStorage
+ ) : Fir2IrComponents by c {
+ 
+-    private val fragmentCache: ConcurrentHashMap<FqName, ExternalPackageFragments> = ConcurrentHashMap()
+-    private val irModuleCache: ConcurrentHashMap<FirModuleData, IrModuleFragment> = ConcurrentHashMap()
++    private val fragmentCache: SerialFirCacheMap<FqName, ExternalPackageFragments> = SerialFirCacheMap()
++    private val irModuleCache: SerialFirCacheMap<FirModuleData, IrModuleFragment> = SerialFirCacheMap()
+ 
+     private class ExternalPackageFragments(
+-        val fragmentsForDependencies: ConcurrentHashMap<FirModuleData, IrExternalPackageFragment>,
+-        val builtinFragmentsForDependencies: ConcurrentHashMap<FirModuleData, IrExternalPackageFragment>,
++        val fragmentsForDependencies: SerialFirCacheMap<FirModuleData, IrExternalPackageFragment>,
++        val builtinFragmentsForDependencies: SerialFirCacheMap<FirModuleData, IrExternalPackageFragment>,
+         val fragmentForPrecompiledBinaries: IrExternalPackageFragment
+     )
+ 
+-    private val fileCache: ConcurrentHashMap<FirFile, IrFile> = ConcurrentHashMap()
+-
+-    private val scriptCache: ConcurrentHashMap<FirScript, IrScript> = ConcurrentHashMap()
+-
+-    private val replSnippetCache: ConcurrentHashMap<FirReplSnippet, IrReplSnippet> = ConcurrentHashMap()
++    private val fileCache: SerialFirCacheMap<FirFile, IrFile> = SerialFirCacheMap()
++
++    private val scriptCache: SerialFirCacheMap<FirScript, IrScript> = SerialFirCacheMap()
++
++    private val replSnippetCache: SerialFirCacheMap<FirReplSnippet, IrReplSnippet> = SerialFirCacheMap()
+ 
+     class DataClassGeneratedFunctionsStorage {
+         var hashCodeSymbol: IrSimpleFunctionSymbol? = null
+@@ -95,17 +95,17 @@
+         var equalsSymbol: IrSimpleFunctionSymbol? = null
+     }
+ 
+-    private val functionCache: ConcurrentHashMap<FirFunction, IrSimpleFunctionSymbol> = commonMemberStorage.functionCache
+-    private val dataClassGeneratedFunctionsCache: ConcurrentHashMap<FirClass, DataClassGeneratedFunctionsStorage> =
++    private val functionCache: SerialFirCacheMap<FirFunction, IrSimpleFunctionSymbol> = commonMemberStorage.functionCache
++    private val dataClassGeneratedFunctionsCache: SerialFirCacheMap<FirClass, DataClassGeneratedFunctionsStorage> =
+         commonMemberStorage.dataClassGeneratedFunctionsCache
+ 
+-    private val constructorCache: ConcurrentHashMap<FirConstructor, IrConstructorSymbol> = commonMemberStorage.constructorCache
+-
+-    private val initializerCache: ConcurrentHashMap<FirAnonymousInitializer, IrAnonymousInitializer> = ConcurrentHashMap()
++    private val constructorCache: SerialFirCacheMap<FirConstructor, IrConstructorSymbol> = commonMemberStorage.constructorCache
++
++    private val initializerCache: SerialFirCacheMap<FirAnonymousInitializer, IrAnonymousInitializer> = SerialFirCacheMap()
+ 
+     class PropertyCacheStorage(
+-        val normal: ConcurrentHashMap<FirProperty, IrPropertySymbol>,
+-        val synthetic: ConcurrentHashMap<SyntheticPropertyKey, IrPropertySymbol>
++        val normal: SerialFirCacheMap<FirProperty, IrPropertySymbol>,
++        val synthetic: SerialFirCacheMap<SyntheticPropertyKey, IrPropertySymbol>
+     ) {
+         /**
+          * Fir synthetic properties are session-dependent, so it can't be used as a cache key
+@@ -141,15 +141,15 @@
+     }
+ 
+     private val propertyCache = PropertyCacheStorage(commonMemberStorage.propertyCache, commonMemberStorage.syntheticPropertyCache)
+-    private val getterForPropertyCache: ConcurrentHashMap<IrSymbol, IrSimpleFunctionSymbol> =
++    private val getterForPropertyCache: SerialFirCacheMap<IrSymbol, IrSimpleFunctionSymbol> =
+         commonMemberStorage.getterForPropertyCache
+-    private val setterForPropertyCache: ConcurrentHashMap<IrSymbol, IrSimpleFunctionSymbol> =
++    private val setterForPropertyCache: SerialFirCacheMap<IrSymbol, IrSimpleFunctionSymbol> =
+         commonMemberStorage.setterForPropertyCache
+-    private val backingFieldForPropertyCache: ConcurrentHashMap<IrPropertySymbol, IrFieldSymbol> =
++    private val backingFieldForPropertyCache: SerialFirCacheMap<IrPropertySymbol, IrFieldSymbol> =
+         commonMemberStorage.backingFieldForPropertyCache
+-    private val propertyForBackingFieldCache: ConcurrentHashMap<IrFieldSymbol, IrPropertySymbol> =
++    private val propertyForBackingFieldCache: SerialFirCacheMap<IrFieldSymbol, IrPropertySymbol> =
+         commonMemberStorage.propertyForBackingFieldCache
+-    private val delegateVariableForPropertyCache: ConcurrentHashMap<IrLocalDelegatedPropertySymbol, IrVariableSymbol> =
++    private val delegateVariableForPropertyCache: SerialFirCacheMap<IrLocalDelegatedPropertySymbol, IrVariableSymbol> =
+         commonMemberStorage.delegateVariableForPropertyCache
+ 
+     /**
+@@ -212,9 +212,9 @@
+         }
+     }
+ 
+-    private val delegatedReverseCache: ConcurrentHashMap<IrSymbol, FirDeclaration> = ConcurrentHashMap()
+-
+-    private val fieldForDelegatedSupertypeCache: ConcurrentHashMap<FirField, IrFieldSymbol> = ConcurrentHashMap()
++    private val delegatedReverseCache: SerialFirCacheMap<IrSymbol, FirDeclaration> = SerialFirCacheMap()
++
++    private val fieldForDelegatedSupertypeCache: SerialFirCacheMap<FirField, IrFieldSymbol> = SerialFirCacheMap()
+     private val delegatedClassesMap: MutableMap<IrClassSymbol, MutableMap<IrClassSymbol, IrFieldSymbol>> = commonMemberStorage.delegatedClassesInfo
+     private val firClassesWithInheritanceByDelegation: MutableSet<FirClass> = commonMemberStorage.firClassesWithInheritanceByDelegation
+ 
+@@ -223,7 +223,7 @@
+     }
+ 
+     // TODO: move to common storage
+-    private val propertyForFieldCache: ConcurrentHashMap<FirField, IrPropertySymbol> = ConcurrentHashMap()
++    private val propertyForFieldCache: SerialFirCacheMap<FirField, IrPropertySymbol> = SerialFirCacheMap()
+ 
+     // ------------------------------------ package fragments ------------------------------------
+ 
+@@ -251,7 +251,7 @@
+         val isBuiltIn = allowBuiltins && fqName in BUILT_INS_PACKAGE_FQ_NAMES
+         val fragments = fragmentCache.getOrPut(fqName) {
+             val fragmentForPrecompiledBinaries = callablesGenerator.createExternalPackageFragment(fqName, sourceModule)
+-            ExternalPackageFragments(ConcurrentHashMap(), ConcurrentHashMap(), fragmentForPrecompiledBinaries)
++            ExternalPackageFragments(SerialFirCacheMap(), SerialFirCacheMap(), fragmentForPrecompiledBinaries)
+         }
+         // Make sure that external package fragments have a different module descriptor. The module descriptors are compared
+         // to determine if objects need regeneration because they are from different modules.
+@@ -551,7 +551,7 @@
+         constructor(property: FirSyntheticProperty) : this(property.getter.delegate, property.setter?.delegate)
+     }
+ 
+-    private val originalForSyntheticProperty: ConcurrentHashMap<FirSyntheticPropertyKey, FirSyntheticProperty> = ConcurrentHashMap()
++    private val originalForSyntheticProperty: SerialFirCacheMap<FirSyntheticPropertyKey, FirSyntheticProperty> = SerialFirCacheMap()
+ 
+     private fun prepareProperty(property: FirProperty): FirProperty {
+         return when {
+--- a/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrClassifierStorage.kt
++++ b/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrClassifierStorage.kt
+@@ -30,7 +30,7 @@
+ import org.jetbrains.kotlin.name.Name
+ import org.jetbrains.kotlin.name.SpecialNames
+ import org.jetbrains.kotlin.utils.addToStdlib.runIf
+-import java.util.concurrent.ConcurrentHashMap
++import org.jetbrains.kotlin.utils.SerialFirCacheMap
+ 
+ class Fir2IrClassifierStorage(
+     private val c: Fir2IrComponents,
+@@ -38,7 +38,7 @@
+     private val conversionScope: Fir2IrConversionScope,
+ ) : Fir2IrComponents by c {
+     private val classCache: MutableMap<FirRegularClass, IrClassSymbol> = commonMemberStorage.classCache
+-    private val notFoundClassCache: ConcurrentHashMap<ConeClassLikeLookupTag, IrClass> = commonMemberStorage.notFoundClassCache
++    private val notFoundClassCache: SerialFirCacheMap<ConeClassLikeLookupTag, IrClass> = commonMemberStorage.notFoundClassCache
+ 
+     private val typeAliasCache: MutableMap<FirTypeAlias, IrTypeAliasSymbol> = mutableMapOf()
+ 
+--- a/compiler/fir/tree/src/org/jetbrains/kotlin/fir/declarations/ExpectActualAttributes.kt
++++ b/compiler/fir/tree/src/org/jetbrains/kotlin/fir/declarations/ExpectActualAttributes.kt
+@@ -15,8 +15,7 @@
+ import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
+ import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
+ import org.jetbrains.kotlin.resolve.multiplatform.ExpectActualMatchingCompatibility
+-import java.util.concurrent.ConcurrentHashMap
+-import java.util.concurrent.ConcurrentMap
++import org.jetbrains.kotlin.utils.SerialFirCacheMap
+ 
+ private object ExpectForActualAttributeKey : FirDeclarationDataKey()
+ 
+@@ -76,8 +75,8 @@
+ // Expect class in the key is needed, because class may correspond to two expects
+ // in case when two `actual typealias` point to the same class.
+ typealias MemberExpectForActualData =
+-        ConcurrentMap<Pair</* actual member */ FirBasedSymbol<*>, /* expect class */ FirRegularClassSymbol>,
+-                ConcurrentMap</* expect member */ FirBasedSymbol<*>, ExpectActualMatchingCompatibility>>
++        SerialFirCacheMap<Pair</* actual member */ FirBasedSymbol<*>, /* expect class */ FirRegularClassSymbol>,
++                SerialFirCacheMap</* expect member */ FirBasedSymbol<*>, ExpectActualMatchingCompatibility>>
+ 
+ /**
+  * Actual class + expect class + actual member declaration -> (many) expect member declaration mapping.
+@@ -117,7 +116,7 @@
+  */
+ class FirExpectActualMappingStorage(val session: FirSession) : FirSessionComponent {
+     val cache: FirCache<FirRegularClassSymbol, MemberExpectForActualData, Nothing?> = session.firCachesFactory.createCache { _, _ ->
+-        ConcurrentHashMap()
++        SerialFirCacheMap()
+     }
+ }
+ 
+--- a/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/transformers/mpp/FirExpectActualMatchingContextImpl.kt
++++ b/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/transformers/mpp/FirExpectActualMatchingContextImpl.kt
+@@ -43,7 +43,7 @@
+ import org.jetbrains.kotlin.types.model.TypeSubstitutorMarker
+ import org.jetbrains.kotlin.types.model.TypeSystemContext
+ import org.jetbrains.kotlin.utils.zipIfSizesAreEqual
+-import java.util.concurrent.ConcurrentHashMap
++import org.jetbrains.kotlin.utils.SerialFirCacheMap
+ 
+ class FirExpectActualMatchingContextImpl private constructor(
+     private val actualSession: FirSession,
+@@ -589,7 +589,7 @@
+         val expectForActualMap = actualSession.expectActualMappingStorage.cache.getValue(this)
+ 
+         val expectToCompatibilityMap = expectForActualMap
+-            .computeIfAbsent(actualMember to expectClassSymbol) { ConcurrentHashMap() }
++            .computeIfAbsent(actualMember to expectClassSymbol) { SerialFirCacheMap() }
+ 
+         /*
+         Don't report when value is overwritten, because it's the case for actual inner classes:
+--- a/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/IrLock.kt
++++ b/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/IrLock.kt
+@@ -8,4 +8,17 @@
+ /*
+     Lock protecting accesses to global IR structures during by-file lowerings.
+  */
+-class IrLock
+\ No newline at end of file
++class IrLock {
++    @PublishedApi
++    internal var serialDepth: Int = 0
++}
++
++/** A synchronous, reentrant scope in one serial compiler Worker. */
++inline fun <T> IrLock.withLock(block: () -> T): T {
++    serialDepth++
++    try {
++        return block()
++    } finally {
++        serialDepth--
++    }
++}
+\ No newline at end of file
+--- a/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrSymbolsMappingForLazyClasses.kt
++++ b/compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrSymbolsMappingForLazyClasses.kt
+@@ -6,6 +6,7 @@
+ package org.jetbrains.kotlin.fir.backend
+ 
+ import org.jetbrains.kotlin.ir.IrLock
++import org.jetbrains.kotlin.ir.withLock
+ import org.jetbrains.kotlin.ir.declarations.lazy.lazyVar
+ import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
+ import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+@@ -58,13 +59,12 @@
+ ) : ReadWriteProperty<Any?, T> {
+     private val lazy = lazyVar(lock, initializer)
+ 
+-    @Volatile
+     private var isRemapped: Boolean = false
+ 
+     override fun toString(): String = lazy.toString()
+ 
+     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
+-        return synchronized(lock) {
++        return lock.withLock {
+             if (!isRemapped && map.isRemapperEnabled) {
+                 lazy.setValue(thisRef, property, map.mapperFun(lazy.getValue(thisRef, property)))
+                 isRemapped = true
+@@ -74,7 +74,7 @@
+     }
+ 
+     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+-        synchronized(lock) {
++        lock.withLock {
+             lazy.setValue(thisRef, property, value)
+             if (map.isRemapperEnabled) isRemapped = true
+         }
+--- a/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/util/SymbolTableSlice.kt
++++ b/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/util/SymbolTableSlice.kt
+@@ -6,6 +6,7 @@
+ package org.jetbrains.kotlin.ir.util
+ 
+ import org.jetbrains.kotlin.ir.IrLock
++import org.jetbrains.kotlin.ir.withLock
+ import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
+ import org.jetbrains.kotlin.ir.declarations.IrSymbolOwner
+ import org.jetbrains.kotlin.ir.symbols.IrBindableSymbol
+@@ -34,7 +35,7 @@
+ 
+     @OptIn(PrivateForInline::class)
+     inline fun declare(key: Key, createSymbol: () -> Symbol, createOwner: (Symbol) -> SymbolOwner): SymbolOwner {
+-        synchronized(lock) {
++        lock.withLock {
+             val existing = get(key)
+             val symbol = if (existing == null) {
+                 createSymbol().also { set(key, it) }
+@@ -47,7 +48,7 @@
+     }
+ 
+     inline fun referenced(key: Key, orElse: () -> Symbol): Symbol {
+-        synchronized(lock) {
++        lock.withLock {
+             return get(key) ?: run {
+                 val new = orElse()
+                 assert(unboundSymbols.add(new)) { "Symbol for ${new.signature} was already referenced" }
+@@ -63,7 +64,7 @@
+         createSymbol: () -> Symbol,
+         createOwner: (Symbol) -> SymbolOwner,
+     ): SymbolOwner {
+-        synchronized(lock) {
++        lock.withLock {
+             val existing = get(key)
+             val symbol = if (existing == null) {
+                 val new = createSymbol()
+--- a/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/lazy/IrLazySymbolTable.kt
++++ b/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/lazy/IrLazySymbolTable.kt
+@@ -7,6 +7,7 @@
+ 
+ import org.jetbrains.kotlin.descriptors.*
+ import org.jetbrains.kotlin.ir.IrLock
++import org.jetbrains.kotlin.ir.withLock
+ import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
+ import org.jetbrains.kotlin.ir.symbols.*
+ import org.jetbrains.kotlin.ir.util.*
+@@ -23,7 +24,7 @@
+         private val delegate get() = originalTable.descriptorExtension
+ 
+         override fun referenceClass(declaration: ClassDescriptor): IrClassSymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceClass(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generateClassStub(declaration)
+@@ -33,7 +34,7 @@
+         }
+ 
+         override fun referenceTypeAlias(declaration: TypeAliasDescriptor): IrTypeAliasSymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceTypeAlias(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generateTypeAliasStub(declaration)
+@@ -43,7 +44,7 @@
+         }
+ 
+         override fun referenceConstructor(declaration: ClassConstructorDescriptor): IrConstructorSymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceConstructor(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generateConstructorStub(declaration)
+@@ -53,7 +54,7 @@
+         }
+ 
+         override fun referenceEnumEntry(declaration: ClassDescriptor): IrEnumEntrySymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceEnumEntry(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generateEnumEntryStub(declaration)
+@@ -63,7 +64,7 @@
+         }
+ 
+         override fun referenceSimpleFunction(declaration: FunctionDescriptor): IrSimpleFunctionSymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceSimpleFunction(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generateFunctionStub(declaration)
+@@ -73,7 +74,7 @@
+         }
+ 
+         override fun referenceProperty(declaration: PropertyDescriptor): IrPropertySymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceProperty(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generatePropertyStub(declaration)
+@@ -83,7 +84,7 @@
+         }
+ 
+         override fun referenceTypeParameter(declaration: TypeParameterDescriptor): IrTypeParameterSymbol {
+-            synchronized(lock) {
++            lock.withLock {
+                 return delegate.referenceTypeParameter(declaration).also {
+                     if (!it.isBound) {
+                         stubGenerator?.generateOrGetTypeParameterStub(declaration)
+--- a/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/lazy/lazyUtil.kt
++++ b/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/lazy/lazyUtil.kt
+@@ -6,25 +6,24 @@
+ package org.jetbrains.kotlin.ir.declarations.lazy
+ 
+ import org.jetbrains.kotlin.ir.IrLock
++import org.jetbrains.kotlin.ir.withLock
+ import kotlin.properties.ReadWriteProperty
+ import kotlin.reflect.KProperty
+ 
+ fun <T> lazyVar(lock: IrLock, initializer: () -> T): ReadWriteProperty<Any?, T> = SynchronizedLazyVar(lock, initializer)
+ 
+ private class SynchronizedLazyVar<T>(val lock: IrLock, initializer: () -> T) : ReadWriteProperty<Any?, T> {
+-    @Volatile
+     private var isInitialized = false
+ 
+     private var initializer: (() -> T)? = initializer
+ 
+-    @Volatile
+     private var _value: Any? = null
+ 
+     private val value: T
+         get() {
+             @Suppress("UNCHECKED_CAST")
+             if (isInitialized) return _value as T
+-            synchronized(lock) {
++            lock.withLock {
+                 if (!isInitialized) {
+                     _value = initializer!!()
+                     isInitialized = true
+@@ -40,7 +39,7 @@
+     override fun getValue(thisRef: Any?, property: KProperty<*>): T = value
+ 
+     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+-        synchronized(lock) {
++        lock.withLock {
+             this._value = value
+             isInitialized = true
+         }
+--- a/compiler/util/src/org/jetbrains/kotlin/utils/threadLocal.kt
++++ b/compiler/util/src/org/jetbrains/kotlin/utils/threadLocal.kt
+@@ -5,25 +5,38 @@
+ 
+ package org.jetbrains.kotlin.utils
+ 
+-import java.util.concurrent.ConcurrentHashMap
+ import kotlin.properties.ReadWriteProperty
+ import kotlin.reflect.KProperty
+ 
+ fun <T> threadLocal(initializer: () -> T): ReadWriteProperty<Any?, T> = ThreadLocalDelegate(initializer)
+ 
+ private class ThreadLocalDelegate<T>(private val initializer: () -> T) : ReadWriteProperty<Any?, T> {
+-    private val map = ConcurrentHashMap<Thread, T>()
++    // One slot belongs to this real delegate in the serial compiler Worker.
++    // No Thread, source session or value is retained in a global registry.
++    private var hasValue = false
++    private var value: Any? = null
+ 
+     override operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+-        return map.getOrPut(Thread.currentThread()) {
+-            initializer()
++        if (!hasValue) {
++            val created = initializer()
++            if (created == null) throw NullPointerException()
++            // The original ConcurrentMap.getOrPut performs putIfAbsent after
++            // its callback: a value installed through reentry wins.
++            if (!hasValue) {
++                value = created
++                hasValue = true
++            }
+         }
++        @Suppress("UNCHECKED_CAST")
++        return value as T
+     }
+ 
+     override operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+-        map[Thread.currentThread()] = value
++        if (value == null) throw NullPointerException()
++        this.value = value
++        hasValue = true
+     }
+ 
+     override fun toString(): String =
+-        "ThreadLocalDelegate(${map.entries.joinToString { "#${it.key.id}=>${it.value}" }})"
+-}
+\ No newline at end of file
++        if (hasValue) "ThreadLocalDelegate(#worker=>$value)" else "ThreadLocalDelegate()"
++}
