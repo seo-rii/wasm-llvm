@@ -109,6 +109,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             rule: 'The diagnostic-rendering component supplies this original table exactly once', checkerFilesExcluded: false };
           return { ...component, commonSources: component.commonSources.filter(filename => !renderingSources.includes(filename)) };
         }],
+        ['diagnosticCommonReceipt', async ({ outputRoot }) => {
+          const renderers = await import('./diagnostic-common/prepare.mjs');
+          const reference = await renderers.prepareDiagnosticCommonReferences();
+          const component = await renderers.prepareDiagnosticCommon({ sourceRoot: reference.sourceRoot, outputRoot });
+          await renderers.verifyDiagnosticCommon(path.dirname(component.receiptPath));
+          for (const pin of component.receipt.originalInputs) {
+            assert(!files.has(pin.path), 'Supplemental renderer conflicts with primary source: ' + pin.path);
+          }
+          return component;
+        }],
         ['diagnosticRenderingReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('sourceClosureReceipt'), 'Supplemental web checkers must be prepared first');
           const rendering = await import('./diagnostic-rendering/prepare.mjs');

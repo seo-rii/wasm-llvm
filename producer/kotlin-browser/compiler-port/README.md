@@ -66,6 +66,8 @@ before the selected common variants enter compilation. The original Web Common
 default message table is selected once, through
 [diagnostic rendering](diagnostic-rendering/README.md). The formatter uses an
 explicit en-US String/Int profile, recorded in the compiler build receipt.
+The [common diagnostic inputs](diagnostic-common/README.md) retain original
+parameter renderers, language-feature messages and their generated flag map.
 The compiler host also uses the source-version-pinned official immutable
 collections wasmJs KLIB; its provenance and bytes are verified before linking.
 
