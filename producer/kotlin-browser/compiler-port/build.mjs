@@ -112,6 +112,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await navigation.verifyFirNavigation(component.outputRoot);
           return component;
         }],
+        ['firContainingClassReceipt', async ({ sourceRoot, outputRoot }) => {
+          const dedup = await import('./fir-containing-class-dedup/prepare.mjs');
+          const component = await dedup.prepareContainingClassDedup({ sourceRoot, outputRoot,
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          await dedup.verifyContainingClassDedup(outputRoot);
+          return component;
+        }],
         ['diagnosticFactoriesReceipt', (await import('./diagnostic-factories/prepare.mjs')).prepareDiagnosticFactories],
         ['sourceClosureReceipt', async ({ outputRoot }) => {
           const sources = await import('./source-closure/prepare.mjs');
@@ -815,6 +823,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports],
       });
       receipt.firNavigationFinalReceipt = final.receipt;
+    }
+    if (sourceHost === 'portable') {
+      const dedup = await import('./fir-containing-class-dedup/prepare.mjs');
+      receipt.firContainingClassFinalReceipt = await dedup.verifyFinalContainingClassDedup({
+        profileRoot: path.join(output, 'components', 'firContainingClassReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+      });
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
