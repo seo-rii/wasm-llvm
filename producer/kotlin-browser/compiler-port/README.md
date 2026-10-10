@@ -49,6 +49,25 @@ expand legacy token/node object imports from the verified declaration inventory.
 The receipt records every changed source hash. Original user source text never
 enters any compiler-source patch or import transformation.
 
+The [parser profile](parser-profile/README.md) selects the official new parser in
+the FIR source entry while retaining resolution and checkers. The
+[diagnostic factory variant](diagnostic-factories/README.md) separates unused PSI
+class metadata from the factory and generated registration tables, preserving all
+969 diagnostic declarations. Its original class bindings remain recorded; an
+unexpected reader of that metadata fails source preparation. The
+[message models](messages/README.md) and [UTF-8 boundary](text/README.md) preserve
+the original compiler's message and binary-writing behavior. Their helper
+comparisons do not establish full diagnostic or source-to-program correctness.
+
+The [version source port](versions/README.md) supplies the official Maven and
+Kotlin tooling version algorithms and compiler version resource from an explicit
+[producer input](compiler-version-input.json). The selected upstream default is
+`2.5.255-SNAPSHOT`, independently of the bootstrap artifact version and target
+stdlib. Source preparation verifies its input digest and upstream resource and
+property rules. This resource identifies the attempted compiler source build; it
+does not establish an accepted compiler/target library pair or execute upstream
+Gradle resource generation.
+
 `entry/BrowserCompiler.kt` directly constructs the WasmWasi FIR sessions and uses
 `MultiplatformParsing2Fir`; it does not initialize KotlinCoreEnvironment or
 discover services/plugins. Syntax errors stop before resolution and do not
@@ -69,6 +88,14 @@ memory KLIBs. `backend` retains whole-program Wasm code generation, IR linking
 and byte writing, with bounded memory output. Their source preparations are
 connected to the whole compiler build. A source hash or a compilable helper does
 not establish source-to-program correctness.
+
+The [backend source profile](backend-profile/README.md) is applied last, against
+the actual prepared whole-program driver, browser entry and composed compiler
+inputs. It splits shared declarations from JS executable and incremental-cache
+shells and rejects retained references to any declaration it excludes. The
+official Wasm phase order, shared JS lowerings and configuration predicates remain
+selected. Shared JS context/AST and stream dependencies that this profile does
+not close remain explicit build blockers.
 
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB

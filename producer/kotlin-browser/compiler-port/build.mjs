@@ -71,6 +71,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let assertionImport;
   try {
     if (sourceHost === 'portable') {
+      const preparedComponents = new Map();
       const preparations = [
         ['sourceHostReceipt', (await import('./host/prepare.mjs')).prepareHostSources],
         ['positioningReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -81,8 +82,31 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           assert(component.sourceSetExclusions.every((entry) => typeof entry.path === 'string' && typeof entry.reason === 'string'));
           return { ...component, sourceSetExclusions: component.sourceSetExclusions.map((entry) => relativePath(entry.path)) };
         }],
+        ['diagnosticFactoriesReceipt', (await import('./diagnostic-factories/prepare.mjs')).prepareDiagnosticFactories],
+        ['parserProfileReceipt', (await import('./parser-profile/prepare.mjs')).prepareParserProfileSources],
         ['coreReceipt', (await import('./core/prepare.mjs')).prepareCoreSources],
         ['configurationReceipt', (await import('./config/prepare.mjs')).prepareConfigurationSources],
+        ['messagesReceipt', (await import('./messages/prepare.mjs')).prepareCompilerMessageSources],
+        ['versionsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const component = await (await import('./versions/prepare.mjs')).prepareVersionSources({
+            sourceRoot, outputRoot,
+            buildVersionInput: path.join(here, 'compiler-version-input.json'),
+            buildVersionInputSha256: '422a2027b62a7de286c5dc75e84f565bf0a2dd3867f98ea56225ce6444ae6d16',
+          });
+          // These two original inputs belong to the same pinned source tree,
+          // outside the primary inventory. They are verified by this component,
+          // rather than silently accepting a missing primary replacement.
+          const additional = component.receipt.sourceFiles.filter((pin) => pin.location === 'additional');
+          assert.deepEqual(additional.map((pin) => pin.path).sort(), [
+            'compiler/compiler.version/src/org/jetbrains/kotlin/config/KotlinCompilerVersion.java',
+            'libraries/tools/kotlin-tooling-core/src/main/kotlin/org/jetbrains/kotlin/tooling/core/KotlinToolingVersion.kt',
+          ]);
+          const supplementalPaths = new Set(additional.map((pin) => pin.path));
+          const absent = component.replacedOriginalPaths.filter((sourcePath) => !files.has(sourcePath));
+          assert(absent.every((sourcePath) => supplementalPaths.has(sourcePath)), 'Missing primary version input');
+          receipt.versionsSupplementalOriginals = additional;
+          return { ...component, replacedOriginalPaths: component.replacedOriginalPaths.filter((sourcePath) => files.has(sourcePath)) };
+        }],
         ['commonJavaReceipt', (await import('./common-java/prepare.mjs')).prepareCommonJavaSources],
         ['descriptorReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./descriptors/prepare.mjs')).prepareDescriptorContracts(
@@ -116,9 +140,20 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ['sessionProfileReceipt', (await import('./session-profile/prepare.mjs')).prepareSessionProfile],
         ['serialResolveReceipt', (await import('./serial-resolve/prepare.mjs')).prepareSerialResolveSources],
         ['flagsReceipt', (await import('./flags/prepare.mjs')).prepareFlagsSources],
+        ['textReceipt', (await import('./text/prepare.mjs')).prepareCompilerTextSources],
         ['klibReceipt', (await import('./klib/prepare.mjs')).prepareKlibSources],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
+        ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
+          assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
+          return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
+            sourceRoot, outputRoot,
+            preparedBackend: preparedComponents.get('backendReceipt'),
+            browserEntry: path.join(here, 'entry/BrowserCompilerPipeline.kt'),
+            retainedSources: [...files.values()].filter((pin) => pin.compile && pin.filename.endsWith('.kt'))
+              .map((pin) => pin.filename),
+          });
+        }],
       ];
       const replacements = new Map();
       for (const [key, prepare] of preparations) {
@@ -129,6 +164,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         await mkdir(componentRoot, { recursive: true });
         await execute('git', ['init', '--quiet', componentRoot], { timeout: 10000, maxBuffer: 65536 });
         const component = await prepare({ sourceRoot: prepared.sourceRoot, outputRoot: componentRoot });
+        preparedComponents.set(key, component);
         receipt[key] = component.receipt;
         if (component.assertionImport) {
           assert.equal(component.assertionImport, 'org.jetbrains.kotlin.portable.assertions.compilerAssert as assert');
