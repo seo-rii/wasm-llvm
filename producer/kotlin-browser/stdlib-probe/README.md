@@ -67,3 +67,9 @@ also pass 81 allocations and the patched stdlib poll path in Node and two
 fresh offline Chromium Workers. Full WASI acceptance and browser Kotlin source
 compilation remain unrun. The recorded earlier failed setup/option
 attempts are preserved separately and are not counted as successful builds.
+
+The [console runtime corpus](console-runtime/README.md) additionally executes
+24 real Kotlin EOF, Unicode, stderr, exception, output-budget and fresh-state
+cases through the existing wasm-idle runner in Node and 24 fresh offline
+Chromium Workers. All raw results match. Cancellation, full WASI acceptance and
+browser Kotlin source compilation remain separate requirements.
