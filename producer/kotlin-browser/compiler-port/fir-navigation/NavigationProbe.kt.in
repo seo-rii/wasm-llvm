@@ -1,0 +1,213 @@
+/* Observer payload fields are explicit method boundaries, never compiler FIR classes. */
+package org.jetbrains.kotlin.portable.firnavigation.probe
+
+@IMPORTS@
+import org.jetbrains.kotlin.KtNodeTypes
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
+
+sealed class SourceKindPayload {
+    object Real : SourceKindPayload()
+    object DelegatedPropertyAccessor : SourceKindPayload()
+}
+
+class SourcePayload(
+    val lighterASTNode: LighterASTNode,
+    val treeStructure: FlyweightCapableTreeStructure<LighterASTNode>,
+    val startOffset: Int = lighterASTNode.startOffset,
+    val endOffset: Int = lighterASTNode.endOffset,
+    val kind: SourceKindPayload = SourceKindPayload.Real,
+) {
+    val elementType: IElementType get() = lighterASTNode.tokenType
+}
+
+fun LighterASTNode.toKtLightSourceElement(
+    treeStructure: FlyweightCapableTreeStructure<LighterASTNode>,
+    startOffset: Int = this.startOffset,
+    endOffset: Int = this.endOffset,
+): SourcePayload = SourcePayload(this, treeStructure, startOffset, endOffset)
+
+open class ElementPayload(val source: SourcePayload?)
+class TypeRefPayload(source: SourcePayload?) : ElementPayload(source)
+class DeclarationPayload(source: SourcePayload?) : ElementPayload(source)
+class EnumEntryPayload(source: SourcePayload?) : ElementPayload(source)
+class ValueParameterPayload(source: SourcePayload?) : ElementPayload(source)
+class ImportPayload(source: SourcePayload?) : ElementPayload(source)
+class SymbolPayload(val fir: ElementPayload)
+
+class NodeFixture(
+    val id: String, val type: IElementType, val start: Int, val end: Int,
+    vararg inputChildren: NodeFixture,
+    private val text: String = id,
+) : LighterASTNode {
+    var parent: NodeFixture? = null
+    val children: List<NodeFixture> = inputChildren.toList().also { nodes -> nodes.forEach { it.parent = this } }
+@NODE_MEMBERS@
+    override fun toString(): String = text
+}
+
+class TreeFixture(val rootNode: NodeFixture, private val mode: String = "normal") : FlyweightCapableTreeStructure<LighterASTNode> {
+    override fun getRoot(): LighterASTNode = rootNode
+    override fun getParent(node: LighterASTNode): LighterASTNode? = (node as NodeFixture).parent
+    override fun getChildren(parent: LighterASTNode, into: Ref<Array<LighterASTNode@SUFFIX@>>): Int {
+        if (mode == "no-write-zero") return 0
+        if (mode == "no-write-one") return 1
+        val nodes = (parent as NodeFixture).children
+        into.set(Array(nodes.size) { nodes[it] })
+        return nodes.size
+    }
+    override fun disposeChildren(nodes: Array<out LighterASTNode>?, count: Int) {}
+    override fun toString(node: LighterASTNode): CharSequence = node.toString()
+    override fun getStartOffset(node: LighterASTNode): Int = (node as NodeFixture).start
+    override fun getEndOffset(node: LighterASTNode): Int = (node as NodeFixture).end
+}
+
+private fun nodeId(source: SourcePayload?): String = source?.let {
+    "${(it.lighterASTNode as NodeFixture).id}:${it.startOffset}:${it.endOffset}"
+} ?: "null"
+
+private inline fun observation(block: () -> Any?): String = try { block().toString() } catch (failure: Throwable) {
+    when (failure) {
+        is NullPointerException -> "failure:NullPointerException"
+        is NoSuchElementException -> "failure:NoSuchElementException"
+        is IndexOutOfBoundsException -> "failure:IndexOutOfBoundsException"
+        is IllegalArgumentException -> "failure:IllegalArgumentException"
+        else -> "failure:${failure::class.simpleName}"
+    }
+}
+
+fun navigationSnapshot(): String {
+    val output = StringBuilder()
+    fun record(id: String, value: Any?) { output.append(id).append('\t').append(value).append('\n') }
+    val branch = NodeFixture("root", KtNodeTypes.TYPE_REFERENCE, 0, 100,
+        NodeFixture("a", KtTokens.IDENTIFIER, 10, 20,
+            NodeFixture("aa", KtTokens.IDENTIFIER, 11, 12),
+            NodeFixture("ab", KtNodeTypes.TYPE_REFERENCE, 13, 19,
+                NodeFixture("aba", KtTokens.IDENTIFIER, 14, 15))),
+        NodeFixture("b", KtNodeTypes.TYPE_REFERENCE, 30, 40,
+            NodeFixture("ba", KtTokens.IDENTIFIER, 31, 32)),
+        NodeFixture("c", KtTokens.IDENTIFIER, 50, 60))
+    val tree = TreeFixture(branch)
+    val source = SourcePayload(branch, tree, 500, 600)
+    val typeSets = listOf(emptySet(), setOf(KtTokens.IDENTIFIER), setOf(KtNodeTypes.TYPE_REFERENCE), setOf(KtTokens.IDENTIFIER, KtNodeTypes.TYPE_REFERENCE))
+    for ([typeIndex, types] in typeSets.withIndex()) for (depth in listOf(-2, -1, 0, 1, 2, 3, 99)) for (reverse in listOf(false, true)) {
+        val prefix = "walk/$typeIndex/$depth/$reverse"
+        val nodes = mutableListOf<String>()
+        source.forEachChildOfType(types, depth, reverse) { nodes += nodeId(it) }
+        record(prefix, nodes.joinToString(","))
+        for (index in listOf(-1, 0, 1, 2, 3, 4, 9))
+            record("$prefix/get/$index", observation { nodeId(source.getChild(types, index, depth, reverse)) })
+        val tokenSet = TokenSet.create(*types.toTypedArray())
+        for (index in listOf(-1, 0, 1, 4)) record("$prefix/token/$index", observation { nodeId(source.getChild(tokenSet, index, depth, reverse)) })
+    }
+    var visitedBeforeReturn = 0
+    fun stopOnSecond(): String {
+        source.forEachChildOfType(setOf(KtTokens.IDENTIFIER), -1) {
+            if (++visitedBeforeReturn == 2) return nodeId(it)
+        }
+        return "unreachable"
+    }
+    record("nonlocal-return", stopOnSecond()); record("nonlocal-return/count", visitedBeforeReturn)
+    val duplicate = TokenSet.create(KtTokens.IDENTIFIER, KtTokens.IDENTIFIER)
+    val union = TokenSet.orSet(duplicate, TokenSet.EMPTY, TokenSet.create(KtNodeTypes.TYPE_REFERENCE))
+    record("token-set/duplicate", duplicate.@SNAPSHOT@.size)
+    record("token-set/union", union.@SNAPSHOT@.size)
+    record("token-set/empty", TokenSet.EMPTY.@SNAPSHOT@.size)
+    val detached = duplicate.@SNAPSHOT@.toMutableSet(); detached.clear()
+    record("token-set/detached-copy", duplicate.@SNAPSHOT@.contains(KtTokens.IDENTIFIER))
+    record("token-set/null", null in duplicate)
+    record("child-padding", nodeId(source.buildChildSourceElement(branch.children[0])))
+    record("child-unpadded", nodeId(branch.children[0].toKtLightSourceElement(tree)))
+
+    val imports = NodeFixture("import", KtNodeTypes.IMPORT_DIRECTIVE, 0, 30,
+        NodeFixture("a.b.c", KtNodeTypes.DOT_QUALIFIED_EXPRESSION, 7, 12,
+            NodeFixture("a.b", KtNodeTypes.DOT_QUALIFIED_EXPRESSION, 7, 10,
+                NodeFixture("a-ref", KtNodeTypes.REFERENCE_EXPRESSION, 7, 8),
+                NodeFixture("b-ref", KtNodeTypes.REFERENCE_EXPRESSION, 9, 10)),
+            NodeFixture("c-ref", KtNodeTypes.REFERENCE_EXPRESSION, 11, 12)))
+    val importTree = TreeFixture(imports); val importPayload = ImportPayload(SourcePayload(imports, importTree))
+    for (index in listOf(-2, -1, 0, 1, 2, 3, 9, Int.MAX_VALUE)) record("import/$index", observation { nodeId(importPayload.getSourceForImportSegment(index)) })
+    record("import/last", nodeId(importPayload.getLastImportedFqNameSegmentSource()))
+    record("import/missing", nodeId(ImportPayload(null).getSourceForImportSegment(0)))
+
+    val modifierTree = TreeFixture(NodeFixture("declaration", KtNodeTypes.FUN, 100, 180,
+        NodeFixture("modifiers", KtNodeTypes.MODIFIER_LIST, 102, 125,
+            NodeFixture("private", KtTokens.PRIVATE_KEYWORD, 102, 109),
+            NodeFixture("annotation", KtNodeTypes.ANNOTATION_ENTRY, 110, 115),
+            NodeFixture("suspend", KtTokens.SUSPEND_KEYWORD, 116, 123),
+            NodeFixture("private-again", KtTokens.PRIVATE_KEYWORD, 123, 125),
+            NodeFixture("ignored", KtTokens.IDENTIFIER, 125, 126)),
+        NodeFixture("val", KtTokens.VAL_KEYWORD, 127, 130),
+        NodeFixture("name", KtTokens.IDENTIFIER, 131, 135)))
+    val padded = SourcePayload(modifierTree.rootNode, modifierTree, 500, 580)
+    val modifiers = padded.getModifierList() as ModifierListBoundary.FirLightModifierList
+    record("modifiers/all", modifiers.modifiers.joinToString(",") { nodeId(it.source) })
+    record("modifiers/first-private", nodeId(modifiers[KtTokens.PRIVATE_KEYWORD]?.source))
+    record("modifiers/contains-private", KtTokens.PRIVATE_KEYWORD in modifiers)
+    record("modifiers/contains-inline", KtTokens.INLINE_KEYWORD in modifiers)
+    record("modifiers/null", KtTokens.PRIVATE_KEYWORD in (null as ModifierListBoundary?))
+    record("modifiers/annotation-sources", modifiers.annotationSources().joinToString(",") { nodeId(it) })
+    record("modifiers/keyword-source", nodeId(keywordSource(padded)))
+    record("modifiers/val-or-var", padded.valOrVarKeyword)
+    val realElement = ElementPayload(padded)
+    record("modifiers/element", realElement.hasModifier(KtTokens.SUSPEND_KEYWORD))
+    record("modifiers/symbol", SymbolPayload(realElement).hasModifier(KtTokens.SUSPEND_KEYWORD))
+    val fakeProperty = SourcePayload(modifierTree.rootNode, modifierTree, kind = SourceKindPayload.DelegatedPropertyAccessor)
+    record("modifiers/fake-source-direct", fakeProperty.getModifierList() != null)
+    record("modifiers/fake-element-filter", ElementPayload(fakeProperty).getModifierList() == null)
+    val accessorTree = TreeFixture(NodeFixture("accessor", KtNodeTypes.PROPERTY_ACCESSOR, 0, 10,
+        NodeFixture("accessor-modifiers", KtNodeTypes.MODIFIER_LIST, 0, 5,
+            NodeFixture("inline", KtTokens.INLINE_KEYWORD, 0, 5))))
+    val fakeAccessor = SourcePayload(accessorTree.rootNode, accessorTree, kind = SourceKindPayload.DelegatedPropertyAccessor)
+    record("modifiers/fake-accessor-retained", ElementPayload(fakeAccessor).hasModifier(KtTokens.INLINE_KEYWORD))
+    record("modifiers/no-source", ElementPayload(null).hasModifier(KtTokens.SUSPEND_KEYWORD))
+
+    with(SourceNavigator.forSource(padded)) {
+        record("navigator/raw-name", DeclarationPayload(padded).getRawName())
+        record("navigator/no-name", DeclarationPayload(null).getRawName())
+        record("navigator/null-dispatch", SourceNavigator.forSource(null) === SourceNavigator.forSource(padded))
+        for ([id, token] in listOf("reference" to KtNodeTypes.REFERENCE_EXPRESSION, "identifier" to KtTokens.IDENTIFIER, "unknown" to KtNodeTypes.BLOCK)) {
+            val node = NodeFixture(id, token, 0, 1); val fixture = TreeFixture(node)
+            record("navigator/raw/$id", SourcePayload(node, fixture).getRawIdentifier())
+        }
+        for ([id, token] in listOf("dot" to KtNodeTypes.DOT_QUALIFIED_EXPRESSION, "safe" to KtTokens.SAFE_ACCESS,
+            "error-safe" to KtTokens.ERROR_SAFE_ACCESS, "projection" to KtNodeTypes.TYPE_PROJECTION)) {
+            val node = NodeFixture(id, token, 0, 10, NodeFixture("qualifier", KtTokens.IDENTIFIER, 0, 4), NodeFixture("selector", KtTokens.IDENTIFIER, 5, 10))
+            val fixture = TreeFixture(node); record("navigator/raw/$id", SourcePayload(node, fixture).getRawIdentifier())
+            val empty = TreeFixture(NodeFixture("empty", token, 0, 1)); record("navigator/raw-empty/$id", observation { SourcePayload(empty.rootNode, empty).getRawIdentifier() })
+        }
+        for ([id, enclosing] in listOf("constraint" to KtNodeTypes.TYPE_CONSTRAINT, "parameter" to KtNodeTypes.TYPE_PARAMETER, "other" to KtNodeTypes.BLOCK)) {
+            val child = NodeFixture("type", KtNodeTypes.TYPE_REFERENCE, 3, 8)
+            val fixture = TreeFixture(NodeFixture("parent", enclosing, 0, 10, child))
+            record("navigator/type-constraint/$id", TypeRefPayload(SourcePayload(child, fixture)).isInTypeConstraint())
+        }
+        val typeChild = NodeFixture("callee-type", KtNodeTypes.TYPE_REFERENCE, 0, 5)
+        val constructor = TreeFixture(NodeFixture("callee", KtNodeTypes.CONSTRUCTOR_CALLEE, 0, 5, typeChild))
+        record("navigator/constructor", TypeRefPayload(SourcePayload(typeChild, constructor)).isInConstructorCallee())
+        record("navigator/constructor-null", TypeRefPayload(null).isInConstructorCallee())
+        val catchParameter = NodeFixture("catch-param", KtNodeTypes.VALUE_PARAMETER, 3, 5)
+        val catchTree = TreeFixture(NodeFixture("catch", KtNodeTypes.CATCH, 0, 10, NodeFixture("catch-list", KtNodeTypes.VALUE_PARAMETER_LIST, 1, 8, catchParameter)))
+        record("navigator/catch", ValueParameterPayload(SourcePayload(catchParameter, catchTree)).isCatchElementParameter())
+        record("navigator/catch-null", ValueParameterPayload(null).isCatchElementParameter())
+        for (levels in 0..3) {
+            var inner = NodeFixture("plain", KtNodeTypes.USER_TYPE, 0, 1)
+            repeat(levels) { inner = NodeFixture("nullable-$it", KtNodeTypes.NULLABLE_TYPE, 0, 2 + it, inner) }
+            val fixture = TreeFixture(NodeFixture("type-ref", KtNodeTypes.TYPE_REFERENCE, 0, 10, inner))
+            record("navigator/redundant-nullable/$levels", TypeRefPayload(SourcePayload(fixture.rootNode, fixture)).isRedundantNullable())
+        }
+        for (mode in listOf("no-write-zero", "no-write-one")) {
+            val fixture = TreeFixture(NodeFixture("type-ref", KtNodeTypes.TYPE_REFERENCE, 0, 1), mode)
+            record("navigator/redundant-nullable/$mode", observation { TypeRefPayload(SourcePayload(fixture.rootNode, fixture)).isRedundantNullable() })
+        }
+        for (body in listOf(false, true)) for (initializer in listOf(false, true)) {
+            val children = mutableListOf<NodeFixture>()
+            if (body) children += NodeFixture("body", KtNodeTypes.CLASS_BODY, 2, 5)
+            if (initializer) children += NodeFixture("initializer", KtNodeTypes.INITIALIZER_LIST, 1, 2)
+            val fixture = TreeFixture(NodeFixture("entry", KtNodeTypes.ENUM_ENTRY, 0, 10, *children.toTypedArray()))
+            val entry = EnumEntryPayload(SourcePayload(fixture.rootNode, fixture))
+            record("navigator/enum/$body/$initializer", "${entry.hasBody()}:${entry.hasInitializer()}")
+        }
+        record("navigator/enum-null", "${EnumEntryPayload(null).hasBody()}:${EnumEntryPayload(null).hasInitializer()}")
+    }
+    return output.toString()
+}
