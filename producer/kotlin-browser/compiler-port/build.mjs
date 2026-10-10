@@ -432,6 +432,18 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           return component;
         }],
+        ['jsAstOutputReceipt', async ({ sourceRoot, outputRoot }) => {
+          const module = await import('./js-ast-consumer-bindings/output-codec/prepare.mjs');
+          const component = await module.prepareJsAstOutput({ sourceRoot, outputRoot });
+          await module.verifyJsAstOutput({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          return component;
+        }],
+        ['jsAstOutputStreamReceipt', async ({ sourceRoot, outputRoot }) => {
+          const module = await import('./js-ast-consumer-bindings/output-stream/prepare.mjs');
+          const component = await module.prepareJsAstOutputStream({ sourceRoot, outputRoot });
+          await module.verifyJsAstOutputStream({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
