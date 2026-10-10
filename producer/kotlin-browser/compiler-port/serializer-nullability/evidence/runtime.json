@@ -1,0 +1,1037 @@
+{
+  "schemaVersion": 1,
+  "kind": "serializer-selected-nullability-runtime",
+  "sourceLockSha256": "11c98e44cffd8ac52831ed880dac6c5dc23196dc4488f02c6973aee28e12d0d3",
+  "flagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "prepared": {
+    "schemaVersion": 1,
+    "kind": "serializer-selected-nullability-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "11c98e44cffd8ac52831ed880dac6c5dc23196dc4488f02c6973aee28e12d0d3",
+    "consumer": {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstSerializer.kt",
+      "gitBlob": "0a5558206817f80bb52334c96c8bf845eb5aa223",
+      "bytes": 29071,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.js",
+      "sha256": "ac5d5dfe85de7b96a08f85fb49349c00b5b591150b1481169179f3f5abd157a0"
+    },
+    "prepared": {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstSerializer.kt",
+      "bytes": 30850,
+      "sha256": "294fc9fe75e371f40d919f61fe74937be9de7dd33507b6c9fdba9e2856d7d69c",
+      "gitBlob": "0fdd0970a29a176a49acfce2bb95f588c3a512c0"
+    },
+    "bindings": [
+      {
+        "owner": "visitThrow(x: JsThrow)",
+        "start": 6014,
+        "line": 191,
+        "before": "writeExpression(x.expression)",
+        "expression": "x.expression",
+        "getter": "getExpression(...)",
+        "fixture": "throw:null",
+        "after": "writeExpression(requiredSerializerAstValue(x.expression, \"getExpression(...)\"))"
+      },
+      {
+        "owner": "visitLabel(x: JsLabel)",
+        "start": 7573,
+        "line": 237,
+        "before": "writeInt(internalizeName(x.name))",
+        "expression": "x.name",
+        "getter": "getName(...)",
+        "fixture": "label:name-null",
+        "after": "writeInt(internalizeName(requiredSerializerAstValue(x.name, \"getName(...)\")))"
+      },
+      {
+        "owner": "visitLabel(x: JsLabel)",
+        "start": 7623,
+        "line": 238,
+        "before": "writeStatement(x.statement)",
+        "expression": "x.statement",
+        "getter": "getStatement(...)",
+        "fixture": "label:statement-null",
+        "after": "writeStatement(requiredSerializerAstValue(x.statement, \"getStatement(...)\"))"
+      },
+      {
+        "owner": "visit(x: JsSwitch)",
+        "start": 8039,
+        "line": 250,
+        "before": "writeExpression(x.expression)",
+        "expression": "x.expression",
+        "getter": "getExpression(...)",
+        "fixture": "switch:null",
+        "after": "writeExpression(requiredSerializerAstValue(x.expression, \"getExpression(...)\"))"
+      },
+      {
+        "owner": "visit(x: JsSwitch)",
+        "start": 8242,
+        "line": 254,
+        "before": "writeExpression(it.caseExpression)",
+        "expression": "it.caseExpression",
+        "getter": "getCaseExpression(...)",
+        "fixture": "case:null",
+        "after": "writeExpression(requiredSerializerAstValue(it.caseExpression, \"getCaseExpression(...)\"))"
+      },
+      {
+        "owner": "visitWhile(x: JsWhile)",
+        "start": 8600,
+        "line": 265,
+        "before": "writeExpression(x.condition)",
+        "expression": "x.condition",
+        "getter": "getCondition(...)",
+        "fixture": "while:condition-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.condition, \"getCondition(...)\"))"
+      },
+      {
+        "owner": "visitWhile(x: JsWhile)",
+        "start": 8645,
+        "line": 266,
+        "before": "writeStatement(x.body)",
+        "expression": "x.body",
+        "getter": "getBody(...)",
+        "fixture": "while:body-null",
+        "after": "writeStatement(requiredSerializerAstValue(x.body, \"getBody(...)\"))"
+      },
+      {
+        "owner": "visitDoWhile(x: JsDoWhile)",
+        "start": 8802,
+        "line": 271,
+        "before": "writeExpression(x.condition)",
+        "expression": "x.condition",
+        "getter": "getCondition(...)",
+        "fixture": "do:condition-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.condition, \"getCondition(...)\"))"
+      },
+      {
+        "owner": "visitDoWhile(x: JsDoWhile)",
+        "start": 8847,
+        "line": 272,
+        "before": "writeStatement(x.body)",
+        "expression": "x.body",
+        "getter": "getBody(...)",
+        "fixture": "do:body-null",
+        "after": "writeStatement(requiredSerializerAstValue(x.body, \"getBody(...)\"))"
+      },
+      {
+        "owner": "visitTry(x: JsTry)",
+        "start": 9771,
+        "line": 300,
+        "before": "writeBlock(x.tryBlock)",
+        "expression": "x.tryBlock",
+        "getter": "getTryBlock(...)",
+        "fixture": "try:null",
+        "after": "writeBlock(requiredSerializerAstValue(x.tryBlock, \"getTryBlock(...)\"))"
+      },
+      {
+        "owner": "visitTry(x: JsTry)",
+        "start": 9924,
+        "line": 303,
+        "before": "writeBlock(c.body)",
+        "expression": "c.body",
+        "getter": "getBody(...)",
+        "fixture": "catch:null",
+        "after": "writeBlock(requiredSerializerAstValue(c.body, \"getBody(...)\"))"
+      },
+      {
+        "owner": "visitRegExp(x: JsRegExp)",
+        "start": 14747,
+        "line": 431,
+        "before": "writeInt(internalizeString(x.pattern))",
+        "expression": "x.pattern",
+        "getter": "getPattern(...)",
+        "fixture": "regexp:null",
+        "after": "writeInt(internalizeString(requiredSerializerAstValue(x.pattern, \"getPattern(...)\")))"
+      },
+      {
+        "owner": "visitBinaryExpression(x: JsBinaryOperation)",
+        "start": 17894,
+        "line": 514,
+        "before": "writeExpression(x.arg1)",
+        "expression": "x.arg1",
+        "getter": "getArg1(...)",
+        "fixture": "binary:first-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.arg1, \"getArg1(...)\"))"
+      },
+      {
+        "owner": "visitBinaryExpression(x: JsBinaryOperation)",
+        "start": 17934,
+        "line": 515,
+        "before": "writeExpression(x.arg2)",
+        "expression": "x.arg2",
+        "getter": "getArg2(...)",
+        "fixture": "binary:second-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.arg2, \"getArg2(...)\"))"
+      },
+      {
+        "owner": "visitPrefixOperation(x: JsPrefixOperation)",
+        "start": 18163,
+        "line": 521,
+        "before": "writeExpression(x.arg)",
+        "expression": "x.arg",
+        "getter": "getArg(...)",
+        "fixture": "prefix:null",
+        "after": "writeExpression(requiredSerializerAstValue(x.arg, \"getArg(...)\"))"
+      },
+      {
+        "owner": "visitPostfixOperation(x: JsPostfixOperation)",
+        "start": 18394,
+        "line": 527,
+        "before": "writeExpression(x.arg)",
+        "expression": "x.arg",
+        "getter": "getArg(...)",
+        "fixture": "postfix:null",
+        "after": "writeExpression(requiredSerializerAstValue(x.arg, \"getArg(...)\"))"
+      },
+      {
+        "owner": "visitConditional(x: JsConditional)",
+        "start": 18563,
+        "line": 532,
+        "before": "writeExpression(x.testExpression)",
+        "expression": "x.testExpression",
+        "getter": "getTestExpression(...)",
+        "fixture": "conditional:test-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.testExpression, \"getTestExpression(...)\"))"
+      },
+      {
+        "owner": "visitConditional(x: JsConditional)",
+        "start": 18613,
+        "line": 533,
+        "before": "writeExpression(x.thenExpression)",
+        "expression": "x.thenExpression",
+        "getter": "getThenExpression(...)",
+        "fixture": "conditional:then-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.thenExpression, \"getThenExpression(...)\"))"
+      },
+      {
+        "owner": "visitConditional(x: JsConditional)",
+        "start": 18663,
+        "line": 534,
+        "before": "writeExpression(x.elseExpression)",
+        "expression": "x.elseExpression",
+        "getter": "getElseExpression(...)",
+        "fixture": "conditional:else-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.elseExpression, \"getElseExpression(...)\"))"
+      },
+      {
+        "owner": "visitArrayAccess(x: JsArrayAccess)",
+        "start": 18844,
+        "line": 539,
+        "before": "writeExpression(x.arrayExpression)",
+        "expression": "x.arrayExpression",
+        "getter": "getArrayExpression(...)",
+        "fixture": "array:array-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.arrayExpression, \"getArrayExpression(...)\"))"
+      },
+      {
+        "owner": "visitArrayAccess(x: JsArrayAccess)",
+        "start": 18895,
+        "line": 540,
+        "before": "writeExpression(x.indexExpression)",
+        "expression": "x.indexExpression",
+        "getter": "getIndexExpression(...)",
+        "fixture": "array:index-null",
+        "after": "writeExpression(requiredSerializerAstValue(x.indexExpression, \"getIndexExpression(...)\"))"
+      },
+      {
+        "owner": "visitNameRef(nameRef: JsNameRef)",
+        "start": 19753,
+        "line": 558,
+        "before": "writeInt(internalizeString(nameRef.ident))",
+        "expression": "nameRef.ident",
+        "getter": "getIdent(...)",
+        "fixture": "nameref:null",
+        "after": "writeInt(internalizeString(requiredSerializerAstValue(nameRef.ident, \"getIdent(...)\")))"
+      },
+      {
+        "owner": "visitNew(x: JsNew)",
+        "start": 20406,
+        "line": 573,
+        "before": "writeExpression(x.constructorExpression)",
+        "expression": "x.constructorExpression",
+        "getter": "getConstructorExpression(...)",
+        "fixture": "new:null",
+        "after": "writeExpression(requiredSerializerAstValue(x.constructorExpression, \"getConstructorExpression(...)\"))"
+      },
+      {
+        "owner": "visitNamedDeclarable(declarable: JsDeclarable.Named)",
+        "start": 21710,
+        "line": 606,
+        "before": "writeInt(internalizeName(declarable.name))",
+        "expression": "declarable.name",
+        "getter": null,
+        "fixture": "named:visitor",
+        "after": "writeInt(internalizeName(declarable.getName()))"
+      },
+      {
+        "owner": "DataWriter.writeFunction(function: JsFunction)",
+        "start": 23833,
+        "line": 664,
+        "before": "writeBlock(function.body)",
+        "expression": "function.body",
+        "getter": "getBody(...)",
+        "fixture": "function:body-null",
+        "after": "writeBlock(requiredSerializerAstValue(function.body, \"getBody(...)\"))"
+      },
+      {
+        "owner": "DataWriter.writeFunction(function: JsFunction)",
+        "start": 24138,
+        "line": 671,
+        "before": "writeExpression(function.computedName)",
+        "expression": "function.computedName",
+        "getter": "getComputedName(...)",
+        "fixture": null,
+        "after": "writeExpression(requiredSerializerAstValue(function.computedName, \"getComputedName(...)\"))"
+      },
+      {
+        "owner": "DataWriter.writeDeclarable(declarable: JsDeclarable)",
+        "start": 25540,
+        "line": 711,
+        "before": "writeInt(internalizeName(declarable.name))",
+        "expression": "declarable.name",
+        "getter": null,
+        "fixture": "named:private",
+        "after": "writeInt(internalizeName(declarable.getName()))"
+      }
+    ],
+    "metadataNullEntry": {
+      "owner": "visitDocComment(comment: JsDocComment)",
+      "before": "value::class.qualifiedName",
+      "expression": "value",
+      "getter": null,
+      "fixture": "metadata:null",
+      "start": 17618,
+      "line": 506
+    },
+    "jsAstBinding": {
+      "sourceLockSha256": "62623893ba3b3a2d90aa549db89ed068026397fa4c70de96979467897e8aa5bf",
+      "receiptSha256": "6110d7fb1f613219b417961b6b88906c987b229b6446af21e61c0ac36dcabf01",
+      "namedSource": {
+        "path": "js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsDeclarable.kt",
+        "bytes": 2860,
+        "sha256": "9e4978305a1c1e76f5ebcf334ded04f26dc7600a9d06a514e8be085cfa9d15b9",
+        "gitBlob": "4685c089c9cc33877544579aa16dfbf5ad8f6c5b",
+        "originalPath": "js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsDeclarable.kt",
+        "originalSha256": "18416c7cbe95ed953238ff3a2349df1b0bbbf60d66ca0ba878534d8c9832116d",
+        "transformations": [
+          {
+            "from": "override fun setName(name: JsName) {\n            this.name = name",
+            "to": "override fun setName(name: JsName?) {\n            this.name = name!!"
+          },
+          {
+            "from": "names.add(declarable.name)",
+            "to": "names.add(declarable.name!!)"
+          }
+        ]
+      }
+    },
+    "expressionChecks": 25,
+    "explicitNamedGetters": 2,
+    "metadataNullEntries": 1,
+    "metadataNullMessage": "Cannot invoke \"Object.getClass()\" because \"value\" is null",
+    "referencePath": "reference/compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstSerializer.kt",
+    "transportChanged": false,
+    "qualifiedNameHostClosed": false,
+    "bootstrapNotNullInstrumentationParity": false,
+    "stackTraceLineParity": false,
+    "fullSerializerWasmExecuted": false,
+    "javaDescriptorImplementationFamilyClosed": false,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "artifactRoot": "out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581",
+  "astArtifactRoot": "out/kotlin-js-ast/differential-WViAyC",
+  "astReceiptSha256": "574aa4c7e27f9a026511e21f4483bbaeb81e8c8e4ced86b467f35a5490f4cee8",
+  "commands": [
+    {
+      "phase": "original-genuine-ast-oracle-java-build",
+      "command": [
+        "javac",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/original-kotlin.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/original-java:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/oracle-dependencies.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/oracle",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/Oracle.java"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1788.2314369999995
+    },
+    {
+      "phase": "original-full-serializer-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-jvm-target",
+        "17",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/original-kotlin.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/original-java:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/oracle-dependencies.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/original/JsIrAstSerializer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/Constants.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 13234.024089000002
+    },
+    {
+      "phase": "original-full-serializer-real-ast-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/oracle:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/original-kotlin.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/original-java:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/oracle-dependencies.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "Oracle"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 446.29461100000117
+    },
+    {
+      "phase": "common-full-serializer-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-jvm-target",
+        "17",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/common/JsIrAstSerializer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/Constants.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 11826.272433000002
+    },
+    {
+      "phase": "common-full-serializer-real-ast-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/oracle:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "Oracle"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 424.7926699999989
+    },
+    {
+      "phase": "actual-common-getter-statements-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-jvm-target",
+        "17",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/getters.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/GetterProjection.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/GetterProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/JvmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 7409.369366999999
+    },
+    {
+      "phase": "actual-common-getter-statements-jvm-observe",
+      "command": [
+        "java",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/getters.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/portable.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.ir.backend.js.utils.serialization.JvmEntryKt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 218.21453800000018
+    },
+    {
+      "phase": "actual-common-getter-statements-wasm-klib",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsConstructExpressionVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsFirstExpressionVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsPrecedenceVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsRequiresSemiVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsReservedIdentifiers.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsToStringGenerationVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/NoOpSourceLocationConsumer.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/SourceLocationConsumer.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/AbstractNode.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsAssignableExpression.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsAssignmentOperation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBigIntLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBindingArrayItem.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBindingElement.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBindingProperty.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsCatchScope.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsClass.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsComment.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsCompositeBlock.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsDeclarable.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsEmpty.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsExport.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsForIn.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsForOf.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsImport.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsImportedModule.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsIterableLoop.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsLocation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsMultiLineComment.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsParameter.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsPropertyInitializer.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsSingleLineComment.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsSpread.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsTemplateStringLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsVars.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsYield.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsYieldStar.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/jsScopes.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/metadata/HasMetadata.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/metadata/MetadataProperty.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/metadata/metadataProperties.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/common/IdentifierPolicy.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/util/NameTable.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/HasArguments.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/HasName.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsArrayAccess.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsArrayLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBinaryOperation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBinaryOperator.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBlock.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBooleanLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBreak.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsCase.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsCatch.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsConditional.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsContext.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsContinue.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDebugger.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDefault.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDoWhile.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDocComment.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDoubleLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsExpression.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsExpressionStatement.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsFor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsFunction.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsIf.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsIntLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsInvocation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsLabel.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsLoop.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsName.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNameRef.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNew.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNode.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNullLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNumberLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsObjectLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsOperator.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsPostfixOperation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsPrefixOperation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsProgram.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsRegExp.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsReturn.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsRootScope.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsScope.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsStatement.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsStringLiteral.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsSuperRef.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsSwitch.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsSwitchMember.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsThisRef.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsThrow.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsTry.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsUnaryOperation.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsUnaryOperator.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsVisitorWithContext.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsVisitorWithContextImpl.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsWhile.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/RecursiveJsVisitor.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/SourceInfoAwareJsNode.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstUtil.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/Maps.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/TextOutput.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/TextOutputImpl.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JavaProperties.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstCharacter.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstInteger.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstSourceReader.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/JavaListView.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/collections/SmartList.kt,/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/assertions/CompilerAssertions.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/probe-support/JoinToWithBuffer.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/GetterProjection.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/GetterProbe.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/klib",
+        "-ir-output-name",
+        "serializer-getters",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsConstructExpressionVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsFirstExpressionVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsPrecedenceVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsRequiresSemiVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsReservedIdentifiers.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/JsToStringGenerationVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/NoOpSourceLocationConsumer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/SourceLocationConsumer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/AbstractNode.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsAssignableExpression.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsAssignmentOperation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBigIntLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBindingArrayItem.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBindingElement.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsBindingProperty.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsCatchScope.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsClass.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsComment.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsCompositeBlock.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsDeclarable.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsEmpty.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsExport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsForIn.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsForOf.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsImport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsImportedModule.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsIterableLoop.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsLocation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsMultiLineComment.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsParameter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsPropertyInitializer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsSingleLineComment.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsSpread.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsTemplateStringLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsVars.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsYield.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/JsYieldStar.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/jsScopes.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/metadata/HasMetadata.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/metadata/MetadataProperty.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/backend/ast/metadata/metadataProperties.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/common/IdentifierPolicy.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/js/js.ast/src/org/jetbrains/kotlin/js/util/NameTable.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/HasArguments.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/HasName.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsArrayAccess.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsArrayLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBinaryOperation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBinaryOperator.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBlock.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBooleanLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsBreak.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsCase.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsCatch.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsConditional.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsContext.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsContinue.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDebugger.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDefault.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDoWhile.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDocComment.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsDoubleLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsExpression.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsExpressionStatement.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsFor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsFunction.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsIf.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsIntLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsInvocation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsLabel.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsLoop.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsName.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNameRef.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNew.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNode.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNullLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsNumberLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsObjectLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsOperator.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsPostfixOperation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsPrefixOperation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsProgram.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsRegExp.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsReturn.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsRootScope.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsScope.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsStatement.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsStringLiteral.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsSuperRef.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsSwitch.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsSwitchMember.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsThisRef.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsThrow.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsTry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsUnaryOperation.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsUnaryOperator.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsVisitorWithContext.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsVisitorWithContextImpl.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JsWhile.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/RecursiveJsVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/SourceInfoAwareJsNode.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstUtil.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/Maps.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/TextOutput.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/TextOutputImpl.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/backend/ast/JavaProperties.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstCharacter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstDoubleFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstInteger.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/AstSourceReader.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/common/compiler-port-js-ast/org/jetbrains/kotlin/js/util/JavaListView.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/collections/SmartList.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/assertions/CompilerAssertions.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-js-ast/differential-WViAyC/probe-support/JoinToWithBuffer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/GetterProjection.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/GetterProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/WasmEntry.kt"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 34303.925328
+    },
+    {
+      "phase": "actual-common-getter-statements-wasm-module",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/klib/serializer-getters.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/wasm",
+        "-ir-output-name",
+        "serializer-getters",
+        "-main",
+        "noCall"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 21802.144883999994
+    },
+    {
+      "phase": "actual-common-getter-statements-node-wasm-observe",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);process.stdout.write(m.serializerGetterProbe());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-serializer-nullability-runtime-final-seal-1791644631625307581/wasm/serializer-getters.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 128.66374099999666
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Constants.kt",
+      "bytes": 2604,
+      "sha256": "963b2f6f7eaa186de6aa40e71ec75abedd0ac63f5b06af01b36775bf49169b2e"
+    },
+    {
+      "path": "Oracle.java",
+      "bytes": 7898,
+      "sha256": "820f352d1d3d218fbd5dda0c2ed14ddba6b0498caa4b955426b37bbed889558f"
+    },
+    {
+      "path": "original/JsIrAstSerializer.kt",
+      "bytes": 29071,
+      "sha256": "ac5d5dfe85de7b96a08f85fb49349c00b5b591150b1481169179f3f5abd157a0"
+    },
+    {
+      "path": "common/JsIrAstSerializer.kt",
+      "bytes": 34709,
+      "sha256": "1d7bbaaa1582957df8a4e779812b62b75b0b4a7c4ae6c9c4694e9cf8f8e2761f"
+    },
+    {
+      "path": "original.jar",
+      "bytes": 47319,
+      "sha256": "b18da5bcbd4d2bceee84fb1e7d8de80dbb3eb5d985e587b9a8d727bdc8d0f92d"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 7792,
+      "sha256": "cb18fd09ec9901589fd53e56b704f24d0b3051905e4c63600ddeb5cbea4fa78e"
+    },
+    {
+      "path": "common.jar",
+      "bytes": 49678,
+      "sha256": "ba1c97f338930c3a8d8777d3787ef27ff2df9597cfa9b9d1c93f4d2ada36159b"
+    },
+    {
+      "path": "common-observations.txt",
+      "bytes": 7792,
+      "sha256": "cb18fd09ec9901589fd53e56b704f24d0b3051905e4c63600ddeb5cbea4fa78e"
+    },
+    {
+      "path": "GetterProjection.kt",
+      "bytes": 7023,
+      "sha256": "e49c5997d7da197ab0ece781ee71d30e78a53a1bcab1380a0e29fae69db5aeec"
+    },
+    {
+      "path": "GetterProbe.kt",
+      "bytes": 4248,
+      "sha256": "cad19123bcaa5159a78e962ff45b506fc7f8c6f45025cc5839c8a4d00211bb61"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 102,
+      "sha256": "64967b8fc1f5d4b8e0d75c78db336b71410a05cad4b19bc827e46c82d9699aeb"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 189,
+      "sha256": "9234604a5f772897caaad60a14ad8b59dab94ab2d8acbe20f738db4abdf399c4"
+    },
+    {
+      "path": "getter-jvm-observations.txt",
+      "bytes": 5091,
+      "sha256": "79f611f294e6a0cb8e5a2533aa1c072e66fdee1a1a4b6761464a7c3e98a90629"
+    },
+    {
+      "path": "getter-wasm-observations.txt",
+      "bytes": 5091,
+      "sha256": "79f611f294e6a0cb8e5a2533aa1c072e66fdee1a1a4b6761464a7c3e98a90629"
+    },
+    {
+      "path": "getters.jar",
+      "bytes": 11736,
+      "sha256": "783ac8549d7317de05ea0384e77568ab42d76fc6ba92dcae9d4a48420689b3b3"
+    },
+    {
+      "path": "klib/serializer-getters.klib",
+      "bytes": 490507,
+      "sha256": "3251f8871b817d57fcf7c233ef860e327670eb647fa2c408f8c437bfedc92417"
+    },
+    {
+      "path": "wasm/serializer-getters.wasm",
+      "bytes": 1400298,
+      "sha256": "ec4ac8d492b05418129dbb648715a022f0975f07d3307cb1fb2d3cd6064e61d4"
+    },
+    {
+      "path": "wasm/serializer-getters.mjs",
+      "bytes": 2295,
+      "sha256": "cb2c9b430211ce2177a943bd8a6b96426abfec31f2855a26be8ae07aec739f51"
+    },
+    {
+      "path": "wasm/serializer-getters.import-object.mjs",
+      "bytes": 9493,
+      "sha256": "6510acbd30ea20019f6f4d7fdac584d216243df146ee82a7441e928590eaed8e"
+    },
+    {
+      "path": "wasm/serializer-getters.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    }
+  ],
+  "originalCommonJvmObservations": 50,
+  "getterCommonJvmWasmObservations": 44,
+  "projectionSignatures": [
+    {
+      "index": 0,
+      "owner": "visitThrow(x: JsThrow)",
+      "expression": "requiredSerializerAstValue(x.expression, \"getExpression(...)\")",
+      "source": "fun projection0(x: JsThrow) = requiredSerializerAstValue(x.expression, \"getExpression(...)\")"
+    },
+    {
+      "index": 1,
+      "owner": "visitLabel(x: JsLabel)",
+      "expression": "requiredSerializerAstValue(x.name, \"getName(...)\")",
+      "source": "fun projection1(x: JsLabel) = requiredSerializerAstValue(x.name, \"getName(...)\")"
+    },
+    {
+      "index": 2,
+      "owner": "visitLabel(x: JsLabel)",
+      "expression": "requiredSerializerAstValue(x.statement, \"getStatement(...)\")",
+      "source": "fun projection2(x: JsLabel) = requiredSerializerAstValue(x.statement, \"getStatement(...)\")"
+    },
+    {
+      "index": 3,
+      "owner": "visit(x: JsSwitch)",
+      "expression": "requiredSerializerAstValue(x.expression, \"getExpression(...)\")",
+      "source": "fun projection3(x: JsSwitch) = requiredSerializerAstValue(x.expression, \"getExpression(...)\")"
+    },
+    {
+      "index": 4,
+      "owner": "visit(x: JsSwitch)",
+      "expression": "requiredSerializerAstValue(it.caseExpression, \"getCaseExpression(...)\")",
+      "source": "fun projection4(it: JsCase) = requiredSerializerAstValue(it.caseExpression, \"getCaseExpression(...)\")"
+    },
+    {
+      "index": 5,
+      "owner": "visitWhile(x: JsWhile)",
+      "expression": "requiredSerializerAstValue(x.condition, \"getCondition(...)\")",
+      "source": "fun projection5(x: JsWhile) = requiredSerializerAstValue(x.condition, \"getCondition(...)\")"
+    },
+    {
+      "index": 6,
+      "owner": "visitWhile(x: JsWhile)",
+      "expression": "requiredSerializerAstValue(x.body, \"getBody(...)\")",
+      "source": "fun projection6(x: JsWhile) = requiredSerializerAstValue(x.body, \"getBody(...)\")"
+    },
+    {
+      "index": 7,
+      "owner": "visitDoWhile(x: JsDoWhile)",
+      "expression": "requiredSerializerAstValue(x.condition, \"getCondition(...)\")",
+      "source": "fun projection7(x: JsDoWhile) = requiredSerializerAstValue(x.condition, \"getCondition(...)\")"
+    },
+    {
+      "index": 8,
+      "owner": "visitDoWhile(x: JsDoWhile)",
+      "expression": "requiredSerializerAstValue(x.body, \"getBody(...)\")",
+      "source": "fun projection8(x: JsDoWhile) = requiredSerializerAstValue(x.body, \"getBody(...)\")"
+    },
+    {
+      "index": 9,
+      "owner": "visitTry(x: JsTry)",
+      "expression": "requiredSerializerAstValue(x.tryBlock, \"getTryBlock(...)\")",
+      "source": "fun projection9(x: JsTry) = requiredSerializerAstValue(x.tryBlock, \"getTryBlock(...)\")"
+    },
+    {
+      "index": 10,
+      "owner": "visitTry(x: JsTry)",
+      "expression": "requiredSerializerAstValue(c.body, \"getBody(...)\")",
+      "source": "fun projection10(c: JsCatch) = requiredSerializerAstValue(c.body, \"getBody(...)\")"
+    },
+    {
+      "index": 11,
+      "owner": "visitRegExp(x: JsRegExp)",
+      "expression": "requiredSerializerAstValue(x.pattern, \"getPattern(...)\")",
+      "source": "fun projection11(x: JsRegExp) = requiredSerializerAstValue(x.pattern, \"getPattern(...)\")"
+    },
+    {
+      "index": 12,
+      "owner": "visitBinaryExpression(x: JsBinaryOperation)",
+      "expression": "requiredSerializerAstValue(x.arg1, \"getArg1(...)\")",
+      "source": "fun projection12(x: JsBinaryOperation) = requiredSerializerAstValue(x.arg1, \"getArg1(...)\")"
+    },
+    {
+      "index": 13,
+      "owner": "visitBinaryExpression(x: JsBinaryOperation)",
+      "expression": "requiredSerializerAstValue(x.arg2, \"getArg2(...)\")",
+      "source": "fun projection13(x: JsBinaryOperation) = requiredSerializerAstValue(x.arg2, \"getArg2(...)\")"
+    },
+    {
+      "index": 14,
+      "owner": "visitPrefixOperation(x: JsPrefixOperation)",
+      "expression": "requiredSerializerAstValue(x.arg, \"getArg(...)\")",
+      "source": "fun projection14(x: JsPrefixOperation) = requiredSerializerAstValue(x.arg, \"getArg(...)\")"
+    },
+    {
+      "index": 15,
+      "owner": "visitPostfixOperation(x: JsPostfixOperation)",
+      "expression": "requiredSerializerAstValue(x.arg, \"getArg(...)\")",
+      "source": "fun projection15(x: JsPostfixOperation) = requiredSerializerAstValue(x.arg, \"getArg(...)\")"
+    },
+    {
+      "index": 16,
+      "owner": "visitConditional(x: JsConditional)",
+      "expression": "requiredSerializerAstValue(x.testExpression, \"getTestExpression(...)\")",
+      "source": "fun projection16(x: JsConditional) = requiredSerializerAstValue(x.testExpression, \"getTestExpression(...)\")"
+    },
+    {
+      "index": 17,
+      "owner": "visitConditional(x: JsConditional)",
+      "expression": "requiredSerializerAstValue(x.thenExpression, \"getThenExpression(...)\")",
+      "source": "fun projection17(x: JsConditional) = requiredSerializerAstValue(x.thenExpression, \"getThenExpression(...)\")"
+    },
+    {
+      "index": 18,
+      "owner": "visitConditional(x: JsConditional)",
+      "expression": "requiredSerializerAstValue(x.elseExpression, \"getElseExpression(...)\")",
+      "source": "fun projection18(x: JsConditional) = requiredSerializerAstValue(x.elseExpression, \"getElseExpression(...)\")"
+    },
+    {
+      "index": 19,
+      "owner": "visitArrayAccess(x: JsArrayAccess)",
+      "expression": "requiredSerializerAstValue(x.arrayExpression, \"getArrayExpression(...)\")",
+      "source": "fun projection19(x: JsArrayAccess) = requiredSerializerAstValue(x.arrayExpression, \"getArrayExpression(...)\")"
+    },
+    {
+      "index": 20,
+      "owner": "visitArrayAccess(x: JsArrayAccess)",
+      "expression": "requiredSerializerAstValue(x.indexExpression, \"getIndexExpression(...)\")",
+      "source": "fun projection20(x: JsArrayAccess) = requiredSerializerAstValue(x.indexExpression, \"getIndexExpression(...)\")"
+    },
+    {
+      "index": 21,
+      "owner": "visitNameRef(nameRef: JsNameRef)",
+      "expression": "requiredSerializerAstValue(nameRef.ident, \"getIdent(...)\")",
+      "source": "fun projection21(nameRef: JsNameRef) = requiredSerializerAstValue(nameRef.ident, \"getIdent(...)\")"
+    },
+    {
+      "index": 22,
+      "owner": "visitNew(x: JsNew)",
+      "expression": "requiredSerializerAstValue(x.constructorExpression, \"getConstructorExpression(...)\")",
+      "source": "fun projection22(x: JsNew) = requiredSerializerAstValue(x.constructorExpression, \"getConstructorExpression(...)\")"
+    },
+    {
+      "index": 23,
+      "owner": "DataWriter.writeFunction(function: JsFunction)",
+      "expression": "requiredSerializerAstValue(function.body, \"getBody(...)\")",
+      "source": "fun projection23(function: JsFunction) = requiredSerializerAstValue(function.body, \"getBody(...)\")"
+    },
+    {
+      "index": 24,
+      "owner": "DataWriter.writeFunction(function: JsFunction)",
+      "expression": "requiredSerializerAstValue(function.computedName, \"getComputedName(...)\")",
+      "source": "fun projection24(function: JsFunction) = requiredSerializerAstValue(function.computedName, \"getComputedName(...)\")"
+    }
+  ],
+  "evaluationOrder": "exact selected expressions in full original/checked Serializer; all four writer buffers and map counts observed before/after failure",
+  "inaccessibleComputedNameSecondReadNull": "genuine final JsFunction pure getter in selected serial single-worker profile; no fabricated concurrent receiver",
+  "bootstrapNotNullInstrumentationParity": false,
+  "qualifiedNameHostClosed": false,
+  "fullSerializerWasmExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}
