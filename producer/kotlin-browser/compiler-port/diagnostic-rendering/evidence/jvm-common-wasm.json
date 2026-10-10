@@ -1,0 +1,924 @@
+{
+  "schemaVersion": 1,
+  "kind": "pinned-openjdk-diagnostic-format-jvm-common-wasm-differential",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "recipeSha256": "2167f7ddff536aede4ac6d98d16b995580659a7366a268bb9566352b1ab72681",
+  "preparationReceiptSha256": "150e7aa47843b3b291e59b9a67ccc4988407a096ca51504315dc5d49856ca4b6",
+  "buildToolSha256": "63113dfb98cefaac86bf45156f6b706b76d108c35cf731d5084c875661d0b5be",
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "observers": [
+    {
+      "path": "FormatProbe.kt",
+      "bytes": 4508,
+      "sha256": "4709611eb3c199b813b0bfe06d5a20a8bcd14ac1c8986c2cff6f9a629ac2dab3"
+    },
+    {
+      "path": "JvmOriginal.kt",
+      "bytes": 627,
+      "sha256": "d82718ecb0c498d87a818f6b62b36e199eb7004e0aba2987777f5ef1667a5638"
+    },
+    {
+      "path": "CommonFormat.kt",
+      "bytes": 410,
+      "sha256": "3e295a3868d75d4d93b0da602f8106e7543e2d032020f978f77f4765ccf9e096"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 437,
+      "sha256": "307018e366429ac143bde02ca86ad13a5dc0f2773226ce0b5f2ff578b8f062bb"
+    },
+    {
+      "path": "ProfileGuardProbe.kt",
+      "bytes": 1265,
+      "sha256": "8dda8339ee4539f722be25308e9d0861ef44cf20b2b2e8bf72da38cc9651a894"
+    },
+    {
+      "path": "ProfileJvmEntry.kt",
+      "bytes": 111,
+      "sha256": "7cce4d9ced0f2c977ac6cf0724203748af8f1a57035447b45304bea18d40b1cf"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 295,
+      "sha256": "c413e6dbd8f4963ff2ce4ee08aad9b94dc615d92cad31bce1ecfe93c0e8f1a93"
+    }
+  ],
+  "commands": [
+    {
+      "phase": "pinned-openjdk-java-text-build",
+      "command": [
+        "javac",
+        "--patch-module",
+        "java.base=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-reference",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/original-jdk",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-reference/MessageFormat.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-reference/ChoiceFormat.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-reference/NumberFormat.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-reference/DecimalFormat.java"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "host-jdk-version",
+      "command": [
+        "java",
+        "-version"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "openjdk-jvm-probe-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/FormatProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedPatterns.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedRawIntPatterns.kt",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/FormatProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedPatterns.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedRawIntPatterns.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/JvmOriginal.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-jvm-probe-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/FormatProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedPatterns.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedRawIntPatterns.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/compiler-port-diagnostic-rendering/DiagnosticMessageFormat.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/ProfileGuardProbe.kt",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/jvm/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/FormatProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedPatterns.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedRawIntPatterns.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/compiler-port-diagnostic-rendering/DiagnosticMessageFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/ProfileGuardProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/CommonFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/JvmEntry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/ProfileJvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "pinned-openjdk-jvm-observe",
+      "command": [
+        "java",
+        "--patch-module",
+        "java.base=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/original-jdk",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.diagnostics.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.diagnostics.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-jvm-profile-guards",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.diagnostics.probe.ProfileJvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-wasmjs-klib-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/FormatProbe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedPatterns.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedRawIntPatterns.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/compiler-port-diagnostic-rendering/DiagnosticMessageFormat.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/ProfileGuardProbe.kt",
+        "-Xir-produce-klib-file",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/klib",
+        "-ir-output-name",
+        "diagnostic-rendering",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/FormatProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedPatterns.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/GeneratedRawIntPatterns.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/compiler-port-diagnostic-rendering/DiagnosticMessageFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/ProfileGuardProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/CommonFormat.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-wasmjs-binary-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/klib/diagnostic-rendering.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/wasm",
+        "-ir-output-name",
+        "diagnostic-rendering",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-array-range-checks",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-node-wasmjs-observe",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m = await import(process.argv[1]); process.stdout.write(m.diagnosticFormatProbe());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/wasm/diagnostic-rendering.mjs"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-node-wasmjs-profile-guards",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.1.0/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m = await import(process.argv[1]); process.stdout.write(m.diagnosticProfileGuardProbe());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-diagnostic-rendering-probe-20261010-18da6805/wasm/diagnostic-rendering.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "outputs": [
+    {
+      "path": "GeneratedPatterns.kt",
+      "bytes": 277284,
+      "sha256": "b49d217f6e4af85632cd8670ece519c9dc3e413f415a4e1b805f5556e8c2956c"
+    },
+    {
+      "path": "GeneratedRawIntPatterns.kt",
+      "bytes": 8647,
+      "sha256": "ebb0736b614b2fe157fb76d328c551d42488e181be1d80819b8a4a968e76a542"
+    },
+    {
+      "path": "common-jvm.txt",
+      "bytes": 477611,
+      "sha256": "506b74e373b13c29a05a7d820777b0019ded0734634ce024489844aebdc4e519"
+    },
+    {
+      "path": "common-wasmjs.txt",
+      "bytes": 477611,
+      "sha256": "506b74e373b13c29a05a7d820777b0019ded0734634ce024489844aebdc4e519"
+    },
+    {
+      "path": "jvm/common.jar",
+      "bytes": 68968,
+      "sha256": "b2269d3c87c35bf386749c7299cc9aebfbf4a4cf446b22d2f7f932ac684c465b"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 52522,
+      "sha256": "64a4ec43ba6c2abb3324e2fa2e3e7c50e4a428ee4c87079e5f2267aa82bbc5e6"
+    },
+    {
+      "path": "klib/diagnostic-rendering.klib",
+      "bytes": 141057,
+      "sha256": "054288333891322960b1d596ec3fa65570db6380aac75b3eb3fd40d896df985f"
+    },
+    {
+      "path": "original-jdk/java/text/ChoiceFormat.class",
+      "bytes": 5683,
+      "sha256": "fe964c221c73d1cc11ac128096ce595ea32de72a49b295225c1999cdd832877a"
+    },
+    {
+      "path": "original-jdk/java/text/DecimalFormat$DigitArrays.class",
+      "bytes": 763,
+      "sha256": "41ab596237c37832498d1cbf167e122c238c2656ba6112bab216627fc8bb9307"
+    },
+    {
+      "path": "original-jdk/java/text/DecimalFormat$FastPathData.class",
+      "bytes": 807,
+      "sha256": "27f39a6e9a0d8179b5aec7bdd6bcb1b84a3f8d92cd5176c3a956f0f34475c623"
+    },
+    {
+      "path": "original-jdk/java/text/DecimalFormat.class",
+      "bytes": 37977,
+      "sha256": "434367f166a186202d9cd44c820e77f04715181894a67e6b3a96c7c84201877e"
+    },
+    {
+      "path": "original-jdk/java/text/MessageFormat$Field.class",
+      "bytes": 903,
+      "sha256": "1c2253e4c6b36f2121e29ab35666711930a3aa1456216ac0960fe848b742cec5"
+    },
+    {
+      "path": "original-jdk/java/text/MessageFormat.class",
+      "bytes": 16065,
+      "sha256": "eb30cfa53ad98f85b1e0d64fd000329905c846736065445563b347c723814cd2"
+    },
+    {
+      "path": "original-jdk/java/text/NumberFormat$Field.class",
+      "bytes": 2166,
+      "sha256": "32c31ac12b9f9cd3695629f1a10f098f988d580b551c2f9acd736b44172525c9"
+    },
+    {
+      "path": "original-jdk/java/text/NumberFormat$Style.class",
+      "bytes": 1040,
+      "sha256": "128e92b23d6f50bf3eed6b00f8a8c44a63bbddd2b209a7fecb9d5ea7fdb27997"
+    },
+    {
+      "path": "original-jdk/java/text/NumberFormat.class",
+      "bytes": 8887,
+      "sha256": "8444f73e6f44dd7685c6c5b98bcd2ec83c2936f8110a5ee298d2e0ee713c25ec"
+    },
+    {
+      "path": "original-jvm.txt",
+      "bytes": 477611,
+      "sha256": "506b74e373b13c29a05a7d820777b0019ded0734634ce024489844aebdc4e519"
+    },
+    {
+      "path": "profile-guards-jvm.txt",
+      "bytes": 70,
+      "sha256": "c432a1d1f26b8b2093c80d8120c312221f39a4914bd6538b97646555ea505b01"
+    },
+    {
+      "path": "profile-guards-wasmjs.txt",
+      "bytes": 70,
+      "sha256": "c432a1d1f26b8b2093c80d8120c312221f39a4914bd6538b97646555ea505b01"
+    },
+    {
+      "path": "wasm/diagnostic-rendering.import-object.mjs",
+      "bytes": 9495,
+      "sha256": "aeb55f2b906b0018cd6d2f244ed671dcaec0b02e235463342c16a77aec9d7b91"
+    },
+    {
+      "path": "wasm/diagnostic-rendering.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/diagnostic-rendering.mjs",
+      "bytes": 2336,
+      "sha256": "c601ce6334bd3150e81854e49f05577fa104996de21a8a16925be90fded85fa7"
+    },
+    {
+      "path": "wasm/diagnostic-rendering.wasm",
+      "bytes": 1528472,
+      "sha256": "8b3cc4a426ef26cefab89151bcc056d36570f2e9b429922c5f954c5df82d2ff0"
+    }
+  ],
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "compilerSourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "originalJdk": {
+    "source": {
+      "repository": "https://github.com/openjdk/jdk17u.git",
+      "commit": "162dbac82cf31c6948414944af836187aff9e6ca",
+      "tag": "jdk-17.0.16+8",
+      "files": [
+        {
+          "sourcePath": "src/java.base/share/classes/java/text/MessageFormat.java",
+          "path": "MessageFormat.java",
+          "gitBlob": "5ac88f0cfaa8a6f6654fd79c01497e8e3c21c0c1",
+          "bytes": 71579,
+          "sha256": "ea197ad6231e4f466f097fb8d90012f994d7e4737fcac56be1570161333bf909"
+        },
+        {
+          "sourcePath": "src/java.base/share/classes/java/text/ChoiceFormat.java",
+          "path": "ChoiceFormat.java",
+          "gitBlob": "342931d1c453e97fe9193c5170ce2613402da39a",
+          "bytes": 22677,
+          "sha256": "ef0af28eccd4be971d2b5facbb255c73e6168cc4a6d051e4cb4024ba03aacded"
+        },
+        {
+          "sourcePath": "src/java.base/share/classes/java/text/NumberFormat.java",
+          "path": "NumberFormat.java",
+          "gitBlob": "f7c402846115678bd95b369be223d3c084b2a1d2",
+          "bytes": 54708,
+          "sha256": "a3bf8d420025a5fcbefef1fd41535458feacedb1beed581c4cebc76e02feb96c"
+        },
+        {
+          "sourcePath": "src/java.base/share/classes/java/text/DecimalFormat.java",
+          "path": "DecimalFormat.java",
+          "gitBlob": "07a66916c56d3d680cf225b49ddd274ea36f57b5",
+          "bytes": 186195,
+          "sha256": "f68d2d3ed911d8887e05530932123a9a043571d36e5a460ae3b695a0f8de3537"
+        },
+        {
+          "sourcePath": "src/java.base/share/classes/java/lang/Integer.java",
+          "path": "Integer.java",
+          "gitBlob": "358855550296e94161fb97885ea80802ff3bd49a",
+          "bytes": 73833,
+          "sha256": "340bb9c7efed986dbc12dfaee9488052de07d48640aa5020e2bbb302a8408ee1"
+        },
+        {
+          "sourcePath": "LICENSE",
+          "path": "LICENSE.OpenJDK",
+          "gitBlob": "8b400c7ab81b7b18baff3f81d597f5e511883134",
+          "bytes": 19274,
+          "sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726"
+        }
+      ],
+      "portedLicense": "GPL-2.0-only WITH Classpath-exception-2.0"
+    },
+    "compiledPinnedJavaText": [
+      "MessageFormat.java",
+      "ChoiceFormat.java",
+      "NumberFormat.java",
+      "DecimalFormat.java"
+    ],
+    "hostSupport": "Host JDK java.lang.Integer and locale provider data; no complete OpenJDK rebuild claimed",
+    "versionCommandStdout": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment (build 17.0.20.1+1-1-deb12u1-Debian)\nOpenJDK 64-Bit Server VM (build 17.0.20.1+1-1-deb12u1-Debian, mixed mode, sharing)\n"
+  },
+  "comparison": {
+    "observations": 2649,
+    "literalParameterizedPatterns": 407,
+    "literalSamples": 1221,
+    "deferredPatternExpressions": [
+      {
+        "index": 47,
+        "table": "common",
+        "diagnostic": "INVISIBLE_REFERENCE_WARNING"
+      },
+      {
+        "index": 67,
+        "table": "common",
+        "diagnostic": "MISSING_DEPENDENCY_CLASS_IN_TYPEALIAS"
+      },
+      {
+        "index": 85,
+        "table": "common",
+        "diagnostic": "IMPLICIT_PROPERTY_TYPE_MAKES_BEHAVIOR_ORDER_DEPENDANT"
+      },
+      {
+        "index": 86,
+        "table": "common",
+        "diagnostic": "IMPLICIT_PROPERTY_TYPE_MAKES_BEHAVIOR_ORDER_DEPENDANT_ERROR"
+      },
+      {
+        "index": 203,
+        "table": "common",
+        "diagnostic": "ANNOTATION_WILL_BE_APPLIED_ALSO_TO_PROPERTY_OR_FIELD"
+      },
+      {
+        "index": 354,
+        "table": "common",
+        "diagnostic": "TYPE_ARGUMENTS_NOT_ALLOWED_WARNING"
+      },
+      {
+        "index": 357,
+        "table": "common",
+        "diagnostic": "WRONG_NUMBER_OF_TYPE_ARGUMENTS"
+      },
+      {
+        "index": 358,
+        "table": "common",
+        "diagnostic": "WRONG_NUMBER_OF_TYPE_ARGUMENTS_WARNING"
+      },
+      {
+        "index": 359,
+        "table": "common",
+        "diagnostic": "WRONG_NUMBER_OF_TYPE_ARGUMENTS_IN_LOCAL_CLASS_IN_LHS_WARNING"
+      },
+      {
+        "index": 360,
+        "table": "common",
+        "diagnostic": "WRONG_NUMBER_OF_TYPE_ARGUMENTS_IN_GET_CLASS_WARNING"
+      },
+      {
+        "index": 362,
+        "table": "common",
+        "diagnostic": "NO_TYPE_ARGUMENTS_ON_RHS"
+      },
+      {
+        "index": 369,
+        "table": "common",
+        "diagnostic": "CONFLICTING_PROJECTION_IN_CALLABLE_REFERENCE_WARNING"
+      },
+      {
+        "index": 375,
+        "table": "common",
+        "diagnostic": "TYPE_PARAMETER_AS_REIFIED"
+      },
+      {
+        "index": 376,
+        "table": "common",
+        "diagnostic": "TYPE_PARAMETER_AS_REIFIED_DEPRECATION_WARNING"
+      },
+      {
+        "index": 380,
+        "table": "common",
+        "diagnostic": "TYPE_INTERSECTION_AS_REIFIED"
+      },
+      {
+        "index": 381,
+        "table": "common",
+        "diagnostic": "TYPE_INTERSECTION_AS_REIFIED_DEPRECATION_WARNING"
+      },
+      {
+        "index": 415,
+        "table": "common",
+        "diagnostic": "DEPRECATED_SMARTCAST_ON_DELEGATED_PROPERTY"
+      },
+      {
+        "index": 437,
+        "table": "common",
+        "diagnostic": "EXPRESSION_OF_NULLABLE_TYPE_IN_CLASS_LITERAL_LHS_WARNING"
+      },
+      {
+        "index": 493,
+        "table": "common",
+        "diagnostic": "MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES"
+      },
+      {
+        "index": 494,
+        "table": "common",
+        "diagnostic": "MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_WHEN_NO_EXPLICIT_OVERRIDE"
+      },
+      {
+        "index": 495,
+        "table": "common",
+        "diagnostic": "MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_DEPRECATION"
+      },
+      {
+        "index": 496,
+        "table": "common",
+        "diagnostic": "MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_WHEN_NO_EXPLICIT_OVERRIDE_DEPRECATION"
+      },
+      {
+        "index": 592,
+        "table": "common",
+        "diagnostic": "INITIALIZATION_BEFORE_DECLARATION_WARNING"
+      },
+      {
+        "index": 642,
+        "table": "common",
+        "diagnostic": "EXPLICIT_TYPE_ARGUMENTS_IN_PROPERTY_ACCESS_WARNING"
+      },
+      {
+        "index": 653,
+        "table": "common",
+        "diagnostic": "DESTRUCTURING_SHORT_FORM_NAME_MISMATCH"
+      },
+      {
+        "index": 654,
+        "table": "common",
+        "diagnostic": "DESTRUCTURING_SHORT_FORM_OF_NON_DATA_CLASS"
+      },
+      {
+        "index": 691,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_CLASS_TYPE_PARAMETER_COUNT"
+      },
+      {
+        "index": 692,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_RETURN_TYPE"
+      },
+      {
+        "index": 693,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_EQUALITY_BOUNDS"
+      },
+      {
+        "index": 694,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_PARAMETER_NAMES"
+      },
+      {
+        "index": 695,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_CONTEXT_PARAMETER_NAMES"
+      },
+      {
+        "index": 696,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_TYPE_PARAMETER_NAMES"
+      },
+      {
+        "index": 697,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_VALUE_PARAMETER_VARARG"
+      },
+      {
+        "index": 698,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_VALUE_PARAMETER_NOINLINE"
+      },
+      {
+        "index": 699,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_VALUE_PARAMETER_CROSSINLINE"
+      },
+      {
+        "index": 700,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_FUNCTION_MODIFIERS_DIFFERENT"
+      },
+      {
+        "index": 701,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_FUNCTION_MODIFIERS_NOT_SUBSET"
+      },
+      {
+        "index": 702,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_PARAMETERS_WITH_DEFAULT_VALUES_IN_EXPECT_ACTUALIZED_BY_FAKE_OVERRIDE"
+      },
+      {
+        "index": 703,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_PROPERTY_KIND"
+      },
+      {
+        "index": 704,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_PROPERTY_LATEINIT_MODIFIER"
+      },
+      {
+        "index": 705,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_PROPERTY_CONST_MODIFIER"
+      },
+      {
+        "index": 706,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_PROPERTY_SETTER_VISIBILITY"
+      },
+      {
+        "index": 707,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_CLASS_KIND"
+      },
+      {
+        "index": 708,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_CLASS_MODIFIERS"
+      },
+      {
+        "index": 709,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_FUN_INTERFACE_MODIFIER"
+      },
+      {
+        "index": 710,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_SUPERTYPES"
+      },
+      {
+        "index": 711,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_NESTED_TYPE_ALIAS"
+      },
+      {
+        "index": 712,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_ENUM_ENTRIES"
+      },
+      {
+        "index": 713,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_ILLEGAL_REQUIRES_OPT_IN"
+      },
+      {
+        "index": 714,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_MODALITY"
+      },
+      {
+        "index": 715,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_VISIBILITY"
+      },
+      {
+        "index": 716,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_CLASS_TYPE_PARAMETER_UPPER_BOUNDS"
+      },
+      {
+        "index": 717,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_TYPE_PARAMETER_VARIANCE"
+      },
+      {
+        "index": 718,
+        "table": "common",
+        "diagnostic": "EXPECT_ACTUAL_INCOMPATIBLE_TYPE_PARAMETER_REIFIED"
+      },
+      {
+        "index": 771,
+        "table": "common",
+        "diagnostic": "NUMERIC_CAST_NEVER_SUCCEEDS_BUT_CAN_BE_REPLACED_WITH_TO_CALL"
+      },
+      {
+        "index": 772,
+        "table": "common",
+        "diagnostic": "INTEGER_LITERAL_CAST_INSTEAD_OF_TO_CALL"
+      },
+      {
+        "index": 773,
+        "table": "common",
+        "diagnostic": "IMPOSSIBLE_IS_CHECK_ERROR"
+      },
+      {
+        "index": 774,
+        "table": "common",
+        "diagnostic": "IMPOSSIBLE_IS_CHECK_WARNING"
+      },
+      {
+        "index": 775,
+        "table": "common",
+        "diagnostic": "IMPOSSIBLE_IS_CHECK_DEPRECATION"
+      },
+      {
+        "index": 776,
+        "table": "common",
+        "diagnostic": "IMPOSSIBLE_IS_CHECK_RELYING_ON_NULL_ERROR"
+      },
+      {
+        "index": 777,
+        "table": "common",
+        "diagnostic": "IMPOSSIBLE_IS_CHECK_RELYING_ON_NULL_WARNING"
+      },
+      {
+        "index": 778,
+        "table": "common",
+        "diagnostic": "IMPOSSIBLE_IS_CHECK_RELYING_ON_NULL_DEPRECATION"
+      },
+      {
+        "index": 785,
+        "table": "common",
+        "diagnostic": "MISSING_BRANCH_FOR_NON_ABSTRACT_SEALED_CLASS"
+      },
+      {
+        "index": 849,
+        "table": "common",
+        "diagnostic": "NON_PUBLIC_CALL_FROM_PUBLIC_INLINE_DEPRECATION"
+      }
+    ],
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsCommonWasm": true,
+    "rawIntDiagnosticBasePatterns": 5,
+    "rawIntDiagnosticSamples": 40,
+    "rawIntPrefixDeclarationSha256": "7fafa3698f77aae082019218f0f8a1d1cb9df1232c387e67208c63ab28f1c0ba",
+    "rawIntWarningSuffixExecution": "not-run",
+    "observationSha256": "506b74e373b13c29a05a7d820777b0019ded0734634ce024489844aebdc4e519",
+    "profileGuardsSha256": "c432a1d1f26b8b2093c80d8120c312221f39a4914bd6538b97646555ea505b01",
+    "defaultLocaleIndependence": [
+      "en-US",
+      "de-DE",
+      "tr-TR",
+      "ar-EG"
+    ],
+    "scope": "Pinned java.text pattern formatting and audited String/Int profile; no actual diagnostic table or resolved FIR execution."
+  },
+  "wasmEngine": {
+    "kind": "Node",
+    "version": "v24.1.0",
+    "flags": [
+      "--experimental-wasm-exnref"
+    ]
+  },
+  "browserComparison": "not-run",
+  "diagnosticTableExecution": "not-run",
+  "resolvedFirExecution": "not-run",
+  "fullCompilerBuilt": false,
+  "freshBrowserSourceCompilation": "not-run",
+  "publicLanguageSupport": false
+}
