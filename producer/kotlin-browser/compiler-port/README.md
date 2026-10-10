@@ -78,6 +78,11 @@ traversal bodies to the pinned OpenJDK word algorithms. Their original JVM,
 common JVM and Wasm comparisons establish selected host API behavior. They
 do not establish complete FIR execution or whole compiler acceptance.
 
+The [fingerprint port](fingerprints/README.md) retains original CityHash,
+serialized IR-file and KLIB-list fingerprint algorithms. Its disk-only overload
+is split after scanning and recording every selected compiler input, including
+the actual browser entry. An unknown retained reader rejects that selection.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is

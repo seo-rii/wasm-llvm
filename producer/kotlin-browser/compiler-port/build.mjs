@@ -393,6 +393,29 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       files.set('compiler-port-entry/' + name, { filename: entryFile, bytes: entryBytes.length,
         sha256: sha256(entryBytes), compile: true });
     }
+    if (sourceHost === 'portable') {
+      // The disk-only fingerprint overload can be split only after the final
+      // source selection and entry are known. Verify every actual reader.
+      const fingerprints = await import('./fingerprints/prepare.mjs');
+      const componentRoot = path.join(output, 'components', 'fingerprintsReceipt');
+      const component = await fingerprints.prepareCompilerFingerprints({ sourceRoot: prepared.sourceRoot, outputRoot: componentRoot,
+        retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      await fingerprints.verifyCompilerFingerprints(path.dirname(component.receiptPath));
+      receipt.fingerprintsReceipt = component.receipt;
+      for (const excluded of component.replacedOriginalPaths) {
+        const sourcePath = relativePath(excluded); assert(files.has(sourcePath));
+        files.set(sourcePath, { ...files.get(sourcePath), compile: false });
+      }
+      for (const filename of component.commonSources) {
+        assert(filename.startsWith(componentRoot + path.sep));
+        const sourcePath = relativePath(path.relative(componentRoot, filename));
+        assert(!files.has(sourcePath), 'Duplicate fingerprint source: ' + sourcePath);
+        const bytes = await readRegular(filename); const digest = sha256(bytes);
+        files.set(sourcePath, { filename, bytes: bytes.length, sha256: digest, compile: true });
+        receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
+      }
+    }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
     receipt.hostLibraries = [{ role: 'compiler-host-stdlib', file: path.basename(bootstrap.wasmJsStdlib),
