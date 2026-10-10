@@ -247,6 +247,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await signatures.verifyDescriptorPlatformSignatures(outputRoot);
           return component;
         }],
+        ['copyBuilderPlatformReceipt', async ({ outputRoot }) => {
+          const builders = await import('./copy-builder-platform/prepare.mjs');
+          const component = await builders.prepareCopyBuilderPlatform({ outputRoot,
+            preparedSignatures: preparedComponents.get('descriptorPlatformSignaturesReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+          });
+          await builders.verifyCopyBuilderPlatform(outputRoot);
+          return component;
+        }],
         ['annotationImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
           const annotations = await import('./annotation-implementations/prepare.mjs');
           const component = await annotations.prepareAnnotationImplementations({ sourceRoot, outputRoot });
@@ -1022,10 +1032,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
     }
     if (sourceHost === 'portable') {
       const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
-      receipt.descriptorPlatformSignaturesFinalReceipt = await signatures.verifyFinalDescriptorPlatformSignatures({
-        profileRoot: path.join(output, 'components', 'descriptorPlatformSignaturesReceipt'),
+      const builders = await import('./copy-builder-platform/prepare.mjs');
+      const final = await builders.verifyFinalCopyBuilderPlatform({
+        profileRoot: path.join(output, 'components', 'copyBuilderPlatformReceipt'),
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+      });
+      receipt.copyBuilderPlatformFinalReceipt = final.receipt;
+      receipt.descriptorPlatformSignaturesFinalReceipt = await signatures.verifyFinalDescriptorPlatformSignatures({
+        profileRoot: path.join(output, 'components', 'descriptorPlatformSignaturesReceipt'),
+        retainedSources: final.predecessorRetainedSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
     }
