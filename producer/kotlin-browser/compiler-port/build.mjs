@@ -83,6 +83,45 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           return { ...component, sourceSetExclusions: component.sourceSetExclusions.map((entry) => relativePath(entry.path)) };
         }],
         ['diagnosticFactoriesReceipt', (await import('./diagnostic-factories/prepare.mjs')).prepareDiagnosticFactories],
+        ['sourceClosureReceipt', async ({ outputRoot }) => {
+          const sources = await import('./source-closure/prepare.mjs');
+          const reference = await sources.prepareSourceClosureReferences();
+          const component = await sources.prepareSourceClosure({ sourceRoot: reference.sourceRoot, outputRoot });
+          const additional = new Set(component.additionalOriginalPaths);
+          assert.equal(additional.size, component.additionalOriginalPaths.length, 'Duplicate supplemental source input');
+          const originals = component.sourceFiles.filter(pin => additional.has(pin.path));
+          assert.equal(originals.length, additional.size, 'Unpinned supplemental source input');
+          for (const pin of originals) {
+            const sourcePath = relativePath(pin.path);
+            assert(!files.has(sourcePath), 'Supplemental source conflicts with primary inventory: ' + sourcePath);
+            const filename = path.join(component.originalSourceRoot, sourcePath);
+            verifyFile(await readRegular(filename, pin.bytes), pin);
+            // Register verified original identity for replacement checks. Only
+            // the component's selected common outputs enter compilation.
+            files.set(sourcePath, { filename, bytes: pin.bytes, sha256: pin.sha256, compile: false });
+          }
+          const deferred = 'compiler/fir/checkers/checkers.web.common/src/org/jetbrains/kotlin/fir/analysis/diagnostics/web/common/FirWebCommonErrorsDefaultMessages.kt';
+          assert(additional.has(deferred), 'Missing supplemental web diagnostic renderer');
+          const renderingSources = component.commonSources.filter(filename => filename.endsWith('/' + deferred));
+          assert.equal(renderingSources.length, 1);
+          receipt.sourceClosureSupplementalOriginals = originals;
+          receipt.sourceClosureRenderingComposition = { originalPath: deferred, deferredSources: renderingSources,
+            rule: 'The diagnostic-rendering component supplies this original table exactly once', checkerFilesExcluded: false };
+          return { ...component, commonSources: component.commonSources.filter(filename => !renderingSources.includes(filename)) };
+        }],
+        ['diagnosticRenderingReceipt', async ({ sourceRoot, outputRoot }) => {
+          assert(preparedComponents.has('sourceClosureReceipt'), 'Supplemental web checkers must be prepared first');
+          const rendering = await import('./diagnostic-rendering/prepare.mjs');
+          await rendering.prepareDiagnosticRenderingReferences();
+          const component = await rendering.prepareDiagnosticRendering({ sourceRoot, outputRoot,
+            additionalSourceRoot: preparedComponents.get('sourceClosureReceipt').originalSourceRoot });
+          for (const pin of component.supplementalOriginals) {
+            assert(files.has(relativePath(pin.path)), 'Missing registered supplemental diagnostic source');
+            assert.equal(files.get(pin.path).sha256, pin.sha256, 'Supplemental diagnostic original identity changed');
+          }
+          receipt.requiredDiagnosticProfile = component.requiredDiagnosticProfile;
+          return component;
+        }],
         ['parserProfileReceipt', (await import('./parser-profile/prepare.mjs')).prepareParserProfileSources],
         ['coreReceipt', (await import('./core/prepare.mjs')).prepareCoreSources],
         ['configurationReceipt', (await import('./config/prepare.mjs')).prepareConfigurationSources],
@@ -136,10 +175,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ['collectionsReceipt', (await import('./collections/prepare.mjs')).prepareCollectionsSources],
         ['smartSetReceipt', (await import('./smart-set/prepare.mjs')).prepareSmartSetSources],
         ['identityReceipt', (await import('./identity/prepare.mjs')).prepareIdentitySources],
+        ['firStorageReceipt', (await import('./fir-storage/prepare.mjs')).prepareFirStorageSources],
         ['registryReceipt', (await import('./registry/prepare.mjs')).prepareRegistrySources],
         ['sessionProfileReceipt', (await import('./session-profile/prepare.mjs')).prepareSessionProfile],
         ['serialResolveReceipt', (await import('./serial-resolve/prepare.mjs')).prepareSerialResolveSources],
         ['flagsReceipt', (await import('./flags/prepare.mjs')).prepareFlagsSources],
+        ['bitSetReceipt', async ({ sourceRoot, outputRoot }) => {
+          const bitSet = await import('./bit-set/prepare.mjs');
+          await bitSet.prepareBitSetReferences();
+          return bitSet.prepareBitSetSources({ sourceRoot, outputRoot });
+        }],
         ['textReceipt', (await import('./text/prepare.mjs')).prepareCompilerTextSources],
         ['klibReceipt', (await import('./klib/prepare.mjs')).prepareKlibSources],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
@@ -351,6 +396,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.hostLibraries.push({ role: 'official-parser-dependency', file: pin.name, sha256: pin.sha256 });
     }
     if (sourceHost === 'portable') {
+      const immutable = await import('./source-closure/immutable.mjs');
+      const dependency = await immutable.prepareImmutableDependency({ outputRoot: path.join(output, 'dependencies') });
+      const checked = await immutable.verifyImmutableDependency(path.dirname(dependency.receiptPath));
+      assert.equal(checked.libraryPath, dependency.libraryPath);
+      assert.equal(checked.receipt.source.commit, lock.source.commit);
+      libraries.push(checked.libraryPath);
+      receipt.immutableDependencyReceipt = checked.receipt;
+      const libraryPin = checked.receipt.files.find(pin => pin.path === checked.receipt.library);
+      assert(libraryPin, 'Missing immutable compiler-host dependency pin');
+      receipt.hostLibraries.push({ role: 'official-persistent-collections-compiler-host', ...libraryPin });
       const codec = await readJson(path.join(protobufBuild, 'receipt.json'));
       assert.equal(codec.kind, 'portable-compiler-protobuf-build');
       assert.equal(codec.source.commit, lock.source.commit);

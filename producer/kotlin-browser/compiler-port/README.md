@@ -59,6 +59,23 @@ unexpected reader of that metadata fails source preparation. The
 the original compiler's message and binary-writing behavior. Their helper
 comparisons do not establish full diagnostic or source-to-program correctness.
 
+The [supplemental source closure](source-closure/README.md) restores the complete
+Web Common checker module and selected original CLI configuration/reporting
+declarations at the same source revision. Original source identities are checked
+before the selected common variants enter compilation. The original Web Common
+default message table is selected once, through
+[diagnostic rendering](diagnostic-rendering/README.md). The formatter uses an
+explicit en-US String/Int profile, recorded in the compiler build receipt.
+The compiler host also uses the source-version-pinned official immutable
+collections wasmJs KLIB; its provenance and bytes are verified before linking.
+
+The [FIR storage port](fir-storage/README.md) retains the real FIR2IR cache,
+expect/actual storage and serial lock bodies. The
+[BitSet port](bit-set/README.md) binds the unchanged liveness-analysis and bit
+traversal bodies to the pinned OpenJDK word algorithms. Their original JVM,
+common JVM and Wasm comparisons establish selected host API behavior. They
+do not establish complete FIR execution or whole compiler acceptance.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is
