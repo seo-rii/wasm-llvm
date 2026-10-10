@@ -514,6 +514,30 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
         addedPaths.push(sourcePath);
       }
+      const exceptionText = await import('./backend-exception-text/prepare.mjs');
+      const exceptionRoot = path.join(output, 'components', 'backendExceptionTextReceipt');
+      const exceptionComponent = await exceptionText.prepareBackendExceptionText({ sourceRoot: prepared.sourceRoot,
+        outputRoot: exceptionRoot, preparedSourceDsl: component });
+      await exceptionText.verifyBackendExceptionText({ sourceRoot: prepared.sourceRoot,
+        preparedSourceDsl: component, profileRoot: exceptionRoot });
+      assert.equal(exceptionComponent.predecessorBindings.length, 1);
+      assert.equal(exceptionComponent.commonSources.length, 1);
+      const binding = exceptionComponent.predecessorBindings[0], sourcePath = relativePath(binding.logicalPath);
+      assert.deepEqual(exceptionComponent.replacedPreparedPaths, [sourcePath]);
+      const previous = files.get(sourcePath);
+      assert(previous?.compile && component.commonSources.includes(previous.filename), 'Missing canonical sourced diagnostic predecessor');
+      assert.equal(previous.filename, binding.filename);
+      assert.equal(previous.bytes, binding.bytes); assert.equal(previous.sha256, binding.sha256);
+      const predecessorBytes = await readRegular(previous.filename);
+      assert.equal(predecessorBytes.length, binding.bytes); assert.equal(sha256(predecessorBytes), binding.sha256);
+      const filename = exceptionComponent.commonSources[0];
+      assert(filename.startsWith(exceptionRoot + path.sep));
+      assert.equal(relativePath(path.relative(exceptionRoot, filename)), sourcePath);
+      const bytes = await readRegular(filename), digest = sha256(bytes);
+      files.set(sourcePath, { filename, bytes: bytes.length, sha256: digest, compile: true });
+      receipt.backendExceptionTextReceipt = exceptionComponent.receipt;
+      receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== sourcePath);
+      receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
       receipt.annotationImports.sources.push(...await bindCompilerJvmAnnotations(addedPaths));
     }
     if (sourceHost === 'portable') {

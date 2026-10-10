@@ -122,6 +122,13 @@ overflow case has different failure categories. ByteBuffer, external readers,
 full arithmetic consumers and retained host-list factory differences remain
 separate limits of the whole compiler.
 
+The [backend exception-name boundary](backend-exception-text/) preserves the
+existing JVM-qualified String protocol using the original two literal names.
+It verifies and replaces the sourced-DSL backend table once before annotation
+imports. Its full JVM table and exact-lambda Wasm evidence retain the original
+message-first behavior; they do not establish host exception-to-protocol
+generation or full diagnostic-table Wasm closure.
+
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
 [producer input](compiler-version-input.json). The selected upstream default is
