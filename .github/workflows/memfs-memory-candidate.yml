@@ -1,0 +1,54 @@
+name: MemFS memory candidate
+
+on:
+  pull_request:
+    paths:
+      - 'producer/clang-browser/scripts/*memfs*.mjs'
+      - 'producer/clang-browser/manifest.json'
+      - 'test/memfs-memory-patch.test.mjs'
+      - '.github/workflows/memfs-memory-candidate.yml'
+      - 'docs/performance/memfs-memory-candidate.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/check-repository.mjs
+      - run: node --test test/memfs-memory-patch.test.mjs
+      - name: Install pinned WASI SDK 33
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/wasi-sdk.tar.gz"
+          curl --fail --location --retry 3 -o "$archive" https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz
+          printf '%s  %s\n' 0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce "$archive" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/memfs-wasi-sdk"
+          tar -xzf "$archive" --strip-components=1 -C "$RUNNER_TEMP/memfs-wasi-sdk"
+      - name: Compile baseline and candidate with identical toolchain flags
+        run: node producer/clang-browser/scripts/build-memfs-memory-candidate.mjs "$RUNNER_TEMP/memfs-wasi-sdk" out/memfs-memory
+      - run: pnpm exec playwright-core install --with-deps chromium
+      - name: Execute actual Wasm in Node and Chromium Worker
+        run: node producer/clang-browser/scripts/validate-memfs-memory-candidate.mjs out/memfs-memory
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memfs-memory-candidate-${{ github.sha }}
+          path: out/memfs-memory/
+          if-no-files-found: warn
+          retention-days: 7

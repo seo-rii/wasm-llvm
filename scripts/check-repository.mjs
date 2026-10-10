@@ -41,6 +41,7 @@ const REQUIRED_PRODUCERS = [
 	'crystal-browser',
 	'ecl-browser',
 	'emscripten-lld-browser',
+	'lean-browser',
 	'lfortran-browser',
 	'lldb-browser',
 	'objective-c-browser',
@@ -48,6 +49,7 @@ const REQUIRED_PRODUCERS = [
 	'rust-browser',
 	'swift-browser',
 	'tinygo-browser',
+	'v-browser',
 	'wamr-browser'
 ];
 

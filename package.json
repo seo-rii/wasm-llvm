@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"check": "node ./scripts/check-repository.mjs",
-		"test": "node --test ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
+		"test": "node --test ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/lean-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
 		"build:clang": "node ./producer/clang-browser/scripts/build-toolchain.mjs",
 		"package:clang": "node ./producer/clang-browser/scripts/package-toolchain.mjs",
 		"prepare:clang-release": "node ./producer/clang-browser/scripts/prepare-release.mjs",
@@ -28,6 +28,9 @@
 		"build:cobol": "bash ./producer/cobol-browser/scripts/build.sh",
 		"prepare:cobol-release": "node ./producer/cobol-browser/scripts/package-release.mjs",
 		"verify:cobol-artifacts": "node ./producer/cobol-browser/scripts/verify-artifacts.mjs",
+		"build:v": "bash ./producer/v-browser/scripts/build.sh",
+		"prepare:v-release": "node ./producer/v-browser/scripts/package-release.mjs",
+		"verify:v-artifacts": "node ./producer/v-browser/scripts/verify-artifacts.mjs",
 		"verify:emscripten-lld-artifacts": "node ./producer/emscripten-lld-browser/scripts/verify-artifacts.mjs",
 		"build:objective-c": "node ./producer/objective-c-browser/scripts/build.mjs",
 		"probe:objective-c:foundation": "node ./producer/objective-c-browser/scripts/probe-foundation.mjs",
@@ -63,6 +66,10 @@
 		"smoke:ecl:browser": "node ./producer/ecl-browser/scripts/producer.mjs browser-smoke",
 		"package:ecl": "node ./producer/ecl-browser/scripts/producer.mjs package && node ./producer/ecl-browser/scripts/notices.mjs",
 		"verify:ecl-artifacts": "node ./producer/ecl-browser/scripts/producer.mjs verify artifacts/ecl-browser && node ./producer/ecl-browser/scripts/notices.mjs --verify",
+		"build:lean": "bash ./producer/lean-browser/scripts/build.sh",
+		"package:lean": "node ./producer/lean-browser/scripts/package.mjs",
+		"smoke:lean": "node ./producer/lean-browser/scripts/smoke.mjs",
+		"verify:lean-artifacts": "node ./producer/lean-browser/scripts/package.mjs --verify",
 		"prepare:lfortran": "node ./producer/lfortran-browser/scripts/producer.mjs prepare",
 		"build:lfortran": "node ./producer/lfortran-browser/scripts/producer.mjs build",
 		"package:lfortran": "node ./producer/lfortran-browser/scripts/producer.mjs package",
@@ -77,10 +84,10 @@
 		"probe:swift-browser-target": "node ./producer/swift-browser/scripts/probe-browser-target.mjs"
 	},
 	"devDependencies": {
-		"@zip.js/zip.js": "^2.8.23",
-		"playwright-core": "^1.59.1",
 		"@bjorn3/browser_wasi_shim": "0.4.2",
-		"acorn": "8.15.0"
+		"@zip.js/zip.js": "^2.23.0",
+		"acorn": "8.19.0",
+		"playwright-core": "^1.63.0"
 	},
 	"engines": {
 		"node": ">=20"

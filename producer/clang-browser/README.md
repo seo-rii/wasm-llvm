@@ -11,6 +11,7 @@ completed build writes checksums and effective versions to `artifacts/clang-brow
 - `sysroot.tar.zip`: trimmed WASI C/C++ sysroot and Clang resource headers
 - `memfs.zip`: bootstrap filesystem used by the external host runtime
 - `clangd/clangd.js` and `clangd/clangd.wasm.gz`: Emscripten pthread clangd worker
+- `clangd/clangd.headers.json.gz`: optional separately fingerprinted complete selected-target C/C++ and resource headers, produced with `CLANGD_SEPARATE_HEADERS=ON`
 - `toolchain.json`: build receipt and SHA-256 hashes
 
 The checked-in producer artifacts are inputs to deployment, not npm package contents. Run
@@ -29,14 +30,43 @@ MemFS from the small source files pinned by immutable revision, size and SHA-256
 The node table holds 8192 entries instead of 1024, leaving room for Objective-C headers and workspace
 files after mounting the sysroot. A clean output directory is sufficient.
 
+The WASI SDK clang driver normally runs any `wasm-opt` found on `PATH` after linking, so a host
+Binaryen package would silently change the clang and wasm-ld bytes. The producer links them with
+`--no-wasm-opt`, keeps the `target_features` section as the driver does for its own pass, and then runs `wasm-opt` from the pinned Emscripten SDK at the level the driver
+would have used (`LLVM_MINSIZE_OPT` for `MinSizeRel`, `O3` for `Release`, `O2` for
+`RelWithDebInfo`, none for `Debug`).
+
 Before linking clangd, the producer prepares a separate `clangd-include` directory containing
 shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
 copying, so excluding other WASI targets cannot leave dangling links. The complete selected C/C++
 headers remain available to clangd; the later compiler sysroot dependency pruning does not affect
-this directory. The include tree remains mounted at `/usr/include` in the worker.
+this directory. The default `CLANGD_SEPARATE_HEADERS=OFF` embeds it at `/usr/include` in clangd's
+Wasm, preserving the two-asset worker contract.
+
+With `CLANGD_SEPARATE_HEADERS=ON`, the linker omits the embedded tree. Packaging stores the complete
+tree at `/usr/include` and the matching resource headers at `/lib/clang/<major>/include` in a
+separately versioned gzip JSON asset. The runtime verifies and prepares that asset concurrently
+with Wasm compilation, then mounts every header before document analysis. Embedded-header and
+custom asset configurations remain supported. The selected execution sysroot is dependency-pruned
+and cannot replace this complete clangd header tree.
+
+The separated candidate passed C/C++ diagnostics, completion and pthread startup checks, but
+current Chromium measurements showed slower readiness and first diagnostics. Header separation
+therefore remains an opt-in configuration; shipped headers remain embedded. It shrinks raw Wasm
+without guaranteeing a smaller combined download or faster startup. The measurements and artifact
+decisions are recorded in [PERFORMANCE.md](PERFORMANCE.md).
 
 ```sh
 pnpm build:clang
+```
+
+To build the separate-header variant in isolated work/output directories:
+
+```sh
+CLANGD_SEPARATE_HEADERS=ON \
+  WASM_LLVM_TOOLCHAIN_WORK_DIR=/path/to/separated-work \
+  WASM_LLVM_TOOLCHAIN_OUT_DIR=/path/to/separated-output \
+  pnpm build:clang
 ```
 
 To rebuild only MemFS with an existing WASI SDK 33 installation:
@@ -97,6 +127,95 @@ Useful overrides:
   model. LLVM 22 falls back to heuristic ranking; completion stays available, but suggestion
   order can change. Set `ON` to restore the model for quality and size comparisons; forcing
   `--ranking-model=decision_forest` at runtime requires a build with the model enabled.
+- `CLANGD_SEPARATE_HEADERS=ON|OFF` (default `OFF`) keeps complete selected-target headers embedded
+  by default. `ON` packages the header tree and matching resource headers separately with
+  compressed/raw fingerprints and preserves their virtual filesystem paths. Switching modes
+  requires relinking clangd and packaging matching assets and receipts together.
+
+Speed comparisons for the WASI clang/wasm-ld modules that run on every browser compile:
+
+- `LLVM_HOT_PATH_OPT=none|O2|O3` (default `none`) compiles the sources under `LLVM_HOT_PATH_DIRS`
+  at that level while the rest of the module keeps `LLVM_MINSIZE_OPT`. The CMake compiler launcher
+  `scripts/hot-path-launcher.sh` rewrites the flag per source; LTO keeps the per-function level.
+  `LLVM_HOT_PATH_DIRS` is a comma-separated list of LLVM checkout paths and defaults to
+  `clang/lib/Lex,clang/lib/Basic,llvm/lib/Support`. These flags
+  optimize the execution compiler itself; they do not change user-program optimization or clangd.
+- `CLANG_WASM_OPT=default|O2|O3` (default `default`) replaces the build type's level for the pinned
+  Binaryen pass over the linked clang and wasm-ld modules.
+- `--compiler-only` stops after those two modules and writes them with `compiler-build.json` to
+  `WASM_LLVM_TOOLCHAIN_OUT_DIR/compiler`, skipping clangd and packaging.
+
+`scripts/benchmark-compiler.mjs` compares builds against a baseline. It reports raw and level-9 gzip
+sizes, SHA-256 identities, module compilation time, and compile/link latency of C,
+`<bits/stdc++.h>`, template-heavy and `-O0 -g` workloads in Node. The report separates execution
+time from preparation and instantiation, preserves every sample, and links and runs each source
+to verify its output. `--enforce` fails when output differs or any module grows by more than
+`--max-growth` percent (default 10) in raw or gzip bytes:
+
+```sh
+node producer/clang-browser/scripts/benchmark-compiler.mjs \
+  --sysroot artifacts/clang-browser/sysroot.tar.zip \
+  --baseline artifacts/clang-browser \
+  --candidate raw-oz=/path/to/raw-oz \
+  --candidate baseline-o3=/path/to/baseline-o3 \
+  --candidate narrow-oz=/path/to/narrow-oz \
+  --candidate narrow-o3=/path/to/narrow-o3 \
+  --runs 5 --enforce --json /path/to/node-comparison.json
+```
+
+Each directory's `compiler-build.json`, `toolchain.json`, and optional `benchmark-provenance.json`
+are included with receipt-file hashes. For post-processing experiments, the latter records the
+pinned Binaryen executable/version/hash, exact command, source-build receipt, and input/output
+module hashes. `SOURCES`, `WORKLOADS`, and `EXPECTED_OUTPUT` are exported for browser probes to
+use equivalent workloads.
+
+Node measurements use local bytes and a fresh WASI instance for each invocation. They omit network
+transfer and persistent-cache reloads; V8 tiering and browser preparation can affect the outcome.
+Earlier Node improvement percentages are reference data and do not predict browser improvements.
+Measure Binaryen `O3` from raw linker outputs separately from narrow selective `O2` with the existing
+Binaryen level, then measure their combination. Their improvement percentages must not be added.
+Verify that the pinned existing-level pass over the same raw inputs reproduces the shipped hashes.
+If it differs, retain that matched raw-input control for attributing the Binaryen-only effect and
+report the comparison against shipped artifacts separately.
+
+`scripts/prepare-browser-benchmark.mjs` prepares local fixtures for the consumer's Chromium probe
+from a JSON configuration. `runtimeManifest` identifies the consumer manifest, `compilerAssets`
+contains the shared compressed memfs/sysroot assets, and each compiler uses exactly one raw or
+compressed directory. Raw directories contain `clang` and `lld`; compressed directories contain
+`clang.wasm.gz` and `lld.wasm.gz`. The script copies existing compressed bytes unchanged, uses
+level-9 gzip for raw candidates, derives receipts from actual bytes, verifies separated headers,
+and preserves source-build/post-processing receipts. Paths are relative to the configuration file:
+
+```json
+{
+  "runtimeManifest": "../wasm-idle/static/clang/runtime-manifest.v1.json",
+  "compilerAssets": "../wasm-idle/static/clang/bin",
+  "compiler": {
+    "baseline": { "compressedDirectory": "../wasm-idle/static/clang/bin" },
+    "raw-oz": { "rawDirectory": "/path/to/raw-oz" },
+    "baseline-o3": { "rawDirectory": "/path/to/baseline-o3" },
+    "narrow-oz": { "rawDirectory": "/path/to/narrow-oz" },
+    "narrow-o3": { "rawDirectory": "/path/to/narrow-o3" }
+  },
+  "clangd": {
+    "shipped": { "directory": "../wasm-idle/static/clangd", "implementation": "shipped" },
+    "separated": {
+      "directory": "/path/to/separated-clangd", "implementation": "current",
+      "rawWasm": "clangd.wasm", "headers": "clangd.headers.json.gz"
+    }
+  }
+}
+```
+
+```sh
+node producer/clang-browser/scripts/prepare-browser-benchmark.mjs \
+  --config /path/to/browser-fixtures-config.json --out-dir /path/to/browser-fixtures
+```
+
+Keep the shipped baseline until measured first program output and warm operation justify the
+compressed-byte increase under both normal and constrained networks. Record empty-cache startup,
+persistent-cache reload, preparation stages, emitted output, and compiler diagnostics separately.
+The current comparison results and artifact promotion decision are in [PERFORMANCE.md](PERFORMANCE.md).
 
 LTO requires recompiling clangd's libraries and can increase link time and peak build memory.
 Use separate work/output directories for comparisons and record both compressed and raw Wasm
@@ -124,6 +243,8 @@ pnpm package:clang -- \
   --memfs-wasm /path/to/memfs.wasm \
   --clangd-js /path/to/clangd.js \
   --clangd-wasm /path/to/clangd.wasm \
+  --clangd-include /path/to/complete/clangd-include \
+  --clangd-resource-include /path/to/resource/include \
   --llvm-version 22.1.8 \
   --llvm-commit ca7933e47d3a3451d81e72ac174dcb5aa28b59d1 \
   --wasi-sdk-version 33 \

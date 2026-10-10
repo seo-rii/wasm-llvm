@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +18,10 @@ function help(env = {}) {
 			CLANGD_ASSERTIONS: '',
 			CLANGD_TIDY_CHECKS: '',
 			CLANGD_DECISION_FOREST: '',
+			CLANGD_SEPARATE_HEADERS: '',
+			LLVM_HOT_PATH_OPT: '',
+			LLVM_HOT_PATH_DIRS: '',
+			CLANG_WASM_OPT: '',
 			...env
 		},
 		encoding: 'utf8'
@@ -106,4 +111,88 @@ test('rejects invalid completion model settings before any build starts', () => 
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /CLANGD_DECISION_FOREST must be ON or OFF/);
 	assert.equal(result.stdout, '');
+});
+
+test('retains embedded headers by default and accepts the separated-header comparison build', () => {
+	const defaults = help();
+	assert.equal(defaults.status, 0, defaults.stderr);
+	assert.match(defaults.stdout, /CLANGD_SEPARATE_HEADERS=OFF/);
+	const separated = help({ CLANGD_SEPARATE_HEADERS: 'ON' });
+	assert.equal(separated.status, 0, separated.stderr);
+	assert.match(separated.stdout, /CLANGD_SEPARATE_HEADERS=ON/);
+	const embedded = help({ CLANGD_SEPARATE_HEADERS: 'OFF' });
+	assert.equal(embedded.status, 0, embedded.stderr);
+	assert.match(embedded.stdout, /CLANGD_SEPARATE_HEADERS=OFF/);
+});
+
+test('rejects invalid header-separation settings before any build starts', () => {
+	const result = help({ CLANGD_SEPARATE_HEADERS: 'true' });
+	assert.notEqual(result.status, 0);
+	assert.match(result.stderr, /CLANGD_SEPARATE_HEADERS must be ON or OFF/);
+	assert.equal(result.stdout, '');
+});
+
+test('optimizes the WASI compiler modules with the pinned Binaryen instead of the host PATH', () => {
+	const source = readFileSync(script, 'utf8');
+	const linkerFlags = source.match(/const wasiLinkerFlags =\s*'([^']*)'/)?.[1] ?? '';
+	assert.match(linkerFlags, /(^| )--no-wasm-opt( |$)/);
+	assert.match(linkerFlags, /-Wl,--keep-section=target_features/);
+	assert.match(source, /path\.join\(emsdkDir, 'upstream', 'bin', 'wasm-opt'\)/);
+	assert.match(source, /MinSizeRel: config\.llvmMinSizeOpt/);
+	assert.match(source, /config\.clangWasmOpt === 'default' \? wasmOptLevel : config\.clangWasmOpt/);
+	assert.match(source, /'--clang-wasm',\s*clangWasm,\s*'--lld-wasm',\s*lldWasm/);
+});
+
+test('keeps speed profiles off by default and accepts hot-path and wasm-opt comparisons', () => {
+	const defaults = help();
+	assert.equal(defaults.status, 0, defaults.stderr);
+	assert.match(defaults.stdout, /LLVM_HOT_PATH_OPT=none/);
+	assert.match(defaults.stdout, /LLVM_HOT_PATH_DIRS=clang\/lib\/Lex,clang\/lib\/Basic,llvm\/lib\/Support\n/);
+	assert.match(defaults.stdout, /CLANG_WASM_OPT=default/);
+	const speed = help({
+		LLVM_HOT_PATH_OPT: 'O2',
+		LLVM_HOT_PATH_DIRS: 'clang/lib/Lex, llvm/lib/Support',
+		CLANG_WASM_OPT: 'O3'
+	});
+	assert.equal(speed.status, 0, speed.stderr);
+	assert.match(speed.stdout, /LLVM_HOT_PATH_OPT=O2/);
+	assert.match(speed.stdout, /LLVM_HOT_PATH_DIRS=clang\/lib\/Lex,llvm\/lib\/Support\n/);
+	assert.match(speed.stdout, /CLANG_WASM_OPT=O3/);
+	assert.match(speed.stdout, /--compiler-only/);
+});
+
+test('rejects invalid speed profile settings before any build starts', () => {
+	for (const [env, message] of [
+		[{ LLVM_HOT_PATH_OPT: 'O1' }, /LLVM_HOT_PATH_OPT must be none, O2 or O3/],
+		[
+			{ LLVM_HOT_PATH_OPT: 'O2', LLVM_BUILD_TYPE: 'Release' },
+			/LLVM_HOT_PATH_OPT requires LLVM_BUILD_TYPE=MinSizeRel/
+		],
+		[{ LLVM_HOT_PATH_DIRS: '../clang/lib/Sema' }, /LLVM_HOT_PATH_DIRS entries must be relative/],
+		[{ LLVM_HOT_PATH_DIRS: '/abs/clang' }, /LLVM_HOT_PATH_DIRS entries must be relative/],
+		[{ CLANG_WASM_OPT: 'O4' }, /CLANG_WASM_OPT must be default, O2 or O3/]
+	]) {
+		const result = help(env);
+		assert.notEqual(result.status, 0);
+		assert.match(result.stderr, message);
+		assert.equal(result.stdout, '');
+	}
+});
+
+test('hot-path launcher raises only matching sources to the requested level', () => {
+	const launcher = fileURLToPath(
+		new URL('../producer/clang-browser/scripts/hot-path-launcher.sh', import.meta.url)
+	);
+	const hotDirs = '/src/clang/lib/Sema:/src/llvm/lib/Support';
+	const compile = (level, source) => {
+		const result = spawnSync(launcher, ['O2', hotDirs, 'echo', level, '-c', source], {
+			encoding: 'utf8'
+		});
+		assert.equal(result.status, 0, result.stderr);
+		return result.stdout.trim().split(' ')[0];
+	};
+	assert.equal(compile('-Oz', '/src/clang/lib/Sema/Sema.cpp'), '-O2');
+	assert.equal(compile('-Os', '/src/llvm/lib/Support/APInt.cpp'), '-O2');
+	assert.equal(compile('-Oz', '/src/clang/lib/CodeGen/CGCall.cpp'), '-Oz');
+	assert.equal(compile('-Oz', '/src/clang/lib/SemaX/a.cpp'), '-Oz');
 });
