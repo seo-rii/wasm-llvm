@@ -1,0 +1,12 @@
+(defun fibonacci (n)
+  (if (< n 2) n (+ (fibonacci (- n 1)) (fibonacci (- n 2)))))
+
+(format t "What is your name? ")
+(finish-output)
+(let ((name (read-line)))
+  (format t "Hello, ~a!~%" name))
+(let ((n (read)))
+  (format t "fibonacci(~d) = ~d~%" n (fibonacci n)))
+(print (list :ecl (lisp-implementation-version) (expt 2 100)))
+(terpri)
+(format t "eof: ~a~%" (read-line *standard-input* nil :eof))
