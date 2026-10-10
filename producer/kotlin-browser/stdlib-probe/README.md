@@ -62,6 +62,8 @@ The [patched-target baseline](../evidence/stdlib-patched-baseline.json) records
 actual Hello World/Fibonacci source and binary compilation with this KLIB.
 The consumer's separate Chromium receipt observes Hello World, inputs 10 → 55
 and 20 → 6765, output-limit failure and fresh-Worker recovery with zero execution
-network requests. Target allocator canaries, full WASI acceptance and browser
-Kotlin source compilation remain unrun. The recorded earlier failed setup/option
+network requests. The [actual allocator canaries](allocator-canary/README.md)
+also pass 81 allocations and the patched stdlib poll path in Node and two
+fresh offline Chromium Workers. Full WASI acceptance and browser Kotlin source
+compilation remain unrun. The recorded earlier failed setup/option
 attempts are preserved separately and are not counted as successful builds.
