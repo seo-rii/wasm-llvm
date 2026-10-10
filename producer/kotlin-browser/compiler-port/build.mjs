@@ -220,6 +220,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ['collectionsReceipt', (await import('./collections/prepare.mjs')).prepareCollectionsSources],
         ['smartSetReceipt', (await import('./smart-set/prepare.mjs')).prepareSmartSetSources],
         ['identityReceipt', (await import('./identity/prepare.mjs')).prepareIdentitySources],
+        ['coneClassIdentityReceipt', async ({ sourceRoot, outputRoot }) => {
+          const cone = await import('./cone-class-identity/prepare.mjs');
+          const component = await cone.prepareConeClassIdentitySources({ sourceRoot, outputRoot,
+            preparedIdentity: preparedComponents.get('identityReceipt') });
+          await cone.verifyConeClassIdentity(outputRoot);
+          return component;
+        }],
         ['firStorageReceipt', (await import('./fir-storage/prepare.mjs')).prepareFirStorageSources],
         ['registryReceipt', (await import('./registry/prepare.mjs')).prepareRegistrySources],
         ['sessionProfileReceipt', (await import('./session-profile/prepare.mjs')).prepareSessionProfile],

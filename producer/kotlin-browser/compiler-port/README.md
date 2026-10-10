@@ -105,6 +105,13 @@ serial cache operations and an ascending annotation snapshot over the verified
 identity and UTF-8 variants. The composer verifies and supersedes those exact
 predecessor files once; their original preparation receipts remain recorded.
 
+The [final Cone equality guards](cone-class-identity/README.md) replace three
+JVM class checks only after verifying the complete identity predecessor. The
+final classes reject the same arguments, and all payload comparisons and hash
+statements remain unchanged. The common layer supersedes that exact source;
+its focused JVM and method-boundary evidence does not prove the full Wasm type
+graph.
+
 The pinned [JavaScript AST port](js-ast/) supplies all selected Java nodes and
 their original Kotlin companions. Its typed property imports bind the existing
 compiler consumers, and shared SmartList and assertion sources are verified and
