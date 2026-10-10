@@ -456,6 +456,23 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await constants.verifyNullConstantValue(outputRoot);
           return component;
         }],
+        ['charConstantFormatReceipt', async ({ sourceRoot, outputRoot }) => {
+          const characters = await import('./char-constant-format/prepare.mjs');
+          const options = { sourceRoot, outputRoot, preparedNullConstant: preparedComponents.get('nullConstantValueReceipt'),
+            preparedJsAst: preparedComponents.get('jsAstReceipt') };
+          const component = await characters.prepareCharConstantFormat(options);
+          await characters.verifyCharConstantFormat(options);
+          assert.equal(component.sharedDependencies.length, 1);
+          const dependency = component.sharedDependencies[0], sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+          assert.equal(dependency.component, 'jsAstReceipt');
+          assert(pin?.compile && preparedComponents.get('jsAstReceipt').commonSources.includes(pin.filename));
+          assert.equal(pin.filename, dependency.filename); assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+          const bytes = await readRegular(pin.filename, pin.bytes);
+          assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+          assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+          receipt.charConstantSharedDependency = dependency;
+          return component;
+        }],
         ['serializerNullabilityReceipt', async ({ sourceRoot, outputRoot }) => {
           const serializer = await import('./serializer-nullability/prepare.mjs');
           const options = { sourceRoot, outputRoot, preparedJsAst: preparedComponents.get('jsAstReceipt') };
