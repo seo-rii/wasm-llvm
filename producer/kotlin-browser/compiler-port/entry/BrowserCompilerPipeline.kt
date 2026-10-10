@@ -24,12 +24,18 @@ import org.jetbrains.kotlin.ir.backend.js.utils.JsMainFunctionDetector
 import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.js.config.dce
+import org.jetbrains.kotlin.js.portable.CompilerByteSink
 import org.jetbrains.kotlin.js.portable.installRequestSourceContent
+import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapPrintOutput
+import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapRuntime
+import org.jetbrains.kotlin.js.portable.sourcemap.SourceMapTextStore
+import org.jetbrains.kotlin.js.portable.sourcemap.installRequestSourceMapRuntime
 import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
 import org.jetbrains.kotlin.platform.wasm.WasmTarget
 import org.jetbrains.kotlin.portable.linker.MemoryKlibInput
 import org.jetbrains.kotlin.portable.linker.requireMemoryKlibFiles
 import org.jetbrains.kotlin.portable.source.LibraryPath
+import org.jetbrains.kotlin.portable.text.compilerUtf8Bytes
 import org.jetbrains.kotlin.wasm.config.WasmConfigurationKeys
 import org.jetbrains.kotlin.wasm.config.wasmDisableCrossFileOptimisations
 
@@ -37,7 +43,8 @@ import org.jetbrains.kotlin.wasm.config.wasmDisableCrossFileOptimisations
 class KotlinEntryRejected(val reasonCode: String, message: String) : Exception(message)
 
 /**
- * Caller-owned approved configuration and immutable library indexes. The caller
+ * Caller-owned approved configuration, output sink and immutable library indexes.
+ * The output sink remains open for the caller to manage. The caller
  * must discard the Worker after an internal exception, trap or forced stop.
  * This entry has not built/executed yet; its actual dependencies are being ported.
  */
@@ -45,6 +52,7 @@ class BrowserCompilerPipeline(
     private val configuration: CompilerConfiguration,
     private val approvedInputs: List<MemoryKlibInput>,
     private val diagnostics: BaseDiagnosticsCollector,
+    private val compilerStdout: CompilerByteSink,
 ) {
     fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary {
         require(configuration.get(WasmConfigurationKeys.WASM_TARGET) == WasmTarget.WASI)
@@ -57,6 +65,10 @@ class BrowserCompilerPipeline(
             KtInMemoryTextSourceFile(it.second, it.third, it.first.getContentsAsText())
         }
         installRequestSourceContent(configuration, requestSources)
+        installRequestSourceMapRuntime(configuration, SourceMapRuntime(
+            SourceMapTextStore(requestSources.associate { (it.path ?: it.name) to it.getContentsAsText().compilerUtf8Bytes() }),
+            SourceMapPrintOutput(compilerStdout),
+        ))
         val loadedInputs = loadMemoryWebKlibs(configuration, approvedInputs, target = "wasm-wasi")
         if (diagnostics.hasErrors) throw SourceCompilationFailed(diagnostics)
         val frontend = BrowserCompilerFrontend(configuration, loadedInputs.all).compileFrontend(requestSources, diagnostics)

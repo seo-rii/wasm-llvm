@@ -61,7 +61,9 @@ for (const variant of ['bootstrap', 'source']) {
 }
 assert.equal(raw.source, raw.bootstrap, 'Pinned source configuration/getter behavior differs from verified bootstrap objects');
 const bytes = await readRegular(prepared.commonSources[0]);
-const finalSources = selected.retainedSources.map(item => item.path === STORAGE ? { path: STORAGE, filename: prepared.commonSources[0], bytes: bytes.length, sha256: sha256(bytes) } : item);
+const finalSources = selected.retainedSources.map(item => item.path === STORAGE
+    ? { path: STORAGE, filename: prepared.commonSources[0], bytes: bytes.length, sha256: sha256(bytes) }
+    : forwardSources.find(entry => entry.path === item.path) ?? item);
 const whole = JSON.parse(await readRegular(selected.evidence.filename));
 const final = await verifyFinalFirStorageSourceProfile({ profileRoot: prepared.outputRoot, retainedSources: finalSources,
     allowedAddedImports: ['kotlin.jvm.*', ...whole.propertyImports.imports, whole.assertionBindings.import] });
