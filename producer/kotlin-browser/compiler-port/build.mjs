@@ -267,6 +267,26 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           receipt.jsAstSharedDependencies = sharedDependencies;
           return component;
         }],
+        ['jsAstIntegerConsumerReceipt', async ({ sourceRoot, outputRoot }) => {
+          const integer = await import('./js-ast-consumer-bindings/integer/prepare.mjs');
+          const verifier = await import('./js-ast-consumer-bindings/integer/verify.mjs');
+          const retainedSources = [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+            .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+          const component = await integer.prepareAstIntegerConsumer({ sourceRoot, outputRoot, retainedSources });
+          await verifier.verifyAstIntegerConsumerPreparation({ sourceRoot, outputRoot,
+            receiptPath: component.receiptPath, retainedSources });
+          const astSources = preparedComponents.get('jsAstReceipt').commonSources;
+          receipt.jsAstIntegerSharedDependencies = [];
+          for (const dependency of component.astDependencies) {
+            const matches = [...files].filter(([, pin]) => pin.compile && astSources.includes(pin.filename)
+              && pin.bytes === dependency.bytes && pin.sha256 === dependency.sha256);
+            assert.equal(matches.length, 1, 'Integer consumer must bind one genuine AST integer source');
+            const [sourcePath, pin] = matches[0];
+            verifyFile(await readRegular(pin.filename), dependency);
+            receipt.jsAstIntegerSharedDependencies.push({ path: sourcePath, bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({

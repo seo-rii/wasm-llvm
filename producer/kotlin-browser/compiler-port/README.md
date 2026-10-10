@@ -115,8 +115,12 @@ graph.
 The pinned [JavaScript AST port](js-ast/) supplies all selected Java nodes and
 their original Kotlin companions. Its typed property imports bind the existing
 compiler consumers, and shared SmartList and assertion sources are verified and
-selected once. The retained host-list factory differences and unbound external
-reader and integer consumers remain separate limits of the whole compiler.
+selected once. The [signed integer consumer binding](js-ast-consumer-bindings/integer/)
+connects the genuine deserializer to that exact AST integer source. Its valid
+byte and eight malformed contracts match across four hosts; a retained integer
+overflow case has different failure categories. ByteBuffer, external readers,
+full arithmetic consumers and retained host-list factory differences remain
+separate limits of the whole compiler.
 
 The [version source port](versions/README.md) supplies the official Maven and
 Kotlin tooling version algorithms and compiler version resource from an explicit
