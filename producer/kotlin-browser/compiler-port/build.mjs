@@ -450,6 +450,12 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           return component;
         }],
+        ['nullConstantValueReceipt', async ({ sourceRoot, outputRoot }) => {
+          const constants = await import('./null-constant-value-profile/prepare.mjs');
+          const component = await constants.prepareNullConstantValue({ sourceRoot, outputRoot });
+          await constants.verifyNullConstantValue(outputRoot);
+          return component;
+        }],
         ['jsAstOutputReceipt', async ({ sourceRoot, outputRoot }) => {
           const module = await import('./js-ast-consumer-bindings/output-codec/prepare.mjs');
           const component = await module.prepareJsAstOutput({ sourceRoot, outputRoot });
