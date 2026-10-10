@@ -500,6 +500,26 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
               .map((pin) => pin.filename),
           });
         }],
+        ['firStorageSourceProfileReceipt', async ({ sourceRoot, outputRoot }) => {
+          const profile = await import('./fir-storage-source-profile/prepare.mjs');
+          const forwardSources = await Promise.all(['BrowserCompiler.kt', 'BrowserCompilerPipeline.kt'].map(async name => {
+            const filename = path.join(here, 'entry', name), bytes = await readRegular(filename);
+            return { path: 'compiler-port-entry/' + name, filename, bytes: bytes.length, sha256: sha256(bytes) };
+          }));
+          const component = await profile.prepareFirStorageSourceProfile({ sourceRoot, outputRoot, forwardSources,
+            preparedFirStorage: preparedComponents.get('firStorageReceipt'), preparedHost: preparedComponents.get('sourceHostReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          await profile.verifyFirStorageSourceProfile(outputRoot);
+          const binding = component.receipt.sourceHostBinding, pin = files.get(binding.logicalPath);
+          assert(pin?.compile && preparedComponents.get('sourceHostReceipt').commonSources.includes(pin.filename));
+          assert.equal(binding.component, 'sourceHostReceipt'); assert.equal(pin.filename, binding.filename);
+          assert.equal(pin.bytes, binding.bytes); assert.equal(pin.sha256, binding.sha256);
+          const bytes = await readRegular(pin.filename, pin.bytes);
+          assert.equal(bytes.length, binding.bytes); assert.equal(sha256(bytes), binding.sha256);
+          assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+          return component;
+        }],
       ];
       const replacements = new Map();
       for (const [key, prepare] of preparations) {
@@ -828,6 +848,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const dedup = await import('./fir-containing-class-dedup/prepare.mjs');
       receipt.firContainingClassFinalReceipt = await dedup.verifyFinalContainingClassDedup({
         profileRoot: path.join(output, 'components', 'firContainingClassReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+      });
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./fir-storage-source-profile/prepare.mjs');
+      receipt.firStorageSourceProfileFinalReceipt = await profile.verifyFinalFirStorageSourceProfile({
+        profileRoot: path.join(output, 'components', 'firStorageSourceProfileReceipt'),
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
