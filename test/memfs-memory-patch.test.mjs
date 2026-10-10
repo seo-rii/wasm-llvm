@@ -17,6 +17,8 @@ return fd <= MAX_FDS && valid;
   EnsureFileSize(node, end);
     copy_in((char *)node->file.data + offset, iov->buf, len);
 static void EnsureFileSize(Node *node) {}
+  // TODO allocate memory?
+  return TRACE_ERRNO(__WASI_ERRNO_SUCCESS);
 `;
 
 test('bounds reads by remaining bytes and advances the position per vector', () => {
@@ -48,4 +50,11 @@ test('instrumentation is an explicit extra test-only import', () => {
   const plain = patchMemfsMemorySource(fixture);
   assert.doesNotMatch(plain, /memfs_test_zeroed/);
   assert.match(instrumentMemfsZeroFill(plain), /extern void memfs_test_zeroed/);
+});
+test('allocation is no longer a successful no-op', () => {
+  const result = patchMemfsMemorySource(fixture);
+  assert.doesNotMatch(result, /TODO allocate memory/);
+  assert.match(result, /len > SIZE_MAX - \(size_t\)offset/);
+  assert.match(result, /memset\(\(char \*\)new_data \+ old_size, 0, end - old_size\)/);
+  assert.match(result, /__WASI_ERRNO_ISDIR/);
 });

@@ -1,6 +1,6 @@
 // This patch operates on the hash-verified upstream source after the existing
 // WASI compatibility patch. It is deliberately not a general C source rewriter.
-export const patchId = 'bounded-memory-io-v1';
+export const patchId = 'bounded-memory-io-v2';
 
 export function replaceOnce(source, before, after) {
   if (source.split(before).length !== 2) throw new Error('MemFS patch context is missing or ambiguous');
@@ -45,7 +45,7 @@ static size_t ReadIovec(Node *node, __wasi_iovec_t *iovs, size_t iovs_len,
     return TRACE_ERRNO(__WASI_ERRNO_FBIG);
   __wasi_filesize_t end = offset + total_len;
   // Every non-gap byte is overwritten by the validated contiguous iovec stream.
-  // Keep EnsureFileSize's full zero-fill for allocate/truncate expansion.
+  // Keep EnsureFileSize's full zero-fill for explicit truncate expansion.
   if (total_len != 0 && end > node->file.size) {
     __wasi_filesize_t old_size = node->file.size;
     void *new_data = realloc(node->file.data, (size_t)end);
@@ -59,6 +59,23 @@ static size_t ReadIovec(Node *node, __wasi_iovec_t *iovs, size_t iovs_len,
   source = replaceOnce(source,
     '    copy_in((char *)node->file.data + offset, iov->buf, len);',
     '    if (len != 0) copy_in((char *)node->file.data + offset, iov->buf, len);');
+  source = replaceOnce(source,
+    '  // TODO allocate memory?\n  return TRACE_ERRNO(__WASI_ERRNO_SUCCESS);',
+    `  // Allocation cannot silently succeed without reserving the requested range.
+  if (!IsRegularFileNode(node)) return TRACE_ERRNO(__WASI_ERRNO_ISDIR);
+  if (offset > SIZE_MAX || len > SIZE_MAX - (size_t)offset)
+    return TRACE_ERRNO(__WASI_ERRNO_FBIG);
+  size_t end = (size_t)offset + (size_t)len;
+  if (end > node->file.size) {
+    size_t old_size = (size_t)node->file.size;
+    void *new_data = realloc(node->file.data, end);
+    if (new_data == NULL) return TRACE_ERRNO(__WASI_ERRNO_NOMEM);
+    memset((char *)new_data + old_size, 0, end - old_size);
+    node->file.data = new_data;
+    node->file.size = end;
+    node->stat.size = end;
+  }
+  return TRACE_ERRNO(__WASI_ERRNO_SUCCESS);`);
   return source;
 }
 
