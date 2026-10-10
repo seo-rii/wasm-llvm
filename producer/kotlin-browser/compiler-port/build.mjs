@@ -69,6 +69,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   const hostFlags = new Set();
   const propertyAliasImports = new Set();
   let assertionImport;
+  let sourceMapRuntimeComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -539,6 +540,39 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           return component;
         }],
+        ['sourceMapRuntimeReceipt', async ({ outputRoot }) => {
+          const runtime = await import('./source-map-runtime/prepare.mjs');
+          const references = await runtime.prepareSourceMapRuntimeReferences();
+          const options = { sourceRoot, outputRoot, runtimeSourceRoot: references.sourceRoot,
+            sourceContentComponent: preparedComponents.get('jsSourceContentReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) };
+          const component = await runtime.prepareSourceMapRuntime(options);
+          await runtime.verifySourceMapRuntime({ ...options, receiptPath: component.receiptPath });
+          receipt.sourceMapRuntimeOriginalBindings = [];
+          for (const original of component.supplementalOriginals) {
+            const sourcePath = relativePath(original.path), filename = path.join(references.sourceRoot, sourcePath);
+            verifyFile(await readRegular(filename, original.bytes), original);
+            assert(!files.has(sourcePath), 'Supplemental source-map runtime original already registered: ' + sourcePath);
+            files.set(sourcePath, { filename, bytes: original.bytes, sha256: original.sha256, compile: false });
+            receipt.sourceMapRuntimeOriginalBindings.push({ path: sourcePath, filename, bytes: original.bytes,
+              sha256: original.sha256, gitBlob: original.gitBlob });
+          }
+          receipt.sourceMapRuntimeSharedDependencies = [];
+          for (const dependency of component.sharedDependencies) {
+            const sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+            const owner = preparedComponents.get(dependency.component);
+            assert(pin?.compile && owner?.commonSources.includes(pin.filename), 'Missing genuine source-map runtime dependency');
+            assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            verifyFile(await readRegular(pin.filename, pin.bytes), dependency);
+            assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+            receipt.sourceMapRuntimeSharedDependencies.push({ path: sourcePath, component: dependency.component,
+              filename: pin.filename, bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          sourceMapRuntimeComposition = { profileRoot: outputRoot, sourceRoot, runtimeSourceRoot: references.sourceRoot,
+            sourceContentComponent: options.sourceContentComponent };
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
@@ -910,6 +944,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
+    }
+    if (sourceHost === 'portable') {
+      const runtime = await import('./source-map-runtime/final.mjs');
+      const retainedSources = [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+        .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+      const final = await runtime.verifySourceMapRuntimeFinalSources({ ...sourceMapRuntimeComposition, retainedSources,
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+        allowedRequestHostSources: retainedSources.filter(pin => ['compiler-port-entry/BrowserCompiler.kt',
+          'compiler-port-entry/BrowserCompilerPipeline.kt'].includes(pin.path)),
+      });
+      receipt.sourceMapRuntimeFinalReceipt = final.receipt;
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
     const libraries = [bootstrap.wasmJsStdlib];
