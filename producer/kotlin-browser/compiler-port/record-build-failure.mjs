@@ -26,7 +26,8 @@ const statusBytes = await readRegular(statusPath);
 const status = JSON.parse(statusBytes);
 assert(Number.isSafeInteger(status.exitCode) && status.exitCode !== 0, 'Record only an exited failed build');
 const receiptPath = path.join(build, 'compiler-build-receipt.json');
-const receiptBytes = await readRegular(receiptPath, 16 * 1024 * 1024);
+// Composed final-selection inventories include several full source indexes.
+const receiptBytes = await readRegular(receiptPath, 64 * 1024 * 1024);
 const receipt = JSON.parse(receiptBytes);
 assert.equal(receipt.kind, 'official-kotlin-compiler-wasmjs-build');
 assert.equal(receipt.source.commit, '4d78aae1e337cd40f69baa865aed950fe807a775');
