@@ -1,0 +1,650 @@
+{
+  "schemaVersion": 1,
+  "kind": "wasm-unreachable-native-js-output-profile",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "target": {
+    "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/CompilationOutputs.kt",
+    "gitBlob": "d86e50c277d94eb7b3bd80e9ddc83f4fd188c76a",
+    "bytes": 6956,
+    "language": "kotlin",
+    "compile": true,
+    "role": "source",
+    "module": "compiler/ir/backend.js",
+    "sha256": "86a3a514b3d4cd01793ea766b549322ff8e79b01ad1f74405273088aa50eb23e"
+  },
+  "declarations": [
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "CompilationOutputs",
+      "kind": "class"
+    },
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "copyModificationTimeFrom",
+      "kind": "function"
+    },
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "asSourceMappingUrl",
+      "kind": "function"
+    },
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "writeIfNotNull",
+      "kind": "function"
+    },
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "CompilationOutputsBuilt",
+      "kind": "class"
+    },
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "CompilationOutputsCached",
+      "kind": "class"
+    },
+    {
+      "packageName": "org.jetbrains.kotlin.ir.backend.js.transformers.irToJs",
+      "name": "CompilationOutputsBuiltForCache",
+      "kind": "class"
+    }
+  ],
+  "memberAndLocalHeaders": [
+    {
+      "line": 16,
+      "text": "abstract class CompilationOutputs {"
+    },
+    {
+      "line": 20,
+      "text": "    var dependencies: Collection<CompilationOutputs> = emptyList()"
+    },
+    {
+      "line": 22,
+      "text": "    abstract val artifactConfiguration: WebArtifactConfiguration"
+    },
+    {
+      "line": 24,
+      "text": "    abstract val tsDefinitions: TypeScriptFragment?"
+    },
+    {
+      "line": 30,
+      "text": "    abstract val jsProgram: JsProgram?"
+    },
+    {
+      "line": 32,
+      "text": "    abstract fun writeJsCode(outputJsFile: File, outputJsMapFile: File)"
+    },
+    {
+      "line": 34,
+      "text": "    fun createWrittenFilesContainer(): MutableSet<File> = LinkedHashSet(2 * (dependencies.size + 1) + 1)"
+    },
+    {
+      "line": 36,
+      "text": "    fun writeAll(): Collection<File> {"
+    },
+    {
+      "line": 37,
+      "text": "        val writtenFiles = createWrittenFilesContainer()"
+    },
+    {
+      "line": 39,
+      "text": "        fun writeOutputFiles(out: CompilationOutputs) {"
+    },
+    {
+      "line": 40,
+      "text": "            var jsFile = out.artifactConfiguration.outputJsFile()"
+    },
+    {
+      "line": 43,
+      "text": "            val jsMapFile = out.artifactConfiguration.outputSourceMapFile().normalizedAbsoluteFile"
+    },
+    {
+      "line": 51,
+      "text": "                val tsFile = out.artifactConfiguration.outputDtsFile().normalizedAbsoluteFile"
+    },
+    {
+      "line": 64,
+      "text": "            val dtsFile = artifactConfiguration.outputDtsFile().normalizedAbsoluteFile"
+    },
+    {
+      "line": 65,
+      "text": "            val allTsDefinitions = dependencies.mapNotNull { it.tsDefinitions } + listOfNotNull(tsDefinitions)"
+    },
+    {
+      "line": 73,
+      "text": "    fun deleteNonWrittenFiles(outputDir: File, writtenFiles: Set<File>) {"
+    },
+    {
+      "line": 82,
+      "text": "    protected val File.normalizedAbsoluteFile"
+    },
+    {
+      "line": 86,
+      "text": "private fun File.copyModificationTimeFrom(from: File) {"
+    },
+    {
+      "line": 87,
+      "text": "    val mtime = from.lastModified()"
+    },
+    {
+      "line": 93,
+      "text": "private fun File.asSourceMappingUrl(): String {"
+    },
+    {
+      "line": 98,
+      "text": "internal fun File.writeIfNotNull(data: String?) {"
+    },
+    {
+      "line": 106,
+      "text": "class CompilationOutputsBuilt("
+    },
+    {
+      "line": 107,
+      "text": "    override val artifactConfiguration: WebArtifactConfiguration,"
+    },
+    {
+      "line": 108,
+      "text": "    private val rawJsCode: String,"
+    },
+    {
+      "line": 109,
+      "text": "    private val sourceMap: String?,"
+    },
+    {
+      "line": 110,
+      "text": "    override val tsDefinitions: TypeScriptFragment?,"
+    },
+    {
+      "line": 111,
+      "text": "    override val jsProgram: JsProgram?,"
+    },
+    {
+      "line": 113,
+      "text": "    override fun writeJsCode(outputJsFile: File, outputJsMapFile: File) {"
+    },
+    {
+      "line": 114,
+      "text": "        val sourceMappingUrl = sourceMap?.let {"
+    },
+    {
+      "line": 121,
+      "text": "    fun writeJsCodeIntoModuleCache("
+    },
+    {
+      "line": 134,
+      "text": "class CompilationOutputsCached("
+    },
+    {
+      "line": 135,
+      "text": "    override val artifactConfiguration: WebArtifactConfiguration,"
+    },
+    {
+      "line": 136,
+      "text": "    private val jsCodeFile: File,"
+    },
+    {
+      "line": 137,
+      "text": "    private val sourceMapFile: File?,"
+    },
+    {
+      "line": 138,
+      "text": "    private val tsDefinitionsFile: File?"
+    },
+    {
+      "line": 140,
+      "text": "    override val tsDefinitions: TypeScriptFragment?"
+    },
+    {
+      "line": 143,
+      "text": "    override val jsProgram: JsProgram?"
+    },
+    {
+      "line": 146,
+      "text": "    override fun writeJsCode(outputJsFile: File, outputJsMapFile: File) {"
+    },
+    {
+      "line": 147,
+      "text": "        val sourceMappingUrl = sourceMapFile?.let {"
+    },
+    {
+      "line": 161,
+      "text": "    private fun File.isUpdateRequired(target: File): Boolean {"
+    },
+    {
+      "line": 162,
+      "text": "        val thisMtime = lastModified()"
+    },
+    {
+      "line": 163,
+      "text": "        val targetMtime = target.lastModified()"
+    },
+    {
+      "line": 168,
+      "text": "class CompilationOutputsBuiltForCache("
+    },
+    {
+      "line": 169,
+      "text": "    override val artifactConfiguration: WebArtifactConfiguration,"
+    },
+    {
+      "line": 170,
+      "text": "    private val jsCodeFile: File,"
+    },
+    {
+      "line": 171,
+      "text": "    private val sourceMapFile: File?,"
+    },
+    {
+      "line": 172,
+      "text": "    private val outputBuilt: CompilationOutputsBuilt"
+    },
+    {
+      "line": 179,
+      "text": "    override val tsDefinitions: TypeScriptFragment?"
+    },
+    {
+      "line": 182,
+      "text": "    override val jsProgram: JsProgram?"
+    },
+    {
+      "line": 185,
+      "text": "    override fun writeJsCode(outputJsFile: File, outputJsMapFile: File) {"
+    }
+  ],
+  "backendProfileSourceLockSha256": "7f0528ccb9a8ca99a0f80ed66cdd0d95b3ea021790c36518c6138d631902a6d7",
+  "existingExclusions": [
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/compilerWithIC.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/IncrementalCache.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/IdSignatureSource.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/JsPerFileCache.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/KotlinLibraryHeader.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/ICUtils.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/IdSignatureHashCalculator.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/KotlinSourceFileMetadata.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/JsPerModuleCache.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/IncrementalCacheArtifact.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/JsMultiArtifactCache.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/IncrementalCacheGuard.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/HashCalculatorForIC.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/JsIrLinkerLoader.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/IdSignatureSerialization.kt",
+    "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/JsExecutableProducer.kt",
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/compilerWithIC.kt",
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ic/WasmModuleArtifact.kt",
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ic/WasmModuleFragments.kt",
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/serialization/WasmSerializer.kt",
+    "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/serialization/WasmDeserializer.kt"
+  ],
+  "existingSplits": [
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ic/IrFactoryImplForWasmIC.kt",
+      "start": "class IrFactoryImplForWasmIC(stageController: StageController)",
+      "end": null,
+      "imports": [
+        "org.jetbrains.kotlin.backend.common.compilationException",
+        "org.jetbrains.kotlin.backend.wasm.WasmBackendContext",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.createStringBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.jsToKotlinAnyAdapterBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.jsToKotlinStringAdapterBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.registerModuleDescriptorBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.runRootSuitesBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.tryGetAssociatedObjectBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.Functions.unitGetInstanceBuiltIn",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.HeapTypes.anyBuiltInType",
+        "org.jetbrains.kotlin.backend.wasm.ir2wasm.Synthetics.HeapTypes.throwableBuiltInType",
+        "org.jetbrains.kotlin.ir.backend.js.utils.findUnitGetInstanceFunction",
+        "org.jetbrains.kotlin.ir.declarations.*",
+        "org.jetbrains.kotlin.ir.irAttribute",
+        "org.jetbrains.kotlin.ir.util.IdSignature",
+        "org.jetbrains.kotlin.ir.util.fileOrNull"
+      ],
+      "retainedDeclarations": [
+        "IrFactoryImplForWasmIC",
+        "signatureForWasmIC",
+        "overrideBuiltInsSignatures"
+      ]
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/CacheUpdater.kt",
+      "start": "abstract class IrICModule<TFragment : IrICProgramFragment>",
+      "end": "enum class DirtyFileState",
+      "imports": [
+        "org.jetbrains.kotlin.ir.declarations.IrFile",
+        "org.jetbrains.kotlin.ir.declarations.IrModuleFragment",
+        "java.io.OutputStream"
+      ],
+      "retainedDeclarations": [
+        "IrICModule",
+        "IrICProgramFragment",
+        "IrICProgramFragments",
+        "IrCompilerICInterface"
+      ]
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/ic/JsModuleArtifact.kt",
+      "start": "abstract class SrcFileArtifact",
+      "end": "/**\n * This class encapsulates the JS AST for a specific kt file, which can be either dirty or not.",
+      "imports": [],
+      "retainedDeclarations": [
+        "SrcFileArtifact",
+        "ModuleArtifact"
+      ]
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/IrModuleToJsTransformer.kt",
+      "fragments": [
+        {
+          "start": "val IrModuleFragment.safeName: String",
+          "end": "private typealias JsIrModules"
+        },
+        {
+          "start": "enum class TranslationMode(",
+          "end": "class IrModuleToJsTransformer("
+        },
+        {
+          "start": "val WebArtifactConfiguration.translationMode: TranslationMode",
+          "end": null
+        }
+      ],
+      "imports": [
+        "org.jetbrains.kotlin.ir.declarations.*",
+        "org.jetbrains.kotlin.js.common.safeModuleName",
+        "org.jetbrains.kotlin.js.config.*"
+      ],
+      "retainedDeclarations": [
+        "safeName",
+        "TranslationMode",
+        "translationMode"
+      ]
+    }
+  ],
+  "requiredTypes": [
+    {
+      "path": "js/js.config/src/org/jetbrains/kotlin/js/config/WebArtifactConfiguration.kt",
+      "gitBlob": "68c62e717cf7aa29359c43636467c05f6fa88c89",
+      "bytes": 3383,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "js/js.config",
+      "sha256": "5ef11408092e011c78a789592725b32c8cff02fd081a2d0fa983a4576f933e4b"
+    },
+    {
+      "path": "js/typescript-printer/src/org/jetbrains/kotlin/ir/backend/js/tsexport/ExportModelToTsDeclarations.kt",
+      "gitBlob": "236c75300f60056549cc94f8d5babfbfde539aa4",
+      "bytes": 26907,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "js/typescript-printer",
+      "sha256": "a9dbd9e76952af8c238a543d499b305e06f2d93aa2e8138e50ef0ec4b520eb2d"
+    }
+  ],
+  "requiredBoundaries": [
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/EnumClassLowering.kt",
+      "gitBlob": "d421a733232392bf1e630920c5ffe4307da898f0",
+      "bytes": 21808,
+      "sha256": "ea919be4754feb0ef772617ebee9a3d2735f9ef6ddf36a0fd82c2b1b5c769256"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/InvokeStaticInitializersLowering.kt",
+      "gitBlob": "d1a52ffbf838da6210d2f67245e8009c6bea091a",
+      "bytes": 1981,
+      "sha256": "c3b0914bd97a5c846dd0fcf55e04310eea8bf896304a37dc4bfc3e0c01496118"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/JsAnnotationImplementationLowering.kt",
+      "gitBlob": "12dc0deabdf97e759ecd9ad45ba658c8928d7c90",
+      "bytes": 4653,
+      "sha256": "61b1fe7072920036fb6a82ee6fe241f78a06b16da2ea5cdd55d159d8c28524e4"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/JsSingleAbstractMethodLowering.kt",
+      "gitBlob": "8e578e49b1638238bbfa27bf7b0dcdc5eae078be",
+      "bytes": 2782,
+      "sha256": "287bebe29b13ff239cb3ccfd275890c3cffef58aa00f2b7015ff586ff0a22137"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/ObjectLowering.kt",
+      "gitBlob": "767b2872a96942557fa1b3bba9c592fedfc60046",
+      "bytes": 7877,
+      "sha256": "4cfa0b3d60bee7b5e0f02913cecdd9129e1e263b7874c7e4f5eae6616550d7cd"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/PrimaryConstructorLowering.kt",
+      "gitBlob": "26491763e45861f31cc29801b03733be2031fb91",
+      "bytes": 3986,
+      "sha256": "d70823c58db67608956db39785431aacf9705b05694031f366f9057b748e5a9e"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/PropertyLazyInitLowering.kt",
+      "gitBlob": "4154a2bd3fdee202b4f845fffd143d4c2b6380ed",
+      "bytes": 8442,
+      "sha256": "9c074243ff610e925287ef89d505f5508704a4c5f87077d8cba0d3ae90f6a24a"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/StaticMembersLowering.kt",
+      "gitBlob": "2ab7494fd380a586c4e8dbd144a766ae1a08daa6",
+      "bytes": 3779,
+      "sha256": "60cf5c995a7363abaa08db98a4baac48508174d8e410daa5399a804c2e4bc5c7"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/inline/RemoveInlineDeclarationsWithReifiedTypeParametersLowering.kt",
+      "gitBlob": "ce962ebf62b91f60883c384dd9dc192baa259fcf",
+      "bytes": 2554,
+      "sha256": "328bb3c21ccb9b0825ef5670feccfb8a35319939d2f27ccb706c584ae82d8a5e"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt",
+      "gitBlob": "71552bc6dafe7f9fbc58c372d6864488f3f0d39f",
+      "bytes": 10644,
+      "sha256": "ebb423eab77ca4a4ea28d246723966cbe3489b39ac9ec00210689f5902f78ca1"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/WasmLoweringPhases.kt",
+      "gitBlob": "6958851e7bd81fc0ea36a681e7ced7836e091a60",
+      "bytes": 9196,
+      "sha256": "15a341f32cad54ee7634df2243839af3eeb40fc0f89fd9d9c9c7025ff95588a2"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ic/FileSignatureRemover.kt",
+      "gitBlob": "7e4cce379932c8bc980317a7f1d688cd03ff0b63",
+      "bytes": 3284,
+      "sha256": "956417e63575b7d95958e4f4fa9f4a3cafac0eb02fd953622b2a7bc9a1a81414"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/ir2wasm/WasmCompiledFragments.kt",
+      "gitBlob": "0443e3283c19988ee484971ce510c9dd1dc41a51",
+      "bytes": 6613,
+      "sha256": "d668abb3db00775afa9966d8b10f44ea5f87267df268af8949b1af65c5fae6f2"
+    },
+    {
+      "path": "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/lower/WasmSuspendFunctionsLowering.kt",
+      "gitBlob": "15a3012b1307af1ddc173ae25a296c1bb395d374",
+      "bytes": 864,
+      "sha256": "eb948f33b53068b86317412248e12d83c826994c24719c7e06be19602285939c"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/WholeWorldStageController.kt",
+      "gitBlob": "a1d7130bf0e105360f2073eec497c68d006d1f0a",
+      "bytes": 1665,
+      "sha256": "7710613cfa8c7d261f6d4dd5dd84b7dc995e15496f1267a2dc1598fa9032d69d"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsIrBackendContext.kt",
+      "gitBlob": "95fc40c74f4447538ae66c53990f2bbb71506d95",
+      "bytes": 7503,
+      "sha256": "d6b41931af4aeb8761ec03032f46b44132189f375170e2f26808d2c80c895882"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsCommonBackendContext.kt",
+      "gitBlob": "b758ebd49e137326944311f8fb5fde9354eeef2a",
+      "bytes": 3171,
+      "sha256": "29c56359d38988b9aa71e974f790783b188ef43202699809c7026c225e01d532"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/misc.kt",
+      "gitBlob": "9d789fd72ea3e831fda70dc6a148497b469feaa4",
+      "bytes": 3938,
+      "sha256": "8401155f684eb113ac2ed991b8f36f71ec9bfb713bd0792094520dc9545681c4"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/JsIrProgramFragment.kt",
+      "gitBlob": "4fab897ab7c46a4d82ac2774d2144ea2280ca3f3",
+      "bytes": 13960,
+      "sha256": "d784685eb3d7a25ebf4c785711075a0f67623e9c6cfd9370018a815d5bf7d95c"
+    },
+    {
+      "path": "js/js.config/src/org/jetbrains/kotlin/js/config/WebArtifactConfiguration.kt",
+      "gitBlob": "68c62e717cf7aa29359c43636467c05f6fa88c89",
+      "bytes": 3383,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "js/js.config",
+      "sha256": "5ef11408092e011c78a789592725b32c8cff02fd081a2d0fa983a4576f933e4b"
+    },
+    {
+      "path": "js/typescript-printer/src/org/jetbrains/kotlin/ir/backend/js/tsexport/ExportModelToTsDeclarations.kt",
+      "gitBlob": "236c75300f60056549cc94f8d5babfbfde539aa4",
+      "bytes": 26907,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "js/typescript-printer",
+      "sha256": "a9dbd9e76952af8c238a543d499b305e06f2d93aa2e8138e50ef0ec4b520eb2d"
+    }
+  ],
+  "allowedStaticImportBinding": {
+    "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/lower/EnumClassLowering.kt",
+    "before": "org.jetbrains.kotlin.descriptors.DescriptorVisibilities.PRIVATE",
+    "after": "org.jetbrains.kotlin.descriptors.DescriptorVisibilities.Companion.PRIVATE"
+  },
+  "tools": [
+    {
+      "path": "references.mjs",
+      "bytes": 2178,
+      "sha256": "f6fd115e20e546eacfd8c3ac68f0693263e554b3c9d95148474a65689a17f3ba",
+      "gitBlob": "42dc18f4964811af5b77d8b25fd4e8c60ecae508"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 16099,
+      "sha256": "731aa06ea3be4fcdc881e130bc726d39250cbd289df9bd442f1c1f92b37dccfd",
+      "gitBlob": "aa42ddee53affb95b63002547ced283b450e89ba"
+    },
+    {
+      "path": "final.mjs",
+      "bytes": 7633,
+      "sha256": "031dfd570d17a6dbaeff9db9682ae2d690247aed589d942b5f2fd50c4a2515dd",
+      "gitBlob": "ea9a50f1daafce70843640efe4a82fb4be496816"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 2771,
+      "sha256": "cbd2706bf10c775663b8614c116393e2f9fbb9c36684e23ee326cc6e51958a2a",
+      "gitBlob": "350b8182104eccca001bd38a34f629ad7a51a872"
+    },
+    {
+      "path": "probe.mjs",
+      "bytes": 9373,
+      "sha256": "90f0db106b3840294b7d5b94bb464c7ff6b9184fc49e6dd0ddeb1f5d30aac475",
+      "gitBlob": "d77d39071d12e41618d8dead9096927f8f1d46bd"
+    },
+    {
+      "path": "guards.mjs",
+      "bytes": 12463,
+      "sha256": "c8520ed43b872ded817802c7a1eb4e8ed3359109ae78eaeab30c70d172caab10",
+      "gitBlob": "0c219cb3824c22317b74d3d8d013fca4e2d295da"
+    },
+    {
+      "path": "verify.mjs",
+      "bytes": 5394,
+      "sha256": "7b030d542fcd82e6f1f21d7d864ea274cfe4bd479c8daa587bacc2b01ff72ea0",
+      "gitBlob": "7996ee410b1d7098e936d9bce2d551b3211a24bf"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../closure.lock.json",
+      "bytes": 1601612,
+      "sha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+      "gitBlob": "0d920e442426a044cf3a70d5fea08afc1de637cb"
+    },
+    {
+      "path": "../backend-profile/sources.lock.json",
+      "bytes": 37751,
+      "sha256": "7f0528ccb9a8ca99a0f80ed66cdd0d95b3ea021790c36518c6138d631902a6d7",
+      "gitBlob": "6ae1e17cac407c5f1da3a3a4da243826d3f86813"
+    },
+    {
+      "path": "../backend-profile/generate.mjs",
+      "bytes": 4979,
+      "sha256": "8e1139fe4b88586be64235e704ece8e62460240c20b15cd75ddce99798db05ad",
+      "gitBlob": "664e531ea34b4e74af8f541d6ddb8cd1937aee0b"
+    },
+    {
+      "path": "../backend-profile/references.mjs",
+      "bytes": 6006,
+      "sha256": "99496f349e3fc82159095a5d5d59c54a579ad4d5fcd60d5593136faef7e971cc",
+      "gitBlob": "f467ac0472ba80f10aa21f3d555f6909fef0dff4"
+    },
+    {
+      "path": "../backend-profile/prepare.mjs",
+      "bytes": 18326,
+      "sha256": "33f13fb12ac4e91253c7fe66d3ade51ab1e203eae345dc9771fc0c5c98da0673",
+      "gitBlob": "6db3c02717a77ab3611aa7f66f6a4959e9475b73"
+    },
+    {
+      "path": "../backend/prepare.mjs",
+      "bytes": 5621,
+      "sha256": "4ec40153dacc8f5c164ca7df80a88841eff52a979dfc387d4bb5150105169b78",
+      "gitBlob": "e3ad8d26ab6260a674c11b0301404f3da3046363"
+    },
+    {
+      "path": "../backend/sources.lock.json",
+      "bytes": 2786,
+      "sha256": "30aec8c5797548909bf59fafeeb457690315fb1e654c55d5f042823e5198989d",
+      "gitBlob": "8ead844cabbc96cb305a88bbab9956882d3681be"
+    },
+    {
+      "path": "../serializer-output-bindings/transform.mjs",
+      "bytes": 1448,
+      "sha256": "945f4479eeed452bb47c101c7d0faf837871f225a08042174badc8679f469923",
+      "gitBlob": "340ea0a0d5de4b4dec53720a518a3e691457a816"
+    },
+    {
+      "path": "../module-relative-paths/sources.lock.json",
+      "bytes": 12123,
+      "sha256": "e874586c327beda8901d7e31f90404a54bf7022392a0b97021314fd403ab560a",
+      "gitBlob": "4bb6878d05b73c1e1a67b0d0ccea267e275003d6"
+    },
+    {
+      "path": "../module-relative-paths/inventory.json",
+      "bytes": 2081,
+      "sha256": "aed7ba6df1b45cd03545b259bf4284fc374d2b7d170fbc1828d7b8e382de7732",
+      "gitBlob": "af21a41b6c95742a2fa3169ed2de986eb59e1b3a"
+    },
+    {
+      "path": "../module-relative-paths/prepare.mjs",
+      "bytes": 11630,
+      "sha256": "022cf8a7590c56feaabe570b4d75a05cd4cf98e0e03a723b2a1cc71071869b46",
+      "gitBlob": "5a803c8572919d89104843ca9f42d31a2e4dce0c"
+    }
+  ],
+  "shippingFilesystemImplemented": false,
+  "compilerBuilt": false,
+  "languageReadiness": false
+}
