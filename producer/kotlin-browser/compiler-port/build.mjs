@@ -496,6 +496,25 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           return component;
         }],
+        ['sourceMapTextIoReceipt', async ({ outputRoot }) => {
+          const io = await import('./source-map-text-io/prepare.mjs');
+          const component = await io.prepareSourceMapTextIo({ outputRoot });
+          await io.verifySourceMapTextIo({ outputRoot, receiptPath: component.receiptPath });
+          receipt.sourceMapTextIoSharedDependencies = [];
+          for (const dependency of component.sharedDependencies) {
+            const sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+            const owner = preparedComponents.get(dependency.component);
+            assert(pin?.compile && owner?.commonSources.includes(pin.filename), 'Missing genuine source-map IO dependency');
+            assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            const bytes = await readRegular(pin.filename, pin.bytes);
+            assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+            if (dependency.gitBlob) verifyFile(bytes, dependency);
+            assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+            receipt.sourceMapTextIoSharedDependencies.push({ path: sourcePath, component: dependency.component,
+              filename: pin.filename, bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
