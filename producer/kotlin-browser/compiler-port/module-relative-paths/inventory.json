@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/transformers/irToJs/JsIrProgramFragment.kt",
+  "input": {
+    "bytes": 14122,
+    "sha256": "e5ef35e55ddd3c3954b37c1cb63479fbeecbab39e437b5d5c6d7be352c41cb83",
+    "gitBlob": "d5d511a07d8553a9e9a4481bc328948e984d22cb"
+  },
+  "changes": [
+    {
+      "start": 836,
+      "line": 17,
+      "before": "import java.io.File",
+      "after": "import org.jetbrains.kotlin.js.portable.modules.relativeModuleRequirePath"
+    },
+    {
+      "start": 10107,
+      "line": 244,
+      "before": "    private fun relativeRequirePath(moduleHeader: JsIrModuleHeader): String {\n        val parentMain = File(header.externalModuleName).parentFile ?: return \"./${moduleHeader.externalModuleName}\"\n\n        val relativePath = File(moduleHeader.externalModuleName)\n            .toRelativeString(parentMain)\n            .replace(File.separator, \"/\")\n\n        return relativePath.takeIf { it.startsWith(\"../\") } ?: \"./$relativePath\"\n    }",
+      "after": "    private fun relativeRequirePath(moduleHeader: JsIrModuleHeader): String =\n        relativeModuleRequirePath(header.externalModuleName, moduleHeader.externalModuleName)"
+    }
+  ],
+  "output": {
+    "bytes": 13915,
+    "sha256": "8bf9203e25e3ae5301673bbefa1e9aa51bcf206278b080e0010d13aba3c1605f",
+    "gitBlob": "a2d7372f65db0eeffee040cfca61721275f938a3"
+  },
+  "originalMethod": {
+    "text": "    private fun relativeRequirePath(moduleHeader: JsIrModuleHeader): String {\n        val parentMain = File(header.externalModuleName).parentFile ?: return \"./${moduleHeader.externalModuleName}\"\n\n        val relativePath = File(moduleHeader.externalModuleName)\n            .toRelativeString(parentMain)\n            .replace(File.separator, \"/\")\n\n        return relativePath.takeIf { it.startsWith(\"../\") } ?: \"./$relativePath\"\n    }",
+    "start": 10107,
+    "bytes": 432,
+    "sha256": "e29f2b48e3c5a6bebc42d11f78844cbb4c9b9ab887d6995ed898b4bab1476005",
+    "gitBlob": "92bfc44531b51c6b4fe88d2aa7d6f4b11930f4be"
+  }
+}

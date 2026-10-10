@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {mkdir,copyFile,readdir} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {readRegular,sha256,gitBlob,writeJson} from '../../scripts/source.mjs';
+import {verifyModuleRequirePathEvidence} from './verify.mjs';
+const HERE=path.dirname(fileURLToPath(import.meta.url)),REPO=path.resolve(HERE,'../../../..');
+const [runtimeRoot,guardsRoot,runtimeStatus,guardsStatus,selectionRoot,selectionStatus]=process.argv.slice(2).map(x=>path.resolve(x));
+for(const root of [runtimeRoot,guardsRoot,selectionRoot])assert(root.startsWith(path.join(REPO,'out')+path.sep));
+await mkdir(path.join(HERE,'evidence'),{mode:0o700});
+for(const [source,name]of [[path.join(runtimeRoot,'runtime.json'),'runtime.json'],[path.join(guardsRoot,'guards.json'),'guards.json'],[runtimeStatus,'runtime-status.json'],[guardsStatus,'guards-status.json'],[path.join(selectionRoot,'selection.json'),'selection.json'],[selectionStatus,'selection-status.json']])await copyFile(source,path.join(HERE,'evidence',name));
+const files=[];async function scan(prefix=''){for(const entry of await readdir(path.join(HERE,prefix),{withFileTypes:true})){const key=prefix?prefix+'/'+entry.name:entry.name;if(entry.isDirectory())await scan(key);else{assert(entry.isFile());if(key==='evidence/artifacts.json')continue;const bytes=await readRegular(path.join(HERE,key),32*1024*1024);files.push({path:key,bytes:bytes.length,sha256:sha256(bytes),gitBlob:gitBlob(bytes)});}}}await scan();files.sort((a,b)=>a.path.localeCompare(b.path));
+await writeJson(path.join(HERE,'evidence/artifacts.json'),{schemaVersion:1,kind:'sealed-genuine-module-relative-path-artifacts',files});
+console.log(JSON.stringify(await verifyModuleRequirePathEvidence()));
