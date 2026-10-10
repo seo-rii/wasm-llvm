@@ -444,6 +444,34 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await module.verifyJsAstOutputStream({ sourceRoot, outputRoot, receiptPath: component.receiptPath });
           return component;
         }],
+        ['sourceMapJsonReceipt', async ({ outputRoot }) => {
+          const module = await import('./source-map-json/prepare.mjs');
+          const references = await module.prepareSourceMapJsonReferences();
+          const component = await module.prepareSourceMapJson({ sourceRoot: references.sourceRoot, outputRoot });
+          await module.verifySourceMapJson({ sourceRoot: references.sourceRoot, outputRoot, receiptPath: component.receiptPath });
+          receipt.sourceMapJsonOriginalBindings = [];
+          for (const original of component.supplementalOriginals) {
+            const sourcePath = relativePath(original.path);
+            const filename = path.join(references.sourceRoot, sourcePath);
+            verifyFile(await readRegular(filename, original.bytes), original);
+            assert(!files.has(sourcePath), 'Supplemental source-map original already registered: ' + sourcePath);
+            files.set(sourcePath, { filename, bytes: original.bytes, sha256: original.sha256, compile: false });
+            receipt.sourceMapJsonOriginalBindings.push({ path: sourcePath, filename, bytes: original.bytes,
+              sha256: original.sha256, gitBlob: original.gitBlob });
+          }
+          receipt.sourceMapJsonSharedDependencies = [];
+          for (const dependency of component.sharedDependencies) {
+            assert.equal(dependency.component, 'jsAstReceipt');
+            const sourcePath = relativePath(dependency.path), pin = files.get(sourcePath);
+            assert(pin?.compile && preparedComponents.get('jsAstReceipt').commonSources.includes(pin.filename));
+            assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+            verifyFile(await readRegular(pin.filename, dependency.bytes), dependency);
+            receipt.sourceMapJsonSharedDependencies.push({ path: sourcePath, filename: pin.filename,
+              bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
