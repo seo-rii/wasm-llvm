@@ -69,6 +69,26 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   const hostFlags = new Set();
   const propertyAliasImports = new Set();
   let assertionImport;
+  async function bindCompilerJvmAnnotations(sourcePaths) {
+    const imported = [];
+    for (const sourcePath of sourcePaths) {
+      const pin = files.get(sourcePath);
+      assert(pin, 'Missing compiler annotation source: ' + sourcePath);
+      if (!pin.compile || !sourcePath.endsWith('.kt')) continue;
+      const original = await readRegular(pin.filename, pin.bytes);
+      const code = original.toString('utf8');
+      if (!/@(?:\w+:)?(?:Jvm[A-Za-z]+|Volatile|Transient|Synchronized)\b/.test(code)) continue;
+      if (/^import kotlin\.jvm\.\*\s*$/m.test(code)) continue;
+      const declaration = /^package[ \t]+[^\r\n]+/m.exec(code);
+      assert(declaration, 'Missing compiler source package: ' + sourcePath);
+      const end = declaration.index + declaration[0].length;
+      const bytes = Buffer.from(code.slice(0, end) + '\nimport kotlin.jvm.*\n' + code.slice(end));
+      await writeFile(pin.filename, bytes, { mode: 0o600 });
+      imported.push({ path: sourcePath, originalSha256: pin.sha256, bytes: bytes.length, sha256: sha256(bytes) });
+      files.set(sourcePath, { ...pin, bytes: bytes.length, sha256: sha256(bytes) });
+    }
+    return imported;
+  }
   try {
     if (sourceHost === 'portable') {
       const preparedComponents = new Map();
@@ -364,22 +384,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       // JVM compiler tasks import kotlin.jvm annotations by default. These are
       // official optional common annotations; import them explicitly for C's
       // Wasm host. User source text never passes through this transformation.
-      const imported = [];
-      for (const [sourcePath, pin] of files) {
-        if (!pin.compile || !sourcePath.endsWith('.kt')) continue;
-        const original = await readRegular(pin.filename, pin.bytes);
-        const code = original.toString('utf8');
-        if (!/@(?:\w+:)?(?:Jvm[A-Za-z]+|Volatile|Transient|Synchronized)\b/.test(code)) continue;
-        if (/^import kotlin\.jvm\.\*\s*$/m.test(code)) continue;
-        const declaration = /^package[ \t]+[^\r\n]+/m.exec(code);
-        assert(declaration, 'Missing compiler source package: ' + sourcePath);
-        const end = declaration.index + declaration[0].length;
-        const bytes = Buffer.from(code.slice(0, end) + '\nimport kotlin.jvm.*\n' + code.slice(end));
-        await writeFile(pin.filename, bytes, { mode: 0o600 });
-        imported.push({ path: sourcePath, originalSha256: pin.sha256, bytes: bytes.length, sha256: sha256(bytes) });
-        files.set(sourcePath, { ...pin, bytes: bytes.length, sha256: sha256(bytes) });
-      }
-      receipt.annotationImports = { rule: 'explicit-kotlin-jvm-optional-annotation-import', sources: imported };
+      receipt.annotationImports = { rule: 'explicit-kotlin-jvm-optional-annotation-import',
+        sources: await bindCompilerJvmAnnotations([...files.keys()]) };
       const propertyImports = [];
       for (const [sourcePath, pin] of files) {
         if (!pin.compile || !sourcePath.endsWith('.kt')) continue;
@@ -455,6 +461,32 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       await writeFile(entryFile, entryBytes, { flag: 'wx', mode: 0o600 });
       files.set('compiler-port-entry/' + name, { filename: entryFile, bytes: entryBytes.length,
         sha256: sha256(entryBytes), compile: true });
+    }
+    if (sourceHost === 'portable') {
+      const dsl = await import('./diagnostic-source-dsl/prepare.mjs');
+      const reference = await dsl.prepareDiagnosticSourceDslReferences();
+      const componentRoot = path.join(output, 'components', 'diagnosticSourceDslReceipt');
+      const component = await dsl.prepareDiagnosticSourceDsl({ sourceRoot: prepared.sourceRoot,
+        referenceRoot: reference.sourceRoot, outputRoot: componentRoot,
+        retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      await dsl.verifyDiagnosticSourceDsl(path.dirname(component.receiptPath));
+      receipt.diagnosticSourceDslReceipt = component.receipt;
+      for (const excluded of component.replacedOriginalPaths) {
+        const sourcePath = relativePath(excluded); assert(files.get(sourcePath)?.compile);
+        files.set(sourcePath, { ...files.get(sourcePath), compile: false });
+      }
+      const addedPaths = [];
+      for (const filename of component.commonSources) {
+        assert(filename.startsWith(componentRoot + path.sep));
+        const sourcePath = relativePath(path.relative(componentRoot, filename));
+        assert(!files.has(sourcePath), 'Duplicate sourced diagnostic input: ' + sourcePath);
+        const bytes = await readRegular(filename); const digest = sha256(bytes);
+        files.set(sourcePath, { filename, bytes: bytes.length, sha256: digest, compile: true });
+        receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
+        addedPaths.push(sourcePath);
+      }
+      receipt.annotationImports.sources.push(...await bindCompilerJvmAnnotations(addedPaths));
     }
     if (sourceHost === 'portable') {
       // The disk-only fingerprint overload can be split only after the final

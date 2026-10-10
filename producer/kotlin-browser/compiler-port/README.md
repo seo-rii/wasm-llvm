@@ -71,6 +71,10 @@ parameter renderers, language-feature messages and their generated flag map.
 The [source-free diagnostic DSL](diagnostic-dsl/README.md) supplies the original
 property delegates used by CLI and backend containers, retaining actual keys,
 factory identity and lazy renderer lookup.
+The [source-bearing delegates](diagnostic-source-dsl/README.md) retain the
+original backend containers and payloads while removing their PSI class
+metadata. Preparation checks the final selected caller inventory, and the
+composer imports common JVM annotations on the newly generated tables.
 The compiler host also uses the source-version-pinned official immutable
 collections wasmJs KLIB; its provenance and bytes are verified before linking.
 
