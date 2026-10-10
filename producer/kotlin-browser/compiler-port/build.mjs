@@ -332,6 +332,29 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           }
           return component;
         }],
+        ['jsAstDeserializerReceipt', async ({ sourceRoot, outputRoot }) => {
+          const deserializer = await import('./js-ast-consumer-bindings/deserializer/prepare.mjs');
+          const preparedInteger = preparedComponents.get('jsAstIntegerConsumerReceipt');
+          const preparedInput = preparedComponents.get('jsAstInputReceipt');
+          assert(Array.isArray(preparedInteger?.retainedSources), 'Missing original integer consumer snapshot');
+          const options = { sourceRoot, outputRoot, preparedInteger, preparedInput,
+            preparedBounds: preparedComponents.get('jsAstIntegerBoundsReceipt'),
+            retainedSources: preparedInteger.retainedSources };
+          const component = await deserializer.prepareJsAstDeserializer(options);
+          await deserializer.verifyJsAstDeserializer({ ...options, receiptPath: component.receiptPath });
+          const dependency = component.inputDependency;
+          assert.equal(dependency.component, 'jsAstInputReceipt');
+          const matches = [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath === dependency.path
+            && preparedInput.commonSources.includes(pin.filename)
+            && pin.bytes === dependency.bytes && pin.sha256 === dependency.sha256);
+          assert.equal(matches.length, 1, 'Deserializer must retain one genuine AST input source');
+          const [sourcePath, pin] = matches[0];
+          const bytes = await readRegular(pin.filename, dependency.bytes);
+          assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+          receipt.jsAstDeserializerInputBinding = { path: sourcePath, component: dependency.component,
+            bytes: pin.bytes, sha256: pin.sha256 };
+          return component;
+        }],
         ['jsSourceContentReceipt', async ({ sourceRoot, outputRoot }) => {
           const sourceContent = await import('./js-ast-consumer-bindings/source-content/prepare.mjs');
           const component = await sourceContent.prepareSourceContentBindings({ sourceRoot, outputRoot });
