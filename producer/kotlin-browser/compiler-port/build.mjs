@@ -253,6 +253,12 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await annotations.verifyAnnotationImplementations(outputRoot);
           return component;
         }],
+        ['deserializationContractsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const contracts = await import('./deserialization-contracts/prepare.mjs');
+          const component = await contracts.prepareDeserializationContracts({ sourceRoot, outputRoot });
+          await contracts.verifyDeserializationContracts(outputRoot);
+          return component;
+        }],
         ['typeContractReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./type-contracts/prepare.mjs')).prepareTypeContracts(
             sourceRoot, path.join(outputRoot, 'compiler-port-type-contracts'));
