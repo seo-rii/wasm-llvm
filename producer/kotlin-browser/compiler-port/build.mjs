@@ -276,6 +276,27 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             preparedIdentity: preparedComponents.get('identityReceipt'),
             preparedText: preparedComponents.get('textReceipt') });
         }],
+        ['wasmCollectionConsumersReceipt', async ({ sourceRoot, outputRoot }) => {
+          const consumers = await import('./wasm-collection-consumers/prepare.mjs');
+          const component = await consumers.prepareWasmCollectionConsumers({ sourceRoot, outputRoot,
+            preparedWasmCollections: preparedComponents.get('wasmCollectionsReceipt'),
+            preparedText: preparedComponents.get('textReceipt') });
+          await consumers.verifyWasmCollectionConsumers(outputRoot);
+          receipt.wasmCollectionConsumerSharedDependencies = [];
+          for (const dependency of component.sharedDependencies) {
+            assert.equal(dependency.component, 'textReceipt');
+            const sourcePath = relativePath(dependency.componentRelativePath), pin = files.get(sourcePath);
+            assert(pin?.compile && preparedComponents.get('textReceipt').commonSources.includes(pin.filename));
+            assert.equal(pin.filename, dependency.filename);
+            assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            assert.equal([...files.values()].filter((selected) => selected.compile && selected.filename === pin.filename).length, 1);
+            const bytes = await readRegular(pin.filename, pin.bytes);
+            assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+            receipt.wasmCollectionConsumerSharedDependencies.push({ path: sourcePath, component: dependency.component,
+              bytes: pin.bytes, sha256: pin.sha256 });
+          }
+          return component;
+        }],
         ['klibReceipt', (await import('./klib/prepare.mjs')).prepareKlibSources],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
