@@ -50,7 +50,10 @@ export async function prepareVersionSources({ sourceRoot, additionalSourceRoot =
     outputRoot, buildVersionInput, buildVersionInputSha256 }) {
     sourceRoot = path.resolve(sourceRoot); additionalSourceRoot = path.resolve(additionalSourceRoot); outputRoot = path.resolve(outputRoot);
     assert(outputRoot.startsWith(path.join(REPO, 'out') + path.sep));
-    assert(sourceRoot !== outputRoot && !sourceRoot.startsWith(outputRoot + path.sep));
+    for (const cacheRoot of [sourceRoot, additionalSourceRoot]) {
+        assert(outputRoot !== cacheRoot && !outputRoot.startsWith(cacheRoot + path.sep) && !cacheRoot.startsWith(outputRoot + path.sep),
+            'Version preparation output overlaps original source cache');
+    }
     for (const root of [sourceRoot, additionalSourceRoot, outputRoot]) await assertNoSymlink(root);
     const lockBytes = await readRegular(path.join(HERE, 'sources.lock.json')); const lock = JSON.parse(lockBytes);
     assert.equal(lock.kind, 'official-version-algorithms-common-source-port'); assert.equal(lock.sources.length, 3);

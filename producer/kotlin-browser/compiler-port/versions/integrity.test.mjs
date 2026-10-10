@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
@@ -112,3 +112,17 @@ test('Preparation refuses source symlinks and output replacement', async () => f
     const link = path.join(f.temp, 'source-link'); await symlink(f.sourceRoot, link);
     await assert.rejects(f.prepare({ ...f.options, sourceRoot: link, outputRoot: path.join(path.dirname(f.options.outputRoot), 'second') }), /Symlink/);
 }));
+
+for (const [name, cacheKey, child] of [
+    ['primary cache descendant', 'sourceRoot', true],
+    ['additional reference cache root', 'additionalSourceRoot', false],
+    ['additional reference cache descendant', 'additionalSourceRoot', true],
+]) {
+    test('Preparation refuses output in the ' + name + ' before writing cache files', async () => fixture(async f => {
+        const cacheRoot = f.options[cacheKey];
+        const before = await readdir(cacheRoot);
+        const outputRoot = child ? path.join(cacheRoot, 'generated-version-output') : cacheRoot;
+        await assert.rejects(f.prepare({ ...f.options, outputRoot }), /overlaps original source cache/);
+        assert.deepEqual(await readdir(cacheRoot), before);
+    }));
+}
