@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "kind": "pinned-js-ast-byte-length-boundary",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "sources": [
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstDeserializer.kt",
+      "gitBlob": "a4abbf984bf25add32ed7e6020dd2da825ab4dc8",
+      "bytes": 25220,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.js",
+      "sha256": "425b0a44a812176c93f6014d186db469ec893f00a4704bf9e179672986e01f24"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/JsIrAstSerializer.kt",
+      "gitBlob": "0a5558206817f80bb52334c96c8bf845eb5aa223",
+      "bytes": 29071,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.js",
+      "sha256": "ac5d5dfe85de7b96a08f85fb49349c00b5b591150b1481169179f3f5abd157a0"
+    },
+    {
+      "path": "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/utils/serialization/Constants.kt",
+      "gitBlob": "052cc791b2db86846ae64b51eaddac7adcb945f9",
+      "bytes": 2604,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/backend.js",
+      "sha256": "963b2f6f7eaa186de6aa40e71ec75abedd0ac63f5b06af01b36775bf49169b2e"
+    }
+  ],
+  "predecessor": [
+    {
+      "path": "../integer/sources.lock.json",
+      "bytes": 6519,
+      "sha256": "29a4048a85865a01c6482e9a88f86bd0caff14ecb2a30feb641dbb3339f18dcd",
+      "gitBlob": "367947ee71a86b9c45b11e4ea540ccf6ed6ec9ca"
+    },
+    {
+      "path": "../integer/prepare.mjs",
+      "bytes": 5281,
+      "sha256": "4f5ea7f2999212df89dc748b49001a64cd0d44c1bc1dc6fd338b7f8f89db3762",
+      "gitBlob": "197f8ea2ed7f3b36021e6c9e48bdeb3fff76d897"
+    },
+    {
+      "path": "../integer/verify.mjs",
+      "bytes": 2510,
+      "sha256": "951b4cdddbb3601231613520eb66dd9b16f71a7e95fb6138d480146ecef4ef02",
+      "gitBlob": "a185b104d28cbfb2292035adda1c70ccbbe71389"
+    },
+    {
+      "path": "../integer/extract.mjs",
+      "bytes": 2802,
+      "sha256": "daa05b8eeda1e440099f8f715e3ad454aaee3ae21a9009a90f64c72547e510e8",
+      "gitBlob": "b6ec119fa9d3cdec306e8a49090764b6b2a21975"
+    }
+  ],
+  "predecessorOutput": {
+    "bytes": 25253,
+    "sha256": "b4591beb74812a4f1093e04c203fec6c2715be37fc25cdc2e2329fe615f2b49e",
+    "gitBlob": "2ce556508f2633b328d37a661a682297c93a9fb7"
+  },
+  "originalReadBytes": "    private inline fun <R> readBytes(transform: (offset: Int, length: Int) -> R): R {\n        val length = readInt()\n        val offset = buffer.position()\n        val result = transform(offset, length)\n        buffer.position(offset + length)\n        return result\n    }",
+  "output": {
+    "bytes": 25389,
+    "sha256": "89bea05a9f0f32735eac7983fe4b1d7291c173e6c7cf386c81ee82475aa6750b",
+    "gitBlob": "a216de0bc91acb99c01371fbf87ce9ce0d06248c"
+  },
+  "tools": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 5388,
+      "sha256": "deeca1b3245b25898f64961604fb982dde856d151f98fb160d9aef474d9b8976",
+      "gitBlob": "6d721afd442bd318d05468cce48c6716b857e6e8"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 708,
+      "sha256": "b4a1506b608c6ac423cbfe04afbdab7b3cfbfd2379ab145142abf336cae2a9c3",
+      "gitBlob": "05d23639cb7bdd5cab91b24987eafc054ff68c49"
+    },
+    {
+      "path": "check.mjs",
+      "bytes": 9747,
+      "sha256": "3358d0dd590affc6c5fe4a5775d4a3ef65cf823cf1388906980ee2c3bf417e4f",
+      "gitBlob": "122d1128f086801b47959978043f8e85be3bbcc3"
+    },
+    {
+      "path": "integrity.test.mjs",
+      "bytes": 3133,
+      "sha256": "ee58751a693912437ee6602ea258058349b12eac52ab2cc7e09770e289530b20",
+      "gitBlob": "4c56c13f93afc7f56d1ca616506a58398852ee2f"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 2086,
+      "sha256": "20eee94a424b5b3338f6f6df7d111b60dacd7340167abc11beffe847fd84e150",
+      "gitBlob": "a8dee1815b9fe4c03751a1d029eb1d10fcbb90ae"
+    }
+  ],
+  "observers": [
+    {
+      "path": "BoundsProbe.kt",
+      "bytes": 1109,
+      "sha256": "32ba0a300a7a6ad7f78f0ba324dfefc084abdefec5371d3a7ab985ee9d188d74",
+      "gitBlob": "a616e1702cdc81c1af98ea89031f1265ec3f5a74"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 92,
+      "sha256": "0eff6ca3d94f1c7ccbc5fe39f571de48ed97585f1e2362032ecaa31c25c7a495",
+      "gitBlob": "8c0f822c91c2dfa6a64a84525dd3f9639906d962"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 148,
+      "sha256": "c0ccb730851cb7d63e66b0334bce3d4e36c30e3c96506bb23a05a91adb90af8c",
+      "gitBlob": "6e7742f3377d28fd170040837d41e6a9d57d9883"
+    }
+  ],
+  "intentionalMalformedContractChange": true,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}
