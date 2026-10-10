@@ -276,6 +276,27 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await builders.verifyCopyBuilderPlatform(outputRoot);
           return component;
         }],
+        ['irPropertyTypeGetterReceipt', async ({ outputRoot }) => {
+          const getter = await import('./ir-property-type-getter/prepare.mjs');
+          const component = await getter.prepareIrPropertyTypeGetter({ outputRoot,
+            preparedCopyBuilder: preparedComponents.get('copyBuilderPlatformReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+          });
+          await getter.verifyIrPropertyTypeGetter(outputRoot);
+          assert.equal(component.sharedDependencies.length, 1);
+          for (const dependency of component.sharedDependencies) {
+            const sourcePath = relativePath(dependency.componentRelativePath), pin = files.get(sourcePath);
+            const owner = preparedComponents.get(dependency.component);
+            assert(pin?.compile && owner?.commonSources.includes(pin.filename), 'Missing genuine IR property dependency');
+            assert.equal(pin.filename, dependency.filename); assert.equal(pin.bytes, dependency.bytes); assert.equal(pin.sha256, dependency.sha256);
+            const bytes = await readRegular(pin.filename, pin.bytes);
+            assert.equal(bytes.length, dependency.bytes); assert.equal(sha256(bytes), dependency.sha256);
+            assert.equal([...files.values()].filter(item => item.compile && item.filename === pin.filename).length, 1);
+          }
+          receipt.irPropertyTypeGetterSharedDependencies = component.sharedDependencies;
+          return component;
+        }],
         ['annotationImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
           const annotations = await import('./annotation-implementations/prepare.mjs');
           const component = await annotations.prepareAnnotationImplementations({ sourceRoot, outputRoot });
@@ -1113,10 +1134,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
     if (sourceHost === 'portable') {
       const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
       const builders = await import('./copy-builder-platform/prepare.mjs');
-      const final = await builders.verifyFinalCopyBuilderPlatform({
-        profileRoot: path.join(output, 'components', 'copyBuilderPlatformReceipt'),
+      const getter = await import('./ir-property-type-getter/prepare.mjs');
+      const irFinal = await getter.verifyFinalIrPropertyTypeGetter({
+        profileRoot: path.join(output, 'components', 'irPropertyTypeGetterReceipt'),
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
+      });
+      receipt.irPropertyTypeGetterFinalReceipt = irFinal.receipt;
+      const final = await builders.verifyFinalCopyBuilderPlatform({
+        profileRoot: path.join(output, 'components', 'copyBuilderPlatformReceipt'),
+        retainedSources: irFinal.predecessorRetainedSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.copyBuilderPlatformFinalReceipt = final.receipt;
