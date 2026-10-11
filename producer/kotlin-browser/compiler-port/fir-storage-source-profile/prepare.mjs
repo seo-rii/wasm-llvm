@@ -11,6 +11,22 @@ const algorithm = text => text.replace(/^import [^\r\n]+\r?\n/gm, '').replace(/^
 const pin = (logical, bytes) => ({ path: logical, bytes: bytes.length, sha256: sha256(bytes) });
 function verifyGenerated(bytes, pin) { assert.equal(bytes.length, pin.bytes); assert.equal(sha256(bytes), pin.sha256); return bytes; }
 
+export async function verifyFirStorageEntryBindings(entryRoot = path.resolve(here, '../entry')) {
+    const lock = JSON.parse(await readRegular(path.join(here, 'sources.lock.json')));
+    assert.deepEqual(lock.entries.map(entry => entry.path), ['compiler-port-entry/BrowserCompiler.kt', 'compiler-port-entry/BrowserCompilerPipeline.kt']);
+    const entries = new Map();
+    for (const entry of lock.entries) {
+        const name = path.basename(entry.path);
+        assert.equal(entry.repositoryPath, '../entry/' + name);
+        const bytes = await readRegular(path.join(entryRoot, name));
+        const message = 'FIR storage entry binding changed: ' + entry.path + '; update fir-storage-source-profile/sources.lock.json';
+        assert.equal(bytes.length, entry.bytes, message + ' (bytes)');
+        assert.equal(sha256(bytes), entry.sha256, message + ' (sha256)');
+        entries.set(entry.path, bytes);
+    }
+    return entries;
+}
+
 async function verifyPrimary(lock) {
     assert.equal(lock.schemaVersion, 1); assert.equal(lock.kind, 'official-fir-storage-lighttree-source-profile');
     assert.equal(lock.source.commit, '4d78aae1e337cd40f69baa865aed950fe807a775');
@@ -34,7 +50,7 @@ async function inputs(sourceRoot, preparedFirStorage, preparedHost) {
     assert(originals.get(UTILS).includes(Buffer.from(lock.psiGetter.text)));
     assert.equal(Buffer.byteLength(lock.psiGetter.text), lock.psiGetter.bytes); assert.equal(sha256(Buffer.from(lock.psiGetter.text)), lock.psiGetter.sha256);
     assert(originals.get(ELEMENT).includes(Buffer.from('val source: KtSourceElement?')));
-    for (const entry of lock.entries) originals.set(entry.path, verifyGenerated(await readRegular(path.join(here, entry.repositoryPath)), entry));
+    for (const [logical, bytes] of await verifyFirStorageEntryBindings()) originals.set(logical, bytes);
     const predecessors = {}, bindings = [];
     for (const [name, prepared, logical, directory, kind, listKey] of [
         ['storage', preparedFirStorage, STORAGE, 'fir-storage', 'official-fir-ir-serial-cache-lock-source-preparation', 'files'],

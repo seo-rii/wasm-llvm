@@ -28,6 +28,11 @@ paths `compiler-port-entry/BrowserCompiler.kt` and
 `compiler-port-entry/BrowserCompilerPipeline.kt` plus their actual filenames,
 sizes and hashes. They are part of the immutable selected snapshot before the
 global assembly imports are added. Duplicate or missing entry bindings fail.
+`verifyFirStorageEntryBindings()` checks both current repository entry sizes and
+hashes before the portable whole build reads prepared inputs, verifies bootstrap
+artifacts or creates its output. Preparation repeats the check at its own input
+boundary. Updating either entry requires refreshing its explicit lock binding;
+size and hash errors identify the affected entry and lock file.
 The returned single `predecessorBindings` entry supersedes the exact
 `firStorageReceipt` source; `sourceHostBinding` is verification evidence and
 does not publish a second host source.
@@ -41,7 +46,7 @@ selected lexical closure. It allows only explicitly declared assembly import
 additions and otherwise preserves canonical imports. The guard is conservative
 lexical analysis with exact body pins, not a resolved whole FIR call graph.
 
-The [sealed proof](evidence/differential.json) binds the actual failed
+The historical [sealed proof](evidence/differential.json) binds the actual failed
 3,509-source whole compilation and its source inventory. The bounded JVM
 observer executes the complete pinned configuration class and the exact pure
 PSI getter on real `CompilerConfiguration`, `KtLightSourceElement` and
@@ -54,9 +59,20 @@ additional source-family and facade consumers, entry drift, predecessor pins,
 mutable final output and imports. Full compiler and public language readiness
 remain false.
 
+The [entry binding refresh](evidence/entry-binding-refresh.json) preserves the
+later preparation failure caused by a stale pipeline entry pin after adding the
+scoped clock and descriptor debug hosts. Its new proof uses the failed build's
+3,619 actual selected sources and the two current entry files, with genuine
+host/storage predecessor receipts. Public preparation, replay and final guards
+pass; an entry body mutation with honestly recomputed size/hash is rejected,
+and the restored selection passes. This replays the selection before subsequent
+whole-build assembly, not the complete final compiler graph. The historical JVM
+configuration/getter observation is retained and was not rerun. Eight tests cover
+the original six integrity cases and the early entry binding checks.
+
 Reproduction (fresh output):
 
 ```sh
-node --test producer/kotlin-browser/compiler-port/fir-storage-source-profile/prepare.test.mjs
+node --test producer/kotlin-browser/compiler-port/fir-storage-source-profile/entry-bindings.test.mjs producer/kotlin-browser/compiler-port/fir-storage-source-profile/prepare.test.mjs
 node producer/kotlin-browser/compiler-port/fir-storage-source-profile/probe.mjs out/kotlin-storage-profile-proof-unique
 ```

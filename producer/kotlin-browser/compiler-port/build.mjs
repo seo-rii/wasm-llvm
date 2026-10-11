@@ -24,6 +24,10 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   assert(['original', 'portable'].includes(sourceHost), 'Unknown source host mode');
   assert(['2g', '3g', '4g'].includes(maximumHeap), 'Unsupported compiler build heap');
   assert(Number.isSafeInteger(timeoutMs) && timeoutMs >= 1000 && timeoutMs <= 1200000, 'Invalid build deadline');
+  if (sourceHost === 'portable') {
+    const profile = await import('./fir-storage-source-profile/prepare.mjs');
+    await profile.verifyFirStorageEntryBindings();
+  }
   const lockBytes = await readRegular(path.join(here, 'closure.lock.json'), 8 * 1024 * 1024);
   const lock = JSON.parse(lockBytes);
   const prepared = await readJson(path.join(input, 'inputs.json'));
