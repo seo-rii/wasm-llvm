@@ -1,0 +1,784 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-type-substitutor-getter-jvm-proof",
+  "result": "pass",
+  "outputRoot": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2",
+  "observations": 6,
+  "comparison": [
+    "empty-constant\ttrue",
+    "empty-map\ttrue",
+    "nonempty-map-and-real-substitution\tfalse:Int",
+    "virtual-exactly-once\ttrue,false:2",
+    "exception-identity\tpreserved:3",
+    "existing-substitution-property\tpreserved"
+  ],
+  "originalObservationSha256": "4e9a77044835583454d638f9b669c2c69878010e1805f81da40bdc99d95722a0",
+  "commonObservationSha256": "4e9a77044835583454d638f9b669c2c69878010e1805f81da40bdc99d95722a0",
+  "actualOriginalJavaClasses": [
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeSubstitutor.java",
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionImpl.java",
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionBase.java"
+  ],
+  "actualCommonClasses": [
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeSubstitutor.java",
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionImpl.java",
+    "core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionBase.java"
+  ],
+  "helperSha256": "b3bcc17316e431ef0536a6a936a0c39ae3ad8fd424b0bc29d70b55aedcfb56be",
+  "probeSha256": "aecc6c86d3f6b545c83b97efce3d321716c7ea9a008edafd9185828701f2002a",
+  "bootstrap": {
+    "lock": {
+      "schemaVersion": 1,
+      "kind": "official-kotlin-bootstrap-artifacts",
+      "version": "2.5.0-dev-10106",
+      "selectedSourceCommit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "compilerSourceCommit": null,
+      "sourceRelation": "The selected source declares this bootstrap version; these binaries are not claimed to be built from that source commit.",
+      "defaultVersionSource": "gradle.properties:bootstrap.kotlin.default.version",
+      "repositoryConventionSource": "repo/gradle-settings-conventions/kotlin-bootstrap/src/main/kotlin/kotlin-bootstrap.settings.gradle.kts",
+      "artifacts": [
+        {
+          "id": "compiler",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-compiler-embeddable",
+          "version": "2.5.0-dev-10106",
+          "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-compiler-embeddable/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+          "bytes": 59164049,
+          "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+          "pinOrigin": "Official repository HEAD Content-Length and .jar.sha256; payload verified during prepare."
+        },
+        {
+          "id": "build-tools-api",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-build-tools-api",
+          "version": "2.5.0-dev-10106",
+          "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-build-tools-api/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar",
+          "bytes": 575844,
+          "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+          "pinOrigin": "Official repository HEAD Content-Length and .jar.sha256; payload verified during prepare."
+        },
+        {
+          "id": "stdlib-jvm",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-stdlib",
+          "version": "2.5.0-dev-10106",
+          "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-stdlib/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+          "bytes": 1859448,
+          "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+          "pinOrigin": "Official repository HEAD Content-Length and .jar.sha256; payload verified during prepare."
+        },
+        {
+          "id": "daemon",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-daemon-embeddable",
+          "version": "2.5.0-dev-10106",
+          "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-daemon-embeddable/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+          "bytes": 372801,
+          "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+          "pinOrigin": "Official repository HEAD Content-Length and .jar.sha256; payload verified during prepare."
+        },
+        {
+          "id": "stdlib-wasi",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-stdlib-wasm-wasi",
+          "version": "2.5.0-dev-10106",
+          "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-stdlib-wasm-wasi/2.5.0-dev-10106/kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+          "bytes": 4044976,
+          "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+          "pinOrigin": "Official repository HEAD Content-Length and .klib.sha256; payload verified during prepare."
+        },
+        {
+          "id": "stdlib-js",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-stdlib-wasm-js",
+          "version": "2.5.0-dev-10106",
+          "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+          "url": "https://redirector.kotlinlang.org/maven/bootstrap/org/jetbrains/kotlin/kotlin-stdlib-wasm-js/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+          "bytes": 4065926,
+          "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+          "pinOrigin": "Official repository HEAD Content-Length and .klib.sha256; payload verified during prepare."
+        },
+        {
+          "id": "reflect",
+          "group": "org.jetbrains.kotlin",
+          "artifact": "kotlin-reflect",
+          "version": "1.6.10",
+          "file": "kotlin-reflect-1.6.10.jar",
+          "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10.jar",
+          "bytes": 3038560,
+          "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+          "pinOrigin": "Selected upstream gradle/verification-metadata.xml, kotlin-reflect1.6.10; local bytes also matched Maven Central SHA-1."
+        },
+        {
+          "id": "coroutines",
+          "group": "org.jetbrains.kotlinx",
+          "artifact": "kotlinx-coroutines-core-jvm",
+          "version": "1.8.0",
+          "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+          "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.8.0/kotlinx-coroutines-core-jvm-1.8.0.jar",
+          "bytes": 1548360,
+          "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+          "pinOrigin": "Maven Central HEAD Content-Length and .jar.sha256; payload verified during prepare."
+        },
+        {
+          "id": "annotations",
+          "group": "org.jetbrains",
+          "artifact": "annotations",
+          "version": "13.0",
+          "file": "annotations-13.0.jar",
+          "url": "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/13.0/annotations-13.0.jar",
+          "bytes": 17536,
+          "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+          "pinOrigin": "Selected upstream gradle/verification-metadata.xml, annotations13.0."
+        }
+      ]
+    },
+    "cacheRoot": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106",
+    "artifacts": [
+      {
+        "id": "compiler",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "file": "kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475",
+        "version": "2.5.0-dev-10106",
+        "verified": true
+      },
+      {
+        "id": "build-tools-api",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar",
+        "file": "kotlin-build-tools-api-2.5.0-dev-10106.jar",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d",
+        "version": "2.5.0-dev-10106",
+        "verified": true
+      },
+      {
+        "id": "stdlib-jvm",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "file": "kotlin-stdlib-2.5.0-dev-10106.jar",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382",
+        "version": "2.5.0-dev-10106",
+        "verified": true
+      },
+      {
+        "id": "daemon",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+        "file": "kotlin-daemon-embeddable-2.5.0-dev-10106.jar",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365",
+        "version": "2.5.0-dev-10106",
+        "verified": true
+      },
+      {
+        "id": "stdlib-wasi",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+        "file": "kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942",
+        "version": "2.5.0-dev-10106",
+        "verified": true
+      },
+      {
+        "id": "stdlib-js",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "file": "kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d",
+        "version": "2.5.0-dev-10106",
+        "verified": true
+      },
+      {
+        "id": "reflect",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar",
+        "file": "kotlin-reflect-1.6.10.jar",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203",
+        "version": "1.6.10",
+        "verified": true
+      },
+      {
+        "id": "coroutines",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar",
+        "file": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5",
+        "version": "1.8.0",
+        "verified": true
+      },
+      {
+        "id": "annotations",
+        "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "file": "annotations-13.0.jar",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478",
+        "version": "13.0",
+        "verified": true
+      }
+    ],
+    "classPath": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+    "wasmWasiStdlib": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-wasi-2.5.0-dev-10106.klib",
+    "wasmJsStdlib": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib"
+  },
+  "preparedReceiptSha256": "39fa788845cf04d7de27fd1bb10f93f76b253ea6f54e04361230926c1b2436f7",
+  "builtReceiptSha256": "951f85ff3a444c45d6074c28084d3ae75dff610b3487b315276f9f55ca681c7d",
+  "commands": [
+    {
+      "label": "original-support",
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/original-support.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/types/sources/core/util.runtime/src/org/jetbrains/kotlin/utils/exceptionUtils.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/types/host/storage/ProcessCanceledException.kt"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "label": "original-java",
+      "command": "javac",
+      "args": [
+        "-J-Xmx512m",
+        "-proc:none",
+        "-source",
+        "17",
+        "-target",
+        "17",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/original-support.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/originals",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeSubstitutor.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionImpl.java",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionBase.java"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "label": "original-caller-compile",
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/originals:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/original-support.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/original-probe.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/GetterProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/types/common/TypeImplementationProperties.kt"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "label": "common-without-bridge-compile",
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/build/type-implementation.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/negative.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/GetterProbe.kt"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1
+    },
+    {
+      "label": "common-with-bridge-compile",
+      "command": "java",
+      "args": [
+        "-Xmx1g",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/build/type-implementation.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/TypeSubstitutorProperties.kt",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/common-probe.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/GetterProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/TypeSubstitutorProperties.kt"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "label": "original-observations",
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/original-probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/originals:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/original-support.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.typegetter.probe.GetterProbeKt"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "label": "common-observations",
+      "command": "java",
+      "args": [
+        "-ea",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/common-probe.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-type-getter-runtime-2/build/type-implementation.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.typegetter.probe.GetterProbeKt"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "GetterProbe.kt",
+      "bytes": 2038,
+      "sha256": "aecc6c86d3f6b545c83b97efce3d321716c7ea9a008edafd9185828701f2002a"
+    },
+    {
+      "path": "TypeSubstitutorProperties.kt",
+      "bytes": 223,
+      "sha256": "b3bcc17316e431ef0536a6a936a0c39ae3ad8fd424b0bc29d70b55aedcfb56be"
+    },
+    {
+      "path": "build/receipt.json",
+      "bytes": 7075,
+      "sha256": "951f85ff3a444c45d6074c28084d3ae75dff610b3487b315276f9f55ca681c7d"
+    },
+    {
+      "path": "build/type-implementation.jar",
+      "bytes": 21398,
+      "sha256": "046be68053fbad0b302bf37c31e676ecf9e438ccb8d2979d72cc5c62e28d461e"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 14626,
+      "sha256": "e362dcf16677da100a088a0ce6c1ed93a3b01a9231662ea40c64bad67e9fca35"
+    },
+    {
+      "path": "common-observations.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "common-observations.stdout",
+      "bytes": 186,
+      "sha256": "4e9a77044835583454d638f9b669c2c69878010e1805f81da40bdc99d95722a0"
+    },
+    {
+      "path": "common-probe.jar",
+      "bytes": 4947,
+      "sha256": "e5188981d716cbcfa081d7d577845f050cba5708ea3f9dc57528273ddc3193df"
+    },
+    {
+      "path": "common-with-bridge-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "common-with-bridge-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "common-without-bridge-compile.stderr",
+      "bytes": 235,
+      "sha256": "0fc318318d2fb71b80e7be201df60901a7883f6bb2d11a6c70ee0caebaa13dd0"
+    },
+    {
+      "path": "common-without-bridge-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-caller-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-caller-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-java.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-java.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-observations.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-observations.stdout",
+      "bytes": 186,
+      "sha256": "4e9a77044835583454d638f9b669c2c69878010e1805f81da40bdc99d95722a0"
+    },
+    {
+      "path": "original-probe.jar",
+      "bytes": 4946,
+      "sha256": "ccb04aa74d72ffc860e1d39aa1eb0238d55364a5385df477733e11f38fdc9186"
+    },
+    {
+      "path": "original-support.jar",
+      "bytes": 2198,
+      "sha256": "202f35eb9a6e50e29c531fd769eb76706e33e3dcd675085350558be54ba233fb"
+    },
+    {
+      "path": "original-support.stderr",
+      "bytes": 1563,
+      "sha256": "1d4a48385ef7ce9494bc607d85fbd4661870cdb1dfdf5629b8f8989bff0b441f"
+    },
+    {
+      "path": "original-support.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeProjectionBase.class",
+      "bytes": 1825,
+      "sha256": "eb6834125e7b3d2f8690f13eb0cb5678aa6caf5acf886854102f701cec5492b7"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeProjectionImpl.class",
+      "bytes": 1874,
+      "sha256": "a3ba24c43e3df0d4809456662451596c38181b9675fa382fc2c5e90c3dec1c90"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeSubstitutor$1.class",
+      "bytes": 1366,
+      "sha256": "1b8381219bda6e798664be3434002322f21782929a77dd09cebf88655054b4b8"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeSubstitutor$2.class",
+      "bytes": 966,
+      "sha256": "b9310c319b6efce19010e73b16be565060f9ab3f044aa5c6dccf637cc68906a8"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeSubstitutor$SubstitutionException.class",
+      "bytes": 401,
+      "sha256": "fca52567ad282b0a35a4c0265501ae292523c26a1c78f106aabf3a98582acae7"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeSubstitutor$VarianceConflictType.class",
+      "bytes": 1373,
+      "sha256": "da796cb5dca119a29d447e14ec490271273e5e1ad64b6ec352317e36455ca902"
+    },
+    {
+      "path": "originals/org/jetbrains/kotlin/types/TypeSubstitutor.class",
+      "bytes": 16676,
+      "sha256": "5ecb15d1f300b11c214bdaf7e68d93f21b904cca07b6be2c6754c06eef28ad19"
+    },
+    {
+      "path": "types/common/TypeImplementationProperties.kt",
+      "bytes": 251,
+      "sha256": "b0ceaa1ac00305ee3a09a9faf31ec60ae4566b0ea6b7015a73c7c1a3ea942519"
+    },
+    {
+      "path": "types/common/TypeProjectionBase.kt",
+      "bytes": 1184,
+      "sha256": "6355f1ff713e9818f099eb47f3c45efe39953135e3fcf215ea97fe2040e6748b"
+    },
+    {
+      "path": "types/common/TypeProjectionImpl.kt",
+      "bytes": 952,
+      "sha256": "a15ca883f764d1c261fe2f54048fcd879025787bad478031ba627ad7051b23f7"
+    },
+    {
+      "path": "types/common/TypeSubstitutor.kt",
+      "bytes": 15502,
+      "sha256": "c9832ba7242ca76f4d5c45da83e3f62f68bbf95b008e05b4f0f51371a3bc804e"
+    },
+    {
+      "path": "types/host/assertions/CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf"
+    },
+    {
+      "path": "types/host/storage/ProcessCanceledException.kt",
+      "bytes": 246,
+      "sha256": "95af72995f7003c89e307794806b3433a87cf79a7bbde9fb590686a44252e2b0"
+    },
+    {
+      "path": "types/host/storage/exceptionUtils.kt",
+      "bytes": 614,
+      "sha256": "9080ec3d34b3dfed8efc2345d8fa5dfcca9d9adc0080c321cc4cb3303bf31236"
+    },
+    {
+      "path": "types/receipt.json",
+      "bytes": 11810,
+      "sha256": "39fa788845cf04d7de27fd1bb10f93f76b253ea6f54e04361230926c1b2436f7"
+    },
+    {
+      "path": "types/sources/core/compiler.common/src/org/jetbrains/kotlin/builtins/StandardNames.kt",
+      "bytes": 16262,
+      "sha256": "9f48f783d1cf74aead25338bd26c1e9fd9daab713b87dc36796d66bf5ecdeb88"
+    },
+    {
+      "path": "types/sources/core/compiler.common/src/org/jetbrains/kotlin/types/AbstractTypeRefiner.kt",
+      "bytes": 1384,
+      "sha256": "e25d124a155cdd07a35b5a3900bf773261c0a1b979de3651fd5710c6bf93e487"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/builtins/KotlinBuiltIns.java",
+      "bytes": 39456,
+      "sha256": "f950ea25cce69e3ff73f349954c9667ddf4305980aa62403afb807d60ff24fa1"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/descriptors/annotations/Annotations.kt",
+      "bytes": 4354,
+      "sha256": "cc3619fcc0aa6605d0f6f0d4c693cf2173474182d82854130ccfd2140b62ebbe"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/resolve/calls/inference/CapturedTypeConstructor.kt",
+      "bytes": 6206,
+      "sha256": "6238c16f0e91e1afb4e4a6df976201ca17a2efa20126afd70a2dce8595e9f621"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/CapturedTypeApproximation.kt",
+      "bytes": 8408,
+      "sha256": "ce6c968d64d300a72db7c20e1bf59e40f5ca1ad51fc26c6c48314a58e3ec9d5b"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/DisjointKeysUnionTypeSubstitution.kt",
+      "bytes": 1863,
+      "sha256": "68d400546511908a7e975fe605cf6907f5f258f8778d696199b81f1bc41c66bb"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/KotlinType.kt",
+      "bytes": 9169,
+      "sha256": "59fb00675007bea26f393fd1bc3819969a4e8c93e75a046d8d7b4d083869181d"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/SpecialTypes.kt",
+      "bytes": 10236,
+      "sha256": "9b38e23f9ab2d42249e13b8f23d2789e0f6de2e5fee01e0c6dadee38ca45b7b1"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/StarProjectionImpl.kt",
+      "bytes": 3816,
+      "sha256": "d0b57f5711a8c40ab480d515600e4729c3373cc3ada60c42f1a028f9cba78b11"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeCapabilities.kt",
+      "bytes": 2274,
+      "sha256": "f4d27b2f7876f052f60933821c5df5f17320049935e7f89f29da76c46378cb25"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeProjection.java",
+      "bytes": 1165,
+      "sha256": "daae514701639e77b2c99cc685d415655399726af65b5a292a25cf93808ba86c"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionBase.java",
+      "bytes": 1754,
+      "sha256": "2ed638bf6088390775d884563ddd785bafe76ed6c2d2d4f737596944ff27460c"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeProjectionImpl.java",
+      "bytes": 1807,
+      "sha256": "d3dbc372dee5aa4291ccb5a151f826d56bab77bde8ba2dadb457f63321c86498"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeSubstitution.kt",
+      "bytes": 8245,
+      "sha256": "574ec9b169b1612edba772ffff061de868521c3a39c397988a53712f13033640"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeSubstitutor.java",
+      "bytes": 20950,
+      "sha256": "a57164b4548a456d66237249bed1963c4cec60b30ef0db2917b3cbaa6016ac1b"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeUtils.java",
+      "bytes": 24761,
+      "sha256": "254c09a833f773a5e78f8a9300fae519b0884125c4ad77eed5ea451b545832d0"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeUtils.kt",
+      "bytes": 17090,
+      "sha256": "b47667fafcaee797cfb2adddf241c6b0e3ca3c7c59c016956879e328e345ceb7"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/TypeWithEnhancement.kt",
+      "bytes": 6673,
+      "sha256": "e621e876f57dfb7a2cb2ab3d3cbf80de72ba380037f26f7fd31b04bfa18599fc"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/checker/KotlinTypeRefiner.kt",
+      "bytes": 3307,
+      "sha256": "8f07bded85ab45a512fb40dfaada76e8e7cfb8a1ba0dbf4e1510fabf9c941d9b"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/checker/NewCapturedType.kt",
+      "bytes": 13310,
+      "sha256": "23da6cc6e73ad9fbed5c10d1c973234cd3c9abd0dee3f4871f76857d4072024d"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/dynamicTypes.kt",
+      "bytes": 2424,
+      "sha256": "00757cb992b27188f66d4127b32e7746719b9bb67f76d5cd93221beb705ffc73"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/error/ErrorTypeKind.kt",
+      "bytes": 6718,
+      "sha256": "523cf2f461611539b9a4a564142be6efcd9d7caf973545a6ab3e3f6ac9f17f2e"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/error/ErrorUtils.kt",
+      "bytes": 5184,
+      "sha256": "ad8e343e766de73b2eeb44579b40e50711e88bdd280e43f3308144f61c7430be"
+    },
+    {
+      "path": "types/sources/core/descriptors/src/org/jetbrains/kotlin/types/flexibleTypes.kt",
+      "bytes": 7609,
+      "sha256": "c3dd8a08af5e24894379365af911335a1101d933e96850b5ab027b3fefdfdd32"
+    },
+    {
+      "path": "types/sources/core/util.runtime/src/org/jetbrains/kotlin/utils/exceptionUtils.kt",
+      "bytes": 1464,
+      "sha256": "bd46cf2854629ac2a18fe8485b0f664f23958fce6737813cdee808030a1c7fd6"
+    }
+  ],
+  "negativeCommonMetadataCompile": "Exactly one compiler error at substitutor.isEmpty without the bridge; same caller succeeds with the shipping bridge.",
+  "dependencies": "Genuine verified bootstrap JVM type-system/builtins dependencies; full original and common TypeSubstitutor and projections are freshly compiled.",
+  "fullConsumerClassesCompiled": false,
+  "fullCommonClassesWasmExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}

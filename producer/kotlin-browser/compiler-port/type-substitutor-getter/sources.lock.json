@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-type-substitutor-getter",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "originals": [
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/types/TypeSubstitutor.java",
+      "gitBlob": "49f8622a8cc5feab2f46001bbd0f9ed3c8adf1af",
+      "bytes": 20950,
+      "language": "java",
+      "compile": false,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "a57164b4548a456d66237249bed1963c4cec60b30ef0db2917b3cbaa6016ac1b"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/ValueParameterDescriptorImpl.kt",
+      "gitBlob": "787dbbabec57483d4788135cc6baf5532fcc1f83",
+      "bytes": 6293,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "54abb91e786088aa289f75206a63f74fdfddc5cca57112c576a79e8ceaceec82"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/SubstitutingScope.kt",
+      "gitBlob": "edf910dd96e222cffd6b7822d88e2603af362f82",
+      "bytes": 4681,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "65480c84afa3265433b89970cf346d4242cc762de783ed7d054934cab658c1b7"
+    },
+    {
+      "path": "core/deserialization/src/org/jetbrains/kotlin/serialization/deserialization/descriptors/DeserializedMemberDescriptor.kt",
+      "gitBlob": "ea85f3067796098cde908ea72661e5dc5737c5e7",
+      "bytes": 8955,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/deserialization",
+      "sha256": "6a8bee651e24a204c930111de3cb6dcfb0ba726b5cb9b2267d9c63b9b57f8978"
+    }
+  ],
+  "selected": [
+    {
+      "path": "compiler-port-type-implementation/common/TypeSubstitutor.kt",
+      "bytes": 15502,
+      "sha256": "c9832ba7242ca76f4d5c45da83e3f62f68bbf95b008e05b4f0f51371a3bc804e",
+      "gitBlob": "ad15fcfc0a4eba8866eebd840ad19809044be6af",
+      "localPath": "../type-implementation/TypeSubstitutor.kt",
+      "calls": []
+    },
+    {
+      "path": "compiler-port-type-implementation/common/TypeImplementationProperties.kt",
+      "bytes": 251,
+      "sha256": "b0ceaa1ac00305ee3a09a9faf31ec60ae4566b0ea6b7015a73c7c1a3ea942519",
+      "gitBlob": "0ae66ac6b9dec984041d1d6d9e9b48a88e62f774",
+      "localPath": "../type-implementation/TypeImplementationProperties.kt",
+      "calls": []
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/ValueParameterDescriptorImpl.kt",
+      "bytes": 6504,
+      "sha256": "3e4f79fc5edd3bd8bf3b293c2c9121132a6dab0e0da4c3ffa81e678e22b9719e",
+      "gitBlob": "fe49cce955c0c929fbdcdb3253bdddc50ed4d0f5",
+      "calls": [
+        {
+          "expression": "substitutor.isEmpty",
+          "context": "if (substitutor.isEmpty) return this"
+        }
+      ]
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/SubstitutingScope.kt",
+      "bytes": 4681,
+      "sha256": "65480c84afa3265433b89970cf346d4242cc762de783ed7d054934cab658c1b7",
+      "gitBlob": "edf910dd96e222cffd6b7822d88e2603af362f82",
+      "calls": [
+        {
+          "expression": "capturingSubstitutor.isEmpty",
+          "context": "if (capturingSubstitutor.isEmpty) return type"
+        },
+        {
+          "expression": "capturingSubstitutor.isEmpty",
+          "context": "if (capturingSubstitutor.isEmpty) return descriptor"
+        },
+        {
+          "expression": "capturingSubstitutor.isEmpty",
+          "context": "if (capturingSubstitutor.isEmpty) return descriptors"
+        }
+      ]
+    },
+    {
+      "path": "core/deserialization/src/org/jetbrains/kotlin/serialization/deserialization/descriptors/DeserializedMemberDescriptor.kt",
+      "bytes": 8955,
+      "sha256": "6a8bee651e24a204c930111de3cb6dcfb0ba726b5cb9b2267d9c63b9b57f8978",
+      "gitBlob": "ea85f3067796098cde908ea72661e5dc5737c5e7",
+      "calls": [
+        {
+          "expression": "substitutor.isEmpty",
+          "context": "if (substitutor.isEmpty) return this"
+        }
+      ]
+    }
+  ],
+  "helper": {
+    "path": "TypeSubstitutorProperties.kt",
+    "bytes": 223,
+    "sha256": "b3bcc17316e431ef0536a6a936a0c39ae3ad8fd424b0bc29d70b55aedcfb56be",
+    "gitBlob": "d9b4f0fb8644e8f0da465503c7ad6ee15206f15f"
+  },
+  "dependencies": [
+    {
+      "path": "../type-implementation/sources.lock.json",
+      "bytes": 11569,
+      "sha256": "917ef4e40b07faf5bf73800cda13bea9a832dcaa0f459cecb8f031dca27bbaaf",
+      "gitBlob": "74905ab74678024324518c2b16f91f331c01e45b"
+    },
+    {
+      "path": "../type-implementation/prepare.mjs",
+      "bytes": 9620,
+      "sha256": "e3fa67449d3282a2e731c01896625a1805b1fead6f66234bbacb9720ffa5a167",
+      "gitBlob": "770f38515f4de05f369c770bb4f107998b932482"
+    },
+    {
+      "path": "../type-implementation/build.mjs",
+      "bytes": 3777,
+      "sha256": "1ea48473f74355e1968fbe5fa665222ff54751a7747347ce5347c122b3bd891d",
+      "gitBlob": "7e9244b418ac89e4e98fe924e9f9bdd89355da35"
+    },
+    {
+      "path": "../descriptor-base-implementations/sources.lock.json",
+      "bytes": 8595,
+      "sha256": "51ee4c5a6647fb923eb3038556b21269760d133eff9e5c85d9aa1092b298a74d",
+      "gitBlob": "908e4498d4172513ddba33950113277acc3ef690"
+    },
+    {
+      "path": "../descriptor-base-implementations/prepare.mjs",
+      "bytes": 12276,
+      "sha256": "1ed033b527b4aa80624ebd78fdf1ac591a13350bcbe68a48cacdfef874dc384e",
+      "gitBlob": "c627575448f01355d1ca357928b1861f150ffc86"
+    },
+    {
+      "path": "../descriptor-base-implementations/transform.mjs",
+      "bytes": 1349,
+      "sha256": "4550fb88c0037adeee692a39f587e8ffd7d3bfc05a5f9d571edb68c644b8d0f0",
+      "gitBlob": "6a752aff6b6637213e5ce4d98f75ce6585eb76ea"
+    },
+    {
+      "path": "../descriptor-visitor-contract/sources.lock.json",
+      "bytes": 42148,
+      "sha256": "a3651d4918cb7263cd65b852acff634a7f58ad27725d2f8b2092547b2889bc9e",
+      "gitBlob": "24c107d4f4fd92951fbc70a1d63f44bebc7effee"
+    },
+    {
+      "path": "../descriptor-platform-signatures/transform.mjs",
+      "bytes": 7765,
+      "sha256": "4b4d7a3cd81112d404a58e86ee06fde0dc8ec4c3a729aaef599ab97233b0eac3",
+      "gitBlob": "a03b37e4bd63dbdd8698bd1e44d84f354da14aef"
+    },
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../../build/bootstrap.mjs",
+      "bytes": 10590,
+      "sha256": "34fc441f041feecb1304be12e7709cc2dd3136791d2479cc66d13153495f97ef",
+      "gitBlob": "0b033a6ad55646928cb0f10794696045caebd3a0"
+    },
+    {
+      "path": "../build-flags.json",
+      "bytes": 16246,
+      "sha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+      "gitBlob": "b2c7c41886742ce8c4e7b24146fc4230aa8594e6"
+    }
+  ]
+}
