@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "kind": "full-genuine-fir-tower-group-jvm-wasm-differential",
+  "artifactRoot": "out/kotlin-tower-group-1791706239100609917",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "c85d0075975d066306d9000d71572f5e96dd433977ba5c73ad07c83f7f809a72",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-fir-tower-group-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "c85d0075975d066306d9000d71572f5e96dd433977ba5c73ad07c83f7f809a72",
+    "preparationToolSha256": "7a9f2906ce7063e64e53e067de95b4e0bd30cf9d71814dea09388706debb9dd6",
+    "original": {
+      "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+      "gitBlob": "20c61d2ede419157458dcaecdf833e9115685c80",
+      "bytes": 17696,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/resolve",
+      "sha256": "b7625e3e0e56318d9ae3d1df817145973007a3e4547446234749791af3cf2ce5"
+    },
+    "files": [
+      {
+        "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+        "bytes": 17762,
+        "sha256": "4c4baa9e175a230e89ac356c1bfef6a5ca04d242ab237c32c87ae8e05742651c",
+        "gitBlob": "9ea09d7287fc5a2195b5f62c0c64411146fb9743"
+      },
+      {
+        "path": "compiler-port-tower-group/TowerGroupNumbers.kt",
+        "bytes": 267,
+        "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5",
+        "gitBlob": "cdf8525cd9f5f4d10227abdb07589d138241c504",
+        "outputPath": "compiler-port-tower-group/TowerGroupNumbers.kt"
+      }
+    ],
+    "recipe": [
+      [
+        "import java.lang.Long.compareUnsigned",
+        "import org.jetbrains.kotlin.portable.tower.compareUnsigned",
+        1
+      ],
+      [
+        "import java.lang.Long.toBinaryString",
+        "import org.jetbrains.kotlin.portable.tower.toBinaryString",
+        1
+      ],
+      [
+        "if (javaClass != other?.javaClass) return false",
+        "if (other == null || this::class != other::class) return false",
+        2
+      ],
+      [
+        "Integer.bitCount(KIND_MASK)",
+        "KIND_MASK.countOneBits()",
+        1
+      ],
+      [
+        "Integer.bitCount(DEPTH_MASK)",
+        "DEPTH_MASK.countOneBits()",
+        1
+      ],
+      [
+        "java.lang.Long.numberOfLeadingZeros(USED_BITS_MASK)",
+        "USED_BITS_MASK.countLeadingZeroBits()",
+        1
+      ],
+      [
+        "invokeResolvePriority.compareTo(other.invokeResolvePriority)",
+        "invokeResolvePriority.ordinal - other.invokeResolvePriority.ordinal",
+        2
+      ]
+    ],
+    "originalAlgorithmsRetained": true,
+    "upstreamNegativeDepthAndReceiverEqualityRetained": true,
+    "hashCodeContract": "Native enum hash identity retained; raw enum hash integers are host-specific.",
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "finalReceipt": {
+    "schemaVersion": 1,
+    "kind": "genuine-fir-tower-group-final",
+    "sourceLockSha256": "c85d0075975d066306d9000d71572f5e96dd433977ba5c73ad07c83f7f809a72",
+    "receiptSha256": "cb9f8c252bce36ce2e094c4df5a98bb753da6719ab2b83618e757ab26afcdcd7",
+    "checked": [
+      {
+        "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+        "bytes": 17762,
+        "sha256": "4c4baa9e175a230e89ac356c1bfef6a5ca04d242ab237c32c87ae8e05742651c"
+      },
+      {
+        "path": "compiler-port-tower-group/TowerGroupNumbers.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler-port-tower-group/TowerGroupNumbers.kt",
+        "bytes": 267,
+        "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5"
+      }
+    ],
+    "exactBodyAndOwnerVerified": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "inputs": [
+    {
+      "path": "Probe.kt",
+      "bytes": 4507,
+      "sha256": "1065ada0e11c403404197b32342a85e6df6453742120423b674a2162a4703dd0"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 150,
+      "sha256": "21d2a65e87b0b0db3bc9f136218cb930aaa1294b1eaf90603902339700eada4c"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 203,
+      "sha256": "7e70c582b8e349080428c8b6ebd5596a79949c015645bfea78579a453a64aaf1"
+    },
+    {
+      "path": "TowerGroupNumbers.kt",
+      "bytes": 267,
+      "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5"
+    },
+    {
+      "path": "check.mjs",
+      "bytes": 7746,
+      "sha256": "cb235cf407d4c34774d4edbf64a00e84fff7d97d12f942bdd18d20a8b46bbbff"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 6379,
+      "sha256": "7a9f2906ce7063e64e53e067de95b4e0bd30cf9d71814dea09388706debb9dd6"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 2565,
+      "sha256": "ae38b752905f0c0403c8ed13cf52807adb9fb21f0a1588588fcc02084b904273"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 2680,
+      "sha256": "c85d0075975d066306d9000d71572f5e96dd433977ba5c73ad07c83f7f809a72"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 150,
+      "sha256": "21d2a65e87b0b0db3bc9f136218cb930aaa1294b1eaf90603902339700eada4c"
+    },
+    {
+      "path": "Original.kt",
+      "bytes": 17696,
+      "sha256": "b7625e3e0e56318d9ae3d1df817145973007a3e4547446234749791af3cf2ce5"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 4507,
+      "sha256": "1065ada0e11c403404197b32342a85e6df6453742120423b674a2162a4703dd0"
+    },
+    {
+      "path": "TowerGroupNumbers.kt",
+      "bytes": 267,
+      "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 203,
+      "sha256": "7e70c582b8e349080428c8b6ebd5596a79949c015645bfea78579a453a64aaf1"
+    },
+    {
+      "path": "common-observations.txt",
+      "bytes": 182408,
+      "sha256": "6b320036038b4d73901ac74a797c657fc5b6e91b06dc7bce1850ab0a35ac04a3"
+    },
+    {
+      "path": "jvm/common.jar",
+      "bytes": 31575,
+      "sha256": "5636802fa3c8d3be1144f6aea1e4612743235d84eae63925412948f472ad51a7"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 31017,
+      "sha256": "a9ff86277b003ad661a3a5b0a42dbf61e8678da2d24b796ef96c9765ed613c24"
+    },
+    {
+      "path": "klib/tower-group.klib",
+      "bytes": 36407,
+      "sha256": "b851c69941b49d4db7722323434297aa157a7d4b6ca3df009cb402c777d73d41"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 182408,
+      "sha256": "6b320036038b4d73901ac74a797c657fc5b6e91b06dc7bce1850ab0a35ac04a3"
+    },
+    {
+      "path": "prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+      "bytes": 17762,
+      "sha256": "4c4baa9e175a230e89ac356c1bfef6a5ca04d242ab237c32c87ae8e05742651c"
+    },
+    {
+      "path": "prepared/compiler-port-tower-group/TowerGroupNumbers.kt",
+      "bytes": 267,
+      "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5"
+    },
+    {
+      "path": "prepared/receipt.json",
+      "bytes": 2632,
+      "sha256": "cb9f8c252bce36ce2e094c4df5a98bb753da6719ab2b83618e757ab26afcdcd7"
+    },
+    {
+      "path": "prepared/reference-original/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+      "bytes": 17696,
+      "sha256": "b7625e3e0e56318d9ae3d1df817145973007a3e4547446234749791af3cf2ce5"
+    },
+    {
+      "path": "wasm/tower-group.import-object.mjs",
+      "bytes": 9486,
+      "sha256": "834c88b9b8555f7bf8223dfcdc5cb3133edc06934a33c2d0f3984b5dcd0093e9"
+    },
+    {
+      "path": "wasm/tower-group.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/tower-group.mjs",
+      "bytes": 2267,
+      "sha256": "8df95342ee23460356a00b264abb1b01c7b940c358b16e6173acfd1277f50784"
+    },
+    {
+      "path": "wasm/tower-group.wasm",
+      "bytes": 744440,
+      "sha256": "5242b4d746ae97ecb56da01f5f164b9cd78f1152ee423ed69c4f778fe54d6ba9"
+    },
+    {
+      "path": "wasm-observations.txt",
+      "bytes": 182408,
+      "sha256": "6b320036038b4d73901ac74a797c657fc5b6e91b06dc7bce1850ab0a35ac04a3"
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-complete-tower-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/Original.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-complete-tower-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.tower.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-complete-tower-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/jvm/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler-port-tower-group/TowerGroupNumbers.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-complete-tower-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.tower.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "complete-tower-wasm-klib-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler-port-tower-group/TowerGroupNumbers.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/Probe.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/klib",
+        "-ir-output-name",
+        "tower-group",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/prepared/compiler-port-tower-group/TowerGroupNumbers.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "complete-tower-wasm-module-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/klib/tower-group.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/wasm",
+        "-ir-output-name",
+        "tower-group",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "complete-tower-node-wasm-observe",
+      "command": [
+        "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);process.stdout.write(m.towerGroupObservation());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-tower-group-1791706239100609917/wasm/tower-group.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "comparison": {
+    "records": 7156,
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsFullNodeWasm": true,
+    "fullSourceExecuted": true,
+    "methodProjection": false,
+    "normalizedText": false,
+    "rawSha256": "6b320036038b4d73901ac74a797c657fc5b6e91b06dc7bce1850ab0a35ac04a3"
+  },
+  "scope": "Complete priority/encoding/equality APIs, all kind pairs including subclass classifier identity, signed depths, invoke receiver pairs, overflow rejection and exact messages, binary strings and public debug-kind comparator.",
+  "limitations": [
+    "Native enum hash integers are host-specific; only within-host stability is observed, not raw enum hash parity.",
+    "The genuine DEBUG=false source is executed unchanged; private DEBUG=true dispatch and full FIR resolution are not executed.",
+    "Upstream negative depths and asymmetric null receiver equality are retained, not repaired."
+  ],
+  "browserExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false,
+  "execution": {
+    "status": {
+      "state": "exited",
+      "pid": 3641609,
+      "exitCode": 0,
+      "durationSeconds": 63.642802000045776
+    },
+    "files": [
+      {
+        "path": "/home/seorii/logs/kotlin-tower-group-1791706239100609917.log",
+        "bytes": 5512,
+        "sha256": "173b64a64f942b380baf82b9f12bc3ee33b751b8a2f6a561fbde38ecae41a973"
+      },
+      {
+        "path": "/home/seorii/logs/kotlin-tower-group-1791706239100609917.status.json",
+        "bytes": 90,
+        "sha256": "344d9c49a031e365c95ddbc64a2568a5d58d8468db065e63db0a9fc007e63aef"
+      },
+      {
+        "path": "/tmp/kotlin-tower-group-1791706239100609917.py",
+        "bytes": 688,
+        "sha256": "8f3515210ca88f5bb7a243495f57d9e200cdfd11d52634ba80a7dc960d9a2d29"
+      }
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-fir-tower-group-common-host",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "original": {
+    "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+    "gitBlob": "20c61d2ede419157458dcaecdf833e9115685c80",
+    "bytes": 17696,
+    "language": "kotlin",
+    "compile": true,
+    "role": "source",
+    "module": "compiler/fir/resolve",
+    "sha256": "b7625e3e0e56318d9ae3d1df817145973007a3e4547446234749791af3cf2ce5"
+  },
+  "output": {
+    "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/calls/tower/TowerGroup.kt",
+    "bytes": 17762,
+    "sha256": "4c4baa9e175a230e89ac356c1bfef6a5ca04d242ab237c32c87ae8e05742651c",
+    "gitBlob": "9ea09d7287fc5a2195b5f62c0c64411146fb9743"
+  },
+  "numbers": {
+    "path": "TowerGroupNumbers.kt",
+    "bytes": 267,
+    "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5",
+    "gitBlob": "cdf8525cd9f5f4d10227abdb07589d138241c504",
+    "outputPath": "compiler-port-tower-group/TowerGroupNumbers.kt"
+  },
+  "recipe": [
+    [
+      "import java.lang.Long.compareUnsigned",
+      "import org.jetbrains.kotlin.portable.tower.compareUnsigned",
+      1
+    ],
+    [
+      "import java.lang.Long.toBinaryString",
+      "import org.jetbrains.kotlin.portable.tower.toBinaryString",
+      1
+    ],
+    [
+      "if (javaClass != other?.javaClass) return false",
+      "if (other == null || this::class != other::class) return false",
+      2
+    ],
+    [
+      "Integer.bitCount(KIND_MASK)",
+      "KIND_MASK.countOneBits()",
+      1
+    ],
+    [
+      "Integer.bitCount(DEPTH_MASK)",
+      "DEPTH_MASK.countOneBits()",
+      1
+    ],
+    [
+      "java.lang.Long.numberOfLeadingZeros(USED_BITS_MASK)",
+      "USED_BITS_MASK.countLeadingZeroBits()",
+      1
+    ],
+    [
+      "invokeResolvePriority.compareTo(other.invokeResolvePriority)",
+      "invokeResolvePriority.ordinal - other.invokeResolvePriority.ordinal",
+      2
+    ]
+  ],
+  "dependencies": [
+    {
+      "path": "transform.mjs",
+      "bytes": 2565,
+      "sha256": "ae38b752905f0c0403c8ed13cf52807adb9fb21f0a1588588fcc02084b904273",
+      "gitBlob": "b712464866e82b4beefbd60af76f1b170ac83bf1"
+    },
+    {
+      "path": "TowerGroupNumbers.kt",
+      "bytes": 267,
+      "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5",
+      "gitBlob": "cdf8525cd9f5f4d10227abdb07589d138241c504"
+    }
+  ]
+}

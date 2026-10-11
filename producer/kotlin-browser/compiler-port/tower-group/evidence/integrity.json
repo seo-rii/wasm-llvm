@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-tower-group-integrity",
+  "actualPredecessorSources": 3524,
+  "actualPortSources": 3525,
+  "tests": 7,
+  "passed": 7,
+  "failed": 0,
+  "skipped": 0,
+  "execution": {
+    "status": {
+      "state": "exited",
+      "pid": 3825001,
+      "exitCode": 0,
+      "durationSeconds": 2.4819390773773193
+    },
+    "command": [
+      "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+      "--test",
+      "producer/kotlin-browser/compiler-port/tower-group/integrity.test.mjs"
+    ],
+    "files": [
+      {
+        "path": "/home/seorii/logs/kotlin-tower-group-guards-1791706300214950366.log",
+        "bytes": 707,
+        "sha256": "649838f6dcc467255d7ec5adfacaee6f83d1370dcd3547141b9633c230d4bb43"
+      },
+      {
+        "path": "/home/seorii/logs/kotlin-tower-group-guards-1791706300214950366.status.json",
+        "bytes": 90,
+        "sha256": "ddf0a1c89cb9a314c978ac1ad76298afe8c08c184cc568f62997812eff70ce6b"
+      },
+      {
+        "path": "/tmp/kotlin-tower-group-guards-1791706300214950366.py",
+        "bytes": 632,
+        "sha256": "3ed40168d448e19469e22c9bda8431105537f5be3ee9ed64be71e0595ebe9273"
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "path": "integrity.test.mjs",
+      "bytes": 7866,
+      "sha256": "f17aac47be29b62a287a4180bdea6059131040766e5c498f195ff3eb60248b4f"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 6379,
+      "sha256": "7a9f2906ce7063e64e53e067de95b4e0bd30cf9d71814dea09388706debb9dd6"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 2565,
+      "sha256": "ae38b752905f0c0403c8ed13cf52807adb9fb21f0a1588588fcc02084b904273"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 2680,
+      "sha256": "c85d0075975d066306d9000d71572f5e96dd433977ba5c73ad07c83f7f809a72"
+    },
+    {
+      "path": "TowerGroupNumbers.kt",
+      "bytes": 267,
+      "sha256": "007fec0b3ef87f05773f2da214aea4a68a8a0aa8bd7726a5584d31cbb96fcbb5"
+    }
+  ],
+  "guards": "Nine-span full-source roundtrip; exact actual roster; rehashed body corruption; snapshot/receipt reauthoring; missing/duplicate/switched owners; exact/duplicate/unrecorded imports; reused/overlapping roots. Restored positives also verified.",
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}
