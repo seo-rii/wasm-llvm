@@ -88,6 +88,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let firSyntaxLightTreeComposition;
   let descriptorFunctionComposition;
   let descriptorKindFilterComposition;
+  let firPredicateComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -400,6 +401,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           const component = await tower.prepareTowerGroup({ sourceRoot, outputRoot });
           towerGroupComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
           await tower.verifyTowerGroup(towerGroupComposition);
+          return component;
+        }],
+        ['firPredicateCollectionsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const predicates = await import('./fir-predicate-collections/prepare.mjs');
+          const component = await predicates.prepareFirPredicateCollections({ sourceRoot, outputRoot });
+          firPredicateComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await predicates.verifyFirPredicateCollections(firPredicateComposition);
           return component;
         }],
         ['performanceManagerReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1431,6 +1439,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const tower = await import('./tower-group/prepare.mjs');
       receipt.towerGroupFinalReceipt = await tower.verifyFinalTowerGroup({
         ...towerGroupComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const predicates = await import('./fir-predicate-collections/prepare.mjs');
+      receipt.firPredicateCollectionsFinalReceipt = await predicates.verifyFinalFirPredicateCollections({
+        ...firPredicateComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
