@@ -89,6 +89,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorFunctionComposition;
   let descriptorKindFilterComposition;
   let firPredicateComposition;
+  let descriptorReceiverComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -356,6 +357,20 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           descriptorFunctionComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
           await functions.verifyDescriptorFunctionImplementations(descriptorFunctionComposition);
           assert.equal(component.commonSources.length, 3);
+          return component;
+        }],
+        ['descriptorReceiverFactoryReceipt', async ({ sourceRoot, outputRoot }) => {
+          const receivers = await import('./descriptor-receiver-factory/prepare.mjs');
+          const component = await receivers.prepareDescriptorReceiverFactory({ sourceRoot, outputRoot,
+            preparedDescriptorFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            preparedTypeContracts: preparedComponents.get('typeContractReceipt'),
+            preparedDescriptorContracts: preparedComponents.get('descriptorReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          descriptorReceiverComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await receivers.verifyDescriptorReceiverFactory(descriptorReceiverComposition);
+          assert.equal(component.commonSources.length, 6);
           return component;
         }],
         ['typeSubstitutorGetterReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1386,10 +1401,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const getter = await import('./ir-property-type-getter/prepare.mjs');
       const bases = await import('./descriptor-base-implementations/prepare.mjs');
       const functions = await import('./descriptor-function-implementations/prepare.mjs');
-      const functionFinal = await functions.verifyFinalDescriptorFunctionImplementations({
-        ...descriptorFunctionComposition,
+      const receivers = await import('./descriptor-receiver-factory/prepare.mjs');
+      const receiverFinal = await receivers.verifyFinalDescriptorReceiverFactory({
+        ...descriptorReceiverComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorReceiverFactoryFinalReceipt = receiverFinal.receipt;
+      const functionFinal = await functions.verifyFinalDescriptorFunctionImplementations({
+        ...descriptorFunctionComposition,
+        retainedSources: receiverFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorFunctionImplementationsFinalReceipt = functionFinal.receipt;
