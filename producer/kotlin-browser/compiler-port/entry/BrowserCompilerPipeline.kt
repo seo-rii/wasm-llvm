@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.portable.linker.MemoryKlibInput
 import org.jetbrains.kotlin.portable.linker.requireMemoryKlibFiles
 import org.jetbrains.kotlin.portable.source.LibraryPath
 import org.jetbrains.kotlin.portable.text.compilerUtf8Bytes
+import org.jetbrains.kotlin.util.portable.withPerformanceCounterClock
 import org.jetbrains.kotlin.wasm.config.WasmConfigurationKeys
 import org.jetbrains.kotlin.wasm.config.wasmDisableCrossFileOptimisations
 
@@ -56,8 +57,14 @@ class BrowserCompilerPipeline(
     private val diagnostics: BaseDiagnosticsCollector,
     private val compilerStdout: CompilerByteSink,
     private val sourceMapPathHost: SourceMapPathHost,
+    private val monotonicTimeNanos: () -> Long,
 ) {
-    fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary {
+    fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary =
+        withPerformanceCounterClock(monotonicTimeNanos) {
+            compileRequest(sources, maximumArtifactBytes)
+        }
+
+    private fun compileRequest(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary {
         require(configuration.get(WasmConfigurationKeys.WASM_TARGET) == WasmTarget.WASI)
         require(maximumArtifactBytes > 0)
         val moduleName = requireNotNull(configuration[CommonConfigurationKeys.MODULE_NAME])

@@ -172,6 +172,12 @@ compiled or executed; unresolved real dependency implementations still block
 the compiler host build. It also needs an approved configuration initializer and
 thin JS export boundary before it can be called in a Worker.
 
+The [performance counter port](performance-counter/README.md) retains the complete
+counter algorithms in a single synchronous Worker. The pipeline requires a
+caller-supplied monotonic nanosecond clock and restores the prior clock when the
+request returns or throws. Counter registries belong to the Worker module; fresh
+Workers provide request isolation.
+
 `linker` preserves the official metadata/IR serializer, full-rebuild library
 linking, dependency generation and post-processing while supplying immutable
 memory KLIBs. `backend` retains whole-program Wasm code generation, IR linking
