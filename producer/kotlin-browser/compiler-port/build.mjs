@@ -336,6 +336,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             sourceRoot, path.join(outputRoot, 'compiler-port-type-implementation'));
           return { ...component, commonSources: component.sourceFiles };
         }],
+        ['typeSubstitutorGetterReceipt', async ({ sourceRoot, outputRoot }) => {
+          const getter = await import('./type-substitutor-getter/prepare.mjs');
+          const component = await getter.prepareTypeSubstitutorGetter({ sourceRoot, outputRoot,
+            preparedTypeImplementations: preparedComponents.get('typeImplementationReceipt'),
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          await getter.verifyTypeSubstitutorGetter(outputRoot);
+          return component;
+        }],
         ['typeUtilitiesReceipt', async ({ sourceRoot, outputRoot }) => {
           const component = await (await import('./type-utilities/prepare.mjs')).prepareTypeUtilities(
             sourceRoot, path.join(outputRoot, 'compiler-port-type-utilities'));
@@ -1210,6 +1220,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
+    }
+    if (sourceHost === 'portable') {
+      const getter = await import('./type-substitutor-getter/prepare.mjs');
+      receipt.typeSubstitutorGetterFinalReceipt = await getter.verifyFinalTypeSubstitutorGetter({
+        outputRoot: path.join(output, 'components', 'typeSubstitutorGetterReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
     }
     if (sourceHost === 'portable') {
       const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
