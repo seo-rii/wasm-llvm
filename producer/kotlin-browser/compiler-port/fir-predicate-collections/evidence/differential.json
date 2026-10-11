@@ -1,0 +1,886 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-fir-predicate-full-body-host-boundary-jvm-wasm-differential",
+  "artifactRoot": "out/kotlin-fir-predicate-runtime-1791713339370593668",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "c825978bec21698fe6094b88122e1dd362df36ddd492a5bf1432f4b1de1b6000",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-fir-predicate-collections-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "c825978bec21698fe6094b88122e1dd362df36ddd492a5bf1432f4b1de1b6000",
+    "preparationToolSha256": "781ead8b0f4c7724f1b03503ceb95ba8eb9cf189624d86c312fa667f0522f57e",
+    "original": {
+      "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProviderImpl.kt",
+      "gitBlob": "9c1fb9fe31eae12f94aeda618e90c3836f2e9868",
+      "bytes": 11405,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/resolve",
+      "sha256": "0b70151590c5ab93dc1f3bed1318c3769075535e73d805238ee1dea3680244f1"
+    },
+    "callerAndPredicateSources": [
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/session/ComponentsContainers.kt",
+        "gitBlob": "038804b641c53df050f36d6c44a8243bee5d584d",
+        "bytes": 14753,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/entrypoint",
+        "sha256": "58031ca096a13d7f662c08e8dca993ba19ee2b653ebba0ada34a9bc69a0642b9"
+      },
+      {
+        "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/transformers/plugin/AbstractFirSpecificAnnotationResolveTransformer.kt",
+        "gitBlob": "8ad477b0ff0f031cd5e5b9767522bccef242a920",
+        "bytes": 31761,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/resolve",
+        "sha256": "7a249750237f573a907c09930fd5e7f363cbfb6f54b828ef36e3b64188aace88"
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProvider.kt",
+        "gitBlob": "1474867de03b7bdef35bc8e246cf123a329d10ca",
+        "bytes": 3353,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/tree",
+        "sha256": "12d3667956463c1c125bc41c4860a20a49636aae6690a664f76a3d02efc8c0bd"
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/AbstractPredicate.kt",
+        "gitBlob": "ac6287ee94cfdb04e2403a4f74ea5770c4e5b882",
+        "bytes": 8436,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/tree",
+        "sha256": "e9e7ce53fc54ba2b09c77f49db4a4d2ff8d7c7991387feb07dd85489d5caf6af"
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/DeclarationPredicate.kt",
+        "gitBlob": "1daaa8d3cefe9672c2f0f33bc8824f397c54e508",
+        "bytes": 7161,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/tree",
+        "sha256": "0e779f8f65f30705380dd6e5218bf0af3e7f88fd747bdd60c50c071667334606"
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/LookupPredicate.kt",
+        "gitBlob": "cc8e2ae11fd96fd1830b8b4a3368626123063ac5",
+        "bytes": 5324,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/tree",
+        "sha256": "fc9447a6657d664d5338338a5b2f9f5f8a6789ecd24a0f3917c9cbd59b41f13d"
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/PredicateVisitor.kt",
+        "gitBlob": "afd1475bd2b434b829bb32960b5a5f98ef01fc68",
+        "bytes": 1871,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "compiler/fir/tree",
+        "sha256": "0b7154871cdfda7e18a434f70cdafec0eaf28e8774089b7576144c2cee1d9720"
+      }
+    ],
+    "files": [
+      {
+        "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProviderImpl.kt",
+        "bytes": 11433,
+        "sha256": "56ecb23a1a012e29efa56917443fba1a31b7db3b44665c517caf37cbb66e6eaa",
+        "gitBlob": "ff409b86884014bc2b47f6b3f10535c558395e6f"
+      },
+      {
+        "path": "compiler-port-fir-predicate/FirPredicateMultimap.kt",
+        "bytes": 1333,
+        "sha256": "350fb6166ce596d4af6abcfe02b9c88947d50d0c7dbbf2219e7421b66a2410f9",
+        "gitBlob": "310f1a7f12024a867060f474cedf4936c3624c37",
+        "outputPath": "compiler-port-fir-predicate/FirPredicateMultimap.kt"
+      }
+    ],
+    "recipe": [
+      [
+        "import com.google.common.collect.LinkedHashMultimap",
+        "import org.jetbrains.kotlin.portable.predicate.LinkedHashMultimap",
+        1
+      ],
+      [
+        "import com.google.common.collect.Multimap",
+        "import org.jetbrains.kotlin.portable.predicate.Multimap",
+        1
+      ]
+    ],
+    "originalAlgorithmsRetained": true,
+    "cacheMapsRetained": 8,
+    "multimapContract": "Only provider-used get/put/putAll; unique per-key values, insertion order and live read views.",
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "finalReceipt": {
+    "schemaVersion": 1,
+    "kind": "genuine-fir-predicate-collections-final",
+    "sourceLockSha256": "c825978bec21698fe6094b88122e1dd362df36ddd492a5bf1432f4b1de1b6000",
+    "receiptSha256": "3bce3045ac8fd8de7ce3fd27a16a325231ecd4a953a6debb6587a0bcefff0d71",
+    "checked": [
+      {
+        "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProviderImpl.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProviderImpl.kt",
+        "bytes": 11433,
+        "sha256": "56ecb23a1a012e29efa56917443fba1a31b7db3b44665c517caf37cbb66e6eaa"
+      },
+      {
+        "path": "compiler-port-fir-predicate/FirPredicateMultimap.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/prepared/compiler-port-fir-predicate/FirPredicateMultimap.kt",
+        "bytes": 1333,
+        "sha256": "350fb6166ce596d4af6abcfe02b9c88947d50d0c7dbbf2219e7421b66a2410f9"
+      }
+    ],
+    "exactBodyAndOwnerVerified": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "inputs": [
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/Probe.kt",
+      "bytes": 6335,
+      "sha256": "84256dd0bf0067fff0d1a64daa6465899f758954c409687b7abb0119f77b496e"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/JvmEntry.kt",
+      "bytes": 99,
+      "sha256": "087691616e2c561ea5ed47b990d770ce1b354356a321c827914c443cee8cbe75"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/WasmEntry.kt",
+      "bytes": 188,
+      "sha256": "71e194729685b8de1152e8cf492fffb9e961ce352819e6e49736cddbe9202780"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/Boundary.kt",
+      "bytes": 3354,
+      "sha256": "c639d6186b27a2eb7e63b42b0a8d5936639da252bdadc2b562e33cbe5772b31f"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/FirPredicateMultimap.kt",
+      "bytes": 1333,
+      "sha256": "350fb6166ce596d4af6abcfe02b9c88947d50d0c7dbbf2219e7421b66a2410f9"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/check.mjs",
+      "bytes": 12666,
+      "sha256": "2e1229792e0c8c3bbce84dc312542b2bcb3c9949c853168ebbcefe02227e7d10"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/prepare.mjs",
+      "bytes": 6791,
+      "sha256": "781ead8b0f4c7724f1b03503ceb95ba8eb9cf189624d86c312fa667f0522f57e"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/transform.mjs",
+      "bytes": 2116,
+      "sha256": "ea3b01841f258561b6d6a3a68a3fbb6f538d239a1a7950d0441a94eaa269d51b"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/fir-predicate-collections/sources.lock.json",
+      "bytes": 4969,
+      "sha256": "c825978bec21698fe6094b88122e1dd362df36ddd492a5bf1432f4b1de1b6000"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/producer/kotlin-browser/compiler-port/build-flags.json",
+      "bytes": 16246,
+      "sha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/AbstractPredicate.kt",
+      "bytes": 8436,
+      "sha256": "e9e7ce53fc54ba2b09c77f49db4a4d2ff8d7c7991387feb07dd85489d5caf6af"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/DeclarationPredicate.kt",
+      "bytes": 7161,
+      "sha256": "0e779f8f65f30705380dd6e5218bf0af3e7f88fd747bdd60c50c071667334606"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/LookupPredicate.kt",
+      "bytes": 5324,
+      "sha256": "fc9447a6657d664d5338338a5b2f9f5f8a6789ecd24a0f3917c9cbd59b41f13d"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/sources/compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/PredicateVisitor.kt",
+      "bytes": 1871,
+      "sha256": "0b7154871cdfda7e18a434f70cdafec0eaf28e8774089b7576144c2cee1d9720"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Boundary.kt",
+      "bytes": 3354,
+      "sha256": "c639d6186b27a2eb7e63b42b0a8d5936639da252bdadc2b562e33cbe5772b31f"
+    },
+    {
+      "path": "FirPredicateMultimap.kt",
+      "bytes": 1333,
+      "sha256": "350fb6166ce596d4af6abcfe02b9c88947d50d0c7dbbf2219e7421b66a2410f9"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 99,
+      "sha256": "087691616e2c561ea5ed47b990d770ce1b354356a321c827914c443cee8cbe75"
+    },
+    {
+      "path": "OriginalProbe.kt",
+      "bytes": 6342,
+      "sha256": "01e4ec5a9d8b969174626a00cd3a5266c2fe5faaf2d852430019a52a92ecc25a"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 6335,
+      "sha256": "84256dd0bf0067fff0d1a64daa6465899f758954c409687b7abb0119f77b496e"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 188,
+      "sha256": "71e194729685b8de1152e8cf492fffb9e961ce352819e6e49736cddbe9202780"
+    },
+    {
+      "path": "boundary-common.kt",
+      "bytes": 10346,
+      "sha256": "596fb8cd34e6dd860f9e8a89cc0a9231f5db52b8cae8307a782ccc09dce9b60e"
+    },
+    {
+      "path": "boundary-original.kt",
+      "bytes": 10360,
+      "sha256": "8dcc89b8e0c4dc988fec3fe02a4401901986d16e95e45bff35d1d74f2eeef619"
+    },
+    {
+      "path": "common-full-provider-body-boundary-jvm-build.arguments.json",
+      "bytes": 3547,
+      "sha256": "7f998506c6695c2ef9c10f93e9df9aead51b2bfd814720bd68140aeb5c5ebd5f"
+    },
+    {
+      "path": "common-full-provider-jvm-typecheck.arguments.json",
+      "bytes": 2877,
+      "sha256": "d15f47f92b6e481e74373fc84c3ca8cb9452c78ebc23573827fe3ada4dce0fb3"
+    },
+    {
+      "path": "common-observations.txt",
+      "bytes": 57111,
+      "sha256": "25ea196fea3abd86ecfa1b486e4170671d43fa14724d29f63b9e9a78b7f6644a"
+    },
+    {
+      "path": "common-provider-boundary-jvm-observe.arguments.json",
+      "bytes": 445,
+      "sha256": "98e856ad1c2b3613a7176a7014f7e4e4e0126398a77ef18d21b8fc6ad0826620"
+    },
+    {
+      "path": "full-common.kt",
+      "bytes": 11454,
+      "sha256": "4318023edc40b4ce733f873349d6f9184274de0e246e003eccced7b7d492d2b6"
+    },
+    {
+      "path": "full-original.kt",
+      "bytes": 11468,
+      "sha256": "b2c8517b8a33d5538e8d40fb55d807fb164de99c1faf5a6b482adbc4e9ace05a"
+    },
+    {
+      "path": "full-provider-body-boundary-wasm-klib-build.arguments.json",
+      "bytes": 4429,
+      "sha256": "0579dcf435d7b86826b52588b1ebc80cc33bcdc88073e1904cfb2fd2fd3d3a52"
+    },
+    {
+      "path": "full-provider-body-boundary-wasm-module-build.arguments.json",
+      "bytes": 2555,
+      "sha256": "63f843b24bc5ee35ab783f14e3c12534d3b6698cbf9886b938b50417b60f1739"
+    },
+    {
+      "path": "jvm/common.jar",
+      "bytes": 108785,
+      "sha256": "bca35fcb9ac833dcde8bb1676d75f3aa7c9957c243496a1e2a64966cd94cc1b2"
+    },
+    {
+      "path": "jvm/full-common.jar",
+      "bytes": 22347,
+      "sha256": "891f013d42c4cddac9dbb74dafc78868c79f68998db878ff24889900118e1fd5"
+    },
+    {
+      "path": "jvm/full-original.jar",
+      "bytes": 17399,
+      "sha256": "35b3a9d1882fb77f18c01e643ed25854c0730d2fd60aa2df1c30fda183fe0d3c"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 103899,
+      "sha256": "abf1ae0c09094cb67019d6dda5674ace7c9070b6f6c91ff73904c396d68b0c7a"
+    },
+    {
+      "path": "klib/fir-predicate.klib",
+      "bytes": 77025,
+      "sha256": "e1c2bc1b952808bbbee58792640a416456d6440415500eb43329e54d5b5d3a2a"
+    },
+    {
+      "path": "original-full-provider-body-boundary-jvm-build.arguments.json",
+      "bytes": 3404,
+      "sha256": "1145f334cdd74be8c29948beca032109bc7c7981d3893ce91957df52b4da171f"
+    },
+    {
+      "path": "original-full-provider-jvm-typecheck.arguments.json",
+      "bytes": 2726,
+      "sha256": "dd52e33f727cbb3c34a668cb5f9e652098b7bafa810681cab8040d90075baa58"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 57111,
+      "sha256": "25ea196fea3abd86ecfa1b486e4170671d43fa14724d29f63b9e9a78b7f6644a"
+    },
+    {
+      "path": "original-provider-boundary-jvm-observe.arguments.json",
+      "bytes": 447,
+      "sha256": "434c3447c70262c82e61c3a3b5efa4127c92c29cceb3b9f10295d3272e4a6ab0"
+    },
+    {
+      "path": "predicates/AbstractPredicate.kt",
+      "bytes": 8475,
+      "sha256": "f9424504570324acf321aea84403134a05e8ddc4bbf925e618a41fd0ac350a72"
+    },
+    {
+      "path": "predicates/DeclarationPredicate.kt",
+      "bytes": 7187,
+      "sha256": "80e91d442b69084ffc53f76257c3723b3615cabf9263452d0d5782bbf19bdb0b"
+    },
+    {
+      "path": "predicates/LookupPredicate.kt",
+      "bytes": 5350,
+      "sha256": "88297052bf08bc18ed3c58f6bc83bfa68a1d03e8ce2b29170e59e535bf4e2ac7"
+    },
+    {
+      "path": "predicates/PredicateVisitor.kt",
+      "bytes": 1884,
+      "sha256": "52663a4e4d508e85651a53f653ffaf16fdcf75f09d2d53e6f6b6ed3ade9f08e8"
+    },
+    {
+      "path": "prepared/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProviderImpl.kt",
+      "bytes": 11433,
+      "sha256": "56ecb23a1a012e29efa56917443fba1a31b7db3b44665c517caf37cbb66e6eaa"
+    },
+    {
+      "path": "prepared/compiler-port-fir-predicate/FirPredicateMultimap.kt",
+      "bytes": 1333,
+      "sha256": "350fb6166ce596d4af6abcfe02b9c88947d50d0c7dbbf2219e7421b66a2410f9"
+    },
+    {
+      "path": "prepared/receipt.json",
+      "bytes": 4901,
+      "sha256": "3bce3045ac8fd8de7ce3fd27a16a325231ecd4a953a6debb6587a0bcefff0d71"
+    },
+    {
+      "path": "prepared/reference-original/compiler/fir/resolve/src/org/jetbrains/kotlin/fir/extensions/FirPredicateBasedProviderImpl.kt",
+      "bytes": 11405,
+      "sha256": "0b70151590c5ab93dc1f3bed1318c3769075535e73d805238ee1dea3680244f1"
+    },
+    {
+      "path": "provider-boundary-node-wasm-observe.arguments.json",
+      "bytes": 362,
+      "sha256": "4f89bde232d16e405d5478307edde2490381b4e5d31b66f9212f008b17377d25"
+    },
+    {
+      "path": "reference-original.kt",
+      "bytes": 11405,
+      "sha256": "0b70151590c5ab93dc1f3bed1318c3769075535e73d805238ee1dea3680244f1"
+    },
+    {
+      "path": "wasm/fir-predicate.import-object.mjs",
+      "bytes": 9488,
+      "sha256": "d1a5b32b7eb5cdf54deb0e4d6cd50da4e4049fca7df162202f2714f50c845ce1"
+    },
+    {
+      "path": "wasm/fir-predicate.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/fir-predicate.mjs",
+      "bytes": 2277,
+      "sha256": "ad31db6bac328c886351f91392d359642ea756545a5e37c3c31973f0b0abd184"
+    },
+    {
+      "path": "wasm/fir-predicate.wasm",
+      "bytes": 858811,
+      "sha256": "2d57c559decd1d1fd6e939fffbb4f1129ec37304a02eb0447bc7a95f957cdabb"
+    },
+    {
+      "path": "wasm-observations.txt",
+      "bytes": 57111,
+      "sha256": "25ea196fea3abd86ecfa1b486e4170671d43fa14724d29f63b9e9a78b7f6644a"
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-full-provider-jvm-typecheck",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-Xfriend-paths=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/jvm/full-original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/full-original.kt"
+      ],
+      "argumentFileSha256": "dd52e33f727cbb3c34a668cb5f9e652098b7bafa810681cab8040d90075baa58",
+      "exitCode": 0
+    },
+    {
+      "phase": "common-full-provider-jvm-typecheck",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-Xfriend-paths=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/jvm/full-common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/full-common.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/prepared/compiler-port-fir-predicate/FirPredicateMultimap.kt"
+      ],
+      "argumentFileSha256": "d15f47f92b6e481e74373fc84c3ca8cb9452c78ebc23573827fe3ada4dce0fb3",
+      "exitCode": 0
+    },
+    {
+      "phase": "original-full-provider-body-boundary-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/boundary-original.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/OriginalProbe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Boundary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/JvmEntry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/AbstractPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/DeclarationPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/LookupPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/PredicateVisitor.kt"
+      ],
+      "argumentFileSha256": "1145f334cdd74be8c29948beca032109bc7c7981d3893ce91957df52b4da171f",
+      "exitCode": 0
+    },
+    {
+      "phase": "original-provider-boundary-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.predicate.probe.JvmEntryKt"
+      ],
+      "argumentFileSha256": "434c3447c70262c82e61c3a3b5efa4127c92c29cceb3b9f10295d3272e4a6ab0",
+      "exitCode": 0
+    },
+    {
+      "phase": "common-full-provider-body-boundary-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/jvm/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/boundary-common.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Boundary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/JvmEntry.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/AbstractPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/DeclarationPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/LookupPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/PredicateVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/prepared/compiler-port-fir-predicate/FirPredicateMultimap.kt"
+      ],
+      "argumentFileSha256": "7f998506c6695c2ef9c10f93e9df9aead51b2bfd814720bd68140aeb5c5ebd5f",
+      "exitCode": 0
+    },
+    {
+      "phase": "common-provider-boundary-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.portable.predicate.probe.JvmEntryKt"
+      ],
+      "argumentFileSha256": "98e856ad1c2b3613a7176a7014f7e4e4e0126398a77ef18d21b8fc6ad0826620",
+      "exitCode": 0
+    },
+    {
+      "phase": "full-provider-body-boundary-wasm-klib-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/boundary-common.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/prepared/compiler-port-fir-predicate/FirPredicateMultimap.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Probe.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Boundary.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/AbstractPredicate.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/DeclarationPredicate.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/LookupPredicate.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/PredicateVisitor.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/klib",
+        "-ir-output-name",
+        "fir-predicate",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/boundary-common.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/prepared/compiler-port-fir-predicate/FirPredicateMultimap.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/Boundary.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/AbstractPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/DeclarationPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/LookupPredicate.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/predicates/PredicateVisitor.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/WasmEntry.kt"
+      ],
+      "argumentFileSha256": "0579dcf435d7b86826b52588b1ebc80cc33bcdc88073e1904cfb2fd2fd3d3a52",
+      "exitCode": 0
+    },
+    {
+      "phase": "full-provider-body-boundary-wasm-module-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/klib/fir-predicate.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/wasm",
+        "-ir-output-name",
+        "fir-predicate",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-asserts"
+      ],
+      "argumentFileSha256": "63f843b24bc5ee35ab783f14e3c12534d3b6698cbf9886b938b50417b60f1739",
+      "exitCode": 0
+    },
+    {
+      "phase": "provider-boundary-node-wasm-observe",
+      "command": [
+        "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);process.stdout.write(m.firPredicateObservation());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-fir-predicate-runtime-1791713339370593668/wasm/fir-predicate.mjs"
+      ],
+      "argumentFileSha256": "4f89bde232d16e405d5478307edde2490381b4e5d31b66f9212f008b17377d25",
+      "exitCode": 0
+    }
+  ],
+  "adapters": [
+    {
+      "kind": "predicate-namespace-and-type-imports",
+      "originalPath": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/AbstractPredicate.kt",
+      "originalSha256": "e9e7ce53fc54ba2b09c77f49db4a4d2ff8d7c7991387feb07dd85489d5caf6af",
+      "adaptedSha256": "f9424504570324acf321aea84403134a05e8ddc4bbf925e618a41fd0ac350a72"
+    },
+    {
+      "kind": "predicate-namespace-and-type-imports",
+      "originalPath": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/DeclarationPredicate.kt",
+      "originalSha256": "0e779f8f65f30705380dd6e5218bf0af3e7f88fd747bdd60c50c071667334606",
+      "adaptedSha256": "80e91d442b69084ffc53f76257c3723b3615cabf9263452d0d5782bbf19bdb0b"
+    },
+    {
+      "kind": "predicate-namespace-and-type-imports",
+      "originalPath": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/LookupPredicate.kt",
+      "originalSha256": "fc9447a6657d664d5338338a5b2f9f5f8a6789ecd24a0f3917c9cbd59b41f13d",
+      "adaptedSha256": "88297052bf08bc18ed3c58f6bc83bfa68a1d03e8ce2b29170e59e535bf4e2ac7"
+    },
+    {
+      "kind": "predicate-namespace-and-type-imports",
+      "originalPath": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/extensions/predicate/PredicateVisitor.kt",
+      "originalSha256": "0b7154871cdfda7e18a434f70cdafec0eaf28e8774089b7576144c2cee1d9720",
+      "adaptedSha256": "52663a4e4d508e85651a53f653ffaf16fdcf75f09d2d53e6f6b6ed3ade9f08e8"
+    },
+    {
+      "kind": "provider-namespace-and-host-imports",
+      "originalSha256": "0b70151590c5ab93dc1f3bed1318c3769075535e73d805238ee1dea3680244f1",
+      "preservedBodySha256": "a1b8dad9e0ba735ec2df788174ef934353b86984c07c88353a193b9c1e539521",
+      "guava": true
+    },
+    {
+      "kind": "provider-namespace-and-host-imports",
+      "originalSha256": "56ecb23a1a012e29efa56917443fba1a31b7db3b44665c517caf37cbb66e6eaa",
+      "preservedBodySha256": "a1b8dad9e0ba735ec2df788174ef934353b86984c07c88353a193b9c1e539521",
+      "guava": false
+    }
+  ],
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "comparison": {
+    "records": 2512,
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsNodeWasm": true,
+    "completeProviderAndPredicateBodiesPreserved": true,
+    "realFirObjectsExecuted": false,
+    "normalizedText": false,
+    "rawSha256": "25ea196fea3abd86ecfa1b486e4170671d43fa14724d29f63b9e9a78b7f6644a"
+  },
+  "scope": "Genuine Guava versus portable multimap; eight complete cache maps; registration order/repetition, owners, file markers, seven lookup/combinator predicates, origins/local matching, source-session delegation and meta-annotation recursion/cycles with explicit proof-only FIR data/callback boundaries.",
+  "limitations": [
+    "Runtime FIR/session/type/annotation/lookup/resolve data and callbacks are proof-only adapters outside compiler packages; genuine complete provider source separately JVM typechecks with real bootstrap dependencies.",
+    "Full FIR resolution, compiler Wasm integration, browser/offline behavior and compiler plugin end-to-end execution are not verified.",
+    "Portable helper implements only pinned provider-used get/put/putAll. Guava collection mutations, global entries ordering/removal and iterator mutation/concurrent modification are not exposed or claimed."
+  ],
+  "browserExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}
