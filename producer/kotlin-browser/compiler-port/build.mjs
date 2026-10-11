@@ -82,6 +82,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
+  let towerGroupComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -367,6 +368,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           const counters = await import('./performance-counter/prepare.mjs');
           const component = await counters.preparePerformanceCounter({ sourceRoot, outputRoot });
           await counters.verifyPerformanceCounter({ sourceRoot, outputRoot });
+          return component;
+        }],
+        ['towerGroupReceipt', async ({ sourceRoot, outputRoot }) => {
+          const tower = await import('./tower-group/prepare.mjs');
+          const component = await tower.prepareTowerGroup({ sourceRoot, outputRoot });
+          towerGroupComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await tower.verifyTowerGroup(towerGroupComposition);
           return component;
         }],
         ['performanceManagerReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1324,6 +1332,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const managers = await import('./performance-manager/prepare.mjs');
       receipt.performanceManagerFinalReceipt = await managers.verifyFinalPerformanceManager({
         sourceRoot: prepared.sourceRoot, outputRoot: path.join(output, 'components', 'performanceManagerReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const tower = await import('./tower-group/prepare.mjs');
+      receipt.towerGroupFinalReceipt = await tower.verifyFinalTowerGroup({
+        ...towerGroupComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
