@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "kind": "full-genuine-performance-counter-jvm-wasm-differential",
+  "artifactRoot": "out/kotlin-performance-counter-1791684636739277891",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-single-worker-performance-counter-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f",
+    "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+    "original": {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+      "gitBlob": "353fbd618c46ddb5ac711291ce3f3f5e9e7e043a",
+      "bytes": 7012,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/util.runtime",
+      "sha256": "33a714537ddbb768bac7a9ef4258f398b1d89da6be4c2036a66a9bac5575ee17"
+    },
+    "files": [
+      {
+        "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+        "bytes": 6919,
+        "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab",
+        "gitBlob": "62ae4db295ccc1d7360b4a9230ae826b66216f02"
+      },
+      {
+        "path": "compiler-port-performance-counter/PerformanceCounterHost.kt",
+        "bytes": 1178,
+        "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe",
+        "gitBlob": "79f7ad774da4639307d0f4e4c14ffdb8618d009e"
+      }
+    ],
+    "recipe": [
+      {
+        "start": 245,
+        "before": "import java.lang.management.ManagementFactory\nimport java.util.*\nimport java.util.concurrent.TimeUnit\nimport java.util.concurrent.atomic.AtomicInteger\nimport java.util.concurrent.atomic.AtomicLong\n",
+        "after": "import org.jetbrains.kotlin.util.portable.PerformanceCounterWorkerLocal\nimport org.jetbrains.kotlin.util.portable.performanceCounterNanoTime\n"
+      },
+      {
+        "start": 447,
+        "before": " * This counter is thread-safe for initialization and usage.\n",
+        "after": " * This port runs synchronously in one Worker; each request needs a fresh module.\n"
+      },
+      {
+        "start": 814,
+        "before": "System.nanoTime()",
+        "after": "performanceCounterNanoTime()"
+      },
+      {
+        "start": 913,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1157,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1364,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1550,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1666,
+        "before": "        @JvmOverloads\n",
+        "after": ""
+      },
+      {
+        "start": 2097,
+        "before": "ThreadLocal<",
+        "after": "PerformanceCounterWorkerLocal<"
+      },
+      {
+        "start": 2136,
+        "before": "            var value = threadLocal.get()\n            if (value == null) {\n                value = default()\n                threadLocal.set(value)\n            }\n            return value",
+        "after": "            val existing = threadLocal.get()\n            if (existing != null) return existing\n            val value = default()\n            threadLocal.set(value)\n            return value"
+      },
+      {
+        "start": 2510,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 3325,
+        "before": "TimeUnit.NANOSECONDS.toMillis(totalTimeNanos)",
+        "after": "totalTimeNanos / 1_000_000L"
+      },
+      {
+        "start": 4038,
+        "before": "ThreadLocal<",
+        "after": "PerformanceCounterWorkerLocal<"
+      },
+      {
+        "start": 5186,
+        "before": "ThreadLocal<",
+        "after": "PerformanceCounterWorkerLocal<"
+      },
+      {
+        "start": 6072,
+        "before": "Stack<Boolean>",
+        "after": "ArrayList<Boolean>"
+      },
+      {
+        "start": 6150,
+        "before": "Stack<Boolean>",
+        "after": "ArrayList<Boolean>"
+      },
+      {
+        "start": 6202,
+        "before": "else peek()",
+        "after": "else last()"
+      },
+      {
+        "start": 6271,
+        "before": "Stack<Boolean>",
+        "after": "ArrayList<Boolean>"
+      },
+      {
+        "start": 6681,
+        "before": "return intervalUsefulTime { push(usefulCall) }",
+        "after": "return intervalUsefulTime { add(usefulCall) }"
+      },
+      {
+        "start": 6843,
+        "before": "assert(callStack.peek() == usefulCall)",
+        "after": "assert(callStack.last() == usefulCall)"
+      },
+      {
+        "start": 6894,
+        "before": "return intervalUsefulTime { pop() }",
+        "after": "return intervalUsefulTime { removeAt(lastIndex) }"
+      }
+    ],
+    "requiredClock": "Caller-owned synchronous monotonic nanoseconds; installation restored in finally; no default clock.",
+    "executionContract": "Single synchronous Worker module; no threads, suspension or shared memory. Fresh Worker for each compiler request.",
+    "originalAlgorithmsRetained": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "finalReceipt": {
+    "schemaVersion": 1,
+    "kind": "genuine-single-worker-performance-counter-final",
+    "sourceLockSha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f",
+    "checked": [
+      {
+        "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/prepared/core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+        "bytes": 6919,
+        "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab"
+      },
+      {
+        "path": "compiler-port-performance-counter/PerformanceCounterHost.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/prepared/compiler-port-performance-counter/PerformanceCounterHost.kt",
+        "bytes": 1178,
+        "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe"
+      }
+    ],
+    "exactBodyAndImportsVerified": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "originalClockSubstitution": {
+    "original": "System.nanoTime()",
+    "replacement": "org.jetbrains.kotlin.util.portable.performanceCounterNanoTime()",
+    "occurrences": 1,
+    "otherOriginalBytesUnchanged": true
+  },
+  "inputs": [
+    {
+      "path": "Probe.kt",
+      "bytes": 7314,
+      "sha256": "82b2017772259062b3677a1e889c96d08c37b05f5377f6a1ddd6d3d50a883004"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 156,
+      "sha256": "f174c66e780b911ac7b546ccdfe38d30fc82434cd4a98377e72226e5ef17e8c5"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 216,
+      "sha256": "73fd1c2994dec15091346c2a26cd4e436c163bd03b9c4af3c1a75a38b8773bbf"
+    },
+    {
+      "path": "PerformanceCounterHost.kt",
+      "bytes": 1178,
+      "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe"
+    },
+    {
+      "path": "OriginalSupport.kt",
+      "bytes": 166,
+      "sha256": "65dc4d582ccc149a1634c0435d3651aa4754dbe64523ab73b347f9460d6f1d4f"
+    },
+    {
+      "path": "CommonSupport.kt",
+      "bytes": 209,
+      "sha256": "af69c69f538ebbc777cec5d3d6e3bc2bf3ac4c3f4fd5989f9166192800c15052"
+    },
+    {
+      "path": "check.mjs",
+      "bytes": 8437,
+      "sha256": "6a1c666616f1b5efda3fc22e68b334d651d2a4d225fb4136f971287fa9985206"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 6963,
+      "sha256": "08bf1bf1fb3bcf57e1d69c2edd75061217f67b9b18ac0a12bb5065b7a20869dd"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 819,
+      "sha256": "5e08feac61530535e816c9d8560510d203a09cc44d2194691f3d17b5c7ac0a10"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 5064,
+      "sha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Common.kt",
+      "bytes": 6919,
+      "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab"
+    },
+    {
+      "path": "CommonSupport.kt",
+      "bytes": 209,
+      "sha256": "af69c69f538ebbc777cec5d3d6e3bc2bf3ac4c3f4fd5989f9166192800c15052"
+    },
+    {
+      "path": "CommonWasm.kt",
+      "bytes": 6992,
+      "sha256": "aafe46c5a702e287fa3ee28ebecc6fa6abdae7179efce9e0550b6a82490aea6f"
+    },
+    {
+      "path": "CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 156,
+      "sha256": "f174c66e780b911ac7b546ccdfe38d30fc82434cd4a98377e72226e5ef17e8c5"
+    },
+    {
+      "path": "Original.kt",
+      "bytes": 7058,
+      "sha256": "7cf5402d977fc1dc0fb21d17bb6620497a53dbefa1fc5fa11a87934baced5efb"
+    },
+    {
+      "path": "OriginalSupport.kt",
+      "bytes": 166,
+      "sha256": "65dc4d582ccc149a1634c0435d3651aa4754dbe64523ab73b347f9460d6f1d4f"
+    },
+    {
+      "path": "PerformanceCounterHost.kt",
+      "bytes": 1178,
+      "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 7314,
+      "sha256": "82b2017772259062b3677a1e889c96d08c37b05f5377f6a1ddd6d3d50a883004"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 216,
+      "sha256": "73fd1c2994dec15091346c2a26cd4e436c163bd03b9c4af3c1a75a38b8773bbf"
+    },
+    {
+      "path": "common-observations.txt",
+      "bytes": 5337,
+      "sha256": "38a5620547cb08dd29e291a2d6e319dbc0a21eacee06cbbed41999f9ece83baa"
+    },
+    {
+      "path": "jvm/common.jar",
+      "bytes": 33836,
+      "sha256": "57d40da8fb3bed482b8c8ecacea486816953f0e9933f609ab98b1f096258ee6d"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 33961,
+      "sha256": "a49e8a9c585f3a0fcdd85aa07a811c8f0a3c0ecebb472e7e5df9d2c9dd201f50"
+    },
+    {
+      "path": "klib/performance-counter.klib",
+      "bytes": 45848,
+      "sha256": "3a68b3b7550b83db51631eb0289e89a0a7b644cc903dc905be0bf61194de0bb0"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 5337,
+      "sha256": "38a5620547cb08dd29e291a2d6e319dbc0a21eacee06cbbed41999f9ece83baa"
+    },
+    {
+      "path": "prepared/compiler-port-performance-counter/PerformanceCounterHost.kt",
+      "bytes": 1178,
+      "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe"
+    },
+    {
+      "path": "prepared/core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+      "bytes": 6919,
+      "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab"
+    },
+    {
+      "path": "prepared/receipt.json",
+      "bytes": 4915,
+      "sha256": "4eeb53c1b78c33496db7fbdedbfa8dbad4b9f98ef079ce312e233edcd26edcd6"
+    },
+    {
+      "path": "wasm/performance-counter.import-object.mjs",
+      "bytes": 9494,
+      "sha256": "9e003c07d3395dc15b2cdc03edd5eb3e26b37b04e69dcef465e1dcafcca2ee8d"
+    },
+    {
+      "path": "wasm/performance-counter.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/performance-counter.mjs",
+      "bytes": 2307,
+      "sha256": "29f2ce5747e93dde9d29aa79ae71dc91892d5e1408f866d525b395c27c58a520"
+    },
+    {
+      "path": "wasm/performance-counter.wasm",
+      "bytes": 794862,
+      "sha256": "3b7129f268f2a3f60b1e84ef8d215a455751c076e79c63a1a6c584c1e389c344"
+    },
+    {
+      "path": "wasm-observations.txt",
+      "bytes": 5337,
+      "sha256": "38a5620547cb08dd29e291a2d6e319dbc0a21eacee06cbbed41999f9ece83baa"
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-complete-counter-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/Original.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/OriginalSupport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/PerformanceCounterHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-complete-counter-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.util.portable.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-complete-counter-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/jvm/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/Common.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CommonSupport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/PerformanceCounterHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-complete-counter-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.util.portable.probe.JvmEntryKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "complete-counter-wasm-klib-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CommonWasm.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CompilerAssertions.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CommonSupport.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/PerformanceCounterHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/Probe.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/klib",
+        "-ir-output-name",
+        "performance-counter",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CommonWasm.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CompilerAssertions.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/CommonSupport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/PerformanceCounterHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "complete-counter-wasm-module-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/klib/performance-counter.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/wasm",
+        "-ir-output-name",
+        "performance-counter",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "complete-counter-node-wasm-observe",
+      "command": [
+        "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);process.stdout.write(m.performanceCounterObservation());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-counter-1791684636739277891/wasm/performance-counter.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "comparison": {
+    "records": 153,
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsFullNodeWasm": true,
+    "fullSourceExecuted": true,
+    "methodProjection": false,
+    "normalizedText": false,
+    "rawSha256": "38a5620547cb08dd29e291a2d6e319dbc0a21eacee06cbbed41999f9ece83baa"
+  },
+  "scope": "Simple, reentrant, excluded and nested throw timing; exact clock reads, count/reset/report snapshot; signed milliseconds and Long wrap; nested/throw clock restoration.",
+  "timingHost": "Deterministic injected clock only, not browser real-clock precision validation.",
+  "singleWorkerOnly": true,
+  "browserExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}

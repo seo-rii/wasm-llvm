@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "kind": "performance-counter-public-integrity-guards",
+  "artifactRoot": "out/kotlin-performance-counter-integrity-1791684600",
+  "inputs": [
+    {
+      "path": "integrity.mjs",
+      "bytes": 8116,
+      "sha256": "fd250e71f892cd6825aa3c9b2498462730cf4dd498ae3f92503c34da70d3762d"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 6963,
+      "sha256": "08bf1bf1fb3bcf57e1d69c2edd75061217f67b9b18ac0a12bb5065b7a20869dd"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 819,
+      "sha256": "5e08feac61530535e816c9d8560510d203a09cc44d2194691f3d17b5c7ac0a10"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 5064,
+      "sha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f"
+    },
+    {
+      "path": "PerformanceCounterHost.kt",
+      "bytes": 1178,
+      "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe"
+    }
+  ],
+  "originalSourceUnchanged": true,
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-single-worker-performance-counter-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f",
+    "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+    "original": {
+      "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+      "gitBlob": "353fbd618c46ddb5ac711291ce3f3f5e9e7e043a",
+      "bytes": 7012,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/util.runtime",
+      "sha256": "33a714537ddbb768bac7a9ef4258f398b1d89da6be4c2036a66a9bac5575ee17"
+    },
+    "files": [
+      {
+        "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+        "bytes": 6919,
+        "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab",
+        "gitBlob": "62ae4db295ccc1d7360b4a9230ae826b66216f02"
+      },
+      {
+        "path": "compiler-port-performance-counter/PerformanceCounterHost.kt",
+        "bytes": 1178,
+        "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe",
+        "gitBlob": "79f7ad774da4639307d0f4e4c14ffdb8618d009e"
+      }
+    ],
+    "recipe": [
+      {
+        "start": 245,
+        "before": "import java.lang.management.ManagementFactory\nimport java.util.*\nimport java.util.concurrent.TimeUnit\nimport java.util.concurrent.atomic.AtomicInteger\nimport java.util.concurrent.atomic.AtomicLong\n",
+        "after": "import org.jetbrains.kotlin.util.portable.PerformanceCounterWorkerLocal\nimport org.jetbrains.kotlin.util.portable.performanceCounterNanoTime\n"
+      },
+      {
+        "start": 447,
+        "before": " * This counter is thread-safe for initialization and usage.\n",
+        "after": " * This port runs synchronously in one Worker; each request needs a fresh module.\n"
+      },
+      {
+        "start": 814,
+        "before": "System.nanoTime()",
+        "after": "performanceCounterNanoTime()"
+      },
+      {
+        "start": 913,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1157,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1364,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1550,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 1666,
+        "before": "        @JvmOverloads\n",
+        "after": ""
+      },
+      {
+        "start": 2097,
+        "before": "ThreadLocal<",
+        "after": "PerformanceCounterWorkerLocal<"
+      },
+      {
+        "start": 2136,
+        "before": "            var value = threadLocal.get()\n            if (value == null) {\n                value = default()\n                threadLocal.set(value)\n            }\n            return value",
+        "after": "            val existing = threadLocal.get()\n            if (existing != null) return existing\n            val value = default()\n            threadLocal.set(value)\n            return value"
+      },
+      {
+        "start": 2510,
+        "before": "synchronized(allCounters)",
+        "after": "run"
+      },
+      {
+        "start": 3325,
+        "before": "TimeUnit.NANOSECONDS.toMillis(totalTimeNanos)",
+        "after": "totalTimeNanos / 1_000_000L"
+      },
+      {
+        "start": 4038,
+        "before": "ThreadLocal<",
+        "after": "PerformanceCounterWorkerLocal<"
+      },
+      {
+        "start": 5186,
+        "before": "ThreadLocal<",
+        "after": "PerformanceCounterWorkerLocal<"
+      },
+      {
+        "start": 6072,
+        "before": "Stack<Boolean>",
+        "after": "ArrayList<Boolean>"
+      },
+      {
+        "start": 6150,
+        "before": "Stack<Boolean>",
+        "after": "ArrayList<Boolean>"
+      },
+      {
+        "start": 6202,
+        "before": "else peek()",
+        "after": "else last()"
+      },
+      {
+        "start": 6271,
+        "before": "Stack<Boolean>",
+        "after": "ArrayList<Boolean>"
+      },
+      {
+        "start": 6681,
+        "before": "return intervalUsefulTime { push(usefulCall) }",
+        "after": "return intervalUsefulTime { add(usefulCall) }"
+      },
+      {
+        "start": 6843,
+        "before": "assert(callStack.peek() == usefulCall)",
+        "after": "assert(callStack.last() == usefulCall)"
+      },
+      {
+        "start": 6894,
+        "before": "return intervalUsefulTime { pop() }",
+        "after": "return intervalUsefulTime { removeAt(lastIndex) }"
+      }
+    ],
+    "requiredClock": "Caller-owned synchronous monotonic nanoseconds; installation restored in finally; no default clock.",
+    "executionContract": "Single synchronous Worker module; no threads, suspension or shared memory. Fresh Worker for each compiler request.",
+    "originalAlgorithmsRetained": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "positives": [
+    "canonical exact output with actual recorded property list",
+    "canonical exact output without recorded imports preserves blank lines",
+    "exact actual ordered property/JVM/assertion prefix assembly",
+    "restored actual assembled source outputs"
+  ],
+  "negatives": [
+    {
+      "label": "missing counter",
+      "reason": "/Missing counter final source/"
+    },
+    {
+      "label": "missing host",
+      "reason": "/Missing counter final source/"
+    },
+    {
+      "label": "duplicate logical path",
+      "reason": "/Duplicate counter selection logical path/"
+    },
+    {
+      "label": "duplicate selected file",
+      "reason": "/Duplicate counter selection file/"
+    },
+    {
+      "label": "wrong component owner",
+      "reason": "/Wrong counter output owner/"
+    },
+    {
+      "label": "claimed source size differs",
+      "reason": "/Counter final size mismatch/"
+    },
+    {
+      "label": "claimed source hash differs",
+      "reason": "/Counter final hash mismatch/"
+    },
+    {
+      "label": "wrong recorded import order",
+      "reason": "/Pinned source content mismatch/"
+    },
+    {
+      "label": "changed timing/count algorithm",
+      "reason": "/Pinned source content mismatch/"
+    },
+    {
+      "label": "changed body whitespace",
+      "reason": "/Pinned source content mismatch/"
+    },
+    {
+      "label": "unrecorded import",
+      "reason": "/Pinned source content mismatch/"
+    },
+    {
+      "label": "duplicate assertion block",
+      "reason": "/Duplicate counter assembly import block/"
+    },
+    {
+      "label": "changed report literal",
+      "reason": "/Pinned source content mismatch/"
+    },
+    {
+      "label": "changed host restoration",
+      "reason": "/Pinned source content mismatch/"
+    },
+    {
+      "label": "changed preparation receipt",
+      "reason": "/Counter preparation receipt changed/"
+    },
+    {
+      "label": "symlink counter source",
+      "reason": "/Symlink paths are not accepted/"
+    },
+    {
+      "label": "changed immutable original",
+      "reason": "/Pinned source content mismatch/"
+    }
+  ],
+  "frozenAssembly": {
+    "receiptPath": "out/kotlin-compiler-port/builds/module-ir-native-whole-1791654238457260213/compiler-build-receipt.json",
+    "bytes": 32780971,
+    "sha256": "7c314635977896f22c78dd8cccca4deb8ef7bcf258da83d5eb8a0de097e948d0",
+    "recordedPropertyImports": [
+      "org.jetbrains.kotlin.portable.common.*",
+      "org.jetbrains.kotlin.portable.descriptors.*",
+      "org.jetbrains.kotlin.js.backend.ast.addPrevious",
+      "org.jetbrains.kotlin.js.backend.ast.arg",
+      "org.jetbrains.kotlin.js.backend.ast.arg1",
+      "org.jetbrains.kotlin.js.backend.ast.arg2",
+      "org.jetbrains.kotlin.js.backend.ast.arguments",
+      "org.jetbrains.kotlin.js.backend.ast.arrayExpression",
+      "org.jetbrains.kotlin.js.backend.ast.body",
+      "org.jetbrains.kotlin.js.backend.ast.caseExpression",
+      "org.jetbrains.kotlin.js.backend.ast.cases",
+      "org.jetbrains.kotlin.js.backend.ast.catches",
+      "org.jetbrains.kotlin.js.backend.ast.closingBraceSource",
+      "org.jetbrains.kotlin.js.backend.ast.commentsAfterNode",
+      "org.jetbrains.kotlin.js.backend.ast.commentsBeforeNode",
+      "org.jetbrains.kotlin.js.backend.ast.computedName",
+      "org.jetbrains.kotlin.js.backend.ast.condition",
+      "org.jetbrains.kotlin.js.backend.ast.constructorExpression",
+      "org.jetbrains.kotlin.js.backend.ast.currentNode",
+      "org.jetbrains.kotlin.js.backend.ast.description",
+      "org.jetbrains.kotlin.js.backend.ast.elseExpression",
+      "org.jetbrains.kotlin.js.backend.ast.elseStatement",
+      "org.jetbrains.kotlin.js.backend.ast.expression",
+      "org.jetbrains.kotlin.js.backend.ast.expressions",
+      "org.jetbrains.kotlin.js.backend.ast.finallyBlock",
+      "org.jetbrains.kotlin.js.backend.ast.flags",
+      "org.jetbrains.kotlin.js.backend.ast.globalBlock",
+      "org.jetbrains.kotlin.js.backend.ast.ident",
+      "org.jetbrains.kotlin.js.backend.ast.ifExpression",
+      "org.jetbrains.kotlin.js.backend.ast.incrementExpression",
+      "org.jetbrains.kotlin.js.backend.ast.indexExpression",
+      "org.jetbrains.kotlin.js.backend.ast.initExpression",
+      "org.jetbrains.kotlin.js.backend.ast.initVars",
+      "org.jetbrains.kotlin.js.backend.ast.isAssignment",
+      "org.jetbrains.kotlin.js.backend.ast.isEmpty",
+      "org.jetbrains.kotlin.js.backend.ast.isEs6Arrow",
+      "org.jetbrains.kotlin.js.backend.ast.isGenerator",
+      "org.jetbrains.kotlin.js.backend.ast.isGetter",
+      "org.jetbrains.kotlin.js.backend.ast.isKeyword",
+      "org.jetbrains.kotlin.js.backend.ast.isLeaf",
+      "org.jetbrains.kotlin.js.backend.ast.isLeftAssociative",
+      "org.jetbrains.kotlin.js.backend.ast.isModifying",
+      "org.jetbrains.kotlin.js.backend.ast.isMultiline",
+      "org.jetbrains.kotlin.js.backend.ast.isSetter",
+      "org.jetbrains.kotlin.js.backend.ast.isStatic",
+      "org.jetbrains.kotlin.js.backend.ast.isTemporary",
+      "org.jetbrains.kotlin.js.backend.ast.isTransparent",
+      "org.jetbrains.kotlin.js.backend.ast.label",
+      "org.jetbrains.kotlin.js.backend.ast.modifiers",
+      "org.jetbrains.kotlin.js.backend.ast.name",
+      "org.jetbrains.kotlin.js.backend.ast.operator",
+      "org.jetbrains.kotlin.js.backend.ast.parameter",
+      "org.jetbrains.kotlin.js.backend.ast.parameters",
+      "org.jetbrains.kotlin.js.backend.ast.parent",
+      "org.jetbrains.kotlin.js.backend.ast.pattern",
+      "org.jetbrains.kotlin.js.backend.ast.precedence",
+      "org.jetbrains.kotlin.js.backend.ast.propertyInitializers",
+      "org.jetbrains.kotlin.js.backend.ast.qualifier",
+      "org.jetbrains.kotlin.js.backend.ast.replaceMe",
+      "org.jetbrains.kotlin.js.backend.ast.rootScope",
+      "org.jetbrains.kotlin.js.backend.ast.scope",
+      "org.jetbrains.kotlin.js.backend.ast.source",
+      "org.jetbrains.kotlin.js.backend.ast.statement",
+      "org.jetbrains.kotlin.js.backend.ast.statements",
+      "org.jetbrains.kotlin.js.backend.ast.symbol",
+      "org.jetbrains.kotlin.js.backend.ast.tags",
+      "org.jetbrains.kotlin.js.backend.ast.testExpression",
+      "org.jetbrains.kotlin.js.backend.ast.thenExpression",
+      "org.jetbrains.kotlin.js.backend.ast.thenStatement",
+      "org.jetbrains.kotlin.js.backend.ast.tryBlock",
+      "org.jetbrains.kotlin.js.backend.ast.value",
+      "org.jetbrains.kotlin.js.util.position",
+      "org.jetbrains.kotlin.js.util.line",
+      "org.jetbrains.kotlin.js.util.column"
+    ]
+  },
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}

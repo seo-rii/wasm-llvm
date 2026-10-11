@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-single-worker-performance-counter",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "original": {
+    "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+    "gitBlob": "353fbd618c46ddb5ac711291ce3f3f5e9e7e043a",
+    "bytes": 7012,
+    "language": "kotlin",
+    "compile": true,
+    "role": "source",
+    "module": "core/util.runtime",
+    "sha256": "33a714537ddbb768bac7a9ef4258f398b1d89da6be4c2036a66a9bac5575ee17"
+  },
+  "output": {
+    "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+    "bytes": 6919,
+    "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab",
+    "gitBlob": "62ae4db295ccc1d7360b4a9230ae826b66216f02"
+  },
+  "host": {
+    "path": "PerformanceCounterHost.kt",
+    "bytes": 1178,
+    "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe",
+    "gitBlob": "79f7ad774da4639307d0f4e4c14ffdb8618d009e"
+  },
+  "recipe": [
+    {
+      "start": 245,
+      "before": "import java.lang.management.ManagementFactory\nimport java.util.*\nimport java.util.concurrent.TimeUnit\nimport java.util.concurrent.atomic.AtomicInteger\nimport java.util.concurrent.atomic.AtomicLong\n",
+      "after": "import org.jetbrains.kotlin.util.portable.PerformanceCounterWorkerLocal\nimport org.jetbrains.kotlin.util.portable.performanceCounterNanoTime\n"
+    },
+    {
+      "start": 447,
+      "before": " * This counter is thread-safe for initialization and usage.\n",
+      "after": " * This port runs synchronously in one Worker; each request needs a fresh module.\n"
+    },
+    {
+      "start": 814,
+      "before": "System.nanoTime()",
+      "after": "performanceCounterNanoTime()"
+    },
+    {
+      "start": 913,
+      "before": "synchronized(allCounters)",
+      "after": "run"
+    },
+    {
+      "start": 1157,
+      "before": "synchronized(allCounters)",
+      "after": "run"
+    },
+    {
+      "start": 1364,
+      "before": "synchronized(allCounters)",
+      "after": "run"
+    },
+    {
+      "start": 1550,
+      "before": "synchronized(allCounters)",
+      "after": "run"
+    },
+    {
+      "start": 1666,
+      "before": "        @JvmOverloads\n",
+      "after": ""
+    },
+    {
+      "start": 2097,
+      "before": "ThreadLocal<",
+      "after": "PerformanceCounterWorkerLocal<"
+    },
+    {
+      "start": 2136,
+      "before": "            var value = threadLocal.get()\n            if (value == null) {\n                value = default()\n                threadLocal.set(value)\n            }\n            return value",
+      "after": "            val existing = threadLocal.get()\n            if (existing != null) return existing\n            val value = default()\n            threadLocal.set(value)\n            return value"
+    },
+    {
+      "start": 2510,
+      "before": "synchronized(allCounters)",
+      "after": "run"
+    },
+    {
+      "start": 3325,
+      "before": "TimeUnit.NANOSECONDS.toMillis(totalTimeNanos)",
+      "after": "totalTimeNanos / 1_000_000L"
+    },
+    {
+      "start": 4038,
+      "before": "ThreadLocal<",
+      "after": "PerformanceCounterWorkerLocal<"
+    },
+    {
+      "start": 5186,
+      "before": "ThreadLocal<",
+      "after": "PerformanceCounterWorkerLocal<"
+    },
+    {
+      "start": 6072,
+      "before": "Stack<Boolean>",
+      "after": "ArrayList<Boolean>"
+    },
+    {
+      "start": 6150,
+      "before": "Stack<Boolean>",
+      "after": "ArrayList<Boolean>"
+    },
+    {
+      "start": 6202,
+      "before": "else peek()",
+      "after": "else last()"
+    },
+    {
+      "start": 6271,
+      "before": "Stack<Boolean>",
+      "after": "ArrayList<Boolean>"
+    },
+    {
+      "start": 6681,
+      "before": "return intervalUsefulTime { push(usefulCall) }",
+      "after": "return intervalUsefulTime { add(usefulCall) }"
+    },
+    {
+      "start": 6843,
+      "before": "assert(callStack.peek() == usefulCall)",
+      "after": "assert(callStack.last() == usefulCall)"
+    },
+    {
+      "start": 6894,
+      "before": "return intervalUsefulTime { pop() }",
+      "after": "return intervalUsefulTime { removeAt(lastIndex) }"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 6963,
+      "sha256": "08bf1bf1fb3bcf57e1d69c2edd75061217f67b9b18ac0a12bb5065b7a20869dd",
+      "gitBlob": "bcd528b6e836e06f2ab7e555902507979b84aecb"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 819,
+      "sha256": "5e08feac61530535e816c9d8560510d203a09cc44d2194691f3d17b5c7ac0a10",
+      "gitBlob": "70a7ca82893b113f46362ad0f48f38a31c66a22c"
+    },
+    {
+      "path": "../assertions/CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf",
+      "gitBlob": "eeafb80051e7f546ff098dc027176904d124e254"
+    }
+  ]
+}
