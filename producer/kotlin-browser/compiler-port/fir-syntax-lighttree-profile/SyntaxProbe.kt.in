@@ -1,0 +1,106 @@
+/* Explicit source/FIR/report callback payloads; these are never shipping compiler types. */
+package org.jetbrains.kotlin.portable.syntaxprobe
+
+@IMPORTS@
+import org.jetbrains.kotlin.KtNodeTypes
+import org.jetbrains.kotlin.lexer.KtTokens
+
+sealed class SourceKindPayload { object Real : SourceKindPayload(); object Fake : SourceKindPayload() }
+class SourcePayload(val lighterASTNode:LighterASTNode,val startOffset:Int,val endOffset:Int,
+    val treeStructure:FlyweightCapableTreeStructure<LighterASTNode>,val kind:SourceKindPayload=SourceKindPayload.Real) {
+    val elementType:IElementType get()=lighterASTNode.tokenType
+}
+open class StatementPayload(val source:SourcePayload?)
+class TypePayload(val isBooleanOrNullableBoolean:Boolean)
+class InitializerPayload(val resolvedType:TypePayload)
+class TypeRefPayload(val coneType:TypePayload)
+class SubjectPayload(val initializer:InitializerPayload?,val returnTypeRef:TypeRefPayload?)
+class WhenPayload(source:SourcePayload?,val subjectVariable:SubjectPayload?):StatementPayload(source)
+class ContextPayload
+class ReporterPayload {
+    val records=mutableListOf<String>()
+    fun reportOn(source:SourcePayload?,factory:String){ records += "$factory:${source?.startOffset}:${source?.endOffset}" }
+}
+object DiagnosticIds {
+    const val CONFUSING_BRANCH_CONDITION_ERROR="CONFUSING_BRANCH_CONDITION_ERROR"
+    const val WRONG_CONDITION_SUGGEST_GUARD="WRONG_CONDITION_SUGGEST_GUARD"
+    const val ANNOTATIONS_ON_BLOCK_LEVEL_EXPRESSION_ON_THE_SAME_LINE="ANNOTATIONS_ON_BLOCK_LEVEL_EXPRESSION_ON_THE_SAME_LINE"
+}
+abstract class ExpressionBoundary<E:StatementPayload> {
+    open fun isApplicable(element:E,source:SourcePayload):Boolean=true
+    context(context:ContextPayload,reporter:ReporterPayload)
+    abstract fun checkLightTree(element:E,source:SourcePayload)
+    context(context:ContextPayload,reporter:ReporterPayload)
+    fun check(element:E) {
+        val source=element.source?:return
+        if(!isApplicable(element,source))return
+        checkLightTree(element,source)
+    }
+}
+class Node(val id:String,val type:IElementType,val start:Int=10,val end:Int=20,vararg input:Node):LighterASTNode {
+    var parent:Node?=null
+    val children=input.toList().also { it.forEach { n -> n.parent=this } }
+    @NODE_MEMBERS@
+    override fun toString():String=id
+}
+class Tree(val rootNode:Node):FlyweightCapableTreeStructure<LighterASTNode> {
+    override fun getRoot():LighterASTNode=rootNode
+    override fun getParent(node:LighterASTNode):LighterASTNode?=(node as Node).parent
+    override fun getChildren(parent:LighterASTNode,into:Ref<Array<LighterASTNode@SUFFIX@>>):Int {
+        val children=(parent as Node).children;into.set(Array(children.size){children[it]});return children.size
+    }
+    override fun disposeChildren(nodes:Array<out LighterASTNode>?,count:Int){}
+    override fun toString(node:LighterASTNode):CharSequence=node.toString()
+    override fun getStartOffset(node:LighterASTNode):Int=node.startOffset
+    override fun getEndOffset(node:LighterASTNode):Int=node.endOffset
+}
+fun syntaxSnapshot():String {
+    val output=StringBuilder()
+    fun record(id:String,body:()->List<String>) {
+        val value=try { body().joinToString(",") } catch(e:NoSuchElementException){"NoSuchElementException"}
+        output.append(id).append('\t').append(value).append('\n')
+    }
+    val tokens=listOf(KtTokens.IN_KEYWORD,KtTokens.NOT_IN,KtTokens.LT,KtTokens.LTEQ,KtTokens.GT,KtTokens.GTEQ,
+        KtTokens.EQEQ,KtTokens.EXCLEQ,KtTokens.EQEQEQ,KtTokens.EXCLEQEQEQ,KtTokens.ANDAND,KtTokens.OROR,KtTokens.PLUS,KtTokens.IDENTIFIER)
+    for(boolean in listOf(false,true)) for([index,token] in tokens.withIndex()) record("binary/$boolean/$index") {
+        val operation=Node("op",KtNodeTypes.OPERATION_REFERENCE,13,15,Node("token",token,13,15))
+        val expression=Node("binary",KtNodeTypes.BINARY_EXPRESSION,10,20,Node("left",KtNodeTypes.REFERENCE_EXPRESSION),operation)
+        val condition=Node("condition",KtNodeTypes.WHEN_CONDITION_EXPRESSION,10,20,expression)
+        val root=Node("when",KtNodeTypes.WHEN,0,30,Node("entry",KtNodeTypes.WHEN_ENTRY,10,20,condition))
+        val source=SourcePayload(root,100,130,Tree(root));val element=WhenPayload(source,SubjectPayload(InitializerPayload(TypePayload(boolean)),null))
+        val reporter=ReporterPayload();with(ContextPayload()){with(reporter){FirConfusingWhenBranchSyntaxChecker.check(element)}};reporter.records
+    }
+    for(type in listOf(KtNodeTypes.IS_EXPRESSION,KtNodeTypes.PARENTHESIZED,KtNodeTypes.REFERENCE_EXPRESSION)) record("expression/$type") {
+        val expression=Node("expression",type,10,20)
+        val root=Node("when",KtNodeTypes.WHEN,0,30,Node("entry",KtNodeTypes.WHEN_ENTRY,10,20,Node("condition",KtNodeTypes.WHEN_CONDITION_EXPRESSION,10,20,expression)))
+        val source=SourcePayload(root,100,130,Tree(root));val reporter=ReporterPayload()
+        with(ContextPayload()){with(reporter){FirConfusingWhenBranchSyntaxChecker.check(WhenPayload(source,SubjectPayload(null,TypeRefPayload(TypePayload(false)))))}};reporter.records
+    }
+    for(subject in listOf<SubjectPayload?>(null,SubjectPayload(null,null))) record("no-subject/${subject==null}") {
+        val root=Node("when",KtNodeTypes.WHEN);val source=SourcePayload(root,10,20,Tree(root));val reporter=ReporterPayload()
+        with(ContextPayload()){with(reporter){FirConfusingWhenBranchSyntaxChecker.check(WhenPayload(source,subject))}};reporter.records
+    }
+    for(container in listOf(KtNodeTypes.BLOCK,KtNodeTypes.WHEN_ENTRY,KtNodeTypes.BODY,KtNodeTypes.THEN,KtNodeTypes.ELSE,KtNodeTypes.VALUE_ARGUMENT))
+        for(right in listOf(false,true)) for(fake in listOf(false,true)) record("annotation/$container/$right/$fake") {
+            val expression=Node("binary",KtNodeTypes.BINARY_EXPRESSION,10,20,Node("ann",KtNodeTypes.ANNOTATED_EXPRESSION))
+            val sibling=Node("sibling",KtNodeTypes.REFERENCE_EXPRESSION)
+            val parent=Node("binary-parent",KtNodeTypes.BINARY_EXPRESSION,0,30,*(if(right) arrayOf(sibling,expression) else arrayOf(expression,sibling)))
+            val root=Node("container",container,0,30,parent);val source=SourcePayload(expression,10,20,Tree(root),if(fake)SourceKindPayload.Fake else SourceKindPayload.Real)
+            val reporter=ReporterPayload();with(ContextPayload()){with(reporter){FirAnnotatedBinaryExpressionChecker.check(StatementPayload(source))}};reporter.records
+        }
+    for(type in listOf(KtNodeTypes.BINARY_EXPRESSION,KtNodeTypes.PARENTHESIZED)) record("no-annotation/$type") {
+        val expression=Node("expression",type,10,20,Node("left",KtNodeTypes.REFERENCE_EXPRESSION));val root=Node("root",KtNodeTypes.BLOCK,0,30,expression)
+        val source=SourcePayload(expression,10,20,Tree(root));val reporter=ReporterPayload()
+        with(ContextPayload()){with(reporter){FirAnnotatedBinaryExpressionChecker.check(StatementPayload(source))}};reporter.records
+    }
+    record("null-source") { val reporter=ReporterPayload();with(ContextPayload()){with(reporter){FirAnnotatedBinaryExpressionChecker.check(StatementPayload(null))}};reporter.records }
+    val raw=output.toString()
+    check(raw.lines().size==61)
+    check(raw.contains("binary/false/10\tWRONG_CONDITION_SUGGEST_GUARD:110:120\n"))
+    check(raw.contains("binary/true/10\tCONFUSING_BRANCH_CONDITION_ERROR:110:120\n"))
+    check(raw.contains("binary/false/12\t\n"))
+    check(raw.split("WRONG_CONDITION_SUGGEST_GUARD:").size-1==1)
+    check(raw.split("CONFUSING_BRANCH_CONDITION_ERROR:").size-1==24)
+    check(raw.split("ANNOTATIONS_ON_BLOCK_LEVEL_EXPRESSION_ON_THE_SAME_LINE:").size-1==5)
+    return raw
+}
