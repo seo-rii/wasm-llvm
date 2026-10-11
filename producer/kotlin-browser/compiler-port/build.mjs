@@ -84,6 +84,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let klibDiskSourceProfileComposition;
   let towerGroupComposition;
   let jvmUtilityProfileComposition;
+  let sourceHostComponent;
+  let firSyntaxLightTreeComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -842,6 +844,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         await mkdir(componentRoot, { recursive: true });
         await execute('git', ['init', '--quiet', componentRoot], { timeout: 10000, maxBuffer: 65536 });
         const component = await prepare({ sourceRoot: prepared.sourceRoot, outputRoot: componentRoot });
+        if (key === 'sourceHostReceipt') sourceHostComponent = component;
         preparedComponents.set(key, component);
         receipt[key] = component.receipt;
         for (const binding of component.predecessorBindings ?? []) {
@@ -1146,6 +1149,38 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       }
     }
     if (sourceHost === 'portable') {
+      const profile = await import('./fir-syntax-lighttree-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'firSyntaxLightTreeProfileReceipt');
+      const component = await profile.prepareFirSyntaxLightTreeProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedHost: sourceHostComponent, recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      const replaced = new Set(component.replacedOriginalPaths.map(relativePath));
+      assert.equal(replaced.size, 18); assert.equal(component.commonSources.length, 18);
+      for (const filename of component.commonSources) {
+        assert(filename.startsWith(outputRoot + path.sep));
+        const logical = relativePath(path.relative(outputRoot, filename)), previous = files.get(logical);
+        assert(replaced.has(logical) && previous?.compile, 'Missing selected syntax predecessor');
+        const binding = component.receipt.files.find(row => row.before.path === logical);
+        assert(binding, 'Missing syntax source binding');
+        assert.deepEqual({ path: logical, filename: previous.filename, bytes: previous.bytes, sha256: previous.sha256 }, binding.before);
+        const bytes = await readRegular(filename), digest = sha256(bytes);
+        assert.deepEqual({ path: logical, filename, bytes: bytes.length, sha256: digest }, binding.after);
+        files.set(logical, { filename, bytes: bytes.length, sha256: digest, compile: true });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== logical);
+        receipt.portableSourceBindings.push({ path: logical, sha256: digest });
+        replaced.delete(logical);
+      }
+      assert.equal(replaced.size, 0, 'Missing prepared syntax source');
+      assert.equal(component.sourceSetExclusions.length, 1);
+      const excluded = relativePath(component.sourceSetExclusions[0]), pin = files.get(excluded);
+      assert(pin?.compile, 'Missing selected PSI-only syntax checker');
+      assert.deepEqual({ path: excluded, filename: pin.filename, bytes: pin.bytes, sha256: pin.sha256 }, component.receipt.excluded);
+      files.set(excluded, { ...pin, compile: false });
+      receipt.firSyntaxLightTreeProfileReceipt = component.receipt;
+      firSyntaxLightTreeComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+    }
+    if (sourceHost === 'portable') {
       const profile = await import('./jvm-utility-source-profile/prepare.mjs');
       const outputRoot = path.join(output, 'components', 'jvmUtilitySourceProfileReceipt');
       const component = await profile.prepareJvmUtilitySourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
@@ -1218,10 +1253,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
     }
     if (sourceHost === 'portable') {
       const navigation = await import('./fir-navigation/prepare.mjs');
-      const final = await navigation.verifyFirNavigationFinalSources({
-        profileRoot: path.join(output, 'components', 'firNavigationReceipt'),
+      const syntax = await import('./fir-syntax-lighttree-profile/prepare.mjs');
+      const syntaxFinal = await syntax.verifyFirSyntaxLightTreeFinalSources({
+        ...firSyntaxLightTreeComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
+      receipt.firSyntaxLightTreeFinalReceipt = syntaxFinal.receipt;
+      const final = await navigation.verifyFirNavigationFinalSources({
+        profileRoot: path.join(output, 'components', 'firNavigationReceipt'),
+        retainedSources: syntaxFinal.predecessorRetainedSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports],
       });
       receipt.firNavigationFinalReceipt = final.receipt;
