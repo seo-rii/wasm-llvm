@@ -83,6 +83,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
   let towerGroupComposition;
+  let jvmUtilityProfileComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -1145,6 +1146,25 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       }
     }
     if (sourceHost === 'portable') {
+      const profile = await import('./jvm-utility-source-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'jvmUtilitySourceProfileReceipt');
+      const component = await profile.prepareJvmUtilitySourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.deepEqual(component.commonSources, []);
+      assert.equal(component.sourceSetExclusions.length, 5);
+      assert.equal(new Set(component.sourceSetExclusions).size, 5);
+      for (const excluded of component.sourceSetExclusions) {
+        const logical = relativePath(excluded), pin = files.get(logical);
+        assert(pin?.compile, 'Missing selected JVM utility source');
+        assert.deepEqual({ path: logical, filename: pin.filename, bytes: pin.bytes, sha256: pin.sha256 },
+          component.receipt.selection.sources.find(row => row.path === logical), 'JVM utility source owner changed');
+        files.set(logical, { ...pin, compile: false });
+      }
+      receipt.jvmUtilitySourceProfileReceipt = component.receipt;
+      jvmUtilityProfileComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+    }
+    if (sourceHost === 'portable') {
       const profile = await import('./klib-disk-source-profile/prepare.mjs');
       const outputRoot = path.join(output, 'components', 'klibDiskSourceProfileReceipt');
       const component = await profile.prepareKlibDiskSourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
@@ -1367,6 +1387,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const profile = await import('./klib-disk-source-profile/prepare.mjs');
       receipt.klibDiskSourceProfileFinalReceipt = await profile.verifyKlibDiskFinalSources({
         ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./jvm-utility-source-profile/prepare.mjs');
+      receipt.jvmUtilitySourceProfileFinalReceipt = await profile.verifyJvmUtilityFinalSources({
+        ...jvmUtilityProfileComposition,
+        klibDiskProfile: { ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition },
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
       });
