@@ -80,6 +80,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let nativeJsOutputProfileComposition;
   let serviceLoaderProfileComposition;
   let firJavaSessionProfileComposition;
+  let klibSignatureIndexComponent;
+  let klibDiskSourceProfileComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -437,6 +439,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
               .map(([sourcePath, { filename, bytes, sha256 }]) => ({ path: sourcePath, filename, bytes, sha256 })) });
           await index.verifyKlibSignatureIndex(outputRoot);
+          klibSignatureIndexComponent = component;
           return component;
         }],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
@@ -1134,6 +1137,35 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       }
     }
     if (sourceHost === 'portable') {
+      const profile = await import('./klib-disk-source-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'klibDiskSourceProfileReceipt');
+      const component = await profile.prepareKlibDiskSourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedKlibSignatureIndex: klibSignatureIndexComponent,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.equal(component.replacedOriginalPaths.length, 1); assert.equal(component.commonSources.length, 1);
+      const sourcePath = relativePath(component.replacedOriginalPaths[0]), previous = files.get(sourcePath);
+      assert(previous?.compile, 'Missing selected KLIB configuration predecessor');
+      assert.deepEqual({ path: sourcePath, filename: previous.filename, bytes: previous.bytes, sha256: previous.sha256 },
+        component.receipt.configuration.before, 'KLIB configuration predecessor changed');
+      assert.equal(component.sourceSetExclusions.length, 7);
+      assert.equal(new Set(component.sourceSetExclusions).size, 7);
+      for (const excluded of component.sourceSetExclusions) {
+        const logical = relativePath(excluded); assert(files.get(logical)?.compile, 'Missing selected KLIB disk source');
+        files.set(logical, { ...files.get(logical), compile: false });
+      }
+      const filename = component.commonSources[0]; assert(filename.startsWith(outputRoot + path.sep));
+      assert.equal(relativePath(path.relative(outputRoot, filename)), sourcePath);
+      const bytes = await readRegular(filename), digest = sha256(bytes);
+      assert.deepEqual({ path: sourcePath, filename, bytes: bytes.length, sha256: digest }, component.receipt.configuration.after);
+      files.set(sourcePath, { filename, bytes: bytes.length, sha256: digest, compile: true });
+      receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== sourcePath);
+      receipt.portableSourceBindings.push({ path: sourcePath, sha256: digest });
+      receipt.klibDiskSourceProfileReceipt = component.receipt;
+      klibDiskSourceProfileComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+    }
+    if (sourceHost === 'portable') {
       // This profile observes the completed assembly. Every later guard must
       // see the same graph with exactly this unused JVM source removed.
       const profile = await import('./service-loader-profile/prepare.mjs');
@@ -1310,6 +1342,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const profile = await import('./service-loader-profile/prepare.mjs');
       receipt.serviceLoaderProfileFinalReceipt = await profile.verifyServiceLoaderFinalSources({
         ...serviceLoaderProfileComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./klib-disk-source-profile/prepare.mjs');
+      receipt.klibDiskSourceProfileFinalReceipt = await profile.verifyKlibDiskFinalSources({
+        ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
       });
