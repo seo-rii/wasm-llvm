@@ -90,6 +90,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorKindFilterComposition;
   let firPredicateComposition;
   let descriptorReceiverComposition;
+  let descriptorSubstitutorComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -371,6 +372,19 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           descriptorReceiverComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
           await receivers.verifyDescriptorReceiverFactory(descriptorReceiverComposition);
           assert.equal(component.commonSources.length, 6);
+          return component;
+        }],
+        ['descriptorSubstitutorReceipt', async ({ sourceRoot, outputRoot }) => {
+          const substitution = await import('./descriptor-substitutor/prepare.mjs');
+          const component = await substitution.prepareDescriptorSubstitutor({ sourceRoot, outputRoot,
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            preparedTypeImplementations: preparedComponents.get('typeImplementationReceipt'),
+            preparedFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          descriptorSubstitutorComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await substitution.verifyDescriptorSubstitutor(descriptorSubstitutorComposition);
+          assert.equal(component.commonSources.length, 4);
           return component;
         }],
         ['typeSubstitutorGetterReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1402,10 +1416,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const bases = await import('./descriptor-base-implementations/prepare.mjs');
       const functions = await import('./descriptor-function-implementations/prepare.mjs');
       const receivers = await import('./descriptor-receiver-factory/prepare.mjs');
-      const receiverFinal = await receivers.verifyFinalDescriptorReceiverFactory({
-        ...descriptorReceiverComposition,
+      const substitution = await import('./descriptor-substitutor/prepare.mjs');
+      const substitutionFinal = await substitution.verifyFinalDescriptorSubstitutor({
+        ...descriptorSubstitutorComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorSubstitutorFinalReceipt = substitutionFinal.receipt;
+      const receiverFinal = await receivers.verifyFinalDescriptorReceiverFactory({
+        ...descriptorReceiverComposition,
+        retainedSources: substitutionFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorReceiverFactoryFinalReceipt = receiverFinal.receipt;
