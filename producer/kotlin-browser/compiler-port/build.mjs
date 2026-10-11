@@ -79,6 +79,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let moduleRequirePathsComposition;
   let nativeJsOutputProfileComposition;
   let serviceLoaderProfileComposition;
+  let firJavaSessionProfileComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -691,6 +692,18 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
             kernelComponent: preparedComponents.get('sourceMapBuilderKernelReceipt') };
           return component;
         }],
+        ['firJavaSessionProfileReceipt', async ({ sourceRoot, outputRoot }) => {
+          const profile = await import('./fir-java-session-profile/prepare.mjs');
+          const filename = path.join(here, 'entry/BrowserCompiler.kt'), bytes = await readRegular(filename);
+          const component = await profile.prepareFirJavaSessionProfile({ sourceRoot, outputRoot,
+            forwardSources: [{ path: 'compiler-port-entry/BrowserCompiler.kt', filename,
+              bytes: bytes.length, sha256: sha256(bytes) }],
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          firJavaSessionProfileComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await profile.verifyFirJavaSessionProfile(firJavaSessionProfileComposition);
+          return component;
+        }],
         ['backendProfileReceipt', async ({ sourceRoot, outputRoot }) => {
           assert(preparedComponents.has('backendReceipt'), 'Whole-program backend must be prepared first');
           return (await import('./backend-profile/prepare.mjs')).prepareBackendProfileSources({
@@ -1241,6 +1254,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const managers = await import('./performance-manager/prepare.mjs');
       receipt.performanceManagerFinalReceipt = await managers.verifyFinalPerformanceManager({
         sourceRoot: prepared.sourceRoot, outputRoot: path.join(output, 'components', 'performanceManagerReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./fir-java-session-profile/prepare.mjs');
+      receipt.firJavaSessionProfileFinalReceipt = await profile.verifyFinalFirJavaSessionProfile({
+        ...firJavaSessionProfileComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
