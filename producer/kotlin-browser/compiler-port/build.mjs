@@ -74,6 +74,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let serializerCommentTypeNamesComposition;
   let moduleRequirePathsComposition;
   let nativeJsOutputProfileComposition;
+  let serviceLoaderProfileComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -1079,7 +1080,26 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         const sourcePath = relativePath(excluded); assert(files.get(sourcePath)?.compile);
         files.set(sourcePath, { ...files.get(sourcePath), compile: false });
       }
-      const final = await profile.verifyK1ContainerProfileComposition({ profileRoot: componentRoot,
+    }
+    if (sourceHost === 'portable') {
+      // This profile observes the completed assembly. Every later guard must
+      // see the same graph with exactly this unused JVM source removed.
+      const profile = await import('./service-loader-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'serviceLoaderProfileReceipt');
+      const component = await profile.prepareServiceLoaderProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.deepEqual(component.commonSources, []);
+      assert.deepEqual(component.sourceSetExclusions, [profile.TARGET]);
+      assert(files.get(profile.TARGET)?.compile, 'Missing original service loader selection');
+      files.set(profile.TARGET, { ...files.get(profile.TARGET), compile: false });
+      receipt.serviceLoaderProfileReceipt = component.receipt;
+      serviceLoaderProfileComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./k1-container-profile/prepare.mjs');
+      const final = await profile.verifyK1ContainerProfileComposition({
+        profileRoot: path.join(output, 'components', 'k1ContainerProfileReceipt'),
         retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
       receipt.k1ContainerFinalReceipt = final.receipt;
@@ -1188,6 +1208,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./service-loader-profile/prepare.mjs');
+      receipt.serviceLoaderProfileFinalReceipt = await profile.verifyServiceLoaderFinalSources({
+        ...serviceLoaderProfileComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
       });
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));

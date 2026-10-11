@@ -201,6 +201,12 @@ path reconstruction, checking the actual selected sources and the verified
 module fragment owner. This source-selection proof does not implement native
 filesystem output or establish a working browser compiler.
 
+After assembly, the [service-loader profile](service-loader-profile/README.md)
+excludes the unreferenced JVM `ServiceLoaderLite.kt`. It checks all primary
+Kotlin/Java sources and actual selected inputs, preserves the original file,
+and requires the final source graph to differ only by that removal. The real
+parser, FIR2IR, Wasm lowering and builtins loader stay selected.
+
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB
 would leave browser compilation `not-built` until a nonempty callable compiler
