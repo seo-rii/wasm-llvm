@@ -11,11 +11,11 @@
   "programTarget": "wasmWasi",
   "publicLanguageSupport": false,
   "sourceBuildReceipt": {
-    "path": "out/kotlin-compiler-port/builds/function-syntax-whole-1791708437574091361/compiler-build-receipt.json",
-    "sha256": "e04c68596ee7b36a94b609637a136e52e74dfece4c4cf660b11e9f171d55c2e4"
+    "path": "out/kotlin-compiler-port/builds/receiver-predicate-whole-1791715136452421425/compiler-build-receipt.json",
+    "sha256": "809e79ed415addbb95fa4d866e15e063282f6f3dd283c835ab188b17b5932255"
   },
   "sourceLockSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
-  "buildToolSha256": "232d8ff085e93ddd6d610055c47c42005e1553f2178186a40058da062a0f879f",
+  "buildToolSha256": "d4266f8ffccfdd38b671db0f3e9b1010952d5f932cb329ab1b349686ff4a93fc",
   "evidenceToolSha256": "794a43d27ee32b0717a02ff1409a45e9051749eb50cd741489f360a29ba19ef9",
   "reproduceCommand": [
     "node",
@@ -506,18 +506,18 @@
     "-Xwasm-kclass-fqn"
   ],
   "sourceInputs": {
-    "selectedKotlinSources": 3522,
-    "sourceIndexSha256": "e0754bfc77b368e3a0160fe15041932ea48d79a125efcf9a36c8902d46fbe6d1",
+    "selectedKotlinSources": 3533,
+    "sourceIndexSha256": "7da846db45b69375c49486d505fd4652358659fafd1ad74e09db4dca8d17265e",
     "originalJavaInventoryCount": 355,
     "inventoryIsNotSymbolClosure": true
   },
   "componentReceiptDigests": {
     "sourceHostReceipt": "e5096aa0d178d832ef4efd3dc57d8ec34500ba85853df09f345faba8ac0a9c05",
     "positioningReceipt": "f04d57a095b87902403f9ad43ad21ebccc66d4222e351dcd9554ffd572556f00",
-    "firNavigationReceipt": "bff5cb1f9f2b6893f119a791cb421edf54420318303eb5a59dbf36a6b56a4200",
+    "firNavigationReceipt": "7823d8922098e950a8b868257c8580e676722dd2ada2c6501055514a667918f8",
     "firContainingClassReceipt": "8756ef7c561a19c1504e83b52811990f442224b74e5d07fede4cf6e7e515bc15",
     "diagnosticFactoriesReceipt": "e413b1f48d79f48539cb06cb81f339a99167b3634e6d65d9677521de18634a71",
-    "sourceClosureReceipt": "47f694f042272b2bf9c3cd0efcbe37db9c2d0288049b328ca328583f2a06060b",
+    "sourceClosureReceipt": "8a507079187fdcddfbaf376ed2a37941007a3133fcdcda26365eee15a6df9d2c",
     "diagnosticCommonReceipt": "880911daeb7c6efdf73c6250cef70ce6ef42f55d90f319172909bdc23d86149e",
     "diagnosticDslReceipt": "0807788820e843a05e749ae6606bcf725ed12ca80fb66d135f2ed68ba61afb48",
     "diagnosticRenderingReceipt": "7c954ab3644338104b7a1bc5e34ef31191cc13d94f78d3268019e36fab5ef56e",
@@ -527,105 +527,113 @@
     "messagesReceipt": "b468d9a081e8e15a23afd0d206f3542d1faaecb3a7b2df5edca27bca7a98e956",
     "versionsReceipt": "8fa1bb61cf61184324174fc731034dcaf95e934f50270477b47ff9b15e7558bc",
     "commonJavaReceipt": "e9860e5bfbd4d58c3836e27cebd0dffc5ce1ed59ca4003238926449d69e226db",
-    "descriptorReceipt": "12bf52738587b46f8ce6a7f2d1c30a7667da4560e9f8d9d0b977ae4efc9a3570",
-    "descriptorVisitorReceipt": "0673f29c8174dda60400c053a6439c64117e5440d8b1352bfed0ee34d8d1cf2b",
-    "descriptorVisitorVoidReceipt": "0a357ed82f406075c2d0f80c3ae3c71a3a298344705db84a93db7b76314ff04d",
-    "descriptorPlatformSignaturesReceipt": "8cd7b9cbb1ee918c61e9092f8168d6b48ab177a396c2c2fb9e43d73cdb6bbb65",
-    "copyBuilderPlatformReceipt": "e0651341076f33e9e043e8ab3e9bf0f63724aa4c8d5f61272ed28b9737f5c0e5",
-    "irPropertyTypeGetterReceipt": "57b77ec2d0208d796330ba9975bc919bd751edf54049a515f6643ab9990e3768",
-    "descriptorBaseImplementationsReceipt": "39e04d19f8475b31c0e223ce5623c5392d29bcad3c52a1cea0a683e9132226a7",
+    "descriptorReceipt": "31bf4fbf0b91c692fb45b57824de33937fa74a91442a40cc0df00f8ac25b9ff4",
+    "descriptorVisitorReceipt": "080c7a584bbca14f5f936124f8009ce80ba852dae70402147f67f162b61bb419",
+    "descriptorVisitorVoidReceipt": "27719555548313adc7ace20d7b16d0670e4ddc53048186093e2330a9421af828",
+    "descriptorPlatformSignaturesReceipt": "65bd4d96bbbd89dad8cca243957465ca9fbbf575792995242eeb834d94f94910",
+    "copyBuilderPlatformReceipt": "ead52ce89b1eef13e6aeb2f349d178d10a94e465d40469a29a91a3c573928289",
+    "irPropertyTypeGetterReceipt": "634b6fc745b24237258258c02b504c956dfd07fb8aeac3dab808ba8ba5936b40",
+    "descriptorBaseImplementationsReceipt": "031598d3fee45c829270adf2bb406f431e0a285b5b470b1f11ba6b595223aaf9",
     "annotationImplementationsReceipt": "0f121e76dd708d841bf8c682119cc3f19382ca3614843a99e4e68e29e1ae6769",
     "deserializationContractsReceipt": "8ccf6a950a6fa733e0c95c98243b29b80b8442f9746ab4fff64bec7198c3e018",
-    "typeContractReceipt": "120807c60a2d4bb8b4e0647afee1d31df5902b126f53fbed0c7495b36becac46",
-    "typeImplementationReceipt": "6eff019d810eac1cb908fcc0f9051f04428ef68f713818a1e1f7c9d0491d012c",
-    "descriptorFunctionImplementationsReceipt": "3d807c1ff45bc17a9b16dcd26a0175bd4fe4ffaac4f02d3404a039d5704c6cbe",
-    "typeSubstitutorGetterReceipt": "b259984c7c874ea1071e7145df4d4c7c29bd0d4104af338a76fd2dba1bf2d33b",
-    "typeUtilitiesReceipt": "15cae0d2d879070742647b89b431f08bcdbf0a6ba438813fb647f7e570aaf383",
+    "typeContractReceipt": "ee1cfc298f208214d654acdb07875cf74763199633cf8e5b1ad1d047c32e616a",
+    "typeImplementationReceipt": "b4a131c6140d6bd8f2b188a2e68933dece03eca9a15ee6267b382f177375afd5",
+    "descriptorFunctionImplementationsReceipt": "03e7a306f7f87229bab0e6f3f206e78ca96732a50f36f62063194b3091dafb3f",
+    "descriptorReceiverFactoryReceipt": "fa99b42935e2ee2742027f1f35ec2485877002e59d9115c2b79d4dcae12357fd",
+    "descriptorSubstitutorReceipt": "5866fb1ebee1f3e2cc31ea8cfe2edaa373fe5d7a8b28536d932a8721ef49108d",
+    "typeSubstitutorGetterReceipt": "5b4703ca87bb8b61f97cb683a96f883be4e8c51d4e2ba099a32605805a34d1c9",
+    "typeUtilitiesReceipt": "c3680561b3995f868a995bd2faf865734a994c0c1d1f6c009005a5f7df2d5036",
     "visibilityReceipt": "976ba35cbc576c1c63965137e0cb0c4e1f985e23f8d5d659c6745809742aedfb",
     "builtInsReceipt": "c0ca1ebcb98d5a62c7b3978232bdf9012fbd556409368e1127c6c820c5f96a58",
     "descriptorUtilsReceipt": "e6f364c7c92c13b93da2d811349df6eca49eebef7bf4a241a6f35b325067428f",
     "memberComparatorReceipt": "a3ecc9910c99e37016188eee71fa6d971b7b8b56937f439468bdde25a48359b9",
+    "descriptorKindFilterHostReceipt": "f13abef392e85d39ba4f143fd7435d735c87d5c178f9a7d89b39779fed30fbb4",
     "assertionReceipt": "5692b07627b625e6e61200f776e1697b82caad56515de5e74ce0eb71427e8828",
     "performanceCounterReceipt": "eda21ca2eb9b6da0c643c422062fec409da4744802c23930efd3ae51f3395ef3",
     "towerGroupReceipt": "85ec055981bc50d7ac9daf08463f41466b79d2266b010daa963a86303dd23d93",
+    "firPredicateCollectionsReceipt": "3aec2fae0653746bbebea7464e7e88605b8c618c432cf1420f89bccc7e0d3356",
     "performanceManagerReceipt": "68adc2f5c4d8e84bb1f76bccce709e1be89fa5d0bb1404acc61f1dc769fd9f96",
     "storageReceipt": "8bd872265ac924388fce142f61e069f6ec96443d4d29cc03ec9b9460730f505b",
     "collectionsReceipt": "75047312d021d7b91cadd30ca8e716b9d368d854c301c8a8d566e6c7375fd157",
-    "smartSetReceipt": "2be3516b4d7d4d1a8f9d5fe4874cbe2436ebed5c8ed4607fcc468cf0dbc2888a",
+    "smartSetReceipt": "052127837ebad84fe472abb7da4739610ce9361b670550349e95b6cc4d5e958d",
     "identityReceipt": "f40e19f117049b3e2fd812448bf82bba38451312faee24c77bf5924d41297b4b",
-    "classifierConstructorGetterReceipt": "604742d84285739d6d3e833859b27bc550889f5879a471dbe55008b1b6290f0a",
-    "coneClassIdentityReceipt": "7e576307211eb9ce675c02a1e60e623014d69366cec0d759ed8e15565f7fbc1f",
+    "classifierConstructorGetterReceipt": "040880c2fc48e82df2810c8a13e44276bd53d64250d7a55f7906f5ffe1cf83c1",
+    "coneClassIdentityReceipt": "b49ab233d2a27109a56d10c6e584cde95d7bbd3305bfb9ef503f368ec8225af6",
     "firStorageReceipt": "3eddb325f43c2f02da78f91ef2bbf89ae280058b18e2d498d6c18af73d6c452a",
     "registryReceipt": "ac5c3ec99615bd68983f0fc027436ca0e5e200e4d6aff8e9a528adc0e42e8f1c",
     "sessionProfileReceipt": "3d3392f23246b6045dce158201a84cb0654d0a9c31959db9c9018f42c4a762fd",
     "serialResolveReceipt": "e2c27f54fd93c1717c05f823c80521ed31d837a4246b86b7f2107bb2c70fcac1",
     "flagsReceipt": "7117da3abc3b10e569897d2564045ca81b4371006efca2ce1578226f0fa01b0b",
     "bitSetReceipt": "ee29325b64332f24a4c8097f9750ca9f0093b1996a28ed85a73852f7b60a43bf",
-    "textReceipt": "0848b7e1ed1275ff58e41117aecf166f8d3249fd189e6065f5db8f998b4f4c76",
-    "wasmCollectionsReceipt": "bac57063a60b3c0ae9c4e5849d8d5b4acb9a9091cc26494593f49ecdb53ae21c",
-    "wasmCollectionConsumersReceipt": "80f5ef4c20cf73a18d246755646abb3a87e6fcaf0779dbf752a70ca7ec36225c",
+    "textReceipt": "b5f7460e386d79510d6ede73615b0a24fd674cf521d178fc05ffcb1b4f5c8c67",
+    "wasmCollectionsReceipt": "ce3adbcd87cd78142bf338824abb07cbee1f99e8d00d2ceef75f74205e6b7b61",
+    "wasmCollectionConsumersReceipt": "e2a0df2494bec7f38454b34d409be1518c8f359c657db5318ba847b3d5fdaa69",
     "klibReceipt": "fb738c7b41b8e39256e34bf0de34d233524e8ce7f98ee8bf35cf34b1b10f866e",
-    "klibSignatureIndexReceipt": "9e891b6a4b4f5be994f70f9a96c66890600285ff7297e964996118c2c7d0caed",
+    "klibSignatureIndexReceipt": "2a4e096253381bb2516a581863a428206c233f269f434c5109c11d62e0b378a7",
     "linkerReceipt": "c311fa487eb91dbbace2fd661a376f1791c50ee0caf634970906b3d9853929f3",
     "backendReceipt": "487fdf812c599997ab419f74438ba6b421a673d5f4101aec9229793df3b3f3e0",
     "jsAstReceipt": "699f630b2e1f73e87f784d20e943f52e30b31d7c19018615faa9a5bf044e00d5",
     "jsAstIntegerConsumerReceipt": "c5fd6845dc9d467ea843e5bcabb4efda38717d8e8d316260d67594d3881391e4",
-    "jsAstIntegerBoundsReceipt": "0102e74e4ee782ef87dca30969ceea0c28b933a13cd10632490b9a4a4dd051dd",
+    "jsAstIntegerBoundsReceipt": "4be12a9ab83ff88e56e46f4a59e19d8cb288347784201679fc1aaa471fc98baa",
     "jsAstInputReceipt": "8cd5b2bed5d12eef2c2eb52f110f1182e7294daaa54d2c59217655a7a8ae132e",
-    "jsAstDeserializerReceipt": "40829d72839c4c7cf7f8dbeb625c46ae7fb067bdfc9e4a62979323c3f9d72f37",
+    "jsAstDeserializerReceipt": "1c59a78ca19df86198a8baf558994b04d6c3ad76196759a85e88426e8d839fd8",
     "constantsArithmeticReceipt": "91dae9ffa766f4ff794d01cd62c22e390388dccd106325415a8ae6a19f3a5bf9",
     "jsSourceContentReceipt": "48fc213a41d0dd61d0494723003053e6959dcb93f5812df431f848d4837a78ac",
     "nullConstantValueReceipt": "9cfd269c28b910ffe4a87ec2cd27f8a370dab42b7fc32abe4b9c60cec8b2a777",
-    "charConstantFormatReceipt": "44d92b199065b587f5da3e6661ccc5e74c852ca66b3318ba7d5f9398d8107940",
+    "charConstantFormatReceipt": "f1c3887a945ed2113b9fd5fce9ffa5df07d03e3080895f5e90005b38162d11c0",
     "serializerNullabilityReceipt": "f9a1d58ef250a32ed6110c965fdd2fc931cddadb360b988f4318fe732fa5b9ce",
     "jsAstOutputReceipt": "ac78f0b92c7ac33a0bef26262e5e0b60092bebd93564de5d402caf917f4eafe3",
     "jsAstOutputStreamReceipt": "9040872e52fddf95715bd8d6f6962e390a6fc351c921c83714c174b924c615df",
     "sourceMapJsonReceipt": "166c326b39ad04281214dd5f30535c7c77402a7002a3cc5924fa6ce09a2d31a9",
     "sourceMapTextIoReceipt": "b828b1a16f96961523c86eb94c8a369875792e0328b979e7ba9d88b67a7d1d29",
-    "sourceMapRuntimeReceipt": "cdde3bad47b76c8f3723337948db9907d4b761ff0cad49146515d0f889a928e7",
+    "sourceMapRuntimeReceipt": "88ea2c1f0b3726d71c4b7821791d8aa1228577b5d658448463ae8e8dc475d5af",
     "sourceMapBuilderKernelReceipt": "6aed1ee069f898f95d54bf63d3fa178edf265b68f294c65f50a4bf5549b37b4d",
     "sourceMapPathConsumerReceipt": "0bb85c5bcb5f944f453314a7f57fbed300fad00e79d82773a8de492bb921b06e",
-    "firJavaSessionProfileReceipt": "e20ded9c7fab5a125a49e0f0331931d969fc2771b9fd176356f823be6f5cfc43",
-    "backendProfileReceipt": "feac1c7d31bf88b3b2b7c2c0d8596849fdac12d0315b89262e64f49cdc01dc19",
-    "nativeJsOutputProfileReceipt": "b4a614059151c403f96b35b8a48b8d2f4919dba0b70da1fabaa07a421342dcdc",
-    "serializerOutputReceipt": "6215683540d09f93cf615dd33c3c57aa290a3bcde6732d7d827937f54cd9409a",
-    "serializerCommentTypeNamesReceipt": "e6e73f7d720c0c2ac37e56af8726e1a46d9663af0f08219dafcd9677f3a7b9bf",
-    "moduleRequirePathsReceipt": "853a47e1ec7a297967f89c8da0fc1432ed72453023c7c53e83791b7e10d1403e",
-    "firStorageSourceProfileReceipt": "ebbbdfe9d41d5c088b883a0dabf596bd5d072abc24bc735392f50adb2ba239c6",
-    "diagnosticSourceDslReceipt": "666c45e06b5a61031b57f572e3ad4fae4c03f6fb1647c4611d0a4f340eda18e1",
-    "backendExceptionTextReceipt": "8a26c7dac9f16326bae95b48e58ac1b38d94f45e37a909d4a6b6e2fdf5940c01",
-    "fingerprintsReceipt": "bf26b0285d85a9d81f53ff11bff5a3dab7baa4b4c90c9a793c3d20b2bcdf42e9",
-    "binaryReaderProfileReceipt": "5c22e019f1e4f4d70ffbe42808542efadf4ff63fcc54b488f23bff13bc41309a",
-    "k1ContainerProfileReceipt": "9bcdb903d62fad525619b961a49962fb1e0e65c780468c28a09a59d43cd5ea6b",
-    "firSyntaxLightTreeProfileReceipt": "ea3cd24a62cce05c28c6da88b1d36bfbfd433477fa1c06ef600fe6d5fe17df73",
-    "jvmUtilitySourceProfileReceipt": "9f79d86cb1f6a40be3dd579055719a56143a45e1a81004f962bce658dfa211a2",
-    "klibDiskSourceProfileReceipt": "9d416ddf97e8b5373ebe35481a7040ca57cf5aa84777dfb34e3c3439da117a18",
-    "serviceLoaderProfileReceipt": "3d15f9dc94d73ed1acd5884faa562665715e9ff31fac830f8a3540df4bcc18b8",
-    "k1ContainerFinalReceipt": "ba079576ede67af95a765d010012cf990b765eabf386282081466e638792c960",
-    "firSyntaxLightTreeFinalReceipt": "6a7c314dd54637e3e5a6c03592e473182f15d8aadab74ed0c7990a3dbda31dcc",
-    "firNavigationFinalReceipt": "fb90d8fed4382f0c5c749e8dd6aefd86e5c50a2f5f23c83528e9f6d561c78d75",
-    "firContainingClassFinalReceipt": "20c1a660938e398a1c241f76d27df7987b12b46f762591dcf2802750a339d611",
-    "firStorageSourceProfileFinalReceipt": "836a3e416f3d424683edc4afb1004b9197c4b161e2647138456d4ad145f64cfd",
-    "sourceMapRuntimeFinalReceipt": "ee4ded795e18071573627f1492744d84c4b90ded56fe64ced304b3aa69b3b28d",
-    "sourceMapPathFinalReceipt": "6aac96656d67da6e42fe4a759977025bac6831acbbf05915667737885edbdef9",
-    "moduleRequirePathsFinalReceipt": "43570c1170178ba3f8f46760257d14ec6257ea492c0801286414d8ad5604a0e5",
-    "serializerCommentTypeNamesFinalReceipt": "f0fc433756cc2b0cdccd79b9989c77e3a095ed67df6c1e88aadf6cdd645ce031",
-    "serializerOutputFinalReceipt": "69cf74ce7c5f6330596208a4f27fa9a2c958fb4b76abe4f2c1b63027a2564110",
-    "nativeJsOutputProfileFinalReceipt": "a34b463013dcfb692116d91ffed59624c53f3b7cec8d1de7a47e07424a24b389",
-    "klibSignatureIndexFinalReceipt": "80f1d5942ae993c1bdd927175d3489be6793aa02f99a2496dc8f0ae0d40b2716",
-    "typeSubstitutorGetterFinalReceipt": "a3af74414fdd850f36f82f5ea76327fe7e6b1f4d58a299f4e2e49e0622dc5f55",
-    "descriptorFunctionImplementationsFinalReceipt": "c6dd0df3a0df1ff5ea2313e385f45a91ba9024f2f540f0b0c7d90d03681d1d35",
-    "descriptorBaseImplementationsFinalReceipt": "cb68c0620aabb997614640d7567f538e07b10d4346a5cb322603ae0da84f8501",
-    "irPropertyTypeGetterFinalReceipt": "f78fdd94bb7d3099a6e72746131d5a8452a5748f8d10f26c7991fba0492ff731",
-    "copyBuilderPlatformFinalReceipt": "a74c7a19edd7d726261fe906a007de39aa336105604dc4b8702bb6daad232450",
-    "descriptorPlatformSignaturesFinalReceipt": "76dd6f33834d72bc429eec5a03858cfadde21ada42de7ad81d646b71c0d893f0",
-    "performanceCounterFinalReceipt": "b55999ec76945298b447a7f9a1b5bc57b663501cef5939b4d1533389fe2663c8",
-    "performanceManagerFinalReceipt": "ba595327b40c5114dcfa95068a463c34478565facf062c570be12717171e876e",
-    "towerGroupFinalReceipt": "6f391557d9c1e0e7a985dc8c9b46dc25e63347551767050289c5227310dd5184",
-    "firJavaSessionProfileFinalReceipt": "4a089e36baa76f824800921ca37053b94b15956be65ab9579a77210271bc9c93",
-    "serviceLoaderProfileFinalReceipt": "6fc6327bab78425c07f4a102fd7f3bec434ac4317940275aa21853585973a824",
-    "klibDiskSourceProfileFinalReceipt": "9049b6a7c960d7662fa486646ccbf693d84b9cf5d51f3858b1eca7faeb82e6c2",
-    "jvmUtilitySourceProfileFinalReceipt": "806a06985e1c633cd9b3264f8dfbba7a4c619c3f295382aec308190c292b8c22",
+    "firJavaSessionProfileReceipt": "39d3d52668885276782ff434c9b6df12b7596b0047561c8d2cd24e04532a5c8e",
+    "backendProfileReceipt": "84677288cfbf96581d6cf46fbe7fe84e35944bcf1c09390dec6788054e005b63",
+    "nativeJsOutputProfileReceipt": "01001c282a8ded1649ec19689de3c8e548e16f3e84739c421b17fc8698c5bf2a",
+    "serializerOutputReceipt": "3628e190a76556f4a9a1b00a47ec0323224fa1f3fafd08e549c32c238db9b02d",
+    "serializerCommentTypeNamesReceipt": "a9eb81efdf458c7f03a1dfa132f5630e2ecc11867fcde7b0e8d8ec2f0c16bdf6",
+    "moduleRequirePathsReceipt": "119085ab774cf4d83949234258c7f0a0b6c59ef558d4cfca10ff1c059da527d2",
+    "firStorageSourceProfileReceipt": "023b1ec9457e0ba0e7a3f1bc50a378d03ebcbd6ca0b6010b41c8fc9b057295ea",
+    "diagnosticSourceDslReceipt": "81fe906e462bfb7575850effc70f887ce1a995f7a71b48c0d443e5ed3325cfa5",
+    "backendExceptionTextReceipt": "3e79fe84f3c99d4ba05ede617e7086f739fe5e6750eb7d61e5083edb72b7d30a",
+    "fingerprintsReceipt": "6c7d373b3b43c47f3c363c555cfe6b2ad204f04ebe223006d49c5d776edfdcde",
+    "binaryReaderProfileReceipt": "3ea3bf3d9edf3d3b95ae7a295f9750c8ba73bbfb0025fbb4cc38f317b0c06af7",
+    "k1ContainerProfileReceipt": "1a308aa61094d11997a94c5b52cd80acfa5a581b7cc65bc4dc3bd86e497faaef",
+    "firSyntaxLightTreeProfileReceipt": "cf56c9afb5b138246ae07ae634b017f4c01a36542b07778d3e7aa4fb54ef16ea",
+    "jvmUtilitySourceProfileReceipt": "46aaef974a7966b8326361ee0bebe9bca351f9bea0884a596c1f72dbc4292fe1",
+    "klibDiskSourceProfileReceipt": "cc2f3d2ed2ceea4ae5b219053e0ad372b037a1fdadbfa93e776341eccf97f826",
+    "serviceLoaderProfileReceipt": "d8adac234bb272ae604bf1dbef8d9805a510db009e497a34a88d6a7acc9fe77a",
+    "k1ContainerFinalReceipt": "d5e8f0cf25bbdbdc459fa282efd1f6818edfc3fe989240c14b2aa0a99d42f781",
+    "firSyntaxLightTreeFinalReceipt": "111d2b8a1276a7c41ddf3f34e8c926b8606d8347d42c6bce3977efdd77f8b5e7",
+    "firNavigationFinalReceipt": "a1c5a90609497c20bf14ace7466435dbc2c50e074a57002ff09413c6f8f7047d",
+    "firContainingClassFinalReceipt": "7c9198b1071a622e27524f451ec1ed26b6872d21bf7db687591a52b51236365e",
+    "firStorageSourceProfileFinalReceipt": "8ea3cdf456e30d85c963be21ffdd30590063aa7e3120abebd7e28937cc41f5ae",
+    "sourceMapRuntimeFinalReceipt": "1bdd27642af809cc355ab84d31ffc25e16b1ad83355b96daf8d140716651715b",
+    "sourceMapPathFinalReceipt": "51a2ae87da71b8e1d62aacb3dcfec823222a7b059d928d112ff2191f38b1bd50",
+    "moduleRequirePathsFinalReceipt": "f9d964ea0e3f06945ade847c3c89a4d18ba7a2934895a4da6ea6dcf677170e6d",
+    "serializerCommentTypeNamesFinalReceipt": "1ad51c6593525155ac6660dbeaa404b3dcc246e2f1f4fc2c9918516b57ce095d",
+    "serializerOutputFinalReceipt": "26d950e3adcef903ecb9bc384f0c21ed79fa43a5750dc4b606ecaa19a86fc38b",
+    "nativeJsOutputProfileFinalReceipt": "dbec9d5980dcd122b1ab61bf2b67583c34940e69ccac8777d9d8647f34a9bbb3",
+    "klibSignatureIndexFinalReceipt": "32f4aa4e1fd6e69dfefc1a4d9cded22b5f57adedd581ec7499ec9e91ca10e30a",
+    "typeSubstitutorGetterFinalReceipt": "c6045916cdf563b7bc864fa698b7a252b36facabf0ae6395ff45e3ea5c79e539",
+    "descriptorSubstitutorFinalReceipt": "7d0efeb8b0a4004111fe7e9889108629b44449d18ac7d73da9d49461e93c3ff1",
+    "descriptorReceiverFactoryFinalReceipt": "6b3db6fc14912b8f591bb3398c1a6815a03b062cbeb3a699c3d87fe6e0f75912",
+    "descriptorFunctionImplementationsFinalReceipt": "282e357e25c8bd2f32cde3daa38528ba5b2aa406147172cdd68454cfb1c3d066",
+    "descriptorBaseImplementationsFinalReceipt": "fc607e845a36d17d209ba186e1861c11d0d6db8a615b4a65a1e205b2b5dacf5a",
+    "irPropertyTypeGetterFinalReceipt": "1551bf61891829e66f316abd3c1f68b3e7854dc52db7127e0883413ed11a058d",
+    "copyBuilderPlatformFinalReceipt": "1cfe7dec4421e7a509392b49e5b9dd7c88c5992cd1ac4e7302736c68a57c58a8",
+    "descriptorPlatformSignaturesFinalReceipt": "441057369b1310f91c232bb5715c13766f4fc9c3efa241ee9e374950da332040",
+    "performanceCounterFinalReceipt": "5b293eac0d3cf7f04f881853b20d4fb4db3fa5aeb65f4072e17a5607009ed1ef",
+    "performanceManagerFinalReceipt": "ea53171b6da54efdad9ddc42374efbcb143c53a3769f8ef8d87076959aab6a6c",
+    "towerGroupFinalReceipt": "b373a988de5a6c820d1d8fa02bcf94a8edf8faf0c7659c7f00c40fb9466ac8eb",
+    "firPredicateCollectionsFinalReceipt": "93d75302f45fd2eef2bb5f2366d5d61d43ceacb1240292f1852f4dad207b15c4",
+    "descriptorKindFilterHostFinalReceipt": "5e21f1535116907282f10bfe55ecb6dd142abcb0b48b7eb9858fa75236afd970",
+    "firJavaSessionProfileFinalReceipt": "1245c8143c1322e8f46da3750f7edbc634dffbd8fc6163fda42e56671c757030",
+    "serviceLoaderProfileFinalReceipt": "123c85a56d82acff070adb67eee46fc31160bfda69550f740cfc1e594a17ffa6",
+    "klibDiskSourceProfileFinalReceipt": "15e4345fad5f21067e7f9af83fa140a222ab915dd946bd6918e384894de6c4ed",
+    "jvmUtilitySourceProfileFinalReceipt": "52d56411950b709626a0276d986aa4e7050d25a3c6014ceef2eecccda1b3d2bf",
     "immutableDependencyReceipt": "d36907b8bdcd9b394a48190fc92289a4882824207825001622ab585a5a765546",
     "protobufBuildReceipt": "5bc9fb8c0e77c9c0234b0e976212fa65bd47c7798e1558ee811f8dff843acbb9"
   },
@@ -1103,37 +1111,37 @@
       "-cp",
       "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
       "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
-      "@/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/function-syntax-whole-1791708437574091361/compiler-klib.args"
+      "@/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/receiver-predicate-whole-1791715136452421425/compiler-klib.args"
     ],
-    "argumentFileSha256": "e419bc1dde9de46efe027cf7c14535b84381322bd7b997028c6c24c7de28cbc6",
+    "argumentFileSha256": "7c747b978f39eafae3eb9fc5ce9174b793c1af66ce52a800352d9a2e54b07dff",
     "timeoutMs": 600000,
     "maximumHeap": "3g",
     "exitCode": 1,
     "signal": null,
-    "pid": 3130835,
-    "elapsedMs": 300123.4622160001
+    "pid": 941327,
+    "elapsedMs": 351697.6336650001
   },
   "executionLog": {
-    "path": "/home/seorii/logs/wasm-kotlin-function-syntax-whole-1791708437574091361.log",
-    "bytes": 612016,
-    "sha256": "7cdbdb26fc8b561f75a51f8e3afca023074e45167e31360f076b3007728418e9",
+    "path": "/home/seorii/logs/wasm-kotlin-receiver-predicate-whole-1791715136452421425.log",
+    "bytes": 580841,
+    "sha256": "0e2f68e6c0fde55714f32ef71e26ccc966b01cc39a998196808ca940ae8a61ef",
     "exitStatus": {
-      "path": "/home/seorii/logs/wasm-kotlin-function-syntax-whole-1791708437574091361.status.json",
-      "sha256": "5db2da6800dce26d47e9af6c94d24ccc99d04bb0ceaf1de8fb47d2d0f8d1beed",
+      "path": "/home/seorii/logs/wasm-kotlin-receiver-predicate-whole-1791715136452421425.status.json",
+      "sha256": "524bf814b2b7a96580b5ffa548fad19ae9e28885c4260dc3493a5f1fefb0a5b8",
       "state": "exited",
-      "pid": 2191940,
-      "head": "95a332ab2e030a6a02616f7c40a3cd012be1527b",
+      "pid": 437372,
+      "head": "eac97af5e2fea68b1de86d0551aef5c56c8febec",
       "exitCode": 1,
-      "durationSeconds": 1955.8934528827667
+      "durationSeconds": 1987.499077796936
     }
   },
   "diagnostics": {
-    "emittedErrorEntries": 1988,
+    "emittedErrorEntries": 1885,
     "interpretation": "Cascading compiler diagnostics; not independent bugs, language features or progress percentage.",
     "mostFrequentUnresolvedReferences": [
       {
         "name": "java",
-        "count": 215
+        "count": 212
       },
       {
         "name": "File",
@@ -1141,15 +1149,15 @@
       },
       {
         "name": "javaClass",
-        "count": 78
-      },
-      {
-        "name": "it",
-        "count": 53
+        "count": 76
       },
       {
         "name": "psi",
         "count": 41
+      },
+      {
+        "name": "it",
+        "count": 39
       },
       {
         "name": "PsiElement",
@@ -1170,10 +1178,6 @@
       {
         "name": "Path",
         "count": 15
-      },
-      {
-        "name": "DescriptorFactory",
-        "count": 14
       },
       {
         "name": "LighterASTNode",
@@ -1204,63 +1208,25 @@
         "count": 12
       },
       {
-        "name": "TypeParameterDescriptorImpl",
-        "count": 12
+        "name": "InputStream",
+        "count": 11
       },
       {
-        "name": "InputStream",
+        "name": "path",
+        "count": 11
+      },
+      {
+        "name": "push",
         "count": 11
       }
     ],
     "entryErrors": [],
     "componentBoundaryErrors": [
       {
-        "path": "components/descriptorFunctionImplementationsReceipt/compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
-        "line": 88,
-        "column": 37,
-        "message": "unresolved reference 'DescriptorFactory'."
-      },
-      {
-        "path": "components/descriptorFunctionImplementationsReceipt/compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
-        "line": 89,
-        "column": 54,
-        "message": "unresolved reference 'ExtensionReceiver'."
-      },
-      {
-        "path": "components/descriptorFunctionImplementationsReceipt/compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
-        "line": 331,
-        "column": 27,
-        "message": "unresolved reference 'DescriptorSubstitutor'."
-      },
-      {
-        "path": "components/descriptorFunctionImplementationsReceipt/compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
-        "line": 338,
-        "column": 33,
-        "message": "unresolved reference 'DescriptorFactory'."
-      },
-      {
-        "path": "components/descriptorFunctionImplementationsReceipt/compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
-        "line": 348,
-        "column": 44,
-        "message": "unresolved reference 'ReceiverParameterDescriptorImpl'."
-      },
-      {
-        "path": "components/descriptorFunctionImplementationsReceipt/compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
-        "line": 349,
-        "column": 17,
-        "message": "unresolved reference 'ExtensionReceiver'."
-      },
-      {
         "path": "components/descriptorPlatformSignaturesReceipt/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/descriptors/IrBuiltinFunctionDescriptor.kt",
         "line": 102,
         "column": 8,
         "message": "unresolved reference 'java'."
-      },
-      {
-        "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 101,
-        "column": 37,
-        "message": "unresolved reference 'DescriptorFactory'."
       },
       {
         "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
@@ -1282,45 +1248,117 @@
       },
       {
         "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 281,
-        "column": 76,
-        "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
-      },
-      {
-        "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 282,
+        "line": 305,
         "column": 17,
-        "message": "unresolved reference 'DescriptorFactory'."
-      },
-      {
-        "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 290,
-        "column": 62,
-        "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
-      },
-      {
-        "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 291,
-        "column": 55,
-        "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
-      },
-      {
-        "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 292,
-        "column": 21,
-        "message": "unresolved reference 'DescriptorFactory'."
-      },
-      {
-        "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
-        "line": 300,
-        "column": 18,
-        "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        "message": "argument type mismatch: actual type is 'List<ReceiverParameterDescriptor?>', but 'List<ReceiverParameterDescriptor>' was expected."
       },
       {
         "path": "components/descriptorPlatformSignaturesReceipt/core/descriptors/src/org/jetbrains/kotlin/types/error/ErrorFunctionDescriptor.kt",
         "line": 171,
         "column": 5,
         "message": "'setOverriddenDescriptors' overrides nothing. Potential signatures for overriding:"
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 100,
+        "column": 9,
+        "message": "unresolved reference 'ClassConstructorDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 101,
+        "column": 16,
+        "message": "unresolved reference 'initialize'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 101,
+        "column": 27,
+        "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 105,
+        "column": 131,
+        "message": "unresolved reference 'PropertySetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 109,
+        "column": 100,
+        "message": "unresolved reference 'PropertySetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 113,
+        "column": 134,
+        "message": "unresolved reference 'PropertySetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 114,
+        "column": 32,
+        "message": "unresolved reference 'PropertySetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 116,
+        "column": 25,
+        "message": "unresolved reference 'PropertySetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 122,
+        "column": 96,
+        "message": "unresolved reference 'PropertyGetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 126,
+        "column": 50,
+        "message": "unresolved reference 'PropertyGetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 130,
+        "column": 80,
+        "message": "unresolved reference 'PropertyGetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 131,
+        "column": 9,
+        "message": "unresolved reference 'PropertyGetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 135,
+        "column": 101,
+        "message": "unresolved reference 'ClassConstructorDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 159,
+        "column": 23,
+        "message": "unresolved reference 'PropertyDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 161,
+        "column": 22,
+        "message": "unresolved reference 'PropertyGetterDescriptorImpl'."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 165,
+        "column": 77,
+        "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+      },
+      {
+        "path": "components/descriptorReceiverFactoryReceipt/compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+        "line": 165,
+        "column": 102,
+        "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
       },
       {
         "path": "components/descriptorVisitorReceipt/compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/descriptors/IrDelegateDescriptor.kt",
