@@ -87,6 +87,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let sourceHostComponent;
   let firSyntaxLightTreeComposition;
   let descriptorFunctionComposition;
+  let descriptorKindFilterComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -378,6 +379,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           const members = await import('./member-comparator/prepare.mjs');
           const component = await members.prepareMemberComparatorSources({ sourceRoot, outputRoot });
           await members.verifyMemberComparator(outputRoot);
+          return component;
+        }],
+        ['descriptorKindFilterHostReceipt', async ({ sourceRoot, outputRoot }) => {
+          const scopes = await import('./descriptor-kind-filter-host/prepare.mjs');
+          const component = await scopes.prepareDescriptorKindFilterHost({ sourceRoot, outputRoot });
+          descriptorKindFilterComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await scopes.verifyDescriptorKindFilterHost(descriptorKindFilterComposition);
           return component;
         }],
         ['assertionReceipt', (await import('./assertions/prepare.mjs')).prepareAssertionSources],
@@ -1423,6 +1431,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const tower = await import('./tower-group/prepare.mjs');
       receipt.towerGroupFinalReceipt = await tower.verifyFinalTowerGroup({
         ...towerGroupComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const scopes = await import('./descriptor-kind-filter-host/prepare.mjs');
+      receipt.descriptorKindFilterHostFinalReceipt = await scopes.verifyFinalDescriptorKindFilterHost({
+        ...descriptorKindFilterComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
