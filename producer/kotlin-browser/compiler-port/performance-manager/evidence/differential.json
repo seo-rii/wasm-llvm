@@ -1,0 +1,1755 @@
+{
+  "schemaVersion": 1,
+  "kind": "full-genuine-performance-manager-family-jvm-wasm-differential",
+  "artifactRoot": "out/kotlin-performance-manager-1791698881330051127",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "7a6b48d9e57567763129a0aa458a70c0480eeea43f53a9913fe822bd7c2afb45",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-performance-manager-report-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "7a6b48d9e57567763129a0aa458a70c0480eeea43f53a9913fe822bd7c2afb45",
+    "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+    "sources": [
+      {
+        "original": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+          "gitBlob": "97129a3b04c002b35898d11e8ae7434a7566e359",
+          "bytes": 20573,
+          "language": "kotlin",
+          "compile": true,
+          "role": "source",
+          "module": "core/compiler.common",
+          "sha256": "11778e2fa75c454f01769d81a49c1b19f6d9d95f92b14d35fcd62740c127ae22"
+        },
+        "output": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+          "bytes": 20716,
+          "sha256": "de00099265c68d193bd6c0e58c483a14b84446d77712ed5162fb94aa6bcab261",
+          "gitBlob": "c7c0fc2a8a9fba7aa1cba92a35cbd74043c05dd7"
+        },
+        "recipe": [
+          {
+            "start": 588,
+            "before": "import java.io.File\nimport java.lang.management.CompilationMXBean\nimport java.lang.management.GarbageCollectorMXBean\nimport java.lang.management.ManagementFactory\nimport java.lang.management.ThreadMXBean\nimport java.text.SimpleDateFormat\nimport java.util.*\n",
+            "after": "import org.jetbrains.kotlin.util.portable.*\n"
+          },
+          {
+            "start": 1201,
+            "before": "    private lateinit var thread: Thread\n    private lateinit var threadMXBean: ThreadMXBean\n",
+            "after": "    private val performanceHost = performanceManagerHost()\n    private lateinit var thread: Any\n    private lateinit var threadMXBean: PerformanceThreadMeasurements\n"
+          },
+          {
+            "start": 1384,
+            "before": "        val nanos = System.nanoTime()\n",
+            "after": "        val nanos = performanceCounterNanoTime()\n"
+          },
+          {
+            "start": 1758,
+            "before": "    private var compilationMXBean: CompilationMXBean? = null\n",
+            "after": "    private var compilationMXBean: PerformanceCompilationMeasurements? = null\n"
+          },
+          {
+            "start": 1862,
+            "before": "    private var garbageCollectorMXBeans: List<GarbageCollectorMXBean> = emptyList()\n",
+            "after": "    private var garbageCollectorMXBeans: List<PerformanceGarbageCollector> = emptyList()\n"
+          },
+          {
+            "start": 1947,
+            "before": "    private val phaseMeasurements: MutableMap<PhaseType, Time> = sortedMapOf()\n    private val phaseSideMeasurements: MutableMap<PhaseSideType, SideStats> = sortedMapOf()\n    private var gcMeasurements: MutableMap<String, GarbageCollectionStats> = sortedMapOf()\n",
+            "after": "    private val phaseMeasurements: MutableMap<PhaseType, Time> = mutableMapOf()\n    private val phaseSideMeasurements: MutableMap<PhaseSideType, SideStats> = mutableMapOf()\n    private var gcMeasurements: MutableMap<String, GarbageCollectionStats> = mutableMapOf()\n"
+          },
+          {
+            "start": 2520,
+            "before": "    private val klibElementStats: SortedMap<String, Long> = sortedMapOf()\n",
+            "after": "    private val klibElementStats: MutableMap<String, Long> = mutableMapOf()\n"
+          },
+          {
+            "start": 3279,
+            "before": "        thread = Thread.currentThread()\n        threadMXBean = ManagementFactory.getThreadMXBean().also { it.isThreadCpuTimeEnabled = true }\n",
+            "after": "        thread = performanceHost.currentWorker()\n        threadMXBean = performanceHost.threadMeasurements().also { it.isThreadCpuTimeEnabled = true }\n"
+          },
+          {
+            "start": 3967,
+            "before": "        for ([phaseType, time] in phaseMeasurements) {\n",
+            "after": "        for ([phaseType, time] in phaseMeasurements.entries.sortedBy { it.key }) {\n"
+          },
+          {
+            "start": 4833,
+            "before": "        for ([phaseSideType, sideStats] in phaseSideMeasurements) {\n",
+            "after": "        for ([phaseSideType, sideStats] in phaseSideMeasurements.entries.sortedBy { it.key }) {\n"
+          },
+          {
+            "start": 5205,
+            "before": "            System.currentTimeMillis(),\n",
+            "after": "            performanceHost.currentTimeMillis(),\n"
+          },
+          {
+            "start": 5894,
+            "before": "            klibElementStats.map { [path, size] -> KlibElementStats(path, size) },\n",
+            "after": "            klibElementStats.entries.sortedBy { it.key }.map { [path, size] -> KlibElementStats(path, size) },\n"
+          },
+          {
+            "start": 6043,
+            "before": "            gcMeasurements.values.toList(),\n",
+            "after": "            gcMeasurements.entries.sortedBy { it.key }.map { it.value },\n"
+          },
+          {
+            "start": 8950,
+            "before": "        compilationMXBean = ManagementFactory.getCompilationMXBean()\n",
+            "after": "        compilationMXBean = performanceHost.compilationMeasurements()\n"
+          },
+          {
+            "start": 9082,
+            "before": "        garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans()\n",
+            "after": "        garbageCollectorMXBeans = performanceHost.garbageCollectors()\n"
+          },
+          {
+            "start": 12629,
+            "before": "        val localCompilationMXBean = compilationMXBean\n",
+            "after": "        val localPerformanceCompilationMeasurements = compilationMXBean\n"
+          },
+          {
+            "start": 12729,
+            "before": "        if (localCompilationMXBean != null && localJitStartTime != null) {\n            jitTimeMillis = localCompilationMXBean.totalCompilationTime - localJitStartTime\n",
+            "after": "        if (localPerformanceCompilationMeasurements != null && localJitStartTime != null) {\n            jitTimeMillis = localPerformanceCompilationMeasurements.totalCompilationTime - localJitStartTime\n"
+          },
+          {
+            "start": 14999,
+            "before": "        val refinedFileName: String = if (File(destFileNameOrPlaceholder).isDirectory) {\n",
+            "after": "        val refinedFileName: String = if (performanceHost.isDirectory(destFileNameOrPlaceholder)) {\n"
+          },
+          {
+            "start": 15175,
+            "before": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == File.separatorChar }) {\n",
+            "after": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == performanceHost.pathSeparator }) {\n"
+          },
+          {
+            "start": 15336,
+            "before": "                File.separatorChar\n",
+            "after": "                performanceHost.pathSeparator\n"
+          },
+          {
+            "start": 15483,
+            "before": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == File.separatorChar }\n",
+            "after": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == performanceHost.pathSeparator }\n"
+          },
+          {
+            "start": 16358,
+            "before": "        val destinationFile = File(refinedFileName)\n        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == destinationFile.extension } ?: DumpFormat.PlainText\n        destinationFile.writeBytes(createPerformanceReport(dumpFormat).toByteArray())\n",
+            "after": "        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == performanceHost.pathExtension(refinedFileName) } ?: DumpFormat.PlainText\n        performanceHost.writeBytes(refinedFileName, createPerformanceReport(dumpFormat).performanceReportBytes())\n"
+          },
+          {
+            "start": 17024,
+            "before": "        SimpleDateFormat(\"yyyy-MM-dd-HH-mm-ss\")\n",
+            "after": "        performanceHost.dateFormatter(PerformanceDateFormat.FileName)\n"
+          },
+          {
+            "start": 17880,
+            "before": "        assertIfDebug(Thread.currentThread() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n",
+            "after": "        assertIfDebug(performanceHost.currentWorker() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n"
+          }
+        ],
+        "referenceHostRecipe": [
+          {
+            "start": 588,
+            "before": "import java.io.File\nimport java.lang.management.CompilationMXBean\nimport java.lang.management.GarbageCollectorMXBean\nimport java.lang.management.ManagementFactory\nimport java.lang.management.ThreadMXBean\nimport java.text.SimpleDateFormat\n",
+            "after": "import org.jetbrains.kotlin.util.portable.*\n"
+          },
+          {
+            "start": 1201,
+            "before": "    private lateinit var thread: Thread\n    private lateinit var threadMXBean: ThreadMXBean\n",
+            "after": "    private val performanceHost = performanceManagerHost()\n    private lateinit var thread: Any\n    private lateinit var threadMXBean: PerformanceThreadMeasurements\n"
+          },
+          {
+            "start": 1384,
+            "before": "        val nanos = System.nanoTime()\n",
+            "after": "        val nanos = performanceCounterNanoTime()\n"
+          },
+          {
+            "start": 1758,
+            "before": "    private var compilationMXBean: CompilationMXBean? = null\n",
+            "after": "    private var compilationMXBean: PerformanceCompilationMeasurements? = null\n"
+          },
+          {
+            "start": 1862,
+            "before": "    private var garbageCollectorMXBeans: List<GarbageCollectorMXBean> = emptyList()\n",
+            "after": "    private var garbageCollectorMXBeans: List<PerformanceGarbageCollector> = emptyList()\n"
+          },
+          {
+            "start": 3279,
+            "before": "        thread = Thread.currentThread()\n        threadMXBean = ManagementFactory.getThreadMXBean().also { it.isThreadCpuTimeEnabled = true }\n",
+            "after": "        thread = performanceHost.currentWorker()\n        threadMXBean = performanceHost.threadMeasurements().also { it.isThreadCpuTimeEnabled = true }\n"
+          },
+          {
+            "start": 5205,
+            "before": "            System.currentTimeMillis(),\n",
+            "after": "            performanceHost.currentTimeMillis(),\n"
+          },
+          {
+            "start": 8950,
+            "before": "        compilationMXBean = ManagementFactory.getCompilationMXBean()\n",
+            "after": "        compilationMXBean = performanceHost.compilationMeasurements()\n"
+          },
+          {
+            "start": 9082,
+            "before": "        garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans()\n",
+            "after": "        garbageCollectorMXBeans = performanceHost.garbageCollectors()\n"
+          },
+          {
+            "start": 12629,
+            "before": "        val localCompilationMXBean = compilationMXBean\n",
+            "after": "        val localPerformanceCompilationMeasurements = compilationMXBean\n"
+          },
+          {
+            "start": 12729,
+            "before": "        if (localCompilationMXBean != null && localJitStartTime != null) {\n            jitTimeMillis = localCompilationMXBean.totalCompilationTime - localJitStartTime\n",
+            "after": "        if (localPerformanceCompilationMeasurements != null && localJitStartTime != null) {\n            jitTimeMillis = localPerformanceCompilationMeasurements.totalCompilationTime - localJitStartTime\n"
+          },
+          {
+            "start": 14999,
+            "before": "        val refinedFileName: String = if (File(destFileNameOrPlaceholder).isDirectory) {\n",
+            "after": "        val refinedFileName: String = if (performanceHost.isDirectory(destFileNameOrPlaceholder)) {\n"
+          },
+          {
+            "start": 15175,
+            "before": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == File.separatorChar }) {\n",
+            "after": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == performanceHost.pathSeparator }) {\n"
+          },
+          {
+            "start": 15336,
+            "before": "                File.separatorChar\n",
+            "after": "                performanceHost.pathSeparator\n"
+          },
+          {
+            "start": 15483,
+            "before": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == File.separatorChar }\n",
+            "after": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == performanceHost.pathSeparator }\n"
+          },
+          {
+            "start": 16358,
+            "before": "        val destinationFile = File(refinedFileName)\n        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == destinationFile.extension } ?: DumpFormat.PlainText\n        destinationFile.writeBytes(createPerformanceReport(dumpFormat).toByteArray())\n",
+            "after": "        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == performanceHost.pathExtension(refinedFileName) } ?: DumpFormat.PlainText\n        performanceHost.writeBytes(refinedFileName, createPerformanceReport(dumpFormat).toByteArray())\n"
+          },
+          {
+            "start": 17024,
+            "before": "        SimpleDateFormat(\"yyyy-MM-dd-HH-mm-ss\")\n",
+            "after": "        performanceHost.dateFormatter(PerformanceDateFormat.FileName)\n"
+          },
+          {
+            "start": 17880,
+            "before": "        assertIfDebug(Thread.currentThread() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n",
+            "after": "        assertIfDebug(performanceHost.currentWorker() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n"
+          }
+        ]
+      },
+      {
+        "original": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+          "gitBlob": "da06c9110b997b48fb5bfc985b9ed5a48c71ab93",
+          "bytes": 12388,
+          "language": "kotlin",
+          "compile": true,
+          "role": "source",
+          "module": "core/compiler.common",
+          "sha256": "b69ec1683eee5ecd3013ee14a979f0f1341986aac11c8c6cce2a02a12f61f6a4"
+        },
+        "output": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+          "bytes": 12520,
+          "sha256": "ed36c44547ac94ed8d345331a872023e112d085a6aac3bcc2870ea2afa9b25e0",
+          "gitBlob": "cdeb9a438d3b7772ffcf5352d1859f2136bb8c50"
+        },
+        "recipe": [
+          {
+            "start": 245,
+            "before": "import java.util.*\nimport java.util.concurrent.TimeUnit\n",
+            "after": ""
+          },
+          {
+            "start": 326,
+            "before": "",
+            "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceFormatEnglish\n"
+          },
+          {
+            "start": 1972,
+            "before": "    val timeStampMs: Long = System.currentTimeMillis(),\n",
+            "after": "    val timeStampMs: Long = org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+          },
+          {
+            "start": 5660,
+            "before": "        get() = TimeUnit.NANOSECONDS.toMillis(nanos)\n",
+            "after": "        get() = nanos / 1_000_000L\n"
+          },
+          {
+            "start": 9523,
+            "before": "                \"${phaseNameFormat}%8s ms\".format(phaseTypeName.getValue(phaseType), time.millis) +\n",
+            "after": "                \"${phaseNameFormat}%8s ms\".performanceFormat(phaseTypeName.getValue(phaseType), time.millis) +\n"
+          },
+          {
+            "start": 9711,
+            "before": "                            \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(time))\n",
+            "after": "                            \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(time))\n"
+          },
+          {
+            "start": 10203,
+            "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASE\", dynamicTime.millis) +\n",
+            "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASE\", dynamicTime.millis) +\n"
+          },
+          {
+            "start": 10363,
+            "before": "                                        \"%12.3f loc/s ($dynamicName)\".format(Locale.ENGLISH, getLinesPerSecond(dynamicTime))\n",
+            "after": "                                        \"%12.3f loc/s ($dynamicName)\".performanceFormatEnglish(getLinesPerSecond(dynamicTime))\n"
+          },
+          {
+            "start": 10971,
+            "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(totTime)) else \"\"\n",
+            "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(totTime)) else \"\"\n"
+          },
+          {
+            "start": 12129,
+            "before": "val nanosInSecond = TimeUnit.SECONDS.toNanos(1)\n",
+            "after": "val nanosInSecond = 1_000_000_000L\n"
+          }
+        ],
+        "referenceHostRecipe": [
+          {
+            "start": 326,
+            "before": "",
+            "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceFormatEnglish\n"
+          },
+          {
+            "start": 1972,
+            "before": "    val timeStampMs: Long = System.currentTimeMillis(),\n",
+            "after": "    val timeStampMs: Long = org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+          },
+          {
+            "start": 9523,
+            "before": "                \"${phaseNameFormat}%8s ms\".format(phaseTypeName.getValue(phaseType), time.millis) +\n",
+            "after": "                \"${phaseNameFormat}%8s ms\".performanceFormat(phaseTypeName.getValue(phaseType), time.millis) +\n"
+          },
+          {
+            "start": 9711,
+            "before": "                            \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(time))\n",
+            "after": "                            \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(time))\n"
+          },
+          {
+            "start": 10203,
+            "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASE\", dynamicTime.millis) +\n",
+            "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASE\", dynamicTime.millis) +\n"
+          },
+          {
+            "start": 10363,
+            "before": "                                        \"%12.3f loc/s ($dynamicName)\".format(Locale.ENGLISH, getLinesPerSecond(dynamicTime))\n",
+            "after": "                                        \"%12.3f loc/s ($dynamicName)\".performanceFormatEnglish(getLinesPerSecond(dynamicTime))\n"
+          },
+          {
+            "start": 10971,
+            "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(totTime)) else \"\"\n",
+            "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(totTime)) else \"\"\n"
+          }
+        ]
+      },
+      {
+        "original": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+          "gitBlob": "717f701a29e297e7dbbedd30725e9e1e604fa921",
+          "bytes": 7298,
+          "language": "kotlin",
+          "compile": true,
+          "role": "source",
+          "module": "core/compiler.common",
+          "sha256": "a7d9f4b0767d9755553107ed1a477b676f26ac079f105a53c4e391707c98d24f"
+        },
+        "output": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+          "bytes": 7299,
+          "sha256": "7b4856b0e9756dda6c3ba6af4566b375b804c99764326e8150d7c073dff050f4",
+          "gitBlob": "d5a5de4fa29532c7f118734b14cbeca2e63b68fd"
+        },
+        "recipe": [
+          {
+            "start": 4373,
+            "before": "                        replace(length - TRAILING_COMMA_SUFFIX.length, length, \"\\n\")\n",
+            "after": "                        setRange(length - TRAILING_COMMA_SUFFIX.length, length, \"\\n\")\n"
+          }
+        ],
+        "referenceHostRecipe": []
+      },
+      {
+        "original": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+          "gitBlob": "df49545fd4b11f0a6c7983cd0202bb7617542559",
+          "bytes": 881,
+          "language": "kotlin",
+          "compile": true,
+          "role": "source",
+          "module": "core/compiler.common",
+          "sha256": "b5d8bd6d552f000dea2000373b34f6ceab6d4b6c8fc4137180c930f31024d16d"
+        },
+        "output": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+          "bytes": 940,
+          "sha256": "bfe473238a6a3278938bbd3edf85a402d6c143fdc25e5b29ee1d0d9194e5a0c2",
+          "gitBlob": "4dc3f74ebad456cc28976d88e1a409feebb195e6"
+        },
+        "recipe": [
+          {
+            "start": 289,
+            "before": "import java.util.SortedSet\n",
+            "after": "import org.jetbrains.kotlin.util.portable.PerformanceReportSortedSet\n"
+          },
+          {
+            "start": 696,
+            "before": "class TimestampReportsData(val moduleName: String, val timeStamps: SortedSet<UnitStats>) : ReportsData() {\n",
+            "after": "class TimestampReportsData(val moduleName: String, val timeStamps: PerformanceReportSortedSet<UnitStats>) : ReportsData() {\n"
+          }
+        ],
+        "referenceHostRecipe": []
+      },
+      {
+        "original": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+          "gitBlob": "a76f24e81dd13a16969fd275ccc306a85e16c60b",
+          "bytes": 9618,
+          "language": "kotlin",
+          "compile": true,
+          "role": "source",
+          "module": "core/compiler.common",
+          "sha256": "fc0ff6d60502d7999c2df23e26e7ff451b32d2cbc6b23ffd8e1b87c14e7e443b"
+        },
+        "output": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+          "bytes": 9712,
+          "sha256": "5e1eaaf0b35ec7e6e32e93455b1d61da3b2abbdf90faa06e5cd00d33df5aa9b7",
+          "gitBlob": "00579ede2371ced95f6751008136531b8f754196"
+        },
+        "recipe": [
+          {
+            "start": 607,
+            "before": "import java.util.PriorityQueue\n",
+            "after": "import org.jetbrains.kotlin.util.portable.PerformanceReportHeap\n"
+          },
+          {
+            "start": 1746,
+            "before": "        val priorityQueue = PriorityQueue<UnitStats>(count, Comparator { o1, o2 ->\n",
+            "after": "        val priorityQueue = PerformanceReportHeap<UnitStats>(count, Comparator { o1, o2 ->\n"
+          },
+          {
+            "start": 7245,
+            "before": "                timeStampMs = latestCurrentTimeMs ?: System.currentTimeMillis(),\n",
+            "after": "                timeStampMs = latestCurrentTimeMs ?: org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+          }
+        ],
+        "referenceHostRecipe": [
+          {
+            "start": 7245,
+            "before": "                timeStampMs = latestCurrentTimeMs ?: System.currentTimeMillis(),\n",
+            "after": "                timeStampMs = latestCurrentTimeMs ?: org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+          }
+        ]
+      },
+      {
+        "original": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+          "gitBlob": "132e7a62f5d778077d5abf540c743301dd40a8c3",
+          "bytes": 8960,
+          "language": "kotlin",
+          "compile": true,
+          "role": "source",
+          "module": "core/compiler.common",
+          "sha256": "5fe400683a25519e338bb22e8157b101f3ed4403893dc9b3d879b415bc85d98e"
+        },
+        "output": {
+          "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+          "bytes": 8973,
+          "sha256": "86040490e3050543427f061a6a25c92f8268608b2cb4e773efef932838ca01b8",
+          "gitBlob": "a0f8345bd307e2b02420f626b5c49db5a4ca3a73"
+        },
+        "recipe": [
+          {
+            "start": 590,
+            "before": "import java.text.SimpleDateFormat\nimport java.util.Locale\nimport java.util.TimeZone\nimport java.util.concurrent.TimeUnit\n",
+            "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceManagerHost\nimport org.jetbrains.kotlin.util.portable.PerformanceDateFormat\n"
+          },
+          {
+            "start": 5496,
+            "before": "            printer = { moduleResult, _ -> String.format(\"%.2f LPS\", moduleResult) }\n",
+            "after": "            printer = { moduleResult, _ -> \"%.2f LPS\".performanceFormat(moduleResult) }\n"
+          },
+          {
+            "start": 6876,
+            "before": "        return String.format(\"%.2f%% (%d ms)\", ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n",
+            "after": "        return \"%.2f%% (%d ms)\".performanceFormat(ratio * 100, (nanos / 1_000_000L))\n"
+          },
+          {
+            "start": 7415,
+            "before": "    private val dateTimeFormatter = SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.ENGLISH).apply {\n        timeZone = TimeZone.getTimeZone(\"UTC\")\n    }\n",
+            "after": "    private val dateTimeFormatter = performanceManagerHost().dateFormatter(PerformanceDateFormat.Markdown)\n"
+          },
+          {
+            "start": 8891,
+            "before": "        appendLine(String.format(columnsFormat, *columns))\n",
+            "after": "        appendLine(columnsFormat.performanceFormat(*columns))\n"
+          }
+        ],
+        "referenceHostRecipe": [
+          {
+            "start": 590,
+            "before": "",
+            "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceManagerHost\nimport org.jetbrains.kotlin.util.portable.PerformanceDateFormat\n"
+          },
+          {
+            "start": 5496,
+            "before": "            printer = { moduleResult, _ -> String.format(\"%.2f LPS\", moduleResult) }\n",
+            "after": "            printer = { moduleResult, _ -> \"%.2f LPS\".performanceFormat(moduleResult) }\n"
+          },
+          {
+            "start": 6876,
+            "before": "        return String.format(\"%.2f%% (%d ms)\", ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n",
+            "after": "        return \"%.2f%% (%d ms)\".performanceFormat(ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n"
+          },
+          {
+            "start": 7415,
+            "before": "    private val dateTimeFormatter = SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.ENGLISH).apply {\n        timeZone = TimeZone.getTimeZone(\"UTC\")\n    }\n",
+            "after": "    private val dateTimeFormatter = performanceManagerHost().dateFormatter(PerformanceDateFormat.Markdown)\n"
+          },
+          {
+            "start": 8891,
+            "before": "        appendLine(String.format(columnsFormat, *columns))\n",
+            "after": "        appendLine(columnsFormat.performanceFormat(*columns))\n"
+          }
+        ]
+      }
+    ],
+    "files": [
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+        "bytes": 20716,
+        "sha256": "de00099265c68d193bd6c0e58c483a14b84446d77712ed5162fb94aa6bcab261",
+        "gitBlob": "c7c0fc2a8a9fba7aa1cba92a35cbd74043c05dd7"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+        "bytes": 12520,
+        "sha256": "ed36c44547ac94ed8d345331a872023e112d085a6aac3bcc2870ea2afa9b25e0",
+        "gitBlob": "cdeb9a438d3b7772ffcf5352d1859f2136bb8c50"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+        "bytes": 7299,
+        "sha256": "7b4856b0e9756dda6c3ba6af4566b375b804c99764326e8150d7c073dff050f4",
+        "gitBlob": "d5a5de4fa29532c7f118734b14cbeca2e63b68fd"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+        "bytes": 940,
+        "sha256": "bfe473238a6a3278938bbd3edf85a402d6c143fdc25e5b29ee1d0d9194e5a0c2",
+        "gitBlob": "4dc3f74ebad456cc28976d88e1a409feebb195e6"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+        "bytes": 9712,
+        "sha256": "5e1eaaf0b35ec7e6e32e93455b1d61da3b2abbdf90faa06e5cd00d33df5aa9b7",
+        "gitBlob": "00579ede2371ced95f6751008136531b8f754196"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+        "bytes": 8973,
+        "sha256": "86040490e3050543427f061a6a25c92f8268608b2cb4e773efef932838ca01b8",
+        "gitBlob": "a0f8345bd307e2b02420f626b5c49db5a4ca3a73"
+      },
+      {
+        "path": "compiler-port-performance-manager/PerformanceManagerHost.kt",
+        "bytes": 3494,
+        "sha256": "1d429aec308e358309c8a130a87c6224f3c8db0415512c3f9d4c493e4f210a99",
+        "gitBlob": "e45894415a1bba9a076469ee1d36c08b06bca3f4"
+      },
+      {
+        "path": "compiler-port-performance-manager/PerformanceCollections.kt",
+        "bytes": 2011,
+        "sha256": "3b2f6aa03ccb9bd9487710a40dd405c60653e7cb6bc2c3a87cea04c496fde40e",
+        "gitBlob": "43f205eb6b2b5b7230508c217aee637c3c885805"
+      }
+    ],
+    "requiredHost": "Explicit request-scoped clock, metrics, worker identity, files, formatting and date providers; no defaults.",
+    "executionContract": "Single synchronous Worker; caller installs performance counter clock and performance manager host for the complete request.",
+    "originalAlgorithmsRetained": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "finalReceipt": {
+    "schemaVersion": 1,
+    "kind": "genuine-performance-manager-report-final",
+    "sourceLockSha256": "7a6b48d9e57567763129a0aa458a70c0480eeea43f53a9913fe822bd7c2afb45",
+    "checked": [
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+        "bytes": 20716,
+        "sha256": "de00099265c68d193bd6c0e58c483a14b84446d77712ed5162fb94aa6bcab261"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+        "bytes": 12520,
+        "sha256": "ed36c44547ac94ed8d345331a872023e112d085a6aac3bcc2870ea2afa9b25e0"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+        "bytes": 7299,
+        "sha256": "7b4856b0e9756dda6c3ba6af4566b375b804c99764326e8150d7c073dff050f4"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+        "bytes": 940,
+        "sha256": "bfe473238a6a3278938bbd3edf85a402d6c143fdc25e5b29ee1d0d9194e5a0c2"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+        "bytes": 9712,
+        "sha256": "5e1eaaf0b35ec7e6e32e93455b1d61da3b2abbdf90faa06e5cd00d33df5aa9b7"
+      },
+      {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+        "bytes": 8973,
+        "sha256": "86040490e3050543427f061a6a25c92f8268608b2cb4e773efef932838ca01b8"
+      },
+      {
+        "path": "compiler-port-performance-manager/PerformanceManagerHost.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/compiler-port-performance-manager/PerformanceManagerHost.kt",
+        "bytes": 3494,
+        "sha256": "1d429aec308e358309c8a130a87c6224f3c8db0415512c3f9d4c493e4f210a99"
+      },
+      {
+        "path": "compiler-port-performance-manager/PerformanceCollections.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/compiler-port-performance-manager/PerformanceCollections.kt",
+        "bytes": 2011,
+        "sha256": "3b2f6aa03ccb9bd9487710a40dd405c60653e7cb6bc2c3a87cea04c496fde40e"
+      }
+    ],
+    "exactBodyAndImportsVerified": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "referenceHostRecipes": [
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+      "recipe": [
+        {
+          "start": 588,
+          "before": "import java.io.File\nimport java.lang.management.CompilationMXBean\nimport java.lang.management.GarbageCollectorMXBean\nimport java.lang.management.ManagementFactory\nimport java.lang.management.ThreadMXBean\nimport java.text.SimpleDateFormat\n",
+          "after": "import org.jetbrains.kotlin.util.portable.*\n"
+        },
+        {
+          "start": 1201,
+          "before": "    private lateinit var thread: Thread\n    private lateinit var threadMXBean: ThreadMXBean\n",
+          "after": "    private val performanceHost = performanceManagerHost()\n    private lateinit var thread: Any\n    private lateinit var threadMXBean: PerformanceThreadMeasurements\n"
+        },
+        {
+          "start": 1384,
+          "before": "        val nanos = System.nanoTime()\n",
+          "after": "        val nanos = performanceCounterNanoTime()\n"
+        },
+        {
+          "start": 1758,
+          "before": "    private var compilationMXBean: CompilationMXBean? = null\n",
+          "after": "    private var compilationMXBean: PerformanceCompilationMeasurements? = null\n"
+        },
+        {
+          "start": 1862,
+          "before": "    private var garbageCollectorMXBeans: List<GarbageCollectorMXBean> = emptyList()\n",
+          "after": "    private var garbageCollectorMXBeans: List<PerformanceGarbageCollector> = emptyList()\n"
+        },
+        {
+          "start": 3279,
+          "before": "        thread = Thread.currentThread()\n        threadMXBean = ManagementFactory.getThreadMXBean().also { it.isThreadCpuTimeEnabled = true }\n",
+          "after": "        thread = performanceHost.currentWorker()\n        threadMXBean = performanceHost.threadMeasurements().also { it.isThreadCpuTimeEnabled = true }\n"
+        },
+        {
+          "start": 5205,
+          "before": "            System.currentTimeMillis(),\n",
+          "after": "            performanceHost.currentTimeMillis(),\n"
+        },
+        {
+          "start": 8950,
+          "before": "        compilationMXBean = ManagementFactory.getCompilationMXBean()\n",
+          "after": "        compilationMXBean = performanceHost.compilationMeasurements()\n"
+        },
+        {
+          "start": 9082,
+          "before": "        garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans()\n",
+          "after": "        garbageCollectorMXBeans = performanceHost.garbageCollectors()\n"
+        },
+        {
+          "start": 12629,
+          "before": "        val localCompilationMXBean = compilationMXBean\n",
+          "after": "        val localPerformanceCompilationMeasurements = compilationMXBean\n"
+        },
+        {
+          "start": 12729,
+          "before": "        if (localCompilationMXBean != null && localJitStartTime != null) {\n            jitTimeMillis = localCompilationMXBean.totalCompilationTime - localJitStartTime\n",
+          "after": "        if (localPerformanceCompilationMeasurements != null && localJitStartTime != null) {\n            jitTimeMillis = localPerformanceCompilationMeasurements.totalCompilationTime - localJitStartTime\n"
+        },
+        {
+          "start": 14999,
+          "before": "        val refinedFileName: String = if (File(destFileNameOrPlaceholder).isDirectory) {\n",
+          "after": "        val refinedFileName: String = if (performanceHost.isDirectory(destFileNameOrPlaceholder)) {\n"
+        },
+        {
+          "start": 15175,
+          "before": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == File.separatorChar }) {\n",
+          "after": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == performanceHost.pathSeparator }) {\n"
+        },
+        {
+          "start": 15336,
+          "before": "                File.separatorChar\n",
+          "after": "                performanceHost.pathSeparator\n"
+        },
+        {
+          "start": 15483,
+          "before": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == File.separatorChar }\n",
+          "after": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == performanceHost.pathSeparator }\n"
+        },
+        {
+          "start": 16358,
+          "before": "        val destinationFile = File(refinedFileName)\n        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == destinationFile.extension } ?: DumpFormat.PlainText\n        destinationFile.writeBytes(createPerformanceReport(dumpFormat).toByteArray())\n",
+          "after": "        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == performanceHost.pathExtension(refinedFileName) } ?: DumpFormat.PlainText\n        performanceHost.writeBytes(refinedFileName, createPerformanceReport(dumpFormat).toByteArray())\n"
+        },
+        {
+          "start": 17024,
+          "before": "        SimpleDateFormat(\"yyyy-MM-dd-HH-mm-ss\")\n",
+          "after": "        performanceHost.dateFormatter(PerformanceDateFormat.FileName)\n"
+        },
+        {
+          "start": 17880,
+          "before": "        assertIfDebug(Thread.currentThread() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n",
+          "after": "        assertIfDebug(performanceHost.currentWorker() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n"
+        }
+      ]
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+      "recipe": [
+        {
+          "start": 326,
+          "before": "",
+          "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceFormatEnglish\n"
+        },
+        {
+          "start": 1972,
+          "before": "    val timeStampMs: Long = System.currentTimeMillis(),\n",
+          "after": "    val timeStampMs: Long = org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+        },
+        {
+          "start": 9523,
+          "before": "                \"${phaseNameFormat}%8s ms\".format(phaseTypeName.getValue(phaseType), time.millis) +\n",
+          "after": "                \"${phaseNameFormat}%8s ms\".performanceFormat(phaseTypeName.getValue(phaseType), time.millis) +\n"
+        },
+        {
+          "start": 9711,
+          "before": "                            \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(time))\n",
+          "after": "                            \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(time))\n"
+        },
+        {
+          "start": 10203,
+          "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASE\", dynamicTime.millis) +\n",
+          "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASE\", dynamicTime.millis) +\n"
+        },
+        {
+          "start": 10363,
+          "before": "                                        \"%12.3f loc/s ($dynamicName)\".format(Locale.ENGLISH, getLinesPerSecond(dynamicTime))\n",
+          "after": "                                        \"%12.3f loc/s ($dynamicName)\".performanceFormatEnglish(getLinesPerSecond(dynamicTime))\n"
+        },
+        {
+          "start": 10971,
+          "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(totTime)) else \"\"\n",
+          "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(totTime)) else \"\"\n"
+        }
+      ]
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+      "recipe": []
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+      "recipe": []
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+      "recipe": [
+        {
+          "start": 7245,
+          "before": "                timeStampMs = latestCurrentTimeMs ?: System.currentTimeMillis(),\n",
+          "after": "                timeStampMs = latestCurrentTimeMs ?: org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+        }
+      ]
+    },
+    {
+      "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+      "recipe": [
+        {
+          "start": 590,
+          "before": "",
+          "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceManagerHost\nimport org.jetbrains.kotlin.util.portable.PerformanceDateFormat\n"
+        },
+        {
+          "start": 5496,
+          "before": "            printer = { moduleResult, _ -> String.format(\"%.2f LPS\", moduleResult) }\n",
+          "after": "            printer = { moduleResult, _ -> \"%.2f LPS\".performanceFormat(moduleResult) }\n"
+        },
+        {
+          "start": 6876,
+          "before": "        return String.format(\"%.2f%% (%d ms)\", ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n",
+          "after": "        return \"%.2f%% (%d ms)\".performanceFormat(ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n"
+        },
+        {
+          "start": 7415,
+          "before": "    private val dateTimeFormatter = SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.ENGLISH).apply {\n        timeZone = TimeZone.getTimeZone(\"UTC\")\n    }\n",
+          "after": "    private val dateTimeFormatter = performanceManagerHost().dateFormatter(PerformanceDateFormat.Markdown)\n"
+        },
+        {
+          "start": 8891,
+          "before": "        appendLine(String.format(columnsFormat, *columns))\n",
+          "after": "        appendLine(columnsFormat.performanceFormat(*columns))\n"
+        }
+      ]
+    }
+  ],
+  "dependencyScope": {
+    "fullPlatformSources": [
+      {
+        "path": "core/language.targets/src/org/jetbrains/kotlin/platform/TargetPlatform.kt",
+        "gitBlob": "6ec5d0a1f91fdb6c34c8e179931eb618f48717b1",
+        "bytes": 4713,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/language.targets",
+        "sha256": "c8cfdc08ef57384801b1e3c52f3bef83400278a4d77433a31c0194f2f9aa926d"
+      },
+      {
+        "path": "core/language.targets/src/org/jetbrains/kotlin/platform/JsPlatform.kt",
+        "gitBlob": "eecf96f46c5fd6eef6d9955ee2eb92e4d9c5ce39",
+        "bytes": 701,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/language.targets",
+        "sha256": "c32fbdff7112d74abb1deb0bf1965f12dc4f55429b88928ca34f18e3760407ba"
+      },
+      {
+        "path": "core/language.targets/src/org/jetbrains/kotlin/platform/WasmPlatform.kt",
+        "gitBlob": "ed4d06e345096d49dcd6b95ff339320a05e3bc0c",
+        "bytes": 595,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/language.targets",
+        "sha256": "d3c125c7d9a39457ca4cb08ee2c3d62744301ffe4783380f07fd3a7f9ebba9da"
+      },
+      {
+        "path": "core/language.targets/src/org/jetbrains/kotlin/platform/PotentiallyWebPlatform.kt",
+        "gitBlob": "0debcbe836badc3d62abab28b83506b2aa31e162",
+        "bytes": 400,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/language.targets",
+        "sha256": "d04a1d339a2f616e7df88c67868005f1dfa00a6c5bb7208e950b55f841bf5530"
+      }
+    ],
+    "exactPlatformDescriptionProjection": {
+      "path": "core/language.targets/src/org/jetbrains/kotlin/platform/platformUtil.kt",
+      "start": 1876,
+      "before": "val TargetPlatform.presentableDescription: String\n    get() = componentPlatforms.joinToString(separator = \"/\")\n",
+      "output": {
+        "path": "PlatformDescription.kt",
+        "bytes": 150,
+        "sha256": "3689ae6c717cecfd0a231df161f6b230aa0999c3758f48adaa20c34e29c52b7c",
+        "gitBlob": "47a0101cab540d2ac6ccbb181f8c10d3695f00c7"
+      }
+    },
+    "counterPreparation": {
+      "schemaVersion": 1,
+      "kind": "genuine-single-worker-performance-counter-preparation",
+      "source": {
+        "repository": "https://github.com/JetBrains/kotlin.git",
+        "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+        "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+      },
+      "sourceLockSha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f",
+      "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+      "original": {
+        "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+        "gitBlob": "353fbd618c46ddb5ac711291ce3f3f5e9e7e043a",
+        "bytes": 7012,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/util.runtime",
+        "sha256": "33a714537ddbb768bac7a9ef4258f398b1d89da6be4c2036a66a9bac5575ee17"
+      },
+      "files": [
+        {
+          "path": "core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+          "bytes": 6919,
+          "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab",
+          "gitBlob": "62ae4db295ccc1d7360b4a9230ae826b66216f02"
+        },
+        {
+          "path": "compiler-port-performance-counter/PerformanceCounterHost.kt",
+          "bytes": 1178,
+          "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe",
+          "gitBlob": "79f7ad774da4639307d0f4e4c14ffdb8618d009e"
+        }
+      ],
+      "recipe": [
+        {
+          "start": 245,
+          "before": "import java.lang.management.ManagementFactory\nimport java.util.*\nimport java.util.concurrent.TimeUnit\nimport java.util.concurrent.atomic.AtomicInteger\nimport java.util.concurrent.atomic.AtomicLong\n",
+          "after": "import org.jetbrains.kotlin.util.portable.PerformanceCounterWorkerLocal\nimport org.jetbrains.kotlin.util.portable.performanceCounterNanoTime\n"
+        },
+        {
+          "start": 447,
+          "before": " * This counter is thread-safe for initialization and usage.\n",
+          "after": " * This port runs synchronously in one Worker; each request needs a fresh module.\n"
+        },
+        {
+          "start": 814,
+          "before": "System.nanoTime()",
+          "after": "performanceCounterNanoTime()"
+        },
+        {
+          "start": 913,
+          "before": "synchronized(allCounters)",
+          "after": "run"
+        },
+        {
+          "start": 1157,
+          "before": "synchronized(allCounters)",
+          "after": "run"
+        },
+        {
+          "start": 1364,
+          "before": "synchronized(allCounters)",
+          "after": "run"
+        },
+        {
+          "start": 1550,
+          "before": "synchronized(allCounters)",
+          "after": "run"
+        },
+        {
+          "start": 1666,
+          "before": "        @JvmOverloads\n",
+          "after": ""
+        },
+        {
+          "start": 2097,
+          "before": "ThreadLocal<",
+          "after": "PerformanceCounterWorkerLocal<"
+        },
+        {
+          "start": 2136,
+          "before": "            var value = threadLocal.get()\n            if (value == null) {\n                value = default()\n                threadLocal.set(value)\n            }\n            return value",
+          "after": "            val existing = threadLocal.get()\n            if (existing != null) return existing\n            val value = default()\n            threadLocal.set(value)\n            return value"
+        },
+        {
+          "start": 2510,
+          "before": "synchronized(allCounters)",
+          "after": "run"
+        },
+        {
+          "start": 3325,
+          "before": "TimeUnit.NANOSECONDS.toMillis(totalTimeNanos)",
+          "after": "totalTimeNanos / 1_000_000L"
+        },
+        {
+          "start": 4038,
+          "before": "ThreadLocal<",
+          "after": "PerformanceCounterWorkerLocal<"
+        },
+        {
+          "start": 5186,
+          "before": "ThreadLocal<",
+          "after": "PerformanceCounterWorkerLocal<"
+        },
+        {
+          "start": 6072,
+          "before": "Stack<Boolean>",
+          "after": "ArrayList<Boolean>"
+        },
+        {
+          "start": 6150,
+          "before": "Stack<Boolean>",
+          "after": "ArrayList<Boolean>"
+        },
+        {
+          "start": 6202,
+          "before": "else peek()",
+          "after": "else last()"
+        },
+        {
+          "start": 6271,
+          "before": "Stack<Boolean>",
+          "after": "ArrayList<Boolean>"
+        },
+        {
+          "start": 6681,
+          "before": "return intervalUsefulTime { push(usefulCall) }",
+          "after": "return intervalUsefulTime { add(usefulCall) }"
+        },
+        {
+          "start": 6843,
+          "before": "assert(callStack.peek() == usefulCall)",
+          "after": "assert(callStack.last() == usefulCall)"
+        },
+        {
+          "start": 6894,
+          "before": "return intervalUsefulTime { pop() }",
+          "after": "return intervalUsefulTime { removeAt(lastIndex) }"
+        }
+      ],
+      "requiredClock": "Caller-owned synchronous monotonic nanoseconds; installation restored in finally; no default clock.",
+      "executionContract": "Single synchronous Worker module; no threads, suspension or shared memory. Fresh Worker for each compiler request.",
+      "originalAlgorithmsRetained": true,
+      "fullCompilerBuilt": false,
+      "languageReadiness": false
+    },
+    "originalCounterClockSubstitutions": 1
+  },
+  "inputs": [
+    {
+      "path": "Probe.kt",
+      "bytes": 13470,
+      "sha256": "ff2a0033e2bf31e081cf7c283751baa9d02e95eca8a8d8881a472997e0fcb047"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 411,
+      "sha256": "82b0136f74fb5cada0256cc1657fde0f45f2deebc6f28b03cabbefca846d6ef3"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 288,
+      "sha256": "2b171d0a01e15606ec724a889cea94bb0958baea2d38c4e4e6e0031e77cd3f80"
+    },
+    {
+      "path": "JvmHost.kt",
+      "bytes": 1767,
+      "sha256": "04a212073bfe3b2e49894928f48911aa5db68017cf1cd04a4f810017acf60568"
+    },
+    {
+      "path": "WasmHost.kt",
+      "bytes": 927,
+      "sha256": "afe46feeb97e428e70b1ba76dd5e94051f7fc9d09290b684c4831a379f4570e0"
+    },
+    {
+      "path": "PerformanceManagerHost.kt",
+      "bytes": 3494,
+      "sha256": "1d429aec308e358309c8a130a87c6224f3c8db0415512c3f9d4c493e4f210a99"
+    },
+    {
+      "path": "PerformanceCollections.kt",
+      "bytes": 2011,
+      "sha256": "3b2f6aa03ccb9bd9487710a40dd405c60653e7cb6bc2c3a87cea04c496fde40e"
+    },
+    {
+      "path": "check.mjs",
+      "bytes": 12248,
+      "sha256": "575f0972be84ec4d91427b1870dca8e2717270346cd009377c04fe62c94d31b7"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 7299,
+      "sha256": "72da235047257de10899fa73eebee27aff34f593774905b5dba08628adbeac14"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 655,
+      "sha256": "a75807503ffeec77ed66b832b8ee6841a300d4b0db970c4193d4875d9b355382"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 32548,
+      "sha256": "7a6b48d9e57567763129a0aa458a70c0480eeea43f53a9913fe822bd7c2afb45"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "CommonSupport.kt",
+      "bytes": 817,
+      "sha256": "8e0df7628c0dd498c810c36abdcf9e7ed955e9f5762157358b2576e81d8d1cb9"
+    },
+    {
+      "path": "CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf"
+    },
+    {
+      "path": "JvmEntry.kt",
+      "bytes": 411,
+      "sha256": "82b0136f74fb5cada0256cc1657fde0f45f2deebc6f28b03cabbefca846d6ef3"
+    },
+    {
+      "path": "JvmHost.kt",
+      "bytes": 1767,
+      "sha256": "04a212073bfe3b2e49894928f48911aa5db68017cf1cd04a4f810017acf60568"
+    },
+    {
+      "path": "OriginalSupport.kt",
+      "bytes": 573,
+      "sha256": "be65ddb288a59989321b864d0fe8882072c593683c157e2ed8c21aaf617ed5fe"
+    },
+    {
+      "path": "PerformanceCollections.kt",
+      "bytes": 2011,
+      "sha256": "3b2f6aa03ccb9bd9487710a40dd405c60653e7cb6bc2c3a87cea04c496fde40e"
+    },
+    {
+      "path": "PerformanceManagerHost.kt",
+      "bytes": 3494,
+      "sha256": "1d429aec308e358309c8a130a87c6224f3c8db0415512c3f9d4c493e4f210a99"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 13470,
+      "sha256": "ff2a0033e2bf31e081cf7c283751baa9d02e95eca8a8d8881a472997e0fcb047"
+    },
+    {
+      "path": "WasmEntry.kt",
+      "bytes": 288,
+      "sha256": "2b171d0a01e15606ec724a889cea94bb0958baea2d38c4e4e6e0031e77cd3f80"
+    },
+    {
+      "path": "WasmHost.kt",
+      "bytes": 927,
+      "sha256": "afe46feeb97e428e70b1ba76dd5e94051f7fc9d09290b684c4831a379f4570e0"
+    },
+    {
+      "path": "common-HostOracle.kt",
+      "bytes": 106121,
+      "sha256": "74053a186435dff50b8319e1eab50c12ab5c8ce33c754e549973a42b1915ae05"
+    },
+    {
+      "path": "common-observations.txt",
+      "bytes": 108589,
+      "sha256": "14bd0274385382ff4f36cd5de06cc465bb3a1460f121cda5a04083fcb11449ad"
+    },
+    {
+      "path": "counter/compiler-port-performance-counter/PerformanceCounterHost.kt",
+      "bytes": 1178,
+      "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe"
+    },
+    {
+      "path": "counter/core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+      "bytes": 6919,
+      "sha256": "56b8460567ab1aa9c3d338a185163641c3c911ab009a78d5c514c22d87da66ab"
+    },
+    {
+      "path": "counter/receipt.json",
+      "bytes": 4915,
+      "sha256": "4eeb53c1b78c33496db7fbdedbfa8dbad4b9f98ef079ce312e233edcd26edcd6"
+    },
+    {
+      "path": "jvm/common.jar",
+      "bytes": 207171,
+      "sha256": "058b27a9f8239e06a2208e8f3f07138fb4e274d90a4af98c41ad10e02810504f"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 199863,
+      "sha256": "7ec4d7fe4a722c338accb560359ccb704fc3fdeaf6629cc6cc9a0ac5a7e42de6"
+    },
+    {
+      "path": "klib/performance-manager.klib",
+      "bytes": 236180,
+      "sha256": "944121385c2accd0ffeaa5853de6c10bc91a628a71b58182741579fb8fbbbfa6"
+    },
+    {
+      "path": "original/MarkdownReportRenderer.kt",
+      "bytes": 9110,
+      "sha256": "c2b769c5f8722e7dc573abf985a11369067a269064096984e2efdac51c82626f"
+    },
+    {
+      "path": "original/PerformanceCounter.kt",
+      "bytes": 7058,
+      "sha256": "7cf5402d977fc1dc0fb21d17bb6620497a53dbefa1fc5fa11a87934baced5efb"
+    },
+    {
+      "path": "original/PerformanceManager.kt",
+      "bytes": 20606,
+      "sha256": "4d8bae018e7af1c19fe91c215deac0be6a3e802ba9c743e2b5ba98e93b168f16"
+    },
+    {
+      "path": "original/ReportsData.kt",
+      "bytes": 881,
+      "sha256": "b5d8bd6d552f000dea2000373b34f6ceab6d4b6c8fc4137180c930f31024d16d"
+    },
+    {
+      "path": "original/StatsCalculator.kt",
+      "bytes": 9671,
+      "sha256": "bcadef63386b1cc091d7945ef9601817fbd4de754b293191e2199e9bdea712ba"
+    },
+    {
+      "path": "original/UnitStats.kt",
+      "bytes": 12607,
+      "sha256": "6e2d740d1a0b47a885373de8dbd31c026c2301fb6955255f87f1fa2eb6cb463d"
+    },
+    {
+      "path": "original/UnitStatsJsonDumper.kt",
+      "bytes": 7298,
+      "sha256": "a7d9f4b0767d9755553107ed1a477b676f26ac079f105a53c4e391707c98d24f"
+    },
+    {
+      "path": "original-HostOracle.kt",
+      "bytes": 106121,
+      "sha256": "74053a186435dff50b8319e1eab50c12ab5c8ce33c754e549973a42b1915ae05"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 108589,
+      "sha256": "14bd0274385382ff4f36cd5de06cc465bb3a1460f121cda5a04083fcb11449ad"
+    },
+    {
+      "path": "platform/JsPlatform.kt",
+      "bytes": 701,
+      "sha256": "c32fbdff7112d74abb1deb0bf1965f12dc4f55429b88928ca34f18e3760407ba"
+    },
+    {
+      "path": "platform/PlatformDescription.kt",
+      "bytes": 150,
+      "sha256": "3689ae6c717cecfd0a231df161f6b230aa0999c3758f48adaa20c34e29c52b7c"
+    },
+    {
+      "path": "platform/PotentiallyWebPlatform.kt",
+      "bytes": 400,
+      "sha256": "d04a1d339a2f616e7df88c67868005f1dfa00a6c5bb7208e950b55f841bf5530"
+    },
+    {
+      "path": "platform/TargetPlatform.kt",
+      "bytes": 4713,
+      "sha256": "c8cfdc08ef57384801b1e3c52f3bef83400278a4d77433a31c0194f2f9aa926d"
+    },
+    {
+      "path": "platform/WasmPlatform.kt",
+      "bytes": 595,
+      "sha256": "d3c125c7d9a39457ca4cb08ee2c3d62744301ffe4783380f07fd3a7f9ebba9da"
+    },
+    {
+      "path": "prepared/compiler-port-performance-manager/PerformanceCollections.kt",
+      "bytes": 2011,
+      "sha256": "3b2f6aa03ccb9bd9487710a40dd405c60653e7cb6bc2c3a87cea04c496fde40e"
+    },
+    {
+      "path": "prepared/compiler-port-performance-manager/PerformanceManagerHost.kt",
+      "bytes": 3494,
+      "sha256": "1d429aec308e358309c8a130a87c6224f3c8db0415512c3f9d4c493e4f210a99"
+    },
+    {
+      "path": "prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+      "bytes": 8973,
+      "sha256": "86040490e3050543427f061a6a25c92f8268608b2cb4e773efef932838ca01b8"
+    },
+    {
+      "path": "prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+      "bytes": 940,
+      "sha256": "bfe473238a6a3278938bbd3edf85a402d6c143fdc25e5b29ee1d0d9194e5a0c2"
+    },
+    {
+      "path": "prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+      "bytes": 9712,
+      "sha256": "5e1eaaf0b35ec7e6e32e93455b1d61da3b2abbdf90faa06e5cd00d33df5aa9b7"
+    },
+    {
+      "path": "prepared/core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+      "bytes": 20716,
+      "sha256": "de00099265c68d193bd6c0e58c483a14b84446d77712ed5162fb94aa6bcab261"
+    },
+    {
+      "path": "prepared/core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+      "bytes": 12520,
+      "sha256": "ed36c44547ac94ed8d345331a872023e112d085a6aac3bcc2870ea2afa9b25e0"
+    },
+    {
+      "path": "prepared/core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+      "bytes": 7299,
+      "sha256": "7b4856b0e9756dda6c3ba6af4566b375b804c99764326e8150d7c073dff050f4"
+    },
+    {
+      "path": "prepared/receipt.json",
+      "bytes": 30421,
+      "sha256": "246395369f230147b1f0c06d1216c82c6cbdf08f653ddbccfed53a892c547144"
+    },
+    {
+      "path": "wasm/performance-manager.import-object.mjs",
+      "bytes": 9559,
+      "sha256": "d0f9522cd880b182f050dda77374e731c7a1085be910a1946dd24e80c4ee3673"
+    },
+    {
+      "path": "wasm/performance-manager.js-builtins.mjs",
+      "bytes": 2095,
+      "sha256": "a370c66f8031ae3a8d5718123a7fb1aeed4f43caca681181ef69b512321d5b94"
+    },
+    {
+      "path": "wasm/performance-manager.mjs",
+      "bytes": 2307,
+      "sha256": "9786013d4fdf3bd44820a919aad1a4ac722706011f50e6830a34c54a22df6871"
+    },
+    {
+      "path": "wasm/performance-manager.wasm",
+      "bytes": 1091051,
+      "sha256": "a4b9751c69264aa19e448ff02a1671d3170a2443b56efe2b87a0efdf3005b43a"
+    },
+    {
+      "path": "wasm-input/MarkdownReportRenderer.kt",
+      "bytes": 9046,
+      "sha256": "a6369c059f0a8e7037d41abcd7bb647734a67fd750a28130e343ee9894bb9938"
+    },
+    {
+      "path": "wasm-input/PerformanceCollections.kt",
+      "bytes": 2084,
+      "sha256": "844e9a95a88bca02ad0fd85b72bc1930a05e2f5bd82539f08e3ae37f05445420"
+    },
+    {
+      "path": "wasm-input/PerformanceCounter.kt",
+      "bytes": 6992,
+      "sha256": "aafe46c5a702e287fa3ee28ebecc6fa6abdae7179efce9e0550b6a82490aea6f"
+    },
+    {
+      "path": "wasm-input/PerformanceCounterHost.kt",
+      "bytes": 1251,
+      "sha256": "9e33f34456cc3483e5fb12ae037fe31b4359abedda8770539fdde7dbf40331af"
+    },
+    {
+      "path": "wasm-input/PerformanceManager.kt",
+      "bytes": 20789,
+      "sha256": "b471816a4a79aa249247b4f7cbbccbedaf3e6cc8f11ced67893ae0b2a1ee6456"
+    },
+    {
+      "path": "wasm-input/PerformanceManagerHost.kt",
+      "bytes": 3567,
+      "sha256": "aac64129074a9de30322baf58c1d29b70419df81162f10fdcc2ba0e6bc6d0090"
+    },
+    {
+      "path": "wasm-input/ReportsData.kt",
+      "bytes": 1013,
+      "sha256": "eb1297d1c2b4a06035f28af68be73e4c2cfc3fda496aa3de1ad4a1e3a2df5838"
+    },
+    {
+      "path": "wasm-input/StatsCalculator.kt",
+      "bytes": 9785,
+      "sha256": "136628d73b75d6c6b336292a86e88d94f03b4b351e4dfd9be718affeed7b8f9b"
+    },
+    {
+      "path": "wasm-input/UnitStats.kt",
+      "bytes": 12593,
+      "sha256": "59f2bf88d678f35659dcf4d61ac3a21ac3361fde45717aa00c027fd30b870400"
+    },
+    {
+      "path": "wasm-input/UnitStatsJsonDumper.kt",
+      "bytes": 7372,
+      "sha256": "f7831d6e1071620d9b8e054d35220049a644a2744d35b35efa2a247aded815b3"
+    },
+    {
+      "path": "wasm-observations.txt",
+      "bytes": 108589,
+      "sha256": "14bd0274385382ff4f36cd5de06cc465bb3a1460f121cda5a04083fcb11449ad"
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-full-manager-family-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/PerformanceManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/UnitStats.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/UnitStatsJsonDumper.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/ReportsData.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/StatsCalculator.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/MarkdownReportRenderer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original/PerformanceCounter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/PerformanceManagerHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/PerformanceCollections.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/counter/compiler-port-performance-counter/PerformanceCounterHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/OriginalSupport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/TargetPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/JsPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/WasmPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PotentiallyWebPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PlatformDescription.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/JvmHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-full-manager-family-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.util.portable.probe.JvmEntryKt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original-HostOracle.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-full-manager-family-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/jvm/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/compiler-port-performance-manager/PerformanceManagerHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/prepared/compiler-port-performance-manager/PerformanceCollections.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/counter/core/util.runtime/src/org/jetbrains/kotlin/utils/PerformanceCounter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/counter/compiler-port-performance-counter/PerformanceCounterHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/CommonSupport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/TargetPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/JsPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/WasmPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PotentiallyWebPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PlatformDescription.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/JvmHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/JvmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-full-manager-family-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar",
+        "org.jetbrains.kotlin.util.portable.probe.JvmEntryKt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/common-HostOracle.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "full-manager-family-wasm-klib-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xmulti-platform",
+        "-Xcommon-sources=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceManager.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/UnitStats.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/UnitStatsJsonDumper.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/ReportsData.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/StatsCalculator.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/MarkdownReportRenderer.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceManagerHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceCollections.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceCounter.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceCounterHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/TargetPlatform.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/JsPlatform.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/WasmPlatform.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PotentiallyWebPlatform.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PlatformDescription.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/CompilerAssertions.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/CommonSupport.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/WasmHost.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original-HostOracle.kt,/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/Probe.kt",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/klib",
+        "-ir-output-name",
+        "performance-manager",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceManager.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/UnitStats.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/UnitStatsJsonDumper.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/ReportsData.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/StatsCalculator.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/MarkdownReportRenderer.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceManagerHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceCollections.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceCounter.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm-input/PerformanceCounterHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/TargetPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/JsPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/WasmPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PotentiallyWebPlatform.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/platform/PlatformDescription.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/CompilerAssertions.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/CommonSupport.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/WasmHost.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/original-HostOracle.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/Probe.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/WasmEntry.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "full-manager-family-wasm-module-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.js.KotlinWasmCompiler",
+        "-Xwasm-target=wasm-js",
+        "-libraries",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-wasm-js-2.5.0-dev-10106.klib",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xir-produce-js",
+        "-Xinclude=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/klib/performance-manager.klib",
+        "-ir-output-dir",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm",
+        "-ir-output-name",
+        "performance-manager",
+        "-main",
+        "noCall",
+        "-Xwasm-enable-asserts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "full-manager-family-node-wasm-observe",
+      "command": [
+        "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+        "--experimental-wasm-exnref",
+        "--input-type=module",
+        "-e",
+        "const m=await import(process.argv[1]);process.stdout.write(m.performanceManagerObservation());",
+        "file:///home/seorii/dev/hancomac/wasm-llvm/out/kotlin-performance-manager-1791698881330051127/wasm/performance-manager.mjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "comparison": {
+    "rawLines": 1367,
+    "originalJvmEqualsCommonJvm": true,
+    "originalJvmEqualsFullNodeWasm": true,
+    "fullSixSourceFamilyExecuted": true,
+    "measuredAlgorithmProjection": false,
+    "normalizedText": false,
+    "rawSha256": "14bd0274385382ff4f36cd5de06cc465bb3a1460f121cda5a04083fcb11449ad"
+  },
+  "hostOracle": "Original JVM executes Java Formatter and SimpleDateFormat at explicit host seams. Common JVM repeats and compares the entire request/response trace. Wasm replays only these recorded formatting/date host responses, checking exact ordered typed requests and exhaustion. Measurements, stats, file naming, reports and heap algorithms execute in Wasm.",
+  "scope": "All phases; side/dynamic throws and finally; child/aggregate/error finalization; K1 counters; CPU/GC/JIT capability values; sorted outputs; heap ties and bounds; plain/JSON/markdown; report filenames/bytes/write failure; host restoration.",
+  "singleWorkerOnly": true,
+  "browserExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false,
+  "execution": {
+    "pid": 2797465,
+    "exitCode": 0,
+    "elapsedSeconds": 72.11706304550171,
+    "artifactReceipt": {
+      "path": "out/kotlin-performance-manager-1791698881330051127/receipt.json",
+      "bytes": 90179,
+      "sha256": "de43b380ba1fc87b698a2149e3f015212805a290ec3bf4341c9fbc6d390936d9"
+    },
+    "log": {
+      "path": "/home/seorii/logs/kotlin-performance-manager-1791698881330051127.log",
+      "bytes": 5597,
+      "sha256": "0dd35d733cf8c7666dd44bdc1d93f8a036f4f8868c43bdcb82b694c06694773f"
+    },
+    "status": {
+      "path": "/home/seorii/logs/kotlin-performance-manager-1791698881330051127.status.json",
+      "bytes": 53,
+      "sha256": "fac6aacce624fafc6bd2ea2e9fa3c336b941bcd59b0ba3c1c0b2e2f62bd4d069"
+    }
+  },
+  "priorBoundedFailure": {
+    "reason": "Full original/common JVM observations matched; Wasm compilation exposed the direct JSON StringBuilder.replace boundary, now ported to common setRange.",
+    "failure": {
+      "path": "out/kotlin-performance-manager-1791698770459761345/failure.json",
+      "bytes": 12872,
+      "sha256": "18a089a177f75847c0ab1dcfda49c9926b7b72ffd7eec653810c34ab029e6236"
+    },
+    "log": {
+      "path": "/home/seorii/logs/kotlin-performance-manager-1791698770459761345.log",
+      "bytes": 5062,
+      "sha256": "b1e3d9c46ada1892900df33429cec0f7634ebfa7b8b79916b2ca205d2d561cf6"
+    },
+    "status": {
+      "path": "/home/seorii/logs/kotlin-performance-manager-1791698770459761345.status.json",
+      "bytes": 53,
+      "sha256": "ba1c33b3201e2212cf2fad2cd9376524f99964d1bc993823a59c9a8ad29b9676"
+    }
+  }
+}

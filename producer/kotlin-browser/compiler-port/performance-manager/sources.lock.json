@@ -1,0 +1,649 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-performance-manager-report-family",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "sources": [
+    {
+      "original": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+        "gitBlob": "97129a3b04c002b35898d11e8ae7434a7566e359",
+        "bytes": 20573,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/compiler.common",
+        "sha256": "11778e2fa75c454f01769d81a49c1b19f6d9d95f92b14d35fcd62740c127ae22"
+      },
+      "output": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/PerformanceManager.kt",
+        "bytes": 20716,
+        "sha256": "de00099265c68d193bd6c0e58c483a14b84446d77712ed5162fb94aa6bcab261",
+        "gitBlob": "c7c0fc2a8a9fba7aa1cba92a35cbd74043c05dd7"
+      },
+      "recipe": [
+        {
+          "start": 588,
+          "before": "import java.io.File\nimport java.lang.management.CompilationMXBean\nimport java.lang.management.GarbageCollectorMXBean\nimport java.lang.management.ManagementFactory\nimport java.lang.management.ThreadMXBean\nimport java.text.SimpleDateFormat\nimport java.util.*\n",
+          "after": "import org.jetbrains.kotlin.util.portable.*\n"
+        },
+        {
+          "start": 1201,
+          "before": "    private lateinit var thread: Thread\n    private lateinit var threadMXBean: ThreadMXBean\n",
+          "after": "    private val performanceHost = performanceManagerHost()\n    private lateinit var thread: Any\n    private lateinit var threadMXBean: PerformanceThreadMeasurements\n"
+        },
+        {
+          "start": 1384,
+          "before": "        val nanos = System.nanoTime()\n",
+          "after": "        val nanos = performanceCounterNanoTime()\n"
+        },
+        {
+          "start": 1758,
+          "before": "    private var compilationMXBean: CompilationMXBean? = null\n",
+          "after": "    private var compilationMXBean: PerformanceCompilationMeasurements? = null\n"
+        },
+        {
+          "start": 1862,
+          "before": "    private var garbageCollectorMXBeans: List<GarbageCollectorMXBean> = emptyList()\n",
+          "after": "    private var garbageCollectorMXBeans: List<PerformanceGarbageCollector> = emptyList()\n"
+        },
+        {
+          "start": 1947,
+          "before": "    private val phaseMeasurements: MutableMap<PhaseType, Time> = sortedMapOf()\n    private val phaseSideMeasurements: MutableMap<PhaseSideType, SideStats> = sortedMapOf()\n    private var gcMeasurements: MutableMap<String, GarbageCollectionStats> = sortedMapOf()\n",
+          "after": "    private val phaseMeasurements: MutableMap<PhaseType, Time> = mutableMapOf()\n    private val phaseSideMeasurements: MutableMap<PhaseSideType, SideStats> = mutableMapOf()\n    private var gcMeasurements: MutableMap<String, GarbageCollectionStats> = mutableMapOf()\n"
+        },
+        {
+          "start": 2520,
+          "before": "    private val klibElementStats: SortedMap<String, Long> = sortedMapOf()\n",
+          "after": "    private val klibElementStats: MutableMap<String, Long> = mutableMapOf()\n"
+        },
+        {
+          "start": 3279,
+          "before": "        thread = Thread.currentThread()\n        threadMXBean = ManagementFactory.getThreadMXBean().also { it.isThreadCpuTimeEnabled = true }\n",
+          "after": "        thread = performanceHost.currentWorker()\n        threadMXBean = performanceHost.threadMeasurements().also { it.isThreadCpuTimeEnabled = true }\n"
+        },
+        {
+          "start": 3967,
+          "before": "        for ([phaseType, time] in phaseMeasurements) {\n",
+          "after": "        for ([phaseType, time] in phaseMeasurements.entries.sortedBy { it.key }) {\n"
+        },
+        {
+          "start": 4833,
+          "before": "        for ([phaseSideType, sideStats] in phaseSideMeasurements) {\n",
+          "after": "        for ([phaseSideType, sideStats] in phaseSideMeasurements.entries.sortedBy { it.key }) {\n"
+        },
+        {
+          "start": 5205,
+          "before": "            System.currentTimeMillis(),\n",
+          "after": "            performanceHost.currentTimeMillis(),\n"
+        },
+        {
+          "start": 5894,
+          "before": "            klibElementStats.map { [path, size] -> KlibElementStats(path, size) },\n",
+          "after": "            klibElementStats.entries.sortedBy { it.key }.map { [path, size] -> KlibElementStats(path, size) },\n"
+        },
+        {
+          "start": 6043,
+          "before": "            gcMeasurements.values.toList(),\n",
+          "after": "            gcMeasurements.entries.sortedBy { it.key }.map { it.value },\n"
+        },
+        {
+          "start": 8950,
+          "before": "        compilationMXBean = ManagementFactory.getCompilationMXBean()\n",
+          "after": "        compilationMXBean = performanceHost.compilationMeasurements()\n"
+        },
+        {
+          "start": 9082,
+          "before": "        garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans()\n",
+          "after": "        garbageCollectorMXBeans = performanceHost.garbageCollectors()\n"
+        },
+        {
+          "start": 12629,
+          "before": "        val localCompilationMXBean = compilationMXBean\n",
+          "after": "        val localPerformanceCompilationMeasurements = compilationMXBean\n"
+        },
+        {
+          "start": 12729,
+          "before": "        if (localCompilationMXBean != null && localJitStartTime != null) {\n            jitTimeMillis = localCompilationMXBean.totalCompilationTime - localJitStartTime\n",
+          "after": "        if (localPerformanceCompilationMeasurements != null && localJitStartTime != null) {\n            jitTimeMillis = localPerformanceCompilationMeasurements.totalCompilationTime - localJitStartTime\n"
+        },
+        {
+          "start": 14999,
+          "before": "        val refinedFileName: String = if (File(destFileNameOrPlaceholder).isDirectory) {\n",
+          "after": "        val refinedFileName: String = if (performanceHost.isDirectory(destFileNameOrPlaceholder)) {\n"
+        },
+        {
+          "start": 15175,
+          "before": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == File.separatorChar }) {\n",
+          "after": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == performanceHost.pathSeparator }) {\n"
+        },
+        {
+          "start": 15336,
+          "before": "                File.separatorChar\n",
+          "after": "                performanceHost.pathSeparator\n"
+        },
+        {
+          "start": 15483,
+          "before": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == File.separatorChar }\n",
+          "after": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == performanceHost.pathSeparator }\n"
+        },
+        {
+          "start": 16358,
+          "before": "        val destinationFile = File(refinedFileName)\n        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == destinationFile.extension } ?: DumpFormat.PlainText\n        destinationFile.writeBytes(createPerformanceReport(dumpFormat).toByteArray())\n",
+          "after": "        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == performanceHost.pathExtension(refinedFileName) } ?: DumpFormat.PlainText\n        performanceHost.writeBytes(refinedFileName, createPerformanceReport(dumpFormat).performanceReportBytes())\n"
+        },
+        {
+          "start": 17024,
+          "before": "        SimpleDateFormat(\"yyyy-MM-dd-HH-mm-ss\")\n",
+          "after": "        performanceHost.dateFormatter(PerformanceDateFormat.FileName)\n"
+        },
+        {
+          "start": 17880,
+          "before": "        assertIfDebug(Thread.currentThread() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n",
+          "after": "        assertIfDebug(performanceHost.currentWorker() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n"
+        }
+      ],
+      "referenceHostRecipe": [
+        {
+          "start": 588,
+          "before": "import java.io.File\nimport java.lang.management.CompilationMXBean\nimport java.lang.management.GarbageCollectorMXBean\nimport java.lang.management.ManagementFactory\nimport java.lang.management.ThreadMXBean\nimport java.text.SimpleDateFormat\n",
+          "after": "import org.jetbrains.kotlin.util.portable.*\n"
+        },
+        {
+          "start": 1201,
+          "before": "    private lateinit var thread: Thread\n    private lateinit var threadMXBean: ThreadMXBean\n",
+          "after": "    private val performanceHost = performanceManagerHost()\n    private lateinit var thread: Any\n    private lateinit var threadMXBean: PerformanceThreadMeasurements\n"
+        },
+        {
+          "start": 1384,
+          "before": "        val nanos = System.nanoTime()\n",
+          "after": "        val nanos = performanceCounterNanoTime()\n"
+        },
+        {
+          "start": 1758,
+          "before": "    private var compilationMXBean: CompilationMXBean? = null\n",
+          "after": "    private var compilationMXBean: PerformanceCompilationMeasurements? = null\n"
+        },
+        {
+          "start": 1862,
+          "before": "    private var garbageCollectorMXBeans: List<GarbageCollectorMXBean> = emptyList()\n",
+          "after": "    private var garbageCollectorMXBeans: List<PerformanceGarbageCollector> = emptyList()\n"
+        },
+        {
+          "start": 3279,
+          "before": "        thread = Thread.currentThread()\n        threadMXBean = ManagementFactory.getThreadMXBean().also { it.isThreadCpuTimeEnabled = true }\n",
+          "after": "        thread = performanceHost.currentWorker()\n        threadMXBean = performanceHost.threadMeasurements().also { it.isThreadCpuTimeEnabled = true }\n"
+        },
+        {
+          "start": 5205,
+          "before": "            System.currentTimeMillis(),\n",
+          "after": "            performanceHost.currentTimeMillis(),\n"
+        },
+        {
+          "start": 8950,
+          "before": "        compilationMXBean = ManagementFactory.getCompilationMXBean()\n",
+          "after": "        compilationMXBean = performanceHost.compilationMeasurements()\n"
+        },
+        {
+          "start": 9082,
+          "before": "        garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans()\n",
+          "after": "        garbageCollectorMXBeans = performanceHost.garbageCollectors()\n"
+        },
+        {
+          "start": 12629,
+          "before": "        val localCompilationMXBean = compilationMXBean\n",
+          "after": "        val localPerformanceCompilationMeasurements = compilationMXBean\n"
+        },
+        {
+          "start": 12729,
+          "before": "        if (localCompilationMXBean != null && localJitStartTime != null) {\n            jitTimeMillis = localCompilationMXBean.totalCompilationTime - localJitStartTime\n",
+          "after": "        if (localPerformanceCompilationMeasurements != null && localJitStartTime != null) {\n            jitTimeMillis = localPerformanceCompilationMeasurements.totalCompilationTime - localJitStartTime\n"
+        },
+        {
+          "start": 14999,
+          "before": "        val refinedFileName: String = if (File(destFileNameOrPlaceholder).isDirectory) {\n",
+          "after": "        val refinedFileName: String = if (performanceHost.isDirectory(destFileNameOrPlaceholder)) {\n"
+        },
+        {
+          "start": 15175,
+          "before": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == File.separatorChar }) {\n",
+          "after": "            val separator = if (destFileNameOrPlaceholder.lastOrNull().let { it == null || it == performanceHost.pathSeparator }) {\n"
+        },
+        {
+          "start": 15336,
+          "before": "                File.separatorChar\n",
+          "after": "                performanceHost.pathSeparator\n"
+        },
+        {
+          "start": 15483,
+          "before": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == File.separatorChar }\n",
+          "after": "            val lastSlashIndex = destFileNameOrPlaceholder.indexOfLast { it == performanceHost.pathSeparator }\n"
+        },
+        {
+          "start": 16358,
+          "before": "        val destinationFile = File(refinedFileName)\n        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == destinationFile.extension } ?: DumpFormat.PlainText\n        destinationFile.writeBytes(createPerformanceReport(dumpFormat).toByteArray())\n",
+          "after": "        val dumpFormat = DumpFormat.entries.firstOrNull { it.extension == performanceHost.pathExtension(refinedFileName) } ?: DumpFormat.PlainText\n        performanceHost.writeBytes(refinedFileName, createPerformanceReport(dumpFormat).toByteArray())\n"
+        },
+        {
+          "start": 17024,
+          "before": "        SimpleDateFormat(\"yyyy-MM-dd-HH-mm-ss\")\n",
+          "after": "        performanceHost.dateFormatter(PerformanceDateFormat.FileName)\n"
+        },
+        {
+          "start": 17880,
+          "before": "        assertIfDebug(Thread.currentThread() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n",
+          "after": "        assertIfDebug(performanceHost.currentWorker() == thread) { \"PerformanceManager functions can be run only from the same thread\" }\n"
+        }
+      ]
+    },
+    {
+      "original": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+        "gitBlob": "da06c9110b997b48fb5bfc985b9ed5a48c71ab93",
+        "bytes": 12388,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/compiler.common",
+        "sha256": "b69ec1683eee5ecd3013ee14a979f0f1341986aac11c8c6cce2a02a12f61f6a4"
+      },
+      "output": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStats.kt",
+        "bytes": 12520,
+        "sha256": "ed36c44547ac94ed8d345331a872023e112d085a6aac3bcc2870ea2afa9b25e0",
+        "gitBlob": "cdeb9a438d3b7772ffcf5352d1859f2136bb8c50"
+      },
+      "recipe": [
+        {
+          "start": 245,
+          "before": "import java.util.*\nimport java.util.concurrent.TimeUnit\n",
+          "after": ""
+        },
+        {
+          "start": 326,
+          "before": "",
+          "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceFormatEnglish\n"
+        },
+        {
+          "start": 1972,
+          "before": "    val timeStampMs: Long = System.currentTimeMillis(),\n",
+          "after": "    val timeStampMs: Long = org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+        },
+        {
+          "start": 5660,
+          "before": "        get() = TimeUnit.NANOSECONDS.toMillis(nanos)\n",
+          "after": "        get() = nanos / 1_000_000L\n"
+        },
+        {
+          "start": 9523,
+          "before": "                \"${phaseNameFormat}%8s ms\".format(phaseTypeName.getValue(phaseType), time.millis) +\n",
+          "after": "                \"${phaseNameFormat}%8s ms\".performanceFormat(phaseTypeName.getValue(phaseType), time.millis) +\n"
+        },
+        {
+          "start": 9711,
+          "before": "                            \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(time))\n",
+          "after": "                            \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(time))\n"
+        },
+        {
+          "start": 10203,
+          "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASE\", dynamicTime.millis) +\n",
+          "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASE\", dynamicTime.millis) +\n"
+        },
+        {
+          "start": 10363,
+          "before": "                                        \"%12.3f loc/s ($dynamicName)\".format(Locale.ENGLISH, getLinesPerSecond(dynamicTime))\n",
+          "after": "                                        \"%12.3f loc/s ($dynamicName)\".performanceFormatEnglish(getLinesPerSecond(dynamicTime))\n"
+        },
+        {
+          "start": 10971,
+          "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(totTime)) else \"\"\n",
+          "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(totTime)) else \"\"\n"
+        },
+        {
+          "start": 12129,
+          "before": "val nanosInSecond = TimeUnit.SECONDS.toNanos(1)\n",
+          "after": "val nanosInSecond = 1_000_000_000L\n"
+        }
+      ],
+      "referenceHostRecipe": [
+        {
+          "start": 326,
+          "before": "",
+          "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceFormatEnglish\n"
+        },
+        {
+          "start": 1972,
+          "before": "    val timeStampMs: Long = System.currentTimeMillis(),\n",
+          "after": "    val timeStampMs: Long = org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+        },
+        {
+          "start": 9523,
+          "before": "                \"${phaseNameFormat}%8s ms\".format(phaseTypeName.getValue(phaseType), time.millis) +\n",
+          "after": "                \"${phaseNameFormat}%8s ms\".performanceFormat(phaseTypeName.getValue(phaseType), time.millis) +\n"
+        },
+        {
+          "start": 9711,
+          "before": "                            \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(time))\n",
+          "after": "                            \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(time))\n"
+        },
+        {
+          "start": 10203,
+          "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASE\", dynamicTime.millis) +\n",
+          "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASE\", dynamicTime.millis) +\n"
+        },
+        {
+          "start": 10363,
+          "before": "                                        \"%12.3f loc/s ($dynamicName)\".format(Locale.ENGLISH, getLinesPerSecond(dynamicTime))\n",
+          "after": "                                        \"%12.3f loc/s ($dynamicName)\".performanceFormatEnglish(getLinesPerSecond(dynamicTime))\n"
+        },
+        {
+          "start": 10971,
+          "before": "                            \"${phaseNameFormat}%8s ms\".format(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".format(Locale.ENGLISH, getLinesPerSecond(totTime)) else \"\"\n",
+          "after": "                            \"${phaseNameFormat}%8s ms\".performanceFormat(\"DYNAMIC PHASES\", totTime.millis) +\n                                    if (linesCount != 0) \"%12.3f loc/s\".performanceFormatEnglish(getLinesPerSecond(totTime)) else \"\"\n"
+        }
+      ]
+    },
+    {
+      "original": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+        "gitBlob": "717f701a29e297e7dbbedd30725e9e1e604fa921",
+        "bytes": 7298,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/compiler.common",
+        "sha256": "a7d9f4b0767d9755553107ed1a477b676f26ac079f105a53c4e391707c98d24f"
+      },
+      "output": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/util/UnitStatsJsonDumper.kt",
+        "bytes": 7299,
+        "sha256": "7b4856b0e9756dda6c3ba6af4566b375b804c99764326e8150d7c073dff050f4",
+        "gitBlob": "d5a5de4fa29532c7f118734b14cbeca2e63b68fd"
+      },
+      "recipe": [
+        {
+          "start": 4373,
+          "before": "                        replace(length - TRAILING_COMMA_SUFFIX.length, length, \"\\n\")\n",
+          "after": "                        setRange(length - TRAILING_COMMA_SUFFIX.length, length, \"\\n\")\n"
+        }
+      ],
+      "referenceHostRecipe": []
+    },
+    {
+      "original": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+        "gitBlob": "df49545fd4b11f0a6c7983cd0202bb7617542559",
+        "bytes": 881,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/compiler.common",
+        "sha256": "b5d8bd6d552f000dea2000373b34f6ceab6d4b6c8fc4137180c930f31024d16d"
+      },
+      "output": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/ReportsData.kt",
+        "bytes": 940,
+        "sha256": "bfe473238a6a3278938bbd3edf85a402d6c143fdc25e5b29ee1d0d9194e5a0c2",
+        "gitBlob": "4dc3f74ebad456cc28976d88e1a409feebb195e6"
+      },
+      "recipe": [
+        {
+          "start": 289,
+          "before": "import java.util.SortedSet\n",
+          "after": "import org.jetbrains.kotlin.util.portable.PerformanceReportSortedSet\n"
+        },
+        {
+          "start": 696,
+          "before": "class TimestampReportsData(val moduleName: String, val timeStamps: SortedSet<UnitStats>) : ReportsData() {\n",
+          "after": "class TimestampReportsData(val moduleName: String, val timeStamps: PerformanceReportSortedSet<UnitStats>) : ReportsData() {\n"
+        }
+      ],
+      "referenceHostRecipe": []
+    },
+    {
+      "original": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+        "gitBlob": "a76f24e81dd13a16969fd275ccc306a85e16c60b",
+        "bytes": 9618,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/compiler.common",
+        "sha256": "fc0ff6d60502d7999c2df23e26e7ff451b32d2cbc6b23ffd8e1b87c14e7e443b"
+      },
+      "output": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/StatsCalculator.kt",
+        "bytes": 9712,
+        "sha256": "5e1eaaf0b35ec7e6e32e93455b1d61da3b2abbdf90faa06e5cd00d33df5aa9b7",
+        "gitBlob": "00579ede2371ced95f6751008136531b8f754196"
+      },
+      "recipe": [
+        {
+          "start": 607,
+          "before": "import java.util.PriorityQueue\n",
+          "after": "import org.jetbrains.kotlin.util.portable.PerformanceReportHeap\n"
+        },
+        {
+          "start": 1746,
+          "before": "        val priorityQueue = PriorityQueue<UnitStats>(count, Comparator { o1, o2 ->\n",
+          "after": "        val priorityQueue = PerformanceReportHeap<UnitStats>(count, Comparator { o1, o2 ->\n"
+        },
+        {
+          "start": 7245,
+          "before": "                timeStampMs = latestCurrentTimeMs ?: System.currentTimeMillis(),\n",
+          "after": "                timeStampMs = latestCurrentTimeMs ?: org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+        }
+      ],
+      "referenceHostRecipe": [
+        {
+          "start": 7245,
+          "before": "                timeStampMs = latestCurrentTimeMs ?: System.currentTimeMillis(),\n",
+          "after": "                timeStampMs = latestCurrentTimeMs ?: org.jetbrains.kotlin.util.portable.performanceManagerHost().currentTimeMillis(),\n"
+        }
+      ]
+    },
+    {
+      "original": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+        "gitBlob": "132e7a62f5d778077d5abf540c743301dd40a8c3",
+        "bytes": 8960,
+        "language": "kotlin",
+        "compile": true,
+        "role": "source",
+        "module": "core/compiler.common",
+        "sha256": "5fe400683a25519e338bb22e8157b101f3ed4403893dc9b3d879b415bc85d98e"
+      },
+      "output": {
+        "path": "core/compiler.common/src/org/jetbrains/kotlin/stats/MarkdownReportRenderer.kt",
+        "bytes": 8973,
+        "sha256": "86040490e3050543427f061a6a25c92f8268608b2cb4e773efef932838ca01b8",
+        "gitBlob": "a0f8345bd307e2b02420f626b5c49db5a4ca3a73"
+      },
+      "recipe": [
+        {
+          "start": 590,
+          "before": "import java.text.SimpleDateFormat\nimport java.util.Locale\nimport java.util.TimeZone\nimport java.util.concurrent.TimeUnit\n",
+          "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceManagerHost\nimport org.jetbrains.kotlin.util.portable.PerformanceDateFormat\n"
+        },
+        {
+          "start": 5496,
+          "before": "            printer = { moduleResult, _ -> String.format(\"%.2f LPS\", moduleResult) }\n",
+          "after": "            printer = { moduleResult, _ -> \"%.2f LPS\".performanceFormat(moduleResult) }\n"
+        },
+        {
+          "start": 6876,
+          "before": "        return String.format(\"%.2f%% (%d ms)\", ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n",
+          "after": "        return \"%.2f%% (%d ms)\".performanceFormat(ratio * 100, (nanos / 1_000_000L))\n"
+        },
+        {
+          "start": 7415,
+          "before": "    private val dateTimeFormatter = SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.ENGLISH).apply {\n        timeZone = TimeZone.getTimeZone(\"UTC\")\n    }\n",
+          "after": "    private val dateTimeFormatter = performanceManagerHost().dateFormatter(PerformanceDateFormat.Markdown)\n"
+        },
+        {
+          "start": 8891,
+          "before": "        appendLine(String.format(columnsFormat, *columns))\n",
+          "after": "        appendLine(columnsFormat.performanceFormat(*columns))\n"
+        }
+      ],
+      "referenceHostRecipe": [
+        {
+          "start": 590,
+          "before": "",
+          "after": "import org.jetbrains.kotlin.util.portable.performanceFormat\nimport org.jetbrains.kotlin.util.portable.performanceManagerHost\nimport org.jetbrains.kotlin.util.portable.PerformanceDateFormat\n"
+        },
+        {
+          "start": 5496,
+          "before": "            printer = { moduleResult, _ -> String.format(\"%.2f LPS\", moduleResult) }\n",
+          "after": "            printer = { moduleResult, _ -> \"%.2f LPS\".performanceFormat(moduleResult) }\n"
+        },
+        {
+          "start": 6876,
+          "before": "        return String.format(\"%.2f%% (%d ms)\", ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n",
+          "after": "        return \"%.2f%% (%d ms)\".performanceFormat(ratio * 100, TimeUnit.NANOSECONDS.toMillis(nanos))\n"
+        },
+        {
+          "start": 7415,
+          "before": "    private val dateTimeFormatter = SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.ENGLISH).apply {\n        timeZone = TimeZone.getTimeZone(\"UTC\")\n    }\n",
+          "after": "    private val dateTimeFormatter = performanceManagerHost().dateFormatter(PerformanceDateFormat.Markdown)\n"
+        },
+        {
+          "start": 8891,
+          "before": "        appendLine(String.format(columnsFormat, *columns))\n",
+          "after": "        appendLine(columnsFormat.performanceFormat(*columns))\n"
+        }
+      ]
+    }
+  ],
+  "hosts": [
+    {
+      "path": "PerformanceManagerHost.kt",
+      "bytes": 3494,
+      "sha256": "1d429aec308e358309c8a130a87c6224f3c8db0415512c3f9d4c493e4f210a99",
+      "gitBlob": "e45894415a1bba9a076469ee1d36c08b06bca3f4"
+    },
+    {
+      "path": "PerformanceCollections.kt",
+      "bytes": 2011,
+      "sha256": "3b2f6aa03ccb9bd9487710a40dd405c60653e7cb6bc2c3a87cea04c496fde40e",
+      "gitBlob": "43f205eb6b2b5b7230508c217aee637c3c885805"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 7299,
+      "sha256": "72da235047257de10899fa73eebee27aff34f593774905b5dba08628adbeac14",
+      "gitBlob": "bb60a2914f373737f874d3938b833d7eba6ad0e8"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 655,
+      "sha256": "a75807503ffeec77ed66b832b8ee6841a300d4b0db970c4193d4875d9b355382",
+      "gitBlob": "d974f796d57df8fe890ad18c7738ffb9913d6533"
+    },
+    {
+      "path": "../performance-counter/sources.lock.json",
+      "bytes": 5064,
+      "sha256": "97e065719d54ba0cd0fe5399ad1a82eaba327b1f1b88450ee71e63c9fc0cc64f",
+      "gitBlob": "96c55397867c261c1ba8d661916004e7d98c8464"
+    },
+    {
+      "path": "../performance-counter/prepare.mjs",
+      "bytes": 6963,
+      "sha256": "08bf1bf1fb3bcf57e1d69c2edd75061217f67b9b18ac0a12bb5065b7a20869dd",
+      "gitBlob": "bcd528b6e836e06f2ab7e555902507979b84aecb"
+    },
+    {
+      "path": "../performance-counter/transform.mjs",
+      "bytes": 819,
+      "sha256": "5e08feac61530535e816c9d8560510d203a09cc44d2194691f3d17b5c7ac0a10",
+      "gitBlob": "70a7ca82893b113f46362ad0f48f38a31c66a22c"
+    },
+    {
+      "path": "../performance-counter/PerformanceCounterHost.kt",
+      "bytes": 1178,
+      "sha256": "0e035ee86eb829adb38c041685337815441bd8fa1e0df9396081fa52ab75debe",
+      "gitBlob": "79f7ad774da4639307d0f4e4c14ffdb8618d009e"
+    },
+    {
+      "path": "../assertions/CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf",
+      "gitBlob": "eeafb80051e7f546ff098dc027176904d124e254"
+    },
+    {
+      "path": "../build-flags.json",
+      "bytes": 16246,
+      "sha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+      "gitBlob": "b2c7c41886742ce8c4e7b24146fc4230aa8594e6"
+    }
+  ],
+  "probeSources": [
+    {
+      "path": "core/language.targets/src/org/jetbrains/kotlin/platform/TargetPlatform.kt",
+      "gitBlob": "6ec5d0a1f91fdb6c34c8e179931eb618f48717b1",
+      "bytes": 4713,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/language.targets",
+      "sha256": "c8cfdc08ef57384801b1e3c52f3bef83400278a4d77433a31c0194f2f9aa926d"
+    },
+    {
+      "path": "core/language.targets/src/org/jetbrains/kotlin/platform/JsPlatform.kt",
+      "gitBlob": "eecf96f46c5fd6eef6d9955ee2eb92e4d9c5ce39",
+      "bytes": 701,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/language.targets",
+      "sha256": "c32fbdff7112d74abb1deb0bf1965f12dc4f55429b88928ca34f18e3760407ba"
+    },
+    {
+      "path": "core/language.targets/src/org/jetbrains/kotlin/platform/WasmPlatform.kt",
+      "gitBlob": "ed4d06e345096d49dcd6b95ff339320a05e3bc0c",
+      "bytes": 595,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/language.targets",
+      "sha256": "d3c125c7d9a39457ca4cb08ee2c3d62744301ffe4783380f07fd3a7f9ebba9da"
+    },
+    {
+      "path": "core/language.targets/src/org/jetbrains/kotlin/platform/PotentiallyWebPlatform.kt",
+      "gitBlob": "0debcbe836badc3d62abab28b83506b2aa31e162",
+      "bytes": 400,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/language.targets",
+      "sha256": "d04a1d339a2f616e7df88c67868005f1dfa00a6c5bb7208e950b55f841bf5530"
+    },
+    {
+      "path": "core/language.targets/src/org/jetbrains/kotlin/platform/platformUtil.kt",
+      "gitBlob": "9bb60b1c894b19bd12adfb7902f58cc0b9bd99bc",
+      "bytes": 1987,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/language.targets",
+      "sha256": "d8d58dc595c34b283f6b62554b0f75d27ba4d27acb3005efffae2c04c6d0f844"
+    }
+  ],
+  "probeProjection": {
+    "path": "core/language.targets/src/org/jetbrains/kotlin/platform/platformUtil.kt",
+    "start": 1876,
+    "before": "val TargetPlatform.presentableDescription: String\n    get() = componentPlatforms.joinToString(separator = \"/\")\n",
+    "output": {
+      "path": "PlatformDescription.kt",
+      "bytes": 150,
+      "sha256": "3689ae6c717cecfd0a231df161f6b230aa0999c3758f48adaa20c34e29c52b7c",
+      "gitBlob": "47a0101cab540d2ac6ccbb181f8c10d3695f00c7"
+    }
+  }
+}
