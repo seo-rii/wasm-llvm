@@ -299,6 +299,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           receipt.irPropertyTypeGetterSharedDependencies = component.sharedDependencies;
           return component;
         }],
+        ['descriptorBaseImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const bases = await import('./descriptor-base-implementations/prepare.mjs');
+          const component = await bases.prepareDescriptorBaseImplementations({ sourceRoot, outputRoot,
+            descriptorVisitorComponent: preparedComponents.get('descriptorVisitorReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+          });
+          await bases.verifyDescriptorBaseImplementations(outputRoot);
+          return component;
+        }],
         ['annotationImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
           const annotations = await import('./annotation-implementations/prepare.mjs');
           const component = await annotations.prepareAnnotationImplementations({ sourceRoot, outputRoot });
@@ -1182,10 +1192,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const signatures = await import('./descriptor-platform-signatures/prepare.mjs');
       const builders = await import('./copy-builder-platform/prepare.mjs');
       const getter = await import('./ir-property-type-getter/prepare.mjs');
-      const irFinal = await getter.verifyFinalIrPropertyTypeGetter({
-        profileRoot: path.join(output, 'components', 'irPropertyTypeGetterReceipt'),
+      const bases = await import('./descriptor-base-implementations/prepare.mjs');
+      const baseFinal = await bases.verifyFinalDescriptorBaseImplementations({
+        outputRoot: path.join(output, 'components', 'descriptorBaseImplementationsReceipt'),
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorBaseImplementationsFinalReceipt = baseFinal.receipt;
+      const irFinal = await getter.verifyFinalIrPropertyTypeGetter({
+        profileRoot: path.join(output, 'components', 'irPropertyTypeGetterReceipt'),
+        retainedSources: baseFinal.predecessorRetainedSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.irPropertyTypeGetterFinalReceipt = irFinal.receipt;

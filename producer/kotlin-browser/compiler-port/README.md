@@ -178,6 +178,15 @@ caller-supplied monotonic nanosecond clock and restores the prior clock when the
 request returns or throws. Counter registries belong to the Worker module; fresh
 Workers provide request isolation.
 
+The [descriptor base implementations](descriptor-base-implementations/README.md)
+supply the three original declaration/variable base classes and bind two real
+value-parameter getter calls explicitly. The pipeline scopes a required descriptor
+debug host around the request, restoring its predecessor on return or exception.
+The final source check reconstructs the exact earlier visitor-owned consumer
+before running the existing descriptor guards. Raw Java null construction remains
+outside the parity claim; reading an uninitialized non-null type has a recorded
+behavior difference.
+
 `linker` preserves the official metadata/IR serializer, full-rebuild library
 linking, dependency generation and post-processing while supplying immutable
 memory KLIBs. `backend` retains whole-program Wasm code generation, IR linking

@@ -34,6 +34,8 @@ import org.jetbrains.kotlin.js.portable.sourcemap.installRequestSourceMapRuntime
 import org.jetbrains.kotlin.js.portable.sourcemap.installRequestSourceMapPathHost
 import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
 import org.jetbrains.kotlin.platform.wasm.WasmTarget
+import org.jetbrains.kotlin.portable.descriptorbases.DescriptorDebugHost
+import org.jetbrains.kotlin.portable.descriptorbases.withDescriptorDebugHost
 import org.jetbrains.kotlin.portable.linker.MemoryKlibInput
 import org.jetbrains.kotlin.portable.linker.requireMemoryKlibFiles
 import org.jetbrains.kotlin.portable.source.LibraryPath
@@ -58,10 +60,13 @@ class BrowserCompilerPipeline(
     private val compilerStdout: CompilerByteSink,
     private val sourceMapPathHost: SourceMapPathHost,
     private val monotonicTimeNanos: () -> Long,
+    private val descriptorDebugHost: DescriptorDebugHost,
 ) {
     fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary =
-        withPerformanceCounterClock(monotonicTimeNanos) {
-            compileRequest(sources, maximumArtifactBytes)
+        withDescriptorDebugHost(descriptorDebugHost) {
+            withPerformanceCounterClock(monotonicTimeNanos) {
+                compileRequest(sources, maximumArtifactBytes)
+            }
         }
 
     private fun compileRequest(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary {
