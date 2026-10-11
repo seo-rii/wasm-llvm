@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 1,
+  "kind": "full-genuine-member-scope-jvm-differential",
+  "artifactRoot": "out/kotlin-descriptor-kind-filter-runtime-1791713335187179532",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "sourceLockSha256": "458523df21e1ccf11efe4b0bc371d699fd904dd2e09ece2e19ca430a0f7e28be",
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "genuine-descriptor-kind-filter-host-preparation",
+    "source": {
+      "repository": "https://github.com/JetBrains/kotlin.git",
+      "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+      "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+    },
+    "sourceLockSha256": "458523df21e1ccf11efe4b0bc371d699fd904dd2e09ece2e19ca430a0f7e28be",
+    "original": {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+      "gitBlob": "3875965cec09574ad74b195462384812a9a93af7",
+      "bytes": 10938,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "8c8ec9d9492ea8284d5b0ae696ab03fcd76f09453c51d70b4a86846509e788bf"
+    },
+    "files": [
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+        "bytes": 11020,
+        "sha256": "49fd5f5dae7ea0c5c1dbf2ef5f66a3b98a06106c2154d995ad61acc4840f28dc",
+        "gitBlob": "eae181ac5512660ec76d32c6d3629fbfa89261e6"
+      }
+    ],
+    "recipe": [
+      [
+        "import java.lang.reflect.Modifier\n",
+        "",
+        1
+      ],
+      [
+        "if (javaClass != other?.javaClass) return false",
+        "if (other == null || this::class != other::class) return false",
+        1
+      ],
+      [
+        "        // Only used in toString\n        private val DEBUG_PREDEFINED_FILTERS_MASK_NAMES by lazy {\n            staticFields<DescriptorKindFilter>()\n                .mapNotNull { field ->\n                    val filter = field.get(null) as? DescriptorKindFilter\n                    if (filter != null) MaskToName(filter.kindMask, field.name) else null\n                }\n        }\n\n        private val DEBUG_MASK_BIT_NAMES by lazy {\n            staticFields<DescriptorKindFilter>()\n                .filter { it.type == Integer.TYPE }\n                .mapNotNull { field ->\n                    val mask = field.get(null) as Int\n                    val isOneBitMask = mask == (mask and (-mask))\n                    if (isOneBitMask) MaskToName(mask, field.name) else null\n                }\n        }\n\n        private inline fun <reified T : Any> staticFields() = T::class.java.fields.filter { Modifier.isStatic(it.modifiers) }",
+        "        // The pinned JVM source exposes these ten @JvmField filters, in source order.\n        // Its Int masks have private backing fields and are absent from Class.fields.\n        private val DEBUG_PREDEFINED_FILTERS_MASK_NAMES by lazy {\n            listOf(\n                MaskToName(ALL.kindMask, \"ALL\"),\n                MaskToName(CALLABLES.kindMask, \"CALLABLES\"),\n                MaskToName(NON_SINGLETON_CLASSIFIERS.kindMask, \"NON_SINGLETON_CLASSIFIERS\"),\n                MaskToName(SINGLETON_CLASSIFIERS.kindMask, \"SINGLETON_CLASSIFIERS\"),\n                MaskToName(TYPE_ALIASES.kindMask, \"TYPE_ALIASES\"),\n                MaskToName(CLASSIFIERS.kindMask, \"CLASSIFIERS\"),\n                MaskToName(PACKAGES.kindMask, \"PACKAGES\"),\n                MaskToName(FUNCTIONS.kindMask, \"FUNCTIONS\"),\n                MaskToName(VARIABLES.kindMask, \"VARIABLES\"),\n                MaskToName(VALUES.kindMask, \"VALUES\")\n            )\n        }\n\n        private val DEBUG_MASK_BIT_NAMES: List<MaskToName> by lazy { emptyList() }",
+        1
+      ],
+      [
+        "override fun toString() = this::class.java.simpleName",
+        "override fun toString() = this::class.simpleName ?: \"\"",
+        1
+      ]
+    ],
+    "publicFilterFields": [
+      "ALL",
+      "CALLABLES",
+      "NON_SINGLETON_CLASSIFIERS",
+      "SINGLETON_CLASSIFIERS",
+      "TYPE_ALIASES",
+      "CLASSIFIERS",
+      "PACKAGES",
+      "FUNCTIONS",
+      "VARIABLES",
+      "VALUES"
+    ],
+    "publicIntFields": [],
+    "originalAlgorithmsRetained": true,
+    "anonymousExcludeDebugName": "",
+    "reflectionSchema": "Pinned Kotlin JVM public fields; private Int backing fields remain absent from debug bit names.",
+    "arbitraryJvmReflectionOrderParity": false,
+    "fullCommonClassWasmExecuted": false,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "finalReceipt": {
+    "schemaVersion": 1,
+    "kind": "genuine-descriptor-kind-filter-host-final",
+    "sourceLockSha256": "458523df21e1ccf11efe4b0bc371d699fd904dd2e09ece2e19ca430a0f7e28be",
+    "receiptSha256": "b6f0aae2411bc089df753db06a04da5e2080d72255930785e4cda39230b89df9",
+    "checked": [
+      {
+        "path": "core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/prepared/core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+        "bytes": 11020,
+        "sha256": "49fd5f5dae7ea0c5c1dbf2ef5f66a3b98a06106c2154d995ad61acc4840f28dc"
+      }
+    ],
+    "exactBodyAndOwnerVerified": true,
+    "fullCompilerBuilt": false,
+    "languageReadiness": false
+  },
+  "inputs": [
+    {
+      "path": "Probe.kt",
+      "bytes": 5801,
+      "sha256": "4f8fcabee061aca828592922119a42ee334b4c0082b6d549504cbf52eddbcc27"
+    },
+    {
+      "path": "check.mjs",
+      "bytes": 6870,
+      "sha256": "b03246d7d6e454d71f44d7424864b7641754043cad479b975cd5d297622e2b45"
+    },
+    {
+      "path": "prepare.mjs",
+      "bytes": 6168,
+      "sha256": "5f64775fe810de645b45986d557b4ea20a856d9978471507137875591e3011af"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 2736,
+      "sha256": "86f93a8e314eb816b2501f3a68733c3d6918ff3598eacf6ca4fa558003a36fbc"
+    },
+    {
+      "path": "sources.lock.json",
+      "bytes": 4568,
+      "sha256": "458523df21e1ccf11efe4b0bc371d699fd904dd2e09ece2e19ca430a0f7e28be"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Original.kt",
+      "bytes": 10938,
+      "sha256": "8c8ec9d9492ea8284d5b0ae696ab03fcd76f09453c51d70b4a86846509e788bf"
+    },
+    {
+      "path": "Probe.kt",
+      "bytes": 5801,
+      "sha256": "4f8fcabee061aca828592922119a42ee334b4c0082b6d549504cbf52eddbcc27"
+    },
+    {
+      "path": "common-observations.txt",
+      "bytes": 2395730,
+      "sha256": "35525d2ca01174d73c9ae99fefe45b83133a8c7c708a95da566e984813b8dd9a"
+    },
+    {
+      "path": "jvm/common.jar",
+      "bytes": 32543,
+      "sha256": "375a79f70a5c93135590c03454be63acc83bdcc19aea7bb1d96ccb8721d7b56b"
+    },
+    {
+      "path": "jvm/original.jar",
+      "bytes": 34535,
+      "sha256": "11bd6f328a34b0ff34ab184f6b1f2dbfc482527e01c54e9e30a35d471ff9b058"
+    },
+    {
+      "path": "original-observations.txt",
+      "bytes": 2395730,
+      "sha256": "35525d2ca01174d73c9ae99fefe45b83133a8c7c708a95da566e984813b8dd9a"
+    },
+    {
+      "path": "prepared/core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+      "bytes": 11020,
+      "sha256": "49fd5f5dae7ea0c5c1dbf2ef5f66a3b98a06106c2154d995ad61acc4840f28dc"
+    },
+    {
+      "path": "prepared/receipt.json",
+      "bytes": 4051,
+      "sha256": "b6f0aae2411bc089df753db06a04da5e2080d72255930785e4cda39230b89df9"
+    },
+    {
+      "path": "prepared/reference-original/core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+      "bytes": 10938,
+      "sha256": "8c8ec9d9492ea8284d5b0ae696ab03fcd76f09453c51d70b4a86846509e788bf"
+    }
+  ],
+  "commands": [
+    {
+      "phase": "original-complete-member-scope-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xfriend-paths=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/jvm/original.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/Original.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/Probe.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "original-complete-member-scope-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/jvm/original.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.scopes.probe.ProbeKt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-complete-member-scope-jvm-build",
+      "command": [
+        "java",
+        "-Xmx768m",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+        "-no-stdlib",
+        "-no-reflect",
+        "-jvm-target",
+        "17",
+        "-language-version",
+        "2.5",
+        "-api-version",
+        "2.5",
+        "-Xcontext-parameters",
+        "-Xexplicit-backing-fields",
+        "-Xname-based-destructuring=complete",
+        "-Xcollection-literals",
+        "-Xcontext-sensitive-resolution",
+        "-Xexplicit-context-arguments",
+        "-Xwarning-level=REDUNDANT_CLI_ARG:disabled",
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.K1Deprecation",
+        "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        "-opt-in=org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess",
+        "-opt-in=org.jetbrains.kotlin.fir.scopes.ScopeFunctionRequiresPrewarm",
+        "-opt-in=org.jetbrains.kotlin.fir.symbols.SymbolInternals",
+        "-opt-in=org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI",
+        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+        "-opt-in=org.jetbrains.kotlin.types.model.K2Only",
+        "-opt-in=org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction",
+        "-Xdont-warn-on-error-suppression",
+        "-Xskip-prerelease-check",
+        "-Xconsistent-data-class-copy-visibility",
+        "-Xfriend-paths=/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar",
+        "-classpath",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "-d",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/jvm/common.jar",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/prepared/core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/MemberScope.kt",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/Probe.kt"
+      ],
+      "exitCode": 0
+    },
+    {
+      "phase": "common-complete-member-scope-jvm-observe",
+      "command": [
+        "java",
+        "-ea",
+        "-cp",
+        "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-descriptor-kind-filter-runtime-1791713335187179532/jvm/common.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-compiler-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-build-tools-api-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-stdlib-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-daemon-embeddable-2.5.0-dev-10106.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlin-reflect-1.6.10.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/kotlinx-coroutines-core-jvm-1.8.0.jar:/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-browser-bootstrap/2.5.0-dev-10106/annotations-13.0.jar",
+        "org.jetbrains.kotlin.portable.scopes.probe.ProbeKt"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "buildFlagsSha256": "28e05de618f4bc7339e9f64d50946963c43cc91de2b1b2c48dd5e63cd9d364ae",
+  "bootstrap": {
+    "version": "2.5.0-dev-10106",
+    "sourceCommit": null,
+    "artifacts": [
+      {
+        "id": "compiler",
+        "bytes": 59164049,
+        "sha256": "4bd26006f00c79dd5c80b7c7906ab9df3aeefa45f36a2843d13bc229ec6d7475"
+      },
+      {
+        "id": "build-tools-api",
+        "bytes": 575844,
+        "sha256": "55ec1d8d90f68fc84ef782acca4bf833b88c1f456689b16640b65e2e27c0322d"
+      },
+      {
+        "id": "stdlib-jvm",
+        "bytes": 1859448,
+        "sha256": "3cffeeb8a80ae2697c33799d723f0a5c8a2322206fcda9550e138e0a6d742382"
+      },
+      {
+        "id": "daemon",
+        "bytes": 372801,
+        "sha256": "dc2032340ddf91a6be48a9a1a38af9e9f14834bc39ff80b5aa04157de279c365"
+      },
+      {
+        "id": "stdlib-wasi",
+        "bytes": 4044976,
+        "sha256": "7ac1ac3e9081e1e7b00716ddc8dd73723638753536ac13c510baa01530b45942"
+      },
+      {
+        "id": "stdlib-js",
+        "bytes": 4065926,
+        "sha256": "6d032bdee739253c95adb80abfd2bc77f9b1e328b5e5b0988184c5ecd0be710d"
+      },
+      {
+        "id": "reflect",
+        "bytes": 3038560,
+        "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+      },
+      {
+        "id": "coroutines",
+        "bytes": 1548360,
+        "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+      },
+      {
+        "id": "annotations",
+        "bytes": 17536,
+        "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+      }
+    ]
+  },
+  "comparison": {
+    "records": 13540,
+    "originalJvmEqualsCommonJvm": true,
+    "fullSourceCompiled": true,
+    "methodProjection": false,
+    "normalizedText": false,
+    "rawSha256": "35525d2ca01174d73c9ae99fefe45b83133a8c7c708a95da566e984813b8dd9a"
+  },
+  "scope": "All filter mask operations, debug rendering, class equality, empty-list raw hashes, builtin excludes and typed descriptor-kind decisions; public field schema and empty/synthetic scope helpers.",
+  "limitations": [
+    "Proxy objects supply explicit descriptor kind/receiver/FqName contracts; this does not execute compiler descriptors or FIR resolution.",
+    "Remaining MemberScope dependencies come from the verified bootstrap; candidate bootstrap source commit is unknown.",
+    "JVM public field iteration is validated for this pinned source and runtime, not all JVM reflection implementations.",
+    "Nonempty excludes use native object hashes; only within-host hash equality is compared, not raw identity integers."
+  ],
+  "fullCommonClassWasmExecuted": false,
+  "browserExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}
