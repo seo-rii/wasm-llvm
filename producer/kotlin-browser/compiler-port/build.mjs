@@ -430,6 +430,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           return component;
         }],
         ['klibReceipt', (await import('./klib/prepare.mjs')).prepareKlibSources],
+        ['klibSignatureIndexReceipt', async ({ sourceRoot, outputRoot }) => {
+          const index = await import('./klib-signature-index/prepare.mjs');
+          const component = await index.prepareKlibSignatureIndex({ sourceRoot, outputRoot,
+            klibComponent: preparedComponents.get('klibReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, { filename, bytes, sha256 }]) => ({ path: sourcePath, filename, bytes, sha256 })) });
+          await index.verifyKlibSignatureIndex(outputRoot);
+          return component;
+        }],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
         ['jsAstReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1220,6 +1229,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
+    }
+    if (sourceHost === 'portable') {
+      const index = await import('./klib-signature-index/prepare.mjs');
+      const final = await index.verifyFinalKlibSignatureIndex({
+        outputRoot: path.join(output, 'components', 'klibSignatureIndexReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.klibSignatureIndexFinalReceipt = final.receipt;
     }
     if (sourceHost === 'portable') {
       const getter = await import('./type-substitutor-getter/prepare.mjs');
