@@ -356,6 +356,12 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await counters.verifyPerformanceCounter({ sourceRoot, outputRoot });
           return component;
         }],
+        ['performanceManagerReceipt', async ({ sourceRoot, outputRoot }) => {
+          const managers = await import('./performance-manager/prepare.mjs');
+          const component = await managers.preparePerformanceManager({ sourceRoot, outputRoot });
+          await managers.verifyPerformanceManager({ sourceRoot, outputRoot });
+          return component;
+        }],
         ['storageReceipt', (await import('./storage/prepare.mjs')).prepareStorageSources],
         ['collectionsReceipt', (await import('./collections/prepare.mjs')).prepareCollectionsSources],
         ['smartSetReceipt', (await import('./smart-set/prepare.mjs')).prepareSmartSetSources],
@@ -1226,6 +1232,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const counters = await import('./performance-counter/prepare.mjs');
       receipt.performanceCounterFinalReceipt = await counters.verifyFinalPerformanceCounter({
         sourceRoot: prepared.sourceRoot, outputRoot: path.join(output, 'components', 'performanceCounterReceipt'),
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const managers = await import('./performance-manager/prepare.mjs');
+      receipt.performanceManagerFinalReceipt = await managers.verifyFinalPerformanceManager({
+        sourceRoot: prepared.sourceRoot, outputRoot: path.join(output, 'components', 'performanceManagerReceipt'),
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,

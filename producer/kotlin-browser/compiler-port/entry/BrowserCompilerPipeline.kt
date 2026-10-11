@@ -41,6 +41,8 @@ import org.jetbrains.kotlin.portable.linker.requireMemoryKlibFiles
 import org.jetbrains.kotlin.portable.source.LibraryPath
 import org.jetbrains.kotlin.portable.text.compilerUtf8Bytes
 import org.jetbrains.kotlin.util.portable.withPerformanceCounterClock
+import org.jetbrains.kotlin.util.portable.PerformanceManagerHost
+import org.jetbrains.kotlin.util.portable.withPerformanceManagerHost
 import org.jetbrains.kotlin.wasm.config.WasmConfigurationKeys
 import org.jetbrains.kotlin.wasm.config.wasmDisableCrossFileOptimisations
 
@@ -61,11 +63,14 @@ class BrowserCompilerPipeline(
     private val sourceMapPathHost: SourceMapPathHost,
     private val monotonicTimeNanos: () -> Long,
     private val descriptorDebugHost: DescriptorDebugHost,
+    private val performanceManagerHost: PerformanceManagerHost,
 ) {
     fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary =
         withDescriptorDebugHost(descriptorDebugHost) {
             withPerformanceCounterClock(monotonicTimeNanos) {
-                compileRequest(sources, maximumArtifactBytes)
+                withPerformanceManagerHost(performanceManagerHost) {
+                    compileRequest(sources, maximumArtifactBytes)
+                }
             }
         }
 
