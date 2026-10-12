@@ -18,10 +18,24 @@ consumers, reintroduced classes/files, duplicate logical/physical sources,
 symlinks, missing split keys/boundaries, changed receipts and changed source bytes.
 Required boundaries total **21**: the existing 19 (including nine Wasm-used JS
 lowerings), plus genuine WebArtifactConfiguration and TypeScript printer sources.
-Their early bytes are verified against primary pins, including the original
-JsIrProgramFragment before serializer/comment/module transformations.
+Their upstream originals remain verified against primary pins, including the
+original JsIrProgramFragment before serializer/comment/module transformations.
+When lowering-phase metadata is composed before native preparation, exactly the
+JS and Wasm lowering callers are already canonical phase outputs in the recorded
+early native receipt. Their snapshots are compared with those exact phase output
+pins, while the entire upstream originals and reversible caller recipes remain
+independently verified.
 
-Twenty late boundary owners remain exact. Only the exact recorded assembly
+Twenty late boundary owners remain exact, including both recorded phase owners.
+The optional `verifiedLoweringPhaseBoundary` requires the canonical `sourceRoot`,
+phase `outputRoot` and externally supplied `expectedReceiptSha256`. The native
+guard independently executes the public phase final verifier on the same actual
+graph and checks all six phase outputs, not only the two overlapping callers.
+Each caller must retain its exact early canonical phase body and owner, its full
+upstream snapshot must reverse byte-for-byte, and only its recorded assembly
+imports can differ at the final stage. A missing or forged phase binding fails;
+the verifier never substitutes reconstructed source rows into the actual graph.
+Only the exact recorded assembly
 import prefix blocks may be removed for comparison; raw string blank lines and
 all other bytes remain significant. EnumClassLowering additionally permits its
 one pinned PRIVATE→Companion.PRIVATE import binding. The fragment's later owner
@@ -39,7 +53,8 @@ comments and executable string interpolation. Comments and strings are retained
 as conservative edges. This is not resolved IR, complete reflection analysis,
 Gradle closure, native JS output support or an accepted complete browser compiler.
 
-The proof uses the completed **failed** 3,525-input compiler assembly, rebuilds
+The historical proof without phase overlays uses the completed **failed**
+3,525-input compiler assembly, rebuilds
 and strictly verifies the genuine backend/profile, and reconstructs early primary
 boundaries in private copies. After early verification it installs actual late
 bytes and the independently sealed genuine module/comment ancestry. The added
@@ -69,6 +84,9 @@ const final = await verifyNativeJsOutputFinalSources({
   ...options, receiptPath: component.receiptPath, preparedProfile: component,
   retainedSources: actualFinalSelectedSources, allowedAddedImports,
   verifiedModuleBoundary: { outputRoot: moduleOptions.outputRoot, final: moduleFinal },
+  // Required when canonical phase overlays were captured by native preparation.
+  verifiedLoweringPhaseBoundary: { sourceRoot, outputRoot: phaseOptions.outputRoot,
+    expectedReceiptSha256: phaseComponent.receiptSha256 },
 });
 ```
 

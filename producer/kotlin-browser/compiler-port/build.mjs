@@ -1528,6 +1528,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
+        verifiedLoweringPhaseBoundary: loweringPhaseFactoriesComposition,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
