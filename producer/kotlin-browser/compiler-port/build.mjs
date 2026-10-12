@@ -84,6 +84,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let klibDiskSourceProfileComposition;
   let towerGroupComposition;
   let jvmUtilityProfileComposition;
+  let nioUtilityProfileComposition;
   let sourceHostComponent;
   let firSyntaxLightTreeComposition;
   let descriptorFunctionComposition;
@@ -1292,6 +1293,22 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       firSyntaxLightTreeComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
     }
     if (sourceHost === 'portable') {
+      const profile = await import('./nio-utility-source-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'nioUtilitySourceProfileReceipt');
+      const component = await profile.prepareNioUtilitySourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.deepEqual(component.commonSources, []);
+      assert.deepEqual(component.sourceSetExclusions, ['compiler/util-io/src/org/jetbrains/kotlin/io/PathUtils.kt']);
+      const logical = relativePath(component.sourceSetExclusions[0]), pin = files.get(logical);
+      assert(pin?.compile, 'Missing selected NIO utility source');
+      assert.deepEqual({ path: logical, filename: pin.filename, bytes: pin.bytes, sha256: pin.sha256 },
+        component.receipt.selection.sources.find(row => row.path === logical), 'NIO utility source owner changed');
+      files.set(logical, { ...pin, compile: false });
+      receipt.nioUtilitySourceProfileReceipt = component.receipt;
+      nioUtilityProfileComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+    }
+    if (sourceHost === 'portable') {
       const profile = await import('./jvm-utility-source-profile/prepare.mjs');
       const outputRoot = path.join(output, 'components', 'jvmUtilitySourceProfileReceipt');
       const component = await profile.prepareJvmUtilitySourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
@@ -1621,6 +1638,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.jvmUtilitySourceProfileFinalReceipt = await profile.verifyJvmUtilityFinalSources({
         ...jvmUtilityProfileComposition,
         klibDiskProfile: { ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition },
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./nio-utility-source-profile/prepare.mjs');
+      receipt.nioUtilitySourceProfileFinalReceipt = await profile.verifyNioUtilityFinalSources({
+        ...nioUtilityProfileComposition,
+        jvmUtilityProfile: { ...jvmUtilityProfileComposition,
+          klibDiskProfile: { ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition } },
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
       });
