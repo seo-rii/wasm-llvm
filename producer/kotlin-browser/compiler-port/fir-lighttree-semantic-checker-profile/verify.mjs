@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { readRegular, sha256 } from '../../scripts/source.mjs';
+import { verifyFirLightTreeSemanticCheckerFinalSources } from './prepare.mjs';
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const checked = async pin => { const bytes = await readRegular(pin.filename, 256 * 1024 * 1024); assert.equal(bytes.length, pin.bytes, 'Evidence bytes changed: ' + pin.filename); assert.equal(sha256(bytes), pin.sha256, 'Evidence digest changed: ' + pin.filename); return bytes; };
+const evidence = JSON.parse(await readRegular(path.join(HERE, 'evidence/selection.json')));
+assert.equal(evidence.schemaVersion, 1); assert.equal(evidence.kind, 'sealed-current-fir-semantic-source-helper-evidence');
+assert.equal(evidence.result, 'pass'); const proof = JSON.parse(await checked(evidence.proof));
+assert.equal(proof.kind, 'actual-fir-lighttree-semantic-checker-source-and-helper-proof'); assert.equal(proof.result, 'pass');
+assert.equal(proof.sourceLockSha256, sha256(await readRegular(path.join(HERE, 'sources.lock.json'))));
+assert.equal(proof.actualSelectedBefore, 3549); assert.equal(proof.actualSelectedAfter, 3549); assert.equal(proof.replacements, 2); assert.equal(proof.spans, 13);
+assert.deepEqual(proof.sourceSetExclusions, []); assert(proof.registrationsPreserved && proof.exactTwoRowReverseVerified && proof.completeMetadataAndOrderPreserved);
+assert.equal(proof.originalAudit.inspectedFiles, 3838); assert.equal(proof.originalAudit.references.length, 4);
+assert.equal(proof.runtime.completeOriginalCheckerJvmTypechecked, 2); assert.equal(proof.runtime.genuineSharedHelperBoundaries, 3);
+assert.equal(proof.runtime.originalJvmCommonJvmNodeWasmRecords, 21); assert.equal(proof.runtime.genuineSourceOrFirClassesSubstituted, false);
+assert.equal(proof.runtime.comparison.originalJvmSha256, proof.runtime.comparison.commonJvmSha256);
+assert.equal(proof.runtime.comparison.originalJvmSha256, proof.runtime.comparison.nodeWasmSha256); assert.equal(proof.runtime.comparison.rawOutputNormalization, false);
+assert.equal(proof.guards.guards, 13); assert.equal(proof.guards.skipped, 0); assert(proof.guards.initialPositivePassed && proof.guards.restoredPositivePassed);
+for (const r of proof.guards.records) { assert(r.reasonMatched); assert.equal(r.error.code, 'ERR_ASSERTION'); assert(new RegExp(r.expectedReason).test(r.error.message)); assert(!/ENOENT|EEXIST/.test(r.error.message)); }
+for (const field of ['fullFirRuntime', 'diagnosticFactoryRuntime', 'fullCompilerBuilt', 'tokenMappingImplemented']) assert.equal(proof[field], false);
+assert.deepEqual(evidence.sourceGuardExecution, proof.sourceGuardExecution);
+assert.equal(evidence.priorGuardExecutionRelabeledAsFresh, false);
+assert(proof.sourceGuardExecution.productionInputsUnchanged && proof.sourceGuardExecution.guardSuiteRanInPriorPartialJob);
+const pins = [...proof.inputs, ...proof.artifacts, ...proof.bootstrapPins, ...evidence.executionPins, ...evidence.additionalArtifactPins], seen = new Map();
+for (const pin of pins) { const prior = seen.get(pin.filename); if (prior) { assert.deepEqual(pin, prior, 'Conflicting evidence owner: ' + pin.filename); continue; } await checked(pin); seen.set(pin.filename, pin); }
+const status = JSON.parse(await checked(evidence.status)); assert.equal(status.state, 'exited'); assert.equal(status.exitCode, 0);
+const manifest = JSON.parse(await checked(evidence.manifest)); assert.equal(manifest.pid, status.pid); assert.deepEqual(manifest.argv, evidence.argv);
+const fixture = JSON.parse(await checked(evidence.fixture));
+const final = await verifyFirLightTreeSemanticCheckerFinalSources({ ...fixture.options, retainedSources: fixture.rows });
+assert.deepEqual(final.predecessorRetainedSources, fixture.beforeRows); assert.deepEqual(final.receipt, proof.final);
+console.log(JSON.stringify({ result: 'pass', uniqueFilesRehashed: seen.size, selectedSources: 3549, replacements: 2, exclusions: 0, guards: 13, originalFullJvm: 2, helperRecords: 21, publicFinalReplayed: true, fullCompilerBuilt: false }));

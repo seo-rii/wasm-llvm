@@ -1,0 +1,473 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-fir-lighttree-semantic-checker-profile",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "targets": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt",
+      "gitBlob": "7250bd84dd7124ad7165bafbd81850405cb8a92c",
+      "bytes": 3758,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/checkers",
+      "sha256": "caecfba0abe58caf45490bde2259dfe459417ddabe8efad5156065a555e44679"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt",
+      "gitBlob": "51d5c356a610794814ccd101388e0aa0299494ee",
+      "bytes": 8330,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/checkers",
+      "sha256": "d298c7b2bbbab400f6bd766833481cb09b5b681063e012ce0fae3379478fa11a"
+    }
+  ],
+  "registries": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/CommonTypeCheckers.kt",
+      "gitBlob": "212c16c1b041f0833cc6973aebe3d52805994060",
+      "bytes": 2131,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/checkers",
+      "sha256": "0cde6adaea9dbb6ee131b585d0688a4f4ade9e201f214dde5591b0888ff4a4b8"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/CommonExpressionCheckers.kt",
+      "gitBlob": "224fcb89e7f8e59c798d51c1cb49d808cfdde75c",
+      "bytes": 8872,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/checkers",
+      "sha256": "7b5e38cb5a8b9a5e3530091ceb312f7e0ebb45133c841d15304ee313c7d9041c"
+    }
+  ],
+  "symbols": [
+    "FirContextualFunctionTypeChecker",
+    "FirParenthesizedPackageQualifierChecker"
+  ],
+  "changes": {
+    "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt": [
+      {
+        "before": "        fun PsiElement.findContextReceiverListSource(): KtPsiSourceElement? {\n            return when (this) {\n                is KtTypeReference -> typeElement?.findContextReceiverListSource()\n                is KtNullableType -> innerType?.findContextReceiverListSource()\n                is KtFunctionType -> contextParameterList?.toKtPsiSourceElement()\n                else -> null\n            }\n        }",
+        "after": "/* sealed LightTree checker profile: unavailable-local-psi-recursion */",
+        "reason": "unavailable-local-psi-recursion"
+      },
+      {
+        "before": "            is KtPsiSourceElement -> psi.findContextReceiverListSource()\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-dispatch */\n",
+        "reason": "unavailable-psi-dispatch"
+      },
+      {
+        "before": "import com.intellij.psi.PsiElement\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-2 */\n",
+        "reason": "unavailable-psi-import-2"
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.KtFunctionType\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-3 */\n",
+        "reason": "unavailable-psi-import-3"
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.KtNullableType\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-4 */\n",
+        "reason": "unavailable-psi-import-4"
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.KtTypeReference\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-5 */\n",
+        "reason": "unavailable-psi-import-5"
+      },
+      {
+        "before": "import com.intellij.lang.LighterASTNode\n",
+        "after": "import org.jetbrains.kotlin.portable.source.LighterASTNode\n",
+        "reason": "existing-portable-carrier-LighterASTNode"
+      },
+      {
+        "before": "import com.intellij.util.diff.FlyweightCapableTreeStructure\n",
+        "after": "import org.jetbrains.kotlin.portable.source.FlyweightCapableTreeStructure\n",
+        "reason": "existing-portable-carrier-FlyweightCapableTreeStructure"
+      }
+    ],
+    "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt": [
+      {
+        "before": "                        is KtPsiSourceElement -> {\n                            source.psi\n                                .getExplicitReceiverOfDotQualified()\n                                ?.toKtPsiSourceElement()\n                        }",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-dispatch */",
+        "reason": "unavailable-psi-dispatch"
+      },
+      {
+        "before": "import org.jetbrains.kotlin.KtPsiSourceElement\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-1 */\n",
+        "reason": "unavailable-psi-import-1"
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.psiUtil.getExplicitReceiverOfDotQualified\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-2 */\n",
+        "reason": "unavailable-psi-import-2"
+      },
+      {
+        "before": "import org.jetbrains.kotlin.toKtPsiSourceElement\n",
+        "after": "/* sealed LightTree checker profile: unavailable-psi-import-3 */\n",
+        "reason": "unavailable-psi-import-3"
+      },
+      {
+        "before": "import com.intellij.psi.tree.IElementType\n",
+        "after": "import org.jetbrains.kotlin.portable.source.IElementType\n",
+        "reason": "existing-portable-carrier-IElementType"
+      }
+    ]
+  },
+  "outputs": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt",
+      "bytes": 3529,
+      "sha256": "878afd912af9dd1e6a590fd10e2ef59ca2c97dd3e953f9de8dbc5dfeb7f8438d"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt",
+      "bytes": 8193,
+      "sha256": "ed59612ec9e25e2fe0d15211c106f82e03521b20348c335e8ff04b222f6e8a65"
+    }
+  ],
+  "originalDeclarations": {
+    "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt": [
+      {
+        "packageName": "org.jetbrains.kotlin.fir.analysis.checkers.type",
+        "name": "FirContextualFunctionTypeChecker",
+        "kind": "object"
+      }
+    ],
+    "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt": [
+      {
+        "packageName": "org.jetbrains.kotlin.fir.analysis.checkers.expression",
+        "name": "FirParenthesizedPackageQualifierChecker",
+        "kind": "object"
+      }
+    ]
+  },
+  "outputDeclarations": {
+    "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt": [
+      {
+        "packageName": "org.jetbrains.kotlin.fir.analysis.checkers.type",
+        "name": "FirContextualFunctionTypeChecker",
+        "kind": "object"
+      }
+    ],
+    "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt": [
+      {
+        "packageName": "org.jetbrains.kotlin.fir.analysis.checkers.expression",
+        "name": "FirParenthesizedPackageQualifierChecker",
+        "kind": "object"
+      }
+    ]
+  },
+  "primaryReferences": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/CommonExpressionCheckers.kt",
+      "names": [
+        "FirParenthesizedPackageQualifierChecker"
+      ]
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/CommonTypeCheckers.kt",
+      "names": [
+        "FirContextualFunctionTypeChecker"
+      ]
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt",
+      "names": [
+        "FirParenthesizedPackageQualifierChecker"
+      ]
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt",
+      "names": [
+        "FirContextualFunctionTypeChecker"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/CommonTypeCheckers.kt",
+      "bytes": 2131,
+      "sha256": "0cde6adaea9dbb6ee131b585d0688a4f4ade9e201f214dde5591b0888ff4a4b8"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/CommonExpressionCheckers.kt",
+      "bytes": 8927,
+      "sha256": "27b12f4d1615d1684933a2eea77203462bc9c21b5bd13f7e7daca1e2fdcc9897"
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt",
+      "bytes": 49077,
+      "sha256": "bbebaa31911d666c97bd1f59e0bb98d9ca19cc596c25e1cc64bd45bdae543fd2"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt",
+      "bytes": 4481,
+      "sha256": "1398bcafc034a6ce9f3f52bf855d659eaf86e1f48b992a071206b6ff3d95518f"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompiler.kt",
+      "bytes": 8242,
+      "sha256": "069d7052f7111011dc4fa215c7950f9bb3e61ec0df0dd4e529af8a2a487f39d1"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompilerPipeline.kt",
+      "bytes": 9670,
+      "sha256": "dc5ca3eb6ed2f128b3835baf94f67b718b22386bf21c7ac8233d57b65b2b6b60"
+    },
+    {
+      "path": "compiler-port-host/PortableLightTree.kt",
+      "bytes": 1461,
+      "sha256": "0274ecbeb4d7323f869b898b6901a0196e953dd8e89ec33bf1aa967b9177a32e"
+    },
+    {
+      "path": "compiler-port-positioning/KtTokenSets.kt",
+      "bytes": 9399,
+      "sha256": "af018d3d4d133814c4d7809a3dd6cf53dc4cd6bd120fa02083bd4a97f1338575"
+    },
+    {
+      "path": "compiler-port-positioning/sourceElementUtils.kt",
+      "bytes": 2217,
+      "sha256": "3074b952e2d327795f06c102b23eecef3d098a1512705efbbb86a9a27ac5947c"
+    },
+    {
+      "path": "compiler-port-positioning/UnwrappableTokenTypes.kt",
+      "bytes": 505,
+      "sha256": "c7b9656e99e05f945203b00a49e227053f8116229e9fb3411fb44b2952b0eb5c"
+    },
+    {
+      "path": "compiler-port-positioning/LightTreePositioningStrategies.kt",
+      "bytes": 103821,
+      "sha256": "948129d0184021685f6db26dc40b28b5dee079da6b3409c5236fd67272b6a847"
+    },
+    {
+      "path": "compiler-port-positioning/LightTreeUtils.kt",
+      "bytes": 1431,
+      "sha256": "9d156998da702c382b05f48ee347b41a8c48afdaf3ca2949e8d4f9a3ed392b8e"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/FirSourceUtils.kt",
+      "bytes": 4537,
+      "sha256": "d8c0c232ef07383b89dd9290516960889996376a93e4f1d3a70b458460f35e1f"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 17572,
+      "sha256": "645b0730c839654d8884d63a2054a5d5b766f21cc12c0fff06b8d5c44754e5e9",
+      "gitBlob": "59d9d75df111835981a95ac12abcd5cd37568a0c"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 4666,
+      "sha256": "4a052e416d9a05842944d9ed5b7a7bb85db67614b6d7d46b0d0bd449cbbe9761",
+      "gitBlob": "c906289406ce6cf23c68fe3d64f1ebdf1632368e"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 4985,
+      "sha256": "3c3399713cbaedf5b7b028afd8516e43a710dd9a4e41e2b0a4aa7799e26dfe54",
+      "gitBlob": "51362bd7761eb4c192f786785d09e2135aec6872"
+    },
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../fir-navigation/transform.mjs",
+      "bytes": 7431,
+      "sha256": "f54b5e64de11774366a3324944a959a0691946268e5d15ba8f795650958b6847",
+      "gitBlob": "296ec0ab5c96b42315e21339a64fb1b579a1502c"
+    },
+    {
+      "path": "../fir-navigation/prepare.mjs",
+      "bytes": 21362,
+      "sha256": "8d4915bd77779bcb9b5d5f119655051be9f9b1750d11b1d2d4d9f4e61d9f8c61",
+      "gitBlob": "c58f4dd3c38270397d6ceb82e7499ab1f1cbcf10"
+    },
+    {
+      "path": "../fir-navigation/sources.lock.json",
+      "bytes": 20354,
+      "sha256": "3e1582865ebff261ad5a152320320feba9725457153bea4edaa715ac39ecd70d",
+      "gitBlob": "8147b790a09bbb9a96937a2630c85396710bdae4"
+    },
+    {
+      "path": "../fir-syntax-lighttree-profile/prepare.mjs",
+      "bytes": 14543,
+      "sha256": "0c07c8374512c8b16902add869f8b7874ce3655f8c25783b38b6e327600a394c",
+      "gitBlob": "4094fe432ca717a4869c0ba0e2262ac4fe61556b"
+    },
+    {
+      "path": "../fir-syntax-lighttree-profile/sources.lock.json",
+      "bytes": 67716,
+      "sha256": "0aea684947b9ad676ca1f699bbd092593f75e1e86bd92993fdcd51b7d04d02c7",
+      "gitBlob": "d2a242afd84d03ed9cbc7e954c253c7578482c8e"
+    },
+    {
+      "path": "../native-js-output-profile/references.mjs",
+      "bytes": 2178,
+      "sha256": "f6fd115e20e546eacfd8c3ac68f0693263e554b3c9d95148474a65689a17f3ba",
+      "gitBlob": "42dc18f4964811af5b77d8b25fd4e8c60ecae508"
+    },
+    {
+      "path": "../backend-profile/references.mjs",
+      "bytes": 6006,
+      "sha256": "99496f349e3fc82159095a5d5d59c54a579ad4d5fcd60d5593136faef7e971cc",
+      "gitBlob": "f467ac0472ba80f10aa21f3d555f6909fef0dff4"
+    },
+    {
+      "path": "../klib-signature-index/transform.mjs",
+      "bytes": 5115,
+      "sha256": "c2e16bbb41c471d231f0422137d91289eedcdb5a5a9392299fd95e4d6edbbde2",
+      "gitBlob": "c238f725a135be0232479e25ee000dc6f1e90749"
+    },
+    {
+      "path": "../host/prepare.mjs",
+      "bytes": 7585,
+      "sha256": "d47bc0f4ec8230fd1b95a21d601baab11aaa99e6d716a7794171df2d59ab820f",
+      "gitBlob": "f5ecdfb72ef32d6674fade54a24cebff16d9b031"
+    },
+    {
+      "path": "../host/sources.lock.json",
+      "bytes": 5522,
+      "sha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+      "gitBlob": "1b7bb8859a98cc644771c94c287b4569ceaf0e31"
+    },
+    {
+      "path": "../host/patches/source-host.patch",
+      "bytes": 29195,
+      "sha256": "f418ded074c23c5693be4bdd25bba7e95143f124f85eac7df5a7e67d5193421f",
+      "gitBlob": "fe27e456fc0f64290677f245e65eddd096752177"
+    },
+    {
+      "path": "../positioning/prepare.mjs",
+      "bytes": 22554,
+      "sha256": "0cc5d6371778b3c5909bbfa3fc05bd3c97760c9e94c7ed43ccd4b7f576053314",
+      "gitBlob": "fcf551d3c089a359d01aecee16907eaab9a969e3"
+    },
+    {
+      "path": "../positioning/positioning.recipe.json",
+      "bytes": 34111,
+      "sha256": "f7430fc1bf8b3d8c0768c540f71792c39950091820bf2c0c2f26fe978e98fcdc",
+      "gitBlob": "1505c228701ce5debb334fba540ab9a0b2714001"
+    },
+    {
+      "path": "../entry/BrowserCompiler.kt",
+      "bytes": 8242,
+      "sha256": "069d7052f7111011dc4fa215c7950f9bb3e61ec0df0dd4e529af8a2a487f39d1",
+      "gitBlob": "4980768086eb186efdbfaafa4c0cac7005db1aef"
+    },
+    {
+      "path": "../entry/BrowserCompilerPipeline.kt",
+      "bytes": 9670,
+      "sha256": "dc5ca3eb6ed2f128b3835baf94f67b718b22386bf21c7ac8233d57b65b2b6b60",
+      "gitBlob": "7a4397b22b9e5b52caefef7eaffc2a430bdc4f22"
+    }
+  ],
+  "recordedPropertyImports": [
+    "org.jetbrains.kotlin.portable.common.*",
+    "org.jetbrains.kotlin.portable.descriptors.*",
+    "org.jetbrains.kotlin.js.backend.ast.addPrevious",
+    "org.jetbrains.kotlin.js.backend.ast.arg",
+    "org.jetbrains.kotlin.js.backend.ast.arg1",
+    "org.jetbrains.kotlin.js.backend.ast.arg2",
+    "org.jetbrains.kotlin.js.backend.ast.arguments",
+    "org.jetbrains.kotlin.js.backend.ast.arrayExpression",
+    "org.jetbrains.kotlin.js.backend.ast.body",
+    "org.jetbrains.kotlin.js.backend.ast.caseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.cases",
+    "org.jetbrains.kotlin.js.backend.ast.catches",
+    "org.jetbrains.kotlin.js.backend.ast.closingBraceSource",
+    "org.jetbrains.kotlin.js.backend.ast.commentsAfterNode",
+    "org.jetbrains.kotlin.js.backend.ast.commentsBeforeNode",
+    "org.jetbrains.kotlin.js.backend.ast.computedName",
+    "org.jetbrains.kotlin.js.backend.ast.condition",
+    "org.jetbrains.kotlin.js.backend.ast.constructorExpression",
+    "org.jetbrains.kotlin.js.backend.ast.currentNode",
+    "org.jetbrains.kotlin.js.backend.ast.description",
+    "org.jetbrains.kotlin.js.backend.ast.elseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.elseStatement",
+    "org.jetbrains.kotlin.js.backend.ast.expression",
+    "org.jetbrains.kotlin.js.backend.ast.expressions",
+    "org.jetbrains.kotlin.js.backend.ast.finallyBlock",
+    "org.jetbrains.kotlin.js.backend.ast.flags",
+    "org.jetbrains.kotlin.js.backend.ast.globalBlock",
+    "org.jetbrains.kotlin.js.backend.ast.ident",
+    "org.jetbrains.kotlin.js.backend.ast.ifExpression",
+    "org.jetbrains.kotlin.js.backend.ast.incrementExpression",
+    "org.jetbrains.kotlin.js.backend.ast.indexExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initVars",
+    "org.jetbrains.kotlin.js.backend.ast.isAssignment",
+    "org.jetbrains.kotlin.js.backend.ast.isEmpty",
+    "org.jetbrains.kotlin.js.backend.ast.isEs6Arrow",
+    "org.jetbrains.kotlin.js.backend.ast.isGenerator",
+    "org.jetbrains.kotlin.js.backend.ast.isGetter",
+    "org.jetbrains.kotlin.js.backend.ast.isKeyword",
+    "org.jetbrains.kotlin.js.backend.ast.isLeaf",
+    "org.jetbrains.kotlin.js.backend.ast.isLeftAssociative",
+    "org.jetbrains.kotlin.js.backend.ast.isModifying",
+    "org.jetbrains.kotlin.js.backend.ast.isMultiline",
+    "org.jetbrains.kotlin.js.backend.ast.isSetter",
+    "org.jetbrains.kotlin.js.backend.ast.isStatic",
+    "org.jetbrains.kotlin.js.backend.ast.isTemporary",
+    "org.jetbrains.kotlin.js.backend.ast.isTransparent",
+    "org.jetbrains.kotlin.js.backend.ast.label",
+    "org.jetbrains.kotlin.js.backend.ast.modifiers",
+    "org.jetbrains.kotlin.js.backend.ast.name",
+    "org.jetbrains.kotlin.js.backend.ast.operator",
+    "org.jetbrains.kotlin.js.backend.ast.parameter",
+    "org.jetbrains.kotlin.js.backend.ast.parameters",
+    "org.jetbrains.kotlin.js.backend.ast.parent",
+    "org.jetbrains.kotlin.js.backend.ast.pattern",
+    "org.jetbrains.kotlin.js.backend.ast.precedence",
+    "org.jetbrains.kotlin.js.backend.ast.propertyInitializers",
+    "org.jetbrains.kotlin.js.backend.ast.qualifier",
+    "org.jetbrains.kotlin.js.backend.ast.replaceMe",
+    "org.jetbrains.kotlin.js.backend.ast.rootScope",
+    "org.jetbrains.kotlin.js.backend.ast.scope",
+    "org.jetbrains.kotlin.js.backend.ast.source",
+    "org.jetbrains.kotlin.js.backend.ast.statement",
+    "org.jetbrains.kotlin.js.backend.ast.statements",
+    "org.jetbrains.kotlin.js.backend.ast.symbol",
+    "org.jetbrains.kotlin.js.backend.ast.tags",
+    "org.jetbrains.kotlin.js.backend.ast.testExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenStatement",
+    "org.jetbrains.kotlin.js.backend.ast.tryBlock",
+    "org.jetbrains.kotlin.js.backend.ast.value",
+    "org.jetbrains.kotlin.js.util.position",
+    "org.jetbrains.kotlin.js.util.line",
+    "org.jetbrains.kotlin.js.util.column"
+  ],
+  "sourceHostLockSha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+  "frozenBuild": {
+    "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/closure-selection-whole-1791789518688526956/compiler-build-receipt.json",
+    "bytes": 59859600,
+    "sha256": "e0609bcd272bf154440d2ba4e551be24393c06d8ef44d0320c46c1791bbb4b60",
+    "argumentFileSha256": "8c7504ee7a1442762204a0391a66f7e6362f6a3b98e7c801ec08c489333fad9b",
+    "selectedSources": 3549,
+    "compilerExitCode": 1
+  },
+  "sourceSetExclusions": [],
+  "preservedRegistrations": true,
+  "scope": "Exactly two complete FIR checker files; impossible PSI arms/imports and existing portable carrier bindings only",
+  "fullFirRuntime": false,
+  "fullCompilerBuilt": false,
+  "tokenMappingImplemented": false
+}

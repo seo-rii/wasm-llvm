@@ -92,6 +92,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let sourceHostComponent;
   let parserProfileComponent;
   let firSyntaxLightTreeComposition;
+  let firLightTreeSemanticComposition;
   let descriptorFunctionComposition;
   let descriptorKindFilterComposition;
   let firPredicateComposition;
@@ -1395,6 +1396,34 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       firSyntaxLightTreeComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
     }
     if (sourceHost === 'portable') {
+      const profile = await import('./fir-lighttree-semantic-checker-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'firLightTreeSemanticCheckerReceipt');
+      const component = await profile.prepareFirLightTreeSemanticCheckers({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedHost: sourceHostComponent, recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      const replaced = new Set(component.replacedOriginalPaths.map(relativePath));
+      assert.equal(replaced.size, 2); assert.equal(component.commonSources.length, 2);
+      assert.deepEqual(component.sourceSetExclusions, []);
+      for (const filename of component.commonSources) {
+        assert(filename.startsWith(outputRoot + path.sep));
+        const logical = relativePath(path.relative(outputRoot, filename)), previous = files.get(logical);
+        assert(replaced.has(logical) && previous?.compile, 'Missing selected semantic checker predecessor');
+        const binding = component.receipt.files.find(row => row.before.path === logical);
+        assert(binding, 'Missing semantic checker source binding');
+        assert.deepEqual({ path: logical, ...previous }, binding.before);
+        const bytes = await readRegular(filename), digest = sha256(bytes);
+        assert.deepEqual({ ...binding.before, filename, bytes: bytes.length, sha256: digest }, binding.after);
+        files.set(logical, { ...previous, filename, bytes: bytes.length, sha256: digest });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== logical);
+        receipt.portableSourceBindings.push({ path: logical, sha256: digest });
+        replaced.delete(logical);
+      }
+      assert.equal(replaced.size, 0, 'Missing prepared semantic checker source');
+      receipt.firLightTreeSemanticCheckerReceipt = component.receipt;
+      firLightTreeSemanticComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+    }
+    if (sourceHost === 'portable') {
       const raw = await import('./raw-fir-literal-host/prepare.mjs');
       const { assembleRawFirLiteralImports } = await import('./raw-fir-literal-host/transform.mjs');
       const outputRoot = path.join(output, 'components', 'rawFirLiteralHostReceipt');
@@ -1572,10 +1601,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
     if (sourceHost === 'portable') {
       const navigation = await import('./fir-navigation/prepare.mjs');
       const syntax = await import('./fir-syntax-lighttree-profile/prepare.mjs');
-      const syntaxFinal = await syntax.verifyFirSyntaxLightTreeFinalSources({
-        ...firSyntaxLightTreeComposition,
+      const semantic = await import('./fir-lighttree-semantic-checker-profile/prepare.mjs');
+      const semanticFinal = await semantic.verifyFirLightTreeSemanticCheckerFinalSources({
+        ...firLightTreeSemanticComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+      });
+      receipt.firLightTreeSemanticCheckerFinalReceipt = semanticFinal.receipt;
+      const syntaxFinal = await syntax.verifyFirSyntaxLightTreeFinalSources({
+        ...firSyntaxLightTreeComposition,
+        retainedSources: semanticFinal.predecessorRetainedSources,
       });
       receipt.firSyntaxLightTreeFinalReceipt = syntaxFinal.receipt;
       const final = await navigation.verifyFirNavigationFinalSources({
