@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "compiler-source-assembly-negative-evidence",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "headAtLaunch": "ac407741ba2ad4157c3ec43d17a0176a3d1341b7",
+  "job": {
+    "pid": 1568165,
+    "log": "/home/seorii/logs/wasm-kotlin-class-phase-literal-whole-1791774763562390524.log",
+    "status": "/home/seorii/logs/wasm-kotlin-class-phase-literal-whole-1791774763562390524.status.json",
+    "output": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/class-phase-literal-whole-1791774763562390524",
+    "runner": "/tmp/wasm-kotlin-class-phase-literal-whole-1791774763562390524.py",
+    "argv": [
+      "/data/wasm-pr-review-20261010-tooling/node-v24.21.0-linux-x64/bin/node",
+      "producer/kotlin-browser/compiler-port/build.mjs",
+      "--input",
+      "out/kotlin-compiler-port",
+      "--protobuf-build",
+      "out/kotlin-compiler-serialization/probe-8/codec",
+      "--output",
+      "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/class-phase-literal-whole-1791774763562390524"
+    ],
+    "head": "ac407741ba2ad4157c3ec43d17a0176a3d1341b7",
+    "availableBytesAtLaunch": 97914941440,
+    "buildToolSha256": "7ece3a72d11628076a4b002efb87aa96efdaae17ae7a093edccd4082c4c63b3f",
+    "compositionPreflight": {
+      "receipt": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-class-phase-literal-nio-composition-preflight-1791773847360462854/receipt.json",
+      "sha256": "cf5cc36cf1f7c3412e899462d85e18d829496609e0c3d9cbbc03eb71c8b2baf9",
+      "finalSources": 3550,
+      "status": "/home/seorii/logs/kotlin-class-phase-literal-nio-composition-preflight-1791773847360462854.status.json"
+    }
+  },
+  "status": {
+    "state": "exited",
+    "pid": 1568165,
+    "head": "ac407741ba2ad4157c3ec43d17a0176a3d1341b7",
+    "exitCode": 1,
+    "durationSeconds": 761.8909430503845
+  },
+  "buildToolSha256": "7ece3a72d11628076a4b002efb87aa96efdaae17ae7a093edccd4082c4c63b3f",
+  "compilerInvoked": false,
+  "compilerDiagnosticCount": null,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false,
+  "selectedSources": 3550,
+  "selectionSha256": "abe49e2a5bcaefe53d5d909b6924b08618e11bcdea47025ef6079644d4324295",
+  "failure": "Pinned source content mismatch: compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt",
+  "explanation": "The native JS output final verifier treats its recorded canonical JS/Wasm phase overlays as upstream original bytes. It rejects the new genuine lowered-factory metadata wrappers before any compiler invocation. The existing whole-source failure with 1770 cascading entries remains the last actual compiler result.",
+  "pins": {
+    "receipt": {
+      "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/class-phase-literal-whole-1791774763562390524/compiler-build-receipt.json",
+      "bytes": 53563324,
+      "sha256": "75eaeab75292e1ec0c8fad8bc9c89c68b762f63f2c00f975e59e1528375c3520"
+    },
+    "log": {
+      "filename": "/home/seorii/logs/wasm-kotlin-class-phase-literal-whole-1791774763562390524.log",
+      "bytes": 236,
+      "sha256": "584f92b5f0e0d65e821a931ba19d8b6dd0ebaefae72136ce8259115235564d47"
+    },
+    "status": {
+      "filename": "/home/seorii/logs/wasm-kotlin-class-phase-literal-whole-1791774763562390524.status.json",
+      "bytes": 141,
+      "sha256": "fd6f6f812e1d2e85cff11ac754596d2421dd2a2cd95ceabf9353195b6ab9eebe"
+    },
+    "runner": {
+      "filename": "/tmp/wasm-kotlin-class-phase-literal-whole-1791774763562390524.py",
+      "bytes": 1218,
+      "sha256": "662691d6a687adea4e174ed0bb54dbc945f43f6f47ede30432c65e36d7bf08ba"
+    },
+    "affectedActualOwners": [
+      {
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/class-phase-literal-whole-1791774763562390524/components/loweringPhaseFactoriesReceipt/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/WasmLoweringPhases.kt",
+        "bytes": 19109,
+        "sha256": "671c142822e8b8320d0bbd703cf619542a1bb75ca3b90099abdfb6c9e31bc74b"
+      },
+      {
+        "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/class-phase-literal-whole-1791774763562390524/components/loweringPhaseFactoriesReceipt/compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt",
+        "bytes": 22208,
+        "sha256": "bf532e2a79e00a080e1a0d555daa58005cc3a14dc4f19a5f89863b2789b0ac12"
+      }
+    ]
+  }
+}
