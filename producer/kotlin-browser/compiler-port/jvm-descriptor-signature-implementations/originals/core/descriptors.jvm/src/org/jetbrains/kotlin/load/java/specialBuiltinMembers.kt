@@ -1,0 +1,162 @@
+/*
+ * Copyright 2010-2015 JetBrains s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@file:JvmName("SpecialBuiltinMembers")
+
+package org.jetbrains.kotlin.load.java
+
+import org.jetbrains.kotlin.K1Deprecation
+import org.jetbrains.kotlin.builtins.KotlinBuiltIns
+import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.load.java.BuiltinMethodsWithSpecialGenericSignature.getSpecialSignatureInfo
+import org.jetbrains.kotlin.load.java.BuiltinMethodsWithSpecialGenericSignature.sameAsBuiltinMethodWithErasedValueParameters
+import org.jetbrains.kotlin.load.java.ClassicBuiltinSpecialProperties.getBuiltinSpecialPropertyGetterName
+import org.jetbrains.kotlin.load.java.descriptors.JavaClassDescriptor
+import org.jetbrains.kotlin.load.kotlin.computeJvmSignature
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.resolve.DescriptorUtils
+import org.jetbrains.kotlin.resolve.descriptorUtil.firstOverridden
+import org.jetbrains.kotlin.resolve.descriptorUtil.propertyIfAccessor
+import org.jetbrains.kotlin.types.checker.TypeCheckingProcedure
+
+@K1Deprecation
+object BuiltinMethodsWithSpecialGenericSignature : SpecialGenericSignatures() {
+    private val CallableMemberDescriptor.hasErasedValueParametersInJava: Boolean
+        get() = computeJvmSignature() in ERASED_VALUE_PARAMETERS_SIGNATURES
+
+    @JvmStatic
+    fun getOverriddenBuiltinFunctionWithErasedValueParametersInJava(
+        functionDescriptor: FunctionDescriptor
+    ): FunctionDescriptor? {
+        if (!functionDescriptor.name.sameAsBuiltinMethodWithErasedValueParameters) return null
+        return functionDescriptor.firstOverridden { it.hasErasedValueParametersInJava } as FunctionDescriptor?
+    }
+
+    val Name.sameAsBuiltinMethodWithErasedValueParameters: Boolean
+        get() = this in ERASED_VALUE_PARAMETERS_SHORT_NAMES
+
+    @JvmStatic
+    internal fun CallableMemberDescriptor.getSpecialSignatureInfo(): SpecialSignatureInfo? {
+        if (name !in ERASED_VALUE_PARAMETERS_SHORT_NAMES) return null
+
+        val builtinSignature = firstOverridden { it is FunctionDescriptor && it.hasErasedValueParametersInJava }?.computeJvmSignature()
+            ?: return null
+
+        return getSpecialSignatureInfo(builtinSignature)
+    }
+}
+
+@K1Deprecation
+object BuiltinMethodsWithDifferentJvmName : SpecialGenericSignatures() {
+    internal fun getJvmName(functionDescriptor: SimpleFunctionDescriptor): Name? {
+        return SIGNATURE_TO_JVM_REPRESENTATION_NAME[functionDescriptor.computeJvmSignature() ?: return null]
+    }
+
+    internal fun isBuiltinFunctionWithDifferentNameInJvm(functionDescriptor: SimpleFunctionDescriptor): Boolean {
+        return KotlinBuiltIns.isBuiltIn(functionDescriptor) && functionDescriptor.firstOverridden {
+            SIGNATURE_TO_JVM_REPRESENTATION_NAME.containsKey(functionDescriptor.computeJvmSignature())
+        } != null
+    }
+
+    val SimpleFunctionDescriptor.isRemoveAtByIndex: Boolean
+        get() = name.asString() == "removeAt" && computeJvmSignature() == REMOVE_AT_NAME_AND_SIGNATURE.signature
+}
+
+@Suppress("UNCHECKED_CAST")
+@K1Deprecation
+fun <T : CallableMemberDescriptor> T.getOverriddenBuiltinWithDifferentJvmName(): T? {
+    if (name !in SpecialGenericSignatures.ORIGINAL_SHORT_NAMES
+        && propertyIfAccessor.name !in BuiltinSpecialProperties.SPECIAL_SHORT_NAMES
+    ) return null
+
+    return when (this) {
+        is PropertyDescriptor, is PropertyAccessorDescriptor ->
+            firstOverridden { ClassicBuiltinSpecialProperties.hasBuiltinSpecialPropertyFqName(it.propertyIfAccessor) } as T?
+        is SimpleFunctionDescriptor ->
+            firstOverridden {
+                BuiltinMethodsWithDifferentJvmName.isBuiltinFunctionWithDifferentNameInJvm(it as SimpleFunctionDescriptor)
+            } as T?
+        else -> null
+    }
+}
+
+@K1Deprecation
+fun CallableMemberDescriptor.doesOverrideBuiltinWithDifferentJvmName(): Boolean = getOverriddenBuiltinWithDifferentJvmName() != null
+
+@Suppress("UNCHECKED_CAST")
+@K1Deprecation
+fun <T : CallableMemberDescriptor> T.getOverriddenSpecialBuiltin(): T? {
+    getOverriddenBuiltinWithDifferentJvmName()?.let { return it }
+
+    if (!name.sameAsBuiltinMethodWithErasedValueParameters) return null
+
+    return firstOverridden {
+        KotlinBuiltIns.isBuiltIn(it) && it.getSpecialSignatureInfo() != null
+    } as T?
+}
+
+@K1Deprecation
+fun getJvmMethodNameIfSpecial(callableMemberDescriptor: CallableMemberDescriptor): String? {
+    val overriddenBuiltin = getOverriddenBuiltinThatAffectsJvmName(callableMemberDescriptor)?.propertyIfAccessor
+        ?: return null
+    return when (overriddenBuiltin) {
+        is PropertyDescriptor -> overriddenBuiltin.getBuiltinSpecialPropertyGetterName()
+        is SimpleFunctionDescriptor -> BuiltinMethodsWithDifferentJvmName.getJvmName(overriddenBuiltin)?.asString()
+        else -> null
+    }
+}
+
+private fun getOverriddenBuiltinThatAffectsJvmName(
+    callableMemberDescriptor: CallableMemberDescriptor
+): CallableMemberDescriptor? =
+    if (KotlinBuiltIns.isBuiltIn(callableMemberDescriptor)) callableMemberDescriptor.getOverriddenBuiltinWithDifferentJvmName()
+    else null
+
+@K1Deprecation
+fun ClassDescriptor.hasRealKotlinSuperClassWithOverrideOf(
+    specialCallableDescriptor: CallableDescriptor
+): Boolean {
+    val builtinContainerDefaultType = (specialCallableDescriptor.containingDeclaration as ClassDescriptor).defaultType
+
+    var superClassDescriptor = DescriptorUtils.getSuperClassDescriptor(this)
+
+    while (superClassDescriptor != null) {
+        if (superClassDescriptor !is JavaClassDescriptor) {
+            // Kotlin class
+
+            val doesOverrideBuiltinDeclaration =
+                TypeCheckingProcedure.findCorrespondingSupertype(superClassDescriptor.defaultType, builtinContainerDefaultType) != null
+
+            if (doesOverrideBuiltinDeclaration) {
+                return !KotlinBuiltIns.isBuiltIn(superClassDescriptor)
+            }
+        }
+
+        superClassDescriptor = DescriptorUtils.getSuperClassDescriptor(superClassDescriptor)
+    }
+
+    return false
+}
+
+@K1Deprecation
+private val CallableMemberDescriptor.isFromJava: Boolean
+    get() {
+        val descriptor = propertyIfAccessor
+        return descriptor.containingDeclaration is JavaClassDescriptor
+    }
+
+@K1Deprecation
+fun CallableMemberDescriptor.isFromJavaOrBuiltins() = isFromJava || KotlinBuiltIns.isBuiltIn(this)

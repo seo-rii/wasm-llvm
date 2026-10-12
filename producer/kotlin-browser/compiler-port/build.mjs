@@ -106,6 +106,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorLazyMutableComposition;
   let descriptorOverridingComposition;
   let descriptorTypeAliasComposition;
+  let jvmDescriptorSignatureComposition;
   let loweringPhaseFactoriesComposition;
   let rawFirLiteralComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
@@ -571,6 +572,40 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           assert.equal(predecessor.filename, path.join(signatures.outputRoot, target), 'Typealias constructor must replace the genuine signature owner');
           assert.deepEqual(component.predecessorBindings, [{ component: 'descriptorPlatformSignaturesReceipt',
             componentRelativePath: target, filename: predecessor.filename, bytes: predecessor.bytes, sha256: predecessor.sha256 }]);
+          return component;
+        }],
+        ['jvmDescriptorSignatureImplementationsReceipt', async ({ outputRoot }) => {
+          const signatures = await import('./jvm-descriptor-signature-implementations/prepare.mjs');
+          const reference = await signatures.prepareJvmDescriptorSignatureReferences();
+          const component = await signatures.prepareJvmDescriptorSignatureImplementations({ sourceRoot: reference.sourceRoot, outputRoot,
+            preparedCore: preparedComponents.get('coreReceipt'),
+            preparedClassImplementations: preparedComponents.get('descriptorClassImplementationsReceipt'),
+            preparedFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            preparedReceivers: preparedComponents.get('descriptorReceiverFactoryReceipt'),
+            preparedPropertyConstructors: preparedComponents.get('descriptorPropertyConstructorsReceipt'),
+            preparedTypeContracts: preparedComponents.get('typeContractReceipt'),
+            preparedTypeUtilities: preparedComponents.get('typeUtilitiesReceipt'),
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            preparedOverriding: preparedComponents.get('descriptorOverridingImplementationsReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+            recordedPropertyImports: receipt.propertyImports?.imports ?? [] });
+          jvmDescriptorSignatureComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await signatures.verifyJvmDescriptorSignatureImplementations(jvmDescriptorSignatureComposition);
+          assert.equal(component.commonSources.length, 18);
+          assert.deepEqual(component.replacedOriginalPaths, []);
+          assert.deepEqual(component.sourceSetExclusions, []);
+          assert.deepEqual(component.predecessorBindings, []);
+          assert.equal(component.sourceFiles.length, 17);
+          assert.deepEqual(component.sourceFiles.map(pin => pin.path), component.additionalOriginalPaths);
+          for (const pin of component.sourceFiles) {
+            const sourcePath = relativePath(pin.path);
+            assert(!files.has(sourcePath), 'Supplemental JVM signature source conflicts with primary inventory: ' + sourcePath);
+            const filename = path.join(component.originalSourceRoot, sourcePath);
+            verifyFile(await readRegular(filename, pin.bytes), pin);
+            files.set(sourcePath, { filename, bytes: pin.bytes, sha256: pin.sha256, compile: false });
+          }
+          receipt.jvmDescriptorSignatureSupplementalOriginals = component.sourceFiles;
           return component;
         }],
         ['performanceCounterReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1741,10 +1776,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const implementations = await import('./descriptor-lazy-mutable-implementations/prepare.mjs');
       const overriding = await import('./descriptor-overriding-implementations/prepare.mjs');
       const typealiases = await import('./descriptor-typealias-constructor-bindings/prepare.mjs');
-      const typeAliasFinal = await typealiases.verifyFinalDescriptorTypeAliasConstructorBindings({
-        ...descriptorTypeAliasComposition,
+      const jvmSignatures = await import('./jvm-descriptor-signature-implementations/prepare.mjs');
+      const jvmSignatureFinal = await jvmSignatures.verifyFinalJvmDescriptorSignatureImplementations({
+        ...jvmDescriptorSignatureComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.jvmDescriptorSignatureImplementationsFinalReceipt = jvmSignatureFinal.receipt;
+      const typeAliasFinal = await typealiases.verifyFinalDescriptorTypeAliasConstructorBindings({
+        ...descriptorTypeAliasComposition,
+        retainedSources: jvmSignatureFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorTypeAliasConstructorBindingsFinalReceipt = typeAliasFinal.receipt;
