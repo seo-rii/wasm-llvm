@@ -1,0 +1,151 @@
+/*
+ * Copyright 2010-2026 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+package org.jetbrains.kotlin.portable.rawfir
+
+import org.jetbrains.kotlin.utils.extractRadix
+
+/**
+ * Checks whether the [text] representation of a number literal has a long number suffix.
+ */
+fun hasLongNumericLiteralSuffix(text: String): Boolean {
+    return text.endsWith('l') || text.endsWith('L')
+}
+
+/**
+ * Checks whether the [text] representation of a number literal has an unsigned number suffix.
+ */
+fun hasUnsignedNumericLiteralSuffix(text: String): Boolean {
+    return text.endsWith('u') || text.endsWith('U')
+}
+
+/**
+ * Checks whether the [text] representation of a number literal has both a long and an unsigned number suffix.
+ */
+fun hasUnsignedLongNumericLiteralSuffix(text: String): Boolean {
+    return text.endsWith("ul") || text.endsWith("uL") ||
+            text.endsWith("Ul") || text.endsWith("UL")
+}
+
+/**
+ * Checks whether the [text] representation of a number literal has a float number suffix.
+ */
+fun hasFloatNumericLiteralSuffix(text: String): Boolean {
+    return text.endsWith('f') || text.endsWith('F')
+}
+
+/**
+ * Parses the [text] representation of a number literal into a [Number] instance.
+ *
+ * For integer literals, always returns a [Long] instance.
+ * For floating-point literals, returns either a [Float] or a [Double], depending on the literal precision.
+ * Returns `null` if the text is not a valid representation of a number literal.
+ *
+ * @param isFloatingPointLiteral Specifies whether the number is floating-point (`Float` or `Double`)
+ * or integer (`Byte`, `Short`, `Int` or `Long`).
+ */
+fun parseNumericLiteral(text: String, isFloatingPointLiteral: Boolean): Number? {
+    val canonicalText = text.replace("_", "")
+    return if (isFloatingPointLiteral) parseDecimalNumberLiteral(canonicalText) else parseLongNumericLiteral(canonicalText)
+}
+
+private fun parseLongNumericLiteral(text: String): Long? {
+    fun String.removeSuffix(i: Int): String = this.substring(0, this.length - i)
+
+    return try {
+        val isUnsigned: Boolean
+        val numberWithoutSuffix: String
+        when {
+            hasUnsignedLongNumericLiteralSuffix(text) -> {
+                isUnsigned = true
+                numberWithoutSuffix = text.removeSuffix(2)
+            }
+            hasUnsignedNumericLiteralSuffix(text) -> {
+                isUnsigned = true
+                numberWithoutSuffix = text.removeSuffix(1)
+            }
+            hasLongNumericLiteralSuffix(text) -> {
+                isUnsigned = false
+                numberWithoutSuffix = text.removeSuffix(1)
+            }
+            else -> {
+                isUnsigned = false
+                numberWithoutSuffix = text
+            }
+        }
+
+        val (number, radix) = extractRadix(numberWithoutSuffix)
+
+        if (isUnsigned) {
+            number.toULong(radix).toLong()
+        } else {
+            number.toLong(radix)
+        }
+    } catch (_: NumberFormatException) {
+        null
+    }
+}
+
+private fun parseDecimalNumberLiteral(text: String): Number? {
+    if (hasFloatNumericLiteralSuffix(text)) {
+        return parseFloat(text)
+    }
+    return parseDouble(text)
+}
+
+private fun parseDouble(text: String): Double? {
+    return try {
+        text.toDouble()
+    } catch (_: NumberFormatException) {
+        null
+    }
+}
+
+private fun parseFloat(text: String): Float? {
+    return try {
+        text.toFloat()
+    } catch (_: NumberFormatException) {
+        null
+    }
+}
+
+/**
+ * Converts the given [text], either `true` or `false`, to a boolean value.
+ *
+ * @throws IllegalStateException if the [text] does not represent a valid boolean value.
+ */
+@Throws(IllegalStateException::class)
+fun parseBooleanLiteral(text: String): Boolean {
+    return when (text) {
+        "true" -> true
+        "false" -> false
+        else -> throw IllegalStateException("'$text' is not a valid boolean literal")
+    }
+}
+
+private val FP_LITERAL_PARTS = "([_\\d]*)\\.?([_\\d]*)e?[+-]?([_\\d]*)[f]?".toRegex()
+
+/**
+ * Checks whether the given [text] contains an underscore in an illegal position.
+ * Underscores are allowed only between digits, not at the beginning or end of the number or one of its parts.
+ */
+fun hasIllegallyPositionedUnderscore(text: String, isFloatingPoint: Boolean): Boolean {
+    val parts: List<String?> = if (isFloatingPoint) {
+        FP_LITERAL_PARTS.findAll(text).flatMap { it.groupValues }.toList()
+    } else {
+        var start = 0
+        var end: Int = text.length
+        if (text.startsWith("0x", ignoreCase = true) || text.startsWith("0b", ignoreCase = true)) start += 2
+        if (text.endsWith('l', ignoreCase = true)) --end
+        listOf(text.substring(start, end))
+    }
+
+    return parts.any { it != null && (it.startsWith("_") || it.endsWith("_")) }
+}
+
+fun hasLongSuffix(text: String) = hasLongNumericLiteralSuffix(text)
+fun hasUnsignedSuffix(text: String) = hasUnsignedNumericLiteralSuffix(text)
+fun hasUnsignedLongSuffix(text: String) = hasUnsignedLongNumericLiteralSuffix(text)
+fun parseBoolean(text: String): Boolean = parseBooleanLiteral(text)
