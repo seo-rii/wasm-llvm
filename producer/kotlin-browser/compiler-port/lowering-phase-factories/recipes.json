@@ -1,0 +1,1337 @@
+{
+  "compiler/ir/backend.common/src/org/jetbrains/kotlin/backend/common/phaser/PhaseFactories.kt": [
+    [
+      "import java.lang.reflect.ParameterizedType",
+      "import kotlin.reflect.KClass\nimport org.jetbrains.kotlin.portable.phaser.LoweringPassFactory",
+      1
+    ],
+    [
+      "private inline fun <ReturnType, reified FunctionType : Function<ReturnType>>\n        FunctionType.extractReturnTypeArgument(): Class<out ReturnType> {\n    // Using Java reflection to extract the generic type argument from the function type.\n    // Note that we're not using kotlin-reflect because its initialization has some overhead.\n    val functionType = javaClass.genericInterfaces.singleOrNull {\n        it is ParameterizedType && it.rawType == FunctionType::class.java\n    } ?: error(\"Supertype ${FunctionType::class.java} is not found: \" + javaClass.genericInterfaces.toList())\n    val returnType = (functionType as ParameterizedType).actualTypeArguments.last()\n    @Suppress(\"UNCHECKED_CAST\")\n    return when (returnType) {\n        is Class<*> -> returnType\n        is ParameterizedType -> returnType.rawType\n        else -> error(\"Unexpected return type ${returnType.typeName}\")\n    } as Class<out ReturnType>\n}",
+      "private inline fun <ReturnType : Any, reified FunctionType : Function<ReturnType>>\n        FunctionType.extractReturnTypeArgument(): KClass<out ReturnType> {\n    val metadata = this as? LoweringPassFactory<*, *>\n        ?: error(\"Explicit lowering pass metadata is required for this factory\")\n    @Suppress(\"UNCHECKED_CAST\")\n    return metadata.loweringClass as KClass<out ReturnType>\n}",
+      1
+    ],
+    [
+      "Class<out FileLoweringPass>",
+      "KClass<out FileLoweringPass>",
+      1
+    ],
+    [
+      "Class<out ModuleLoweringPass>",
+      "KClass<out ModuleLoweringPass>",
+      1
+    ],
+    [
+      "Class<out Pass>",
+      "KClass<out Pass>",
+      1
+    ],
+    [
+      "    loweringClass.simpleName,",
+      "    loweringClass.simpleName ?: \"\",",
+      1
+    ]
+  ],
+  "compiler/ir/ir.inline/src/org/jetbrains/kotlin/ir/inline/CommonLoweringPhases.kt": [
+    [
+      "package org.jetbrains.kotlin.ir.inline",
+      "package org.jetbrains.kotlin.ir.inline\n\nimport org.jetbrains.kotlin.portable.phaser.loweringFactory",
+      1
+    ],
+    [
+      "        this += ::AvoidLocalFOsInInlineFunctionsLowering\n",
+      "        this += loweringFactory(AvoidLocalFOsInInlineFunctionsLowering::class, ::AvoidLocalFOsInInlineFunctionsLowering)\n",
+      1
+    ],
+    [
+      "        this += ::VersionOverloadsLowering\n",
+      "        this += loweringFactory(VersionOverloadsLowering::class, ::VersionOverloadsLowering)\n",
+      1
+    ],
+    [
+      "        this += ::InlineCallCycleCheckerLowering\n",
+      "        this += loweringFactory(InlineCallCycleCheckerLowering::class, ::InlineCallCycleCheckerLowering)\n",
+      1
+    ],
+    [
+      "            this += ::LateinitLowering\n",
+      "            this += loweringFactory(LateinitLowering::class, ::LateinitLowering)\n",
+      1
+    ],
+    [
+      "            this += ::createSharedVariablesLoweringPhase\n",
+      "            this += loweringFactory(SharedVariablesLowering::class, ::createSharedVariablesLoweringPhase)\n",
+      1
+    ],
+    [
+      "            this += ::LocalClassesInInlineLambdasLowering\n",
+      "            this += loweringFactory(LocalClassesInInlineLambdasLowering::class, ::LocalClassesInInlineLambdasLowering)\n",
+      1
+    ],
+    [
+      "            this += ::ArrayConstructorLowering\n",
+      "            this += loweringFactory(ArrayConstructorLowering::class, ::ArrayConstructorLowering)\n",
+      1
+    ],
+    [
+      "            this += ::PreSerializationPrivateFunctionInlining\n",
+      "            this += loweringFactory(PreSerializationPrivateFunctionInlining::class, ::PreSerializationPrivateFunctionInlining)\n",
+      1
+    ],
+    [
+      "            this += ::InlineDeclarationCheckerLowering\n",
+      "            this += loweringFactory(InlineDeclarationCheckerLowering::class, ::InlineDeclarationCheckerLowering)\n",
+      2
+    ],
+    [
+      "            this += ::OuterThisInInlineFunctionsSpecialAccessorLowering\n",
+      "            this += loweringFactory(OuterThisInInlineFunctionsSpecialAccessorLowering::class, ::OuterThisInInlineFunctionsSpecialAccessorLowering)\n",
+      1
+    ],
+    [
+      "            this += ::createSyntheticAccessorGeneration\n",
+      "            this += loweringFactory(SyntheticAccessorLowering::class, ::createSyntheticAccessorGeneration)\n",
+      1
+    ],
+    [
+      "            this += ::IrValidationAfterInliningPrivateFunctionsKlibPhase\n",
+      "            this += loweringFactory(IrValidationAfterInliningPrivateFunctionsKlibPhase::class, ::IrValidationAfterInliningPrivateFunctionsKlibPhase)\n",
+      1
+    ],
+    [
+      "            this += ::createInlineAllFunctionsPhase\n",
+      "            this += loweringFactory(FunctionInlining::class, ::createInlineAllFunctionsPhase)\n",
+      1
+    ],
+    [
+      "            this += ::createInlineFunctionSerializationPreProcessing\n",
+      "            this += loweringFactory(InlineFunctionSerializationPreProcessing::class, ::createInlineFunctionSerializationPreProcessing)\n",
+      1
+    ],
+    [
+      "            this += ::RedundantCastsRemoverLowering\n",
+      "            this += loweringFactory(RedundantCastsRemoverLowering::class, ::RedundantCastsRemoverLowering)\n",
+      1
+    ],
+    [
+      "            this += ::createIrValidationAfterInliningAllFunctionsKlibFirstStagePhase\n",
+      "            this += loweringFactory(IrValidationAfterInliningAllFunctionsKlibFirstStagePhase::class, ::createIrValidationAfterInliningAllFunctionsKlibFirstStagePhase)\n",
+      1
+    ]
+  ],
+  "compiler/ir/ir.inline/src/org/jetbrains/kotlin/ir/inline/konan/NativeFirstPhaseLoweringPhases.kt": [
+    [
+      "package org.jetbrains.kotlin.ir.inline.konan",
+      "package org.jetbrains.kotlin.ir.inline.konan\n\nimport org.jetbrains.kotlin.portable.phaser.loweringFactory",
+      1
+    ],
+    [
+      "            this += ::createUpgradeCallableReferencesPhase\n",
+      "            this += loweringFactory(UpgradeCallableReferences::class, ::createUpgradeCallableReferencesPhase)\n",
+      1
+    ],
+    [
+      "            this += ::NativeAssertionWrapperLowering\n",
+      "            this += loweringFactory(NativeAssertionWrapperLowering::class, ::NativeAssertionWrapperLowering)\n",
+      1
+    ],
+    [
+      "        this += ::NativeExportedBridgeCallDispatchLowering\n",
+      "        this += loweringFactory(NativeExportedBridgeCallDispatchLowering::class, ::NativeExportedBridgeCallDispatchLowering)\n",
+      1
+    ],
+    [
+      "        this += ::TailrecCheckerLowering\n",
+      "        this += loweringFactory(TailrecCheckerLowering::class, ::TailrecCheckerLowering)\n",
+      1
+    ]
+  ],
+  "compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/WasmLoweringPhases.kt": [
+    [
+      "package org.jetbrains.kotlin.backend.wasm",
+      "package org.jetbrains.kotlin.backend.wasm\n\nimport org.jetbrains.kotlin.portable.phaser.loweringFactory",
+      1
+    ],
+    [
+      "            this += ::createUpgradeCallableReferences\n",
+      "            this += loweringFactory(UpgradeCallableReferences::class, ::createUpgradeCallableReferences)\n",
+      1
+    ],
+    [
+      "    ::createUpgradeCallableReferences,\n",
+      "    loweringFactory(UpgradeCallableReferences::class, ::createUpgradeCallableReferences),\n",
+      1
+    ],
+    [
+      "        this += ::WasmTailrecCheckerLowering\n",
+      "        this += loweringFactory(WasmTailrecCheckerLowering::class, ::WasmTailrecCheckerLowering)\n",
+      1
+    ],
+    [
+      "    ::IrValidationBeforeLoweringsKlibSecondStagePhase,\n",
+      "    loweringFactory(IrValidationBeforeLoweringsKlibSecondStagePhase::class, ::IrValidationBeforeLoweringsKlibSecondStagePhase),\n",
+      1
+    ],
+    [
+      "    ::InlineCallCycleCheckerLowering,\n",
+      "    loweringFactory(InlineCallCycleCheckerLowering::class, ::InlineCallCycleCheckerLowering),\n",
+      1
+    ],
+    [
+      "    ::LateinitLowering,\n",
+      "    loweringFactory(LateinitLowering::class, ::LateinitLowering),\n",
+      1
+    ],
+    [
+      "    ::createSharedVariablesLoweringPhase,\n",
+      "    loweringFactory(SharedVariablesLowering::class, ::createSharedVariablesLoweringPhase),\n",
+      1
+    ],
+    [
+      "    ::LocalClassesInInlineLambdasLowering,\n",
+      "    loweringFactory(LocalClassesInInlineLambdasLowering::class, ::LocalClassesInInlineLambdasLowering),\n",
+      1
+    ],
+    [
+      "    ::ArrayConstructorLowering,\n",
+      "    loweringFactory(ArrayConstructorLowering::class, ::ArrayConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmCoroutinesSymbolsResolver,\n",
+      "    loweringFactory(WasmCoroutinesSymbolsResolver::class, ::WasmCoroutinesSymbolsResolver),\n",
+      1
+    ],
+    [
+      "    ::WasmPrivateFunctionInlining,\n",
+      "    loweringFactory(WasmPrivateFunctionInlining::class, ::WasmPrivateFunctionInlining),\n",
+      1
+    ],
+    [
+      "    ::OuterThisInInlineFunctionsSpecialAccessorLowering,\n",
+      "    loweringFactory(OuterThisInInlineFunctionsSpecialAccessorLowering::class, ::OuterThisInInlineFunctionsSpecialAccessorLowering),\n",
+      1
+    ],
+    [
+      "    ::createSyntheticAccessorGenerationPhase,\n",
+      "    loweringFactory(SyntheticAccessorLowering::class, ::createSyntheticAccessorGenerationPhase),\n",
+      1
+    ],
+    [
+      "    ::IrValidationAfterInliningPrivateFunctionsKlibPhase,\n",
+      "    loweringFactory(IrValidationAfterInliningPrivateFunctionsKlibPhase::class, ::IrValidationAfterInliningPrivateFunctionsKlibPhase),\n",
+      1
+    ],
+    [
+      "    ::WasmAllFunctionInlining,\n",
+      "    loweringFactory(WasmAllFunctionInlining::class, ::WasmAllFunctionInlining),\n",
+      1
+    ],
+    [
+      "    ::RedundantCastsRemoverLowering,\n",
+      "    loweringFactory(RedundantCastsRemoverLowering::class, ::RedundantCastsRemoverLowering),\n",
+      1
+    ],
+    [
+      "    ::IrValidationAfterInliningAllFunctionsKlibSecondStagePhase,\n",
+      "    loweringFactory(IrValidationAfterInliningAllFunctionsKlibSecondStagePhase::class, ::IrValidationAfterInliningAllFunctionsKlibSecondStagePhase),\n",
+      1
+    ],
+    [
+      "    ::createConstEvaluationPhase,\n",
+      "    loweringFactory(ConstEvaluationLowering::class, ::createConstEvaluationPhase),\n",
+      1
+    ],
+    [
+      "    ::createSpecializeSharedVariableBoxesPhase,\n",
+      "    loweringFactory(SharedVariablesPrimitiveBoxSpecializationLowering::class, ::createSpecializeSharedVariableBoxesPhase),\n",
+      1
+    ],
+    [
+      "    ::RemoveInlineDeclarationsWithReifiedTypeParametersLowering,\n",
+      "    loweringFactory(RemoveInlineDeclarationsWithReifiedTypeParametersLowering::class, ::RemoveInlineDeclarationsWithReifiedTypeParametersLowering),\n",
+      1
+    ],
+    [
+      "    ::JsCodeCallsLowering,\n",
+      "    loweringFactory(JsCodeCallsLowering::class, ::JsCodeCallsLowering),\n",
+      1
+    ],
+    [
+      "    ::GenerateWasmTests,\n",
+      "    loweringFactory(GenerateWasmTests::class, ::GenerateWasmTests),\n",
+      1
+    ],
+    [
+      "    ::JsCommonAnnotationImplementationTransformer,\n",
+      "    loweringFactory(JsCommonAnnotationImplementationTransformer::class, ::JsCommonAnnotationImplementationTransformer),\n",
+      1
+    ],
+    [
+      "    ::ExcludeDeclarationsFromCodegen,\n",
+      "    loweringFactory(ExcludeDeclarationsFromCodegen::class, ::ExcludeDeclarationsFromCodegen),\n",
+      1
+    ],
+    [
+      "    ::ExpectDeclarationsRemoveLowering,\n",
+      "    loweringFactory(ExpectDeclarationsRemoveLowering::class, ::ExpectDeclarationsRemoveLowering),\n",
+      1
+    ],
+    [
+      "    ::RangeContainsLowering,\n",
+      "    loweringFactory(RangeContainsLowering::class, ::RangeContainsLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmTailrecLowering,\n",
+      "    loweringFactory(WasmTailrecLowering::class, ::WasmTailrecLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumWhenLowering,\n",
+      "    loweringFactory(EnumWhenLowering::class, ::EnumWhenLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumClassConstructorLowering,\n",
+      "    loweringFactory(EnumClassConstructorLowering::class, ::EnumClassConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumClassConstructorBodyTransformer,\n",
+      "    loweringFactory(EnumClassConstructorBodyTransformer::class, ::EnumClassConstructorBodyTransformer),\n",
+      1
+    ],
+    [
+      "    ::EnumEntryInstancesLowering,\n",
+      "    loweringFactory(EnumEntryInstancesLowering::class, ::EnumEntryInstancesLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumEntryInstancesBodyLowering,\n",
+      "    loweringFactory(EnumEntryInstancesBodyLowering::class, ::EnumEntryInstancesBodyLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumEntryCreateGetInstancesFunsLowering,\n",
+      "    loweringFactory(EnumEntryCreateGetInstancesFunsLowering::class, ::EnumEntryCreateGetInstancesFunsLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumSyntheticFunctionsAndPropertiesLowering,\n",
+      "    loweringFactory(EnumSyntheticFunctionsAndPropertiesLowering::class, ::EnumSyntheticFunctionsAndPropertiesLowering),\n",
+      1
+    ],
+    [
+      "    ::DelegatedPropertyOptimizationLowering,\n",
+      "    loweringFactory(DelegatedPropertyOptimizationLowering::class, ::DelegatedPropertyOptimizationLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmPropertyReferenceLowering,\n",
+      "    loweringFactory(WasmPropertyReferenceLowering::class, ::WasmPropertyReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::JsSingleAbstractMethodLowering,\n",
+      "    loweringFactory(JsSingleAbstractMethodLowering::class, ::JsSingleAbstractMethodLowering),\n",
+      1
+    ],
+    [
+      "    ::LocalDelegatedPropertiesLowering,\n",
+      "    loweringFactory(LocalDelegatedPropertiesLowering::class, ::LocalDelegatedPropertiesLowering),\n",
+      1
+    ],
+    [
+      "    ::createCaptureRichFunctionReferenceLocals,\n",
+      "    loweringFactory(LocalDeclarationsLowering::class, ::createCaptureRichFunctionReferenceLocals),\n",
+      1
+    ],
+    [
+      "    ::WasmCallableReferenceLowering,\n",
+      "    loweringFactory(WasmCallableReferenceLowering::class, ::WasmCallableReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::createInventNamesForLocalFunctionsPhase,\n",
+      "    loweringFactory(KlibInventNamesForLocalFunctions::class, ::createInventNamesForLocalFunctionsPhase),\n",
+      1
+    ],
+    [
+      "    ::createLocalDeclarationsLoweringPhase,\n",
+      "    loweringFactory(LocalDeclarationsLowering::class, ::createLocalDeclarationsLoweringPhase),\n",
+      1
+    ],
+    [
+      "    ::LocalDeclarationPopupLowering,\n",
+      "    loweringFactory(LocalDeclarationPopupLowering::class, ::LocalDeclarationPopupLowering),\n",
+      1
+    ],
+    [
+      "    ::InnerClassesLowering,\n",
+      "    loweringFactory(InnerClassesLowering::class, ::InnerClassesLowering),\n",
+      1
+    ],
+    [
+      "    ::InnerClassesMemberBodyLowering,\n",
+      "    loweringFactory(InnerClassesMemberBodyLowering::class, ::InnerClassesMemberBodyLowering),\n",
+      1
+    ],
+    [
+      "    ::InnerClassConstructorCallsLowering,\n",
+      "    loweringFactory(InnerClassConstructorCallsLowering::class, ::InnerClassConstructorCallsLowering),\n",
+      1
+    ],
+    [
+      "    ::PropertiesLowering,\n",
+      "    loweringFactory(PropertiesLowering::class, ::PropertiesLowering),\n",
+      1
+    ],
+    [
+      "    ::PrimaryConstructorLowering,\n",
+      "    loweringFactory(PrimaryConstructorLowering::class, ::PrimaryConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::DelegateToSyntheticPrimaryConstructor,\n",
+      "    loweringFactory(DelegateToSyntheticPrimaryConstructor::class, ::DelegateToSyntheticPrimaryConstructor),\n",
+      1
+    ],
+    [
+      "    ::WasmStringSwitchOptimizerLowering,\n",
+      "    loweringFactory(WasmStringSwitchOptimizerLowering::class, ::WasmStringSwitchOptimizerLowering),\n",
+      1
+    ],
+    [
+      "    ::AssociatedObjectsLowering,\n",
+      "    loweringFactory(AssociatedObjectsLowering::class, ::AssociatedObjectsLowering),\n",
+      1
+    ],
+    [
+      "    ::ComplexExternalDeclarationsToTopLevelFunctionsLowering,\n",
+      "    loweringFactory(ComplexExternalDeclarationsToTopLevelFunctionsLowering::class, ::ComplexExternalDeclarationsToTopLevelFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::ComplexExternalDeclarationsUsageLowering,\n",
+      "    loweringFactory(ComplexExternalDeclarationsUsageLowering::class, ::ComplexExternalDeclarationsUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::JsInteropFunctionsLowering,\n",
+      "    loweringFactory(JsInteropFunctionsLowering::class, ::JsInteropFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::ObjectDeclarationLowering, // Also depends on `WasmCallableReferenceLowering`, but it is hard to represent in the common phase\n",
+      "    loweringFactory(ObjectDeclarationLowering::class, ::ObjectDeclarationLowering), // Also depends on `WasmCallableReferenceLowering`, but it is hard to represent in the common phase\n",
+      1
+    ],
+    [
+      "    ::WasmStaticInitializersDeclarationLowering,\n",
+      "    loweringFactory(WasmStaticInitializersDeclarationLowering::class, ::WasmStaticInitializersDeclarationLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmStaticInitializersUsageLowering,\n",
+      "    loweringFactory(WasmStaticInitializersUsageLowering::class, ::WasmStaticInitializersUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumUsageLowering,\n",
+      "    loweringFactory(EnumUsageLowering::class, ::EnumUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumClassRemoveEntriesLowering,\n",
+      "    loweringFactory(EnumClassRemoveEntriesLowering::class, ::EnumClassRemoveEntriesLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmSuspendFunctionsLowering,\n",
+      "    loweringFactory(WasmSuspendFunctionsLowering::class, ::WasmSuspendFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmInitializersLowering,\n",
+      "    loweringFactory(WasmInitializersLowering::class, ::WasmInitializersLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmInitializersCleanupLowering,\n",
+      "    loweringFactory(WasmInitializersCleanupLowering::class, ::WasmInitializersCleanupLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmAddContinuationToNonLocalSuspendFunctionsLowering,\n",
+      "    loweringFactory(WasmAddContinuationToNonLocalSuspendFunctionsLowering::class, ::WasmAddContinuationToNonLocalSuspendFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmAddContinuationToFunctionCallsLowering,\n",
+      "    loweringFactory(WasmAddContinuationToFunctionCallsLowering::class, ::WasmAddContinuationToFunctionCallsLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmSuspendLambdaMergingLowering,\n",
+      "    loweringFactory(WasmSuspendLambdaMergingLowering::class, ::WasmSuspendLambdaMergingLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmAddFunctionSupertypeToSuspendFunctionLowering,\n",
+      "    loweringFactory(WasmAddFunctionSupertypeToSuspendFunctionLowering::class, ::WasmAddFunctionSupertypeToSuspendFunctionLowering),\n",
+      1
+    ],
+    [
+      "    ::GenerateMainFunctionWrappers,\n",
+      "    loweringFactory(GenerateMainFunctionWrappers::class, ::GenerateMainFunctionWrappers),\n",
+      1
+    ],
+    [
+      "    ::createKotlinNothingValueExceptionPhase,\n",
+      "    loweringFactory(KotlinNothingValueExceptionLowering::class, ::createKotlinNothingValueExceptionPhase),\n",
+      1
+    ],
+    [
+      "    ::InvokeOnExportedFunctionExitLowering,\n",
+      "    loweringFactory(InvokeOnExportedFunctionExitLowering::class, ::InvokeOnExportedFunctionExitLowering),\n",
+      1
+    ],
+    [
+      "    ::TryCatchCanonicalization,\n",
+      "    loweringFactory(TryCatchCanonicalization::class, ::TryCatchCanonicalization),\n",
+      1
+    ],
+    [
+      "    ::WasmForLoopsLowering,\n",
+      "    loweringFactory(WasmForLoopsLowering::class, ::WasmForLoopsLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmPropertyLazyInitLowering,\n",
+      "    loweringFactory(WasmPropertyLazyInitLowering::class, ::WasmPropertyLazyInitLowering),\n",
+      1
+    ],
+    [
+      "    ::RemoveInitializersForLazyProperties,\n",
+      "    loweringFactory(RemoveInitializersForLazyProperties::class, ::RemoveInitializersForLazyProperties),\n",
+      1
+    ],
+    [
+      "    ::WasmPropertyAccessorInlineLowering,\n",
+      "    loweringFactory(WasmPropertyAccessorInlineLowering::class, ::WasmPropertyAccessorInlineLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmStringConcatenationLowering,\n",
+      "    loweringFactory(WasmStringConcatenationLowering::class, ::WasmStringConcatenationLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmDefaultArgumentStubGenerator,\n",
+      "    loweringFactory(WasmDefaultArgumentStubGenerator::class, ::WasmDefaultArgumentStubGenerator),\n",
+      1
+    ],
+    [
+      "    ::WasmDefaultParameterPatchOverridenSymbolsLowering,\n",
+      "    loweringFactory(WasmDefaultParameterPatchOverridenSymbolsLowering::class, ::WasmDefaultParameterPatchOverridenSymbolsLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmDefaultParameterInjector,\n",
+      "    loweringFactory(WasmDefaultParameterInjector::class, ::WasmDefaultParameterInjector),\n",
+      1
+    ],
+    [
+      "    ::createDefaultParameterCleanerPhase,\n",
+      "    loweringFactory(DefaultParameterCleaner::class, ::createDefaultParameterCleanerPhase),\n",
+      1
+    ],
+    [
+      "    ::WasmClassReferenceLowering,\n",
+      "    loweringFactory(WasmClassReferenceLowering::class, ::WasmClassReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmVarargExpressionLowering,\n",
+      "    loweringFactory(WasmVarargExpressionLowering::class, ::WasmVarargExpressionLowering),\n",
+      1
+    ],
+    [
+      "    ::InlineClassDeclarationLowering,\n",
+      "    loweringFactory(InlineClassDeclarationLowering::class, ::InlineClassDeclarationLowering),\n",
+      1
+    ],
+    [
+      "    ::InlineClassUsageLowering,\n",
+      "    loweringFactory(InlineClassUsageLowering::class, ::InlineClassUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::ExpressionBodyTransformer,\n",
+      "    loweringFactory(ExpressionBodyTransformer::class, ::ExpressionBodyTransformer),\n",
+      1
+    ],
+    [
+      "    ::EraseVirtualDispatchReceiverParametersTypes,\n",
+      "    loweringFactory(EraseVirtualDispatchReceiverParametersTypes::class, ::EraseVirtualDispatchReceiverParametersTypes),\n",
+      1
+    ],
+    [
+      "    ::WasmBridgesConstruction,\n",
+      "    loweringFactory(WasmBridgesConstruction::class, ::WasmBridgesConstruction),\n",
+      1
+    ],
+    [
+      "    ::GenericReturnTypeLowering,\n",
+      "    loweringFactory(GenericReturnTypeLowering::class, ::GenericReturnTypeLowering),\n",
+      1
+    ],
+    [
+      "    ::UnitToVoidLowering,\n",
+      "    loweringFactory(UnitToVoidLowering::class, ::UnitToVoidLowering),\n",
+      1
+    ],
+    [
+      "    ::BuiltInsLowering,\n",
+      "    loweringFactory(BuiltInsLowering::class, ::BuiltInsLowering),\n",
+      2
+    ],
+    [
+      "    ::WasmAutoboxingTransformer,\n",
+      "    loweringFactory(WasmAutoboxingTransformer::class, ::WasmAutoboxingTransformer),\n",
+      1
+    ],
+    [
+      "    ::ObjectUsageLowering,\n",
+      "    loweringFactory(ObjectUsageLowering::class, ::ObjectUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmPurifyObjectInstanceGettersLowering,\n",
+      "    loweringFactory(WasmPurifyObjectInstanceGettersLowering::class, ::WasmPurifyObjectInstanceGettersLowering),\n",
+      1
+    ],
+    [
+      "    ::FieldInitializersLowering,\n",
+      "    loweringFactory(FieldInitializersLowering::class, ::FieldInitializersLowering),\n",
+      1
+    ],
+    [
+      "    ::ExplicitlyCastExternalTypesLowering,\n",
+      "    loweringFactory(ExplicitlyCastExternalTypesLowering::class, ::ExplicitlyCastExternalTypesLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmTypeOperatorLowering,\n",
+      "    loweringFactory(WasmTypeOperatorLowering::class, ::WasmTypeOperatorLowering),\n",
+      1
+    ],
+    [
+      "    ::VirtualDispatchReceiverExtraction,\n",
+      "    loweringFactory(VirtualDispatchReceiverExtraction::class, ::VirtualDispatchReceiverExtraction),\n",
+      1
+    ],
+    [
+      "    ::InvokeStaticInitializersLowering,\n",
+      "    loweringFactory(InvokeStaticInitializersLowering::class, ::InvokeStaticInitializersLowering),\n",
+      1
+    ],
+    [
+      "    ::StaticMembersLowering,\n",
+      "    loweringFactory(StaticMembersLowering::class, ::StaticMembersLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmInlineObjectsWithPureInitializationLowering,\n",
+      "    loweringFactory(WasmInlineObjectsWithPureInitializationLowering::class, ::WasmInlineObjectsWithPureInitializationLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmCleanupPurifiedLeftoverUsagesLowering,\n",
+      "    loweringFactory(WasmCleanupPurifiedLeftoverUsagesLowering::class, ::WasmCleanupPurifiedLeftoverUsagesLowering),\n",
+      1
+    ],
+    [
+      "    ::WhenBranchOptimiserLowering,\n",
+      "    loweringFactory(WhenBranchOptimiserLowering::class, ::WhenBranchOptimiserLowering),\n",
+      1
+    ],
+    [
+      "    ::WasmTailCallLowering,\n",
+      "    loweringFactory(WasmTailCallLowering::class, ::WasmTailCallLowering),\n",
+      1
+    ],
+    [
+      "    ::IrValidationAfterLoweringsSecondStagePhase,\n",
+      "    loweringFactory(IrValidationAfterLoweringsSecondStagePhase::class, ::IrValidationAfterLoweringsSecondStagePhase),\n",
+      1
+    ]
+  ],
+  "compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt": [
+    [
+      "package org.jetbrains.kotlin.ir.backend.js",
+      "package org.jetbrains.kotlin.ir.backend.js\n\nimport org.jetbrains.kotlin.portable.phaser.loweringFactory",
+      1
+    ],
+    [
+      "            this += ::createUpgradeCallableReferences\n",
+      "            this += loweringFactory(UpgradeCallableReferences::class, ::createUpgradeCallableReferences)\n",
+      1
+    ],
+    [
+      "    ::createUpgradeCallableReferences,\n",
+      "    loweringFactory(UpgradeCallableReferences::class, ::createUpgradeCallableReferences),\n",
+      1
+    ],
+    [
+      "            this += ::createJsCodeOutliningPhaseOnFirstStage\n",
+      "            this += loweringFactory(JsCodeOutliningLowering::class, ::createJsCodeOutliningPhaseOnFirstStage)\n",
+      1
+    ],
+    [
+      "        this += ::TailrecCheckerLowering\n",
+      "        this += loweringFactory(TailrecCheckerLowering::class, ::TailrecCheckerLowering)\n",
+      1
+    ],
+    [
+      "    ::IrValidationBeforeLoweringsKlibSecondStagePhase,\n",
+      "    loweringFactory(IrValidationBeforeLoweringsKlibSecondStagePhase::class, ::IrValidationBeforeLoweringsKlibSecondStagePhase),\n",
+      1
+    ],
+    [
+      "    ::InlineCallCycleCheckerLowering,\n",
+      "    loweringFactory(InlineCallCycleCheckerLowering::class, ::InlineCallCycleCheckerLowering),\n",
+      1
+    ],
+    [
+      "    ::createJsCodeOutliningPhaseOnSecondStage,\n",
+      "    loweringFactory(JsCodeOutliningLowering::class, ::createJsCodeOutliningPhaseOnSecondStage),\n",
+      1
+    ],
+    [
+      "    ::LateinitLowering,\n",
+      "    loweringFactory(LateinitLowering::class, ::LateinitLowering),\n",
+      1
+    ],
+    [
+      "    ::createSharedVariablesLoweringPhase,\n",
+      "    loweringFactory(SharedVariablesLowering::class, ::createSharedVariablesLoweringPhase),\n",
+      1
+    ],
+    [
+      "    ::LocalClassesInInlineLambdasLowering,\n",
+      "    loweringFactory(LocalClassesInInlineLambdasLowering::class, ::LocalClassesInInlineLambdasLowering),\n",
+      1
+    ],
+    [
+      "    ::ArrayConstructorLowering,\n",
+      "    loweringFactory(ArrayConstructorLowering::class, ::ArrayConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::JsPrivateFunctionInlining,\n",
+      "    loweringFactory(JsPrivateFunctionInlining::class, ::JsPrivateFunctionInlining),\n",
+      1
+    ],
+    [
+      "    ::OuterThisInInlineFunctionsSpecialAccessorLowering,\n",
+      "    loweringFactory(OuterThisInInlineFunctionsSpecialAccessorLowering::class, ::OuterThisInInlineFunctionsSpecialAccessorLowering),\n",
+      1
+    ],
+    [
+      "    ::createSyntheticAccessorGenerationPhase,\n",
+      "    loweringFactory(SyntheticAccessorLowering::class, ::createSyntheticAccessorGenerationPhase),\n",
+      1
+    ],
+    [
+      "    ::IrValidationAfterInliningPrivateFunctionsKlibPhase,\n",
+      "    loweringFactory(IrValidationAfterInliningPrivateFunctionsKlibPhase::class, ::IrValidationAfterInliningPrivateFunctionsKlibPhase),\n",
+      1
+    ],
+    [
+      "    ::JsAllFunctionInlining,\n",
+      "    loweringFactory(JsAllFunctionInlining::class, ::JsAllFunctionInlining),\n",
+      1
+    ],
+    [
+      "    ::RedundantCastsRemoverLowering,\n",
+      "    loweringFactory(RedundantCastsRemoverLowering::class, ::RedundantCastsRemoverLowering),\n",
+      1
+    ],
+    [
+      "    ::IrValidationAfterInliningAllFunctionsKlibSecondStagePhase,\n",
+      "    loweringFactory(IrValidationAfterInliningAllFunctionsKlibSecondStagePhase::class, ::IrValidationAfterInliningAllFunctionsKlibSecondStagePhase),\n",
+      1
+    ],
+    [
+      "    ::createConstEvaluationPhase,\n",
+      "    loweringFactory(ConstEvaluationLowering::class, ::createConstEvaluationPhase),\n",
+      1
+    ],
+    [
+      "    ::CopyInlineFunctionBodyLowering,\n",
+      "    loweringFactory(CopyInlineFunctionBodyLowering::class, ::CopyInlineFunctionBodyLowering),\n",
+      1
+    ],
+    [
+      "    ::RemoveInlineDeclarationsWithReifiedTypeParametersLowering,\n",
+      "    loweringFactory(RemoveInlineDeclarationsWithReifiedTypeParametersLowering::class, ::RemoveInlineDeclarationsWithReifiedTypeParametersLowering),\n",
+      1
+    ],
+    [
+      "    ::ImplicitlyExportedDeclarationsMarkingLowering,\n",
+      "    loweringFactory(ImplicitlyExportedDeclarationsMarkingLowering::class, ::ImplicitlyExportedDeclarationsMarkingLowering),\n",
+      1
+    ],
+    [
+      "    ::PrepareInlineClassesToBeExportedLowering,\n",
+      "    loweringFactory(PrepareInlineClassesToBeExportedLowering::class, ::PrepareInlineClassesToBeExportedLowering),\n",
+      1
+    ],
+    [
+      "    ::PrepareExportedDefaultImplementationsLowering,\n",
+      "    loweringFactory(PrepareExportedDefaultImplementationsLowering::class, ::PrepareExportedDefaultImplementationsLowering),\n",
+      1
+    ],
+    [
+      "    ::ReplaceSuspendIntrinsicLowering,\n",
+      "    loweringFactory(ReplaceSuspendIntrinsicLowering::class, ::ReplaceSuspendIntrinsicLowering),\n",
+      1
+    ],
+    [
+      "    ::PrepareSuspendFunctionsForExportLowering,\n",
+      "    loweringFactory(PrepareSuspendFunctionsForExportLowering::class, ::PrepareSuspendFunctionsForExportLowering),\n",
+      1
+    ],
+    [
+      "    ::ReplaceExportedSuspendFunctionsCallsWithTheirBridgeCall,\n",
+      "    loweringFactory(ReplaceExportedSuspendFunctionsCallsWithTheirBridgeCall::class, ::ReplaceExportedSuspendFunctionsCallsWithTheirBridgeCall),\n",
+      1
+    ],
+    [
+      "    ::IgnoreOriginalSuspendFunctionsThatWereExportedLowering,\n",
+      "    loweringFactory(IgnoreOriginalSuspendFunctionsThatWereExportedLowering::class, ::IgnoreOriginalSuspendFunctionsThatWereExportedLowering),\n",
+      1
+    ],
+    [
+      "    ::ExcludeSyntheticDeclarationsFromExportLowering,\n",
+      "    loweringFactory(ExcludeSyntheticDeclarationsFromExportLowering::class, ::ExcludeSyntheticDeclarationsFromExportLowering),\n",
+      1
+    ],
+    [
+      "    ::JsStaticLowering,\n",
+      "    loweringFactory(JsStaticLowering::class, ::JsStaticLowering),\n",
+      1
+    ],
+    [
+      "    ::JsInventNamesForLocalClasses,\n",
+      "    loweringFactory(JsInventNamesForLocalClasses::class, ::JsInventNamesForLocalClasses),\n",
+      1
+    ],
+    [
+      "    ::JsCollectClassIdentifiersLowering,\n",
+      "    loweringFactory(JsCollectClassIdentifiersLowering::class, ::JsCollectClassIdentifiersLowering),\n",
+      1
+    ],
+    [
+      "    ::JsCommonAnnotationImplementationTransformer,\n",
+      "    loweringFactory(JsCommonAnnotationImplementationTransformer::class, ::JsCommonAnnotationImplementationTransformer),\n",
+      1
+    ],
+    [
+      "    ::ExpectDeclarationsRemoveLowering,\n",
+      "    loweringFactory(ExpectDeclarationsRemoveLowering::class, ::ExpectDeclarationsRemoveLowering),\n",
+      1
+    ],
+    [
+      "    ::StripTypeAliasDeclarationsLowering,\n",
+      "    loweringFactory(StripTypeAliasDeclarationsLowering::class, ::StripTypeAliasDeclarationsLowering),\n",
+      1
+    ],
+    [
+      "    ::CreateScriptFunctionsPhase,\n",
+      "    loweringFactory(CreateScriptFunctionsPhase::class, ::CreateScriptFunctionsPhase),\n",
+      1
+    ],
+    [
+      "    ::JsStringConcatenationLowering,\n",
+      "    loweringFactory(JsStringConcatenationLowering::class, ::JsStringConcatenationLowering),\n",
+      1
+    ],
+    [
+      "    ::PropertyReferenceLowering,\n",
+      "    loweringFactory(PropertyReferenceLowering::class, ::PropertyReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::JsCallableReferenceLowering,\n",
+      "    loweringFactory(JsCallableReferenceLowering::class, ::JsCallableReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::JsSingleAbstractMethodLowering,\n",
+      "    loweringFactory(JsSingleAbstractMethodLowering::class, ::JsSingleAbstractMethodLowering),\n",
+      1
+    ],
+    [
+      "    ::TailrecLowering,\n",
+      "    loweringFactory(TailrecLowering::class, ::TailrecLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumClassConstructorLowering,\n",
+      "    loweringFactory(EnumClassConstructorLowering::class, ::EnumClassConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumClassConstructorBodyTransformer,\n",
+      "    loweringFactory(EnumClassConstructorBodyTransformer::class, ::EnumClassConstructorBodyTransformer),\n",
+      1
+    ],
+    [
+      "    ::LocalDelegatedPropertiesLowering,\n",
+      "    loweringFactory(LocalDelegatedPropertiesLowering::class, ::LocalDelegatedPropertiesLowering),\n",
+      1
+    ],
+    [
+      "    ::createInventNamesForLocalFunctionsPhase,\n",
+      "    loweringFactory(KlibInventNamesForLocalFunctions::class, ::createInventNamesForLocalFunctionsPhase),\n",
+      1
+    ],
+    [
+      "    ::createLocalDeclarationsLoweringPhase,\n",
+      "    loweringFactory(LocalDeclarationsLowering::class, ::createLocalDeclarationsLoweringPhase),\n",
+      1
+    ],
+    [
+      "    ::LocalDeclarationPopupLowering,\n",
+      "    loweringFactory(LocalDeclarationPopupLowering::class, ::LocalDeclarationPopupLowering),\n",
+      1
+    ],
+    [
+      "    ::InnerClassesLowering,\n",
+      "    loweringFactory(InnerClassesLowering::class, ::InnerClassesLowering),\n",
+      1
+    ],
+    [
+      "    ::InnerClassesMemberBodyLowering,\n",
+      "    loweringFactory(InnerClassesMemberBodyLowering::class, ::InnerClassesMemberBodyLowering),\n",
+      1
+    ],
+    [
+      "    ::InnerClassConstructorCallsLowering,\n",
+      "    loweringFactory(InnerClassConstructorCallsLowering::class, ::InnerClassConstructorCallsLowering),\n",
+      1
+    ],
+    [
+      "    ::JsClassUsageInReflectionLowering,\n",
+      "    loweringFactory(JsClassUsageInReflectionLowering::class, ::JsClassUsageInReflectionLowering),\n",
+      1
+    ],
+    [
+      "    ::PropertiesLowering,\n",
+      "    loweringFactory(PropertiesLowering::class, ::PropertiesLowering),\n",
+      1
+    ],
+    [
+      "    ::PrimaryConstructorLowering,\n",
+      "    loweringFactory(PrimaryConstructorLowering::class, ::PrimaryConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::DelegateToSyntheticPrimaryConstructor,\n",
+      "    loweringFactory(DelegateToSyntheticPrimaryConstructor::class, ::DelegateToSyntheticPrimaryConstructor),\n",
+      1
+    ],
+    [
+      "    ::AnnotationConstructorLowering,\n",
+      "    loweringFactory(AnnotationConstructorLowering::class, ::AnnotationConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumEntryInstancesLowering,\n",
+      "    loweringFactory(EnumEntryInstancesLowering::class, ::EnumEntryInstancesLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumEntryInstancesBodyLowering,\n",
+      "    loweringFactory(EnumEntryInstancesBodyLowering::class, ::EnumEntryInstancesBodyLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumEntryCreateGetInstancesFunsLowering,\n",
+      "    loweringFactory(EnumEntryCreateGetInstancesFunsLowering::class, ::EnumEntryCreateGetInstancesFunsLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumSyntheticFunctionsAndPropertiesLowering,\n",
+      "    loweringFactory(EnumSyntheticFunctionsAndPropertiesLowering::class, ::EnumSyntheticFunctionsAndPropertiesLowering),\n",
+      1
+    ],
+    [
+      "    ::ObjectDeclarationLowering,\n",
+      "    loweringFactory(ObjectDeclarationLowering::class, ::ObjectDeclarationLowering),\n",
+      1
+    ],
+    [
+      "    ::JsStaticInitializersDeclarationLowering,\n",
+      "    loweringFactory(JsStaticInitializersDeclarationLowering::class, ::JsStaticInitializersDeclarationLowering),\n",
+      1
+    ],
+    [
+      "    ::JsStaticInitializersUsageLowering,\n",
+      "    loweringFactory(JsStaticInitializersUsageLowering::class, ::JsStaticInitializersUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::JsInitializersLowering,\n",
+      "    loweringFactory(JsInitializersLowering::class, ::JsInitializersLowering),\n",
+      1
+    ],
+    [
+      "    ::JsInitializersCleanupLowering,\n",
+      "    loweringFactory(JsInitializersCleanupLowering::class, ::JsInitializersCleanupLowering),\n",
+      1
+    ],
+    [
+      "    ::createKotlinNothingValueExceptionPhase,\n",
+      "    loweringFactory(KotlinNothingValueExceptionLowering::class, ::createKotlinNothingValueExceptionPhase),\n",
+      1
+    ],
+    [
+      "    ::CollectClassDefaultConstructorsLowering,\n",
+      "    loweringFactory(CollectClassDefaultConstructorsLowering::class, ::CollectClassDefaultConstructorsLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumWhenLowering,\n",
+      "    loweringFactory(EnumWhenLowering::class, ::EnumWhenLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumUsageLowering,\n",
+      "    loweringFactory(EnumUsageLowering::class, ::EnumUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::ExternalEnumUsagesLowering,\n",
+      "    loweringFactory(ExternalEnumUsagesLowering::class, ::ExternalEnumUsagesLowering),\n",
+      1
+    ],
+    [
+      "    ::EnumClassRemoveEntriesLowering,\n",
+      "    loweringFactory(EnumClassRemoveEntriesLowering::class, ::EnumClassRemoveEntriesLowering),\n",
+      1
+    ],
+    [
+      "    ::JsSuspendFunctionWithGeneratorsLowering,\n",
+      "    loweringFactory(JsSuspendFunctionWithGeneratorsLowering::class, ::JsSuspendFunctionWithGeneratorsLowering),\n",
+      1
+    ],
+    [
+      "    ::JsSuspendFunctionsLowering,\n",
+      "    loweringFactory(JsSuspendFunctionsLowering::class, ::JsSuspendFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::InteropCallableReferenceLowering,\n",
+      "    loweringFactory(InteropCallableReferenceLowering::class, ::InteropCallableReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::JsSuspendArityStoreLowering,\n",
+      "    loweringFactory(JsSuspendArityStoreLowering::class, ::JsSuspendArityStoreLowering),\n",
+      1
+    ],
+    [
+      "    ::AddContinuationToNonLocalSuspendFunctionsLowering,\n",
+      "    loweringFactory(AddContinuationToNonLocalSuspendFunctionsLowering::class, ::AddContinuationToNonLocalSuspendFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::AddContinuationToLocalSuspendFunctionsLowering,\n",
+      "    loweringFactory(AddContinuationToLocalSuspendFunctionsLowering::class, ::AddContinuationToLocalSuspendFunctionsLowering),\n",
+      1
+    ],
+    [
+      "    ::JsAddContinuationToFunctionCallsLowering,\n",
+      "    loweringFactory(JsAddContinuationToFunctionCallsLowering::class, ::JsAddContinuationToFunctionCallsLowering),\n",
+      1
+    ],
+    [
+      "    ::JsReturnableBlockLowering,\n",
+      "    loweringFactory(JsReturnableBlockLowering::class, ::JsReturnableBlockLowering),\n",
+      1
+    ],
+    [
+      "    ::RangeContainsLowering,\n",
+      "    loweringFactory(RangeContainsLowering::class, ::RangeContainsLowering),\n",
+      1
+    ],
+    [
+      "    ::ForLoopsLowering,\n",
+      "    loweringFactory(ForLoopsLowering::class, ::ForLoopsLowering),\n",
+      1
+    ],
+    [
+      "    ::PrimitiveCompanionLowering,\n",
+      "    loweringFactory(PrimitiveCompanionLowering::class, ::PrimitiveCompanionLowering),\n",
+      1
+    ],
+    [
+      "    ::JsPropertyLazyInitLowering,\n",
+      "    loweringFactory(JsPropertyLazyInitLowering::class, ::JsPropertyLazyInitLowering),\n",
+      1
+    ],
+    [
+      "    ::RemoveInitializersForLazyProperties,\n",
+      "    loweringFactory(RemoveInitializersForLazyProperties::class, ::RemoveInitializersForLazyProperties),\n",
+      1
+    ],
+    [
+      "    ::JsPropertyAccessorInlineLowering,\n",
+      "    loweringFactory(JsPropertyAccessorInlineLowering::class, ::JsPropertyAccessorInlineLowering),\n",
+      1
+    ],
+    [
+      "    ::CopyAccessorBodyLowerings,\n",
+      "    loweringFactory(CopyAccessorBodyLowerings::class, ::CopyAccessorBodyLowerings),\n",
+      1
+    ],
+    [
+      "    ::BooleanPropertyInExternalLowering,\n",
+      "    loweringFactory(BooleanPropertyInExternalLowering::class, ::BooleanPropertyInExternalLowering),\n",
+      1
+    ],
+    [
+      "    ::ExternalPropertyOverridingLowering,\n",
+      "    loweringFactory(ExternalPropertyOverridingLowering::class, ::ExternalPropertyOverridingLowering),\n",
+      1
+    ],
+    [
+      "    ::PrivateMembersLowering,\n",
+      "    loweringFactory(PrivateMembersLowering::class, ::PrivateMembersLowering),\n",
+      1
+    ],
+    [
+      "    ::PrivateMemberBodiesLowering,\n",
+      "    loweringFactory(PrivateMemberBodiesLowering::class, ::PrivateMemberBodiesLowering),\n",
+      1
+    ],
+    [
+      "    ::JsDefaultArgumentStubGenerator,\n",
+      "    loweringFactory(JsDefaultArgumentStubGenerator::class, ::JsDefaultArgumentStubGenerator),\n",
+      1
+    ],
+    [
+      "    ::JsDefaultParameterPatchOverridenSymbolsLowering,\n",
+      "    loweringFactory(JsDefaultParameterPatchOverridenSymbolsLowering::class, ::JsDefaultParameterPatchOverridenSymbolsLowering),\n",
+      1
+    ],
+    [
+      "    ::JsDefaultParameterInjector,\n",
+      "    loweringFactory(JsDefaultParameterInjector::class, ::JsDefaultParameterInjector),\n",
+      1
+    ],
+    [
+      "    ::createDefaultParameterCleanerPhase,\n",
+      "    loweringFactory(DefaultParameterCleaner::class, ::createDefaultParameterCleanerPhase),\n",
+      1
+    ],
+    [
+      "    ::CaptureStackTraceInThrowables,\n",
+      "    loweringFactory(CaptureStackTraceInThrowables::class, ::CaptureStackTraceInThrowables),\n",
+      1
+    ],
+    [
+      "    ::ThrowableLowering,\n",
+      "    loweringFactory(ThrowableLowering::class, ::ThrowableLowering),\n",
+      1
+    ],
+    [
+      "    ::VarargLowering,\n",
+      "    loweringFactory(VarargLowering::class, ::VarargLowering),\n",
+      1
+    ],
+    [
+      "    ::MultipleCatchesLowering,\n",
+      "    loweringFactory(MultipleCatchesLowering::class, ::MultipleCatchesLowering),\n",
+      1
+    ],
+    [
+      "    ::JsBridgesConstruction,\n",
+      "    loweringFactory(JsBridgesConstruction::class, ::JsBridgesConstruction),\n",
+      1
+    ],
+    [
+      "    ::TypeOperatorLowering,\n",
+      "    loweringFactory(TypeOperatorLowering::class, ::TypeOperatorLowering),\n",
+      1
+    ],
+    [
+      "    ::SecondaryConstructorLowering,\n",
+      "    loweringFactory(SecondaryConstructorLowering::class, ::SecondaryConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::SecondaryFactoryInjectorLowering,\n",
+      "    loweringFactory(SecondaryFactoryInjectorLowering::class, ::SecondaryFactoryInjectorLowering),\n",
+      1
+    ],
+    [
+      "    ::JsClassReferenceLowering,\n",
+      "    loweringFactory(JsClassReferenceLowering::class, ::JsClassReferenceLowering),\n",
+      1
+    ],
+    [
+      "    ::ConstLowering,\n",
+      "    loweringFactory(ConstLowering::class, ::ConstLowering),\n",
+      1
+    ],
+    [
+      "    ::JsInlineClassDeclarationLowering,\n",
+      "    loweringFactory(JsInlineClassDeclarationLowering::class, ::JsInlineClassDeclarationLowering),\n",
+      1
+    ],
+    [
+      "    ::JsInlineClassUsageLowering,\n",
+      "    loweringFactory(JsInlineClassUsageLowering::class, ::JsInlineClassUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::ExpressionBodyTransformer,\n",
+      "    loweringFactory(ExpressionBodyTransformer::class, ::ExpressionBodyTransformer),\n",
+      1
+    ],
+    [
+      "    ::createAutoboxingTransformerPhase,\n",
+      "    loweringFactory(AutoboxingTransformer::class, ::createAutoboxingTransformerPhase),\n",
+      1
+    ],
+    [
+      "    ::AutoboxingForExportedInlineClassesForExternalsLowering,\n",
+      "    loweringFactory(AutoboxingForExportedInlineClassesForExternalsLowering::class, ::AutoboxingForExportedInlineClassesForExternalsLowering),\n",
+      1
+    ],
+    [
+      "    ::JsBlockDecomposerLowering,\n",
+      "    loweringFactory(JsBlockDecomposerLowering::class, ::JsBlockDecomposerLowering),\n",
+      1
+    ],
+    [
+      "    ::InvokeStaticInitializersLowering,\n",
+      "    loweringFactory(InvokeStaticInitializersLowering::class, ::InvokeStaticInitializersLowering),\n",
+      1
+    ],
+    [
+      "    ::ObjectUsageLowering,\n",
+      "    loweringFactory(ObjectUsageLowering::class, ::ObjectUsageLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6AddBoxParameterToConstructorsLowering,\n",
+      "    loweringFactory(ES6AddBoxParameterToConstructorsLowering::class, ::ES6AddBoxParameterToConstructorsLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6SyntheticPrimaryConstructorLowering,\n",
+      "    loweringFactory(ES6SyntheticPrimaryConstructorLowering::class, ::ES6SyntheticPrimaryConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6ConstructorLowering,\n",
+      "    loweringFactory(ES6ConstructorLowering::class, ::ES6ConstructorLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6ConstructorCallLowering,\n",
+      "    loweringFactory(ES6ConstructorCallLowering::class, ::ES6ConstructorCallLowering),\n",
+      1
+    ],
+    [
+      "    ::CallsLowering,\n",
+      "    loweringFactory(CallsLowering::class, ::CallsLowering),\n",
+      1
+    ],
+    [
+      "    ::EscapedIdentifiersLowering,\n",
+      "    loweringFactory(EscapedIdentifiersLowering::class, ::EscapedIdentifiersLowering),\n",
+      1
+    ],
+    [
+      "    ::MainFunctionCallWrapperLowering,\n",
+      "    loweringFactory(MainFunctionCallWrapperLowering::class, ::MainFunctionCallWrapperLowering),\n",
+      1
+    ],
+    [
+      "    ::EffectAnalysisLowering,\n",
+      "    loweringFactory(EffectAnalysisLowering::class, ::EffectAnalysisLowering),\n",
+      1
+    ],
+    [
+      "    ::CleanupLowering,\n",
+      "    loweringFactory(CleanupLowering::class, ::CleanupLowering),\n",
+      1
+    ],
+    [
+      "    ::IrValidationAfterLoweringsSecondStagePhase,\n",
+      "    loweringFactory(IrValidationAfterLoweringsSecondStagePhase::class, ::IrValidationAfterLoweringsSecondStagePhase),\n",
+      1
+    ],
+    [
+      "    ::ES6CollectConstructorsWhichNeedBoxParameters,\n",
+      "    loweringFactory(ES6CollectConstructorsWhichNeedBoxParameters::class, ::ES6CollectConstructorsWhichNeedBoxParameters),\n",
+      1
+    ],
+    [
+      "    ::ES6CollectPrimaryConstructorsWhichCouldBeOptimizedLowering,\n",
+      "    loweringFactory(ES6CollectPrimaryConstructorsWhichCouldBeOptimizedLowering::class, ::ES6CollectPrimaryConstructorsWhichCouldBeOptimizedLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6ConstructorBoxParameterOptimizationLowering,\n",
+      "    loweringFactory(ES6ConstructorBoxParameterOptimizationLowering::class, ::ES6ConstructorBoxParameterOptimizationLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6PrimaryConstructorOptimizationLowering,\n",
+      "    loweringFactory(ES6PrimaryConstructorOptimizationLowering::class, ::ES6PrimaryConstructorOptimizationLowering),\n",
+      1
+    ],
+    [
+      "    ::ES6PrimaryConstructorUsageOptimizationLowering,\n",
+      "    loweringFactory(ES6PrimaryConstructorUsageOptimizationLowering::class, ::ES6PrimaryConstructorUsageOptimizationLowering),\n",
+      1
+    ],
+    [
+      "    ::PurifyObjectInstanceGettersLowering,\n",
+      "    loweringFactory(PurifyObjectInstanceGettersLowering::class, ::PurifyObjectInstanceGettersLowering),\n",
+      1
+    ],
+    [
+      "    ::InlineObjectsWithPureInitializationLowering,\n",
+      "    loweringFactory(InlineObjectsWithPureInitializationLowering::class, ::InlineObjectsWithPureInitializationLowering),\n",
+      1
+    ],
+    [
+      "    ::JsCleanupPurifiedLeftoverUsagesLowering,\n",
+      "    loweringFactory(JsCleanupPurifiedLeftoverUsagesLowering::class, ::JsCleanupPurifiedLeftoverUsagesLowering),\n",
+      1
+    ],
+    [
+      "    ::MoveCallableFactoriesToDeclarationsLowering,\n",
+      "    loweringFactory(MoveCallableFactoriesToDeclarationsLowering::class, ::MoveCallableFactoriesToDeclarationsLowering),\n",
+      1
+    ],
+    [
+      "    ::DeduplicateCallableReferenceFactoriesLowering,\n",
+      "    loweringFactory(DeduplicateCallableReferenceFactoriesLowering::class, ::DeduplicateCallableReferenceFactoriesLowering),\n",
+      1
+    ],
+    [
+      "    ::WhileConditionFoldingLowering,\n",
+      "    loweringFactory(WhileConditionFoldingLowering::class, ::WhileConditionFoldingLowering),\n",
+      1
+    ]
+  ]
+}
