@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-descriptor-overriding-unchanged-runtime-proof-reuse",
+  "result": "pass",
+  "shippingMatches": [
+    {
+      "path": "OverridingUtil.kt",
+      "bytes": 31704,
+      "sha256": "0bc81a402895952358ecab324a0b7bf21930d5226590043bdc770b74be133988",
+      "privatePath": "common/OverridingUtil.kt"
+    },
+    {
+      "path": "OverridingHost.kt",
+      "bytes": 2080,
+      "sha256": "8f0c30906534299af19adfe32bc2d206bc96e7c318b470b5747d0aae01e019f1",
+      "privatePath": "common/OverridingHost.kt"
+    },
+    {
+      "path": "OverridingUtilProperties.kt",
+      "bytes": 296,
+      "sha256": "895c78f4ae2189763b04b4e62631ca8e12d921003af6e5aae63fe1c21ce2fd2d",
+      "privatePath": "common/OverridingUtilProperties.kt"
+    },
+    {
+      "path": "contracts/DescriptorEquivalenceForOverrides.kt",
+      "bytes": 5576,
+      "sha256": "ec57a7596580e0d4ab6eaf91fabbb4d0eb01f6e2bc4e77302542d2246541bee1",
+      "privatePath": "consumers/DescriptorEquivalenceForOverrides.kt"
+    },
+    {
+      "path": "contracts/overridingUtils.kt",
+      "bytes": 2840,
+      "sha256": "0693fb9ee24b205a5904f95ff1d60d1acd7c297579b17787aa3ca2c22999fd89",
+      "privatePath": "consumers/overridingUtils.kt"
+    },
+    {
+      "path": "contracts/GivenFunctionsMemberScope.kt",
+      "bytes": 4076,
+      "sha256": "99df19c839bb788fed26aa71f97a0611b437bb6261d8274ee187a302ac8729e7",
+      "privatePath": "consumers/GivenFunctionsMemberScope.kt"
+    },
+    {
+      "path": "contracts/DeserializedClassDescriptor.kt",
+      "bytes": 22324,
+      "sha256": "7c9bbcddf6bb2304cd50b5ffb86494310c841886c37095290758941020d03ff7",
+      "privatePath": "consumers/DeserializedClassDescriptor.kt"
+    }
+  ],
+  "rawProof": {
+    "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/overriding-private-draft-1791793342203338045/wasm-overriding-private-runtime-1791793541809898941/runtime-proof.json",
+    "bytes": 332328,
+    "sha256": "b2c415b7b8fa6fd9c5786a05afd8847e7a0e9aea55698035a11995bbec57b945"
+  },
+  "privateSeal": {
+    "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/overriding-private-draft-1791793342203338045/private-draft-receipt.json",
+    "bytes": 33036,
+    "sha256": "380ac95bcf2053cd0832bb5f732194513d7b693ce685555bc6212880b8b86067"
+  },
+  "sourceReview": {
+    "schemaVersion": 1,
+    "kind": "bounded-independent-overriding-source-review",
+    "reviewer": "/root/property_constructor",
+    "original": {
+      "path": "original/OverridingUtil.java",
+      "bytes": 46954,
+      "sha256": "b65160b4d67da5d8d5f3a4d4eb80168ca277dddd911d0051f9ca23aaa1a37cfb"
+    },
+    "common": {
+      "path": "common/OverridingUtil.kt",
+      "bytes": 31704,
+      "sha256": "0bc81a402895952358ecab324a0b7bf21930d5226590043bdc770b74be133988"
+    },
+    "result": "pass",
+    "fullOriginalAndCommonSourceCompared": true,
+    "finalDeltaCompared": true,
+    "finalDelta": "Only four .indices loops replaced with repeated-size while conditions and increment after body; early returns and indexed getter order preserved.",
+    "reviewed": [
+      "all original public/private methods and nested virtual info getters/toString",
+      "both external passes, repeated contract reads, virtual dispatch and short circuit",
+      "callback identity and constructor visibility",
+      "frozen most-specific baseline descriptor",
+      "fake-copy strategy ordering and modality repeated getter reads",
+      "recursive visibility/accessor defaults and identity/equality",
+      "iterator/callback/removal ordering"
+    ],
+    "runtimeArtifactsIndependentlyApprovedByReviewer": false,
+    "providerRealmLifecycleChosenForBrowser": false,
+    "reentrantOrConcurrentHostLifecycleProven": false,
+    "genuineJvmCountingListObservation": "OVERRIDABLE: SUCCESS:7:2"
+  },
+  "recheckedPrivateSealPins": 143,
+  "recheckedRuntimeInputPins": 1049,
+  "originalRecordedJvmCommands": 10,
+  "originalRecordedJvmCommandsAllExited0": true,
+  "ordinaryRecords": 32,
+  "spiRecords": 12,
+  "constructorFailureRecords": 2,
+  "recordedCompilerAndConsumersComplete": true,
+  "originalRuntimeUsesCompletePinnedJavaTypeSubstitutor": true,
+  "newJvmCommandsExecuted": 0,
+  "reuseReason": "All seven shipping source bodies are byte-identical to the completed complete-provider JVM oracle; all raw input and artifact pins were rechecked.",
+  "bootstrapSourceCommit": null,
+  "portableThreeProvidersImplemented": false,
+  "browserProviderInitializationChosen": false,
+  "concurrentHostInitializationProven": false,
+  "recursiveJavaClassInitializationParity": false,
+  "architectureIssue": "ARCH-010",
+  "fullCommonClassWasmExecuted": false,
+  "fullCompilerBuilt": false,
+  "languageReadiness": false
+}

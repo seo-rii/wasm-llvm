@@ -103,6 +103,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorPropertyComposition;
   let descriptorClassComposition;
   let descriptorLazyMutableComposition;
+  let descriptorOverridingComposition;
   let loweringPhaseFactoriesComposition;
   let rawFirLiteralComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
@@ -515,6 +516,38 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           return component;
         }],
         ['assertionReceipt', (await import('./assertions/prepare.mjs')).prepareAssertionSources],
+        ['descriptorOverridingImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const implementations = await import('./descriptor-overriding-implementations/prepare.mjs');
+          const component = await implementations.prepareDescriptorOverridingImplementations({ sourceRoot, outputRoot,
+            preparedClassImplementations: preparedComponents.get('descriptorClassImplementationsReceipt'),
+            preparedLazyMutableImplementations: preparedComponents.get('descriptorLazyMutableImplementationsReceipt'),
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            preparedFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            preparedReceivers: preparedComponents.get('descriptorReceiverFactoryReceipt'),
+            preparedDescriptorSubstitutor: preparedComponents.get('descriptorSubstitutorReceipt'),
+            preparedPropertyConstructors: preparedComponents.get('descriptorPropertyConstructorsReceipt'),
+            preparedDescriptorContracts: preparedComponents.get('descriptorReceipt'),
+            preparedTypeContracts: preparedComponents.get('typeContractReceipt'),
+            preparedTypeUtilities: preparedComponents.get('typeUtilitiesReceipt'),
+            preparedKindFilterHost: preparedComponents.get('descriptorKindFilterHostReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+            recordedPropertyImports: receipt.propertyImports?.imports ?? [] });
+          descriptorOverridingComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await implementations.verifyDescriptorOverridingImplementations(descriptorOverridingComposition);
+          assert.equal(component.commonSources.length, 7);
+          assert.deepEqual(component.predecessorBindings, []);
+          assert.deepEqual(component.receipt.contractPredecessorRows.map(row => row.path), [
+            'core/descriptors/src/org/jetbrains/kotlin/resolve/DescriptorEquivalenceForOverrides.kt',
+            'core/descriptors/src/org/jetbrains/kotlin/resolve/overridingUtils.kt',
+            'core/descriptors/src/org/jetbrains/kotlin/resolve/scopes/GivenFunctionsMemberScope.kt',
+            'core/deserialization/src/org/jetbrains/kotlin/serialization/deserialization/descriptors/DeserializedClassDescriptor.kt',
+          ]);
+          for (const predecessor of component.receipt.contractPredecessorRows) {
+            assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Overriding consumer overlay must replace the genuine raw owner');
+          }
+          return component;
+        }],
         ['performanceCounterReceipt', async ({ sourceRoot, outputRoot }) => {
           const counters = await import('./performance-counter/prepare.mjs');
           const component = await counters.preparePerformanceCounter({ sourceRoot, outputRoot });
@@ -1647,10 +1680,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const properties = await import('./descriptor-property-constructors/prepare.mjs');
       const classes = await import('./descriptor-class-implementations/prepare.mjs');
       const implementations = await import('./descriptor-lazy-mutable-implementations/prepare.mjs');
-      const lazyMutableFinal = await implementations.verifyFinalDescriptorLazyMutableImplementations({
-        ...descriptorLazyMutableComposition,
+      const overriding = await import('./descriptor-overriding-implementations/prepare.mjs');
+      const overridingFinal = await overriding.verifyFinalDescriptorOverridingImplementations({
+        ...descriptorOverridingComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorOverridingImplementationsFinalReceipt = overridingFinal.receipt;
+      const lazyMutableFinal = await implementations.verifyFinalDescriptorLazyMutableImplementations({
+        ...descriptorLazyMutableComposition,
+        retainedSources: overridingFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorLazyMutableImplementationsFinalReceipt = lazyMutableFinal.receipt;
