@@ -91,6 +91,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let firPredicateComposition;
   let descriptorReceiverComposition;
   let descriptorSubstitutorComposition;
+  let metadataVersionComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -246,6 +247,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           assert(absent.every((sourcePath) => supplementalPaths.has(sourcePath)), 'Missing primary version input');
           receipt.versionsSupplementalOriginals = additional;
           return { ...component, replacedOriginalPaths: component.replacedOriginalPaths.filter((sourcePath) => files.has(sourcePath)) };
+        }],
+        ['metadataVersionHostReceipt', async ({ sourceRoot, outputRoot }) => {
+          const metadata = await import('./metadata-version-host/prepare.mjs');
+          const component = await metadata.prepareMetadataVersionHost({ sourceRoot, outputRoot });
+          metadataVersionComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await metadata.verifyMetadataVersionHost(metadataVersionComposition);
+          assert.equal(component.commonSources.length, 1);
+          return component;
         }],
         ['commonJavaReceipt', (await import('./common-java/prepare.mjs')).prepareCommonJavaSources],
         ['descriptorReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1500,6 +1509,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const scopes = await import('./descriptor-kind-filter-host/prepare.mjs');
       receipt.descriptorKindFilterHostFinalReceipt = await scopes.verifyFinalDescriptorKindFilterHost({
         ...descriptorKindFilterComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const metadata = await import('./metadata-version-host/prepare.mjs');
+      receipt.metadataVersionHostFinalReceipt = await metadata.verifyFinalMetadataVersionHost({
+        ...metadataVersionComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
