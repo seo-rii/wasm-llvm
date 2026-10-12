@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-typealias-constructor-bindings",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "target": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+  "classConstructor": "core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassConstructorDescriptor.kt",
+  "originals": [
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+      "gitBlob": "48d309f2f1860d9e59e28ec44c55a885cf6d752f",
+      "bytes": 9950,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "f9c06ea19ce9e73f4b5a3f7463db597d56e7a0115c2d2e7fa4b0605ce4c6df8b"
+    },
+    {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassConstructorDescriptor.kt",
+      "gitBlob": "35b18fdfa6733b740c273bcc63d04a72260217a1",
+      "bytes": 1316,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "core/descriptors",
+      "sha256": "fa6d26971069a66bf31715446a1f287b4c8d0e9f8ba3dd5aa130744548bd10b8"
+    }
+  ],
+  "common": {
+    "path": "TypeAliasConstructorBindings.kt",
+    "bytes": 868,
+    "sha256": "2388e0c38c8775c6e18b81940f8681eca188ed5a58eddc9e7233a53f2ddd6862",
+    "gitBlob": "24a2a2e5b1c765f05a9825383e95dadce709758c"
+  },
+  "contract": {
+    "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+    "input": {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+      "bytes": 10791,
+      "sha256": "eadff905dadf2e2f9888f0d6dc1114aa5b8effc322f4c7a008416521030d9940",
+      "gitBlob": "1b66d6e66b7ad8165289091529087a6d0b21608b",
+      "localPath": "contracts/SignatureTypeAliasConstructorDescriptor.kt"
+    },
+    "output": {
+      "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+      "bytes": 11051,
+      "sha256": "592a35a8b8637185658e71a264d34aa32fa443bd6b13104ae991610ea46149c6",
+      "gitBlob": "fa8e41c45ea149ee240b4236d93dd7df85483d4d",
+      "localPath": "contracts/TypeAliasConstructorDescriptor.kt"
+    }
+  },
+  "changes": [
+    {
+      "before": "package org.jetbrains.kotlin.descriptors.impl",
+      "after": "package org.jetbrains.kotlin.descriptors.impl\nimport org.jetbrains.kotlin.portable.typealiasconstructors.isActual\nimport org.jetbrains.kotlin.portable.typealiasconstructors.original\nimport org.jetbrains.kotlin.portable.typealiasconstructors.platformReceiverList"
+    },
+    {
+      "before": "underlyingConstructorDescriptor.contextReceiverParameters.map { it.substitute(substitutorForUnderlyingClass) },",
+      "after": "platformReceiverList(underlyingConstructorDescriptor.contextReceiverParameters.map { it.substitute(substitutorForUnderlyingClass) }),"
+    },
+    {
+      "before": "                contextReceiverParameters,\n                typeAliasDescriptor.declaredTypeParameters,",
+      "after": "                platformReceiverList(contextReceiverParameters),\n                typeAliasDescriptor.declaredTypeParameters,"
+    }
+  ],
+  "bindings": [
+    {
+      "name": "preparedFunctions",
+      "kind": "genuine-descriptor-function-preparation",
+      "sourceLockSha256": "2e9243c9629dacf496d9ce19747be0436d24783e02a68ccbc7f4820fa02fdc8f",
+      "files": [
+        {
+          "path": "compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
+          "bytes": 29038,
+          "sha256": "779e91b214a12955bfa1e3654352af10945866fd623fc5d56996d0997c80dd46",
+          "gitBlob": "a627832a31295431f7bc51df5adebfe33d8c2d48",
+          "receiptPath": "compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-functions/FunctionDescriptorImpl.kt",
+          "localPath": "../descriptor-function-implementations/FunctionDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-functions/SimpleFunctionDescriptorImpl.kt",
+          "bytes": 4416,
+          "sha256": "853dcd42d1c80806a4ba365031613177569d9653097d8f4644399de514f33ee1",
+          "gitBlob": "765f8c1b8fa76d9777924ce005e1f2882d348a21",
+          "receiptPath": "compiler-port-descriptor-functions/SimpleFunctionDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-functions/SimpleFunctionDescriptorImpl.kt",
+          "localPath": "../descriptor-function-implementations/SimpleFunctionDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-functions/FunctionDescriptorProperties.kt",
+          "bytes": 1061,
+          "sha256": "743a13030f0722223039532aefa8512b6335074f4c2a925a461490bf5d1f4eff",
+          "gitBlob": "3e5455e437db7925b1497eb77ead549c160eeda6",
+          "receiptPath": "compiler-port-descriptor-functions/FunctionDescriptorProperties.kt",
+          "outputPath": "compiler-port-descriptor-functions/FunctionDescriptorProperties.kt",
+          "localPath": "../descriptor-function-implementations/FunctionDescriptorProperties.kt"
+        }
+      ]
+    },
+    {
+      "name": "preparedReceivers",
+      "kind": "genuine-descriptor-receiver-factory-preparation",
+      "sourceLockSha256": "82ad723275bccdeb029ec004fc4d53a1fb58aceae62915ff863355e2627e4d3f",
+      "files": [
+        {
+          "path": "compiler-port-descriptor-receiver-factory/AbstractReceiverParameterDescriptor.kt",
+          "bytes": 2665,
+          "sha256": "bbe0599c8ceba3b4a7b3f9c1cfda099551123e80a2f52c7f9f547d9c43eb7a5a",
+          "gitBlob": "b2b424bdd461a48f76c307b6fc348167bb85a3cc",
+          "receiptPath": "compiler-port-descriptor-receiver-factory/AbstractReceiverParameterDescriptor.kt",
+          "outputPath": "compiler-port-descriptor-receiver-factory/AbstractReceiverParameterDescriptor.kt",
+          "localPath": "../descriptor-receiver-factory/AbstractReceiverParameterDescriptor.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-receiver-factory/ReceiverParameterDescriptorImpl.kt",
+          "bytes": 1536,
+          "sha256": "33db3a260868d09e65643f5fefd5133f7f295679aa1a88e3ebc230d87a9481ea",
+          "gitBlob": "020bebc2c0cd4f0d80a0c17ef63d03fa53fdfdb8",
+          "receiptPath": "compiler-port-descriptor-receiver-factory/ReceiverParameterDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-receiver-factory/ReceiverParameterDescriptorImpl.kt",
+          "localPath": "../descriptor-receiver-factory/ReceiverParameterDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-receiver-factory/AbstractReceiverValue.kt",
+          "bytes": 536,
+          "sha256": "c24c97a13fcd662be62ac00f4bcf43f44b12f9e9cb635285c2320cf47703b5b9",
+          "gitBlob": "0786acf5c36e4c983887f07779f99f2f60415a45",
+          "receiptPath": "compiler-port-descriptor-receiver-factory/AbstractReceiverValue.kt",
+          "outputPath": "compiler-port-descriptor-receiver-factory/AbstractReceiverValue.kt",
+          "localPath": "../descriptor-receiver-factory/AbstractReceiverValue.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-receiver-factory/ExtensionReceiver.kt",
+          "bytes": 824,
+          "sha256": "2513e5f1a1dbb6f07248283c3d450b5110cb64ca11f0cbb34b9cc85d559642bd",
+          "gitBlob": "1cd327e99ce8108260c4e721db95e08d1c43a59b",
+          "receiptPath": "compiler-port-descriptor-receiver-factory/ExtensionReceiver.kt",
+          "outputPath": "compiler-port-descriptor-receiver-factory/ExtensionReceiver.kt",
+          "localPath": "../descriptor-receiver-factory/ExtensionReceiver.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-receiver-factory/TransientReceiver.kt",
+          "bytes": 635,
+          "sha256": "194a8353ce0317386455b7ef5c71cffa82ce170c4485122a9c7859e3269ac6ba",
+          "gitBlob": "6191124d7e3e570bd11fba509dd0455f2e299a03",
+          "receiptPath": "compiler-port-descriptor-receiver-factory/TransientReceiver.kt",
+          "outputPath": "compiler-port-descriptor-receiver-factory/TransientReceiver.kt",
+          "localPath": "../descriptor-receiver-factory/TransientReceiver.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+          "bytes": 8485,
+          "sha256": "2969fbb0cae0fe30a534823e0c1e08721d0563d2e0ef5335841d185df3791a94",
+          "gitBlob": "5b18ca39fdc4f865c530a3a313b242980e243326",
+          "receiptPath": "compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+          "outputPath": "compiler-port-descriptor-receiver-factory/DescriptorFactory.kt",
+          "localPath": "../descriptor-receiver-factory/DescriptorFactory.kt"
+        }
+      ]
+    },
+    {
+      "name": "preparedPropertyConstructors",
+      "kind": "genuine-descriptor-property-constructor-preparation",
+      "sourceLockSha256": "74e1f691bd50b7b5e4f2e5acecad22b420b41dcf4562026b9535ffbcfc4f1702",
+      "files": [
+        {
+          "path": "compiler-port-descriptor-property-constructors/VariableDescriptorWithInitializerImpl.kt",
+          "bytes": 1956,
+          "sha256": "791ad7e19acbcc386851ee57cbee9c626c16028809fd40229339c3969f4019f9",
+          "gitBlob": "40da30f7dc1c489056461124ac902d38843f4138",
+          "receiptPath": "compiler-port-descriptor-property-constructors/VariableDescriptorWithInitializerImpl.kt",
+          "outputPath": "compiler-port-descriptor-property-constructors/VariableDescriptorWithInitializerImpl.kt",
+          "localPath": "../descriptor-property-constructors/VariableDescriptorWithInitializerImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-property-constructors/PropertyAccessorDescriptorImpl.kt",
+          "bytes": 4359,
+          "sha256": "a6dc53bf13c930c96de213cdedbb6d1589a5388a080d18be3931f913190b46cb",
+          "gitBlob": "5239a1a0a30d9dc6716070758b67b6d7a905f47a",
+          "receiptPath": "compiler-port-descriptor-property-constructors/PropertyAccessorDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-property-constructors/PropertyAccessorDescriptorImpl.kt",
+          "localPath": "../descriptor-property-constructors/PropertyAccessorDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-property-constructors/PropertyGetterDescriptorImpl.kt",
+          "bytes": 1684,
+          "sha256": "9faefa1ec36fe6d2dc739a811f9a7926c4f49c292588478ccc82dc08b4cc8c19",
+          "gitBlob": "b00675aafceeb5fbe7ae5cd48264e289315b0631",
+          "receiptPath": "compiler-port-descriptor-property-constructors/PropertyGetterDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-property-constructors/PropertyGetterDescriptorImpl.kt",
+          "localPath": "../descriptor-property-constructors/PropertyGetterDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-property-constructors/PropertySetterDescriptorImpl.kt",
+          "bytes": 2500,
+          "sha256": "0e313927e534bd18da86a4b3fa45e55b34bf7a128530df90f66f4ca93762aa02",
+          "gitBlob": "fb4cf111d20e7872d8941a06255060974e95dbbe",
+          "receiptPath": "compiler-port-descriptor-property-constructors/PropertySetterDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-property-constructors/PropertySetterDescriptorImpl.kt",
+          "localPath": "../descriptor-property-constructors/PropertySetterDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-property-constructors/PropertyDescriptorImpl.kt",
+          "bytes": 17096,
+          "sha256": "abfeefb8649d9f88a136268902a4ee95e5ef33ebdf860d8d1f03ca138b763e12",
+          "gitBlob": "65d344b7c860981776f99192a5c23725d6af205e",
+          "receiptPath": "compiler-port-descriptor-property-constructors/PropertyDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-property-constructors/PropertyDescriptorImpl.kt",
+          "localPath": "../descriptor-property-constructors/PropertyDescriptorImpl.kt"
+        },
+        {
+          "path": "compiler-port-descriptor-property-constructors/ClassConstructorDescriptorImpl.kt",
+          "bytes": 4957,
+          "sha256": "c3f4cd65c1ac25a5a961984e41edfe01965d35e8c759689cec745b837ff41d70",
+          "gitBlob": "ba54765cbf8ee20b9f9221bee47d89a065a68820",
+          "receiptPath": "compiler-port-descriptor-property-constructors/ClassConstructorDescriptorImpl.kt",
+          "outputPath": "compiler-port-descriptor-property-constructors/ClassConstructorDescriptorImpl.kt",
+          "localPath": "../descriptor-property-constructors/ClassConstructorDescriptorImpl.kt"
+        }
+      ]
+    },
+    {
+      "name": "preparedDescriptorPlatformSignatures",
+      "kind": "selected-descriptor-platform-signature-preparation",
+      "sourceLockSha256": "ada6ba37f672b151aac2db78b93997b7f184b760921099191fa02f9f78819dd5",
+      "files": [
+        {
+          "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+          "bytes": 10791,
+          "sha256": "eadff905dadf2e2f9888f0d6dc1114aa5b8effc322f4c7a008416521030d9940",
+          "gitBlob": "1b66d6e66b7ad8165289091529087a6d0b21608b",
+          "localPath": "contracts/SignatureTypeAliasConstructorDescriptor.kt",
+          "receiptPath": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt",
+          "outputPath": "core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt"
+        },
+        {
+          "path": "core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassConstructorDescriptor.kt",
+          "bytes": 1320,
+          "sha256": "62f3a095c8dab40c91ae29e4f4b0af79a269699a33e8f47ea3a297d36614759a",
+          "gitBlob": "6f2b6740246fc3089da06c065ecb1611b7fb5250",
+          "localPath": "bindings/ClassConstructorDescriptor.kt",
+          "receiptPath": "core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassConstructorDescriptor.kt",
+          "outputPath": "core/descriptors/src/org/jetbrains/kotlin/descriptors/ClassConstructorDescriptor.kt"
+        }
+      ]
+    }
+  ],
+  "selectionDependencies": [
+    {
+      "path": "compiler-port-assertions/CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf",
+      "gitBlob": "eeafb80051e7f546ff098dc027176904d124e254",
+      "localPath": "../assertions/CompilerAssertions.kt"
+    },
+    {
+      "path": "compiler-port-descriptors/generated/DescriptorProperties.kt",
+      "bytes": 16525,
+      "sha256": "f25aff88099b657ec7ada0e9f2fd3e4f4be6c8d1fb3870752c0ae8bc27ef78d7",
+      "gitBlob": "85df62146bb94ccae3c41820d9c646d7a20fdc5a",
+      "localPath": "../descriptor-overriding-implementations/bindings/DescriptorProperties.kt"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 13808,
+      "sha256": "85a44ebb1fe251e5a626cdef39b71eec1b31692e71d873a10f8a25473a7978b8",
+      "gitBlob": "307bf0ed1568944981772e0459c818342cc2f030"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 1585,
+      "sha256": "f7cf9ef239bd5e761b6eab197ad1c837d0c377a605602c0fb383d088a1ab7639",
+      "gitBlob": "1188f688da1655a0d20c9eeb07f0eeb0abcda1c6"
+    },
+    {
+      "path": "fixture.mjs",
+      "bytes": 2609,
+      "sha256": "595dae40320f76135ffc3bde40dfc97c66647c86ecd3a398932e54300d38e95b",
+      "gitBlob": "4d9c77dd31c49b7a90b3e69a7e634acf5a7d4968"
+    },
+    {
+      "path": "integrity.mjs",
+      "bytes": 5720,
+      "sha256": "7ac98bf2398e220f9149b102c32277debfa5e175a49cbf4b8048f1c00ac269a0",
+      "gitBlob": "24641639ca938596a3905a186c27b93b9e23ea05"
+    },
+    {
+      "path": "probe.mjs",
+      "bytes": 3462,
+      "sha256": "32e6e1a3b81ef123a337d7a55f38990ab2cb03a8349312ececa762610fc4ace5",
+      "gitBlob": "a8df520a405d5345a33ee1387b8d15681bb3cc9e"
+    },
+    {
+      "path": "update-lock.mjs",
+      "bytes": 5071,
+      "sha256": "20072a49b332d909620774be0c21f32464aedf7a9a74c6cc9d176d9ab0fc4b9d",
+      "gitBlob": "8dd8932bd06c8fe6b80b0cf2395e037433010730"
+    },
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../type-substitutor-getter/prepare.mjs",
+      "bytes": 14925,
+      "sha256": "330586423f919b69b759b0bcee8024fec32e2692e3c66fd8fa3f8348e715d6ad",
+      "gitBlob": "140c6e4118768b446ad21a923f383a4f5ea8e32a"
+    },
+    {
+      "path": "../descriptor-base-implementations/prepare.mjs",
+      "bytes": 12276,
+      "sha256": "1ed033b527b4aa80624ebd78fdf1ac591a13350bcbe68a48cacdfef874dc384e",
+      "gitBlob": "c627575448f01355d1ca357928b1861f150ffc86"
+    },
+    {
+      "path": "../descriptor-function-implementations/sources.lock.json",
+      "bytes": 11381,
+      "sha256": "2e9243c9629dacf496d9ce19747be0436d24783e02a68ccbc7f4820fa02fdc8f",
+      "gitBlob": "07cdeefc12c5c1b40bc995aa427316daa7c45c7e"
+    },
+    {
+      "path": "../descriptor-receiver-factory/sources.lock.json",
+      "bytes": 14593,
+      "sha256": "82ad723275bccdeb029ec004fc4d53a1fb58aceae62915ff863355e2627e4d3f",
+      "gitBlob": "64661b88f0eacae6202009decc4c15bbc15cb19b"
+    },
+    {
+      "path": "../descriptor-property-constructors/sources.lock.json",
+      "bytes": 20357,
+      "sha256": "74e1f691bd50b7b5e4f2e5acecad22b420b41dcf4562026b9535ffbcfc4f1702",
+      "gitBlob": "0becfc113009bb1ab44adc3cd5fbcba686426bb9"
+    },
+    {
+      "path": "../descriptor-platform-signatures/sources.lock.json",
+      "bytes": 64791,
+      "sha256": "ada6ba37f672b151aac2db78b93997b7f184b760921099191fa02f9f78819dd5",
+      "gitBlob": "6b186a1d7aef54121c129630b14574fc433e8a6a"
+    },
+    {
+      "path": "../descriptor-overriding-implementations/sources.lock.json",
+      "bytes": 46199,
+      "sha256": "3c216d0aba6c273f1d237888184a4f8b7ec27bfc87927a23cff959da62be7bc7",
+      "gitBlob": "673f99869961e82deb9b028874a627e6a0eb6438"
+    },
+    {
+      "path": "../descriptor-platform-signatures/transform.mjs",
+      "bytes": 7765,
+      "sha256": "4b4d7a3cd81112d404a58e86ee06fde0dc8ec4c3a729aaef599ab97233b0eac3",
+      "gitBlob": "a03b37e4bd63dbdd8698bd1e44d84f354da14aef"
+    },
+    {
+      "path": "../descriptor-platform-signatures/prepare.mjs",
+      "bytes": 20151,
+      "sha256": "6a329cacf7ed5c33f6dcb8be5503fe1076ab99be0e321cf6bf4080d69cf9d99e",
+      "gitBlob": "edf5deb51bfb758d9dc2e3ede017ff486e0e6774"
+    },
+    {
+      "path": "../assertions/CompilerAssertions.kt",
+      "bytes": 474,
+      "sha256": "188c1642381600c0a377b2e5dcda2e8393d44d4d1c4d857e97b71f96c48a7eaf",
+      "gitBlob": "eeafb80051e7f546ff098dc027176904d124e254"
+    }
+  ],
+  "assemblyImports": [
+    "org.jetbrains.kotlin.portable.common.*",
+    "org.jetbrains.kotlin.portable.descriptors.*",
+    "org.jetbrains.kotlin.js.backend.ast.addPrevious",
+    "org.jetbrains.kotlin.js.backend.ast.arg",
+    "org.jetbrains.kotlin.js.backend.ast.arg1",
+    "org.jetbrains.kotlin.js.backend.ast.arg2",
+    "org.jetbrains.kotlin.js.backend.ast.arguments",
+    "org.jetbrains.kotlin.js.backend.ast.arrayExpression",
+    "org.jetbrains.kotlin.js.backend.ast.body",
+    "org.jetbrains.kotlin.js.backend.ast.caseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.cases",
+    "org.jetbrains.kotlin.js.backend.ast.catches",
+    "org.jetbrains.kotlin.js.backend.ast.closingBraceSource",
+    "org.jetbrains.kotlin.js.backend.ast.commentsAfterNode",
+    "org.jetbrains.kotlin.js.backend.ast.commentsBeforeNode",
+    "org.jetbrains.kotlin.js.backend.ast.computedName",
+    "org.jetbrains.kotlin.js.backend.ast.condition",
+    "org.jetbrains.kotlin.js.backend.ast.constructorExpression",
+    "org.jetbrains.kotlin.js.backend.ast.currentNode",
+    "org.jetbrains.kotlin.js.backend.ast.description",
+    "org.jetbrains.kotlin.js.backend.ast.elseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.elseStatement",
+    "org.jetbrains.kotlin.js.backend.ast.expression",
+    "org.jetbrains.kotlin.js.backend.ast.expressions",
+    "org.jetbrains.kotlin.js.backend.ast.finallyBlock",
+    "org.jetbrains.kotlin.js.backend.ast.flags",
+    "org.jetbrains.kotlin.js.backend.ast.globalBlock",
+    "org.jetbrains.kotlin.js.backend.ast.ident",
+    "org.jetbrains.kotlin.js.backend.ast.ifExpression",
+    "org.jetbrains.kotlin.js.backend.ast.incrementExpression",
+    "org.jetbrains.kotlin.js.backend.ast.indexExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initVars",
+    "org.jetbrains.kotlin.js.backend.ast.isAssignment",
+    "org.jetbrains.kotlin.js.backend.ast.isEmpty",
+    "org.jetbrains.kotlin.js.backend.ast.isEs6Arrow",
+    "org.jetbrains.kotlin.js.backend.ast.isGenerator",
+    "org.jetbrains.kotlin.js.backend.ast.isGetter",
+    "org.jetbrains.kotlin.js.backend.ast.isKeyword",
+    "org.jetbrains.kotlin.js.backend.ast.isLeaf",
+    "org.jetbrains.kotlin.js.backend.ast.isLeftAssociative",
+    "org.jetbrains.kotlin.js.backend.ast.isModifying",
+    "org.jetbrains.kotlin.js.backend.ast.isMultiline",
+    "org.jetbrains.kotlin.js.backend.ast.isSetter",
+    "org.jetbrains.kotlin.js.backend.ast.isStatic",
+    "org.jetbrains.kotlin.js.backend.ast.isTemporary",
+    "org.jetbrains.kotlin.js.backend.ast.isTransparent",
+    "org.jetbrains.kotlin.js.backend.ast.label",
+    "org.jetbrains.kotlin.js.backend.ast.modifiers",
+    "org.jetbrains.kotlin.js.backend.ast.name",
+    "org.jetbrains.kotlin.js.backend.ast.operator",
+    "org.jetbrains.kotlin.js.backend.ast.parameter",
+    "org.jetbrains.kotlin.js.backend.ast.parameters",
+    "org.jetbrains.kotlin.js.backend.ast.parent",
+    "org.jetbrains.kotlin.js.backend.ast.pattern",
+    "org.jetbrains.kotlin.js.backend.ast.precedence",
+    "org.jetbrains.kotlin.js.backend.ast.propertyInitializers",
+    "org.jetbrains.kotlin.js.backend.ast.qualifier",
+    "org.jetbrains.kotlin.js.backend.ast.replaceMe",
+    "org.jetbrains.kotlin.js.backend.ast.rootScope",
+    "org.jetbrains.kotlin.js.backend.ast.scope",
+    "org.jetbrains.kotlin.js.backend.ast.source",
+    "org.jetbrains.kotlin.js.backend.ast.statement",
+    "org.jetbrains.kotlin.js.backend.ast.statements",
+    "org.jetbrains.kotlin.js.backend.ast.symbol",
+    "org.jetbrains.kotlin.js.backend.ast.tags",
+    "org.jetbrains.kotlin.js.backend.ast.testExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenStatement",
+    "org.jetbrains.kotlin.js.backend.ast.tryBlock",
+    "org.jetbrains.kotlin.js.backend.ast.value",
+    "org.jetbrains.kotlin.js.util.position",
+    "org.jetbrains.kotlin.js.util.line",
+    "org.jetbrains.kotlin.js.util.column"
+  ],
+  "sharedContractsChanged": false
+}

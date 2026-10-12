@@ -105,6 +105,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorClassComposition;
   let descriptorLazyMutableComposition;
   let descriptorOverridingComposition;
+  let descriptorTypeAliasComposition;
   let loweringPhaseFactoriesComposition;
   let rawFirLiteralComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
@@ -547,6 +548,29 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           for (const predecessor of component.receipt.contractPredecessorRows) {
             assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Overriding consumer overlay must replace the genuine raw owner');
           }
+          return component;
+        }],
+        ['descriptorTypeAliasConstructorBindingsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const bindings = await import('./descriptor-typealias-constructor-bindings/prepare.mjs');
+          const signatures = preparedComponents.get('descriptorPlatformSignaturesReceipt');
+          const component = await bindings.prepareDescriptorTypeAliasConstructorBindings({ sourceRoot, outputRoot,
+            preparedFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            preparedReceivers: preparedComponents.get('descriptorReceiverFactoryReceipt'),
+            preparedPropertyConstructors: preparedComponents.get('descriptorPropertyConstructorsReceipt'),
+            preparedDescriptorPlatformSignatures: signatures,
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+            recordedPropertyImports: receipt.propertyImports?.imports ?? [] });
+          descriptorTypeAliasComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await bindings.verifyDescriptorTypeAliasConstructorBindings(descriptorTypeAliasComposition);
+          assert.equal(component.commonSources.length, 2);
+          const target = 'core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/TypeAliasConstructorDescriptor.kt';
+          assert.deepEqual(component.replacedOriginalPaths, [target]);
+          assert.deepEqual(component.receipt.contractPredecessorRows.map(row => row.path), [target]);
+          const predecessor = component.receipt.contractPredecessorRows[0];
+          assert.equal(predecessor.filename, path.join(signatures.outputRoot, target), 'Typealias constructor must replace the genuine signature owner');
+          assert.deepEqual(component.predecessorBindings, [{ component: 'descriptorPlatformSignaturesReceipt',
+            componentRelativePath: target, filename: predecessor.filename, bytes: predecessor.bytes, sha256: predecessor.sha256 }]);
           return component;
         }],
         ['performanceCounterReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1716,10 +1740,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const classes = await import('./descriptor-class-implementations/prepare.mjs');
       const implementations = await import('./descriptor-lazy-mutable-implementations/prepare.mjs');
       const overriding = await import('./descriptor-overriding-implementations/prepare.mjs');
-      const overridingFinal = await overriding.verifyFinalDescriptorOverridingImplementations({
-        ...descriptorOverridingComposition,
+      const typealiases = await import('./descriptor-typealias-constructor-bindings/prepare.mjs');
+      const typeAliasFinal = await typealiases.verifyFinalDescriptorTypeAliasConstructorBindings({
+        ...descriptorTypeAliasComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorTypeAliasConstructorBindingsFinalReceipt = typeAliasFinal.receipt;
+      const overridingFinal = await overriding.verifyFinalDescriptorOverridingImplementations({
+        ...descriptorOverridingComposition,
+        retainedSources: typeAliasFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorOverridingImplementationsFinalReceipt = overridingFinal.receipt;
