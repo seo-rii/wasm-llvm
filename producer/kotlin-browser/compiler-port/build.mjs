@@ -96,6 +96,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let irInterningComposition;
   let irFileLineSearchComposition;
   let descriptorPropertyComposition;
+  let loweringPhaseFactoriesComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -565,6 +566,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           irInterningComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
           await intern.verifyIrInterning(irInterningComposition);
           assert.equal(component.commonSources.length, 2);
+          return component;
+        }],
+        ['loweringPhaseFactoriesReceipt', async ({ sourceRoot, outputRoot }) => {
+          const phases = await import('./lowering-phase-factories/prepare.mjs');
+          const component = await phases.prepareLoweringPhaseFactories({ sourceRoot, outputRoot });
+          loweringPhaseFactoriesComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await phases.verifyLoweringPhaseFactories(loweringPhaseFactoriesComposition);
+          assert.equal(component.commonSources.length, 6);
+          assert.equal(component.replacedOriginalPaths.length, 5);
           return component;
         }],
         ['jsAstReceipt', async ({ sourceRoot, outputRoot }) => {
@@ -1576,6 +1586,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const scopes = await import('./descriptor-kind-filter-host/prepare.mjs');
       receipt.descriptorKindFilterHostFinalReceipt = await scopes.verifyFinalDescriptorKindFilterHost({
         ...descriptorKindFilterComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const phases = await import('./lowering-phase-factories/prepare.mjs');
+      receipt.loweringPhaseFactoriesFinalReceipt = await phases.verifyFinalLoweringPhaseFactories({
+        ...loweringPhaseFactoriesComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
