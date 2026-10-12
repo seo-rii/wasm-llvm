@@ -35,7 +35,23 @@ test('actual full-selection public final rejects changed PSI reachability, algor
     async function add(name,text){const bytes=Buffer.from(text);await writeFile(extra,bytes);await reject(name,()=>call([...rows,{path:'compiler-port-fixture/New.kt',filename:extra,bytes:bytes.length,sha256:sha256(bytes)}]));}
     await add('new fully qualified sealed source-family subclass','package fixture\nclass Other : org.jetbrains.kotlin.KtSourceElement()\n');
     await add('new PSI checker alias in interpolation','package fixture\nimport org.jetbrains.kotlin.fir.analysis.checkers.syntax.FirPrefixAndSuffixSyntaxChecker as Affix\nval use="${Affix}"\n');
-    const final=await call();assert.equal(final.receipt.selectedSources,3523);assert.deepEqual(final.predecessorRetainedSources,fixture.originalSources);
+    const final=await call();assert.equal(final.receipt.selectedSources,rows.length);assert.deepEqual(final.predecessorRetainedSources,fixture.originalSources);
     await writeJson(path.join(path.dirname(process.env.FIR_SYNTAX_FIXTURE),'integrity.json'),{schemaVersion:1,kind:'fir-syntax-public-final-guards',result:'pass',checks,
         actualSources:rows.length,restoredFinalPassed:true,preparationReceiptSha256:prepared.receiptSha256,fullCompilerBuilt:false});
+});
+
+
+test('retained syntax import boundaries use the portable source host',{skip:!process.env.FIR_SYNTAX_FIXTURE},async()=>{
+    const fixture=JSON.parse(await readFile(process.env.FIR_SYNTAX_FIXTURE,'utf8'));
+    const lock=JSON.parse(await readFile(new URL('sources.lock.json',import.meta.url),'utf8'));
+    for(const output of lock.outputs){
+        const row=fixture.retainedSources.find(item=>item.path===output.path);assert(row,'Missing full syntax output: '+output.path);
+        assert.equal(row.filename,path.join(fixture.prepared.outputRoot,output.path));
+        const bytes=await readFile(row.filename);assert.equal(bytes.length,row.bytes);assert.equal(sha256(bytes),row.sha256);
+        // Comments must not conceal imports of tree carriers absent from the common host.
+        const text=bytes.toString().replace(/\/\*[\s\S]*?\*\//g,'');
+        const unavailable=[...text.matchAll(/^import\s+com\.intellij\.(?:lang\.LighterASTNode|psi\.tree\.(?:IElementType|TokenSet)|util\.diff\.FlyweightCapableTreeStructure)\b/gm)].map(match=>match[0]);
+        assert.deepEqual(unavailable,[],output.path+' retains an unavailable legacy tree carrier import');
+    }
+    assert.equal(lock.outputs.length,18);
 });

@@ -36,7 +36,7 @@ export function syntaxChanges(logical, original) {
         assert(before.length && text.split(before).length === 2, 'Unique syntax span: ' + logical + ':' + before.slice(0, 100));
         changes.push({ before, after, reason }); text = text.replace(before, after);
     }
-    function remove(before, reason) { replace(before, '/* browser syntax profile: ' + reason + ' */', reason); }
+    function remove(before, reason) { replace(before, '/* browser syntax profile: ' + reason + ' */' + (before.endsWith('\n') ? '\n' : ''), reason); }
     function declaration(marker, reason) { remove(balancedSpan(text, marker).text, reason); }
     if (logical === ROSTER) {
         replace('        FirPrefixAndSuffixSyntaxChecker,\n', '        // PSI-only literal affix checker is inapplicable to the sealed light-tree source host.\n', 'unreachable-psi-registration');

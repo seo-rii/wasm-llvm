@@ -10,7 +10,7 @@ The source identity is Kotlin commit
 `4d78aae1e337cd40f69baa865aed950fe807a775`. Preparation verifies all 3,838 primary
 Kotlin/Java input pins, including Java and `compile: false` entries, and saves the
 19 complete modified/excluded original files. The lock records their complete
-top-level declaration inventories and 77 exact, reversible replacement spans.
+top-level declaration inventories and 78 exact, reversible replacement spans.
 
 The coherent change contains the common `FirSyntaxChecker` base, its 17 direct
 subclasses, and `CommonExpressionCheckers`. Sixteen subclasses remain, with the
@@ -56,7 +56,48 @@ original confusing-when and missing-constructor caller bodies. Other final
 guards receive the actual current graph. Existing source owners remain intact;
 the reverse view does not rewrite their files or the active source map.
 
-## Evidence and limits
+## Current import-boundary repair
+
+The `native-phase-whole` compiler invocation selected 3,550 source files and
+reported 1,609 cascading diagnostics. Two were in the retained confusing-when
+checker: removing the preceding PSI import had glued its replacement comment
+to `import com.intellij.psi.tree.IElementType`. The later anchored import rewrite
+missed that line. Removal now retains the terminal newline of the original span,
+so the actual complete output imports the existing portable `IElementType`.
+The full checker algorithms remain unchanged.
+
+The current recipe has 78 spans, 19 original files and 18 outputs. Seventeen
+output digests change; the checker registration roster remains byte-identical.
+The focused regression reads the actual owned complete files, verifies their
+row digests, and checks imports after removing comments. It fails for the
+recorded bad import in the immutable 3,550-file compiler graph and passes on the
+current outputs.
+
+Current source validation restores only the 18 recorded syntax predecessors and
+the one recorded PSI exclusion from that actual final graph. Public preparation
+then validates 3,551 inputs and the public final returns 3,550 selected files.
+Other final rows retain their exact owners, bytes and order. The existing
+navigation final runs on the verified predecessor view in its own private copied
+component. Three public tests pass without skips; their eight rejection checks
+remain ordinary rejection checks. A separate honest-digest legacy-import mutation
+captures `ERR_ASSERTION`, `deepStrictEqual`, and the exact
+`Selected complete syntax algorithm changed` reason and path, excludes filesystem
+failures, and restores a passing public final.
+
+See [import-newline.json](evidence/import-newline.json) for current source, lock,
+execution, argv/configuration and proof pins. The independently reviewed private
+draft also verifies all 19 originals, all 18 reversible outputs and eight unchanged
+original light-tree methods. These are source and guard results. The archived
+60-record behavior observer was not rerun for this repair; this component still
+does not establish a complete FIR Wasm runtime, token mapping, or working compiler.
+
+## Archived behavior and source evidence
+
+The following artifacts preserve their original source, recipe and tool pins,
+including the earlier 77-span recipe. Their eight negative checks are historical
+ordinary rejection checks; they are not relabeled as exact-reason checks under
+the current recipe.
+
 
 The recovered actual `memory-host-whole-1791700702126849235` graph passes
 3,524 → 3,523 selection validation. Its original selection restores exactly,
