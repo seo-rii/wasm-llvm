@@ -94,6 +94,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let metadataVersionComposition;
   let irInterningComposition;
   let irFileLineSearchComposition;
+  let descriptorPropertyComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -397,6 +398,30 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           await substitution.verifyDescriptorSubstitutor(descriptorSubstitutorComposition);
           assert.equal(component.commonSources.length, 4);
           return component;
+        }],
+        ['descriptorPropertyConstructorsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const properties = await import('./descriptor-property-constructors/prepare.mjs');
+          const component = await properties.prepareDescriptorPropertyConstructors({ sourceRoot, outputRoot,
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            preparedFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            preparedReceivers: preparedComponents.get('descriptorReceiverFactoryReceipt'),
+            preparedDescriptorSubstitutor: preparedComponents.get('descriptorSubstitutorReceipt'),
+            preparedDescriptorContracts: preparedComponents.get('descriptorReceipt'),
+            preparedCopyBuilders: preparedComponents.get('copyBuilderPlatformReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          descriptorPropertyComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await properties.verifyDescriptorPropertyConstructors(descriptorPropertyComposition);
+          assert.equal(component.commonSources.length, 8);
+          const owners = new Map([
+            ['compiler-port-descriptors/generated/VariableDescriptor.kt', 'descriptorReceipt'],
+            ['compiler-port-descriptors/generated/PropertyDescriptor.kt', 'copyBuilderPlatformReceipt'],
+          ]);
+          assert.deepEqual(component.receipt.contractPredecessorRows.map(row => row.path).sort(), [...owners.keys()].sort());
+          return { ...component, predecessorBindings: component.receipt.contractPredecessorRows.map(row => ({
+            component: owners.get(row.path), componentRelativePath: row.path,
+            filename: row.filename, bytes: row.bytes, sha256: row.sha256,
+          })) };
         }],
         ['typeSubstitutorGetterReceipt', async ({ sourceRoot, outputRoot }) => {
           const getter = await import('./type-substitutor-getter/prepare.mjs');
@@ -1444,10 +1469,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const functions = await import('./descriptor-function-implementations/prepare.mjs');
       const receivers = await import('./descriptor-receiver-factory/prepare.mjs');
       const substitution = await import('./descriptor-substitutor/prepare.mjs');
-      const substitutionFinal = await substitution.verifyFinalDescriptorSubstitutor({
-        ...descriptorSubstitutorComposition,
+      const properties = await import('./descriptor-property-constructors/prepare.mjs');
+      const propertyFinal = await properties.verifyFinalDescriptorPropertyConstructors({
+        ...descriptorPropertyComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorPropertyConstructorsFinalReceipt = propertyFinal.receipt;
+      const substitutionFinal = await substitution.verifyFinalDescriptorSubstitutor({
+        ...descriptorSubstitutorComposition,
+        retainedSources: propertyFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorSubstitutorFinalReceipt = substitutionFinal.receipt;
