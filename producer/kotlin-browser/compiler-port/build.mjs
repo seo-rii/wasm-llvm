@@ -92,6 +92,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorReceiverComposition;
   let descriptorSubstitutorComposition;
   let metadataVersionComposition;
+  let irInterningComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -523,6 +524,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         }],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
+        ['irInterningReceipt', async ({ sourceRoot, outputRoot }) => {
+          const intern = await import('./ir-interning/prepare.mjs');
+          const component = await intern.prepareIrInterning({ sourceRoot, outputRoot });
+          irInterningComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await intern.verifyIrInterning(irInterningComposition);
+          assert.equal(component.commonSources.length, 2);
+          return component;
+        }],
         ['jsAstReceipt', async ({ sourceRoot, outputRoot }) => {
           const ast = await import('./js-ast/prepare.mjs');
           const component = await ast.prepareJsAstSources({ sourceRoot, outputRoot });
@@ -1518,6 +1527,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const metadata = await import('./metadata-version-host/prepare.mjs');
       receipt.metadataVersionHostFinalReceipt = await metadata.verifyFinalMetadataVersionHost({
         ...metadataVersionComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const intern = await import('./ir-interning/prepare.mjs');
+      receipt.irInterningFinalReceipt = await intern.verifyFinalIrInterning({
+        ...irInterningComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
