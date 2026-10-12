@@ -7,8 +7,10 @@ import { readNativeJsOutputLock } from './prepare.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), MAX = 64 * 1024 * 1024;
 const identity = bytes => ({ bytes: bytes.length, sha256: sha256(bytes) });
-async function content(pin) {
-    const bytes = await readRegular(pin.filename ?? pin.path, MAX);
+async function content(pin, archiveMap) {
+    const original = pin.filename ?? pin.path, archived = archiveMap?.get(original);
+    if (archived) assert.deepEqual({ bytes: pin.bytes, sha256: pin.sha256 }, { bytes: archived.bytes, sha256: archived.sha256 });
+    const bytes = await readRegular(archived?.archivedFilename ?? original, MAX);
     assert.deepEqual(identity(bytes), { bytes: pin.bytes, sha256: pin.sha256 }); return bytes;
 }
 async function files(directory) {
@@ -20,9 +22,9 @@ async function files(directory) {
     }
     return result.sort();
 }
-async function pins(rows) {
+async function pins(rows, archiveMap) {
     for (let index = 0; index < rows.length; index += 24) {
-        const results = await Promise.allSettled(rows.slice(index, index + 24).map(content));
+        const results = await Promise.allSettled(rows.slice(index, index + 24).map(row => content(row, archiveMap)));
         for (const result of results) if (result.status !== 'fulfilled') throw result.reason;
     }
 }
@@ -71,20 +73,36 @@ async function historical(snapshotManifest) {
         originalSourceSnapshotVerified: true, executionIsHistorical: true, currentNoPhaseExecutionClaimed: false };
 }
 
-export async function verifyNativePhaseCompositionEvidence() {
+export async function verifyNativePhaseCompositionEvidence({ archiveManifest } = {}) {
     const currentLock = await readNativeJsOutputLock();
     const evidence = JSON.parse(await readRegular(path.join(HERE, 'evidence/phase-composition-execution.json'), MAX));
-    assert.equal(evidence.result, 'pass'); assert.equal(evidence.sourceLockSha256, sha256(currentLock.bytes)); assert.deepEqual(evidence.source, currentLock.lock.source);
+    assert.equal(evidence.result, 'pass'); assert.deepEqual(evidence.source, currentLock.lock.source);
+    let archiveMap;
+    if (evidence.sourceLockSha256 !== sha256(currentLock.bytes)) {
+        if (!archiveManifest) {
+            const currentProfile = JSON.parse(await readRegular(path.join(HERE, '../native-first-phase-source-profile/evidence/selection.json'), MAX));
+            const pin = currentProfile.archivedNativePhase.manifest;
+            const bytes = await content(pin); archiveManifest = pin.filename;
+            assert.equal(JSON.parse(bytes).sourceLockSha256, evidence.sourceLockSha256);
+        }
+        const archive = JSON.parse(await readRegular(archiveManifest, MAX));
+        assert.equal(archive.kind, 'immutable-native-phase-shipping-before-first-phase-exclusion');
+        assert.equal(archive.sourceLockSha256, evidence.sourceLockSha256);
+        assert.deepEqual(archive.files.map(row => row.filename).sort(), evidence.currentInputs.map(row => row.filename).sort());
+        archiveMap = new Map(archive.files.map(row => [row.filename, row]));
+        for (const row of archive.files) await content(row, archiveMap);
+        assert.equal(sha256(await readRegular(archiveMap.get(path.join(HERE, 'sources.lock.json')).archivedFilename)), evidence.sourceLockSha256);
+    } else assert.equal(evidence.sourceLockSha256, sha256(currentLock.bytes));
     const status = JSON.parse(await readRegular(evidence.job.status)); assert.deepEqual(status, evidence.status);
     assert.equal(status.pid, evidence.job.pid); assert.equal(status.state, 'exited'); assert.equal(status.exitCode, 0);
-    await pins([...evidence.executionPins, ...evidence.currentInputs, ...evidence.artifacts]);
+    await pins([...evidence.executionPins, ...evidence.currentInputs, ...evidence.artifacts], archiveMap);
     assert.deepEqual(evidence.artifacts.map(row => row.filename).sort(), await files(evidence.job.output));
     for (const row of evidence.primaryOriginalPins) verifyFile(await readRegular(row.filename, MAX), row);
     assert.equal(evidence.primaryOriginalPins.length, 3417); await pins(evidence.actualHistoricalRows);
     assert.equal(evidence.actualHistoricalRows.length, 3550);
     const rawBytes = await content(evidence.integrityPin), raw = JSON.parse(rawBytes);
     assert.deepEqual(rawBytes, await readRegular(path.join(HERE, 'evidence/phase-composition.json'), MAX));
-    await pins(raw.inputs); assert.deepEqual(raw.historicalSources, evidence.actualHistoricalRows);
+    await pins(raw.inputs, archiveMap); assert.deepEqual(raw.historicalSources, evidence.actualHistoricalRows);
     assert.deepEqual(raw.passed, evidence.positivePublicChecks); assert.equal(raw.passed.length, 3);
     assert.deepEqual(raw.rejected, evidence.reasonMatchedNegativeChecks); assert.equal(raw.rejected.length, 13);
     assert.equal(new Set(raw.rejected.map(row => row.name)).size, 13);
@@ -97,8 +115,9 @@ export async function verifyNativePhaseCompositionEvidence() {
     assert.equal(evidence.historicalFilesReadOnly, true);
     const legacy = await historical(evidence.legacy.sourceSnapshotManifest);
     assert.equal(legacy.sourceLockSha256, evidence.legacy.sourceLockSha256); await pins(evidence.legacy.sourceSnapshotPins); await pins(evidence.legacy.executionPins);
-    return { result: 'pass', currentInputPins: evidence.currentInputs.length, primaryOriginals: 3417,
+    return { result: 'pass', mode: archiveMap ? 'archival-before-native-first-phase-exclusion' : 'original-phase-composition',
+        executionIsHistorical: Boolean(archiveMap), currentExecutionClaimed: !archiveMap, checkedShippingInputPins: evidence.currentInputs.length, primaryOriginals: 3417,
         actualHistoricalSources: 3550, positives: 3, negatives: 13, artifacts: evidence.artifacts.length, legacy };
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) console.log(JSON.stringify(await verifyNativePhaseCompositionEvidence()));
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) console.log(JSON.stringify(await verifyNativePhaseCompositionEvidence({ archiveManifest: process.argv[2] })));

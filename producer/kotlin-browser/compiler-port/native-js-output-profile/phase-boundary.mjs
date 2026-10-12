@@ -3,20 +3,26 @@ import path from 'node:path';
 import { assertNoSymlink, readRegular, sha256, verifyFile } from '../../scripts/source.mjs';
 import { verifyFinalLoweringPhaseFactories } from '../lowering-phase-factories/prepare.mjs';
 import { RECIPE, transformLoweringPhaseSource } from '../lowering-phase-factories/transform.mjs';
+import { verifyNativeFirstPhaseFinalSources } from '../native-first-phase-source-profile/prepare.mjs';
 
 export const PHASE_BOUNDARIES = [
     'compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt',
     'compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/WasmLoweringPhases.kt',
 ];
 
-/** Bind the real final graph; never replace its rows with reconstructed predecessors. */
+/** Keep the native actual graph intact; only the phase checker may receive a verified one-row predecessor. */
 export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, retainedSources, recordedPropertyImports, requiredBoundaries, source }) {
     assert.equal(path.resolve(boundary.sourceRoot), path.resolve(sourceRoot), 'Native and phase canonical source roots differ');
     assert.equal(path.resolve(boundary.outputRoot), boundary.outputRoot, 'Canonical phase output root required');
     assert.match(boundary.expectedReceiptSha256 ?? '', /^[a-f0-9]{64}$/, 'External phase preparation receipt digest required');
     await assertNoSymlink(boundary.outputRoot);
-    const final = await verifyFinalLoweringPhaseFactories({ ...boundary, retainedSources, recordedPropertyImports });
-    assert.equal(final.checked.length, 6, 'Native composition requires all six actual phase outputs');
+    const phaseBoundary = { sourceRoot, outputRoot: boundary.outputRoot, expectedReceiptSha256: boundary.expectedReceiptSha256 };
+    const profile = boundary.nativeFirstPhaseProfile;
+    const nativeFirstPhase = profile ? await verifyNativeFirstPhaseFinalSources({ ...profile, sourceRoot, retainedSources,
+        loweringPhaseBoundary: phaseBoundary, recordedPropertyImports }) : undefined;
+    const phaseSources = nativeFirstPhase?.predecessorRetainedSources ?? retainedSources;
+    const final = await verifyFinalLoweringPhaseFactories({ ...phaseBoundary, retainedSources: phaseSources, recordedPropertyImports });
+    assert.equal(final.checked.length, 6, 'Native composition requires all six canonical phase outputs');
     assert.equal(final.exactBodyAndOwnerVerified, true);
     assert.equal(final.receiptSha256, boundary.expectedReceiptSha256);
     const receiptPath = path.join(boundary.outputRoot, 'receipt.json'), receiptBytes = await readRegular(receiptPath);
@@ -43,11 +49,16 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
         assert(checked && checked.filename === filename, 'Phase final does not bind actual native owner');
         const proof = { path: logical, filename, originalFilename, upstreamPin: nativePin, outputPin,
             preparationReceiptSha256: boundary.expectedReceiptSha256, sourceLockSha256: final.sourceLockSha256,
-            entireOriginalRoundtripVerified: true, fullActualPhaseOutputsChecked: 6 };
+            entireOriginalRoundtripVerified: true, ...(nativeFirstPhase ? {
+                actualSelectedPhaseOutputs: 5, restoredExcludedPhaseOutputs: 1, fullCanonicalOutputsVerified: 6,
+            } : { fullActualPhaseOutputsChecked: 6 }) };
         proofMappings.push(proof); mappings.set(logical, { original, common, outputPin, filename, proof });
     }
     return { mappings, receipt: { component: 'loweringPhaseFactoriesReceipt', receiptPath,
         preparationReceiptSha256: boundary.expectedReceiptSha256, sourceLockSha256: final.sourceLockSha256,
         checked: final.checked, mappings: proofMappings, actualFinalSelectionUsed: true,
+        ...(nativeFirstPhase ? { actualSelectedPhaseOutputs: 5, restoredExcludedPhaseOutputs: 1, fullCanonicalOutputsVerified: 6,
+            phaseVerificationSelection: 'actual graph plus exactly one independently verified excluded predecessor',
+            nativeFirstPhaseProfile: nativeFirstPhase.receipt } : {}),
         fullIrLoweringExecuted: false, fullCompilerBuilt: false, languageReadiness: false } };
 }

@@ -81,6 +81,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let serviceLoaderProfileComposition;
   let distributionPathComposition;
   let distributionPathPredecessorSources;
+  let nativeFirstPhaseComposition;
+  let nativeFirstPhasePredecessorSources;
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
@@ -1492,9 +1494,37 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       }
       receipt.distributionPathSourceProfileReceipt = component.receipt;
       distributionPathComposition = { sourceRoot: prepared.sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
-      const final = await profile.verifyFinalDistributionPathSourceProfile({ ...distributionPathComposition,
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./native-first-phase-source-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'nativeFirstPhaseSourceProfileReceipt');
+      const component = await profile.prepareNativeFirstPhaseSourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedLoweringPhaseFactories: loweringPhaseFactoriesComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.deepEqual(component.commonSources, []);
+      assert.deepEqual(component.sourceSetExclusions, [
+        'compiler/ir/ir.inline/src/org/jetbrains/kotlin/ir/inline/konan/NativeFirstPhaseLoweringPhases.kt',
+      ]);
+      const excluded = component.sourceSetExclusions[0], pin = files.get(excluded);
+      assert(pin?.compile, 'Missing selected native first-phase source');
+      assert.deepEqual({ path: excluded, ...pin }, component.receipt.excluded, 'Native first-phase source owner or metadata changed');
+      files.set(excluded, { ...pin, compile: false });
+      receipt.nativeFirstPhaseSourceProfileReceipt = component.receipt;
+      nativeFirstPhaseComposition = { sourceRoot: prepared.sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+      const final = await profile.verifyNativeFirstPhaseFinalSources({ ...nativeFirstPhaseComposition,
+        loweringPhaseBoundary: loweringPhaseFactoriesComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.nativeFirstPhaseSourceProfileFinalReceipt = final.receipt;
+      nativeFirstPhasePredecessorSources = final.predecessorRetainedSources;
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./distribution-path-source-profile/prepare.mjs');
+      const final = await profile.verifyFinalDistributionPathSourceProfile({ ...distributionPathComposition,
+        retainedSources: nativeFirstPhasePredecessorSources });
       receipt.distributionPathSourceProfileFinalReceipt = final.receipt;
       distributionPathPredecessorSources = final.predecessorRetainedSources;
     }
@@ -1582,7 +1612,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
-        verifiedLoweringPhaseBoundary: loweringPhaseFactoriesComposition,
+        verifiedLoweringPhaseBoundary: { ...loweringPhaseFactoriesComposition, nativeFirstPhaseProfile: nativeFirstPhaseComposition },
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
@@ -1736,8 +1766,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const phases = await import('./lowering-phase-factories/prepare.mjs');
       receipt.loweringPhaseFactoriesFinalReceipt = await phases.verifyFinalLoweringPhaseFactories({
         ...loweringPhaseFactoriesComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: nativeFirstPhasePredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }

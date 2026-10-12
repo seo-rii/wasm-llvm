@@ -29,12 +29,18 @@ independently verified.
 Twenty late boundary owners remain exact, including both recorded phase owners.
 The optional `verifiedLoweringPhaseBoundary` requires the canonical `sourceRoot`,
 phase `outputRoot` and externally supplied `expectedReceiptSha256`. The native
-guard independently executes the public phase final verifier on the same actual
-graph and checks all six phase outputs, not only the two overlapping callers.
+guard independently executes the public phase final verifier and checks all six
+canonical phase outputs, not only the two overlapping callers. With the optional
+`nativeFirstPhaseProfile: { outputRoot, expectedReceiptSha256 }` nested inside this
+binding, it independently verifies the exact one-row native first-phase exclusion
+on the actual graph first. Five phase outputs are actual selected inputs and one
+verified excluded predecessor is restored only for the phase checker. Native
+lexical closure and the module proof continue to use the unchanged actual graph.
+Without that profile, all six outputs must be actual selected inputs.
 Each caller must retain its exact early canonical phase body and owner, its full
 upstream snapshot must reverse byte-for-byte, and only its recorded assembly
 imports can differ at the final stage. A missing or forged phase binding fails;
-the verifier never substitutes reconstructed source rows into the actual graph.
+the verifier never substitutes reconstructed source rows into the native actual graph.
 Only the exact recorded assembly
 import prefix blocks may be removed for comparison; raw string blank lines and
 all other bytes remain significant. EnumClassLowering additionally permits its
@@ -104,3 +110,12 @@ node producer/kotlin-browser/compiler-port/native-js-output-profile/verify.mjs
 Sealed evidence binds final logs/statuses, every generated artifact, unit bytes,
 actual assembly/module references and the explicitly invalid historical run.
 Filesystem, readiness, new runtime execution and complete compiler flags are false.
+
+
+The previous phase-overlay proof is archived under its c677 lock, source snapshots
+and 13 reason-matched guards. `verify-phase.mjs` reports an explicit archival mode
+when the current lock includes the native first-phase selector. Current selector
+and native/module composition evidence is verified with
+`node producer/kotlin-browser/compiler-port/native-first-phase-source-profile/verify.mjs`.
+Its proof distinguishes five actual phase outputs from one restored canonical
+reference, keeps both actual JS/Wasm bindings, and adds no compiler/runtime run.
