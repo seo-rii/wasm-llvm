@@ -475,12 +475,16 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
               .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
           descriptorClassComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
           await classes.verifyDescriptorClassImplementations(descriptorClassComposition);
-          assert.equal(component.commonSources.length, 10);
+          assert.equal(component.commonSources.length, 12);
           assert.deepEqual(component.predecessorBindings, []);
-          assert.equal(component.receipt.contractPredecessorRows.length, 1);
-          const predecessor = component.receipt.contractPredecessorRows[0];
-          assert.equal(predecessor.path, 'core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/ModuleAwareClassDescriptor.kt');
-          assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Class scope overlay must replace the genuine raw owner');
+          assert.deepEqual(component.receipt.contractPredecessorRows.map(row => row.path), [
+            'core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/ModuleAwareClassDescriptor.kt',
+            'core/descriptors/src/org/jetbrains/kotlin/types/error/ErrorClassDescriptor.kt',
+            'core/descriptors/src/org/jetbrains/kotlin/resolve/OverridingStrategy.kt',
+          ]);
+          for (const predecessor of component.receipt.contractPredecessorRows) {
+            assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Class consumer overlay must replace the genuine raw owner');
+          }
           return component;
         }],
         ['assertionReceipt', (await import('./assertions/prepare.mjs')).prepareAssertionSources],
