@@ -96,6 +96,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let irInterningComposition;
   let irFileLineSearchComposition;
   let descriptorPropertyComposition;
+  let descriptorClassComposition;
   let loweringPhaseFactoriesComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
@@ -454,6 +455,30 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           const component = await scopes.prepareDescriptorKindFilterHost({ sourceRoot, outputRoot });
           descriptorKindFilterComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
           await scopes.verifyDescriptorKindFilterHost(descriptorKindFilterComposition);
+          return component;
+        }],
+        ['descriptorClassImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const classes = await import('./descriptor-class-implementations/prepare.mjs');
+          const component = await classes.prepareDescriptorClassImplementations({ sourceRoot, outputRoot,
+            preparedDescriptorBases: preparedComponents.get('descriptorBaseImplementationsReceipt'),
+            preparedFunctions: preparedComponents.get('descriptorFunctionImplementationsReceipt'),
+            preparedReceivers: preparedComponents.get('descriptorReceiverFactoryReceipt'),
+            preparedDescriptorSubstitutor: preparedComponents.get('descriptorSubstitutorReceipt'),
+            preparedPropertyConstructors: preparedComponents.get('descriptorPropertyConstructorsReceipt'),
+            preparedDescriptorContracts: preparedComponents.get('descriptorReceipt'),
+            preparedTypeContracts: preparedComponents.get('typeContractReceipt'),
+            preparedTypeUtilities: preparedComponents.get('typeUtilitiesReceipt'),
+            preparedKindFilterHost: preparedComponents.get('descriptorKindFilterHostReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+          descriptorClassComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await classes.verifyDescriptorClassImplementations(descriptorClassComposition);
+          assert.equal(component.commonSources.length, 10);
+          assert.deepEqual(component.predecessorBindings, []);
+          assert.equal(component.receipt.contractPredecessorRows.length, 1);
+          const predecessor = component.receipt.contractPredecessorRows[0];
+          assert.equal(predecessor.path, 'core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/ModuleAwareClassDescriptor.kt');
+          assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Class scope overlay must replace the genuine raw owner');
           return component;
         }],
         ['assertionReceipt', (await import('./assertions/prepare.mjs')).prepareAssertionSources],
@@ -1497,10 +1522,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const receivers = await import('./descriptor-receiver-factory/prepare.mjs');
       const substitution = await import('./descriptor-substitutor/prepare.mjs');
       const properties = await import('./descriptor-property-constructors/prepare.mjs');
-      const propertyFinal = await properties.verifyFinalDescriptorPropertyConstructors({
-        ...descriptorPropertyComposition,
+      const classes = await import('./descriptor-class-implementations/prepare.mjs');
+      const classFinal = await classes.verifyFinalDescriptorClassImplementations({
+        ...descriptorClassComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorClassImplementationsFinalReceipt = classFinal.receipt;
+      const propertyFinal = await properties.verifyFinalDescriptorPropertyConstructors({
+        ...descriptorPropertyComposition,
+        retainedSources: classFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorPropertyConstructorsFinalReceipt = propertyFinal.receipt;
