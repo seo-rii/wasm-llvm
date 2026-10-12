@@ -98,6 +98,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let irFileLineSearchComposition;
   let descriptorPropertyComposition;
   let descriptorClassComposition;
+  let descriptorLazyMutableComposition;
   let loweringPhaseFactoriesComposition;
   let rawFirLiteralComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
@@ -484,6 +485,28 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           ]);
           for (const predecessor of component.receipt.contractPredecessorRows) {
             assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Class consumer overlay must replace the genuine raw owner');
+          }
+          return component;
+        }],
+        ['descriptorLazyMutableImplementationsReceipt', async ({ sourceRoot, outputRoot }) => {
+          const implementations = await import('./descriptor-lazy-mutable-implementations/prepare.mjs');
+          const component = await implementations.prepareDescriptorLazyMutableImplementations({ sourceRoot, outputRoot,
+            preparedClassImplementations: preparedComponents.get('descriptorClassImplementationsReceipt'),
+            preparedDescriptorSubstitutor: preparedComponents.get('descriptorSubstitutorReceipt'),
+            preparedPropertyConstructors: preparedComponents.get('descriptorPropertyConstructorsReceipt'),
+            preparedTypeUtilities: preparedComponents.get('typeUtilitiesReceipt'),
+            retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+              .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+            recordedPropertyImports: receipt.propertyImports?.imports ?? [] });
+          descriptorLazyMutableComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await implementations.verifyDescriptorLazyMutableImplementations(descriptorLazyMutableComposition);
+          assert.equal(component.commonSources.length, 4);
+          assert.deepEqual(component.predecessorBindings, []);
+          assert.deepEqual(component.receipt.contractPredecessorRows.map(row => row.path), [
+            'core/descriptors/src/org/jetbrains/kotlin/builtins/suspendFunctionTypes.kt',
+          ]);
+          for (const predecessor of component.receipt.contractPredecessorRows) {
+            assert.equal(predecessor.filename, path.join(output, 'sources', predecessor.path), 'Lazy/mutable consumer overlay must replace the genuine raw owner');
           }
           return component;
         }],
@@ -1562,10 +1585,17 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const substitution = await import('./descriptor-substitutor/prepare.mjs');
       const properties = await import('./descriptor-property-constructors/prepare.mjs');
       const classes = await import('./descriptor-class-implementations/prepare.mjs');
-      const classFinal = await classes.verifyFinalDescriptorClassImplementations({
-        ...descriptorClassComposition,
+      const implementations = await import('./descriptor-lazy-mutable-implementations/prepare.mjs');
+      const lazyMutableFinal = await implementations.verifyFinalDescriptorLazyMutableImplementations({
+        ...descriptorLazyMutableComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+      receipt.descriptorLazyMutableImplementationsFinalReceipt = lazyMutableFinal.receipt;
+      const classFinal = await classes.verifyFinalDescriptorClassImplementations({
+        ...descriptorClassComposition,
+        retainedSources: lazyMutableFinal.predecessorRetainedSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.descriptorClassImplementationsFinalReceipt = classFinal.receipt;
