@@ -93,6 +93,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorSubstitutorComposition;
   let metadataVersionComposition;
   let irInterningComposition;
+  let irFileLineSearchComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -524,6 +525,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         }],
         ['linkerReceipt', (await import('./linker/prepare.mjs')).prepareLinkerSources],
         ['backendReceipt', (await import('./backend/prepare.mjs')).prepareBackendSources],
+        ['irFileLineSearchReceipt', async ({ sourceRoot, outputRoot }) => {
+          const lines = await import('./ir-file-line-search/prepare.mjs');
+          const component = await lines.prepareIrFileLineSearch({ sourceRoot, outputRoot });
+          irFileLineSearchComposition = { sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+          await lines.verifyIrFileLineSearch(irFileLineSearchComposition);
+          assert.equal(component.commonSources.length, 1);
+          return component;
+        }],
         ['irInterningReceipt', async ({ sourceRoot, outputRoot }) => {
           const intern = await import('./ir-interning/prepare.mjs');
           const component = await intern.prepareIrInterning({ sourceRoot, outputRoot });
@@ -1527,6 +1536,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const metadata = await import('./metadata-version-host/prepare.mjs');
       receipt.metadataVersionHostFinalReceipt = await metadata.verifyFinalMetadataVersionHost({
         ...metadataVersionComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const lines = await import('./ir-file-line-search/prepare.mjs');
+      receipt.irFileLineSearchFinalReceipt = await lines.verifyFinalIrFileLineSearch({
+        ...irFileLineSearchComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
