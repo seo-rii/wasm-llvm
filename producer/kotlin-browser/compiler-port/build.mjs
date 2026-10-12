@@ -86,6 +86,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let jvmUtilityProfileComposition;
   let nioUtilityProfileComposition;
   let sourceHostComponent;
+  let parserProfileComponent;
   let firSyntaxLightTreeComposition;
   let descriptorFunctionComposition;
   let descriptorKindFilterComposition;
@@ -98,6 +99,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let descriptorPropertyComposition;
   let descriptorClassComposition;
   let loweringPhaseFactoriesComposition;
+  let rawFirLiteralComposition;
   async function bindCompilerJvmAnnotations(sourcePaths) {
     const imported = [];
     for (const sourcePath of sourcePaths) {
@@ -992,6 +994,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         await execute('git', ['init', '--quiet', componentRoot], { timeout: 10000, maxBuffer: 65536 });
         const component = await prepare({ sourceRoot: prepared.sourceRoot, outputRoot: componentRoot });
         if (key === 'sourceHostReceipt') sourceHostComponent = component;
+        if (key === 'parserProfileReceipt') parserProfileComponent = component;
         preparedComponents.set(key, component);
         receipt[key] = component.receipt;
         for (const binding of component.predecessorBindings ?? []) {
@@ -1328,6 +1331,37 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       firSyntaxLightTreeComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
     }
     if (sourceHost === 'portable') {
+      const raw = await import('./raw-fir-literal-host/prepare.mjs');
+      const { assembleRawFirLiteralImports } = await import('./raw-fir-literal-host/transform.mjs');
+      const outputRoot = path.join(output, 'components', 'rawFirLiteralHostReceipt');
+      const component = await raw.prepareRawFirLiteralHost({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedHost: sourceHostComponent, preparedParserProfile: parserProfileComponent,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      rawFirLiteralComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
+      await raw.verifyRawFirLiteralHost(rawFirLiteralComposition);
+      assert.equal(component.commonSources.length, 2);
+      assert.deepEqual(component.replacedOriginalPaths, [component.receipt.before.path]);
+      const before = component.receipt.before, previous = files.get(before.path);
+      assert(previous?.compile, 'Missing selected raw FIR builder predecessor');
+      assert.deepEqual({ path: before.path, filename: previous.filename, bytes: previous.bytes, sha256: previous.sha256 }, before);
+      receipt.rawFirLiteralAssemblyBindings = [];
+      for (const filename of component.commonSources) {
+        assert(filename.startsWith(outputRoot + path.sep));
+        const logical = relativePath(path.relative(outputRoot, filename));
+        assert(logical === before.path || !files.has(logical), 'Duplicate raw FIR helper source');
+        const canonical = await readRegular(filename), bytes = assembleRawFirLiteralImports(canonical, receipt.propertyImports.imports);
+        await writeFile(filename, bytes, { mode: 0o600 });
+        const digest = sha256(bytes);
+        files.set(logical, { filename, bytes: bytes.length, sha256: digest, compile: true });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== logical);
+        receipt.portableSourceBindings.push({ path: logical, sha256: digest });
+        receipt.rawFirLiteralAssemblyBindings.push({ path: logical, canonicalSha256: sha256(canonical), bytes: bytes.length, sha256: digest });
+      }
+      receipt.rawFirLiteralHostReceipt = component.receipt;
+    }
+    if (sourceHost === 'portable') {
       const profile = await import('./nio-utility-source-profile/prepare.mjs');
       const outputRoot = path.join(output, 'components', 'nioUtilitySourceProfileReceipt');
       const component = await profile.prepareNioUtilitySourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
@@ -1618,6 +1652,15 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const scopes = await import('./descriptor-kind-filter-host/prepare.mjs');
       receipt.descriptorKindFilterHostFinalReceipt = await scopes.verifyFinalDescriptorKindFilterHost({
         ...descriptorKindFilterComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        recordedPropertyImports: receipt.propertyImports.imports,
+      });
+    }
+    if (sourceHost === 'portable') {
+      const raw = await import('./raw-fir-literal-host/prepare.mjs');
+      receipt.rawFirLiteralHostFinalReceipt = await raw.verifyFinalRawFirLiteralHost({
+        ...rawFirLiteralComposition,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         recordedPropertyImports: receipt.propertyImports.imports,
