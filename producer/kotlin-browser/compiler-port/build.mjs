@@ -79,6 +79,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let moduleRequirePathsComposition;
   let nativeJsOutputProfileComposition;
   let serviceLoaderProfileComposition;
+  let distributionPathComposition;
+  let distributionPathPredecessorSources;
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
@@ -1468,6 +1470,35 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       serviceLoaderProfileComposition = { outputRoot, expectedReceiptSha256: component.receiptSha256 };
     }
     if (sourceHost === 'portable') {
+      const profile = await import('./distribution-path-source-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'distributionPathSourceProfileReceipt');
+      const component = await profile.prepareDistributionPathSourceProfile({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedJvmUtilityProfile: jvmUtilityProfileComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.deepEqual(component.commonSources, []);
+      assert.deepEqual(component.sourceSetExclusions, [
+        'compiler/util/src/org/jetbrains/kotlin/utils/PathUtil.kt',
+        'compiler/util/src/org/jetbrains/kotlin/utils/KotlinPaths.kt',
+        'compiler/util/src/org/jetbrains/kotlin/utils/KotlinPathsFromHomeDir.kt',
+      ]);
+      for (const excluded of component.sourceSetExclusions) {
+        const pin = files.get(excluded);
+        assert(pin?.compile, 'Missing selected distribution path source');
+        assert.deepEqual({ path: excluded, ...pin }, component.receipt.selection.sources.find(row => row.path === excluded),
+          'Distribution path source owner or metadata changed');
+        files.set(excluded, { ...pin, compile: false });
+      }
+      receipt.distributionPathSourceProfileReceipt = component.receipt;
+      distributionPathComposition = { sourceRoot: prepared.sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+      const final = await profile.verifyFinalDistributionPathSourceProfile({ ...distributionPathComposition,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.distributionPathSourceProfileFinalReceipt = final.receipt;
+      distributionPathPredecessorSources = final.predecessorRetainedSources;
+    }
+    if (sourceHost === 'portable') {
       const profile = await import('./k1-container-profile/prepare.mjs');
       const final = await profile.verifyK1ContainerProfileComposition({
         profileRoot: path.join(output, 'components', 'k1ContainerProfileReceipt'),
@@ -1750,16 +1781,14 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const profile = await import('./service-loader-profile/prepare.mjs');
       receipt.serviceLoaderProfileFinalReceipt = await profile.verifyServiceLoaderFinalSources({
         ...serviceLoaderProfileComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: distributionPathPredecessorSources,
       });
     }
     if (sourceHost === 'portable') {
       const profile = await import('./klib-disk-source-profile/prepare.mjs');
       receipt.klibDiskSourceProfileFinalReceipt = await profile.verifyKlibDiskFinalSources({
         ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: distributionPathPredecessorSources,
       });
     }
     if (sourceHost === 'portable') {
@@ -1767,8 +1796,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.jvmUtilitySourceProfileFinalReceipt = await profile.verifyJvmUtilityFinalSources({
         ...jvmUtilityProfileComposition,
         klibDiskProfile: { ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition },
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: distributionPathPredecessorSources,
       });
     }
     if (sourceHost === 'portable') {
@@ -1777,8 +1805,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         ...nioUtilityProfileComposition,
         jvmUtilityProfile: { ...jvmUtilityProfileComposition,
           klibDiskProfile: { ...klibDiskSourceProfileComposition, serviceLoaderProfile: serviceLoaderProfileComposition } },
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: distributionPathPredecessorSources,
       });
     }
     const parserRecipe = await readJson(path.join(here, '..', 'parser-probe/recipe.json'));
