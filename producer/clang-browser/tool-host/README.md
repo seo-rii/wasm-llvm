@@ -188,3 +188,22 @@ must exit 125, then a fresh valid instance must still succeed.
 Node disables the Wasm trap handler for this small protocol fixture so its large
 virtual-memory reservation does not defeat the test runner's address-space cap;
 this fixture makes no performance claim.
+
+After a candidate has a complete verified producer receipt, run the independent
+producer CLI fixture with an external process deadline:
+
+```sh
+timeout 300 node --disable-wasm-trap-handler \
+  producer/clang-browser/tool-host/smoke-cli.mjs \
+  /path/to/private-output /path/to/new-cli-results
+```
+
+This runs actual Clang and LLD bytes in Node's WASI host, including a genuine
+non-root cwd with Korean/spaced paths, a response file, `-I`/`-D`, `-E`/`-S`/`-c`,
+an ordinary diagnostic exit, and linking two object files through the real driver
+bridge. It executes the resulting freestanding Wasm export and expects `42`.
+The shared private filesystem contains real pinned linker bytes at its executable
+path. The receipt records each command, actual child dispatch, stdout/stderr,
+module identities, fixture hash and producer receipt hash. It does not qualify
+the container VFS, Workers, Chromium, cancellation, or complete C/C++ sysroots;
+those remain the consumer and release gates. The output directory must be new.
