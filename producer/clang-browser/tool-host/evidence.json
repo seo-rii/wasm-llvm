@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "profileId": "wasm-llvm/clang-browser/tool-host-exec-v1",
+  "qualification": "ABI and actual WASI libc cwd fixtures passed; full Clang/LLD CLI and browser gate pending",
+  "llvmCommit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+  "patchSha256": "6e76d1c35f3cbe50acde6bafab50861ab817b7c8f3a6e5bd69ba735bf3f34dc2",
+  "initialCwdSha256": "d316c54817d3c636c3a1958d8ea2fbc58faf6fc092f08be324bb416e2d66a060",
+  "host": {
+    "node": "v24.1.0",
+    "os": "Linux x86_64"
+  },
+  "execProtocol": {
+    "schemaVersion": 1,
+    "node": "v24.1.0",
+    "bytes": 742472,
+    "sha256": "145f8e2bc6388d949ed4890332737c43b9b0ee191c5c427aa3523e76a8fe3e76",
+    "calls": [
+      {
+        "program": "/toolchains/wasm-ld",
+        "argv": [
+          "wasm-ld",
+          "space arg",
+          "한글",
+          ""
+        ],
+        "env": [],
+        "flags": 1,
+        "result": 23
+      },
+      {
+        "program": "/toolchains/wasm-ld",
+        "argv": [
+          "wasm-ld",
+          "space arg",
+          "한글",
+          ""
+        ],
+        "env": [
+          "ONE=value space",
+          "TWO="
+        ],
+        "flags": 0,
+        "result": 0
+      },
+      {
+        "program": "/toolchains/wasm-ld",
+        "argv": [
+          "wasm-ld",
+          "space arg",
+          "한글",
+          ""
+        ],
+        "env": [],
+        "flags": 0,
+        "result": 0
+      },
+      {
+        "program": "/toolchains/wasm-ld",
+        "argv": [
+          "wasm-ld",
+          "space arg",
+          "한글",
+          ""
+        ],
+        "env": [],
+        "flags": 1,
+        "result": -1
+      },
+      {
+        "program": "/toolchains/wasm-ld",
+        "argv": [
+          "wasm-ld",
+          "space arg",
+          "한글",
+          ""
+        ],
+        "env": [],
+        "flags": 1,
+        "result": -2
+      }
+    ],
+    "unsupportedRequestsRejectedBeforeHost": [
+      "timeout",
+      "memory",
+      "redirect",
+      "affinity"
+    ],
+    "processStatistics": "unavailable",
+    "passed": true
+  },
+  "cwdProtocol": {
+    "passed": true,
+    "node": "v24.1.0",
+    "cwd": "/workspace/한글 space",
+    "pwdIgnored": true,
+    "relativeFileRead": "cwd-ok\n",
+    "results": [
+      {
+        "mode": "valid",
+        "code": 0
+      },
+      {
+        "mode": "reject",
+        "code": 125
+      },
+      {
+        "mode": "empty",
+        "code": 125
+      },
+      {
+        "mode": "relative",
+        "code": 125
+      },
+      {
+        "mode": "embedded-nul",
+        "code": 125
+      },
+      {
+        "mode": "too-large",
+        "code": 125
+      },
+      {
+        "mode": "missing",
+        "code": 125
+      },
+      {
+        "mode": "valid",
+        "code": 0
+      }
+    ]
+  },
+  "fixtureModules": {
+    "fixture.wasm": {
+      "bytes": 742472,
+      "sha256": "145f8e2bc6388d949ed4890332737c43b9b0ee191c5c427aa3523e76a8fe3e76"
+    },
+    "cwd-fixture.wasm": {
+      "bytes": 342410,
+      "sha256": "ff3b62357a1970757e53a507d5a32ff989c42b5b03772e59b57be493b59a4284"
+    }
+  },
+  "validation": {
+    "privateBuildTests": 6,
+    "producerAndDefaultBuildOptionTests": 19,
+    "abiProtocolCalls": 5,
+    "cwdCases": 8
+  },
+  "heavyBuild": {
+    "originalCandidate": "exec_v1 only; no non-root cwd qualification",
+    "successor": "exec_v1 plus initial_cwd in Clang and LLD; not yet qualified",
+    "optimization": "successor requests raw links to test correctness before Binaryen",
+    "defaultArtifactsModified": false
+  },
+  "limitations": [
+    "The protocol callback returns controlled statuses and does not stand in for real Clang/LLD execution.",
+    "The cwd fixture uses the real pinned WASI libc and local Node preopens; browser integration is a separate consumer gate.",
+    "A cached relink records exact input identities but does not prove a clean source-to-object rebuild.",
+    "No distribution or deployment has been published."
+  ],
+  "fixturePatchSha256": "555acdb3c4a02cfd796d7c0a285ce4252a4805b897e962587756dc55e4273050",
+  "appliedProgramSha256": "e36faf73c4a5496da5f1d67aa518adfd272bd3ac743f28109bc8564a5ff5ef2d",
+  "patchWhitespaceNormalization": "The committed patch omits blank context spaces; applying it produces exactly the source used by the ABI fixture."
+}

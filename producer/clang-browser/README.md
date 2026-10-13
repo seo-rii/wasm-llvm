@@ -17,6 +17,11 @@ completed build writes checksums and effective versions to `artifacts/clang-brow
 The checked-in producer artifacts are inputs to deployment, not npm package contents. Run
 `prepare:clang-release` to produce the directory that should be uploaded to static hosting.
 
+The separate experimental [synchronous tool host profile](tool-host/README.md) adds a
+versioned import for the Clang driver's linker job. It requires an explicitly registered
+consumer host and has separate build receipts. `CLANG_TOOL_HOST=OFF` is the default;
+the existing compiler artifacts and release packager do not opt into this profile.
+
 ## Rebuild
 
 The full build requires CMake, Ninja, Git, tar, a downloader, and enough disk for native and WASI
