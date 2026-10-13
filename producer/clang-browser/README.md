@@ -8,7 +8,7 @@ completed build writes checksums and effective versions to `artifacts/clang-brow
 
 - `clang.zip`: raw WASI Clang driver module
 - `lld.zip`: raw WASI LLD module
-- `sysroot.tar.zip`: trimmed WASI C/C++ sysroot and Clang resource headers
+- `sysroot.tar.zip`: complete selected-target WASI C/C++ and Clang resource headers, with selected runtime libraries
 - `memfs.zip`: bootstrap filesystem used by the external host runtime
 - `clangd/clangd.js` and `clangd/clangd.wasm.gz`: Emscripten pthread clangd worker
 - `clangd/clangd.headers.json.gz`: optional separately fingerprinted complete selected-target C/C++ and resource headers, produced with `CLANGD_SEPARATE_HEADERS=ON`
@@ -25,7 +25,7 @@ applies the pinned YoWASP WASI-host patch, the checksum-pinned LLVM patch that p
 WASI `close()` results instead of returning stale `errno`, and the checksum-pinned local patch that
 limits the standalone LLD module to its WebAssembly driver. A separate checksum-pinned clangd patch
 adds the Asyncify bridge that waits for browser-provided stdin before each JSON-RPC message. The
-producer then builds Clang/LLD/clangd, trims the sysroot, and packages the result. It also rebuilds
+producer then builds Clang/LLD/clangd, selects the target and runtime libraries, and packages the result. It also rebuilds
 MemFS from the small source files pinned by immutable revision, size and SHA-256 in the manifest.
 The node table holds 8192 entries instead of 1024, leaving room for Objective-C headers and workspace
 files after mounting the sysroot. A clean output directory is sufficient.
@@ -39,16 +39,17 @@ would have used (`LLVM_MINSIZE_OPT` for `MinSizeRel`, `O3` for `Release`, `O2` f
 Before linking clangd, the producer prepares a separate `clangd-include` directory containing
 shared headers and only the selected `TARGET_TRIPLE` headers. It resolves SDK header aliases while
 copying, so excluding other WASI targets cannot leave dangling links. The complete selected C/C++
-headers remain available to clangd; the later compiler sysroot dependency pruning does not affect
-this directory. The default `CLANGD_SEPARATE_HEADERS=OFF` embeds it at `/usr/include` in clangd's
+headers remain available to clangd and the execution compiler. Header probes validate the execution
+sysroot across supported C++ standards without deleting headers outside their dependency closure.
+The default `CLANGD_SEPARATE_HEADERS=OFF` embeds this separate directory at `/usr/include` in clangd's
 Wasm, preserving the two-asset worker contract.
 
 With `CLANGD_SEPARATE_HEADERS=ON`, the linker omits the embedded tree. Packaging stores the complete
 tree at `/usr/include` and the matching resource headers at `/lib/clang/<major>/include` in a
 separately versioned gzip JSON asset. The runtime verifies and prepares that asset concurrently
 with Wasm compilation, then mounts every header before document analysis. Embedded-header and
-custom asset configurations remain supported. The selected execution sysroot is dependency-pruned
-and cannot replace this complete clangd header tree.
+custom asset configurations remain supported. Clangd continues to use its separate header tree,
+prepared before execution sysroot target aliases and runtime libraries are selected.
 
 The separated candidate passed C/C++ diagnostics, completion and pthread startup checks, but
 current Chromium measurements showed slower readiness and first diagnostics. Header separation

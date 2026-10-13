@@ -84,9 +84,11 @@ function dependencyPaths(contents) {
 	return paths;
 }
 
+// Keep the entry point used by existing build recipes, but preserve every header
+// in the already selected WASI/libc++ and Clang resource trees. Probe dependencies
+// validate the sysroot; they cannot describe every public header a user may include.
 export async function pruneSysrootHeaders({
 	sysroot,
-	resourceIncludeDir,
 	probeDir,
 	cCompiler,
 	cppCompiler,
@@ -115,31 +117,7 @@ export async function pruneSysrootHeaders({
 		}
 	}
 
-	async function prune(directory, isRoot = true) {
-		let hasEntries = false;
-		for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
-			const entryPath = path.join(directory, entry.name);
-			if (entry.isDirectory()) {
-				if (await prune(entryPath, false)) hasEntries = true;
-				continue;
-			}
-			const relative = path.relative(sysroot, entryPath).split(path.sep).join('/');
-			if (!entry.isFile() || dependencyFiles.has(relative)) {
-				hasEntries = true;
-				continue;
-			}
-			await fs.rm(entryPath);
-		}
-		if (!isRoot && !hasEntries) {
-			await fs.rmdir(directory);
-			return false;
-		}
-		return true;
-	}
-
-	await prune(path.join(sysroot, 'include'));
-	await prune(resourceIncludeDir);
-	// Fail before packaging if pruning made any supported mode uncompilable.
+	// Fail before packaging if any supported language mode is uncompilable.
 	for (const probe of probes) {
 		await run(probe.compiler, [...probe.args, '-fsyntax-only']);
 	}

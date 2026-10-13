@@ -22,6 +22,20 @@ try {
 	compilerUnavailable = 'Requires Clang with C++26 support (or WASI_SDK_PATH)';
 }
 
+async function snapshotHeaders({ sysroot, resourceIncludeDir }) {
+	const files = new Map();
+	async function walk(directory) {
+		for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+			const filename = path.join(directory, entry.name);
+			if (entry.isDirectory()) await walk(filename);
+			else files.set(path.relative(sysroot, filename), await fs.readFile(filename));
+		}
+	}
+	await walk(path.join(sysroot, 'include'));
+	await walk(resourceIncludeDir);
+	return files;
+}
+
 async function fixture(t, cppSource = '#include <entry.h>\nint main() { return selected; }\n') {
 	// Make dependency escaping is exercised by actual compiler output.
 	const root = await fs.mkdtemp(path.join(os.tmpdir(), 'sysroot probe $ # '));
@@ -55,9 +69,23 @@ async function fixture(t, cppSource = '#include <entry.h>\nint main() { return s
 #endif
 `);
 	await fs.writeFile(path.join(resourceIncludeDir, 'resource.h'), '/* Required resource header. */\n');
-	await fs.writeFile(path.join(resourceIncludeDir, 'unused.h'), '/* Must be removed. */\n');
-	await fs.mkdir(path.join(include, 'unused'));
-	await fs.writeFile(path.join(include, 'unused', 'unused.h'), '/* Must be removed. */\n');
+	const unreachedHeaders = [
+		'include/complex.h',
+		'include/c++/v1/complex',
+		'include/c++/v1/fstream',
+		'include/c++/v1/regex',
+		'include/c++/v1/valarray',
+		'include/c++/v1/__bit/byteswap.h',
+		'include/c++/v1/module.modulemap',
+		'include/unused/unused.h',
+		'lib/clang/22/include/stdatomic.h',
+		'lib/clang/22/include/unused.h'
+	];
+	for (const header of unreachedHeaders) {
+		const filename = path.join(root, header);
+		await fs.mkdir(path.dirname(filename), { recursive: true });
+		await fs.writeFile(filename, `/* Unreached header: ${header}. */\n`);
+	}
 	const cProbe = path.join(probeDir, 'probe.c');
 	const cppProbe = path.join(probeDir, 'probe.cpp');
 	await fs.writeFile(cProbe, '#include <entry.h>\nint main(void) { return selected; }\n');
@@ -67,6 +95,7 @@ async function fixture(t, cppSource = '#include <entry.h>\nint main() { return s
 		root,
 		include,
 		conditionalHeaders,
+		unreachedHeaders,
 		options: {
 			sysroot: root,
 			resourceIncludeDir,
@@ -82,17 +111,18 @@ async function fixture(t, cppSource = '#include <entry.h>\nint main() { return s
 	};
 }
 
-test('pruning retains conditional dependencies from C and every C++ standard, including pre-C++11 and C++23/26', { skip: compilerUnavailable }, async (t) => {
-	const { root, include, conditionalHeaders, options } = await fixture(t);
+test('validates every C++ standard while preserving public and resource headers outside the probe closure', { skip: compilerUnavailable }, async (t) => {
+	const { root, include, conditionalHeaders, unreachedHeaders, options } = await fixture(t);
+	const before = await snapshotHeaders(options);
 	const retained = await pruneSysrootHeaders(options);
 	for (const name of conditionalHeaders) {
 		assert.ok(retained.has(`include/${name}`), name);
 		assert.match(await fs.readFile(path.join(include, name), 'utf8'), /selected/);
 	}
 	assert.ok(retained.has('lib/clang/22/include/resource.h'));
-	await assert.rejects(fs.access(path.join(include, 'unused')), { code: 'ENOENT' });
-	await assert.rejects(fs.access(path.join(options.resourceIncludeDir, 'unused.h')), { code: 'ENOENT' });
-	// Code generation against the already pruned fixture also succeeds.
+	for (const header of unreachedHeaders) assert.ok(!retained.has(header), header);
+	assert.deepEqual(await snapshotHeaders(options), before);
+	// Code generation after validation also succeeds.
 	for (const standard of ['gnu++98', 'gnu++03', 'gnu++11', 'gnu++14', 'gnu++17', 'gnu++20', 'gnu++23', 'gnu++26']) {
 		const output = path.join(root, `${standard}.o`);
 		await execute(compiler, [...options.cppFlags, `-std=${standard}`, '-c', options.cppProbe, '-o', output]);
@@ -100,20 +130,22 @@ test('pruning retains conditional dependencies from C and every C++ standard, in
 	}
 });
 
-test('pruning fails before removing files when a later-standard dependency cannot be collected', { skip: compilerUnavailable }, async (t) => {
+test('missing later-standard dependencies fail without modifying any headers', { skip: compilerUnavailable }, async (t) => {
 	const { include, options } = await fixture(t);
 	await fs.rm(path.join(include, 'cpp26.h'));
+	const before = await snapshotHeaders(options);
 	await assert.rejects(pruneSysrootHeaders(options), /cpp26\.h.*not found/s);
-	await fs.access(path.join(include, 'unused', 'unused.h'));
+	assert.deepEqual(await snapshotHeaders(options), before);
 });
 
-test('post-pruning verification rejects a probe that preprocesses but cannot compile', { skip: compilerUnavailable }, async (t) => {
-	const { include, options } = await fixture(t, '#include <entry.h>\nint main() { return missing_symbol; }\n');
+test('verification rejects a probe that preprocesses but cannot compile without modifying headers', { skip: compilerUnavailable }, async (t) => {
+	const { options } = await fixture(t, '#include <entry.h>\nint main() { return missing_symbol; }\n');
+	const before = await snapshotHeaders(options);
 	await assert.rejects(pruneSysrootHeaders(options), /undeclared identifier 'missing_symbol'/);
-	await assert.rejects(fs.access(path.join(include, 'unused')), { code: 'ENOENT' });
+	assert.deepEqual(await snapshotHeaders(options), before);
 });
 
-test('the real WASI SDK sysroot retains libc++ C++23/26 headers and compiles all producer probes after pruning', { skip: !process.env.WASI_SDK_PATH && 'Set WASI_SDK_PATH for the real sysroot integration test' }, async (t) => {
+test('the real WASI SDK preserves all selected headers and compiles public families beyond producer probes', { skip: !process.env.WASI_SDK_PATH && 'Set WASI_SDK_PATH for the real sysroot integration test' }, async (t) => {
 	const sdk = path.resolve(process.env.WASI_SDK_PATH);
 	const root = await fs.mkdtemp(path.join(os.tmpdir(), 'wasm-llvm-sysroot-'));
 	t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -143,7 +175,7 @@ test('the real WASI SDK sysroot retains libc++ C++23/26 headers and compiles all
 	await fs.writeFile(cppProbe, SYSROOT_CPP_PROBE);
 	const flags = ['--target=wasm32-wasi', `--sysroot=${root}`, '-resource-dir', resourceDir, '-I', path.join(root, 'include')];
 	const cppFlags = [...flags, '-isystem', cppInclude, '-isystem', targetInclude];
-	const retained = await pruneSysrootHeaders({
+	const options = {
 		sysroot: root,
 		resourceIncludeDir,
 		probeDir,
@@ -154,7 +186,10 @@ test('the real WASI SDK sysroot retains libc++ C++23/26 headers and compiles all
 		cProbe,
 		cppProbe,
 		run: (command, args) => execute(command, args)
-	});
+	};
+	const before = await snapshotHeaders(options);
+	const retained = await pruneSysrootHeaders(options);
+	assert.deepEqual(await snapshotHeaders(options), before);
 	for (const header of ['__ostream/print.h', '__algorithm/ranges_contains_subrange.h', '__type_traits/is_within_lifetime.h', '__vector/vector_bool_formatter.h']) {
 		assert.ok(retained.has(`include/c++/v1/${header}`), header);
 	}
@@ -163,4 +198,53 @@ test('the real WASI SDK sysroot retains libc++ C++23/26 headers and compiles all
 		await execute(compiler, [...cppFlags, `-std=${standard}`, '-c', cppProbe, '-o', output]);
 		assert.deepEqual((await fs.readFile(output)).subarray(0, 4), Buffer.from([0, 97, 115, 109]));
 	}
+	const publicCppProbe = path.join(probeDir, 'public-headers.cpp');
+	await fs.writeFile(publicCppProbe, `
+#include <any>
+#include <bit>
+#include <charconv>
+#include <chrono>
+#include <complex>
+#include <filesystem>
+#include <forward_list>
+#include <fstream>
+#include <memory_resource>
+#include <random>
+#include <ranges>
+#include <regex>
+#include <span>
+#include <valarray>
+#if __cplusplus >= 202302L
+static_assert(std::byteswap(0x12345678u) == 0x78563412u);
+#endif
+int main() {
+  std::complex<double> value(3, 4);
+  std::valarray<int> values{1, 2, 3};
+  std::forward_list<int> list{1, 2, 3};
+  char buffer[16];
+  auto result = std::to_chars(buffer, buffer + sizeof(buffer), 123);
+  return int(std::norm(value)) + values.sum() + list.front() + int(result.ptr - buffer);
+}
+`);
+	for (const standard of ['gnu++20', 'gnu++23', 'gnu++26']) {
+		const output = path.join(probeDir, `public-${standard}.o`);
+		await execute(compiler, [...cppFlags, `-std=${standard}`, '-c', publicCppProbe, '-o', output]);
+		assert.deepEqual((await fs.readFile(output)).subarray(0, 4), Buffer.from([0, 97, 115, 109]));
+	}
+	const publicCProbe = path.join(probeDir, 'public-headers.c');
+	await fs.writeFile(publicCProbe, `
+#include <complex.h>
+#include <fenv.h>
+#include <inttypes.h>
+#include <tgmath.h>
+#include <threads.h>
+#include <uchar.h>
+int main(void) {
+  double complex value = 3.0 + 4.0 * I;
+  return (int)creal(value);
+}
+`);
+	const cOutput = path.join(probeDir, 'public-c.o');
+	await execute(compiler, [...options.cFlags, '-std=gnu11', '-c', publicCProbe, '-o', cOutput]);
+	assert.deepEqual((await fs.readFile(cOutput)).subarray(0, 4), Buffer.from([0, 97, 115, 109]));
 });
