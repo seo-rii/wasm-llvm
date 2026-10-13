@@ -20,7 +20,7 @@
         "argv": [
           "wasm-ld",
           "space arg",
-          "한글",
+          "\ud55c\uae00",
           ""
         ],
         "env": [],
@@ -32,7 +32,7 @@
         "argv": [
           "wasm-ld",
           "space arg",
-          "한글",
+          "\ud55c\uae00",
           ""
         ],
         "env": [
@@ -47,7 +47,7 @@
         "argv": [
           "wasm-ld",
           "space arg",
-          "한글",
+          "\ud55c\uae00",
           ""
         ],
         "env": [],
@@ -59,7 +59,7 @@
         "argv": [
           "wasm-ld",
           "space arg",
-          "한글",
+          "\ud55c\uae00",
           ""
         ],
         "env": [],
@@ -71,7 +71,7 @@
         "argv": [
           "wasm-ld",
           "space arg",
-          "한글",
+          "\ud55c\uae00",
           ""
         ],
         "env": [],
@@ -91,7 +91,7 @@
   "cwdProtocol": {
     "passed": true,
     "node": "v24.1.0",
-    "cwd": "/workspace/한글 space",
+    "cwd": "/workspace/\ud55c\uae00 space",
     "pwdIgnored": true,
     "relativeFileRead": "cwd-ok\n",
     "results": [
@@ -140,7 +140,7 @@
     }
   },
   "validation": {
-    "privateBuildTests": 6,
+    "privateBuildTests": 9,
     "producerAndDefaultBuildOptionTests": 19,
     "abiProtocolCalls": 5,
     "cwdCases": 8
@@ -149,7 +149,36 @@
     "originalCandidate": "exec_v1 only; no non-root cwd qualification",
     "successor": "exec_v1 plus initial_cwd in Clang and LLD; not yet qualified",
     "optimization": "successor requests raw links to test correctness before Binaryen",
-    "defaultArtifactsModified": false
+    "defaultArtifactsModified": false,
+    "attempts": [
+      {
+        "candidate": "exec_v1 only",
+        "result": "failed",
+        "failure": "2700-second wall-clock timeout",
+        "addressSpaceBytesPerProcess": 10737418240,
+        "threads": 2,
+        "qualified": false
+      },
+      {
+        "candidate": "exec_v1 plus initial_cwd, default cached LTO",
+        "result": "failed",
+        "failure": "LLVM allocator out of memory under inherited RLIMIT_AS; no cgroup OOM event observed",
+        "addressSpaceBytesPerProcess": 10737418240,
+        "threads": 2,
+        "qualified": false
+      }
+    ],
+    "retry": {
+      "status": "pending",
+      "addressSpaceBytesPerProcess": 17179869184,
+      "enforcement": "RLIMIT_AS; not an RSS or aggregate process-tree limit",
+      "threads": 1,
+      "ltoOptimizerLevel": 1,
+      "ltoCodegenLevel": 1,
+      "ltoPartitions": 1,
+      "binaryenOptimization": "none",
+      "qualification": "separate correctness candidate; baseline size and performance not qualified"
+    }
   },
   "limitations": [
     "The protocol callback returns controlled statuses and does not stand in for real Clang/LLD execution.",

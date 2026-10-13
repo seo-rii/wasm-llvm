@@ -86,6 +86,13 @@ are two linker/Binaryen threads, a 10 GiB address-space limit per child, and a
 45-minute timeout per child. This can fail on a constrained machine; a failed
 candidate is preserved and cannot overwrite a previously completed output.
 
+`--address-space-gib` sets inherited Linux `RLIMIT_AS` for each process; the old
+`--memory-gib` spelling remains an alias. It limits virtual address space, not
+resident RAM or the sum of a process tree. The receipt separates this enforced
+limit from observed Linux `wait4` maximum RSS and CPU time, including failed and
+timed-out children. The RSS observation is not a container-wide memory limit.
+Available host memory and competing jobs must be checked before each large link.
+
 For a detached build, record its exit status separately from its log. Inspect the
 small metadata files while it runs; the status helper does not read active logs:
 
@@ -107,6 +114,29 @@ its object and the baseline binary have not changed.
 For an initial correctness gate, `--skip-optimize` keeps the raw linker output and
 records `optimization: none`; this does not claim the optimized size or performance
 profile. All code, import, gzip and unchanged-input verification still runs.
+Here `optimization` describes the optional Binaryen stage. Input objects and LTO
+retain their own separately recorded optimization settings.
+
+The cached input uses full `-flto`, which merges its IR for optimization. Setting
+ThinLTO jobs or a cache directory cannot make that input an incremental ThinLTO
+build; changing modes requires rebuilding the input objects. See the upstream
+[ThinLTO design](https://clang.llvm.org/docs/ThinLTO.html). The helper pins full-LTO
+codegen to one partition and records the mode and optional optimizer/codegen level
+overrides. No override preserves the cached command's optimization defaults.
+
+After an observed 10 GiB address-space failure, a separate correctness candidate
+can explicitly lower link-time optimization while retaining all input objects:
+
+```sh
+# Add to the isolated build command above, after checking current resource headroom:
+--threads 1 --address-space-gib 16 --timeout-seconds 7200 \
+  --lto-opt-level 1 --lto-codegen-level 1 --skip-optimize
+```
+
+This changes the candidate's optimization provenance. It does not establish the
+baseline producer's size/performance qualification, and it never changes the
+read-only cached objects or default producer settings. Clang and LLD still link
+sequentially, and every candidate must pass the actual consumer CLI gate.
 
 The receipt identifies an incremental local candidate, not a reproducible clean
 distribution. Cached objects are identified by their actual hashes; their source

@@ -1,5 +1,8 @@
 import importlib.util
+import json
 from pathlib import Path
+import signal
+import sys
 import tempfile
 import unittest
 
@@ -45,8 +48,54 @@ class PrivateBuildTests(unittest.TestCase):
             self.assertIn("/private/libLLVMSupport.a", result)
             self.assertIn("--no-wasm-opt", result)
             self.assertIn("-Wl,--threads=2", result)
+            self.assertIn("-Wl,--lto-partitions=1", result)
+            self.assertFalse(any(word.startswith("-Wl,--lto-O") for word in result))
             self.assertEqual(set(inputs), {support, obj})
             self.assertEqual({path: builder.identity(path) for path in inputs}, expected)
+
+    def test_correctness_link_uses_explicit_lto_options(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "lib").mkdir()
+            (root / builder.ARCHIVE).write_bytes(b"archive")
+            result, _ = builder.private_link(
+                ["/sdk/bin/clang++", "-flto", builder.ARCHIVE], root,
+                root / "private.a", root / "out.wasm", 1,
+                lto_opt_level=1, lto_codegen_level=1)
+            self.assertIn("-flto", result)
+            self.assertIn("-Wl,--lto-O1", result)
+            self.assertIn("-Wl,--lto-CGO1", result)
+            self.assertIn("-Wl,--threads=1", result)
+            self.assertFalse(any("thinlto-cache" in word for word in result))
+
+    def test_address_space_limit_is_inherited_and_usage_is_observed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            code = (
+                "import json,resource,subprocess,sys; from pathlib import Path; "
+                "nested=subprocess.check_output([sys.executable,'-c',"
+                "'import resource; print(resource.getrlimit(resource.RLIMIT_AS)[0])'],text=True); "
+                "Path('limits.json').write_text(json.dumps([resource.getrlimit(resource.RLIMIT_AS)[0],int(nested),resource.getrlimit(resource.RLIMIT_CORE)[0]]))"
+            )
+            result = builder.run_bounded([sys.executable, "-c", code], root, 10, 512 * 1024**2, 1)
+            self.assertEqual(json.loads((root / "limits.json").read_text()), [512 * 1024**2, 512 * 1024**2, 0])
+            self.assertEqual(result["exitCode"], 0)
+            self.assertEqual(result["termination"], "exited")
+            self.assertGreater(result["usage"]["maximumResidentSetBytes"], 0)
+
+    def test_failed_and_timed_out_children_retain_bounded_results(self):
+        for code, timeout, expected_code, termination in [
+            ("raise SystemExit(7)", 10, 7, "exited"),
+            ("import time; time.sleep(10)", 0.1, -signal.SIGKILL, "timeout"),
+        ]:
+            with self.subTest(termination=termination), tempfile.TemporaryDirectory() as directory:
+                with self.assertRaises(builder.CommandFailure) as caught:
+                    builder.run_bounded([sys.executable, "-c", code], directory, timeout, 512 * 1024**2, 1)
+                result = caught.exception.result
+                self.assertEqual(result["exitCode"], expected_code)
+                self.assertEqual(result["termination"], termination)
+                self.assertGreater(result["usage"]["maximumResidentSetBytes"], 0)
+                self.assertNotIn(code, str(caught.exception))
 
     def test_missing_or_duplicate_support_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -68,7 +68,8 @@ def private_compile(argv, source, output):
     return result + ["-DLLVM_WASM_IDLE_TOOL_HOST=1", "-c", str(source), "-o", str(output)]
 
 
-def private_link(argv, build, archive, output, threads, expected_support_occurrences=1):
+def private_link(argv, build, archive, output, threads, expected_support_occurrences=1,
+                 lto_opt_level=None, lto_codegen_level=None):
     result, inputs = [], []
     skip = False
     support_count = 0
@@ -94,11 +95,16 @@ def private_link(argv, build, archive, output, threads, expected_support_occurre
     if support_count != expected_support_occurrences:
         raise ValueError(f"expected {expected_support_occurrences} LLVMSupport archive reference(s)")
     # Avoid SDK's implicit invocation of a mutable wasm-opt on PATH.
-    return result + [
+    options = [
         "--no-wasm-opt", "-Wl,--keep-section=target_features",
         f"-Wl,--threads={threads}", f"-Wl,--thinlto-jobs={threads}",
-        "-o", str(output),
-    ], sorted(set(inputs))
+        "-Wl,--lto-partitions=1",
+    ]
+    if lto_opt_level is not None:
+        options.append(f"-Wl,--lto-O{lto_opt_level}")
+    if lto_codegen_level is not None:
+        options.append(f"-Wl,--lto-CGO{lto_codegen_level}")
+    return result + options + ["-o", str(output)], sorted(set(inputs))
 
 
 def validate_output(output, protected):
@@ -111,24 +117,54 @@ def validate_output(output, protected):
         raise ValueError("output must not exist; failed builds are preserved")
 
 
-def run_bounded(argv, cwd, timeout, memory_bytes, threads):
+class CommandFailure(RuntimeError):
+    def __init__(self, result):
+        self.result = result
+        super().__init__(f"{Path(result['argv'][0]).name}: {result['termination']} "
+                         f"(exit {result['exitCode']}, {result['durationSeconds']} s)")
+
+
+def run_bounded(argv, cwd, timeout, address_space_bytes, threads):
     def limits():
-        resource.setrlimit(resource.RLIMIT_AS, (memory_bytes, memory_bytes))
+        resource.setrlimit(resource.RLIMIT_AS, (address_space_bytes, address_space_bytes))
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
 
     started = time.monotonic()
     env = {**os.environ, "BINARYEN_CORES": str(threads)}
     child = subprocess.Popen(argv, cwd=cwd, env=env, start_new_session=True,
                              preexec_fn=limits)
+    termination = "exited"
     try:
-        code = child.wait(timeout=timeout)
+        while True:
+            pid, status, usage = os.wait4(child.pid, os.WNOHANG)
+            if pid:
+                break
+            if time.monotonic() - started >= timeout:
+                termination = "timeout"
+                os.killpg(child.pid, signal.SIGKILL)
+                _, status, usage = os.wait4(child.pid, 0)
+                break
+            time.sleep(0.05)
+        child.returncode = os.waitstatus_to_exitcode(status)
     except BaseException:
-        os.killpg(child.pid, signal.SIGKILL)
-        child.wait()
+        if child.returncode is None:
+            try:
+                os.killpg(child.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            child.wait()
         raise
-    if code:
-        raise subprocess.CalledProcessError(code, argv)
-    return {"argv": argv, "durationSeconds": round(time.monotonic() - started, 3),
-            "exitCode": code}
+    result = {
+        "argv": argv, "durationSeconds": round(time.monotonic() - started, 3),
+        "exitCode": child.returncode,
+        "termination": "signal" if child.returncode < 0 and termination == "exited" else termination,
+        "usage": {"maximumResidentSetBytes": usage.ru_maxrss * 1024,
+                  "userCpuSeconds": usage.ru_utime, "systemCpuSeconds": usage.ru_stime,
+                  "scope": "Linux wait4 child accounting; not an aggregate process-tree memory limit"},
+    }
+    if child.returncode:
+        raise CommandFailure(result)
+    return result
 
 
 def build(args):
@@ -169,7 +205,9 @@ def build(args):
     link_inputs = []
     for name, argv in [("clang", link_argv), ("lld", lld_argv)]:
         command, inputs = private_link(argv, cached, private_archive, output / f"{name}.raw.wasm", args.threads,
-                                      expected_support_occurrences=2 if name == "lld" else 1)
+                                      expected_support_occurrences=2 if name == "lld" else 1,
+                                      lto_opt_level=args.lto_opt_level,
+                                      lto_codegen_level=args.lto_codegen_level)
         links[name] = command + [str(cwd_object)]
         link_inputs.extend(inputs)
     original_files = sorted(set(link_inputs + [source / PROGRAM, cached / OBJECT, cached / "bin/llvm", cached / "bin/lld"]))
@@ -178,6 +216,13 @@ def build(args):
         "schemaVersion": 1, "profile": profile,
         "qualification": "local incremental candidate; not a distribution lock",
         "optimization": "none" if args.skip_optimize else "Oz",
+        "linkTimeOptimization": {
+            "mode": "thin" if "-flto=thin" in compile_argv else "full" if "-flto" in compile_argv or "-flto=full" in compile_argv else "unspecified",
+            "optimizerLevelOverride": args.lto_opt_level,
+            "codegenLevelOverride": args.lto_codegen_level,
+            "partitions": 1,
+            "thinLtoCache": None,
+        },
         "source": {"revision": revision, "repository": manifest["sources"]["llvm"]["repository"]},
         "producerManifest": identity(HERE.parent / "manifest.json"),
         "inputs": originals,
@@ -187,7 +232,10 @@ def build(args):
             "wasmOpt": {"path": str(wasm_opt), **identity(wasm_opt),
                         "version": capture([str(wasm_opt), "--version"])},
         },
-        "limits": {"threads": args.threads, "addressSpaceBytesPerChild": args.memory_gib * 1024**3,
+        "limits": {"threads": args.threads,
+                   "addressSpaceBytesPerProcess": args.address_space_gib * 1024**3,
+                   "addressSpaceEnforcement": "inherited RLIMIT_AS; virtual address space, not RSS or process-tree total",
+                   "coreDumpBytes": 0,
                    "timeoutSecondsPerChild": args.timeout_seconds},
         "commands": [],
     }
@@ -213,8 +261,13 @@ def build(args):
         receipt.write_text(json.dumps(plan, indent=2) + "\n")
 
     def execute(argv):
-        plan["commands"].append(run_bounded(argv, output, args.timeout_seconds,
-                                              args.memory_gib * 1024**3, args.threads))
+        try:
+            result = run_bounded(argv, output, args.timeout_seconds,
+                                 args.address_space_gib * 1024**3, args.threads)
+        except CommandFailure as error:
+            plan["commands"].append(error.result)
+            raise
+        plan["commands"].append(result)
 
     try:
         phase("patch")
@@ -272,12 +325,17 @@ def main():
     parser.add_argument("--wasm-opt", type=Path, required=True)
     parser.add_argument("--wasm-opt-sha256", required=True)
     parser.add_argument("--threads", type=int, default=2)
-    parser.add_argument("--memory-gib", type=int, default=10)
+    parser.add_argument("--address-space-gib", "--memory-gib", dest="address_space_gib", type=int, default=10,
+                        help="per-process inherited RLIMIT_AS in GiB; not resident RAM or a process-tree total")
+    parser.add_argument("--lto-opt-level", type=int, choices=range(4),
+                        help="explicit link-time optimizer level; default preserves cached command")
+    parser.add_argument("--lto-codegen-level", type=int, choices=range(4),
+                        help="explicit link-time codegen level; default preserves cached command")
     parser.add_argument("--timeout-seconds", type=int, default=2700)
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--skip-optimize", action="store_true", help="retain raw links for the first CLI gate")
     args = parser.parse_args()
-    if not 1 <= args.threads <= 4 or not 1 <= args.memory_gib <= 16 or not 1 <= args.timeout_seconds <= 7200:
+    if not 1 <= args.threads <= 4 or not 1 <= args.address_space_gib <= 16 or not 1 <= args.timeout_seconds <= 7200:
         parser.error("limits outside allowed bounds (threads 1..4, GiB 1..16, timeout 1..7200)")
     build(args)
 
