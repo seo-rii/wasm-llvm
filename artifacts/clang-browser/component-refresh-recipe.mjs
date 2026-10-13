@@ -53,6 +53,9 @@ async function inventory(dir){
 async function writeFile(relative,bytes,dir){const target=path.join(dir,relative);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,bytes);}
 const manifestBytes=await fs.readFile(path.join(producerDir,'manifest.json'));
 const manifest=JSON.parse(manifestBytes);
+const previousBytes=await fs.readFile(path.join(artifacts,'toolchain.json'));
+const previous=JSON.parse(previousBytes);
+for(const [name,sha]of Object.entries(previous.assets))assert.equal(hash(await fs.readFile(path.join(artifacts,name))),sha,`Current asset ${name}`);
 const initialSysrootSha='3948a257ad5fd3ed6ee26789ef2634ce28169f2e12fd60fc0682f6f30ad4be77';
 try{await fs.access(baseline);}catch{
  const original=await readJson(path.join(artifacts,'toolchain.json'));
@@ -83,6 +86,7 @@ await fs.cp(path.join(sourceInclude,'wasm32-wasi'),path.join(candidate,'include/
 });
 await fs.cp(path.join(sourceInclude,'wasm32-wasi/noeh/c++/v1'),path.join(candidate,'include/c++/v1'),{recursive:true,dereference:true});
 await fs.cp(path.join(extracted,'lib/clang/22/include'),path.join(candidate,'lib/clang/22/include'),{recursive:true,dereference:true});
+const selectedSdkHeaders=await inventory(candidate);
 for(const header of GCC_COMPATIBILITY_HEADERS)await writeFile(header.path,Buffer.from(header.contents),candidate);
 const originalTar=await unzip(path.join(baseline,'sysroot.tar.zip'),'sysroot.tar');
 const originalRoot=path.join(work,'original');await fs.mkdir(originalRoot);
@@ -99,12 +103,23 @@ const cFlags=dir=>[...flags(dir),'-isystem',path.join(dir,'include/wasm32-wasi')
 const cppFlags=dir=>[...flags(dir),'-isystem',path.join(dir,'include/c++/v1'),'-isystem',path.join(dir,'include/wasm32-wasi')];
 const cCompiler=path.join(sdk,'bin/clang'),cppCompiler=path.join(sdk,'bin/clang++');
 await pruneSysrootHeaders({sysroot:candidate,resourceIncludeDir:path.join(candidate,'lib/clang/22/include'),probeDir,cCompiler,cppCompiler,cFlags:cFlags(candidate),cppFlags:cppFlags(candidate),cProbe,cppProbe,run});
-const closure=await inventory(candidate);
+const selectedHeaders=await inventory(candidate);
+const selectedTrees=['include/wasm32-wasi/','include/c++/v1/','lib/clang/22/include/'].map(prefix=>({
+ path:prefix.slice(0,-1),sourceFileCount:[...selectedSdkHeaders.keys()].filter(name=>name.startsWith(prefix)).length,
+ outputFileCount:[...selectedHeaders.keys()].filter(name=>name.startsWith(prefix)).length
+}));
+for(const name of selectedSdkHeaders.keys())assert(selectedHeaders.has(name),`Retained selected SDK header ${name}`);
 const refreshed=path.join(work,'refreshed');await fs.cp(originalRoot,refreshed,{recursive:true});
 const added=[];
-for(const[name,bytes]of closure){
+for(const[name,bytes]of selectedHeaders){
  if(oldFiles.has(name)){assert.deepEqual(bytes,oldFiles.get(name),name);continue;}
  await writeFile(name,bytes,refreshed);
+ const compatibility=GCC_COMPATIBILITY_HEADERS.find(header=>header.path===name);
+ if(compatibility){
+  assert.deepEqual(bytes,Buffer.from(compatibility.contents),`Compatibility source ${name}`);
+  added.push({path:name,...digest(bytes),sourcePath:'producer/clang-browser/scripts/gcc-compat.mjs',sourceEntry:name});
+  continue;
+ }
  const archivePath=name.startsWith('include/c++/v1/')?'share/wasi-sysroot/include/wasm32-wasi/noeh/c++/v1/'+name.slice('include/c++/v1/'.length):name.startsWith('include/wasm32-wasi/')?'share/wasi-sysroot/'+name:name;
  assert.deepEqual(bytes,await fs.readFile(path.join(extracted,archivePath)),`SDK source ${name}`);
  added.push({path:name,...digest(bytes),sourcePath:'wasi-sdk-33.0-x86_64-linux/'+archivePath});
@@ -118,7 +133,7 @@ for(const standard of SYSROOT_CPP_STANDARDS){
  const object=path.join(probeDir,standard+'.o');await run(cppCompiler,[...cppFlags(refreshed),'-std='+standard,'-c',cppProbe,'-o',object]);
  assert.deepEqual((await fs.readFile(object)).subarray(0,4),Buffer.from([0,97,115,109]));
 }
-console.log(`Preserved ${oldFiles.size} existing files; added ${added.length} receipt-bound SDK files. All 8 C++ modes compile.`);
+console.log(`Preserved ${oldFiles.size} existing files; added ${added.length} receipt-bound files. All 8 C++ modes compile.`);
 const source=path.join(probeDir,'long-double.cpp');
 await fs.writeFile(source,'#include <cstdio>\n#include <iostream>\n#include <cfloat>\nstatic_assert(sizeof(long double)==16 && LDBL_MANT_DIG==113);\nint main(){long double x=0; if(sscanf("2.5","%Lf",&x)!=1)return 1; printf("format=%.3Lf scan=%.3Lf\\n",1.25L,x); std::cout<<"iostream="<<x<<"\\n";}\n');
 const guest=path.join(probeDir,'long-double.wasm');
@@ -137,16 +152,30 @@ await run(process.execPath,[path.join(scriptDir,'package-toolchain.mjs'),
  '--target-dir',output,'--llvm-version',original.llvmVersion,'--llvm-commit',original.llvmCommit,'--wasi-sdk-version',original.wasiSdkVersion,
  '--emsdk-version',original.emsdkVersion,'--resource-dir',original.resourceDir,'--compiler-runtime-lib-dir',original.compilerRuntimeLibDir]);
 const packaged=await readJson(path.join(output,'toolchain.json'));
+// ZIP implementations can emit different metadata for the same module. Verify
+// the decoded source-built module, then retain the shipped MemFS container bytes.
+for(const directory of [output,artifacts])assert.deepEqual(await unzip(path.join(directory,'memfs.zip'),'memfs'),memfsWasm,'Preserved source-built MemFS module');
+await fs.copyFile(path.join(artifacts,'memfs.zip'),path.join(output,'memfs.zip'));
+packaged.assets['memfs.zip']=previous.assets['memfs.zip'];
 const preservedNames=['clang.zip','lld.zip','clangd/clangd.js','clangd/clangd.wasm.gz'];
 const preservedAssets={};
 for(const name of preservedNames){const bytes=await fs.readFile(path.join(baseline,name));await writeFile(name,bytes,output);preservedAssets[name]=digest(bytes);}
+preservedAssets['memfs.zip']=digest(await fs.readFile(path.join(artifacts,'memfs.zip')));
 const refreshedFiles=await inventory(refreshed);
+const previousRoot=path.join(work,'previous');await fs.mkdir(previousRoot);
+await fs.writeFile(path.join(work,'previous.tar'),await unzip(path.join(artifacts,'sysroot.tar.zip'),'sysroot.tar'));
+await run('tar',['-xf',path.join(work,'previous.tar'),'-C',previousRoot]);
+const previousFiles=await inventory(previousRoot);
+for(const[name,bytes]of previousFiles)assert.deepEqual(refreshedFiles.get(name),bytes,`Preserved current ${name}`);
+for(const name of ['memfs.zip','memfs-build-receipt.json','LICENSE.memfs-llvm.txt','LICENSE.memfs-stb_sprintf.txt'])
+ assert.deepEqual(await fs.readFile(path.join(output,name)),await fs.readFile(path.join(artifacts,name)),`Preserved current ${name}`);
+assert.deepEqual(packaged.memfs,previous.memfs,'Preserved current MemFS provenance');
 for(const[name,bytes]of oldFiles)assert.deepEqual(refreshedFiles.get(name),bytes,`Preserved ${name}`);
 const scripts={};
 for(const name of ['sysroot-pruning.mjs','gcc-compat.mjs','package-toolchain.mjs','memfs-provenance.mjs'])scripts['producer/clang-browser/scripts/'+name]=digest(await fs.readFile(path.join(scriptDir,name)));
 const toolchain={...original,assets:{...original.assets,'sysroot.tar.zip':packaged.assets['sysroot.tar.zip'],'memfs.zip':packaged.assets['memfs.zip']},memfs:packaged.memfs,
  componentDerivation:{format:'wasm-llvm-clang-component-refresh-v1',compilerRebuilt:false,
-  description:'Preserves all prior Clang/LLD/clangd artifact bytes and all prior sysroot files; adds the SDK 33 conditional header closure and long-double archive, and replaces MemFS with the separately source-built 8192-node module.',
+  description:'Preserves all prior Clang/LLD/clangd artifact bytes and all prior sysroot files; includes the complete selected SDK 33 WASI C, no-exceptions libc++ and Clang resource header trees, the long-double archive, and the existing separately source-built 8192-node MemFS module.',
   originalToolchain:{...digest(originalBytes),metadata:original},preservedAssets,
   source:{sdkVersion:'33',sdkArchive:{name:path.basename(sdkArchive),sha256:manifest.toolchains.wasiSdk.archives['x86_64-linux']},producerManifestSha256:hash(manifestBytes),scripts},
   regeneration:{helper:'artifacts/clang-browser/component-refresh-recipe.mjs',...digest(await fs.readFile(fileURLToPath(import.meta.url))),
@@ -155,14 +184,14 @@ const toolchain={...original,assets:{...original.assets,'sysroot.tar.zip':packag
    environment:{WASM_LLVM_REPO_ROOT:'<wasm-llvm checkout>',CLANG_REFRESH_WORK_DIR:'<task-owned work directory outside artifacts>',WASI_SDK_PATH:'<extracted pinned WASI SDK 33>',WASI_SDK_ARCHIVE:'<pinned wasi-sdk-33.0-x86_64-linux.tar.gz>',MEMFS_SOURCE_DIR:'<source-built MemFS output with raw module, receipt and licenses>',CLANG_REFRESH_BASELINE_DIR:'<original artifact snapshot from baseRevision>'},
    baseRevision:'36e14dd531483a0f2b8c63b85713fec2cd4ab93e',baselinePath:'artifacts/clang-browser',publishOption:'--publish'},
   sysroot:{originalZipSha256:original.assets['sysroot.tar.zip'],originalTar:digest(originalTar),originalFileCount:oldFiles.size,retainedOriginalFileCount:oldFiles.size,
-   addedFiles:added,outputFileCount:refreshedFiles.size,outputZipSha256:packaged.assets['sysroot.tar.zip'],outputTar:digest(await unzip(path.join(output,'sysroot.tar.zip'),'sysroot.tar'))},
+   headerSelection:{policy:'complete-selected-sdk-trees',trees:selectedTrees},addedFiles:added,outputFileCount:refreshedFiles.size,outputZipSha256:packaged.assets['sysroot.tar.zip'],outputTar:digest(await unzip(path.join(output,'sysroot.tar.zip'),'sysroot.tar'))},
   memfs:{outputZipSha256:packaged.assets['memfs.zip'],buildReceiptSha256:packaged.memfs.files['memfs-build-receipt.json'].sha256},
-  validation:{cppCodeGeneration:SYSROOT_CPP_STANDARDS,longDouble:{standard:'gnu++26',abi:'binary128',expectedOutput},memfs:{maxNodes:8192,usableFileNodes:8188},preservedBytes:true}
+  validation:{cppCodeGeneration:SYSROOT_CPP_STANDARDS,longDouble:{standard:'gnu++26',abi:'binary128',expectedOutput},memfs:{maxNodes:8192,usableFileNodes:8188},completeSelectedHeaders:true,preservedBytes:true}
  }};
 await writeJson(path.join(output,'toolchain.json'),toolchain);
 await fs.copyFile(fileURLToPath(import.meta.url),path.join(output,'component-refresh-recipe.mjs'));
 for(const name of preservedNames)assert.deepEqual(await fs.readFile(path.join(artifacts,name)),await fs.readFile(path.join(baseline,name)),name);
-const changed=['sysroot.tar.zip','memfs.zip','toolchain.json','memfs-build-receipt.json','LICENSE.memfs-llvm.txt','LICENSE.memfs-stb_sprintf.txt','component-refresh-recipe.mjs'];
+const changed=['sysroot.tar.zip','toolchain.json','component-refresh-recipe.mjs'];
 if(process.argv.includes('--publish'))for(const name of changed)await fs.copyFile(path.join(output,name),path.join(artifacts,name));
 const report={changed:changed.map(name=>({path:'artifacts/clang-browser/'+name,...(name==='toolchain.json'?{}:{sha256:toolchain.assets[name]??toolchain.memfs.files[name]?.sha256})})),preservedAssets,addedFiles:added.length,outputFiles:refreshedFiles.size,published:process.argv.includes('--publish')};
 await writeJson(path.join(cache,'report.json'),report);console.log(JSON.stringify(report,null,2));
