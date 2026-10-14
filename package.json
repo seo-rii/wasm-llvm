@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"check": "node ./scripts/check-repository.mjs",
-		"test": "node --test ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs ./producer/lean-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
+		"test": "node --test ./producer/d-browser/test/*.test.mjs ./producer/nim-browser/test/*.test.mjs ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs ./producer/lean-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
 		"audit:kotlin-source": "node ./producer/kotlin-browser/scripts/audit.mjs",
 		"ledger:kotlin-fixtures": "node ./producer/kotlin-browser/scripts/fixtures.mjs",
 		"test:kotlin-producer": "node --test ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs",
@@ -96,7 +96,17 @@
 		"build:lean": "bash ./producer/lean-browser/scripts/build.sh",
 		"package:lean": "node ./producer/lean-browser/scripts/package.mjs",
 		"smoke:lean": "node ./producer/lean-browser/scripts/smoke.mjs",
-		"verify:lean-artifacts": "node ./producer/lean-browser/scripts/package.mjs --verify"
+		"verify:lean-artifacts": "node ./producer/lean-browser/scripts/package.mjs --verify",
+		"package:d": "node ./producer/d-browser/scripts/package.mjs",
+		"verify:d-artifacts": "node ./producer/d-browser/scripts/package.mjs --verify",
+		"test:d-producer": "node --test ./producer/d-browser/test/*.test.mjs",
+		"package:nim": "node ./producer/nim-browser/scripts/package.mjs",
+		"verify:nim-artifacts": "node ./producer/nim-browser/scripts/package.mjs --verify",
+		"test:nim-producer": "node --test ./producer/nim-browser/test/*.test.mjs",
+		"collect:d-inputs": "node ./producer/d-browser/scripts/collect-wasm-idle-assets.mjs",
+		"finalize:d-inputs": "node ./producer/d-browser/scripts/package-wasm-idle-assets.mjs",
+		"verify:d-inputs": "node ./producer/d-browser/scripts/check-wasm-idle-assets.mjs",
+		"probe:d-frontend": "bash ./producer/d-browser/scripts/probe-dmd-wasi-frontend.sh"
 	},
 	"devDependencies": {
 		"@bjorn3/browser_wasi_shim": "0.4.2",

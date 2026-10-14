@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/nim-browser",
+  "provenance": "content-locked-git-archive-prebuilt",
+  "compilerHost": "browser-wasm",
+  "programTarget": "wasm32-wasi",
+  "sources": {
+    "distribution": {
+      "repository": "https://github.com/benagastov/Nim-WASM-Compiler.git",
+      "commit": "ca3471ae124b40b51268da6e202753dfa061731c",
+      "verifiedBuildInput": false
+    },
+    "nim": {
+      "repository": "https://github.com/nim-lang/Nim.git",
+      "commit": "f7145dd26efeeeb6eeae6fff649db244d81b212d",
+      "version": "2.2.4",
+      "verifiedBuildInput": false
+    },
+    "llvm": {
+      "repository": "https://github.com/binji/wasm-clang.git",
+      "commit": "8e78cdb9caa80f75ed86d6632cb4e9310b22748c",
+      "version": "8.0.1",
+      "verifiedBuildInput": false
+    }
+  },
+  "sourceLock": "sources.lock.json",
+  "sourceLockSha256": "4a0372bd7830ee54305211838c62dcb2539585451a44cff5c72005621d2e27d8",
+  "outputs": [
+    "nim/nim-bundle.js",
+    "nim/nim.wasm",
+    "nim/nimbase.h",
+    "clang/clang.js",
+    "clang/clang.wasm",
+    "clang/lld.wasm",
+    "clang/memfs.wasm",
+    "clang/sysroot.tar",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "README.md",
+    "producer-receipt.json"
+  ],
+  "llvmProfile": {
+    "id": "nim-llvm8",
+    "version": 1,
+    "nimVersion": "2.2.4",
+    "llvmVersion": "8.0.1",
+    "resourceDir": "/lib/clang/8.0.1",
+    "requiredAssets": [
+      "clang/clang.js",
+      "clang/clang.wasm",
+      "clang/lld.wasm",
+      "clang/memfs.wasm",
+      "clang/sysroot.tar"
+    ]
+  }
+}

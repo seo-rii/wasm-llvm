@@ -1,0 +1,1479 @@
+diff --git a/std/datetime/systime.d b/std/datetime/systime.d
+index 189b95ce5..7bb48049f 100644
+--- a/std/datetime/systime.d
++++ b/std/datetime/systime.d
+@@ -99,6 +99,17 @@ else version (Posix)
+     import core.sys.posix.signal : timespec;
+     import core.sys.posix.sys.types : time_t;
+ }
++else version (WASI)
++{
++    import core.stdc.time : time_t;
++    import core.sys.posix.sys.stat : timespec;
++
++    struct timeval
++    {
++        time_t tv_sec;
++        long tv_usec;
++    }
++}
+
+ version (StdUnittest)
+ {
+@@ -418,6 +429,11 @@ public:
+             }
+             else static assert(0, "Unsupported OS");
+         }
++        else version (WASI)
++        {
++            static import core.stdc.time;
++            return unixTimeToStdTime(core.stdc.time.time(null));
++        }
+         else static assert(0, "Unsupported OS");
+     }
+
+@@ -2652,6 +2668,16 @@ public:
+             }
+         }
+     }
++    else version (WASI)
++    {
++        timespec toTimeSpec() @safe const pure nothrow scope
++        {
++            immutable tv_sec = toUnixTime!(typeof(timespec.tv_sec))();
++            immutable fracHNSecs = removeUnitsFromHNSecs!"seconds"(_stdTime - 621_355_968_000_000_000L);
++            immutable tv_nsec = cast(typeof(timespec.tv_nsec))convert!("hnsecs", "nsecs")(fracHNSecs);
++            return timespec(tv_sec, tv_nsec);
++        }
++    }
+
+     /++
+         Returns a `tm` which represents this $(LREF SysTime).
+diff --git a/std/datetime/timezone.d b/std/datetime/timezone.d
+index 7461fcaa3..3fe57b2d2 100644
+--- a/std/datetime/timezone.d
++++ b/std/datetime/timezone.d
+@@ -60,6 +60,10 @@ else version (Posix)
+     import core.sys.posix.signal : timespec;
+     import core.sys.posix.sys.types : time_t;
+ }
++else version (WASI)
++{
++    import core.stdc.time : time_t;
++}
+
+ version (StdUnittest) import std.exception : assertThrown;
+
+@@ -622,6 +626,8 @@ public:
+             catch (Exception e)
+                 assert(0, "GetTimeZoneInformation() returned invalid UTF-16.");
+         }
++        else version (WASI)
++            return "UTC";
+     }
+
+     @safe unittest
+@@ -707,6 +713,8 @@ public:
+             catch (Exception e)
+                 assert(0, "GetTimeZoneInformation() returned invalid UTF-16.");
+         }
++        else version (WASI)
++            return "UTC";
+     }
+
+     @safe unittest
+@@ -778,6 +786,8 @@ public:
+
+             return tzInfo.DaylightDate.wMonth != 0;
+         }
++        else version (WASI)
++            return false;
+     }
+
+     @safe unittest
+@@ -842,6 +852,8 @@ public:
+
+             return WindowsTimeZone._dstInEffect(&tzInfo, stdTime);
+         }
++        else version (WASI)
++            return false;
+     }
+
+     @safe unittest
+@@ -884,6 +896,8 @@ public:
+
+             return WindowsTimeZone._utcToTZ(&tzInfo, stdTime, hasDST);
+         }
++        else version (WASI)
++            return stdTime;
+     }
+
+     @safe unittest
+@@ -939,6 +953,8 @@ public:
+
+             return WindowsTimeZone._tzToUTC(&tzInfo, adjTime, hasDST);
+         }
++        else version (WASI)
++            return adjTime;
+     }
+
+     @safe unittest
+@@ -1104,7 +1120,10 @@ private:
+         import std.concurrency : initOnce;
+         static instance = new immutable(LocalTime)();
+         static shared bool guard;
+-        initOnce!guard({tzset(); return true;}());
++        version (WASI)
++            initOnce!guard({ return true; }());
++        else
++            initOnce!guard({tzset(); return true;}());
+         return instance;
+     }
+
+@@ -1888,7 +1907,10 @@ private:
+         $(HTTP en.wikipedia.org/wiki/List_of_tz_database_time_zones, List of Time
+           Zones)
+   +/
+-final class PosixTimeZone : TimeZone
++version (WASI)
++{
++}
++else final class PosixTimeZone : TimeZone
+ {
+     import std.algorithm.searching : countUntil, canFind, startsWith;
+     import std.file : isDir, isFile, exists, dirEntries, SpanMode, DirEntry;
+diff --git a/std/file.d b/std/file.d
+index 0d4959b22..2fc7d78e3 100644
+--- a/std/file.d
++++ b/std/file.d
+@@ -102,11 +102,16 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
++version (WASI)
++    version = StdFilePosix;
++else version (Posix)
++    version = StdFilePosix;
++
+ version (Windows)
+ {
+     import core.sys.windows.winbase, core.sys.windows.winnt, std.windows.syserror;
+ }
+-else version (Posix)
++else version (StdFilePosix)
+ {
+     import core.sys.posix.dirent, core.sys.posix.fcntl, core.sys.posix.sys.stat,
+         core.sys.posix.sys.time, core.sys.posix.unistd, core.sys.posix.utime;
+@@ -119,7 +124,7 @@ version (Windows)
+ {
+     private alias FSChar = WCHAR;       // WCHAR can be aliased to wchar or wchar_t
+ }
+-else version (Posix)
++else version (StdFilePosix)
+ {
+     private alias FSChar = char;
+ }
+@@ -131,13 +136,22 @@ else
+ {
+     import std.conv : text;
+     import std.path : buildPath;
+-    import std.process : thisProcessID;
+
+     enum base = "deleteme.dmd.unittest.pid";
+     static string fileName;
+
++    version (WASI)
++    {
++        enum pid = 0;
++    }
++    else
++    {
++        import std.process : thisProcessID;
++        auto pid = thisProcessID;
++    }
++
+     if (!fileName)
+-        fileName = text(buildPath(tempDir(), base), thisProcessID);
++        fileName = text(buildPath(tempDir(), base), pid);
+     return fileName;
+ }
+
+@@ -154,7 +168,7 @@ version (Android)
+     package enum system_directory = "/system/etc";
+     package enum system_file      = "/system/etc/hosts";
+ }
+-else version (Posix)
++else version (StdFilePosix)
+ {
+     package enum system_directory = "/usr/include";
+     package enum system_file      = "/usr/include/assert.h";
+@@ -216,7 +230,7 @@ class FileException : Exception
+     {
+         this(name, generateSysErrorMsg(errno), file, line, errno);
+     }
+-    else version (Posix) this(scope const(char)[] name,
++    else version (StdFilePosix) this(scope const(char)[] name,
+                              uint errno = .errno,
+                              string file = __FILE__,
+                              size_t line = __LINE__) @trusted
+@@ -242,7 +256,7 @@ private T cenforce(T)(T condition, lazy scope const(char)[] name, string file =
+     {
+         throw new FileException(name, .GetLastError(), file, line);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         throw new FileException(name, .errno, file, line);
+     }
+@@ -266,7 +280,7 @@ private T cenforce(T)(T condition, scope const(char)[] name, scope const(FSChar)
+     throw new FileException(name, .GetLastError(), file, line);
+ }
+
+-version (Posix)
++version (StdFilePosix)
+ @trusted
+ private T cenforce(T)(T condition, scope const(char)[] name, scope const(FSChar)* namez,
+     string file = __FILE__, size_t line = __LINE__)
+@@ -351,7 +365,7 @@ if (isConvertibleToString!R)
+     static assert(__traits(compiles, read(TestAliasedString(null))));
+ }
+
+-version (Posix) private void[] readImpl(scope const(char)[] name, scope const(FSChar)* namez,
++version (StdFilePosix) private void[] readImpl(scope const(char)[] name, scope const(FSChar)* namez,
+                                         size_t upTo = size_t.max) @trusted
+ {
+     import core.memory : GC;
+@@ -827,7 +841,7 @@ if (isConvertibleToString!R)
+
+ // POSIX implementation helper for write and append
+
+-version (Posix) private void writeImpl(scope const(char)[] name, scope const(FSChar)* namez,
++version (StdFilePosix) private void writeImpl(scope const(char)[] name, scope const(FSChar)* namez,
+         scope const(void)[] buffer, bool append) @trusted
+ {
+     import std.conv : octal;
+@@ -1006,7 +1020,7 @@ private void renameImpl(scope const(char)[] f, scope const(char)[] t,
+                     text("Attempting to rename file ", f, " to ", t)));
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         static import core.stdc.stdio;
+
+@@ -1077,7 +1091,7 @@ private void removeImpl(scope const(char)[] name, scope const(FSChar)* namez) @t
+     {
+         cenforce(DeleteFileW(namez), name, namez);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         static import core.stdc.stdio;
+
+@@ -1160,7 +1174,7 @@ version (Windows) private ulong makeUlong(DWORD dwLow, DWORD dwHigh) @safe pure
+     return li.QuadPart;
+ }
+
+-version (Posix) private extern (C) pragma(mangle, stat.mangleof)
++version (StdFilePosix) private extern (C) pragma(mangle, stat.mangleof)
+ int trustedStat(scope const(FSChar)* namez, ref stat_t buf) @nogc nothrow @trusted;
+
+ /**
+@@ -1181,7 +1195,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+         with (getFileAttributesWin(name))
+             return makeUlong(nFileSizeLow, nFileSizeHigh);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString();
+
+@@ -1234,7 +1248,7 @@ if (isConvertibleToString!R)
+ }
+
+ // Reads a time field from a stat_t with full precision.
+-version (Posix)
++version (StdFilePosix)
+ private SysTime statTimeToStdTime(char which)(ref const stat_t statbuf)
+ {
+     auto unixTime = mixin(`statbuf.st_` ~ which ~ `time`);
+@@ -1281,7 +1295,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+             modificationTime = FILETIMEToSysTime(&ftLastWriteTime);
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString();
+
+@@ -1712,7 +1726,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+
+         return ftm;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString!FSChar();
+         stat_t statbuf = void;
+@@ -1799,7 +1813,7 @@ if (isSomeFiniteCharInputRange!R)
+
+         return ftm;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString!FSChar();
+         stat_t statbuf = void;
+@@ -1854,7 +1868,7 @@ version (StdDdoc)
+      +/
+     SysTime timeStatusChanged()(auto ref stat_t statbuf) pure nothrow {assert(false);}
+ }
+-else version (Posix)
++else version (StdFilePosix)
+ {
+     SysTime timeLastModified()(auto ref stat_t statbuf) pure nothrow
+     {
+@@ -1978,7 +1992,7 @@ private bool existsImpl(scope const(FSChar)* namez) @trusted nothrow @nogc
+         // fileio/base/getfileattributes.asp
+         return GetFileAttributesW(namez) != 0xFFFFFFFF;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         /*
+             The reason why we use stat (and not access) here is
+@@ -2065,7 +2079,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+
+         return result;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString!FSChar();
+         stat_t statbuf = void;
+@@ -2152,7 +2166,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+     {
+         return getAttributes(name);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString!FSChar();
+         static auto trustedLstat(const(FSChar)* namez, ref stat_t buf) @trusted
+@@ -2188,7 +2202,7 @@ if (isConvertibleToString!R)
+     assertThrown!FileException(source.getLinkAttributes);
+
+     // symlinking isn't available on Windows
+-    version (Posix)
++    version (StdFilePosix)
+     {
+         scope(exit) source.remove, target.remove;
+
+@@ -2269,7 +2283,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+             string names = null;
+         cenforce(trustedSetFileAttributesW(namez, attributes), names, namez);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         auto namez = name.tempCString!FSChar();
+         static auto trustedChmod(scope const(FSChar)* namez, mode_t mode) @trusted
+@@ -2304,7 +2318,7 @@ if (isConvertibleToString!R)
+     import std.conv : octal;
+
+     auto f = deleteme ~ "file";
+-    version (Posix)
++    version (StdFilePosix)
+     {
+         scope(exit) f.remove;
+
+@@ -2330,7 +2344,7 @@ if (isConvertibleToString!R)
+     import std.conv : octal;
+
+     auto dir = deleteme ~ "dir";
+-    version (Posix)
++    version (StdFilePosix)
+     {
+         scope(exit) dir.rmdir;
+
+@@ -2368,7 +2382,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+     {
+         return (getAttributes(name) & FILE_ATTRIBUTE_DIRECTORY) != 0;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         return (getAttributes(name) & S_IFMT) == S_IFDIR;
+     }
+@@ -2415,7 +2429,7 @@ if (isConvertibleToString!R)
+         if ("C:\\Windows\\system.ini".exists)
+             assert(!"C:\\Windows\\system.ini".isDir);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         if (system_directory.exists)
+             assert(system_directory.isDir);
+@@ -2429,7 +2443,7 @@ if (isConvertibleToString!R)
+ {
+     version (Windows)
+         enum dir = "C:\\Program Files\\";
+-    else version (Posix)
++    else version (StdFilePosix)
+         enum dir = system_directory;
+
+     if (dir.exists)
+@@ -2455,7 +2469,7 @@ bool attrIsDir(uint attributes) @safe pure nothrow @nogc
+     {
+         return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         return (attributes & S_IFMT) == S_IFDIR;
+     }
+@@ -2498,7 +2512,7 @@ bool attrIsDir(uint attributes) @safe pure nothrow @nogc
+             assert(!attrIsDir(getLinkAttributes("C:\\Windows\\system.ini")));
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         if (system_directory.exists)
+         {
+@@ -2544,7 +2558,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+ {
+     version (Windows)
+         return !name.isDir;
+-    else version (Posix)
++    else version (StdFilePosix)
+         return (getAttributes(name) & S_IFMT) == S_IFREG;
+ }
+
+@@ -2596,7 +2610,7 @@ if (isConvertibleToString!R)
+         if ("C:\\Windows\\system.ini".exists)
+             assert("C:\\Windows\\system.ini".isFile);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         if (system_directory.exists)
+             assert(!system_directory.isFile);
+@@ -2639,7 +2653,7 @@ bool attrIsFile(uint attributes) @safe pure nothrow @nogc
+     {
+         return (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         return (attributes & S_IFMT) == S_IFREG;
+     }
+@@ -2682,7 +2696,7 @@ bool attrIsFile(uint attributes) @safe pure nothrow @nogc
+             assert(attrIsFile(getLinkAttributes("C:\\Windows\\system.ini")));
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         if (system_directory.exists)
+         {
+@@ -2719,7 +2733,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+ {
+     version (Windows)
+         return (getAttributes(name) & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+-    else version (Posix)
++    else version (StdFilePosix)
+         return (getLinkAttributes(name) & S_IFMT) == S_IFLNK;
+ }
+
+@@ -2747,7 +2761,7 @@ if (isConvertibleToString!R)
+     assertThrown!FileException(source.isSymlink);
+
+     // symlinking isn't available on Windows
+-    version (Posix)
++    version (StdFilePosix)
+     {
+         scope(exit) source.remove, target.remove;
+
+@@ -2786,7 +2800,7 @@ if (isConvertibleToString!R)
+             assert(getAttributes(fakeSymFile) == getLinkAttributes(fakeSymFile));
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         if (system_directory.exists)
+         {
+@@ -2857,7 +2871,7 @@ bool attrIsSymlink(uint attributes) @safe pure nothrow @nogc
+ {
+     version (Windows)
+         return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+-    else version (Posix)
++    else version (StdFilePosix)
+         return (attributes & S_IFMT) == S_IFLNK;
+ }
+
+@@ -2873,7 +2887,7 @@ bool attrIsSymlink(uint attributes) @safe pure nothrow @nogc
+     assertThrown!FileException(source.getLinkAttributes.attrIsSymlink);
+
+     // symlinking isn't available on Windows
+-    version (Posix)
++    version (StdFilePosix)
+     {
+         scope(exit) source.remove, target.remove;
+
+@@ -2907,7 +2921,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+             return SetCurrentDirectoryW(pathz);
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         static auto trustedChdir(scope const(FSChar)* pathz) @trusted
+         {
+@@ -2982,7 +2996,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+             string pathStr = null;
+         wenforce(trustedCreateDirectoryW(pathz), pathStr, pathz);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         import std.conv : octal;
+
+@@ -3044,7 +3058,7 @@ private bool ensureDirExists()(scope const(char)[] pathname)
+             return true;
+         cenforce(GetLastError() == ERROR_ALREADY_EXISTS, pathname.idup);
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         import std.conv : octal;
+
+@@ -3147,7 +3161,7 @@ void mkdirRecurse(scope const(char)[] pathname) @safe
+         {
+             immutable path = basepath ~ "\\fake\\here\\";
+         }
+-        else version (Posix)
++        else version (StdFilePosix)
+         {
+             immutable path = basepath ~ `/fake/here/`;
+         }
+@@ -3180,7 +3194,7 @@ if (isSomeFiniteCharInputRange!R && !isConvertibleToString!R)
+             return RemoveDirectoryW(pathz);
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         static auto trustedRmdir(scope const(FSChar)* pathz) @trusted
+         {
+@@ -3236,7 +3250,7 @@ if (isConvertibleToString!R)
+ version (StdDdoc) void symlink(RO, RL)(RO original, RL link)
+ if ((isSomeFiniteCharInputRange!RO || isConvertibleToString!RO) &&
+     (isSomeFiniteCharInputRange!RL || isConvertibleToString!RL));
+-else version (Posix) void symlink(RO, RL)(RO original, RL link)
++else version (StdFilePosix) void symlink(RO, RL)(RO original, RL link)
+ if ((isSomeFiniteCharInputRange!RO || isConvertibleToString!RO) &&
+     (isSomeFiniteCharInputRange!RL || isConvertibleToString!RL))
+ {
+@@ -3257,7 +3271,7 @@ if ((isSomeFiniteCharInputRange!RO || isConvertibleToString!RO) &&
+     }
+ }
+
+-version (Posix) @safe unittest
++version (StdFilePosix) @safe unittest
+ {
+     if (system_directory.exists)
+     {
+@@ -3300,7 +3314,7 @@ version (Posix) @safe unittest
+     }
+ }
+
+-version (Posix) @safe unittest
++version (StdFilePosix) @safe unittest
+ {
+     static assert(__traits(compiles,
+         symlink(TestAliasedString(null), TestAliasedString(null))));
+@@ -3320,7 +3334,7 @@ version (Posix) @safe unittest
+   +/
+ version (StdDdoc) string readLink(R)(R link)
+ if (isSomeFiniteCharInputRange!R || isConvertibleToString!R);
+-else version (Posix) string readLink(R)(R link)
++else version (StdFilePosix) string readLink(R)(R link)
+ if (isSomeFiniteCharInputRange!R || isConvertibleToString!R)
+ {
+     static if (isConvertibleToString!R)
+@@ -3369,7 +3383,7 @@ if (isSomeFiniteCharInputRange!R || isConvertibleToString!R)
+     }
+ }
+
+-version (Posix) @safe unittest
++version (StdFilePosix) @safe unittest
+ {
+     import std.exception : assertThrown;
+     import std.string;
+@@ -3389,12 +3403,12 @@ version (Posix) @safe unittest
+     assertThrown!FileException(readLink("/doesnotexist"));
+ }
+
+-version (Posix) @safe unittest
++version (StdFilePosix) @safe unittest
+ {
+     static assert(__traits(compiles, readLink(TestAliasedString("foo"))));
+ }
+
+-version (Posix) @system unittest // input range of dchars
++version (StdFilePosix) @system unittest // input range of dchars
+ {
+     mkdirRecurse(deleteme);
+     scope(exit) if (deleteme.exists) rmdirRecurse(deleteme);
+@@ -3458,7 +3472,7 @@ else version (Solaris) string getcwd() @trusted
+     scope(exit) core.stdc.stdlib.free(p);
+     return p[0 .. core.stdc.string.strlen(p)].idup;
+ }
+-else version (Posix) string getcwd() @trusted
++else version (StdFilePosix) string getcwd() @trusted
+ {
+     auto p = cenforce(core.sys.posix.unistd.getcwd(null, 0),
+             "cannot get cwd");
+@@ -3630,6 +3644,11 @@ else version (Posix) string getcwd() @trusted
+     {
+         return readLink("/proc/self/exe");
+     }
++    else version (WASI)
++    {
++        import std.path : buildPath;
++        return buildPath(getcwd(), "ldc2.wasm");
++    }
+     else
+         static assert(0, "thisExePath is not supported on this platform");
+ }
+@@ -3668,7 +3687,7 @@ version (StdDdoc)
+         {
+             private this(string path, in WIN32_FIND_DATAW *fd);
+         }
+-        else version (Posix)
++        else version (StdFilePosix)
+         {
+             private this(string path, core.sys.posix.dirent.dirent* fd);
+         }
+@@ -3925,7 +3944,7 @@ else version (Windows)
+         uint  _attributes; /// The file attributes from WIN32_FIND_DATAW.
+     }
+ }
+-else version (Posix)
++else version (StdFilePosix)
+ {
+     struct DirEntry
+     {
+@@ -4156,7 +4175,7 @@ else version (Posix)
+             assert(!de.isSymlink);
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         import std.exception : assertThrown;
+
+@@ -4325,7 +4344,7 @@ private void copyImpl(scope const(char)[] f, scope const(char)[] t,
+             throw new FileException(format!"Copy from %s to %s"(f, t));
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         static import core.stdc.stdio;
+         import std.conv : to, octal;
+@@ -4416,7 +4435,7 @@ private void copyImpl(scope const(char)[] f, scope const(char)[] t,
+ }
+
+ // https://issues.dlang.org/show_bug.cgi?id=11434
+-@safe version (Posix) @safe unittest
++@safe version (StdFilePosix) @safe unittest
+ {
+     import std.conv : octal;
+     auto t1 = deleteme, t2 = deleteme~"2";
+@@ -4537,7 +4556,7 @@ version (Windows) @system unittest
+     enforce(!exists(deleteme ~ ".dir"));
+ }
+
+-version (Posix) @system unittest
++version (StdFilePosix) @system unittest
+ {
+     import std.exception : enforce, collectException;
+
+@@ -4746,7 +4765,7 @@ private struct DirIteratorImpl
+             return _followSymlink ? _cur.isDir : _cur.isDir && !_cur.isSymlink;
+         }
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         struct DirHandle
+         {
+@@ -5150,7 +5169,7 @@ auto dirEntries(bool useDIP1000 = dip1000Enabled)
+
+     mkdir(dpath);
+     write(fpath, "hello world");
+-    version (Posix) () @trusted
++    version (StdFilePosix) () @trusted
+     {
+         core.sys.posix.unistd.symlink((dpath ~ '\0').ptr, (sdpath ~ '\0').ptr);
+         core.sys.posix.unistd.symlink((fpath ~ '\0').ptr, (sfpath ~ '\0').ptr);
+@@ -5158,7 +5177,7 @@ auto dirEntries(bool useDIP1000 = dip1000Enabled)
+
+     static struct Flags { bool dir, file, link; }
+     auto tests = [dpath : Flags(true), fpath : Flags(false, true)];
+-    version (Posix)
++    version (StdFilePosix)
+     {
+         tests[sdpath] = Flags(true, false, true);
+         tests[sfpath] = Flags(false, true, true);
+@@ -5200,7 +5219,7 @@ auto dirEntries(bool useDIP1000 = dip1000Enabled)
+             assert(de.timeCreated > past);
+             assert(de.timeCreated < future);
+         }
+-        else version (Posix)
++        else version (StdFilePosix)
+         {
+             assert(de.timeStatusChanged > past);
+             assert(de.timeStatusChanged < future);
+@@ -5395,9 +5414,8 @@ string tempDir() @trusted
+             DWORD len = GetTempPathW(buf.length, buf.ptr);
+             if (len) cache = buf[0 .. len].to!string;
+         }
+-        else version (Posix)
++        else version (StdFilePosix)
+         {
+-            import std.process : environment;
+             // This function looks through the list of alternative directories
+             // and returns the first one which exists and is a directory.
+             static string findExistingDir(T...)(lazy T alternatives)
+@@ -5407,12 +5425,21 @@ string tempDir() @trusted
+                 return null;
+             }
+
+-            cache = findExistingDir(environment.get("TMPDIR"),
+-                                    environment.get("TEMP"),
+-                                    environment.get("TMP"),
+-                                    "/tmp",
+-                                    "/var/tmp",
+-                                    "/usr/tmp");
++            version (WASI)
++            {
++                cache = findExistingDir("/tmp");
++            }
++            else
++            {
++                import std.process : environment;
++
++                cache = findExistingDir(environment.get("TMPDIR"),
++                                        environment.get("TEMP"),
++                                        environment.get("TMP"),
++                                        "/tmp",
++                                        "/var/tmp",
++                                        "/usr/tmp");
++            }
+         }
+         else static assert(false, "Unsupported platform");
+
+@@ -5480,7 +5507,7 @@ ulong getAvailableDiskSpace(scope const(char)[] path) @safe
+
+         return freeBytesAvailable.QuadPart;
+     }
+-    else version (Posix)
++    else version (StdFilePosix)
+     {
+         import std.internal.cstring : tempCString;
+
+diff --git a/std/parallelism.d b/std/parallelism.d
+index bafdbb92f..d3f7f5ce8 100644
+--- a/std/parallelism.d
++++ b/std/parallelism.d
+@@ -1059,6 +1059,10 @@ uint totalCPUsImpl() @nogc nothrow @trusted
+         import core.sys.posix.unistd : _SC_NPROCESSORS_ONLN, sysconf;
+         return cast(uint) sysconf(_SC_NPROCESSORS_ONLN);
+     }
++    else version (WASI)
++    {
++        return 1;
++    }
+     else
+     {
+         static assert(0, "Don't know how to get N CPUs on this OS.");
+diff --git a/std/path.d b/std/path.d
+index 13694ee87..04cd6f045 100644
+--- a/std/path.d
++++ b/std/path.d
+@@ -95,12 +95,20 @@ $(TR $(TD Other) $(TD
+ */
+ module std.path;
+
+-
+-import std.file : getcwd;
++version (WASI)
++{
++}
++else
++    import std.file : getcwd;
+ static import std.meta;
+ import std.range;
+ import std.traits;
+
++version (WASI) extern (C) private nothrow @nogc
++{
++    pragma(mangle, "getcwd") char* wasiGetcwd(char*, size_t);
++}
++
+ version (OSX)
+     version = Darwin;
+ else version (iOS)
+@@ -110,6 +118,11 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
++version (WASI)
++    version = StdPathPosix;
++else version (Posix)
++    version = StdPathPosix;
++
+ version (StdUnittest)
+ {
+ private:
+@@ -130,7 +143,8 @@ private:
+ /** String used to separate directory names in a path.  Under
+     POSIX this is a slash, under Windows a backslash.
+ */
+-version (Posix)          enum string dirSeparator = "/";
++version (StdPathPosix)          enum string dirSeparator = "/";
++else version (WASI)      enum string dirSeparator = "/";
+ else version (Windows)   enum string dirSeparator = "\\";
+ else static assert(0, "unsupported platform");
+
+@@ -140,7 +154,8 @@ else static assert(0, "unsupported platform");
+ /** Path separator string.  A colon under POSIX, a semicolon
+     under Windows.
+ */
+-version (Posix)          enum string pathSeparator = ":";
++version (StdPathPosix)          enum string pathSeparator = ":";
++else version (WASI)      enum string pathSeparator = ":";
+ else version (Windows)   enum string pathSeparator = ";";
+ else static assert(0, "unsupported platform");
+
+@@ -193,7 +208,20 @@ version (Windows) private bool isSeparator(dchar c)  @safe pure nothrow @nogc
+ {
+     return isDirSeparator(c) || isDriveSeparator(c);
+ }
+-version (Posix) private alias isSeparator = isDirSeparator;
++version (StdPathPosix) private alias isSeparator = isDirSeparator;
++version (WASI) private alias isSeparator = isDirSeparator;
++
++version (WASI) private string getcwd() @trusted
++{
++    import core.stdc.stdlib : free;
++    import core.stdc.string : strlen;
++
++    auto p = wasiGetcwd(null, 0);
++    if (p is null)
++        return ".";
++    scope(exit) free(p);
++    return p[0 .. strlen(p)].idup;
++}
+
+
+ /*  Helper function that determines the position of the last
+@@ -360,7 +388,7 @@ enum CaseSensitive : bool
+     assert(baseName!(CaseSensitive.no)("dir/file.EXT", ".ext") == "file");
+     assert(baseName!(CaseSensitive.yes)("dir/file.EXT", ".ext") != "file");
+
+-    version (Posix)
++    version (StdPathPosix)
+         assert(relativePath!(CaseSensitive.no)("/FOO/bar", "/foo/baz") == "../bar");
+     else
+         assert(relativePath!(CaseSensitive.no)(`c:\FOO\bar`, `c:\foo\baz`) == `..\bar`);
+@@ -368,7 +396,8 @@ enum CaseSensitive : bool
+
+ version (Windows)     private enum osDefaultCaseSensitivity = false;
+ else version (Darwin) private enum osDefaultCaseSensitivity = false;
+-else version (Posix)  private enum osDefaultCaseSensitivity = true;
++else version (StdPathPosix)  private enum osDefaultCaseSensitivity = true;
++else version (WASI)   private enum osDefaultCaseSensitivity = true;
+ else static assert(0);
+
+ /**
+@@ -779,7 +808,7 @@ private auto _rootName(R)(R path)
+     if (path.empty)
+         goto Lnull;
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         if (isDirSeparator(path[0])) return path[0 .. 1];
+     }
+@@ -836,7 +865,7 @@ if (isSomeChar!C)
+ @safe unittest
+ {
+     import std.range : empty;
+-    version (Posix)  assert(driveName("c:/foo").empty);
++    version (StdPathPosix)  assert(driveName("c:/foo").empty);
+     version (Windows)
+     {
+         assert(driveName(`dir\file`).empty);
+@@ -855,7 +884,7 @@ if (isSomeChar!C)
+ {
+     assert(testAliasedString!driveName("d:/file"));
+
+-    version (Posix)
++    version (StdPathPosix)
+         immutable result = "";
+     else version (Windows)
+         immutable result = "d:";
+@@ -872,7 +901,7 @@ if (isSomeChar!C)
+     import std.array;
+     import std.utf : byChar;
+
+-    version (Posix)  assert(driveName("c:/foo".byChar).empty);
++    version (StdPathPosix)  assert(driveName("c:/foo".byChar).empty);
+     version (Windows)
+     {
+         assert(driveName(`dir\file`.byChar).empty);
+@@ -937,7 +966,7 @@ if (isSomeChar!C)
+ {
+     assert(testAliasedString!stripDrive("d:/dir/file"));
+
+-    version (Posix)
++    version (StdPathPosix)
+         immutable result = "d:/dir/file";
+     else version (Windows)
+         immutable result = "/dir/file";
+@@ -962,7 +991,7 @@ if (isSomeChar!C)
+         foreach (i, c; `\dir\file`)
+             assert(s[i] == c);
+     }
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(stripDrive(`d:\dir\file`) == `d:\dir\file`);
+
+@@ -1499,7 +1528,7 @@ if (isSomeChar!C)
+ ///
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(buildPath("foo", "bar", "baz") == "foo/bar/baz");
+         assert(buildPath("/foo/", "bar/baz")  == "/foo/bar/baz");
+@@ -1522,7 +1551,7 @@ if (isSomeChar!C)
+     // ir() wraps an array in a plain (i.e. non-forward) input range, so that
+     // we can test both code paths
+     InputRange!(C[]) ir(C)(C[][] p...) { return inputRangeObject(p.dup); }
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(buildPath("foo") == "foo");
+         assert(buildPath("/foo/") == "/foo/");
+@@ -1599,7 +1628,7 @@ if (isSomeChar!C)
+ {
+     // Test for https://issues.dlang.org/show_bug.cgi?id=7397
+     string[] ary = ["a", "b"];
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(buildPath(ary) == "a/b");
+     }
+@@ -1652,7 +1681,7 @@ if ((isRandomAccessRange!R1 && hasSlicing!R1 && hasLength!R1 && isSomeChar!(Elem
+         {
+             if (isRooted(r2))
+             {
+-                version (Posix)
++                version (StdPathPosix)
+                 {
+                     pos = 0;
+                 }
+@@ -1684,7 +1713,7 @@ if ((isRandomAccessRange!R1 && hasSlicing!R1 && hasLength!R1 && isSomeChar!(Elem
+ @safe unittest
+ {
+     import std.array;
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(chainPath("foo", "bar", "baz").array == "foo/bar/baz");
+         assert(chainPath("/foo/", "bar/baz").array  == "/foo/bar/baz");
+@@ -1701,7 +1730,7 @@ if ((isRandomAccessRange!R1 && hasSlicing!R1 && hasLength!R1 && isSomeChar!(Elem
+     }
+
+     import std.utf : byChar;
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(chainPath("foo", "bar", "baz").array == "foo/bar/baz");
+         assert(chainPath("/foo/".byChar, "bar/baz").array  == "/foo/bar/baz");
+@@ -1779,7 +1808,7 @@ if (isSomeChar!C)
+ {
+     assert(buildNormalizedPath("foo", "..") == ".");
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(buildNormalizedPath("/foo/./bar/..//baz/") == "/foo/baz");
+         assert(buildNormalizedPath("../foo/.") == "../foo");
+@@ -1814,7 +1843,7 @@ if (isSomeChar!C)
+     assert(buildNormalizedPath(null, "") == "");
+     assert(buildNormalizedPath!(char)(null, null) == "");
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(buildNormalizedPath("/", "foo", "bar") == "/foo/bar");
+         assert(buildNormalizedPath("foo", "bar", "baz") == "foo/bar/baz");
+@@ -1879,7 +1908,7 @@ if (isSomeChar!C)
+ {
+     // Test for https://issues.dlang.org/show_bug.cgi?id=7397
+     string[] ary = ["a", "b"];
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(buildNormalizedPath(ary) == "a/b");
+     }
+@@ -2058,7 +2087,7 @@ if (isSomeChar!(ElementEncodingType!R) &&
+     import std.array;
+     assert(asNormalizedPath("foo/..").array == ".");
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(asNormalizedPath("/foo/./bar/..//baz/").array == "/foo/baz");
+         assert(asNormalizedPath("../foo/.").array == "../foo");
+@@ -2103,7 +2132,7 @@ if (isConvertibleToString!R)
+     save.popFront();
+     assert(save.front == 'o');
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(asNormalizedPath("/foo/bar").array == "/foo/bar");
+         assert(asNormalizedPath("foo/bar/baz").array == "foo/bar/baz");
+@@ -2180,7 +2209,7 @@ if (isConvertibleToString!R)
+ {
+     import std.array;
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         // Trivial
+         assert(asNormalizedPath("").empty);
+@@ -2411,7 +2440,7 @@ if ((isRandomAccessRange!R && hasSlicing!R ||
+                     popFront();
+                 }
+             }
+-            else version (Posix)
++            else version (StdPathPosix)
+             {
+                 if (_path.length >= 1 && isDirSeparator(_path[0]))
+                 {
+@@ -2466,7 +2495,7 @@ if ((isRandomAccessRange!R && hasSlicing!R ||
+     assert(equal(pathSplitter("/foo/bar"), ["/", "foo", "bar"]));
+     assert(equal(pathSplitter("foo/../bar//./"), ["foo", "..", "bar", "."]));
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(equal(pathSplitter("//foo/bar"), ["/", "foo", "bar"]));
+     }
+@@ -2528,7 +2557,7 @@ if (isConvertibleToString!R)
+     assert(equal2(ps2, ["foo", "bar", "baz"]));
+
+     // Platform specific
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(equal2(pathSplitter("//foo/bar"w.dup), ["/"w, "foo"w, "bar"w]));
+     }
+@@ -2578,14 +2607,14 @@ if (isRandomAccessRange!R && isSomeChar!(ElementType!R) ||
+     is(StringTypeOf!R))
+ {
+     if (path.length >= 1 && isDirSeparator(path[0])) return true;
+-    version (Posix)         return false;
++    version (StdPathPosix)         return false;
+     else version (Windows)  return isAbsolute!(BaseOf!R)(path);
+ }
+
+ ///
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert( isRooted("/"));
+         assert( isRooted("/foo"));
+@@ -2638,7 +2667,7 @@ if (isRandomAccessRange!R && isSomeChar!(ElementType!R) ||
+     On POSIX, an absolute path starts at the root directory.
+     (In fact, `_isAbsolute` is just an alias for $(LREF isRooted).)
+     ---
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(isAbsolute("/"));
+         assert(isAbsolute("/foo"));
+@@ -2678,7 +2707,7 @@ else version (Windows)
+         return isDriveRoot!(BaseOf!R)(path) || isUNC!(BaseOf!R)(path);
+     }
+ }
+-else version (Posix)
++else version (StdPathPosix)
+ {
+     alias isAbsolute = isRooted;
+ }
+@@ -2690,7 +2719,7 @@ else version (Posix)
+     assert(!isAbsolute("../foo"w));
+     static assert(!isAbsolute("foo"));
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+     assert(isAbsolute("/"d));
+     assert(isAbsolute("/foo".dup));
+@@ -2764,7 +2793,7 @@ string absolutePath(return scope const string path, lazy string base = getcwd())
+ ///
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(absolutePath("some/file", "/foo/bar")  == "/foo/bar/some/file");
+         assert(absolutePath("../file", "/foo/bar")    == "/foo/bar/../file");
+@@ -2783,7 +2812,7 @@ string absolutePath(return scope const string path, lazy string base = getcwd())
+
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         static assert(absolutePath("some/file", "/foo/bar") == "/foo/bar/some/file");
+     }
+@@ -2804,7 +2833,7 @@ string absolutePath(return scope const string path, lazy string base = getcwd())
+         return absolutePath(path, base);
+     }
+
+-    version (Posix)
++    version (StdPathPosix)
+         assert(testAbsPath("some/file", "/foo/bar")  == "/foo/bar/some/file");
+     version (Windows)
+         assert(testAbsPath(`some\file`, `c:\foo\bar`)    == `c:\foo\bar\some\file`);
+@@ -2849,7 +2878,7 @@ if ((isRandomAccessRange!R && isSomeChar!(ElementType!R) ||
+ {
+     import std.array;
+     assert(asAbsolutePath(cast(string) null).array == "");
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(asAbsolutePath("/foo").array == "/foo");
+     }
+@@ -2929,7 +2958,7 @@ string relativePath(CaseSensitive cs = CaseSensitive.osDefault)
+ {
+     assert(relativePath("foo") == "foo");
+
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(relativePath("foo", "/bar") == "foo");
+         assert(relativePath("/foo/bar", "/foo/bar") == ".");
+@@ -2952,7 +2981,7 @@ string relativePath(CaseSensitive cs = CaseSensitive.osDefault)
+ {
+     import std.exception;
+     assert(relativePath("foo") == "foo");
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         relativePath("/foo");
+         assert(relativePath("/foo/bar", "/foo/baz") == "../bar");
+@@ -3059,7 +3088,7 @@ if ((isNarrowString!R1 ||
+ @safe unittest
+ {
+     import std.array;
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(asRelativePath("foo", "/bar").array == "foo");
+         assert(asRelativePath("/foo/bar", "/foo/bar").array == ".");
+@@ -3084,7 +3113,7 @@ if ((isNarrowString!R1 ||
+
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(isBidirectionalRange!(typeof(asRelativePath("foo/bar/baz", "/foo/woo/wee"))));
+     }
+@@ -3107,7 +3136,7 @@ if (isConvertibleToString!R1 || isConvertibleToString!R2)
+ @safe unittest
+ {
+     import std.array;
+-    version (Posix)
++    version (StdPathPosix)
+         assert(asRelativePath(TestAliasedString("foo"), TestAliasedString("/bar")).array == "foo");
+     else version (Windows)
+         assert(asRelativePath(TestAliasedString("foo"), TestAliasedString(`c:\bar`)).array == "foo");
+@@ -3121,7 +3150,7 @@ if (isConvertibleToString!R1 || isConvertibleToString!R2)
+ @safe unittest
+ {
+     import std.array, std.utf : bCU=byCodeUnit;
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         assert(asRelativePath("/foo/bar/baz".bCU, "/foo/bar".bCU).array == "baz");
+         assert(asRelativePath("/foo/bar/baz"w.bCU, "/foo/bar"w.bCU).array == "baz"w);
+@@ -3204,7 +3233,7 @@ int filenameCharCmp(CaseSensitive cs = CaseSensitive.osDefault)(dchar a, dchar b
+     assert(filenameCharCmp!(CaseSensitive.no)('A', 'b') < 0);
+     assert(filenameCharCmp!(CaseSensitive.no)('b', 'A') > 0);
+
+-    version (Posix)   assert(filenameCharCmp('\\', '/') != 0);
++    version (StdPathPosix)   assert(filenameCharCmp('\\', '/') != 0);
+     version (Windows) assert(filenameCharCmp('\\', '/') == 0);
+ }
+
+@@ -3323,7 +3352,7 @@ if (isConvertibleToString!Range1 || isConvertibleToString!Range2)
+     assert(filenameCmp!(CaseSensitive.no)("Abc", "abD") < 0);
+     assert(filenameCmp!(CaseSensitive.no)("abc", "AbB") > 0);
+
+-    version (Posix)   assert(filenameCmp(`abc\def`, `abc/def`) != 0);
++    version (StdPathPosix)   assert(filenameCmp(`abc\def`, `abc/def`) != 0);
+     version (Windows) assert(filenameCmp(`abc\def`, `abc/def`) == 0);
+ }
+
+@@ -3680,7 +3709,7 @@ if ((isRandomAccessRange!Range && hasLength!Range && hasSlicing!Range && isSomeC
+                     break;
+             }
+         }
+-        else version (Posix)
++        else version (StdPathPosix)
+         {
+             if (c == 0 || c == '/') return false;
+         }
+@@ -3724,7 +3753,7 @@ unittest
+     auto invalid = ["", "foo\0bar", "foo/bar"];
+     auto pfdep = [`foo\bar`, "*.txt"];
+     version (Windows) invalid ~= pfdep;
+-    else version (Posix) valid ~= pfdep;
++    else version (StdPathPosix) valid ~= pfdep;
+     else static assert(0);
+
+     import std.meta : AliasSeq;
+@@ -3868,7 +3897,7 @@ if ((isRandomAccessRange!Range && hasLength!Range && hasSlicing!Range && isSomeC
+             remainder = path;
+         }
+     }
+-    else version (Posix)
++    else version (StdPathPosix)
+     {
+         remainder = path;
+     }
+@@ -3985,7 +4014,7 @@ if (isConvertibleToString!Range)
+ */
+ string expandTilde(return scope const string inputPath) @safe nothrow
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         import core.exception : onOutOfMemoryError;
+         import core.stdc.errno : errno, EBADF, ENOENT, EPERM, ERANGE, ESRCH;
+@@ -4059,6 +4088,10 @@ string expandTilde(return scope const string inputPath) @safe nothrow
+             {
+                 return path;
+             }
++            else version (WASI)
++            {
++                return path;
++            }
+             else
+             {
+                 import core.sys.posix.pwd : passwd, getpwnam_r;
+@@ -4168,7 +4201,7 @@ string expandTilde(return scope const string inputPath) @safe nothrow
+ ///
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         import std.process : environment;
+
+@@ -4183,7 +4216,7 @@ string expandTilde(return scope const string inputPath) @safe nothrow
+
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         static if (__traits(compiles, { import std.process : executeShell; }))
+             import std.process : executeShell;
+@@ -4235,7 +4268,7 @@ string expandTilde(return scope const string inputPath) @safe nothrow
+
+ @safe unittest
+ {
+-    version (Posix)
++    version (StdPathPosix)
+     {
+         import std.process : environment;
+
+diff --git a/std/stdio.d b/std/stdio.d
+index e71bc123e..9e04da34f 100644
+--- a/std/stdio.d
++++ b/std/stdio.d
+@@ -183,6 +183,10 @@ else version (Solaris)
+ {
+     version = GENERIC_IO;
+ }
++else version (WASI)
++{
++    version = GENERIC_IO;
++}
+ else
+ {
+     static assert(0, "unsupported operating system");
+@@ -343,6 +347,17 @@ else version (GENERIC_IO)
+         private alias _FLOCK = core.sys.posix.stdio.flockfile;
+         private alias _FUNLOCK = core.sys.posix.stdio.funlockfile;
+     }
++    else version (WASI)
++    {
++        extern (C) private
++        {
++            pragma(mangle, "flockfile") void wasiFlockfile(FILE* fp);
++            pragma(mangle, "funlockfile") void wasiFunlockfile(FILE* fp);
++        }
++
++        private alias _FLOCK = wasiFlockfile;
++        private alias _FUNLOCK = wasiFunlockfile;
++    }
+     else
+     {
+         static assert(0, "don't know how to lock files on GENERIC_IO");
+@@ -839,6 +854,12 @@ Params:
+             auto fp = fdopen(fd, modez);
+             errnoEnforce(fp);
+         }
++        else version (WASI)
++        {
++            import core.sys.posix.stdio : fdopen;
++            auto fp = fdopen(fd, modez);
++            errnoEnforce(fp);
++        }
+         else
+             static assert(0, "no fdopen() available");
+
+@@ -1280,6 +1301,11 @@ Throws: `Exception` if the file is not opened.
+             import core.sys.posix.stdio : fseeko, off_t;
+             alias fseekFun = fseeko;
+         }
++        else version (WASI)
++        {
++            import core.sys.posix.stdio : fseeko, off_t;
++            alias fseekFun = fseeko;
++        }
+         errnoEnforce(fseekFun(_p.handle, to!off_t(offset), origin) == 0,
+                 "Could not seek in file `"~_name~"'");
+     }
+@@ -1337,6 +1363,11 @@ Throws: `Exception` if the file is not opened.
+             import core.sys.posix.stdio : ftello;
+             immutable result = ftello(cast(FILE*) _p.handle);
+         }
++        else version (WASI)
++        {
++            import core.sys.posix.stdio : ftello;
++            immutable result = ftello(cast(FILE*) _p.handle);
++        }
+         errnoEnforce(result != -1,
+                 "Query ftell() failed for file `"~_name~"'");
+         return result;
+@@ -1473,6 +1504,9 @@ $(UL
+             errnoEnforce(lockImpl(F_SETLKW, type, start, length) != -1,
+                     "Could not set lock for file `"~_name~"'");
+         }
++        else version (WASI)
++        {
++        }
+         else
+         version (Windows)
+         {
+@@ -1511,6 +1545,10 @@ specified file segment was already locked.
+             errnoEnforce(res != -1, "Could not set lock for file `"~_name~"'");
+             return true;
+         }
++        else version (WASI)
++        {
++            return true;
++        }
+         else
+         version (Windows)
+         {
+@@ -1546,6 +1584,9 @@ Removes the lock over the specified file segment.
+             errnoEnforce(lockImpl(F_SETLK, F_UNLCK, start, length) != -1,
+                     "Could not remove lock for file `"~_name~"'");
+         }
++        else version (WASI)
++        {
++        }
+         else
+         version (Windows)
+         {
+@@ -3343,6 +3384,10 @@ is empty, throws an `Exception`. In case of an I/O error throws
+                     {
+                         trustedFPUTWC(cast(wchar_t) c, handle_);
+                     }
++                    else version (WASI)
++                    {
++                        trustedFPUTWC(cast(wchar_t) c, handle_);
++                    }
+                     else
+                     {
+                         static assert(0);
+@@ -5723,6 +5768,24 @@ private size_t readlnImpl(FILE* fps, ref char[] buf, dchar terminator, File.Orie
+                     StdioException();
+                 return buf.length;
+             }
++            else version (WASI)
++            {
++                buf.length = 0;
++                for (int c; (c = lf.fgetwc()) != -1; )
++                {
++                    import std.utf : encode;
++
++                    if ((c & ~0x7F) == 0)
++                        buf ~= cast(char) c;
++                    else
++                        encode(buf, cast(dchar) c);
++                    if (c == terminator)
++                        break;
++                }
++                if (ferror(fps))
++                    StdioException();
++                return buf.length;
++            }
+             else
+             {
+                 static assert(0);
+@@ -5823,6 +5886,23 @@ private size_t readlnImpl(FILE* fps, ref char[] buf, dchar terminator, File.Orie
+                     StdioException();
+                 return buf.length;
+             }
++            else version (WASI)
++            {
++                import std.utf : encode;
++                buf.length = 0;
++                for (int c; (c = lf.fgetwc()) != -1; )
++                {
++                    if ((c & ~0x7F) == 0)
++                        buf ~= cast(char) c;
++                    else
++                        encode(buf, cast(dchar) c);
++                    if (c == terminator)
++                        break;
++                }
++                if (ferror(fps))
++                    StdioException();
++                return buf.length;
++            }
+             else
+             {
+                 static assert(0);
