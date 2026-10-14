@@ -224,6 +224,12 @@ module identities, fixture hash and producer receipt hash. It does not qualify
 the container VFS, Workers, Chromium, cancellation, or complete C/C++ sysroots;
 those remain the consumer and release gates. The output directory must be new.
 
+The pinned WebAssembly driver selects an absolute linker with
+`-fuse-ld=/path/to/wasm-ld` and checks its executable metadata. Its
+`wasm::Linker::getLinkerPath` does not consult `--ld-path`; the fixture therefore
+uses `-fuse-ld` and requires the actual dispatch request to match the pinned path.
+Neither host nor fixture rewrites the user's original argv.
+
 If both raw links succeeded and only the final LLD verifier failed because its
 `exec_v1` import was incorrectly expected to be absent, preserve that candidate
 and reverify the same executable bytes into a new directory:

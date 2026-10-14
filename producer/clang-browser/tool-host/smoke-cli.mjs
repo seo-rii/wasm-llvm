@@ -254,7 +254,7 @@ try {
   assert.match(commands.at(-1).stderr, /error:/);
   command("link", [
     "--target=wasm32-wasi",
-    `--ld-path=${linkerPath}`,
+    `-fuse-ld=${linkerPath}`,
     "-nostdlib",
     "-Wl,--no-entry",
     "-Wl,--export=answer",
