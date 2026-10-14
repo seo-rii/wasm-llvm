@@ -143,11 +143,13 @@
     "privateBuildTests": 11,
     "producerAndDefaultBuildOptionTests": 19,
     "abiProtocolCalls": 5,
-    "cwdCases": 8
+    "cwdCases": 8,
+    "abiVerifierCases": 5,
+    "requalificationGuardCases": 3
   },
   "heavyBuild": {
     "originalCandidate": "exec_v1 only; no non-root cwd qualification",
-    "successor": "exec_v1 plus initial_cwd in Clang and LLD; not yet qualified",
+    "successor": "exec_v1 plus initial_cwd in both modules; producer ABI and actual Node WASI freestanding CLI qualified",
     "optimization": "successor requests raw links to test correctness before Binaryen",
     "defaultArtifactsModified": false,
     "attempts": [
@@ -196,10 +198,44 @@
           "scope": "sampled /proc values before exit; not final CPU or peak memory"
         },
         "qualified": false
+      },
+      {
+        "candidate": "guarded O1/CGO1 one-thread exec_v1 plus initial_cwd",
+        "result": "links succeeded; stale LLD verifier failed",
+        "sourceReceipt": {
+          "bytes": 61783,
+          "sha256": "1d8d08f11fb0337887d0deaefdac1f7d8860672672e0eac40bfcd4326cfcc214"
+        },
+        "noLinkerRebuildAfterCorrection": true,
+        "links": [
+          {
+            "exitCode": 0,
+            "durationSeconds": 578.152,
+            "usage": {
+              "maximumResidentSetBytes": 14223040512,
+              "userCpuSeconds": 553.103757,
+              "systemCpuSeconds": 19.151292,
+              "scope": "Linux wait4 child accounting; not an aggregate process-tree memory limit"
+            },
+            "kind": "clang"
+          },
+          {
+            "exitCode": 0,
+            "durationSeconds": 285.064,
+            "usage": {
+              "maximumResidentSetBytes": 7961432064,
+              "userCpuSeconds": 273.870105,
+              "systemCpuSeconds": 8.687131,
+              "scope": "Linux wait4 child accounting; not an aggregate process-tree memory limit"
+            },
+            "kind": "lld"
+          }
+        ],
+        "qualifiedBeforeCorrection": false
       }
     ],
     "retry": {
-      "status": "not started; one externally guarded retry is being prepared",
+      "status": "completed links preserved; corrected ABI verification and actual producer CLI passed; consumer/browser gate separate",
       "addressSpaceBytesPerProcess": 17179869184,
       "enforcement": "RLIMIT_AS; not an RSS or aggregate process-tree limit",
       "threads": 1,
@@ -229,7 +265,72 @@
   "patchWhitespaceNormalization": "The committed patch omits blank context spaces; applying it produces exactly the source used by the ABI fixture.",
   "producerCliSmoke": {
     "script": "smoke-cli.mjs",
-    "status": "prepared; waiting for verified full Clang/LLD candidate",
-    "scope": "Node WASI freestanding compile/link/run; not consumer VFS, browser or full-sysroot qualification"
+    "status": "passed",
+    "receipt": "cli-evidence.json",
+    "receiptIdentity": {
+      "bytes": 5025,
+      "sha256": "99bef206dba7f50dd07f6e7885b0e8570b11aae381360148a98a8d2f4678d2f3"
+    },
+    "commands": 7,
+    "linkerDispatches": 1,
+    "executedArtifactResult": 42,
+    "scope": "producer Node WASI freestanding CLI smoke; not container/browser/sysroot qualification"
+  },
+  "requalification": {
+    "sourceReceipt": {
+      "bytes": 61783,
+      "sha256": "1d8d08f11fb0337887d0deaefdac1f7d8860672672e0eac40bfcd4326cfcc214"
+    },
+    "completedReceipt": {
+      "bytes": 68744,
+      "sha256": "6e610fe9bb6a12c794dd3b0e5110b25c76cd31eed11d9546224d9e3e7478df14"
+    },
+    "verifier": {
+      "bytes": 4396,
+      "sha256": "b6f31f6069a32abe36652c93b489de59c193c560c93174aac0e5b4ecc238e63f"
+    },
+    "helper": {
+      "bytes": 8994,
+      "sha256": "4753a00a30efc28fc4f1b567fe7686ee99edb8fdaa4a0e73a569f50d0691734e"
+    },
+    "executableBytesUnchanged": true,
+    "outputs": {
+      "clang.raw.wasm": {
+        "bytes": 51965041,
+        "sha256": "e0b548b70e13ad9620c1f47a1ef3f552b74cea586866ef1d8dcc0558c87f50e3"
+      },
+      "clang.wasm": {
+        "bytes": 51965041,
+        "sha256": "e0b548b70e13ad9620c1f47a1ef3f552b74cea586866ef1d8dcc0558c87f50e3"
+      },
+      "clang.module.json": {
+        "bytes": 3835,
+        "sha256": "7ec694ac9fd7138000b83a2cbadbf304c504a1f584761c8858922586eeda6c20"
+      },
+      "clang.wasm.gz": {
+        "bytes": 16270174,
+        "sha256": "eeee4f23e80b03cdd7b98c6722801f6e21143e67d83301a667acc7b70aba31ba"
+      },
+      "lld.raw.wasm": {
+        "bytes": 24938493,
+        "sha256": "3da2fc3d37702d3d56bce834672912334e36d245efaf97fbdda7e4b5e810134a"
+      },
+      "lld.wasm": {
+        "bytes": 24938493,
+        "sha256": "3da2fc3d37702d3d56bce834672912334e36d245efaf97fbdda7e4b5e810134a"
+      },
+      "lld.module.json": {
+        "bytes": 3601,
+        "sha256": "664b9c01aac9fec36f4463c6964b6bde7fb7a900f9feeb5d4d67b04cfe8a2245"
+      },
+      "lld.wasm.gz": {
+        "bytes": 8178107,
+        "sha256": "dd9279345172fae1aef049ffcaf7531f945d85df08d97ea2ffce90581e9eee2d"
+      }
+    },
+    "childDispatch": {
+      "clang": "pinned linker only",
+      "lld": "deny"
+    }
   }
 }
