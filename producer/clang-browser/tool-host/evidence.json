@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "profileId": "wasm-llvm/clang-browser/tool-host-exec-v1",
-  "qualification": "ABI and actual WASI libc cwd fixtures passed; full Clang/LLD CLI and browser gate pending",
+  "qualification": "ABI and actual WASI libc cwd fixtures passed; producer Node CLI and recorded consumer Chromium batch C/C++ passed; remaining profile/release gates explicit",
   "llvmCommit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
   "patchSha256": "6e76d1c35f3cbe50acde6bafab50861ab817b7c8f3a6e5bd69ba735bf3f34dc2",
   "initialCwdSha256": "d316c54817d3c636c3a1958d8ea2fbc58faf6fc092f08be324bb416e2d66a060",
@@ -405,5 +405,27 @@
       "clang": "pinned linker only",
       "lld": "deny"
     }
+  },
+  "consumerBrowser": {
+    "repository": "seo-rii/wasm-idle",
+    "pullRequest": "https://github.com/seo-rii/wasm-idle/pull/159",
+    "receipt": "https://github.com/seo-rii/wasm-idle/blob/eb0153b800ca8ae9b1571693574052577e45f023/packages/container/test/fixtures/clang-browser-evidence.json",
+    "receiptSha256": "b04774f0181150e46a4121dccbcf14ecb584bcf968133af585cbcae7e256fb9a",
+    "testedApplicationCommit": "fe5e3a85277e2dec02347d9d5362e5656ed3e5b7",
+    "producerReceiptSha256": "7db6ac0eff2256c79e0a5435908810d15daa18d2220c57ab64fea2116b7ba9fd",
+    "producerCliReceiptSha256": "f7895ec00fd05cb224b42e085873beb75fd5899cf238acf8f3833aeb2f9bded5",
+    "passed": true,
+    "scope": "consumer Chromium 153.0.8010.12/Linux x64 batch snapshot C/C++ command and artifact execution; unchanged full selected-target sysroot",
+    "coldCompilerInvocations": 9,
+    "coldArtifactExecutions": 3,
+    "reloadCommand": "clang --version",
+    "reloadAdditionalAssetBodies": 0,
+    "guestWorkersStarted": 13,
+    "guestWorkersRemaining": 0,
+    "cppProfile": "C++20 with explicit -fno-exceptions",
+    "limitations": [
+      "Complete producer header regression corpus pending.",
+      "No clean source-to-object build, live compiler/shell, release or performance qualification."
+    ]
   }
 }

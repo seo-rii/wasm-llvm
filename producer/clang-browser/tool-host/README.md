@@ -270,3 +270,14 @@ result `42`. Exact artifact, receipt and script identities are in `evidence.json
 This qualifies the recorded Node WASI freestanding workflow; consumer filesystem,
 browser, full sysroot, clean-build reproducibility and release performance have
 their own evidence and promotion gates.
+
+The consumer separately passed Chromium 153.0.8010.12/Linux x64 batch snapshot
+qualification with these unchanged compiler/linker bytes and the full selected
+sysroot. Its [original receipt](https://github.com/seo-rii/wasm-idle/blob/eb0153b800ca8ae9b1571693574052577e45f023/packages/container/test/fixtures/clang-browser-evidence.json)
+pins the completed producer and CLI receipts; `evidence.json` records that link
+and digest without replacing producer evidence. The cold page executes nine
+compiler commands and three artifacts, including C binary stdio and C++20 with
+explicit `-fno-exceptions`. A reloaded `--version` command reuses the verified
+asset cache with no further body requests. All 13 guest Workers are reclaimed.
+The complete header regression corpus, exception-enabled C++, clean rebuild,
+actual shell/live compiler, release and performance remain separate gates.
