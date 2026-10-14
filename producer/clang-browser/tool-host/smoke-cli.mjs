@@ -56,6 +56,7 @@ const cwd = "/workspace/project space/한글";
 const project = path.join(root, cwd);
 mkdirSync(path.join(project, "include"), { recursive: true });
 mkdirSync(path.join(root, "opt/bin"), { recursive: true });
+mkdirSync(path.join(root, "tmp"));
 // A real executable node contains the pinned linker bytes; no empty placeholder.
 const linkerPath = "/opt/bin/wasm-ld";
 copyFileSync(path.join(candidate, "lld.wasm"), path.join(root, linkerPath));
@@ -156,9 +157,10 @@ function invoke(kind, argv, env, descriptors, depth = 0) {
           return -1;
         }
         const program = string(programPointer, programLength);
-        assert.equal(program, linkerPath, "only the pinned linker may execute");
         assert(flags === 0 || flags === 1);
         const childArgv = table(argvPointer, argc);
+        const compilerChild = program === "" && childArgv[0] === "" && childArgv[1] === "clang" && (childArgv[2] === "-cc1" || childArgv[2] === "-cc1as");
+        assert(compilerChild || program === linkerPath, "only exact pinned compiler jobs or linker may execute");
         let childEnv = env;
         if (flags === 0) {
           childEnv = Object.create(null);
@@ -168,8 +170,9 @@ function invoke(kind, argv, env, descriptors, depth = 0) {
             childEnv[item.slice(0, separator)] = item.slice(separator + 1);
           }
         }
-        const code = invoke("lld", childArgv, childEnv, descriptors, depth + 1);
-        dispatches.push({ program, argv: childArgv, flags, code, cwd });
+        const childKind = compilerChild ? "clang" : "lld";
+        const code = invoke(childKind, childArgv, childEnv, descriptors, depth + 1);
+        dispatches.push({ program, kind: childKind, argv: childArgv, flags, code, cwd });
         return code;
       },
     },
@@ -270,6 +273,17 @@ try {
   );
   assert.deepEqual(WebAssembly.Module.imports(artifact), []);
   assert.equal(new WebAssembly.Instance(artifact).exports.answer(), 42);
+  command("source-link", [
+    "--target=wasm32-wasi", `-fuse-ld=${linkerPath}`, "-Iinclude", "-DVALUE=40",
+    "-nostdlib", "-Wl,--no-entry", "-Wl,--export=answer", "part one.c", "part two.c",
+    "-o", "source-answer.wasm"
+  ]);
+  assert.equal(dispatches.filter((entry) => entry.kind === "clang").length, 2);
+  assert.equal(dispatches.filter((entry) => entry.kind === "lld").length, 2);
+  assert(dispatches.every((entry) => entry.code === 0));
+  const sourceArtifact = new WebAssembly.Module(readFileSync(path.join(project, "source-answer.wasm")));
+  assert.deepEqual(WebAssembly.Module.imports(sourceArtifact), []);
+  assert.equal(new WebAssembly.Instance(sourceArtifact).exports.answer(), 42);
   passed = true;
 } finally {
   writeFileSync(

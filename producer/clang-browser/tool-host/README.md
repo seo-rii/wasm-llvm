@@ -53,9 +53,18 @@ The linked Clang and LLD modules both retain the exact `exec_v1` import. In the
 pinned LLVM revision, `lld/Common/ErrorHandler.cpp` calls `ExecuteAndWait` for
 its optional error-handling script. Import presence does not grant that feature:
 the host must return `-1` for every LLD child-execution request, including a directly
-invoked linker. Only a top-level Clang invocation may dispatch the pinned linker.
+invoked linker. Only a top-level Clang invocation may dispatch the pinned linker
+or its verified compiler's exact cc1/cc1as jobs.
 The verifier requires the same seven-i32-to-i32 signature for both tools and
 records this per-tool dispatch policy.
+
+The pinned fixture's LLVM multicall driver requests `program: ''` and original argv beginning
+`['', 'clang', '-cc1', ...]` or exactly `-cc1as` when compile/link has multiple jobs.
+The host may explicitly register that narrow self-execution form against the same
+verified compiler bytes, preserving the empty first entry. Do not resolve the
+empty string as a filesystem path or allow generic driver recursion. Child cc1
+and linker processes cannot dispatch grandchildren. Child `@rsp`-only packets
+are unsupported until an independent ABI/profile gate is defined.
 
 ## Initial working directory
 

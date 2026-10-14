@@ -46,7 +46,7 @@ for (const kind of ['clang', 'lld']) {
     withFixture(fixture(), (run, receipt) => {
       run('--initial-cwd', `--kind=${kind}`);
       assert.deepEqual(receipt().bridgeSignature, { parameters: Array(7).fill('i32'), results: ['i32'] });
-      assert.equal(receipt().childDispatch, kind === 'clang' ? 'pinned linker only' : 'deny');
+      assert.equal(receipt().childDispatch, kind === 'clang' ? 'pinned linker; explicit compiler cc1/cc1as opt-in' : 'deny');
     });
   });
   test(`${kind} rejects missing/unknown ABI, wrong signature and unrelated host import`, () => {

@@ -134,7 +134,7 @@ await writeFile(
       exports,
       kind,
       bridgeSignature: { parameters: Array(7).fill("i32"), results: ["i32"] },
-      childDispatch: kind === "clang" ? "pinned linker only" : "deny",
+      childDispatch: kind === "clang" ? "pinned linker; explicit compiler cc1/cc1as opt-in" : "deny",
       cwdSignature: initialCwd
         ? { parameters: ["i32", "i32"], results: ["i32"] }
         : null,
