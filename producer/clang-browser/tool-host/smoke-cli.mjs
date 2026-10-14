@@ -76,6 +76,7 @@ writeFileSync(
 writeFileSync(path.join(project, "broken.c"), "int broken( {\n");
 const commands = [];
 const dispatches = [];
+const rejectedDispatches = [];
 const decoder = new TextDecoder("utf-8", { fatal: true });
 
 function invoke(kind, argv, env, descriptors, depth = 0) {
@@ -150,8 +151,10 @@ function invoke(kind, argv, env, descriptors, depth = 0) {
         envc,
         flags,
       ) {
-        assert.equal(kind, "clang");
-        assert.equal(depth, 0);
+        if (kind !== "clang" || depth !== 0) {
+          rejectedDispatches.push({ kind, depth, result: -1 });
+          return -1;
+        }
         const program = string(programPointer, programLength);
         assert.equal(program, linkerPath, "only the pinned linker may execute");
         assert(flags === 0 || flags === 1);
@@ -289,6 +292,7 @@ try {
         linkTimeOptimization: producer.linkTimeOptimization,
         commands,
         dispatches,
+        rejectedDispatches,
         executedArtifactResult: passed ? 42 : null,
       },
       null,

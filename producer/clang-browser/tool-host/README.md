@@ -46,6 +46,14 @@ Process statistics are reset to unavailable. `ExecuteNoWait` stays unsupported.
 Cancellation is owned by the outer execution group, including the synchronous
 child; this import does not implement native processes, signals or fork.
 
+The linked Clang and LLD modules both retain the exact `exec_v1` import. In the
+pinned LLVM revision, `lld/Common/ErrorHandler.cpp` calls `ExecuteAndWait` for
+its optional error-handling script. Import presence does not grant that feature:
+the host must return `-1` for every LLD child-execution request, including a directly
+invoked linker. Only a top-level Clang invocation may dispatch the pinned linker.
+The verifier requires the same seven-i32-to-i32 signature for both tools and
+records this per-tool dispatch policy.
+
 ## Initial working directory
 
 Both Clang and LLD include a C constructor at priority 101 that calls

@@ -10,6 +10,7 @@ assert(
   ),
 );
 const initialCwd = flags.includes("--initial-cwd");
+assert(flags.filter((flag) => flag.startsWith("--kind=")).length <= 1, "ambiguous tool kind");
 const kind = flags.includes("--kind=lld") ? "lld" : "clang";
 const bytes = await readFile(wasmPath);
 const module = await WebAssembly.compile(bytes);
@@ -18,9 +19,7 @@ const exports = WebAssembly.Module.exports(module);
 const bridge = imports.filter((item) => item.module === "wasm_idle_tool_host");
 assert.deepEqual(
   bridge,
-  kind === "clang"
-    ? [{ module: "wasm_idle_tool_host", name: "exec_v1", kind: "function" }]
-    : [],
+  [{ module: "wasm_idle_tool_host", name: "exec_v1", kind: "function" }],
 );
 assert.deepEqual(
   imports.filter((item) => item.module === "wasm_idle_process_v1"),
@@ -115,12 +114,10 @@ while (reader.offset < reader.data.length) {
 }
 assert.deepEqual(
   signature,
-  kind === "clang"
-    ? {
-        parameters: Array(7).fill(0x7f),
-        results: [0x7f],
-      }
-    : undefined,
+  {
+    parameters: Array(7).fill(0x7f),
+    results: [0x7f],
+  },
 );
 assert.deepEqual(
   cwdSignature,
@@ -136,10 +133,8 @@ await writeFile(
       imports,
       exports,
       kind,
-      bridgeSignature:
-        kind === "clang"
-          ? { parameters: Array(7).fill("i32"), results: ["i32"] }
-          : null,
+      bridgeSignature: { parameters: Array(7).fill("i32"), results: ["i32"] },
+      childDispatch: kind === "clang" ? "pinned linker only" : "deny",
       cwdSignature: initialCwd
         ? { parameters: ["i32", "i32"], results: ["i32"] }
         : null,
