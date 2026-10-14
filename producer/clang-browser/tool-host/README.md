@@ -223,3 +223,23 @@ path. The receipt records each command, actual child dispatch, stdout/stderr,
 module identities, fixture hash and producer receipt hash. It does not qualify
 the container VFS, Workers, Chromium, cancellation, or complete C/C++ sysroots;
 those remain the consumer and release gates. The output directory must be new.
+
+If both raw links succeeded and only the final LLD verifier failed because its
+`exec_v1` import was incorrectly expected to be absent, preserve that candidate
+and reverify the same executable bytes into a new directory:
+
+```sh
+python3 -B producer/clang-browser/tool-host/requalify.py \
+  --candidate /path/to/failed-candidate --output /path/to/new-requalification \
+  --source-receipt-sha256 REVIEWED_FAILED_RECEIPT_SHA256 \
+  --clang-sha256 REVIEWED_CLANG_SHA256 --lld-sha256 REVIEWED_LLD_SHA256
+```
+
+This narrow path requires both successful link commands, raw/final byte equality,
+unchanged compiled recipe/profile, and every pinned original input. It copies
+the failed receipt and source pack, records the verifier replacement separately,
+checks the exact imports/signatures again and regenerates deterministic gzip.
+It never relinks or modifies the original receipt. A new complete receipt means
+the executable bytes passed producer verification; the actual CLI and browser
+gates still have to run. Link failures, optimized candidates, changed bytes,
+changed recipes and malformed histories are rejected before new output is created.
