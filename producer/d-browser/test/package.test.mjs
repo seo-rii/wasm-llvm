@@ -64,6 +64,28 @@ test('packages an exact deterministic receipt graph and validates compiler metad
 	assert.equal(manifest.compiler.linker.wasm.asset, 'bin/lld.wasm.gz');
 });
 
+test('normalizes toolchain modes and ignores caller tar options', async () => {
+	const value = await fixture();
+	const first = await packageD(value);
+	const savedUmask = process.umask();
+	const savedEnv = { TAR_OPTIONS: process.env.TAR_OPTIONS, POSIXLY_CORRECT: process.env.POSIXLY_CORRECT };
+	try {
+		for (const [index, mask] of [0o002, 0o077].entries()) {
+			process.umask(mask);
+			assert.deepEqual(await packageD({ ...value, outputDir: path.join(value.root, `umask-${index}`) }), first);
+		}
+		process.umask(savedUmask);
+		Object.assign(process.env, { TAR_OPTIONS: '--format=posix', POSIXLY_CORRECT: '1' });
+		assert.deepEqual(await packageD({ ...value, outputDir: path.join(value.root, 'caller-env') }), first);
+	} finally {
+		process.umask(savedUmask);
+		for (const [key, saved] of Object.entries(savedEnv)) {
+			if (saved === undefined) delete process.env[key];
+			else process.env[key] = saved;
+		}
+	}
+});
+
 test('rejects a changed finalized compiler before publication and preserves an existing output', async () => {
 	const value = await fixture();
 	await mkdir(value.outputDir);

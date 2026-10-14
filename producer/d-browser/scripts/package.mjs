@@ -21,6 +21,8 @@ const INPUTS = ['bin/ldc2.wasm', 'bin/lld.js', 'bin/lld.wasm', 'bin/lld.data',
 const COMPILER_OUTPUTS = ['bin/ldc2.wasm.gz', 'bin/lld.js', 'bin/lld.wasm.gz',
 	'bin/lld.data.gz', 'toolchain/toolchain.tar.gz'];
 const OUTPUTS = [...COMPILER_OUTPUTS, 'runtime-manifest.v1.json', 'runtime-build.json'];
+// Archive tools must not inherit caller tar defaults such as TAR_OPTIONS or POSIXLY_CORRECT.
+const TAR_ENV = { PATH: process.env.PATH ?? '/usr/bin:/bin', LC_ALL: 'C', TZ: 'UTC' };
 
 export async function loadContract() {
 	const manifestBytes = await readRegular(ROOT, 'manifest.json', 1024 * 1024);
@@ -94,7 +96,7 @@ export async function verifyDArtifacts(directory, contract) {
 }
 
 async function extractToolchain(archive, target) {
-	const options = { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 120_000, env: { ...process.env, LC_ALL: 'C' } };
+	const options = { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 120_000, env: TAR_ENV };
 	const { stdout: names } = await run('tar', ['--zstd', '-tf', archive], options);
 	const { stdout: entries } = await run('tar', ['--zstd', '-tvf', archive], options);
 	for (const name of names.trimEnd().split('\n')) {
@@ -143,8 +145,9 @@ export async function packageD({ sourceDir, outputDir, contract } = {}) {
 				await extractToolchain(path.join(work, name), path.join(toolchain, destination));
 			}
 			const archive = path.join(work, 'toolchain.tar');
-			await run('tar', ['--sort=name', '--mtime=@0', '--owner=0', '--group=0', '--numeric-owner',
-				'-cf', archive, '-C', toolchain, '.'], { timeout: 120_000 });
+			// Extracted modes depend on the caller umask; restore the archived 0644/0755 shape.
+			await run('tar', ['--format=gnu', '--sort=name', '--mtime=@0', '--owner=0', '--group=0', '--numeric-owner',
+				'--mode=go=u,go-w', '-cf', archive, '-C', toolchain, '.'], { timeout: 120_000, env: TAR_ENV });
 			await emit('toolchain/toolchain.tar.gz', await compress(await readFile(archive), { level: 9 }));
 			for (const [name, bytes] of Object.entries(metadata(contract, artifacts))) await emit(name, bytes);
 			const receipt = { ...contract.identity, artifacts };

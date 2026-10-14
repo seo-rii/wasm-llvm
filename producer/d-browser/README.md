@@ -57,10 +57,11 @@ The receipt has `schemaVersion: 1`, `format: wasm-llvm-d-browser-artifacts-v1`,
 `producerId: wasm-llvm/d-browser`, SHA-256 hashes of the exact producer manifest and source-lock
 files, and an `artifacts` array of `{path, bytes, sha256}`. Gzip entries also carry
 `uncompressedBytes` and `uncompressedSha256`. Metadata uses a fixed epoch and source identifier;
-verification independently reconstructs it from the pinned compiler receipts. Tar entry order,
-timestamps and ownership are normalized. Gzip delivery hashes may change with the zlib version;
-the native and toolchain logical hashes remain pinned, and any changed delivery receipt requires
-an explicit consumer lock update.
+verification independently reconstructs it from the pinned compiler receipts. The toolchain tar
+uses the GNU format with normalized entry order, timestamps, ownership and 0644/0755 modes, so the
+caller's umask, `TAR_OPTIONS` and `POSIXLY_CORRECT` do not change it. Gzip delivery hashes may
+change with the zlib version; the native and toolchain logical hashes remain pinned, and any
+changed delivery receipt requires an explicit consumer lock update.
 
 Consumers must pin the producer receipt itself (or every expected artifact digest), in addition to
 its manifest/source-lock identity, and verify all files before publication. A receipt's own hashes
