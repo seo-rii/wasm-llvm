@@ -25,6 +25,9 @@ Each argv/environment table entry has an eight-byte little-endian layout:
 a required terminator. argv includes argv0 and preserves empty arguments. Flag
 bit 0 means inherit the current environment; zero means use the explicit table,
 including an empty environment. All other flags are reserved and must fail.
+For inherited environments the count is zero; the unused pointer may be nonzero
+because an empty LLVM SmallVector has inline storage. Do not dereference it or
+require a null pointer. A nonzero count with the inheritance flag is rejected.
 
 The call is synchronous. The host child inherits the current cwd, filesystem and
 fd 0/1/2. The host must copy and validate the tables and strings before dispatch,
