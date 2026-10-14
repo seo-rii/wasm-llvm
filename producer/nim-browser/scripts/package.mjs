@@ -180,18 +180,24 @@ export async function packageNim({ sourceDir, fromRuntimeDir, archivePath, downl
 
 async function main() {
 	const args = process.argv.slice(2).filter((arg) => arg !== '--');
-	const options = { outputDir: path.resolve(ROOT, '../../out/nim-browser') };
+	const defaultOutput = path.resolve(ROOT, '../../out/nim-browser');
+	const options = { outputDir: defaultOutput };
 	const seen = new Set();
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
 		if (arg === '--help') {
-			console.log('package:nim -- (--source <distribution-root> | --from-runtime <installed-dir> | --archive <pinned-tar.gz> | --download) --out <new-dir>\nverify:nim-artifacts -- --verify <output-dir>');
+			console.log('package:nim -- (--source <distribution-root> | --from-runtime <installed-dir> | --archive <pinned-tar.gz> | --download) --out <new-dir>\nverify:nim-artifacts [-- <output-dir>]');
 			return;
 		}
 		if (seen.has(arg)) throw new Error(`Duplicate Nim producer option: ${arg}`);
 		seen.add(arg);
 		if (arg === '--download') { options.download = true; continue; }
 		const key = { '--source': 'sourceDir', '--from-runtime': 'fromRuntimeDir', '--archive': 'archivePath', '--out': 'outputDir', '--verify': 'verify' }[arg];
+		if (key === 'verify' && (!args[i + 1] || args[i + 1].startsWith('--'))) {
+			// Verification never falls through to packaging from WASM_LLVM_NIM_SOURCE_DIR.
+			options.verify = defaultOutput;
+			continue;
+		}
 		if (!key || !args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`Invalid Nim producer option: ${arg}`);
 		options[key] = path.resolve(args[++i]);
 	}

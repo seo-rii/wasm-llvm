@@ -32,7 +32,7 @@ the producer does not search sibling repositories or download an unpinned releas
 
 ```sh
 pnpm package:d -- --source /path/to/ldc-wasm/dist/wasm-idle --out out/d-browser
-pnpm verify:d-artifacts -- --verify out/d-browser
+pnpm verify:d-artifacts -- out/d-browser
 pnpm test:d-producer
 ```
 

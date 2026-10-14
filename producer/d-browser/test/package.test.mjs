@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { loadContract, packageD, verifyDArtifacts } from '../scripts/package.mjs';
@@ -144,4 +145,18 @@ test('rejects undeclared files and forged producer identities', async () => {
 	receipt.manifestSha256 = '0'.repeat(64);
 	await writeFile(file, jsonBytes(receipt));
 	await assert.rejects(verifyDArtifacts(value.outputDir, value.contract), /manifestSha256/u);
+});
+
+test('verify CLI only verifies, with an optional output directory', async () => {
+	const root = await mkdtemp(path.join(os.tmpdir(), 'd-producer-cli-'));
+	roots.push(root);
+	const script = fileURLToPath(new URL('../scripts/package.mjs', import.meta.url));
+	const env = { ...process.env, WASM_LLVM_D_SOURCE_DIR: root };
+	const explicit = await run(process.execPath, [script, '--verify', '--', root], { env }).catch((error) => error);
+	assert.match(explicit.stderr, /producer-receipt\.json/u);
+	const defaulted = await run(process.execPath, [script, '--verify'], { env }).catch((error) => error);
+	const output = `${defaulted.stdout}${defaulted.stderr}`;
+	assert.doesNotMatch(output, /Packaged|requires|Invalid/u);
+	assert.ok(!output.includes(root), 'verification must not read the packaging source');
+	await assert.rejects(run(process.execPath, [script, '--verify', '--source', root], { env }), /cannot be combined/u);
 });

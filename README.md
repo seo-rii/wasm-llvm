@@ -72,8 +72,8 @@ pnpm prepare:clang-release
 # D and Nim: preserve the existing verified compiler binaries
 pnpm package:d -- --source /path/to/ldc-wasm/dist/wasm-idle --out out/d-browser
 pnpm package:nim -- --from-runtime /path/to/wasm-idle/static/wasm-nim --out out/nim-browser
-pnpm verify:d-artifacts -- --verify out/d-browser
-pnpm verify:nim-artifacts -- --verify out/nim-browser
+pnpm verify:d-artifacts -- out/d-browser
+pnpm verify:nim-artifacts -- out/nim-browser
 
 # LLDB debug adapter
 pnpm prepare:lldb -- --plan

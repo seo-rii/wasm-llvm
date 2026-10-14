@@ -28,7 +28,7 @@ pnpm package:nim -- --download --out out/nim-browser
 # Migrate a previously published, content-locked wasm-idle installation without a download.
 pnpm package:nim -- --from-runtime /path/to/static/wasm-nim --out out/nim-browser
 
-pnpm verify:nim-artifacts -- --verify out/nim-browser
+pnpm verify:nim-artifacts -- out/nim-browser
 pnpm test:nim-producer
 ```
 

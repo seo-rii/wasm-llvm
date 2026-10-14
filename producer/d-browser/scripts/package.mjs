@@ -162,18 +162,23 @@ export async function packageD({ sourceDir, outputDir, contract } = {}) {
 
 async function main() {
 	const args = process.argv.slice(2).filter((arg) => arg !== '--');
-	const options = { sourceDir: process.env.WASM_LLVM_D_SOURCE_DIR, outputDir: path.resolve(ROOT, '../../out/d-browser') };
+	const defaultOutput = path.resolve(ROOT, '../../out/d-browser');
+	const options = { sourceDir: process.env.WASM_LLVM_D_SOURCE_DIR, outputDir: defaultOutput };
 	const seen = new Set();
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
 		if (arg === '--help') {
-			console.log('package:d -- --source <finalized-ldc-wasm-dir> --out <new-output-dir>\nverify:d-artifacts -- --verify <output-dir>');
+			console.log('package:d -- --source <finalized-ldc-wasm-dir> --out <new-output-dir>\nverify:d-artifacts [-- <output-dir>]');
 			return;
 		}
-		if (!['--source', '--out', '--verify'].includes(arg) || seen.has(arg) || !args[i + 1] || args[i + 1].startsWith('--')) {
-			throw new Error(`Invalid D producer option: ${arg}`);
-		}
+		if (!['--source', '--out', '--verify'].includes(arg) || seen.has(arg)) throw new Error(`Invalid D producer option: ${arg}`);
 		seen.add(arg);
+		if (!args[i + 1] || args[i + 1].startsWith('--')) {
+			// Only --verify has a default; verification never falls through to packaging.
+			if (arg !== '--verify') throw new Error(`Invalid D producer option: ${arg}`);
+			options.verify = defaultOutput;
+			continue;
+		}
 		options[arg === '--source' ? 'sourceDir' : arg === '--out' ? 'outputDir' : 'verify'] = path.resolve(args[++i]);
 	}
 	if (options.verify && (seen.has('--source') || seen.has('--out'))) throw new Error('--verify cannot be combined with packaging');
