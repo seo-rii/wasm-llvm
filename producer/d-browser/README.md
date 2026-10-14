@@ -15,7 +15,12 @@ bash producer/d-browser/scripts/apply-ldc-patches.sh /path/to/ldc
 pnpm probe:d-frontend -- --ldc-source /path/to/ldc --bootstrap-ldmd2 /path/to/bootstrap/bin/ldmd2
 pnpm collect:d-inputs -- --help
 pnpm finalize:d-inputs -- --help
+pnpm verify:d-inputs -- producer/d-browser/dist/wasm-idle
 ```
+
+The copied recipes keep their upstream defaults relative to `producer/d-browser` (`build/` and
+`dist/wasm-idle`). `verify:d-inputs` resolves its default from the current directory instead, so
+pass the finalized directory explicitly.
 
 These upstream porting probes do not constitute a new full compiler rebuild or binary-to-source
 attestation. The current migration validates and preserves the finalized compiler bytes.
