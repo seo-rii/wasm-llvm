@@ -182,7 +182,11 @@ CLANG_TOOL_HOST=ON \
 ```
 
 This applies the checksum-pinned patch after the existing producer patches and
-adds `-DLLVM_WASM_IDLE_TOOL_HOST=1` only to the WASI build. Its compiler receipt
+adds `-DLLVM_WASM_IDLE_TOOL_HOST=1` only to the WASI build. Before patching it
+requires the profile's `baselineProgramSha256`. It rejects caller overrides of the
+manifest's LLVM version, YoWASP patch source, WASI SDK/Emscripten versions and
+target triple, and an unverified `WASI_SDK_PATH`, so the receipt cannot attribute
+other inputs to these pins. Its compiler receipt
 records the profile and hashes of the extra source/notice/ABI materials. The
 default `CLANG_TOOL_HOST=OFF` keeps the existing source and output contract.
 

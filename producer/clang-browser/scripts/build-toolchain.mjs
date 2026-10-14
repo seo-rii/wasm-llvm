@@ -158,6 +158,23 @@ if (config.clangToolHost === 'ON') {
 	if (config.llvmCommit !== toolHostProfile.llvmCommit || config.hostTriple !== 'wasm32-wasip1') {
 		throw new Error('CLANG_TOOL_HOST requires the profile-pinned LLVM revision and wasm32-wasip1 host');
 	}
+	// The tool-host receipt records the manifest's sources and SDK pins; caller overrides would
+	// build from different inputs (or an unverified WASI_SDK_PATH) under that same identity.
+	const overridden = [
+		['LLVM_VERSION', config.llvmVersion, producerManifest.sources.llvm.version],
+		['YOWASP_WASI_PATCH_REPO', config.yowaspWasiPatchRepo, producerManifest.sources.wasiHostPatch.repository],
+		['YOWASP_WASI_PATCH_COMMIT', config.yowaspWasiPatchCommit, producerManifest.sources.wasiHostPatch.commit],
+		['WASI_SDK_VERSION', config.wasiSdkVersion, producerManifest.toolchains.wasiSdk.version],
+		['EMSDK_VERSION', config.emsdkVersion, producerManifest.toolchains.emsdk.version],
+		['EMSDK_COMMIT', config.emsdkCommit, producerManifest.toolchains.emsdk.commit],
+		['TARGET_TRIPLE', config.targetTriple, producerManifest.target]
+	]
+		.filter(([, actual, expected]) => actual !== expected)
+		.map(([name]) => name);
+	if (process.env.WASI_SDK_PATH) overridden.push('WASI_SDK_PATH');
+	if (overridden.length) {
+		throw new Error(`CLANG_TOOL_HOST requires producer-manifest pinned inputs; unset ${overridden.join(', ')}`);
+	}
 }
 
 const run = (command, args, options = {}) =>
@@ -489,6 +506,12 @@ await patchLlvmWasiClose();
 await patchLldForWasmOnly();
 await patchClangdForEmscriptenStdin();
 if (toolHostProfile) {
+	// Same pinned patch input as the isolated cached rebuild (build.py); the work dir is fresh.
+	await assertSha256(
+		path.join(llvmSource, 'llvm/lib/Support/Program.cpp'),
+		toolHostProfile.baselineProgramSha256,
+		'tool-host Program.cpp baseline'
+	);
 	await applyChecksumPinnedPatch(
 		{ ...toolHostProfile.patch, path: `tool-host/${toolHostProfile.patch.path}` },
 		'LLVM synchronous tool-host patch',
