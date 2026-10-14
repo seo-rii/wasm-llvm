@@ -199,8 +199,8 @@ archive. Full sources remain available at the pinned repository revisions. LLVM'
 ## Validation
 
 ```sh
-python3 -B -m unittest discover -s producer/clang-browser/tool-host -p test_build.py
-node --test test/clang-tool-host.test.mjs
+python3 -B -m unittest discover -s producer/clang-browser/tool-host -p 'test_*.py'
+node --test test/clang-tool-host.test.mjs test/clang-tool-host-verify.test.mjs
 python3 -B producer/clang-browser/tool-host/test-abi.py \
   --build /path/to/existing/wasi-raw \
   --candidate /path/to/private-output \
