@@ -18,12 +18,14 @@ hosting and loaded by URL from the consuming application.
 | Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
 | COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
 | Crystal        | Crystal 1.21.0, verified native bootstrap, markd 0.5.0                                          | WASI object and compiler-host portability receipts; browser host blocked | [`producer/crystal-browser`](producer/crystal-browser/README.md)             |
+| D | LDC 1.42.0 finalized WASI bundle and LLVM 16.0.4 LLD, exact content locks | Compiler, deterministic toolchain, manifest and producer receipt | [`producer/d-browser`](producer/d-browser/README.md) |
 | ECL (Common Lisp) | ECL 26.5.5, emsdk 6.0.0 | Emscripten ES module runtime (`ecl.mjs`/gzip `ecl.wasm.gz`), receipt, Node and Chromium stdin/condition acceptance | [`producer/ecl-browser`](producer/ecl-browser/README.md) |
 | Emscripten LLD | LLVM 16.0.4 canonical import                                                                     | JS/Wasm/data bundle and receipt                                     | [`producer/emscripten-lld-browser`](producer/emscripten-lld-browser/README.md) |
 | Kotlin candidate | Official Kotlin development source `4d78aae1e337cd40f69baa865aed950fe807a775` | Source/dependency inventory and fixture ledger; browser compiler not built, G0 blocked | [`producer/kotlin-browser`](producer/kotlin-browser/README.md) |
 | Lean 4 | Lean 4.34.1 source and release bootstrap, libuv 1.48.0, emsdk 6.0.0 | `lean --run` JS/Wasm module, wasm32 `Init` library, Node acceptance receipt | [`producer/lean-browser`](producer/lean-browser/README.md) |
 | LFortran       | LFortran source snapshot, LLVM 22.1.8 Emscripten package, emsdk 4.0.9                              | LLVM-enabled compiler producer and real Fortran input validation     | [`producer/lfortran-browser`](producer/lfortran-browser/README.md)             |
 | LLDB           | LLVM 22.1.8, emsdk 6.0.0, shared-ring transport and browser plugin patches                       | `lldb-web-dap` JS/Wasm/pthread worker, manifest, receipt            | [`producer/lldb-browser`](producer/lldb-browser/README.md)                     |
+| Nim | Nim 2.2.4 and LLVM 8.0.1 content-locked prebuilts | Compiler assets, patched module bridge, legal files and producer receipt | [`producer/nim-browser`](producer/nim-browser/README.md) |
 | Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
 | Odin           | dev-2026-09 source commit and official native bootstrap, emsdk 6.0.0                           | Native WASI object/link/stdio baseline and browser-host portability probe; browser compiler not ready | [`producer/odin-browser`](producer/odin-browser/README.md) |
 | Rust           | Rust 1.99.0, rust-lang LLVM 22.1.8, wasi-libc and libstdc++ commits                              | Full `rustc.wasm`, target libraries, receipt                        | [`producer/rust-browser`](producer/rust-browser/README.md)                     |
@@ -66,6 +68,12 @@ each producer README.
 pnpm build:clang
 pnpm package:clang -- --help
 pnpm prepare:clang-release
+
+# D and Nim: preserve the existing verified compiler binaries
+pnpm package:d -- --source /path/to/ldc-wasm/dist/wasm-idle --out out/d-browser
+pnpm package:nim -- --from-runtime /path/to/wasm-idle/static/wasm-nim --out out/nim-browser
+pnpm verify:d-artifacts -- --verify out/d-browser
+pnpm verify:nim-artifacts -- --verify out/nim-browser
 
 # LLDB debug adapter
 pnpm prepare:lldb -- --plan
@@ -173,3 +181,8 @@ This repository may contain Node scripts that download, patch, compile, package,
 compiler assets. It must not contain browser runtime TypeScript, package exports, self-imports from
 `@seo-rii/wasm-llvm`, package-relative static asset loading, or npm publication hooks. The
 `scripts/check-repository.mjs` check enforces that boundary.
+
+D, C3, Nim and LFortran compiler preparation and artifact production are owned here.
+The `wasm-idle` consumer keeps their execution adapters and shares immutable, receipt-verified
+compiler modules across browser sessions. Each execution still owns its Worker, filesystem and
+memory. LLVM versions and ABI profiles retain separate cache identities.
