@@ -1,0 +1,3073 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 81ca3ef..df302c4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -254,7 +254,7 @@ if( CMAKE_COMPILER_IS_GNUCXX
+     AND CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6.0" )
+     append("-mminimal-toc" LDC_CXXFLAGS)
+ endif()
+-if(UNIX)
++if(UNIX OR WASI)
+     append("-DLDC_POSIX" LDC_CXXFLAGS)
+ endif()
+ set(SANITIZE_CXXFLAGS)
+@@ -409,6 +409,9 @@ set(LDC_CXX_SOURCE_FILES
+     ${DRV_SRC_EXTRA}
+     ${DRV_HDR}
+ )
++if(WASI)
++    list(APPEND LDC_CXX_SOURCE_FILES ${PROJECT_SOURCE_DIR}/driver/wasi_shims.cpp)
++endif()
+ set(LDC_D_SOURCE_FILES
+     ${FE_SRC_D}
+     ${GEN_SRC_D}
+@@ -1045,6 +1048,16 @@ option(LDC_BUILD_RUNTIME "Build the runtime libraries" ${_LDC_BUILD_RUNTIME_DEFA
+
+ if(LDC_BUILD_RUNTIME)
+     add_subdirectory(runtime)
++    if(WASI)
++        set(LDC_WASI_UNWIND_LIB "${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/eh/libunwind.a")
++        if(NOT EXISTS "${LDC_WASI_UNWIND_LIB}")
++            set(LDC_WASI_UNWIND_LIB "${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasip1/eh/libunwind.a")
++        endif()
++        if(NOT EXISTS "${LDC_WASI_UNWIND_LIB}")
++            message(FATAL_ERROR "WASI libunwind.a not found under ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib")
++        endif()
++        target_link_libraries(${LDC_EXE} phobos2-ldc druntime-ldc "${LDC_WASI_UNWIND_LIB}")
++    endif()
+
+     # POST_BUILD can't be used for targets in a different directory so
+     # runtime/CMakeLists.txt can't directly add the commands.
+diff --git a/dmd/common/file.d b/dmd/common/file.d
+index 5774043..e7b186c 100644
+--- a/dmd/common/file.d
++++ b/dmd/common/file.d
+@@ -28,6 +28,11 @@ import dmd.common.smallbuffer;
+ import dmd.root.filename;
+ import dmd.root.rmem;
+
++version (WASI)
++    version = CompilerHostUnixLike;
++else version (Posix)
++    version = CompilerHostUnixLike;
++
+ version (Windows)
+ {
+     import core.stdc.wchar_;
+@@ -50,14 +55,104 @@ else
+
+     enum invalidHandle = INVALID_HANDLE_VALUE;
+ }
+-else version (Posix)
++else version (CompilerHostUnixLike)
+ {
+-    import core.sys.posix.dirent;
+-    import core.sys.posix.fcntl;
+-    import core.sys.posix.sys.mman;
+-    import core.sys.posix.sys.stat;
+-    import core.sys.posix.unistd;
+-    import core.sys.posix.utime;
++    version (Posix)
++    {
++        import core.sys.posix.dirent;
++        import core.sys.posix.fcntl;
++        import core.sys.posix.sys.mman;
++        import core.sys.posix.sys.stat;
++        import core.sys.posix.unistd;
++        import core.sys.posix.utime;
++    }
++    else version (WASI)
++    {
++        alias ssize_t = int;
++        alias off_t = long;
++        alias mode_t = uint;
++        alias dev_t = ulong;
++        alias ino_t = ulong;
++        alias nlink_t = ulong;
++        alias uid_t = uint;
++        alias gid_t = uint;
++        alias blksize_t = int;
++        alias blkcnt_t = long;
++
++        enum O_RDONLY = 0x0400_0000;
++        enum O_WRONLY = 0x1000_0000;
++        enum O_RDWR = O_RDONLY | O_WRONLY;
++        enum O_CREAT = 0x0000_1000;
++        enum O_TRUNC = 0x0000_8000;
++
++        enum S_IFMT = 61_440;
++        enum S_IFDIR = 16_384;
++        enum S_IFREG = 32_768;
++        enum S_IRUSR = 256;
++        enum S_IWUSR = 128;
++        enum S_IRGRP = 32;
++        enum S_IROTH = 4;
++
++        enum PROT_READ = 1;
++        enum PROT_WRITE = 2;
++        enum MAP_SHARED = 0x01;
++        enum MAP_FAILED = cast(void*) -1;
++
++        struct timespec
++        {
++            long tv_sec;
++            int tv_nsec;
++        }
++
++        struct stat_t
++        {
++            dev_t st_dev;
++            ino_t st_ino;
++            nlink_t st_nlink;
++            mode_t st_mode;
++            uid_t st_uid;
++            gid_t st_gid;
++            uint __pad0;
++            dev_t st_rdev;
++            off_t st_size;
++            blksize_t st_blksize;
++            blkcnt_t st_blocks;
++            timespec st_atim;
++            timespec st_mtim;
++            timespec st_ctim;
++            long[3] __reserved;
++        }
++
++        struct DIR;
++
++        struct dirent
++        {
++            ino_t d_ino;
++            ubyte d_type;
++            char[1] d_name;
++        }
++
++        extern(C) nothrow @nogc
++        {
++            int open(const char* pathname, int flags, ...);
++            int close(int fd);
++            ssize_t read(int fd, void* buffer, size_t count);
++            ssize_t write(int fd, const void* buffer, size_t count);
++            int ftruncate(int fd, off_t length);
++            int unlink(const char* pathname);
++            int fstat(int fd, stat_t* buffer);
++            int lstat(const char* pathname, stat_t* buffer);
++            void* mmap(void* address, size_t length, int protection, int flags, int fd, off_t offset);
++            int munmap(void* address, size_t length);
++            int utime(const char* filename, const void* times);
++            DIR* opendir(const char* dirname);
++            dirent* readdir(DIR* dirp);
++            int closedir(DIR* dirp);
++        }
++
++        private bool S_ISDIR(mode_t mode) nothrow @nogc { return (mode & S_IFMT) == S_IFDIR; }
++        private bool S_ISREG(mode_t mode) nothrow @nogc { return (mode & S_IFMT) == S_IFREG; }
++    }
+
+     enum invalidHandle = -1;
+ }
+@@ -111,7 +206,7 @@ struct FileMapping(Datum)
+     */
+     this(const char* filename)
+     {
+-        version (Posix)
++        version (CompilerHostUnixLike)
+         {
+             handle = open(filename, is(Datum == const) ? O_RDONLY : (O_CREAT | O_RDWR),
+                 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+@@ -247,7 +342,7 @@ struct FileMapping(Datum)
+         if (!active)
+             return;
+         fakePure({
+-            version (Posix)
++            version (CompilerHostUnixLike)
+             {
+                 // Cannot call fprintf from inside a destructor, so exiting silently.
+
+@@ -323,7 +418,7 @@ struct FileMapping(Datum)
+         auto deleteme = name;
+         close();
+         // In-memory resource freed, now get rid of the underlying temp file.
+-        version(Posix)
++        version(CompilerHostUnixLike)
+         {
+             if (unlink(deleteme) != 0)
+             {
+@@ -379,7 +474,7 @@ struct FileMapping(Datum)
+     {
+         assert(handle != invalidHandle);
+         fakePure({
+-            version(Posix)
++            version(CompilerHostUnixLike)
+             {
+                 if (data.length)
+                 {
+@@ -453,7 +548,7 @@ struct FileMapping(Datum)
+         close();
+
+         // Rename the underlying file to the target, no copy necessary.
+-        version(Posix)
++        version(CompilerHostUnixLike)
+         {
+             if (.rename(oldname, filename) != 0)
+             {
+@@ -480,7 +575,7 @@ struct FileMapping(Datum)
+ /// Write a file, returning `true` on success.
+ extern(D) static bool writeFile(const(char)* name, const void[] data) nothrow
+ {
+-    version (Posix)
++    version (CompilerHostUnixLike)
+     {
+         int fd = open(name, O_CREAT | O_WRONLY | O_TRUNC, (6 << 6) | (4 << 3) | 4);
+         if (fd == -1)
+@@ -556,7 +651,7 @@ bool touchFile(const char* namez)
+
+         return f != 0;
+     }
+-    else version (Posix)
++    else version (CompilerHostUnixLike)
+     {
+         return utime(namez, null) == 0;
+     }
+@@ -570,7 +665,7 @@ Size of a file in bytes.
+ Params: fd = file handle
+ Returns: file size in bytes, or `ulong.max` on any error.
+ */
+-version (Posix)
++version (CompilerHostUnixLike)
+ {
+     private ulong fileSize(int fd)
+     {
+@@ -700,7 +795,7 @@ bool findFiles(const char* dir_path, const char[][] exts, bool recurse, void del
+         if (log) printf("findFiles() exit\n");
+         return false;
+     }
+-    else version (Posix)
++    else version (CompilerHostUnixLike)
+     {
+         DIR* dir = opendir(dir_path);
+         if (!dir)
+diff --git a/dmd/common/outbuffer.d b/dmd/common/outbuffer.d
+index a5340ef..57e121c 100644
+--- a/dmd/common/outbuffer.d
++++ b/dmd/common/outbuffer.d
+@@ -11,6 +11,7 @@
+
+ module dmd.common.outbuffer;
+
++import core.stdc.config : cpp_size_t;
+ import core.stdc.stdarg;
+ import core.stdc.stdio;
+ import core.stdc.string;
+@@ -232,9 +233,9 @@ struct OutBuffer
+
+     alias put = write;  // transition to output range which uses put()
+
+-    extern (C++) void write(scope const(void)* data, size_t nbytes) pure nothrow @system
++    extern (C++) void write(scope const(void)* data, cpp_size_t nbytes) pure nothrow @system
+     {
+-        put(data[0 .. nbytes]);
++        put(data[0 .. cast(size_t) nbytes]);
+     }
+
+     void write(scope const(void)[] buf) pure nothrow @trusted
+diff --git a/dmd/console.d b/dmd/console.d
+index 29dc9fb..3be13a3 100644
+--- a/dmd/console.d
++++ b/dmd/console.d
+@@ -28,6 +28,11 @@ else version (Posix)
+ {
+     import core.sys.posix.unistd;
+ }
++else version (WASI)
++{
++    private enum STDERR_FILENO = 2;
++    private extern(C) int isatty(int fd) @trusted @nogc nothrow;
++}
+ else
+ {
+     static assert(0);
+@@ -215,6 +220,11 @@ bool detectTerminal() nothrow
+         const(char)* term = getenv("TERM");
+         return isatty(STDERR_FILENO) && term && term[0] && strcmp(term, "dumb") != 0;
+     }
++    else version (WASI)
++    {
++        const(char)* term = getenv("TERM");
++        return isatty(STDERR_FILENO) && term && term[0] && strcmp(term, "dumb") != 0;
++    }
+     else version (Windows)
+     {
+         auto h = WindowsConsole.getStdHandle(stderr);
+diff --git a/dmd/dmodule.d b/dmd/dmodule.d
+index a2cb131..4bbbeed 100644
+--- a/dmd/dmodule.d
++++ b/dmd/dmodule.d
+@@ -61,6 +61,10 @@ else version (Posix)
+ {
+     enum PathSeparator = '/';
+ }
++else version (WASI)
++{
++    enum PathSeparator = '/';
++}
+ else
+     static assert(0);
+
+diff --git a/dmd/expression.d b/dmd/expression.d
+index b2a84ac..819492a 100644
+--- a/dmd/expression.d
++++ b/dmd/expression.d
+@@ -13,6 +13,7 @@
+
+ module dmd.expression;
+
++import core.stdc.config : cpp_size_t;
+ import core.stdc.stdarg;
+ import core.stdc.stdio;
+ import core.stdc.string;
+@@ -1453,19 +1454,20 @@ extern (C++) final class StringExp : Expression
+     }
+
+     /// Returns: integer at index `i`
+-    dinteger_t getIndex(size_t i) const pure
++    dinteger_t getIndex(cpp_size_t i) const pure
+     {
+-        assert(i < len);
++        auto index = cast(size_t) i;
++        assert(index < len);
+         final switch (sz)
+         {
+         case 1:
+-            return string[i];
++            return string[index];
+         case 2:
+-            return wstring[i];
++            return wstring[index];
+         case 4:
+-            return dstring[i];
++            return dstring[index];
+         case 8:
+-            return lstring[i];
++            return lstring[index];
+         }
+     }
+
+diff --git a/dmd/json.d b/dmd/json.d
+index 080870a..fc24946 100644
+--- a/dmd/json.d
++++ b/dmd/json.d
+@@ -46,6 +46,10 @@ version(Windows)
+     extern (C) char* _getcwd(char* buffer, size_t maxlen);
+     alias getcwd = _getcwd;
+ }
++else version (WASI)
++{
++    extern (C) char* getcwd(char* buffer, size_t maxlen);
++}
+ else
+ {
+     import core.sys.posix.unistd : getcwd;
+diff --git a/dmd/mars.d b/dmd/mars.d
+index 0946553..11078a4 100644
+--- a/dmd/mars.d
++++ b/dmd/mars.d
+@@ -63,6 +63,8 @@ version (Windows)
+     import core.sys.windows.winbase : getpid = GetCurrentProcessId;
+ else version (Posix)
+     import core.sys.posix.unistd : getpid;
++else version (WASI)
++    extern (C) int getpid();
+ else
+     static assert(0);
+
+diff --git a/dmd/mtype.d b/dmd/mtype.d
+index 53be31c..165ba0d 100644
+--- a/dmd/mtype.d
++++ b/dmd/mtype.d
+@@ -12,6 +12,7 @@
+ module dmd.mtype;
+
+ import core.checkedint;
++import core.stdc.config : cpp_size_t;
+ import core.stdc.stdarg;
+ import core.stdc.stdio;
+ import core.stdc.stdlib;
+@@ -3753,13 +3754,14 @@ extern (C++) final class Parameter : ASTNode
+      *   The parameter at index `nth` (taking tuples into account),
+      *   or `null` if out of bound.
+      */
+-    static Parameter getNth(Parameters* parameters, size_t nth)
++    static Parameter getNth(Parameters* parameters, cpp_size_t nth)
+     {
+         Parameter param;
++        auto target = cast(size_t) nth;
+
+         int getNthParamDg(size_t n, Parameter p)
+         {
+-            if (n == nth)
++            if (n == target)
+             {
+                 param = p;
+                 return 1;
+diff --git a/dmd/root/ctfloat.d b/dmd/root/ctfloat.d
+index 2996d7c..e32f975 100644
+--- a/dmd/root/ctfloat.d
++++ b/dmd/root/ctfloat.d
+@@ -13,6 +13,7 @@ module dmd.root.ctfloat;
+
+ static import core.math, core.stdc.math;
+ import core.stdc.errno;
++import core.stdc.config : cpp_size_t;
+ import core.stdc.stdint;
+ import core.stdc.stdio;
+ import core.stdc.stdlib;
+@@ -212,7 +213,7 @@ extern (C++) struct CTFloat
+     @system
+     static real_t parse(const(char)* literal, out bool isOutOfRange);
+     @system
+-    static int sprint(char* str, size_t size, char fmt, real_t x);
++    static int sprint(char* str, cpp_size_t size, char fmt, real_t x);
+   }
+   else
+   {
+@@ -237,7 +238,7 @@ extern (C++) struct CTFloat
+     }
+
+     @system
+-    static int sprint(char* str, size_t size, char fmt, real_t x)
++    static int sprint(char* str, cpp_size_t size, char fmt, real_t x)
+     {
+         version(CRuntime_Microsoft)
+         {
+diff --git a/dmd/root/file.d b/dmd/root/file.d
+index 3d4b93b..eea399d 100644
+--- a/dmd/root/file.d
++++ b/dmd/root/file.d
+@@ -27,6 +27,56 @@ import dmd.common.file;
+ import dmd.common.outbuffer;
+ import dmd.common.smallbuffer;
+
++version (WASI)
++{
++    private alias wasi_ssize_t = int;
++    private alias wasi_off_t = long;
++    private alias wasi_mode_t = uint;
++    private alias wasi_dev_t = ulong;
++    private alias wasi_ino_t = ulong;
++    private alias wasi_nlink_t = ulong;
++    private alias wasi_uid_t = uint;
++    private alias wasi_gid_t = uint;
++    private alias wasi_blksize_t = int;
++    private alias wasi_blkcnt_t = long;
++
++    private enum WASI_O_RDONLY = 0x0400_0000;
++
++    private struct WasiTimespec
++    {
++        long tv_sec;
++        int tv_nsec;
++    }
++
++    private struct WasiStat
++    {
++        wasi_dev_t st_dev;
++        wasi_ino_t st_ino;
++        wasi_nlink_t st_nlink;
++        wasi_mode_t st_mode;
++        wasi_uid_t st_uid;
++        wasi_gid_t st_gid;
++        uint __pad0;
++        wasi_dev_t st_rdev;
++        wasi_off_t st_size;
++        wasi_blksize_t st_blksize;
++        wasi_blkcnt_t st_blocks;
++        WasiTimespec st_atim;
++        WasiTimespec st_mtim;
++        WasiTimespec st_ctim;
++        long[3] __reserved;
++    }
++
++    extern (C) nothrow @nogc
++    {
++        pragma(mangle, "open") int wasi_open(const char* pathname, int flags, ...);
++        pragma(mangle, "close") int wasi_close(int fd);
++        pragma(mangle, "read") wasi_ssize_t wasi_read(int fd, void* buffer, size_t count);
++        pragma(mangle, "fstat") int wasi_fstat(int fd, WasiStat* buffer);
++        pragma(mangle, "stat") int wasi_stat(const char* pathname, WasiStat* buffer);
++    }
++}
++
+ nothrow:
+
+ /// Owns a (rmem-managed) buffer.
+@@ -121,6 +171,31 @@ nothrow:
+                 return Failure;
+             }
+         }
++        else version (WASI)
++        {
++            int fd = name.toCStringThen!(slice => wasi_open(slice.ptr, WASI_O_RDONLY));
++            if (fd == -1)
++                return Failure;
++
++            WasiStat statbuf;
++            if (wasi_fstat(fd, &statbuf))
++            {
++                wasi_close(fd);
++                return Failure;
++            }
++
++            size_t size = cast(size_t)statbuf.st_size;
++            auto buf = buffer.allocate(size);
++            wasi_ssize_t numread = wasi_read(fd, buf.ptr, size);
++            if (numread != size)
++            {
++                wasi_close(fd);
++                return Failure;
++            }
++
++            if (wasi_close(fd) == -1)
++                return Failure;
++        }
+         else version (Windows)
+         {
+             // work around Windows file path length limitation
+@@ -174,6 +249,10 @@ nothrow:
+         {
+             .remove(name);
+         }
++        else version (WASI)
++        {
++            .remove(name);
++        }
+         else version (Windows)
+         {
+             name.toDString.extendedPathThen!(p => DeleteFileW(p.ptr));
+@@ -192,6 +271,10 @@ version (IN_LLVM)
+         {
+             .remove(name);
+         }
++        else version (WASI)
++        {
++            .remove(name);
++        }
+         else version (Windows)
+         {
+             name.toDString.extendedPathThen!(p => RemoveDirectoryW(p.ptr));
+@@ -257,6 +340,12 @@ version (IN_LLVM)
+             if (stat(namez, &buf) == 0)
+                 return buf.st_size;
+         }
++        else version (WASI)
++        {
++            WasiStat buf;
++            if (wasi_stat(namez, &buf) == 0)
++                return buf.st_size;
++        }
+         else version (Windows)
+         {
+             const nameStr = namez.toDString();
+diff --git a/dmd/root/filename.d b/dmd/root/filename.d
+index 2b0e046..a38a580 100644
+--- a/dmd/root/filename.d
++++ b/dmd/root/filename.d
+@@ -14,6 +14,7 @@ module dmd.root.filename;
+ import core.stdc.ctype;
+ import core.stdc.errno;
+ import core.stdc.stdio;
++import core.stdc.stdlib : getenv;
+ import core.stdc.string;
+
+ import dmd.common.file;
+@@ -46,6 +47,59 @@ version (Windows)
+     alias getcwd = _getcwd;
+ }
+
++version (WASI)
++{
++    private alias wasi_off_t = long;
++    private alias wasi_mode_t = uint;
++    private alias wasi_dev_t = ulong;
++    private alias wasi_ino_t = ulong;
++    private alias wasi_nlink_t = ulong;
++    private alias wasi_uid_t = uint;
++    private alias wasi_gid_t = uint;
++    private alias wasi_blksize_t = int;
++    private alias wasi_blkcnt_t = long;
++
++    private enum WASI_S_IFMT = 61_440;
++    private enum WASI_S_IFDIR = 16_384;
++
++    private struct WasiTimespec
++    {
++        long tv_sec;
++        int tv_nsec;
++    }
++
++    private struct WasiStat
++    {
++        wasi_dev_t st_dev;
++        wasi_ino_t st_ino;
++        wasi_nlink_t st_nlink;
++        wasi_mode_t st_mode;
++        wasi_uid_t st_uid;
++        wasi_gid_t st_gid;
++        uint __pad0;
++        wasi_dev_t st_rdev;
++        wasi_off_t st_size;
++        wasi_blksize_t st_blksize;
++        wasi_blkcnt_t st_blocks;
++        WasiTimespec st_atim;
++        WasiTimespec st_mtim;
++        WasiTimespec st_ctim;
++        long[3] __reserved;
++    }
++
++    extern (C) nothrow @nogc
++    {
++        char* getcwd(char* buffer, size_t maxlen);
++        int mkdir(const char* pathname, wasi_mode_t mode);
++        int stat(const char* pathname, WasiStat* buffer);
++    }
++
++    private bool WASI_S_ISDIR(wasi_mode_t mode) nothrow @nogc
++    {
++        return (mode & WASI_S_IFMT) == WASI_S_IFDIR;
++    }
++}
++
+ version (CRuntime_Glibc)
+ {
+     extern (C) char* canonicalize_file_name(const char*) nothrow;
+@@ -65,6 +119,10 @@ bool isDirSeparator(char c) pure nothrow @nogc @safe
+     {
+         return c == '/';
+     }
++    else version (WASI)
++    {
++        return c == '/';
++    }
+     else
+     {
+         assert(0);
+@@ -141,6 +199,10 @@ nothrow:
+         {
+             return isDirSeparator(name[0]);
+         }
++        else version (WASI)
++        {
++            return isDirSeparator(name[0]);
++        }
+         else
+         {
+             assert(0);
+@@ -204,6 +266,11 @@ nothrow:
+             case '/':
+                 return null;
+             }
++            version (WASI)
++            {
++            case '/':
++                return null;
++            }
+             version (Windows)
+             {
+             case '\\':
+@@ -305,6 +372,11 @@ nothrow:
+                 case '/':
+                     return str[idx + 1 .. $];
+                 }
++                version (WASI)
++                {
++                case '/':
++                    return str[idx + 1 .. $];
++                }
+                 version (Windows)
+                 {
+                 case '/':
+@@ -441,6 +513,11 @@ nothrow:
+                 if (!isDirSeparator(last))
+                     p[length++] = '/';
+             }
++            else version (WASI)
++            {
++                if (!isDirSeparator(last))
++                    p[length++] = '/';
++            }
+             else version (Windows)
+             {
+                 if (!isDirSeparator(last) && last != ':')
+@@ -535,6 +612,10 @@ nothrow:
+                     version (Posix)
+                     {
+                     case ':':
++                    }
++                    version (WASI)
++                    {
++                    case ':':
+                     }
+                         p++;    // ; cannot appear as part of a
+                         break;  // path, quotes won't protect it
+@@ -558,6 +639,18 @@ nothrow:
+                             buf.writeByte('~');
+                         continue;
+                     }
++                    version (WASI)
++                    {
++                    case '~':
++                        if (!home)
++                            home = getenv("HOME");
++                        // Expand ~ only if it is prefixing the rest of the path.
++                        if (!buf.length && p[1] == '/' && home)
++                            buf.writestring(home);
++                        else
++                            buf.writeByte('~');
++                        continue;
++                    }
+
+                     version (none)
+                     {
+@@ -883,6 +976,15 @@ nothrow:
+                 return 2;
+             return 1;
+         }
++        else version (WASI)
++        {
++            WasiStat st;
++            if (name.toCStringThen!((v) => stat(v.ptr, &st)) < 0)
++                return 0;
++            if (WASI_S_ISDIR(st.st_mode))
++                return 2;
++            return 1;
++        }
+         else version (Windows)
+         {
+             return name.extendedPathThen!((wname)
+@@ -954,6 +1056,11 @@ nothrow:
+             errno = 0;
+             const r = path.toCStringThen!((pathCS) => mkdir(pathCS.ptr, (7 << 6) | (7 << 3) | 7));
+         }
++        version (WASI)
++        {
++            errno = 0;
++            const r = path.toCStringThen!((pathCS) => mkdir(pathCS.ptr, (7 << 6) | (7 << 3) | 7));
++        }
+
+         if (r == 0)
+             return true;
+@@ -971,6 +1078,11 @@ nothrow:
+             if (errno == EEXIST)
+                 return true;
+         }
++        version (WASI)
++        {
++            if (errno == EEXIST)
++                return true;
++        }
+
+         return false;
+     }
+@@ -1057,6 +1169,12 @@ nothrow:
+                 return null;
+             return xarraydup(name);
+         }
++        else version (WASI)
++        {
++            if (!name.length)
++                return null;
++            return xarraydup(name);
++        }
+         else version (Windows)
+         {
+             // Convert to wstring first since otherwise the Win32 APIs have a character limit
+diff --git a/dmd/root/rmem.d b/dmd/root/rmem.d
+index ca10b0d..f9740c6 100644
+--- a/dmd/root/rmem.d
++++ b/dmd/root/rmem.d
+@@ -12,6 +12,7 @@
+ module dmd.root.rmem;
+
+ import core.exception : onOutOfMemoryError;
++import core.stdc.config : cpp_size_t;
+ import core.stdc.stdio;
+ import core.stdc.stdlib;
+ import core.stdc.string;
+@@ -39,64 +40,72 @@ extern (C++) struct Mem
+         pureFree(p);
+     }
+
+-    static void* xmalloc(size_t size) pure nothrow
++    static void* xmalloc(cpp_size_t size) pure nothrow
+     {
++        auto bytes = cast(size_t) size;
+         if (isGCEnabled)
+-            return size ? GC.malloc(size) : null;
++            return bytes ? GC.malloc(bytes) : null;
+
+-        return size ? check(pureMalloc(size)) : null;
++        return bytes ? check(pureMalloc(bytes)) : null;
+     }
+
+-    static void* xmalloc_noscan(size_t size) pure nothrow
++    static void* xmalloc_noscan(cpp_size_t size) pure nothrow
+     {
++        auto bytes = cast(size_t) size;
+         if (isGCEnabled)
+-            return size ? GC.malloc(size, GC.BlkAttr.NO_SCAN) : null;
++            return bytes ? GC.malloc(bytes, GC.BlkAttr.NO_SCAN) : null;
+
+-        return size ? check(pureMalloc(size)) : null;
++        return bytes ? check(pureMalloc(bytes)) : null;
+     }
+
+-    static void* xcalloc(size_t size, size_t n) pure nothrow
++    static void* xcalloc(cpp_size_t size, cpp_size_t n) pure nothrow
+     {
++        auto bytes = cast(size_t) size;
++        auto count = cast(size_t) n;
+         if (isGCEnabled)
+-            return size * n ? GC.calloc(size * n) : null;
++            return bytes * count ? GC.calloc(bytes * count) : null;
+
+-        return (size && n) ? check(pureCalloc(size, n)) : null;
++        return (bytes && count) ? check(pureCalloc(bytes, count)) : null;
+     }
+
+-    static void* xcalloc_noscan(size_t size, size_t n) pure nothrow
++    static void* xcalloc_noscan(cpp_size_t size, cpp_size_t n) pure nothrow
+     {
++        auto bytes = cast(size_t) size;
++        auto count = cast(size_t) n;
+         if (isGCEnabled)
+-            return size * n ? GC.calloc(size * n, GC.BlkAttr.NO_SCAN) : null;
++            return bytes * count ? GC.calloc(bytes * count, GC.BlkAttr.NO_SCAN) : null;
+
+-        return (size && n) ? check(pureCalloc(size, n)) : null;
++        return (bytes && count) ? check(pureCalloc(bytes, count)) : null;
+     }
+
+-    static void* xrealloc(void* p, size_t size) pure nothrow
++    static void* xrealloc(void* p, cpp_size_t size) pure nothrow
+     {
++        auto bytes = cast(size_t) size;
+         if (isGCEnabled)
+-            return GC.realloc(p, size);
++            return GC.realloc(p, bytes);
+
+-        if (!size)
++        if (!bytes)
+         {
+             pureFree(p);
+             return null;
+         }
+
+-        return check(pureRealloc(p, size));
++        return check(pureRealloc(p, bytes));
+     }
+
+-    static void* xrealloc_noscan(void* p, size_t size) pure nothrow
++    static void* xrealloc_noscan(void* p, cpp_size_t size) pure nothrow
+     {
++        auto bytes = cast(size_t) size;
+         if (isGCEnabled)
+-            return GC.realloc(p, size, GC.BlkAttr.NO_SCAN);
++            return GC.realloc(p, bytes, GC.BlkAttr.NO_SCAN);
+
+-        if (!size)
++        if (!bytes)
+         {
+             pureFree(p);
+             return null;
+         }
+
+-        return check(pureRealloc(p, size));
++        return check(pureRealloc(p, bytes));
+     }
+
+     static void* error() pure nothrow @nogc @safe
+@@ -141,10 +150,10 @@ extern (C++) struct Mem
+         _isGCEnabled = false;
+     }
+
+-    static void addRange(const(void)* p, size_t size) nothrow @nogc
++    static void addRange(const(void)* p, cpp_size_t size) nothrow @nogc
+     {
+         if (isGCEnabled)
+-            GC.addRange(p, size);
++            GC.addRange(p, cast(size_t) size);
+     }
+
+     static void removeRange(const(void)* p) nothrow @nogc
+diff --git a/dmd/target.d b/dmd/target.d
+index 3f8481c..0fab0fc 100644
+--- a/dmd/target.d
++++ b/dmd/target.d
+@@ -71,6 +71,8 @@ Target.OS defaultTargetOS() @safe
+         return Target.OS.Solaris;
+     else version (DragonFlyBSD)
+         return Target.OS.DragonFlyBSD;
++    else version (WASI)
++        return Target.OS.WASI;
+     else
+         static assert(0, "unknown TARGET");
+ }
+@@ -341,10 +343,11 @@ extern (C++) struct Target
+         FreeBSD      = 0x10,
+         Solaris      = 0x20,
+         DragonFlyBSD = 0x40,
++        WASI         = 0x80,
+
+         // Combination masks
+-        all = linux | Windows | OSX | OpenBSD | FreeBSD | Solaris | DragonFlyBSD,
+-        Posix = linux | OSX | OpenBSD | FreeBSD | Solaris | DragonFlyBSD,
++        all = linux | Windows | OSX | OpenBSD | FreeBSD | Solaris | DragonFlyBSD | WASI,
++        Posix = linux | OSX | OpenBSD | FreeBSD | Solaris | DragonFlyBSD | WASI,
+     }
+
+     extern(D) enum ObjectFormat : ubyte
+diff --git a/driver/cache_pruning.d b/driver/cache_pruning.d
+index 93ce1b5..9527f91 100644
+--- a/driver/cache_pruning.d
++++ b/driver/cache_pruning.d
+@@ -20,18 +20,19 @@
+
+ module driver.cache_pruning;
+
++import core.stdc.config : cpp_size_t;
+ import std.file;
+ import std.datetime: Clock, dur, Duration, SysTime;
+
+ // Creates a CachePruner and performs the pruning.
+ // This function is meant to take care of all C++ interfacing.
+ extern (C++) void pruneCache(const(char)* cacheDirectoryPtr,
+-    size_t cacheDirectoryLen, uint pruneIntervalSeconds,
++    cpp_size_t cacheDirectoryLen, uint pruneIntervalSeconds,
+     uint expireIntervalSeconds, ulong sizeLimitBytes, uint sizeLimitPercentage)
+ {
+     import std.conv: to;
+
+-    auto pruner = CachePruner(to!(string)(cacheDirectoryPtr[0 .. cacheDirectoryLen]),
++    auto pruner = CachePruner(to!(string)(cacheDirectoryPtr[0 .. cast(size_t) cacheDirectoryLen]),
+         pruneIntervalSeconds, expireIntervalSeconds, sizeLimitBytes, sizeLimitPercentage);
+
+     pruner.doPrune();
+diff --git a/driver/wasi_shims.cpp b/driver/wasi_shims.cpp
+new file mode 100644
+index 0000000..3e87847
+--- /dev/null
++++ b/driver/wasi_shims.cpp
+@@ -0,0 +1,5 @@
++#if defined(__wasi__)
++#include <stddef.h>
++
++extern "C" int posix_madvise(void *, size_t, int) { return 0; }
++#endif
+diff --git a/gen/cpp-imitating-naming.d b/gen/cpp-imitating-naming.d
+index a7e7756..592dfdd 100644
+--- a/gen/cpp-imitating-naming.d
++++ b/gen/cpp-imitating-naming.d
+@@ -9,6 +9,8 @@
+
+ module gen.cpp_imitating_naming;
+
++import core.stdc.config : cpp_size_t;
++
+ private string dTemplateToCPlusPlus(const(string) name) @safe pure
+ {
+ 	import std.string : indexOf, indexOfAny;
+@@ -224,10 +226,10 @@ string convertDIdentifierToCPlusPlus(const(string) name) @safe pure
+
+ ///
+ extern (C++, ldc)
+-const(char)* convertDIdentifierToCPlusPlus(const(char)* name, size_t nameLength) @trusted pure
++const(char)* convertDIdentifierToCPlusPlus(const(char)* name, cpp_size_t nameLength) @trusted pure
+ {
+ 	import std.exception : assumeUnique;
+ 	import std.string : toStringz;
+
+-	return name[0 .. nameLength].assumeUnique.convertDIdentifierToCPlusPlus.toStringz;
++	return name[0 .. cast(size_t) nameLength].assumeUnique.convertDIdentifierToCPlusPlus.toStringz;
+ }
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index a203e1c..e565309 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -36,6 +36,7 @@ set(LD_FLAGS              ""                                  CACHE STRING "Runt
+ set(C_SYSTEM_LIBS         AUTO                                CACHE STRING "C system libraries for linking shared libraries and test runners, separated by ';'")
+ set(TARGET_SYSTEM         AUTO                                CACHE STRING "Target OS/toolchain for cross-compilation (e.g., 'Linux;UNIX', 'Linux;UNIX;musl', 'Darwin;APPLE;UNIX', 'Windows;MSVC')")
+ set(RT_SUPPORT_SANITIZERS OFF                                 CACHE BOOL   "Build runtime libraries with sanitizer support (e.g. for AddressSanitizer)")
++set(LDC_RUNTIME_COMPILER  "${LDC_EXE_FULL}"                   CACHE FILEPATH "D compiler executable used to build druntime and Phobos")
+
+ set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+
+@@ -44,6 +45,11 @@ set(DRUNTIME_EXTRA_UNITTEST_FLAGS -d-version=CoreUnittest -unittest -checkaction
+ set(PHOBOS2_EXTRA_FLAGS           )
+ set(PHOBOS2_EXTRA_UNITTEST_FLAGS  -d-version=StdUnittest -unittest -checkaction=context -linkonce-templates)
+
++set(LDC_RUNTIME_COMPILER_DEPS)
++if("${LDC_RUNTIME_COMPILER}" STREQUAL "${LDC_EXE_FULL}")
++    list(APPEND LDC_RUNTIME_COMPILER_DEPS ${LDC_EXE_FULL})
++endif()
++
+ # Shadow the D_FLAGS cache variable by a regular variable containing all base D flags
+ set(D_FLAGS ${D_FLAGS} ${D_EXTRA_FLAGS})
+ if (RT_SUPPORT_SANITIZERS)
+@@ -237,6 +243,19 @@ if(PHOBOS2_DIR)
+         file(GLOB_RECURSE PHOBOS2_D_WINDOWS ${PHOBOS2_DIR}/std/windows/*.d)
+         list(REMOVE_ITEM PHOBOS2_D ${PHOBOS2_D_WINDOWS})
+     endif()
++    if("${TARGET_SYSTEM}" MATCHES "WASI")
++        file(GLOB_RECURSE PHOBOS2_D_EXPERIMENTAL_ALLOCATOR ${PHOBOS2_DIR}/std/experimental/allocator/*.d)
++        list(REMOVE_ITEM PHOBOS2_D ${PHOBOS2_D_EXPERIMENTAL_ALLOCATOR})
++        list(REMOVE_ITEM PHOBOS2_D
++            ${PHOBOS2_DIR}/etc/c/curl.d
++            ${PHOBOS2_DIR}/std/mmfile.d
++            ${PHOBOS2_DIR}/std/net/curl.d
++            ${PHOBOS2_DIR}/std/package.d
++            ${PHOBOS2_DIR}/std/process.d
++            ${PHOBOS2_DIR}/std/socket.d
++            ${PHOBOS2_DIR}/std/zip.d
++        )
++    endif()
+
+     if(PHOBOS_SYSTEM_ZLIB)
+         find_package(ZLIB REQUIRED)
+@@ -413,7 +432,7 @@ macro(dc src_files src_basedir d_flags output_basedir emit_bc all_at_once single
+
+     # dc_deps can only contain paths, otherwise cmake will ignore the dependency.
+     # See: https://github.com/ldc-developers/ldc/pull/4743#issuecomment-2323156173
+-    set(dc_deps ${LDC_EXE_FULL})
++    set(dc_deps ${LDC_RUNTIME_COMPILER_DEPS})
+
+     set(relative_src_files "")
+     set(new_o "")
+@@ -449,7 +468,7 @@ macro(dc src_files src_basedir d_flags output_basedir emit_bc all_at_once single
+
+             add_custom_command(
+                 OUTPUT  ${outfiles}
+-                COMMAND ${LDC_EXE_FULL} ${dc_flags} -of=${output_o} ${relative_src_file}
++                COMMAND ${LDC_RUNTIME_COMPILER} ${dc_flags} -of=${output_o} ${relative_src_file}
+                 COMMAND ${renameCommand}
+                 WORKING_DIRECTORY ${src_basedir}
+                 DEPENDS ${f} ${dc_deps}
+@@ -479,7 +498,7 @@ macro(dc src_files src_basedir d_flags output_basedir emit_bc all_at_once single
+
+         add_custom_command(
+             OUTPUT  ${new_o} ${new_bc}
+-            COMMAND ${LDC_EXE_FULL} ${dc_flags} ${relative_src_files}
++            COMMAND ${LDC_RUNTIME_COMPILER} ${dc_flags} ${relative_src_files}
+             WORKING_DIRECTORY ${src_basedir}
+             DEPENDS ${src_files} ${dc_deps}
+         )
+@@ -558,7 +577,7 @@ endmacro()
+ # Define an optional 'D' CMake linker language for the static runtime libs,
+ # using LDC as archiver. LDC handles (cross-)archiving internally via LLVM
+ # and supports LTO objects.
+-set(CMAKE_D_CREATE_STATIC_LIBRARY "${LDC_EXE_FULL} -lib -of=<TARGET> <OBJECTS>")
++set(CMAKE_D_CREATE_STATIC_LIBRARY "${LDC_RUNTIME_COMPILER} -lib -of=<TARGET> <OBJECTS>")
+ foreach(f ${D_FLAGS})
+     append("\"${f}\"" CMAKE_D_CREATE_STATIC_LIBRARY)
+ endforeach()
+diff --git a/runtime/druntime/src/core/internal/abort.d b/runtime/druntime/src/core/internal/abort.d
+index c0adde9..0b3b600 100644
+--- a/runtime/druntime/src/core/internal/abort.d
++++ b/runtime/druntime/src/core/internal/abort.d
+@@ -17,6 +17,15 @@ void abort(scope string msg, scope string filename = __FILE__, size_t line = __L
+                 write(2, s.ptr, s.length);
+         }
+     }
++    else version (WASI)
++    {
++        import core.sys.posix.unistd: write;
++        static void writeStr(scope const(char)[][] m...) @nogc nothrow @trusted
++        {
++            foreach (s; m)
++                write(2, s.ptr, s.length);
++        }
++    }
+     else version (Windows)
+     {
+         import core.sys.windows.winbase : GetStdHandle, STD_ERROR_HANDLE, WriteFile, INVALID_HANDLE_VALUE;
+diff --git a/runtime/druntime/src/core/internal/entrypoint.d b/runtime/druntime/src/core/internal/entrypoint.d
+index 811a3ba..a489f54 100644
+--- a/runtime/druntime/src/core/internal/entrypoint.d
++++ b/runtime/druntime/src/core/internal/entrypoint.d
+@@ -36,6 +36,15 @@ template _d_cmain()
+         {
+             int _d_run_main(int argc, char** argv, void* mainFunc);
+
++            version (WASI)
++            {
++                int __main_void()
++                {
++                    pragma(LDC_profile_instr, false);
++                    return _d_run_main(0, null, &_Dmain);
++                }
++            }
++
+             int main(int argc, char** argv)
+             {
+                 pragma(LDC_profile_instr, false);
+diff --git a/runtime/druntime/src/core/memory.d b/runtime/druntime/src/core/memory.d
+index e3a46a0..079ec99 100644
+--- a/runtime/druntime/src/core/memory.d
++++ b/runtime/druntime/src/core/memory.d
+@@ -215,6 +215,13 @@ private extern (C) void _initialize() @system
+
+         (cast() pageSize) = cast(size_t) sysconf(_SC_PAGESIZE);
+     }
++    else version (WASI)
++    {
++        import core.sys.posix.unistd : sysconf, _SC_PAGESIZE;
++
++        auto value = sysconf(_SC_PAGESIZE);
++        (cast() pageSize) = value > 0 ? cast(size_t) value : 65_536;
++    }
+     else version (Windows)
+     {
+         import core.sys.windows.winbase : GetSystemInfo, SYSTEM_INFO;
+@@ -1179,6 +1186,7 @@ else
+ }
+
+ version (D_BetterC) {}
++else version (WASI) {}
+ else // TODO: remove this function after Phobos no longer needs it.
+ extern (C) private @system @nogc nothrow
+ {
+diff --git a/runtime/druntime/src/core/stdc/assert_.d b/runtime/druntime/src/core/stdc/assert_.d
+index ac237d9..a6184d1 100644
+--- a/runtime/druntime/src/core/stdc/assert_.d
++++ b/runtime/druntime/src/core/stdc/assert_.d
+@@ -123,6 +123,10 @@ else version (Solaris)
+ {
+     noreturn __assert_c99(const(char)* exp, const(char)* file, uint line, const(char)* func);
+ }
++else version (WASI)
++{
++    noreturn __assert_fail(const(char)* exp, const(char)* file, int line, const(char)* func);
++}
+ else
+ {
+     static assert(0);
+diff --git a/runtime/druntime/src/core/stdc/config.d b/runtime/druntime/src/core/stdc/config.d
+index 952ceac..941aef5 100644
+--- a/runtime/druntime/src/core/stdc/config.d
++++ b/runtime/druntime/src/core/stdc/config.d
+@@ -289,6 +289,11 @@ version (Darwin)
+     else
+         alias cpp_ptrdiff_t = ptrdiff_t;
+ }
++else version (WASI)
++{
++    alias cpp_size_t = cpp_ulong;
++    alias cpp_ptrdiff_t = cpp_long;
++}
+ else
+ {
+     alias cpp_size_t = size_t;
+diff --git a/runtime/druntime/src/core/stdc/errno.d b/runtime/druntime/src/core/stdc/errno.d
+index db347e4..7a0f63b 100644
+--- a/runtime/druntime/src/core/stdc/errno.d
++++ b/runtime/druntime/src/core/stdc/errno.d
+@@ -153,6 +153,16 @@ else version (Haiku)
+         alias errno = _errnop;
+     }
+ }
++else version (CRuntime_WASI)
++{
++    ///
++    extern(C) pragma(mangle, "getErrno") @property int getErrno();
++    ///
++    extern(C) pragma(mangle, "setErrno") @property int setErrno(int n);
++
++    alias errno = getErrno;
++    alias errno = setErrno;
++}
+ else
+ {
+     ///
+diff --git a/runtime/druntime/src/core/stdc/fenv.d b/runtime/druntime/src/core/stdc/fenv.d
+index 7d42d5c..129371f 100644
+--- a/runtime/druntime/src/core/stdc/fenv.d
++++ b/runtime/druntime/src/core/stdc/fenv.d
+@@ -559,6 +559,15 @@ else version (CRuntime_UClibc)
+         static assert(false, "Architecture not supported.");
+     }
+ }
++else version (WASI)
++{
++    struct fenv_t
++    {
++        uint __cw;
++    }
++
++    alias fexcept_t = uint;
++}
+ else
+ {
+     static assert( false, "Unsupported platform" );
+@@ -628,6 +637,14 @@ else version (Solaris)
+         static assert(0, "Unimplemented architecture");
+     }
+ }
++else version (WASI)
++{
++    enum
++    {
++        FE_ALL_EXCEPT = 0,
++        FE_TONEAREST = 0,
++    }
++}
+ else
+ {
+     version (X86)
+@@ -932,6 +949,11 @@ else version (CRuntime_UClibc)
+     ///
+     enum FE_DFL_ENV = cast(fenv_t*)(-1);
+ }
++else version (WASI)
++{
++    ///
++    enum FE_DFL_ENV = cast(fenv_t*)(-1);
++}
+ else
+ {
+     static assert( false, "Unsupported platform" );
+diff --git a/runtime/druntime/src/core/stdc/limits.d b/runtime/druntime/src/core/stdc/limits.d
+index 2684b22..df60adc 100644
+--- a/runtime/druntime/src/core/stdc/limits.d
++++ b/runtime/druntime/src/core/stdc/limits.d
+@@ -129,6 +129,19 @@ else version (linux)
+     ///
+     enum PIPE_BUF       = 4096;
+ }
++else version (WASI)
++{
++    ///
++    enum MAX_CANON      = 255;
++    ///
++    enum MAX_INPUT      = 255;
++    ///
++    enum NAME_MAX       = 255;
++    ///
++    enum PATH_MAX       = 4096;
++    ///
++    enum PIPE_BUF       = 4096;
++}
+ else version (NetBSD)
+ {
+     ///
+diff --git a/runtime/druntime/src/core/stdc/locale.d b/runtime/druntime/src/core/stdc/locale.d
+index 357d75e..15f34a5 100644
+--- a/runtime/druntime/src/core/stdc/locale.d
++++ b/runtime/druntime/src/core/stdc/locale.d
+@@ -298,6 +298,23 @@ else version (CRuntime_UClibc)
+     ///
+     enum LC_IDENTIFICATION = 12;
+ }
++else version (WASI)
++{
++    ///
++    enum LC_CTYPE          = 0;
++    ///
++    enum LC_NUMERIC        = 1;
++    ///
++    enum LC_TIME           = 2;
++    ///
++    enum LC_COLLATE        = 3;
++    ///
++    enum LC_MONETARY       = 4;
++    ///
++    enum LC_MESSAGES       = 5;
++    ///
++    enum LC_ALL            = 6;
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+diff --git a/runtime/druntime/src/core/stdc/time.d b/runtime/druntime/src/core/stdc/time.d
+index d7a5765..0d3c31d 100644
+--- a/runtime/druntime/src/core/stdc/time.d
++++ b/runtime/druntime/src/core/stdc/time.d
+@@ -19,6 +19,33 @@ version (Posix)
+     public import core.sys.posix.stdc.time;
+ else version (Windows)
+     public import core.sys.windows.stdc.time;
++else version (WASI)
++{
++    import core.stdc.config : c_long;
++
++    alias long time_t;
++    alias c_long clock_t;
++
++    enum clock_t CLOCKS_PER_SEC = 1_000_000;
++
++    struct tm
++    {
++        int     tm_sec;
++        int     tm_min;
++        int     tm_hour;
++        int     tm_mday;
++        int     tm_mon;
++        int     tm_year;
++        int     tm_wday;
++        int     tm_yday;
++        int     tm_isdst;
++        c_long  tm_gmtoff;
++        char*   tm_zone;
++    }
++
++    void tzset();
++    extern __gshared const(char)*[2] tzname;
++}
+ else
+     static assert(0, "unsupported system");
+
+diff --git a/runtime/druntime/src/core/sync/condition.d b/runtime/druntime/src/core/sync/condition.d
+index 3acee7a..6093571 100644
+--- a/runtime/druntime/src/core/sync/condition.d
++++ b/runtime/druntime/src/core/sync/condition.d
+@@ -41,6 +41,9 @@ else version (Posix)
+         pthread_cond_signal, pthread_cond_t, pthread_cond_timedwait, pthread_cond_wait;
+     import core.sys.posix.time : timespec;
+ }
++else version (WASI)
++{
++}
+ else
+ {
+     static assert(false, "Platform not supported");
+@@ -158,6 +161,18 @@ class Condition
+                     throw staticError!AssertError("Unable to initialize condition", __FILE__, __LINE__);
+             }
+         }
++        else version (WASI)
++        {
++            static if (is(Q == shared))
++            {
++                import core.atomic : atomicLoad;
++                m_assocMutex = atomicLoad(m);
++            }
++            else
++            {
++                m_assocMutex = m;
++            }
++        }
+     }
+
+     ~this() @nogc
+@@ -175,6 +190,9 @@ class Condition
+             int rc = pthread_cond_destroy( &m_hndl );
+             assert( !rc, "Unable to destroy condition" );
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+
+@@ -250,6 +268,9 @@ class Condition
+             if ( rc )
+                 throw staticError!AssertError("Unable to wait for condition", __FILE__, __LINE__);
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+     /**
+@@ -315,6 +336,10 @@ class Condition
+                 return false;
+             throw staticError!AssertError("Unable to wait for condition", __FILE__, __LINE__);
+         }
++        else version (WASI)
++        {
++            return false;
++        }
+     }
+
+     /**
+@@ -363,6 +388,9 @@ class Condition
+             if ( rc )
+                 throw staticError!AssertError("Unable to notify condition", __FILE__, __LINE__);
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+     /**
+@@ -411,6 +439,9 @@ class Condition
+             if ( rc )
+                 throw staticError!AssertError("Unable to notify condition", __FILE__, __LINE__);
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+ private:
+@@ -616,6 +647,10 @@ private:
+         Mutex               m_assocMutex;
+         pthread_cond_t      m_hndl;
+     }
++    else version (WASI)
++    {
++        Mutex               m_assocMutex;
++    }
+ }
+
+
+diff --git a/runtime/druntime/src/core/sync/event.d b/runtime/druntime/src/core/sync/event.d
+index 6278218..7198d4d 100644
+--- a/runtime/druntime/src/core/sync/event.d
++++ b/runtime/druntime/src/core/sync/event.d
+@@ -26,6 +26,9 @@ else version (Posix)
+     import core.sys.posix.sys.types : pthread_cond_t, pthread_mutex_t;
+     import core.sys.posix.time : timespec;
+ }
++else version (WASI)
++{
++}
+ else
+ {
+     static assert(false, "Platform not supported");
+@@ -133,6 +136,14 @@ nothrow @nogc:
+             m_manualReset = manualReset;
+             m_initalized = true;
+         }
++        else version (WASI)
++        {
++            if (m_initalized)
++                return;
++            m_state = initialState;
++            m_manualReset = manualReset;
++            m_initalized = true;
++        }
+     }
+
+     // copying not allowed, can produce resource leaks
+@@ -167,6 +178,10 @@ nothrow @nogc:
+                 m_initalized = false;
+             }
+         }
++        else version (WASI)
++        {
++            m_initalized = false;
++        }
+     }
+
+     deprecated ("Use setIfInitialized() instead") void set()
+@@ -192,6 +207,11 @@ nothrow @nogc:
+                 pthread_mutex_unlock(&m_mutex);
+             }
+         }
++        else version (WASI)
++        {
++            if (m_initalized)
++                m_state = true;
++        }
+     }
+
+     /// Reset the event manually
+@@ -211,6 +231,11 @@ nothrow @nogc:
+                 pthread_mutex_unlock(&m_mutex);
+             }
+         }
++        else version (WASI)
++        {
++            if (m_initalized)
++                m_state = false;
++        }
+     }
+
+     /**
+@@ -229,6 +254,10 @@ nothrow @nogc:
+         {
+             return wait(Duration.max);
+         }
++        else version (WASI)
++        {
++            return m_initalized && m_state;
++        }
+     }
+
+     /**
+@@ -290,6 +319,14 @@ nothrow @nogc:
+
+             return result == 0;
+         }
++        else version (WASI)
++        {
++            if (!m_initalized || !m_state)
++                return false;
++            if (!m_manualReset)
++                m_state = false;
++            return true;
++        }
+     }
+
+ private:
+@@ -305,6 +342,12 @@ private:
+         bool m_state;
+         bool m_manualReset;
+     }
++    else version (WASI)
++    {
++        bool m_initalized;
++        bool m_state;
++        bool m_manualReset;
++    }
+ }
+
+ // Test single-thread (non-shared) use.
+diff --git a/runtime/druntime/src/core/sync/mutex.d b/runtime/druntime/src/core/sync/mutex.d
+index 8993f85..ae00c13 100644
+--- a/runtime/druntime/src/core/sync/mutex.d
++++ b/runtime/druntime/src/core/sync/mutex.d
+@@ -31,6 +31,9 @@ else version (Posix)
+         pthread_mutexattr_init, pthread_mutexattr_settype;
+     import core.sys.posix.sys.types : pthread_mutex_t, pthread_mutexattr_t;
+ }
++else version (WASI)
++{
++}
+ else
+ {
+     static assert(false, "Platform not supported");
+@@ -99,6 +102,9 @@ class Mutex :
+             !pthread_mutex_init(cast(pthread_mutex_t*) &m_hndl, &attr) ||
+                 abort("Error: pthread_mutex_init failed.");
+         }
++        else version (WASI)
++        {
++        }
+
+         m_proxy.link = this;
+         this.__monitor = cast(void*) &m_proxy;
+@@ -151,6 +157,9 @@ class Mutex :
+             !pthread_mutex_destroy(&m_hndl) ||
+                 abort("Error: pthread_mutex_destroy failed.");
+         }
++        else version (WASI)
++        {
++        }
+         this.__monitor = null;
+     }
+
+@@ -196,6 +205,9 @@ class Mutex :
+             syncErr.msg = "Unable to lock mutex.";
+             throw syncErr;
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+     /**
+@@ -234,6 +246,9 @@ class Mutex :
+             syncErr.msg = "Unable to unlock mutex.";
+             throw syncErr;
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+     /**
+@@ -271,6 +286,10 @@ class Mutex :
+         {
+             return pthread_mutex_trylock(&m_hndl) == 0;
+         }
++        else version (WASI)
++        {
++            return true;
++        }
+     }
+
+
+@@ -283,6 +302,10 @@ private:
+     {
+         pthread_mutex_t     m_hndl;
+     }
++    else version (WASI)
++    {
++        size_t              m_hndl;
++    }
+
+     struct MonitorProxy
+     {
+diff --git a/runtime/druntime/src/core/sync/semaphore.d b/runtime/druntime/src/core/sync/semaphore.d
+index 4446566..df19f45 100644
+--- a/runtime/druntime/src/core/sync/semaphore.d
++++ b/runtime/druntime/src/core/sync/semaphore.d
+@@ -50,6 +50,9 @@ else version (Posix)
+     import core.sys.posix.semaphore : sem_destroy, sem_init, sem_post, sem_t, sem_timedwait, sem_trywait, sem_wait;
+     import core.sys.posix.time : clock_gettime, CLOCK_REALTIME, timespec;
+ }
++else version (WASI)
++{
++}
+ else
+ {
+     static assert(false, "Platform not supported");
+@@ -107,6 +110,10 @@ class Semaphore
+             if ( rc )
+                 throw new SyncError( "Unable to create semaphore" );
+         }
++        else version (WASI)
++        {
++            m_hndl = count;
++        }
+     }
+
+
+@@ -127,6 +134,9 @@ class Semaphore
+             int rc = sem_destroy( &m_hndl );
+             assert( !rc, "Unable to destroy semaphore" );
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+
+@@ -172,6 +182,11 @@ class Semaphore
+                     throw new SyncError( "Unable to wait for semaphore" );
+             }
+         }
++        else version (WASI)
++        {
++            if (m_hndl > 0)
++                --m_hndl;
++        }
+     }
+
+
+@@ -268,6 +283,13 @@ class Semaphore
+                     throw new SyncError( "Unable to wait for semaphore" );
+             }
+         }
++        else version (WASI)
++        {
++            if (m_hndl == 0)
++                return false;
++            --m_hndl;
++            return true;
++        }
+     }
+
+
+@@ -297,6 +319,10 @@ class Semaphore
+             if ( rc )
+                 throw new SyncError( "Unable to notify semaphore" );
+         }
++        else version (WASI)
++        {
++            ++m_hndl;
++        }
+     }
+
+
+@@ -340,6 +366,13 @@ class Semaphore
+                     throw new SyncError( "Unable to wait for semaphore" );
+             }
+         }
++        else version (WASI)
++        {
++            if (m_hndl == 0)
++                return false;
++            --m_hndl;
++            return true;
++        }
+     }
+
+
+@@ -351,6 +384,8 @@ protected:
+     else version (Darwin)    alias Handle = semaphore_t;
+     /// ditto
+     else version (Posix)     alias Handle = sem_t;
++    /// ditto
++    else version (WASI)      alias Handle = uint;
+
+     /// Handle to the system-specific semaphore.
+     Handle m_hndl;
+diff --git a/runtime/druntime/src/core/sys/posix/dirent.d b/runtime/druntime/src/core/sys/posix/dirent.d
+index 0e822f5..c9e2fd5 100644
+--- a/runtime/druntime/src/core/sys/posix/dirent.d
++++ b/runtime/druntime/src/core/sys/posix/dirent.d
+@@ -27,7 +27,10 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C):
+ nothrow:
+ @nogc:
+@@ -64,6 +67,15 @@ else version (linux)
+         char[256]   d_name = 0;
+     }
+ }
++else version (WASI)
++{
++    struct dirent
++    {
++        ino_t       d_ino;
++        ubyte       d_type;
++        char[1]     d_name = 0;
++    }
++}
+ else version (Darwin)
+ {
+     // _DARWIN_FEATURE_64_BIT_INODE dirent is default for Mac OSX >10.5 and is
+@@ -436,6 +448,27 @@ else version (CRuntime_UClibc)
+         dirent* readdir(DIR*);
+     }
+ }
++else version (WASI)
++{
++    enum
++    {
++        DT_UNKNOWN  = 0,
++        DT_FIFO     = 1,
++        DT_CHR      = 2,
++        DT_DIR      = 4,
++        DT_BLK      = 6,
++        DT_REG      = 8,
++        DT_LNK      = 10,
++        DT_SOCK     = 12,
++    }
++
++    struct DIR
++    {
++        // Managed by libc.
++    }
++
++    dirent* readdir(DIR*);
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+@@ -567,6 +600,10 @@ else version (CRuntime_UClibc)
+     int readdir_r(DIR*, dirent*, dirent**);
+   }
+ }
++else version (WASI)
++{
++    // WASI libc does not provide readdir_r.
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+@@ -654,6 +691,11 @@ else version (CRuntime_UClibc)
+     void   seekdir(DIR*, c_long);
+     c_long telldir(DIR*);
+ }
++else version (WASI)
++{
++    void   seekdir(DIR*, c_long);
++    c_long telldir(DIR*);
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+diff --git a/runtime/druntime/src/core/sys/posix/fcntl.d b/runtime/druntime/src/core/sys/posix/fcntl.d
+index 4f7a225..85711d9 100644
+--- a/runtime/druntime/src/core/sys/posix/fcntl.d
++++ b/runtime/druntime/src/core/sys/posix/fcntl.d
+@@ -44,7 +44,10 @@ version (SystemZ) version = IBMZ_Any;
+ version (X86)     version = X86_Any;
+ version (X86_64)  version = X86_Any;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C):
+
+ nothrow:
+@@ -870,6 +873,53 @@ else version (Solaris)
+     enum AT_REMOVEDIR        = 0x1;
+     enum AT_EACCESS          = 0x4;
+ }
++else version (WASI)
++{
++    enum F_GETFD = 1;
++    enum F_SETFD = 2;
++    enum F_GETFL = 3;
++    enum F_SETFL = 4;
++
++    enum FD_CLOEXEC = 1;
++
++    enum F_RDLCK = 0;
++    enum F_UNLCK = 0;
++    enum F_WRLCK = 0;
++
++    enum O_APPEND = 0x0001;
++    enum O_DSYNC = 0x0002;
++    enum O_NONBLOCK = 0x0004;
++    enum O_RSYNC = 0x0008;
++    enum O_SYNC = 0x0010;
++    enum O_CREAT = 0x0000_1000;
++    enum O_DIRECTORY = 0x0000_2000;
++    enum O_EXCL = 0x0000_4000;
++    enum O_TRUNC = 0x0000_8000;
++    enum O_NOFOLLOW = 0x0100_0000;
++    enum O_EXEC = 0x0200_0000;
++    enum O_RDONLY = 0x0400_0000;
++    enum O_SEARCH = 0x0800_0000;
++    enum O_WRONLY = 0x1000_0000;
++    enum O_CLOEXEC = 0;
++    enum O_NOCTTY = 0;
++    enum O_RDWR = O_RDONLY | O_WRONLY;
++    enum O_ACCMODE = O_EXEC | O_RDWR | O_SEARCH;
++
++    struct flock
++    {
++        short l_type;
++        short l_whence;
++        off_t l_start;
++        off_t l_len;
++        pid_t l_pid;
++    }
++
++    enum AT_EACCESS = 0;
++    enum AT_SYMLINK_NOFOLLOW = 0x1;
++    enum AT_SYMLINK_FOLLOW = 0x2;
++    enum AT_REMOVEDIR = 0x4;
++    enum AT_FDCWD = -2;
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+@@ -999,6 +1049,12 @@ else version (CRuntime_UClibc)
+         int openat(int, const scope char*, int, ...);
+     }
+ }
++else version (WASI)
++{
++    int creat(const scope char*, mode_t);
++    int open(const scope char*, int, ...);
++    int openat(int, const scope char*, int, ...);
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+diff --git a/runtime/druntime/src/core/sys/posix/stdio.d b/runtime/druntime/src/core/sys/posix/stdio.d
+index e3de3e2..76e5784 100644
+--- a/runtime/druntime/src/core/sys/posix/stdio.d
++++ b/runtime/druntime/src/core/sys/posix/stdio.d
+@@ -27,7 +27,10 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C):
+
+ nothrow:
+@@ -444,6 +447,11 @@ else version (Posix)
+     int   fseeko(FILE*, off_t, int);
+     off_t ftello(FILE*);
+ }
++else version (WASI)
++{
++    int   fseeko(FILE*, off_t, int);
++    off_t ftello(FILE*);
++}
+
+ char*  ctermid(char*);
+ FILE*  fdopen(int, const scope char*);
+diff --git a/runtime/druntime/src/core/sys/posix/sys/stat.d b/runtime/druntime/src/core/sys/posix/sys/stat.d
+index 762d6fc..6ec4cd9 100644
+--- a/runtime/druntime/src/core/sys/posix/sys/stat.d
++++ b/runtime/druntime/src/core/sys/posix/sys/stat.d
+@@ -38,7 +38,10 @@ version (SPARC64) version = SPARC_Any;
+ version (CRuntime_Bionic)
+     private enum __USE_FILE_OFFSET64 = true;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C) nothrow @nogc:
+
+ //
+@@ -1172,6 +1175,49 @@ version (linux)
+         extern bool S_TYPEISSHM( stat_t* buf ) { return false; }
+     }
+ }
++else version (WASI)
++{
++    struct timespec
++    {
++        time_t tv_sec;
++        c_long tv_nsec;
++    }
++
++    struct stat_t
++    {
++        dev_t       st_dev;
++        ino_t       st_ino;
++        nlink_t     st_nlink;
++        mode_t      st_mode;
++        uid_t       st_uid;
++        gid_t       st_gid;
++        uint        __pad0;
++        dev_t       st_rdev;
++        off_t       st_size;
++        blksize_t   st_blksize;
++        blkcnt_t    st_blocks;
++        timespec    st_atim;
++        timespec    st_mtim;
++        timespec    st_ctim;
++        long[3]     __reserved;
++
++        extern(D) @safe @property inout pure nothrow
++        {
++            pragma(inline, true):
++            ref inout(time_t) st_atime() return { return st_atim.tv_sec; }
++            ref inout(time_t) st_mtime() return { return st_mtim.tv_sec; }
++            ref inout(time_t) st_ctime() return { return st_ctim.tv_sec; }
++        }
++    }
++
++    enum S_ISUID    = 0x800;
++    enum S_ISGID    = 0x400;
++    enum S_ISVTX    = 0x200;
++
++    extern bool S_TYPEISMQ(stat_t* buf)  { return false; }
++    extern bool S_TYPEISSEM(stat_t* buf) { return false; }
++    extern bool S_TYPEISSHM(stat_t* buf) { return false; }
++}
+ else version (Darwin)
+ {
+     // _DARWIN_FEATURE_64_BIT_INODE stat is default for Mac OSX >10.5 and is
+@@ -1599,6 +1645,31 @@ version (CRuntime_Glibc)
+     extern (D) bool S_ISLNK()( mode_t mode )  { return S_ISTYPE( mode, S_IFLNK );  }
+     extern (D) bool S_ISSOCK()( mode_t mode ) { return S_ISTYPE( mode, S_IFSOCK ); }
+ }
++else version (WASI)
++{
++    enum S_IRUSR    = 0x100;
++    enum S_IWUSR    = 0x080;
++    enum S_IXUSR    = 0x040;
++    enum S_IRWXU    = S_IRUSR | S_IWUSR | S_IXUSR;
++
++    enum S_IRGRP    = S_IRUSR >> 3;
++    enum S_IWGRP    = S_IWUSR >> 3;
++    enum S_IXGRP    = S_IXUSR >> 3;
++    enum S_IRWXG    = S_IRWXU >> 3;
++
++    enum S_IROTH    = S_IRGRP >> 3;
++    enum S_IWOTH    = S_IWGRP >> 3;
++    enum S_IXOTH    = S_IXGRP >> 3;
++    enum S_IRWXO    = S_IRWXG >> 3;
++
++    extern (D) bool S_ISBLK()(mode_t mode)  { return (mode & S_IFMT) == S_IFBLK;  }
++    extern (D) bool S_ISCHR()(mode_t mode)  { return (mode & S_IFMT) == S_IFCHR;  }
++    extern (D) bool S_ISDIR()(mode_t mode)  { return (mode & S_IFMT) == S_IFDIR;  }
++    extern (D) bool S_ISFIFO()(mode_t mode) { return (mode & S_IFMT) == S_IFIFO;  }
++    extern (D) bool S_ISREG()(mode_t mode)  { return (mode & S_IFMT) == S_IFREG;  }
++    extern (D) bool S_ISLNK()(mode_t mode)  { return (mode & S_IFMT) == S_IFLNK;  }
++    extern (D) bool S_ISSOCK()(mode_t mode) { return (mode & S_IFMT) == S_IFSOCK; }
++}
+ else version (Darwin)
+ {
+     enum S_IRUSR    = 0x100;  // octal 0400
+@@ -1952,6 +2023,17 @@ version (CRuntime_Glibc)
+     int   mkfifoat(int, const scope char*, mode_t);
+     int   utimensat(int, const scope char*, ref const(timespec)[2], int);
+ }
++else version (WASI)
++{
++    int   fstat(int, stat_t*) @trusted;
++    int   lstat(const scope char*, stat_t*);
++    int   stat(const scope char*, stat_t*);
++    int   fchmodat(int, const scope char*, mode_t, int);
++    int   fstatat(int, const scope char*, stat_t*, int);
++    int   futimens(int, ref const(timespec)[2]);
++    int   mkdirat(int, const scope char*, mode_t);
++    int   utimensat(int, const scope char*, ref const(timespec)[2], int);
++}
+ else version (Solaris)
+ {
+     version (D_LP64)
+@@ -2177,6 +2259,11 @@ version (linux)
+     enum UTIME_NOW = 0x3fffffff;
+     enum UTIME_OMIT = 0x3ffffffe;
+ }
++else version (WASI)
++{
++    enum UTIME_NOW = 0x3fffffff;
++    enum UTIME_OMIT = 0x3ffffffe;
++}
+ else version (Darwin)
+ {
+     enum UTIME_NOW = -1;
+@@ -2245,6 +2332,17 @@ version (linux)
+     enum S_IFLNK    = 0xA000; // octal 0120000
+     enum S_IFSOCK   = 0xC000; // octal 0140000
+ }
++else version (WASI)
++{
++    enum S_IFMT     = 0xF000;
++    enum S_IFBLK    = 0x6000;
++    enum S_IFCHR    = 0x2000;
++    enum S_IFIFO    = 0x1000;
++    enum S_IFREG    = 0x8000;
++    enum S_IFDIR    = 0x4000;
++    enum S_IFLNK    = 0xA000;
++    enum S_IFSOCK   = 0xC000;
++}
+ else version (Darwin)
+ {
+     enum S_IFMT     = 0xF000; // octal 0170000
+@@ -2383,6 +2481,10 @@ else version (CRuntime_UClibc)
+     int mknod(const scope char*, mode_t, dev_t);
+     int mknodat(int, const scope char*, mode_t, dev_t);
+ }
++else version (WASI)
++{
++    // WASI libc does not provide mknod/mknodat.
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+diff --git a/runtime/druntime/src/core/sys/posix/sys/statvfs.d b/runtime/druntime/src/core/sys/posix/sys/statvfs.d
+index ede7866..72dfc17 100644
+--- a/runtime/druntime/src/core/sys/posix/sys/statvfs.d
++++ b/runtime/druntime/src/core/sys/posix/sys/statvfs.d
+@@ -12,7 +12,10 @@ import core.stdc.config;
+ import core.sys.posix.config;
+ public import core.sys.posix.sys.types;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C) :
+ nothrow:
+ @nogc:
+diff --git a/runtime/druntime/src/core/sys/posix/sys/time.d b/runtime/druntime/src/core/sys/posix/sys/time.d
+index dda4caf..40262a3 100644
+--- a/runtime/druntime/src/core/sys/posix/sys/time.d
++++ b/runtime/druntime/src/core/sys/posix/sys/time.d
+@@ -29,7 +29,10 @@ else version (WatchOS)
+
+ version (linux) public import core.sys.linux.sys.time;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C) nothrow @nogc:
+
+ //
+@@ -82,6 +85,17 @@ version (CRuntime_Glibc)
+     int setitimer(int, const scope itimerval*, itimerval*);
+     int utimes(const scope char*, ref const(timeval)[2]); // LEGACY
+ }
++else version (WASI)
++{
++    struct timeval
++    {
++        time_t      tv_sec;
++        suseconds_t tv_usec;
++    }
++
++    int gettimeofday(timeval*, void*);
++    int utimes(const scope char*, ref const(timeval)[2]);
++}
+ else version (CRuntime_Musl)
+ {
+     struct timeval
+diff --git a/runtime/druntime/src/core/sys/posix/sys/types.d b/runtime/druntime/src/core/sys/posix/sys/types.d
+index 859c4ea..c88b2d0 100644
+--- a/runtime/druntime/src/core/sys/posix/sys/types.d
++++ b/runtime/druntime/src/core/sys/posix/sys/types.d
+@@ -28,7 +28,10 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C):
+
+ //
+@@ -156,6 +159,21 @@ version (linux)
+         alias slong_t   time_t;
+     }
+ }
++else version (WASI)
++{
++    alias long      blkcnt_t;
++    alias c_long    blksize_t;
++    alias ulong     dev_t;
++    alias uint      gid_t;
++    alias ulong     ino_t;
++    alias uint      mode_t;
++    alias ulong     nlink_t;
++    alias long      off_t;
++    alias int       pid_t;
++    alias c_long    ssize_t;
++    alias long      time_t;
++    alias uint      uid_t;
++}
+ else version (Darwin)
+ {
+     alias long      blkcnt_t;
+@@ -329,6 +347,16 @@ version (linux)
+     alias slong_t   suseconds_t;
+     alias uint      useconds_t;
+ }
++else version (WASI)
++{
++    alias ulong     fsblkcnt_t;
++    alias ulong     fsfilcnt_t;
++    alias c_long    clock_t;
++    alias uint      id_t;
++    alias int       key_t;
++    alias long      suseconds_t;
++    alias uint      useconds_t;
++}
+ else version (Darwin)
+ {
+     alias uint   fsblkcnt_t;
+@@ -1300,6 +1328,19 @@ else version (CRuntime_UClibc)
+
+     alias c_ulong pthread_t;
+ }
++else version (WASI)
++{
++    alias void* pthread_attr_t;
++    alias void* pthread_cond_t;
++    alias void* pthread_condattr_t;
++    alias int   pthread_key_t;
++    alias void* pthread_mutex_t;
++    alias void* pthread_mutexattr_t;
++    alias int   pthread_once_t;
++    alias void* pthread_rwlock_t;
++    alias void* pthread_rwlockattr_t;
++    alias void* pthread_t;
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+@@ -1408,6 +1449,11 @@ else version (CRuntime_UClibc)
+         int __align;
+     }
+ }
++else version (WASI)
++{
++    alias void* pthread_barrier_t;
++    alias void* pthread_barrierattr_t;
++}
+ else
+ {
+     static assert(false, "Unsupported platform");
+@@ -1452,6 +1498,10 @@ else version (CRuntime_Musl)
+ {
+     alias int pthread_spinlock_t;
+ }
++else version (WASI)
++{
++    alias int pthread_spinlock_t;
++}
+
+ //
+ // Timer (TMR)
+diff --git a/runtime/druntime/src/core/sys/posix/unistd.d b/runtime/druntime/src/core/sys/posix/unistd.d
+index 83536a3..de477f0 100644
+--- a/runtime/druntime/src/core/sys/posix/unistd.d
++++ b/runtime/druntime/src/core/sys/posix/unistd.d
+@@ -28,7 +28,10 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C):
+ nothrow:
+ @nogc:
+@@ -358,6 +361,15 @@ else version (CRuntime_UClibc)
+     int   symlinkat(const scope char*, int, const scope char*);
+     int   unlinkat(int, const scope char*, int);
+ }
++else version (WASI)
++{
++    off_t lseek(int, off_t, int) @trusted;
++    int   ftruncate(int, off_t) @trusted;
++    int   linkat(int, const scope char*, int, const scope char*, int);
++    ssize_t readlinkat(int, const scope char*, char*, size_t);
++    int   symlinkat(const scope char*, int, const scope char*);
++    int   unlinkat(int, const scope char*, int);
++}
+
+ version (CRuntime_Glibc)
+ {
+@@ -2489,6 +2501,58 @@ else version (CRuntime_UClibc)
+         _SC_RAW_SOCKETS
+     }
+ }
++else version (WASI)
++{
++    enum F_OK = 0;
++    enum R_OK = 4;
++    enum W_OK = 2;
++    enum X_OK = 1;
++
++    enum F_ULOCK = 0;
++    enum F_LOCK = 1;
++    enum F_TLOCK = 2;
++    enum F_TEST = 3;
++
++    enum
++    {
++        _PC_LINK_MAX,
++        _PC_MAX_CANON,
++        _PC_MAX_INPUT,
++        _PC_NAME_MAX,
++        _PC_PATH_MAX,
++        _PC_PIPE_BUF,
++        _PC_CHOWN_RESTRICTED,
++        _PC_NO_TRUNC,
++        _PC_VDISABLE,
++        _PC_SYNC_IO,
++        _PC_ASYNC_IO,
++        _PC_PRIO_IO,
++        _PC_FILESIZEBITS,
++        _PC_REC_INCR_XFER_SIZE,
++        _PC_REC_MAX_XFER_SIZE,
++        _PC_REC_MIN_XFER_SIZE,
++        _PC_REC_XFER_ALIGN,
++        _PC_ALLOC_SIZE_MIN,
++        _PC_SYMLINK_MAX,
++        _PC_2_SYMLINKS
++    }
++
++    enum
++    {
++        _SC_ARG_MAX,
++        _SC_CHILD_MAX,
++        _SC_CLK_TCK,
++        _SC_NGROUPS_MAX,
++        _SC_OPEN_MAX,
++        _SC_STREAM_MAX,
++        _SC_TZNAME_MAX,
++        _SC_JOB_CONTROL,
++        _SC_SAVED_IDS,
++        _SC_VERSION,
++        _SC_PAGESIZE,
++        _SC_PAGE_SIZE = _SC_PAGESIZE,
++    }
++}
+
+ //
+ // File Synchronization (FSC)
+@@ -2537,6 +2601,10 @@ else version (CRuntime_UClibc)
+ {
+     int fsync(int) @trusted;
+ }
++else version (WASI)
++{
++    int fsync(int) @trusted;
++}
+
+ //
+ // Synchronized I/O (SIO)
+diff --git a/runtime/druntime/src/core/sys/posix/utime.d b/runtime/druntime/src/core/sys/posix/utime.d
+index e7059d7..04bda29 100644
+--- a/runtime/druntime/src/core/sys/posix/utime.d
++++ b/runtime/druntime/src/core/sys/posix/utime.d
+@@ -26,7 +26,10 @@ else version (TVOS)
+ else version (WatchOS)
+     version = Darwin;
+
+-version (Posix):
++version (Posix) version = CoreSysPosix;
++else version (WASI) version = CoreSysPosix;
++
++version (CoreSysPosix):
+ extern (C):
+ nothrow:
+ @nogc:
+@@ -54,6 +57,16 @@ version (CRuntime_Glibc)
+
+     int utime(const scope char*, const scope utimbuf*);
+ }
++else version (WASI)
++{
++    struct utimbuf
++    {
++        time_t actime;
++        time_t modtime;
++    }
++
++    int utime(const scope char*, const scope utimbuf*);
++}
+ else version (CRuntime_Musl)
+ {
+     struct utimbuf
+diff --git a/runtime/druntime/src/core/thread/fiber/package.d b/runtime/druntime/src/core/thread/fiber/package.d
+index a592ed6..d637dce 100644
+--- a/runtime/druntime/src/core/thread/fiber/package.d
++++ b/runtime/druntime/src/core/thread/fiber/package.d
+@@ -391,6 +391,13 @@ package
+                 static assert(false);
+         }
+     }
++    else version (WASI)
++    {
++        extern (C) void fiber_switchContext( void** oldp, void* newp ) nothrow @nogc
++        {
++            abort();
++        }
++    }
+     else
+     extern (C) void fiber_switchContext( void** oldp, void* newp ) nothrow @nogc
+     {
+@@ -1028,6 +1035,12 @@ protected:
+         {
+             VirtualFree( m_pmem, 0, MEM_RELEASE );
+         }
++        else version (WASI)
++        {
++            import core.stdc.stdlib : free;
++
++            free( m_pmem );
++        }
+         else
+         {
+             import core.sys.posix.sys.mman : mmap, munmap;
+@@ -1658,6 +1671,10 @@ protected:
+             //       be a pointer to the ucontext_t struct for that fiber.
+             push( cast(size_t) &m_utxt );
+         }
++        else version (WASI)
++        {
++            abort();
++        }
+         else
+             static assert(0, "Not implemented");
+     }
+diff --git a/runtime/druntime/src/core/thread/osthread.d b/runtime/druntime/src/core/thread/osthread.d
+index 73e5adb..b47275d 100644
+--- a/runtime/druntime/src/core/thread/osthread.d
++++ b/runtime/druntime/src/core/thread/osthread.d
+@@ -158,6 +158,10 @@ else version (Posix)
+         // Use POSIX threads for suspend/resume
+     }
+ }
++else version (WASI)
++{
++    import core.stdc.stdlib : free, malloc, realloc;
++}
+
+ version (GNU)
+ {
+@@ -257,6 +261,10 @@ class Thread : ThreadBase
+     {
+         private shared bool     m_isRunning;
+     }
++    else version (WASI)
++    {
++        private shared bool     m_isRunning;
++    }
+
+     version (Darwin)
+     {
+@@ -801,6 +809,12 @@ class Thread : ThreadBase
+                 result.PRIORITY_MAX != -1 ||
+                     assert(0, "Internal error in sched_get_priority_max");
+             }
++            else version (WASI)
++            {
++                result.PRIORITY_MIN = 0;
++                result.PRIORITY_DEFAULT = 0;
++                result.PRIORITY_MAX = 0;
++            }
+             else
+             {
+                 static assert(0, "Your code here.");
+@@ -884,6 +898,10 @@ class Thread : ThreadBase
+             }
+             return param.sched_priority;
+         }
++        else version (WASI)
++        {
++            return PRIORITY_DEFAULT;
++        }
+     }
+
+
+@@ -974,6 +992,9 @@ class Thread : ThreadBase
+                 }
+             }
+         }
++        else version (WASI)
++        {
++        }
+     }
+
+
+@@ -1024,6 +1045,10 @@ class Thread : ThreadBase
+         {
+             return atomicLoad(m_isRunning);
+         }
++        else version (WASI)
++        {
++            return atomicLoad(m_isRunning);
++        }
+     }
+
+
+@@ -1343,6 +1368,14 @@ private extern (D) ThreadBase attachThread(ThreadBase _thisThread) @nogc nothrow
+
+         atomicStore!(MemoryOrder.raw)(thisThread.toThread.m_isRunning, true);
+     }
++    else version (WASI)
++    {
++        thisThread.m_addr = 1;
++        thisContext.bstack = getStackBottom();
++        thisContext.tstack = thisContext.bstack;
++
++        atomicStore!(MemoryOrder.raw)(thisThread.toThread.m_isRunning, true);
++    }
+     thisThread.m_isDaemon = true;
+     thisThread.tlsRTdataInit();
+     Thread.setThis( thisThread );
+@@ -1626,7 +1659,11 @@ in (fn)
+     }
+     else version (LDC)
+     {
+-        version (PPC_Any)
++        version (WASI)
++        {
++            sp = &sp;
++        }
++        else version (PPC_Any)
+         {
+             // Nonvolatile registers, according to:
+             // System V Application Binary Interface
+@@ -1779,6 +1816,10 @@ version (Posix)
+ {
+     alias getpid = imported!"core.sys.posix.unistd".getpid;
+ }
++else version (WASI)
++{
++    alias getpid = imported!"core.sys.posix.unistd".getpid;
++}
+ else version (Windows)
+ {
+     alias getpid = imported!"core.sys.windows.winbase".GetCurrentProcessId;
+@@ -1949,6 +1990,10 @@ private extern(D) void* getStackBottom() nothrow @nogc
+         thr_stksegment(&stk);
+         return stk.ss_sp;
+     }
++    else version (WASI)
++    {
++        return getStackTop();
++    }
+     else
+         static assert(false, "Platform not supported.");
+ }
+@@ -2327,6 +2372,11 @@ private extern (D) bool suspend( Thread t ) nothrow @nogc
+             t.m_curr.tstack = getStackTop();
+         }
+     }
++    else version (WASI)
++    {
++        if ( !t.m_lock )
++            t.m_curr.tstack = getStackTop();
++    }
+     return true;
+ }
+
+@@ -2500,6 +2550,11 @@ private extern (D) void resume(ThreadBase _t) nothrow @nogc
+             t.m_curr.tstack = t.m_curr.bstack;
+         }
+     }
++    else version (WASI)
++    {
++        if ( !t.m_lock )
++            t.m_curr.tstack = t.m_curr.bstack;
++    }
+     else
+         static assert(false, "Platform not supported.");
+ }
+@@ -2998,6 +3053,9 @@ else version (Posix)
+         }
+     }
+ }
++else version (WASI)
++{
++}
+ else
+ {
+     // NOTE: This is the only place threading versions are checked.  If a new
+@@ -3210,6 +3268,12 @@ private
+ ThreadID createLowLevelThread(void delegate() nothrow dg, uint stacksize = 0,
+                               void delegate() nothrow cbDllUnload = null) nothrow @nogc
+ {
++    version (WASI)
++    {
++        return ThreadID.init;
++    }
++    else
++    {
+     void delegate() nothrow* context = cast(void delegate() nothrow*)malloc(dg.sizeof);
+     *context = dg;
+
+@@ -3283,6 +3347,7 @@ ThreadID createLowLevelThread(void delegate() nothrow dg, uint stacksize = 0,
+         ll_pThreads[ll_nThreads - 1].tid = tid;
+     }
+     return tid;
++    }
+ }
+
+ /**
+diff --git a/runtime/druntime/src/core/thread/types.d b/runtime/druntime/src/core/thread/types.d
+index 7d1a5fe..17f2537 100644
+--- a/runtime/druntime/src/core/thread/types.d
++++ b/runtime/druntime/src/core/thread/types.d
+@@ -24,6 +24,11 @@ version (Posix)
+
+     alias ThreadID = pthread_t;
+ }
++else
++version (WASI)
++{
++    alias ThreadID = size_t;
++}
+
+ struct ll_ThreadData
+ {
+diff --git a/runtime/druntime/src/core/time.d b/runtime/druntime/src/core/time.d
+index 8189e67..f98e913 100644
+--- a/runtime/druntime/src/core/time.d
++++ b/runtime/druntime/src/core/time.d
+@@ -92,6 +92,35 @@ else version (Posix)
+     import core.sys.posix.sys.time : gettimeofday, timeval;
+     import core.sys.posix.time : clock_getres, clock_gettime, CLOCK_MONOTONIC, timespec;
+ }
++else version (WASI)
++{
++    private struct __clockid
++    {
++        int opaque;
++    }
++
++    private alias clockid_t = const(__clockid)*;
++
++    private struct timespec
++    {
++        long tv_sec;
++        int tv_nsec;
++    }
++
++    extern(C) nothrow @nogc
++    {
++        extern __gshared const __clockid _CLOCK_MONOTONIC;
++        extern __gshared const __clockid _CLOCK_REALTIME;
++
++        int clock_getres(clockid_t clockId, timespec* resolution);
++        int clock_gettime(clockid_t clockId, timespec* time);
++    }
++
++    private enum CLOCK_MONOTONIC = cast(clockid_t)&_CLOCK_MONOTONIC;
++    private enum CLOCK_REALTIME = cast(clockid_t)&_CLOCK_REALTIME;
++    private enum CLOCK_PROCESS_CPUTIME_ID = CLOCK_MONOTONIC;
++    private enum CLOCK_THREAD_CPUTIME_ID = CLOCK_MONOTONIC;
++}
+
+ version (unittest) import core.stdc.stdio : printf;
+
+@@ -337,6 +366,14 @@ else version (Solaris) enum ClockType
+     second = 6,
+     threadCPUTime = 7,
+ }
++else version (WASI) enum ClockType
++{
++    normal = 0,
++    coarse = 2,
++    precise = 3,
++    processCPUTime = 4,
++    threadCPUTime = 7,
++}
+ else
+ {
+     // It needs to be decided (and implemented in an appropriate version branch
+@@ -445,6 +482,21 @@ version (Posix)
+             assert(0, "What are the monotonic clock types supported by this system?");
+     }
+ }
++else
++version (WASI)
++{
++    private auto _wasiClock(ClockType clockType)
++    {
++        with(ClockType) final switch (clockType)
++        {
++        case coarse: return CLOCK_MONOTONIC;
++        case normal: return CLOCK_MONOTONIC;
++        case precise: return CLOCK_MONOTONIC;
++        case processCPUTime: return CLOCK_PROCESS_CPUTIME_ID;
++        case threadCPUTime: return CLOCK_THREAD_CPUTIME_ID;
++        }
++    }
++}
+
+ unittest
+ {
+@@ -2132,6 +2184,10 @@ struct MonoTimeImpl(ClockType clockType)
+     {
+         enum clockArg = _posixClock(clockType);
+     }
++    else version (WASI)
++    {
++        enum clockArg = _wasiClock(clockType);
++    }
+     else
+         static assert(0, "Unsupported platform");
+
+@@ -2197,6 +2253,19 @@ struct MonoTimeImpl(ClockType clockType)
+                                               1_000_000_000L,
+                                               ticksPerSecond));
+         }
++        else version (WASI)
++        {
++            timespec ts = void;
++            immutable error = clock_gettime(clockArg, &ts);
++            if (error)
++            {
++                import core.internal.abort : abort;
++                abort("Call to clock_gettime failed.");
++            }
++            return MonoTimeImpl(convClockFreq(ts.tv_sec * 1_000_000_000L + ts.tv_nsec,
++                                              1_000_000_000L,
++                                              ticksPerSecond));
++        }
+     }
+
+
+@@ -2592,6 +2661,22 @@ extern(C) void _d_initMonoTime() @nogc nothrow
+             }
+         }
+     }
++    else version (WASI)
++    {
++        timespec ts;
++        foreach (i, typeStr; __traits(allMembers, ClockType))
++        {
++            enum clockArg = _wasiClock(__traits(getMember, ClockType, typeStr));
++            if (clock_getres(clockArg, &ts) == 0)
++            {
++                if (tps[i] != 0)
++                    assert(0);
++
++                tps[i] = ts.tv_sec != 0 || ts.tv_nsec <= 0 || ts.tv_nsec >= 1000
++                    ? 1_000_000_000L : 1_000_000_000L / ts.tv_nsec;
++            }
++        }
++    }
+     else
+         static assert(0, "Unsupported platform");
+ }
+@@ -2893,6 +2978,16 @@ deprecated:
+             else
+                 ticksPerSec = 1_000_000;
+         }
++        else version (WASI)
++        {
++            timespec ts;
++
++            if (clock_getres(CLOCK_MONOTONIC, &ts) != 0)
++                ticksPerSec = 0;
++            else
++                ticksPerSec = ts.tv_nsec >= 1000 ? 1_000_000_000
++                                                 : 1_000_000_000 / ts.tv_nsec;
++        }
+         else
+             static assert(0, "Unsupported platform");
+
+@@ -3462,6 +3557,21 @@ deprecated:
+                                     tv.tv_usec * TickDuration.ticksPerSec / 1000 / 1000);
+             }
+         }
++        else version (WASI)
++        {
++            timespec ts = void;
++            immutable error = clock_gettime(CLOCK_MONOTONIC, &ts);
++            static if (ts.tv_sec.max < long.max)
++            {
++                if (error)
++                {
++                    import core.internal.abort : abort;
++                    abort("Call to clock_gettime failed.");
++                }
++            }
++            return TickDuration(ts.tv_sec * TickDuration.ticksPerSec +
++                                ts.tv_nsec * TickDuration.ticksPerSec / 1000 / 1000 / 1000);
++        }
+     }
+
+     version (CoreUnittest) @safe nothrow unittest
+diff --git a/runtime/druntime/src/ldc/wasi_shims.c b/runtime/druntime/src/ldc/wasi_shims.c
+new file mode 100644
+index 0000000..7cb3f12
+--- /dev/null
++++ b/runtime/druntime/src/ldc/wasi_shims.c
+@@ -0,0 +1,23 @@
++#if defined(__wasi__)
++#include <stdio.h>
++#include <stdlib.h>
++#include <unwind.h>
++
++void _Unwind_Resume(_Unwind_Exception *exception_object) {
++    _Unwind_RaiseException(exception_object);
++    abort();
++}
++
++void flockfile(FILE *file) {
++    (void)file;
++}
++
++int ftrylockfile(FILE *file) {
++    (void)file;
++    return 0;
++}
++
++void funlockfile(FILE *file) {
++    (void)file;
++}
++#endif
+diff --git a/runtime/druntime/src/rt/cover.d b/runtime/druntime/src/rt/cover.d
+index 0b19021..4576b4d 100644
+--- a/runtime/druntime/src/rt/cover.d
++++ b/runtime/druntime/src/rt/cover.d
+@@ -29,6 +29,12 @@ else version (Posix)
+     import core.sys.posix.fcntl : O_CREAT, O_RDWR, open, S_IRGRP, S_IROTH, S_IRUSR, S_IWGRP, S_IWOTH, S_IWUSR;
+     import core.sys.posix.unistd : ftruncate;
+ }
++else version (WASI)
++{
++    import core.stdc.stdio : fopen;
++    import core.sys.posix.fcntl : O_CREAT, O_RDWR, open, S_IRGRP, S_IROTH, S_IRUSR, S_IWGRP, S_IWOTH, S_IWUSR;
++    import core.sys.posix.unistd : ftruncate;
++}
+ else
+     static assert(0, "Unsupported platform");
+
+@@ -327,6 +333,8 @@ shared static ~this()
+             SetEndOfFile(handle(fileno(flst)));
+         else version (Posix)
+             ftruncate(fileno(flst), ftell(flst));
++        else version (WASI)
++            ftruncate(fileno(flst), ftell(flst));
+     }
+ }
+
+@@ -360,6 +368,8 @@ string appendFN( string path, string name )
+         const char sep = '\\';
+     else version (Posix)
+         const char sep = '/';
++    else version (WASI)
++        const char sep = '/';
+
+     auto dest = path;
+
+@@ -409,6 +419,11 @@ string getExt( string name )
+             if ( name[i] == '/' )
+                 break;
+         }
++        else version (WASI)
++        {
++            if ( name[i] == '/' )
++                break;
++        }
+     }
+     return null;
+ }
+@@ -466,10 +481,15 @@ FILE* openOrCreateFile(string name)
+     else version (Posix)
+         immutable fd = open((name ~ '\0').ptr, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
+                 S_IROTH | S_IWOTH);
++    else version (WASI)
++        immutable fd = open((name ~ '\0').ptr, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
++                S_IROTH | S_IWOTH);
+     version (CRuntime_Microsoft)
+         alias fdopen = _fdopen;
+     else version (Posix)
+         import core.sys.posix.stdio : fdopen;
++    else version (WASI)
++        import core.sys.posix.stdio : fdopen;
+     return fdopen(fd, "r+b");
+ }
+
+@@ -491,6 +511,9 @@ void lockFile(int fd)
+         import core.sys.posix.unistd : F_LOCK, lockf;
+         lockf(fd, F_LOCK, 0); // exclusive lock
+     }
++    else version (WASI)
++    {
++    }
+     else version (Windows)
+     {
+         OVERLAPPED off;
+@@ -527,6 +550,8 @@ bool readFile(string name, ref char[] buf)
+         auto file = _wfopen(toUTF16z(name), "rb"w.ptr);
+     else version (Posix)
+         auto file = fopen((name ~ '\0').ptr, "rb".ptr);
++    else version (WASI)
++        auto file = fopen((name ~ '\0').ptr, "rb".ptr);
+     if (file is null) return false;
+     scope(exit) fclose(file);
+     return readFile(file, buf);
+diff --git a/runtime/druntime/src/rt/dmain2.d b/runtime/druntime/src/rt/dmain2.d
+index a669c7f..5e540cc 100644
+--- a/runtime/druntime/src/rt/dmain2.d
++++ b/runtime/druntime/src/rt/dmain2.d
+@@ -43,6 +43,10 @@ else version (Posix)
+ {
+     import core.stdc.string : strlen;
+ }
++else version (WASI)
++{
++    import core.stdc.string : strlen;
++}
+
+ // not sure why we can't define this in one place, but this is to keep this
+ // module from importing core.runtime.
+@@ -322,6 +326,18 @@ extern (C) int _d_run_main(int argc, char** argv, MainFunc mainFunc)
+             totalArgsLength += arg.length;
+         }
+     }
++    else version (WASI)
++    {
++        // Allocate args[] on the stack
++        char[][] args = (cast(char[]*) alloca(argc * (char[]).sizeof))[0 .. argc];
++
++        size_t totalArgsLength = 0;
++        foreach (i, ref arg; args)
++        {
++            arg = argv[i][0 .. strlen(argv[i])];
++            totalArgsLength += arg.length;
++        }
++    }
+     else
+         static assert(0);
+
+diff --git a/runtime/druntime/src/rt/dwarfeh.d b/runtime/druntime/src/rt/dwarfeh.d
+index 31671c2..d76ab09 100644
+--- a/runtime/druntime/src/rt/dwarfeh.d
++++ b/runtime/druntime/src/rt/dwarfeh.d
+@@ -11,7 +11,12 @@
+
+ module rt.dwarfeh;
+
+-version (Posix):
++version (Posix)
++    version = DwarfEHSupported;
++else version (WASI)
++    version = DwarfEHSupported;
++
++version (DwarfEHSupported):
+
+ // debug = EH_personality;
+
+@@ -99,6 +104,11 @@ else version (LoongArch64)
+     enum eh_exception_regno = 4;
+     enum eh_selector_regno = 5;
+ }
++else version (WebAssembly)
++{
++    enum eh_exception_regno = 0;
++    enum eh_selector_regno = 1;
++}
+ else
+ {
+     static assert(0, "Unknown EH register numbers for this architecture");
+diff --git a/runtime/druntime/src/rt/monitor_.d b/runtime/druntime/src/rt/monitor_.d
+index 1d4ed2e..78d5f19 100644
+--- a/runtime/druntime/src/rt/monitor_.d
++++ b/runtime/druntime/src/rt/monitor_.d
+@@ -24,6 +24,9 @@ else version (Posix)
+         pthread_mutexattr_settype;
+     import core.sys.posix.sys.types : pthread_mutex_t, pthread_mutexattr_t;
+ }
++else version (WASI)
++{
++}
+ else
+ {
+     static assert(0, "Unsupported platform");
+@@ -225,6 +228,30 @@ else version (Posix)
+         pthread_mutex_unlock(mtx) && assert(0);
+     }
+ }
++else version (WASI)
++{
++@nogc:
++    struct Mutex
++    {
++        int unused;
++    }
++
++    void initMutex(Mutex* mtx)
++    {
++    }
++
++    void destroyMutex(Mutex* mtx)
++    {
++    }
++
++    void lockMutex(Mutex* mtx)
++    {
++    }
++
++    void unlockMutex(Mutex* mtx)
++    {
++    }
++}
+
+ struct Monitor
+ {
+diff --git a/runtime/druntime/src/rt/sections.d b/runtime/druntime/src/rt/sections.d
+index 90bb112..12a3459 100644
+--- a/runtime/druntime/src/rt/sections.d
++++ b/runtime/druntime/src/rt/sections.d
+@@ -67,6 +67,9 @@ else version (CRuntime_Bionic)
+     public import rt.sections_elf_shared;
+ else version (CRuntime_UClibc)
+     public import rt.sections_elf_shared;
++else version (WASI)
++{
++}
+ else
+     static assert(0, "unimplemented");
+
+diff --git a/runtime/druntime/src/rt/sections_ldc.d b/runtime/druntime/src/rt/sections_ldc.d
+index 8d42a10..fb6ce37 100644
+--- a/runtime/druntime/src/rt/sections_ldc.d
++++ b/runtime/druntime/src/rt/sections_ldc.d
+@@ -76,8 +76,13 @@ struct SectionGroup
+ private:
+     ModuleGroup _moduleGroup;
+
+-    import rt.util.container.array;
+-    Array!(void[]) _gcRanges;
++    version (WASI)
++        void[][] _gcRanges;
++    else
++    {
++        import rt.util.container.array;
++        Array!(void[]) _gcRanges;
++    }
+
+     version (Solaris)
+     {
+@@ -322,7 +327,11 @@ void initSections() nothrow @nogc
+
+     static void pushRange(void* start, void* end) nothrow @nogc
+     {
+-        globalSectionGroup._gcRanges.insertBack(start[0 .. (end - start)]);
++        version (WASI)
++        {
++        }
++        else
++            globalSectionGroup._gcRanges.insertBack(start[0 .. (end - start)]);
+     }
+
+     version (UseELF)
+@@ -350,7 +359,11 @@ void finiSections() nothrow @nogc
+ void[] initTLSRanges() nothrow @nogc
+ {
+     debug(PRINTF) printf("initTLSRanges called\n");
+-    version (UseELF)
++    version (WASI)
++    {
++        return null;
++    }
++    else version (UseELF)
+     {
+         auto rng = getTLSRange(&globalSectionGroup);
+         debug(PRINTF) printf("Add range %p %d\n", rng ? rng.ptr : cast(void*)0, rng ? rng.length : 0);
+@@ -373,6 +386,15 @@ void scanTLSRanges(void[] rng, scope void delegate(void* pbeg, void* pend) nothr
+
+ extern (C) __gshared ModuleReference* _Dmodule_ref;   // start of linked list
+
++version (WASI)
++{
++    extern (C)
++    {
++        extern __gshared immutable(ModuleInfo*) __start___minfo;
++        extern __gshared immutable(ModuleInfo*) __stop___minfo;
++    }
++}
++
+ private:
+
+ // This linked list is created by a compiler generated function inserted
+@@ -393,18 +415,33 @@ do
+ {
+     import core.stdc.stdlib : malloc;
+
+-    size_t len = 0;
+-    for (auto mr = _Dmodule_ref; mr; mr = mr.next)
+-        len++;
++    version (WASI)
++    {
++        auto mbeg = cast(immutable(ModuleInfo)**)&__start___minfo;
++        auto mend = cast(immutable(ModuleInfo)**)&__stop___minfo;
++        auto len = (cast(size_t)mend - cast(size_t)mbeg) / size_t.sizeof;
++        auto result = (cast(immutable(ModuleInfo)**)malloc(len * size_t.sizeof))[0 .. len];
+
+-    auto result = (cast(immutable(ModuleInfo)**)malloc(len * size_t.sizeof))[0 .. len];
++        foreach (i, ref r; result)
++            r = mbeg[i];
+
+-    auto tip = _Dmodule_ref;
+-    foreach (ref r; result)
+-    {
+-        r = tip.mod;
+-        tip = tip.next;
++        return cast(immutable)result;
+     }
++    else
++    {
++        size_t len = 0;
++        for (auto mr = _Dmodule_ref; mr; mr = mr.next)
++            len++;
+
+-    return cast(immutable)result;
++        auto result = (cast(immutable(ModuleInfo)**)malloc(len * size_t.sizeof))[0 .. len];
++
++        auto tip = _Dmodule_ref;
++        foreach (ref r; result)
++        {
++            r = tip.mod;
++            tip = tip.next;
++        }
++
++        return cast(immutable)result;
++    }
+ }
