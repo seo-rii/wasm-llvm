@@ -140,7 +140,7 @@
     }
   },
   "validation": {
-    "privateBuildTests": 9,
+    "privateBuildTests": 11,
     "producerAndDefaultBuildOptionTests": 19,
     "abiProtocolCalls": 5,
     "cwdCases": 8
@@ -166,10 +166,40 @@
         "addressSpaceBytesPerProcess": 10737418240,
         "threads": 2,
         "qualified": false
+      },
+      {
+        "candidate": "exec_v1 plus initial_cwd, full-LTO O1/CGO1",
+        "result": "failed",
+        "failure": "7200.127-second wall-clock timeout; clang++ process group killed; no Clang or LLD output",
+        "producerExitCode": 1,
+        "childExitCode": -9,
+        "termination": "timeout",
+        "wallSeconds": 7200.127,
+        "addressSpaceBytesPerProcess": 17179869184,
+        "threads": 1,
+        "ltoOptimizerLevel": 1,
+        "ltoCodegenLevel": 1,
+        "binaryenOptimization": "none",
+        "failedReceiptSha256": "48ab6f38b99afd7c0be6dff6b85e658bbcacb3bffe0cc712bcbeeaf3438032a6",
+        "driverWait4": {
+          "maximumResidentSetBytes": 38756352,
+          "userCpuSeconds": 0.040941,
+          "systemCpuSeconds": 0.011202,
+          "scope": "clang++ driver only; group kill prevented waiting for the linker; not linker or process-tree totals"
+        },
+        "lastSeparateLinkerObservation": {
+          "observedAt": "2026-10-14T01:17:49Z",
+          "elapsedWallSeconds": 7080.9,
+          "userPlusSystemCpuSeconds": 756.2,
+          "residentSetBytes": 7766638592,
+          "virtualAddressSpaceBytes": 11633057792,
+          "scope": "sampled /proc values before exit; not final CPU or peak memory"
+        },
+        "qualified": false
       }
     ],
     "retry": {
-      "status": "pending",
+      "status": "not started; one externally guarded retry is being prepared",
       "addressSpaceBytesPerProcess": 17179869184,
       "enforcement": "RLIMIT_AS; not an RSS or aggregate process-tree limit",
       "threads": 1,
@@ -177,7 +207,15 @@
       "ltoCodegenLevel": 1,
       "ltoPartitions": 1,
       "binaryenOptimization": "none",
-      "qualification": "separate correctness candidate; baseline size and performance not qualified"
+      "qualification": "separate correctness candidate; baseline size and performance not qualified",
+      "wallSecondsPerChild": 14400,
+      "cpuSecondsPerProcess": {
+        "soft": 1200,
+        "hard": 1260
+      },
+      "minimumAvailableMemoryBytes": 8589934592,
+      "minimumFreeDiskBytes": 4294967296,
+      "admissionFailure": "immediate explicit failure; no waiting or automatic retry"
     }
   },
   "limitations": [

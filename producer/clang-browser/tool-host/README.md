@@ -91,6 +91,8 @@ candidate is preserved and cannot overwrite a previously completed output.
 resident RAM or the sum of a process tree. The receipt separates this enforced
 limit from observed Linux `wait4` maximum RSS and CPU time, including failed and
 timed-out children. The RSS observation is not a container-wide memory limit.
+Killing a driver and its child together can leave only the driver's usage in
+`wait4`; it must not be described as the linker's final CPU time or peak RSS.
 Available host memory and competing jobs must be checked before each large link.
 
 For a detached build, record its exit status separately from its log. Inspect the
@@ -101,8 +103,14 @@ python3 -B producer/clang-browser/tool-host/status.py \
   --output /path/to/private-output --exit-status /path/to/build.status
 ```
 
-`--timeout-seconds` can explicitly raise the wall-clock cap to at most 7200 seconds
-per child on a heavily contended machine. The memory and thread limits still apply.
+`--timeout-seconds` can explicitly raise the wall-clock cap to at most 14400 seconds
+per child on a heavily contended machine; its default remains 2700. The O1/CGO1
+candidate reached a 7200-second deadline after the last separate linker observation
+showed only 756.2 CPU seconds at 7080.9 wall seconds. This justifies a distinct,
+longer wall allowance, not a claim that the linker completed or a repeat without
+resource admission. The memory and thread limits still apply. An external queue
+may additionally inherit `RLIMIT_CPU` and require available RAM/disk before launch;
+record that policy separately because this helper does not enforce it.
 
 The link explicitly disables the SDK's implicit `wasm-opt`, keeps target features,
 and then runs the explicitly hash-pinned Binaryen at `-Oz`. The output contains

@@ -1,10 +1,13 @@
 import importlib.util
+import contextlib
+import io
 import json
 from pathlib import Path
 import signal
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("tool_host_build", Path(__file__).with_name("build.py"))
 builder = importlib.util.module_from_spec(spec)
@@ -12,6 +15,30 @@ spec.loader.exec_module(builder)
 
 
 class PrivateBuildTests(unittest.TestCase):
+    def test_cli_wall_cap_is_explicit_and_default_is_unchanged(self):
+        required = ["build.py", "--source", "/source", "--build", "/build",
+                    "--output", "/output", "--wasm-opt", "/wasm-opt",
+                    "--wasm-opt-sha256", "digest"]
+        for timeout in [None, 1, 7200, 14400]:
+            argv = required + ([] if timeout is None else ["--timeout-seconds", str(timeout)])
+            with self.subTest(timeout=timeout), patch.object(sys, "argv", argv), patch.object(builder, "build") as build:
+                builder.main()
+                self.assertEqual(build.call_args.args[0].timeout_seconds, 2700 if timeout is None else timeout)
+
+    def test_cli_rejects_out_of_range_resource_limits_before_building(self):
+        required = ["build.py", "--source", "/source", "--build", "/build",
+                    "--output", "/output", "--wasm-opt", "/wasm-opt",
+                    "--wasm-opt-sha256", "digest"]
+        for option, value in [("--timeout-seconds", 0), ("--timeout-seconds", -1),
+                              ("--timeout-seconds", 14401), ("--threads", 0),
+                              ("--threads", 5), ("--address-space-gib", 0),
+                              ("--address-space-gib", 17)]:
+            with self.subTest(option=option, value=value), patch.object(sys, "argv", required + [option, str(value)]), patch.object(builder, "build") as build:
+                with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+                    builder.main()
+                self.assertEqual(caught.exception.code, 2)
+                build.assert_not_called()
+
     def test_ninja_shell_suffix_is_never_executed(self):
         self.assertEqual(builder.compiler_command(
             ': && /sdk/bin/clang++ "file with spaces.a" -o bin/llvm && cd /cache && touch existing'

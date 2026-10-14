@@ -335,8 +335,8 @@ def main():
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--skip-optimize", action="store_true", help="retain raw links for the first CLI gate")
     args = parser.parse_args()
-    if not 1 <= args.threads <= 4 or not 1 <= args.address_space_gib <= 16 or not 1 <= args.timeout_seconds <= 7200:
-        parser.error("limits outside allowed bounds (threads 1..4, GiB 1..16, timeout 1..7200)")
+    if not 1 <= args.threads <= 4 or not 1 <= args.address_space_gib <= 16 or not 1 <= args.timeout_seconds <= 14400:
+        parser.error("limits outside allowed bounds (threads 1..4, GiB 1..16, timeout 1..14400)")
     build(args)
 
 
