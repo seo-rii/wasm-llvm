@@ -268,6 +268,79 @@
     "status": "passed",
     "receipt": "cli-evidence.json",
     "receiptIdentity": {
+      "bytes": 8930,
+      "sha256": "f7895ec00fd05cb224b42e085873beb75fd5899cf238acf8f3833aeb2f9bded5"
+    },
+    "commands": 8,
+    "linkerDispatches": 2,
+    "compilerCc1Dispatches": 2,
+    "executedArtifactResult": 42,
+    "scope": "producer Node WASI freestanding CLI smoke; not container/browser/sysroot qualification",
+    "childResponseFileOnly": "unsupported"
+  },
+  "requalification": {
+    "sourceReceipt": {
+      "bytes": 61783,
+      "sha256": "1d8d08f11fb0337887d0deaefdac1f7d8860672672e0eac40bfcd4326cfcc214"
+    },
+    "completedReceipt": {
+      "bytes": 68741,
+      "sha256": "7db6ac0eff2256c79e0a5435908810d15daa18d2220c57ab64fea2116b7ba9fd"
+    },
+    "verifier": {
+      "bytes": 4427,
+      "sha256": "9528e84e96b2b96fc1a6fc3f94af13f8767effc8d98eb82744eb660d54bbf649"
+    },
+    "helper": {
+      "bytes": 8994,
+      "sha256": "4753a00a30efc28fc4f1b567fe7686ee99edb8fdaa4a0e73a569f50d0691734e"
+    },
+    "executableBytesUnchanged": true,
+    "outputs": {
+      "clang.raw.wasm": {
+        "bytes": 51965041,
+        "sha256": "e0b548b70e13ad9620c1f47a1ef3f552b74cea586866ef1d8dcc0558c87f50e3"
+      },
+      "clang.wasm": {
+        "bytes": 51965041,
+        "sha256": "e0b548b70e13ad9620c1f47a1ef3f552b74cea586866ef1d8dcc0558c87f50e3"
+      },
+      "clang.module.json": {
+        "bytes": 3866,
+        "sha256": "1d0c2c3ee914380ec92b1d1df675c59220e6102090e0686645ef7b19b2460938"
+      },
+      "clang.wasm.gz": {
+        "bytes": 16270174,
+        "sha256": "eeee4f23e80b03cdd7b98c6722801f6e21143e67d83301a667acc7b70aba31ba"
+      },
+      "lld.raw.wasm": {
+        "bytes": 24938493,
+        "sha256": "3da2fc3d37702d3d56bce834672912334e36d245efaf97fbdda7e4b5e810134a"
+      },
+      "lld.wasm": {
+        "bytes": 24938493,
+        "sha256": "3da2fc3d37702d3d56bce834672912334e36d245efaf97fbdda7e4b5e810134a"
+      },
+      "lld.module.json": {
+        "bytes": 3601,
+        "sha256": "664b9c01aac9fec36f4463c6964b6bde7fb7a900f9feeb5d4d67b04cfe8a2245"
+      },
+      "lld.wasm.gz": {
+        "bytes": 8178107,
+        "sha256": "dd9279345172fae1aef049ffcaf7531f945d85df08d97ea2ffce90581e9eee2d"
+      }
+    },
+    "childDispatch": {
+      "clang": "pinned linker and explicitly registered exact multicall cc1/cc1as",
+      "lld": "deny",
+      "maximumDepth": 2
+    }
+  },
+  "previousProducerCliSmoke": {
+    "script": "smoke-cli.mjs",
+    "status": "passed",
+    "receipt": "cli-evidence.json",
+    "receiptIdentity": {
       "bytes": 5025,
       "sha256": "99bef206dba7f50dd07f6e7885b0e8570b11aae381360148a98a8d2f4678d2f3"
     },
@@ -276,7 +349,7 @@
     "executedArtifactResult": 42,
     "scope": "producer Node WASI freestanding CLI smoke; not container/browser/sysroot qualification"
   },
-  "requalification": {
+  "previousRequalification": {
     "sourceReceipt": {
       "bytes": 61783,
       "sha256": "1d8d08f11fb0337887d0deaefdac1f7d8860672672e0eac40bfcd4326cfcc214"

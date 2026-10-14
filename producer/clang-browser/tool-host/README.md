@@ -263,8 +263,9 @@ gates still have to run. Link failures, optimized candidates, changed bytes,
 changed recipes and malformed histories are rejected before new output is created.
 
 The 2026-10-14 local O1/CGO1, one-thread candidate completed both links and was
-requalified with unchanged executable hashes. `cli-evidence.json` records seven
-actual Clang commands, one actual driver-to-LLD dispatch and generated Wasm export
+requalified with unchanged executable hashes. `cli-evidence.json` records eight
+actual Clang commands, two cc1 compiler and two actual driver-to-LLD dispatches,
+including a two-source compile/link workflow, and generated Wasm export
 result `42`. Exact artifact, receipt and script identities are in `evidence.json`.
 This qualifies the recorded Node WASI freestanding workflow; consumer filesystem,
 browser, full sysroot, clean-build reproducibility and release performance have
