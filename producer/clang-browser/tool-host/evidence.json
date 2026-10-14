@@ -424,8 +424,38 @@
     "guestWorkersRemaining": 0,
     "cppProfile": "C++20 with explicit -fno-exceptions",
     "limitations": [
-      "Complete producer header regression corpus pending.",
+      "The separate selected-header compile corpus passes on consumer PR #188; exhaustive combinations and every included family runtime are not qualified.",
       "No clean source-to-object build, live compiler/shell, release or performance qualification."
     ]
+  },
+  "consumerHeaders": {
+    "repository": "seo-rii/wasm-idle",
+    "pullRequest": "https://github.com/seo-rii/wasm-idle/pull/188",
+    "receiptArchiveCommit": "54ea3ad0e7564ed7940d41a24c6ac5ca76821257",
+    "testedApplicationCommit": "b8edc146c4ba26905c9a0639726f24407825b3a3",
+    "nodeReceipt": "https://github.com/seo-rii/wasm-idle/blob/54ea3ad0e7564ed7940d41a24c6ac5ca76821257/packages/container/test/fixtures/clang-headers/node-evidence.json",
+    "nodeReceiptSha256": "c69fa7bc702ba653e98e9919307de54cbbf120817181799cf7241d19f4a1329e",
+    "chromiumReceipt": "https://github.com/seo-rii/wasm-idle/blob/54ea3ad0e7564ed7940d41a24c6ac5ca76821257/packages/container/test/fixtures/clang-headers/chromium-evidence.json",
+    "chromiumReceiptSha256": "c2c5de32cc85f53eb5dc051f599714e178ca8f0111593a0ae4083a159e3c4d6f",
+    "corpusSha256": "f8c5a9360642a7fd676ba10edbc8ac5a07fea9c4f9d75698b6aad32d7769bee2",
+    "passed": true,
+    "scope": "14 concrete compile-only cases: unchanged 13 established producer cases plus one resource-header fixture, exact object/dependency/header byte checks; not exhaustive combinations or all-family runtime support",
+    "headersReadAndVerifiedPerBackend": 1050,
+    "completeSysrootPreserved": true,
+    "cppFlags": [
+      "-fno-exceptions"
+    ],
+    "node": {
+      "guestWorkersStarted": 14,
+      "guestWorkersRemaining": 0
+    },
+    "chromium": {
+      "version": "153.0.8010.12",
+      "guestWorkersStarted": 16,
+      "guestWorkersRemaining": 0,
+      "reloadCommand": "clang --version",
+      "reloadAdditionalAssetBodies": 0,
+      "faults": []
+    }
   }
 }

@@ -279,5 +279,13 @@ and digest without replacing producer evidence. The cold page executes nine
 compiler commands and three artifacts, including C binary stdio and C++20 with
 explicit `-fno-exceptions`. A reloaded `--version` command reuses the verified
 asset cache with no further body requests. All 13 guest Workers are reclaimed.
-The complete header regression corpus, exception-enabled C++, clean rebuild,
-actual shell/live compiler, release and performance remain separate gates.
+The separate [selected-header corpus](https://github.com/seo-rii/wasm-idle/pull/188)
+also passes all 14 concrete compile cases in Node Workers and Chromium: 13
+unchanged established producer cases plus one Clang resource-header fixture.
+Both receipts verify real Wasm objects, compiler dependencies and the same
+1,050 original header-byte identities without pruning the full sysroot. All
+14 Node and 16 Chromium Workers are reclaimed. `evidence.json` links the
+immutable original receipts and their tested source; it does not replace
+producer build/CLI evidence. Exception-enabled C++, exhaustive combinations,
+every included family's linked runtime behavior, clean rebuild, actual
+shell/live compiler, release and performance remain separate gates.
