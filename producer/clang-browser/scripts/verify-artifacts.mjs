@@ -136,6 +136,8 @@ export async function loadVerifiedClangArtifacts(directory = artifactDir, { requ
 			files.get(CLANGD_HEADER_ASSET),
 			metadata.clangd.headers
 		);
+	if (metadata.buildProvenance?.status === 'verified' && metadata.memfs === undefined)
+		throw new Error('Verified Clang package requires MemFS build provenance');
 	const sidecars = metadata.memfs === undefined ? new Map() :
 		await loadMemfsReleaseFiles(directory, metadata.memfs, files.get('memfs.zip'));
 	if (metadata.buildProvenance?.status === 'verified') {
@@ -148,7 +150,8 @@ export async function loadVerifiedClangArtifacts(directory = artifactDir, { requ
 		const receiptBytes = await fs.readFile(receiptPath);
 		if (sha256(receiptBytes) !== provenance.sha256) throw new Error('Clang build receipt hash mismatch');
 		const receipt = await verifyClangBuildReceipt(JSON.parse(receiptBytes), {
-			clang: rawFiles.get('clang'), lld: rawFiles.get('lld'), sysroot: rawFiles.get('sysroot.tar'),
+			clang: rawFiles.get('clang'), lld: rawFiles.get('lld'), memfs: rawFiles.get('memfs'),
+			memfsReceipt: sidecars.get('memfs-build-receipt.json'), sysroot: rawFiles.get('sysroot.tar'),
 			clangdJs: files.get('clangd/clangd.js'), clangdWasm,
 			clangdHeaders: metadata.clangd?.headers ? await gunzipAsync(files.get(CLANGD_HEADER_ASSET), { maxOutputLength: metadata.clangd.headers.uncompressedBytes }) : undefined
 		});

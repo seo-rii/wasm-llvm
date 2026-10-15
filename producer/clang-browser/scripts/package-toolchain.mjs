@@ -231,9 +231,6 @@ async function main() {
 		const headerGzip = headerBytes ? await gzipAsync(headerBytes, { level: 9 }) : undefined;
 
 		readTarEntries(sysrootTarBytes);
-		if (buildReceipt) await verifyClangBuildReceipt(buildReceipt, {
-			clang: clangBytes, lld: lldBytes, sysroot: sysrootTarBytes, clangdJs: clangdJsBytes, clangdWasm: clangdWasmBytes, clangdHeaders: headerBytes
-		}, { producerRoot });
 		await assertWasm('clang', clangBytes);
 		await assertWasm('lld', lldBytes);
 		await assertWasm('memfs', memfsBytes);
@@ -241,6 +238,12 @@ async function main() {
 		const memfs = args.has('memfs-receipt')
 			? await loadMemfsBuildMetadata(path.resolve(required(args, 'memfs-receipt')), memfsBytes)
 			: null;
+		if (buildReceipt && !memfs) throw new Error('Verified Clang packaging requires --memfs-receipt and its license notices');
+		if (buildReceipt) await verifyClangBuildReceipt(buildReceipt, {
+			clang: clangBytes, lld: lldBytes, memfs: memfsBytes,
+			memfsReceipt: memfs?.files.get('memfs-build-receipt.json'), sysroot: sysrootTarBytes,
+			clangdJs: clangdJsBytes, clangdWasm: clangdWasmBytes, clangdHeaders: headerBytes
+		}, { producerRoot });
 
 		await replaceArtifactDirectory(targetDir, async (targetDir) => {
 			await fs.mkdir(path.join(targetDir, 'clangd'), { recursive: true });

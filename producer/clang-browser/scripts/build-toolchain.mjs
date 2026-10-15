@@ -10,14 +10,15 @@ import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
 import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
-import { addWasiSignalStub, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
+import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
 const repoRoot = path.resolve(producerRoot, '..', '..');
-const producerManifest = JSON.parse(
-	await fs.readFile(path.join(producerRoot, 'manifest.json'), 'utf8')
-);
+const producerManifestPath = path.join(producerRoot, 'manifest.json');
+const producerManifestBytes = await fs.readFile(producerManifestPath);
+const producerManifestIdentity = { bytes: producerManifestBytes.length, sha256: createHash('sha256').update(producerManifestBytes).digest('hex') };
+const producerManifest = JSON.parse(producerManifestBytes);
 const llvmBuildType = process.env.LLVM_BUILD_TYPE || 'MinSizeRel';
 // Libraries that dominate parsing, semantic analysis and code generation time when the WASI
 // compiler builds typical single-file programs. Relative to the LLVM checkout.
@@ -379,6 +380,9 @@ if (!config.emsdkCommit) {
 	throw new Error('EMSDK_COMMIT is required when EMSDK_VERSION overrides the producer manifest');
 }
 
+// Every qualified build starts without prior object files, generated tools or linker outputs.
+await claimFreshBuildDirectory(buildDir);
+process.env.PYTHONDONTWRITEBYTECODE = '1';
 await fs.mkdir(config.workDir, { recursive: true });
 await fs.mkdir(tempDir, { recursive: true });
 await fs.mkdir(downloadDir, { recursive: true });
@@ -448,7 +452,11 @@ if (!wasiSdkPath) {
 }
 if (!wasiSdkPath) throw new Error('Could not find WASI_SDK_PATH');
 const llvmWasiToolchainFile = await writeLlvmWasiToolchainFile(wasiSdkPath);
+const wasiSdkIdentity = await directoryIdentity(wasiSdkPath);
 await recordBuildTool('wasiClang', path.join(wasiSdkPath, 'bin', 'clang'));
+await recordBuildTool('wasiClangxx', path.join(wasiSdkPath, 'bin', 'clang++'));
+await recordBuildTool('wasiAr', path.join(wasiSdkPath, 'bin', 'llvm-ar'));
+await recordBuildTool('wasiRanlib', path.join(wasiSdkPath, 'bin', 'llvm-ranlib'));
 await recordBuildTool('wasiLld', path.join(wasiSdkPath, 'bin', 'wasm-ld'));
 
 const sysrootArchive = `wasi-sysroot-${config.wasiSdkVersion}.0+m.tar.gz`;
@@ -477,7 +485,7 @@ const { wasmPath: memfsWasm, receiptPath: memfsReceipt } = await buildMemfs({
 	wasiSdkPath,
 	wasiSdkVersion: config.wasiSdkVersion,
 	workDir: path.join(buildDir, 'memfs'),
-	outDir: path.join(config.outDir, 'memfs-build')
+	outDir: path.join(buildDir, 'memfs-artifacts')
 });
 
 const nativeBuild = path.join(buildDir, 'native');
@@ -698,6 +706,13 @@ await run(path.join(emsdkDir, 'emsdk'), ['activate', config.emsdkVersion]);
 await recordBuildTool('emsdkClang', path.join(emsdkDir, 'upstream', 'bin', 'clang'));
 await recordBuildTool('wasmOpt', path.join(emsdkDir, 'upstream', 'bin', 'wasm-opt'));
 const emccIdentity = await fileIdentity(path.join(emsdkDir, 'upstream', 'emscripten', 'emcc.py'));
+// Emscripten lazily writes compiled system libraries. Keep those generated outputs
+// in this fresh build while hashing every installed helper, source and library input.
+const emsdkUpstream = path.join(emsdkDir, 'upstream');
+const emsdkUpstreamIdentity = await directoryIdentity(emsdkUpstream);
+const emCache = path.join(buildDir, 'emscripten-cache');
+await fs.cp(path.join(emsdkUpstream, 'emscripten', 'cache'), emCache, { recursive: true });
+process.env.EM_CACHE = emCache;
 
 // The level the WASI SDK driver derives from the configuration's link-time -O flag.
 const wasmOptLevel = {
@@ -929,14 +944,16 @@ await run('tar', ['--sort=name', '--mtime=@0', '--owner=0', '--group=0', '--nume
 await verifyPatchedCheckout(llvmVerification);
 await verifyPatchedCheckout({ source: emsdkDir, commit: config.emsdkCommit, allowIgnored: true });
 for (const [name, executable] of Object.entries(buildToolPaths)) {
-	if ((await fileIdentity(executable)).sha256 !== buildTools[name].sha256) throw new Error(`Build tool changed during compilation: ${name}`);
+	await assertFileUnchanged(executable, buildTools[name], `Build tool ${name}`);
 }
 for (const entry of recipe) {
-	if ((await fileIdentity(path.join(producerRoot, entry.path))).sha256 !== entry.sha256) throw new Error(`Build recipe changed during compilation: ${entry.path}`);
+	await assertFileUnchanged(path.join(producerRoot, entry.path), entry, `Build recipe ${entry.path}`);
 }
-if ((await fileIdentity(path.join(emsdkDir, 'upstream', 'emscripten', 'emcc.py'))).sha256 !== emccIdentity.sha256) throw new Error('Emscripten driver changed during compilation');
+await assertFileUnchanged(producerManifestPath, producerManifestIdentity, 'Producer manifest');
+await assertDirectoryUnchanged(wasiSdkPath, wasiSdkIdentity, 'Installed WASI SDK');
+await assertDirectoryUnchanged(emsdkUpstream, emsdkUpstreamIdentity, 'Installed Emscripten SDK');
 const inputs = {};
-for (const [name, file] of Object.entries({ clang: clangWasm, lld: lldWasm, sysroot: sysrootTar,
+for (const [name, file] of Object.entries({ clang: clangWasm, lld: lldWasm, memfs: memfsWasm, memfsReceipt, sysroot: sysrootTar,
 	clangdJs: path.join(clangdBuild, 'bin', 'clangd.js'), clangdWasm: path.join(clangdBuild, 'bin', 'clangd.wasm')
 })) inputs[name] = await fileIdentity(file);
 if (config.clangdSeparateHeaders === 'ON') {
@@ -948,7 +965,9 @@ if (config.clangdSeparateHeaders === 'ON') {
 const { workDir: _workDir, outDir: _outDir, ...buildOptions } = config;
 const buildReceipt = {
 	schemaVersion: 1, producerId: producerManifest.producerId, kind: 'clang-build-receipt',
-	manifestSha256: (await fileIdentity(path.join(producerRoot, 'manifest.json'))).sha256,
+	manifestSha256: producerManifestIdentity.sha256,
+	buildMode: 'fresh-output-directory',
+	installedToolchains: { wasiSdk: wasiSdkIdentity, emsdkUpstream: emsdkUpstreamIdentity },
 	sources: {
 		llvm: { repository: producerManifest.sources.llvm.repository, ...llvmSourceIdentity,
 			patches: [yowaspPatch.identity, ...llvmPatchSpecs] },

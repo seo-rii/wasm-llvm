@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { loadVerifiedClangArtifacts, verifyClangArtifacts, verifyClangProducerManifest } from '../producer/clang-browser/scripts/verify-artifacts.mjs';
 import { createClangdHeaderAsset } from '../producer/clang-browser/scripts/prepare-clangd-headers.mjs';
 import { replaceArtifactDirectory } from '../producer/clang-browser/scripts/artifact-directory.mjs';
-import { clangdJs, clangdWasm, sha256, wasm, writeClangFixture, writeBuildReceipt, makeBuildReceipt, zipFiles } from './fixtures/clang/artifacts.mjs';
+import { clangdJs, clangdWasm, sha256, wasm, writeClangFixture, writeBuildReceipt, zipFiles } from './fixtures/clang/artifacts.mjs';
 
 const exec = promisify(execFile);
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -115,6 +115,7 @@ test('manifest compatibility accepts only the recorded optional-header-only hist
 	await assert.rejects(verifyClangProducerManifest(f.metadata, bytes), /manifest mismatch/);
 	delete f.metadata.clangd.headers;
 	f.metadata.producer.manifestSha256 = 'cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78';
+	delete f.metadata.memfs;
 	await assert.rejects(verifyClangProducerManifest(f.metadata, bytes), /manifest mismatch/);
 	f.metadata.producer.manifestSha256 = '0'.repeat(64);
 	await f.writeMetadata();
@@ -142,13 +143,13 @@ test('packaging validates named ZIP inputs, preserves failure output, and remove
 	}
 	const output = path.join(f.root, 'packaged');
 	const receiptPath = path.join(raw, 'clang-build-receipt.json');
-	await fs.writeFile(receiptPath, JSON.stringify(await makeBuildReceipt({ clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm })));
-	const packageArgs = ['--build-receipt', receiptPath, '--clang-wasm', path.join(raw, 'clang.wasm'), '--lld-wasm', path.join(raw, 'lld.wasm'),
+	await writeBuildReceipt(raw, {}, { clang: wasm, lld: wasm, memfs: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm });
+	const packageArgs = ['--build-receipt', receiptPath, '--memfs-receipt', path.join(raw, 'memfs-build-receipt.json'), '--clang-wasm', path.join(raw, 'clang.wasm'), '--lld-wasm', path.join(raw, 'lld.wasm'),
 		'--memfs-wasm', path.join(raw, 'memfs.wasm'), '--sysroot', path.join(raw, 'sysroot.tar'),
 		'--clangd-js', path.join(raw, 'clangd.js'), '--clangd-wasm', path.join(raw, 'clangd.wasm'),
 		'--target-dir', output, '--resource-dir', '/lib/clang/22'];
 	const pack = async (extra = []) => {
-		const receipt = await makeBuildReceipt({ clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm });
+		const receipt = await writeBuildReceipt(raw, {}, { clang: wasm, lld: wasm, memfs: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm });
 		if (extra.includes('--clangd-include')) {
 			const headers = await createClangdHeaderAsset({ includeDir: path.join(raw, 'include'), resourceIncludeDir: path.join(raw, 'resource'),
 				resourceDir: '/lib/clang/22', targetTriple: 'wasm32-wasi', version: `${extra[extra.indexOf('--version') + 1]}:${receipt.buildOptions.llvmCommit}` });
@@ -217,7 +218,7 @@ test('staging failure and failed publication roll back byte-for-byte, and concur
 test('packager requires build evidence and explicit unverified packaging cannot be promoted', async (t) => {
 	const f = await fixture(t);
 	const output = path.join(f.root, 'unverified-package');
-	const args = ['--clang-wasm', path.join(f.artifacts, 'clang.zip'), '--lld-wasm', path.join(f.artifacts, 'lld.zip'),
+	const args = ['--memfs-receipt', path.join(f.artifacts, 'memfs-build-receipt.json'), '--clang-wasm', path.join(f.artifacts, 'clang.zip'), '--lld-wasm', path.join(f.artifacts, 'lld.zip'),
 		'--memfs-zip', path.join(f.artifacts, 'memfs.zip'), '--sysroot', path.join(f.artifacts, 'sysroot.tar.zip'),
 		'--clangd-js', path.join(f.artifacts, 'clangd/clangd.js'), '--clangd-wasm', path.join(f.artifacts, 'clangd/clangd.wasm.gz'),
 		'--llvm-version', f.metadata.llvmVersion, '--target-dir', output];
@@ -242,4 +243,27 @@ test('packager requires build evidence and explicit unverified packaging cannot 
 test('committed legacy artifacts are inspectable but cannot enter the release path without a fresh build receipt', async () => {
 	await assert.rejects(loadVerifiedClangArtifacts(path.join(repo, 'artifacts/clang-browser'), { requireBuildReceipt: true }),
 		/requires a verified source-to-output build receipt/);
+});
+
+test('release requires independent MemFS proof and binds it and the module to the complete Clang build', async (t) => {
+	const f = await fixture(t);
+	await f.release();
+	const before = await snapshot(f.output);
+	const originalMemfs = structuredClone(f.metadata.memfs);
+	delete f.metadata.memfs;
+	await f.writeMetadata();
+	await assert.rejects(f.release(), /requires MemFS build provenance/);
+	assert.deepEqual(await snapshot(f.output), before);
+	f.metadata.memfs = originalMemfs;
+	const replacement = Buffer.concat([wasm, Buffer.from([0, 1, 0])]);
+	const zip = await zipFiles([['memfs', replacement]]);
+	await fs.writeFile(path.join(f.artifacts, 'memfs.zip'), zip);
+	f.metadata.assets['memfs.zip'] = sha256(zip);
+	f.metadata.memfs.buildReceipt.outputs['memfs.wasm'] = { bytes: replacement.length, sha256: sha256(replacement) };
+	const receipt = Buffer.from(`${JSON.stringify(f.metadata.memfs.buildReceipt)}\n`);
+	await fs.writeFile(path.join(f.artifacts, 'memfs-build-receipt.json'), receipt);
+	f.metadata.memfs.files['memfs-build-receipt.json'] = { bytes: receipt.length, sha256: sha256(receipt) };
+	await f.writeMetadata();
+	await assert.rejects(f.release(), /memfs input identity mismatch/);
+	assert.deepEqual(await snapshot(f.output), before);
 });

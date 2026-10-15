@@ -64,20 +64,43 @@ export async function makeBuildReceipt(inputs) {
 					manifest.sources.lldWasmOnlyPatch, manifest.sources.clangdEmscriptenStdinPatch] },
 			emsdk: { ...source, repository: 'https://github.com/emscripten-core/emsdk', commit: manifest.toolchains.emsdk.commit }
 		},
+		buildMode: 'fresh-output-directory',
+		installedToolchains: { wasiSdk: { bytes: 1, entries: 1, sha256: sha256('SDK fixture') },
+			emsdkUpstream: { bytes: 1, entries: 1, sha256: sha256('Emscripten fixture') } },
 		buildOptions: { clangdSeparateHeaders: inputs.clangdHeaders ? 'ON' : 'OFF', llvmCommit: manifest.sources.llvm.commit, emsdkCommit: manifest.toolchains.emsdk.commit,
 			llvmVersion: manifest.sources.llvm.version, emsdkVersion: manifest.toolchains.emsdk.version,
 			wasiSdkVersion: manifest.toolchains.wasiSdk.version, yowaspWasiPatchRepo: manifest.sources.wasiHostPatch.repository,
 			yowaspWasiPatchCommit: manifest.sources.wasiHostPatch.commit },
 		inputs: Object.fromEntries(Object.entries(inputs).map(([name, bytes]) => [name, identity(bytes)])),
 		recipe: { files, sha256: sha256(JSON.stringify(files)) },
-		tools: Object.fromEntries(['cmake', 'ninja', 'tar', 'wasiClang', 'wasiLld', 'nativeC', 'nativeCxx',
+		tools: Object.fromEntries(['cmake', 'ninja', 'tar', 'wasiClang', 'wasiClangxx', 'wasiAr', 'wasiRanlib', 'wasiLld', 'nativeC', 'nativeCxx',
 			'llvmTablegen', 'clangTablegen', 'emsdkClang', 'wasmOpt', 'emccDriver'].map((name) => [name, identity(Buffer.from(name))])),
 		reproducibility: { independentlyRebuilt: false }
 	};
 }
 
 export async function writeBuildReceipt(directory, metadata, inputs) {
-	const receipt = await makeBuildReceipt(inputs);
+	const memfs = inputs.memfs || wasm;
+	const manifest = JSON.parse(await fs.readFile(new URL('../../../producer/clang-browser/manifest.json', import.meta.url)));
+	const source = manifest.sources.memfs;
+	const memfsReceipt = {
+		format: 'wasm-llvm-memfs-build-v1', maxNodes: source.maxNodes,
+		abi: { maxNodes: source.maxNodes, usableNodes: source.maxNodes - 4 },
+		source: { repository: source.repository, commit: source.commit, files: source.files },
+		patch: { originalSha256: source.files['memfs.c'].sha256, patchedSha256: 'a'.repeat(64), builderSha256: 'b'.repeat(64) },
+		license: source.license, outputs: { 'memfs.wasm': { bytes: memfs.length, sha256: sha256(memfs) } }
+	};
+	const memfsReceiptBytes = Buffer.from(`${JSON.stringify(memfsReceipt)}\n`);
+	const memfsFiles = new Map([['memfs-build-receipt.json', memfsReceiptBytes]]);
+	for (const [sourceName, targetName] of [['LICENSE.llvm.txt', 'LICENSE.memfs-llvm.txt'], ['LICENSE.stb_sprintf.txt', 'LICENSE.memfs-stb_sprintf.txt']]) {
+		const bytes = await fs.readFile(new URL(`../memfs/${sourceName}`, import.meta.url));
+		memfsFiles.set(targetName, bytes);
+		await fs.writeFile(path.join(directory, sourceName), bytes);
+	}
+	for (const [name, bytes] of memfsFiles) await fs.writeFile(path.join(directory, name), bytes);
+	metadata.memfs = { buildReceipt: memfsReceipt,
+		files: Object.fromEntries([...memfsFiles].map(([name, bytes]) => [name, { bytes: bytes.length, sha256: sha256(bytes) }])) };
+	const receipt = await makeBuildReceipt({ ...inputs, memfs, memfsReceipt: memfsReceiptBytes });
 	const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
 	await fs.writeFile(path.join(directory, 'clang-build-receipt.json'), bytes);
 	metadata.buildProvenance = { status: 'verified', receipt: 'clang-build-receipt.json', bytes: bytes.length, sha256: sha256(bytes) };

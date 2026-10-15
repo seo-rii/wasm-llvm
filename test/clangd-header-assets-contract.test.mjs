@@ -33,6 +33,7 @@ function headerAsset(headers = tree()) {
 	const raw = Buffer.isBuffer(headers) ? headers : Buffer.from(JSON.stringify(headers));
 	const compressed = gzipSync(raw);
 	return {
+		raw,
 		compressed,
 		metadata: {
 			asset: CLANGD_HEADER_ASSET,
@@ -56,6 +57,16 @@ async function artifactFixture(t, separateHeaders) {
 		const asset = headerAsset();
 		files.set(CLANGD_HEADER_ASSET, asset.compressed);
 		metadata.clangd.headers = asset.metadata;
+		// Extend the synthetic build evidence as well as the storage metadata.
+		// Keep every existing raw input (including MemFS) bound to the fixture.
+		const receiptPath = path.join(root, metadata.buildProvenance.receipt);
+		const receipt = JSON.parse(await readFile(receiptPath));
+		receipt.buildOptions.clangdSeparateHeaders = 'ON';
+		receipt.inputs.clangdHeaders = { bytes: asset.raw.length, sha256: sha256(asset.raw) };
+		const receiptBytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
+		await writeFile(receiptPath, receiptBytes);
+		metadata.buildProvenance.bytes = receiptBytes.length;
+		metadata.buildProvenance.sha256 = sha256(receiptBytes);
 	}
 	for (const [name, bytes] of files) {
 		await writeFile(path.join(root, name), bytes);
@@ -72,6 +83,18 @@ test('verifies legacy two-asset clangd bundles and separately versioned three-as
 		const fixture = await artifactFixture(t, headers);
 		assert.deepEqual(await verifyClangArtifacts(fixture.root), { assets: headers ? 7 : 6 });
 	}
+});
+
+test('rejects replaced headers even when storage hashes agree but the build receipt is unchanged', async (t) => {
+	const fixture = await artifactFixture(t, true);
+	const headers = tree();
+	headers.files['/usr/include/extra.h'] = '// different build';
+	const asset = headerAsset(headers);
+	await writeFile(path.join(fixture.root, CLANGD_HEADER_ASSET), asset.compressed);
+	fixture.metadata.clangd.headers = asset.metadata;
+	fixture.metadata.assets[CLANGD_HEADER_ASSET] = sha256(asset.compressed);
+	await fixture.writeMetadata();
+	await assert.rejects(verifyClangArtifacts(fixture.root), /clangdHeaders input identity mismatch/);
 });
 
 test('the producer manifest identifies the separately delivered clangd header asset as optional', async () => {

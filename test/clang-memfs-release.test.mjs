@@ -81,13 +81,12 @@ async function fixture(t) {
       path.join(root, name),
     );
   }
-  const buildReceipt = await makeBuildReceipt({ clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024),
+  const buildReceipt = await makeBuildReceipt({ clang: wasm, lld: wasm, memfs: wasm, memfsReceipt: await readFile(receiptPath), sysroot: Buffer.alloc(1024),
     clangdJs: await readFile(path.join(root, "clangd.js")), clangdWasm: await readFile(path.join(root, "clangd.wasm")) });
   const buildReceiptPath = path.join(root, "clang-build-receipt.json");
   await writeFile(buildReceiptPath, JSON.stringify(buildReceipt));
   const packageArgs = [
     path.join(scripts, "package-toolchain.mjs"),
-    "--build-receipt", buildReceiptPath,
     "--clang-wasm",
     path.join(root, "module.wasm"),
     "--lld-wasm",
@@ -109,11 +108,12 @@ async function fixture(t) {
     releaseDir,
     receipt,
     receiptPath,
-    package: (withReceipt = true) =>
+    package: (withReceipt = true, unverified = false) =>
       exec(
         process.execPath,
         [
           ...packageArgs,
+          ...(unverified ? ["--allow-unverified-build", "true"] : ["--build-receipt", buildReceiptPath]),
           ...(withReceipt ? ["--memfs-receipt", receiptPath] : []),
         ],
         { cwd: repo },
@@ -157,18 +157,15 @@ test("preserves the receipt and verified licenses through packaging and the offi
   }
 });
 
-test("retains legacy/custom packaging without an explicit MemFS receipt", async (t) => {
+test("requires MemFS evidence for verified builds and keeps unverified packaging local", async (t) => {
   const f = await fixture(t);
-  await f.package(false);
-  await f.release();
-  const build = JSON.parse(
-    await readFile(path.join(f.releaseDir, "runtime-build.json")),
-  );
-  assert.equal(build.toolchain.memfs, undefined);
-  assert.equal(build.assets.length, 6);
-  await assert.rejects(readFile(path.join(f.releaseDir, sidecars[0])), {
-    code: "ENOENT",
-  });
+  await assert.rejects(f.package(false), /requires --memfs-receipt/);
+  await assert.rejects(readFile(path.join(f.artifactDir, "memfs.zip")), { code: "ENOENT" });
+  await f.package(false, true);
+  const metadata = JSON.parse(await readFile(path.join(f.artifactDir, "toolchain.json")));
+  assert.equal(metadata.memfs, undefined);
+  assert.equal(metadata.buildProvenance.status, "unverified");
+  await assert.rejects(f.release(), /requires a verified source-to-output build receipt/);
 });
 
 test("rejects an explicit missing receipt before writing package assets", async (t) => {

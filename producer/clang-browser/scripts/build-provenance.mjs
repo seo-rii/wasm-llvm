@@ -22,6 +22,63 @@ export async function fileIdentity(file) {
 	return { bytes, sha256: hash.digest('hex') };
 }
 
+export async function assertFileUnchanged(file, expected, label) {
+	const current = await fileIdentity(file);
+	if (current.bytes !== expected.bytes || current.sha256 !== expected.sha256)
+		throw new Error(`${label} changed during compilation`);
+}
+
+export async function claimFreshBuildDirectory(directory) {
+	await fs.mkdir(directory, { recursive: true });
+	if (!(await fs.lstat(directory)).isDirectory() || (await fs.readdir(directory)).length !== 0)
+		throw new Error(`Verified builds require a fresh empty build directory: ${directory}`);
+	// Exclusive creation prevents two producers from sharing the initially empty output.
+	try {
+		await fs.writeFile(path.join(directory, '.fresh-build-claim'), `${randomUUID()}\n`, { flag: 'wx' });
+	} catch (error) {
+		if (error.code === 'EEXIST') throw new Error(`Build directory is already claimed: ${directory}`);
+		throw error;
+	}
+}
+
+export async function directoryIdentity(directory) {
+	const root = await fs.realpath(directory);
+	const hash = createHash('sha256');
+	let bytes = 0;
+	let entries = 0;
+	async function visit(relative) {
+		const absolute = path.join(root, relative);
+		const stat = await fs.lstat(absolute);
+		let item;
+		if (stat.isSymbolicLink()) {
+			const resolved = await fs.realpath(absolute);
+			const targetRelative = path.relative(root, resolved);
+			if (targetRelative === '..' || targetRelative.startsWith(`..${path.sep}`) || path.isAbsolute(targetRelative))
+				throw new Error(`SDK symlink escapes its recorded tree: ${relative}`);
+			item = [relative, 'symlink', await fs.readlink(absolute)];
+		} else if (stat.isFile()) {
+			const identity = await fileIdentity(absolute);
+			bytes += identity.bytes;
+			item = [relative, 'file', stat.mode & 0o777, identity.bytes, identity.sha256];
+		} else if (stat.isDirectory()) {
+			item = [relative, 'directory', stat.mode & 0o777];
+		} else throw new Error(`Unsupported SDK input: ${relative}`);
+		hash.update(`${JSON.stringify(item)}\n`);
+		entries += 1;
+		if (stat.isDirectory()) {
+			for (const name of (await fs.readdir(absolute)).sort()) await visit(relative ? `${relative}/${name}` : name);
+		}
+	}
+	await visit('');
+	return { bytes, entries, sha256: hash.digest('hex') };
+}
+
+export async function assertDirectoryUnchanged(directory, expected, label) {
+	const current = await directoryIdentity(directory);
+	if (current.bytes !== expected.bytes || current.entries !== expected.entries || current.sha256 !== expected.sha256)
+		throw new Error(`${label} changed during compilation`);
+}
+
 export async function downloadPinned(url, target, expectedSha256, { fetchImpl = fetch } = {}) {
 	if (!/^[a-f0-9]{64}$/.test(expectedSha256)) throw new Error('Download requires a SHA-256 pin');
 	try {
@@ -155,7 +212,7 @@ export async function verifyClangBuildReceipt(receipt, inputs, { producerRoot = 
 		if (patches[index + 1]?.path !== patch.path || patches[index + 1]?.sha256 !== patch.sha256) fail('local patch identity mismatch');
 	}
 
-	const inputNames = ['clang', 'lld', 'sysroot', 'clangdJs', 'clangdWasm'];
+	const inputNames = ['clang', 'lld', 'memfs', 'memfsReceipt', 'sysroot', 'clangdJs', 'clangdWasm'];
 	if (receipt.buildOptions?.clangdSeparateHeaders === 'ON') inputNames.push('clangdHeaders');
 	else if (receipt.buildOptions?.clangdSeparateHeaders !== 'OFF' || inputs.clangdHeaders || receipt.inputs?.clangdHeaders)
 		fail('separate header inputs do not match build options');
@@ -172,7 +229,12 @@ export async function verifyClangBuildReceipt(receipt, inputs, { producerRoot = 
 	for (const field of ['llvmVersion', 'wasiSdkVersion', 'emsdkVersion']) {
 		if (typeof receipt.buildOptions?.[field] !== 'string' || !receipt.buildOptions[field]) fail(`missing ${field}`);
 	}
-	for (const name of ['cmake', 'ninja', 'tar', 'wasiClang', 'wasiLld', 'nativeC', 'nativeCxx',
+	if (receipt.buildMode !== 'fresh-output-directory') fail('reused build outputs are not qualified');
+	for (const name of ['wasiSdk', 'emsdkUpstream']) {
+		const tree = receipt.installedToolchains?.[name];
+		if (!identity(tree) || !Number.isSafeInteger(tree.entries) || tree.entries <= 0) fail(`missing ${name} installed tree identity`);
+	}
+	for (const name of ['cmake', 'ninja', 'tar', 'wasiClang', 'wasiClangxx', 'wasiAr', 'wasiRanlib', 'wasiLld', 'nativeC', 'nativeCxx',
 		'llvmTablegen', 'clangTablegen', 'emsdkClang', 'wasmOpt', 'emccDriver']) {
 		if (!identity(receipt.tools?.[name])) fail(`missing ${name} executable identity`);
 	}

@@ -109,7 +109,7 @@ test('clean toolchain checkout rejects tracked and untracked source changes', as
 
 async function receiptFixture() {
 	const { makeBuildReceipt } = await import('./fixtures/clang/artifacts.mjs');
-	const inputs = Object.fromEntries(['clang', 'lld', 'sysroot', 'clangdJs', 'clangdWasm'].map((name) => [name, Buffer.from(name)]));
+	const inputs = Object.fromEntries(['clang', 'lld', 'memfs', 'memfsReceipt', 'sysroot', 'clangdJs', 'clangdWasm'].map((name) => [name, Buffer.from(name)]));
 	return { inputs, receipt: await makeBuildReceipt(inputs) };
 }
 
@@ -130,6 +130,9 @@ test('receipt verification requires current recipe, manifest, source, patches an
 		(value) => { value.sources.llvm.commit = 'main'; },
 		(value) => { value.sources.llvm.patches.pop(); },
 		(value) => { delete value.tools.wasiClang; },
+		(value) => { delete value.tools.wasiAr; },
+		(value) => { delete value.installedToolchains.emsdkUpstream; },
+		(value) => { value.buildMode = 'reused'; },
 		(value) => { value.recipe.files[0].sha256 = '0'.repeat(64); value.recipe.sha256 = sha256(JSON.stringify(value.recipe.files)); },
 		(value) => { value.inputs.clang.bytes = '5'; }
 	]) {
@@ -156,4 +159,63 @@ test('receipt header mode and header bytes must agree with the actual package in
 	receipt.inputs.clangdHeaders = { bytes: headers.length, sha256: sha256(headers) };
 	await assert.rejects(verifyClangBuildReceipt(receipt, inputs), /clangdHeaders input identity mismatch/);
 	await verifyClangBuildReceipt(receipt, { ...inputs, clangdHeaders: headers });
+});
+
+test('verified build directories are claimed exclusively and existing outputs are preserved and rejected', async (t) => {
+	const { claimFreshBuildDirectory } = await import('../producer/clang-browser/scripts/build-provenance.mjs');
+	const root = await temporary(t);
+	const fresh = path.join(root, 'fresh');
+	const claims = await Promise.allSettled([claimFreshBuildDirectory(fresh), claimFreshBuildDirectory(fresh)]);
+	assert.equal(claims.filter((result) => result.status === 'fulfilled').length, 1);
+	for (const name of ['native', 'wasi-raw', 'clangd']) {
+		const directory = path.join(root, name);
+		await fs.mkdir(path.join(directory, name), { recursive: true });
+		const output = path.join(directory, name, 'cached-output');
+		await fs.writeFile(output, 'old binary from another compiler');
+		await assert.rejects(claimFreshBuildDirectory(directory), /fresh empty build directory/);
+		assert.equal(await fs.readFile(output, 'utf8'), 'old binary from another compiler');
+	}
+	const alias = path.join(root, 'alias');
+	const empty = path.join(root, 'empty');
+	await fs.mkdir(empty);
+	await fs.symlink(empty, alias);
+	await assert.rejects(claimFreshBuildDirectory(alias), /fresh empty build directory/);
+});
+
+test('installed SDK identities detect ignored helper and sysroot changes while compiler bytes stay the same', async (t) => {
+	const { directoryIdentity, fileIdentity, assertDirectoryUnchanged } = await import('../producer/clang-browser/scripts/build-provenance.mjs');
+	const { source, commit } = await checkout(t);
+	await fs.writeFile(path.join(source, '.git/info/exclude'), 'upstream/\n');
+	const upstream = path.join(source, 'upstream');
+	await fs.mkdir(path.join(upstream, 'emscripten/tools'), { recursive: true });
+	const compiler = path.join(upstream, 'clang');
+	const helper = path.join(upstream, 'emscripten/tools/link.py');
+	await fs.writeFile(compiler, 'same compiler');
+	await fs.writeFile(helper, 'original helper');
+	const initial = await directoryIdentity(upstream);
+	const compilerBefore = await fileIdentity(compiler);
+	await fs.writeFile(helper, 'modified helper');
+	await verifyPatchedCheckout({ source, commit, allowIgnored: true });
+	assert.deepEqual(await fileIdentity(compiler), compilerBefore);
+	await assert.rejects(assertDirectoryUnchanged(upstream, initial, 'Installed Emscripten SDK'), /changed during compilation/);
+	const sdk = path.join(await temporary(t), 'sdk');
+	await fs.mkdir(path.join(sdk, 'share/wasi-sysroot/include'), { recursive: true });
+	const header = path.join(sdk, 'share/wasi-sysroot/include/stdio.h');
+	await fs.writeFile(header, 'original header');
+	const sdkBefore = await directoryIdentity(sdk);
+	await fs.writeFile(header, 'modified header');
+	await assert.rejects(assertDirectoryUnchanged(sdk, sdkBefore, 'Installed WASI SDK'), /changed during compilation/);
+	await fs.symlink(helper, path.join(sdk, 'external-helper'));
+	await assert.rejects(directoryIdentity(sdk), /symlink escapes/);
+});
+
+test('manifest edits during a build are rejected against its initial exact bytes', async (t) => {
+	const { fileIdentity, assertFileUnchanged } = await import('../producer/clang-browser/scripts/build-provenance.mjs');
+	const root = await temporary(t);
+	const manifest = path.join(root, 'manifest.json');
+	await fs.writeFile(manifest, JSON.stringify({ sources: { llvm: { commit: 'a'.repeat(40) } } }));
+	const initial = await fileIdentity(manifest);
+	await assertFileUnchanged(manifest, initial, 'Producer manifest');
+	await fs.writeFile(manifest, JSON.stringify({ sources: { llvm: { commit: 'b'.repeat(40) } } }));
+	await assert.rejects(assertFileUnchanged(manifest, initial, 'Producer manifest'), /Producer manifest changed during compilation/);
 });

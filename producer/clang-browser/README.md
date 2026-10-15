@@ -86,7 +86,7 @@ the linker explicitly exports the original API and strips custom debug/name sect
 checks the exact import/export set, function arities and 8188 usable file nodes, including a trap
 at exhaustion. It writes `memfs.wasm`, deterministic `memfs.wasm.gz`, license notices, and
 `memfs-build-receipt.json` with source, patched-source and builder hashes, SDK identity, commands,
-capacity and output hashes. The full build places these under the output directory's `memfs-build/`.
+capacity and output hashes. The full build keeps these under its fresh build directory's `memfs-artifacts/`.
 
 The full build passes that receipt to the packager using `--memfs-receipt`. When packaging outputs
 manually, pass the same option alongside `--memfs-wasm`; the receipt's directory must also contain
@@ -94,9 +94,9 @@ manually, pass the same option alongside `--memfs-wasm`; the receipt's directory
 and verifies both license notices. `toolchain.json` records the original receipt and sidecar hashes
 under `memfs`, separately from the six runtime assets. `prepare:clang-release` verifies and copies
 `memfs-build-receipt.json`, `LICENSE.memfs-llvm.txt` and `LICENSE.memfs-stb_sprintf.txt` into the release
-root, preserving their metadata in `runtime-build.json`. Legacy/custom inputs without an explicit
-MemFS receipt retain the existing packaging contract; an explicit missing or mismatched receipt or
-license is an error.
+root, preserving their metadata in `runtime-build.json`. Verified packaging and release require this
+independent MemFS proof; the complete Clang receipt additionally binds both the raw module and exact
+MemFS receipt bytes. Only explicit local unverified packaging may omit the MemFS receipt.
 
 The pinned 2019 LLVM release license is NCSA; `memfs.c` itself has no per-file license header.
 The build preserves that license and selects the MIT option embedded in `stb_sprintf.h`, recording
@@ -238,13 +238,24 @@ The full producer writes `clang-build-receipt.json` before packaging. It verifie
 working tree against the pinned commit plus expected patches using an isolated Git index, and
 rejects unexpected tracked, untracked or ignored source files. The YoWASP marker records its
 repository, commit and patch digest; marker existence alone never proves the patch is applied.
-The emsdk checkout must have no tracked edits; ignored SDK installation outputs are allowed.
+The emsdk checkout must have no tracked edits. The full installed WASI SDK and emsdk `upstream/`
+trees (including ignored helpers, sysroots and preinstalled libraries) are hashed before and after
+compilation. Emscripten's mutable working cache is copied into the fresh build directory, so generated
+cache outputs do not overwrite or disappear from the recorded installed input tree.
 
-The receipt binds compiler, linker, sysroot TAR, clangd and optional header bytes to source-tree
+The producer claims an empty `build/` directory exclusively before patching sources or writing build
+outputs. Existing native, WASI, clangd or other cached outputs are rejected and preserved; use a new
+work directory or explicitly move the previous build directory after reviewing it. This avoids
+attributing old object files to the current compiler merely because their timestamps prevent a rebuild.
+
+The receipt binds compiler, linker, MemFS plus its receipt, sysroot TAR, clangd and optional header bytes to source-tree
 and diff identities, recipe files, build options, and the native compiler/linker/tablegen/optimizer
-executable digests and versions. Source, recipe and executable identities are checked again after
-the build. It records build-input evidence, not a signature, independent reproducibility proof or
-runtime acceptance result. A clean independent rebuild and real acceptance remain separate gates.
+executable digests and versions, including the actual WASI C++ compiler, archiver and ranlib. The
+manifest hash is captured from its exact startup bytes. Manifest, source, recipe, installed SDK tree
+and executable identities are checked again before receipt publication. This records the stated build
+input scope; it does not make the entire host environment hermetic, authenticate a receipt, or prove
+independent reproducibility or runtime acceptance. A clean independent rebuild and real acceptance
+remain separate gates.
 
 Downloads use unique temporary files, verify SHA-256 before rename, and replace a corrupt cache
 only after the replacement is verified. SDK extraction uses a digest-specific directory and marker
@@ -259,6 +270,7 @@ pnpm package:clang -- \
   --lld-wasm /path/to/wasm-ld.wasm \
   --sysroot /path/to/wasi-sysroot \
   --memfs-wasm /path/to/memfs.wasm \
+  --memfs-receipt /path/to/memfs-build-receipt.json \
   --clangd-js /path/to/clangd.js \
   --clangd-wasm /path/to/clangd.wasm \
   --clangd-include /path/to/complete/clangd-include \
