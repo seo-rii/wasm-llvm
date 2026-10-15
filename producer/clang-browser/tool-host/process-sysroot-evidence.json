@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "profileId": "wasm-llvm/clang-browser/container-process-sysroot-v1",
+  "complete": true,
+  "qualification": "producer-only process-profile sysroot; browser and container qualification are separate",
+  "producerCommit": "e8f0f732bc01e27b5f86055aad5445c6a9de6099",
+  "producerTreeClean": true,
+  "contract": {
+    "module": "wasm_idle_process_v1",
+    "name": "initial_cwd",
+    "capacity": 4096,
+    "constructorPriority": 101,
+    "failureExit": 125
+  },
+  "inputs": {
+    "sysroot": {
+      "path": "/home/seorii/dev/hancomac/tmp/container-20261013/clang-tool-host-full-sysroot/sysroot.tar",
+      "bytes": 35328000,
+      "sha256": "91899da37610664152a2a1cbae3632f35ff8803e32f006225c1c4fb50f341402"
+    },
+    "initialCwd": {
+      "path": "/home/seorii/dev/hancomac/tmp/container-20261013/producer-sysroot/producer/clang-browser/tool-host/initial-cwd.c",
+      "bytes": 744,
+      "sha256": "d316c54817d3c636c3a1958d8ea2fbc58faf6fc092f08be324bb416e2d66a060"
+    },
+    "cwdFixture": {
+      "path": "/home/seorii/dev/hancomac/tmp/container-20261013/producer-sysroot/producer/clang-browser/tool-host/cwd-fixture.c",
+      "bytes": 464,
+      "sha256": "e593363cdb6d1040d987345ad850ae5a9a9157744499bd81bcd81901a5386ab0"
+    },
+    "cwdFixtureHost": {
+      "path": "/home/seorii/dev/hancomac/tmp/container-20261013/producer-sysroot/producer/clang-browser/tool-host/cwd-fixture.mjs",
+      "bytes": 2134,
+      "sha256": "129b4477b3c83c908f84ccc221808264c071fdcaf6df4bd20bd16549a57fd769"
+    },
+    "clang": {
+      "path": "/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/clang-22",
+      "bytes": 118656,
+      "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+    },
+    "wasmLd": {
+      "path": "/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/wasm-ld",
+      "resolved": "/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/lld",
+      "bytes": 4165088,
+      "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+    },
+    "node": {
+      "path": "/home/seorii/.cache/wasm-idle-aux-deps-20261007/node-v24.21.0-linux-x64/bin/node",
+      "bytes": 126595440,
+      "sha256": "7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c"
+    },
+    "clangLibraries": {
+      "libLLVM.so.22.1-wasi-sdk": {
+        "bytes": 61334888,
+        "sha256": "3baf077cc63ee5c6a30dfd185330fdd84a8a8c6f2748ec7aa4a767f723288cce"
+      },
+      "libclang-cpp.so.22.1-wasi-sdk": {
+        "bytes": 63655472,
+        "sha256": "8dc7afd0adeb98ede0e87333c8ab4508511503672d3ecf5fe467b93e26c9d2f8"
+      }
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/clang-22",
+        "--no-default-config",
+        "--target=wasm32-wasi",
+        "--sysroot=/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/sysroot",
+        "-resource-dir=/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/sysroot/lib/clang/22",
+        "-O2",
+        "-c",
+        "/home/seorii/dev/hancomac/tmp/container-20261013/producer-sysroot/producer/clang-browser/tool-host/initial-cwd.c",
+        "-o",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/initial-cwd.o"
+      ],
+      "exitCode": 0,
+      "durationSeconds": 0.049,
+      "stderr": "clang-22: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "argv": [
+        "/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/wasm-ld",
+        "-r",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/crt1.original.o",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/initial-cwd.o",
+        "-o",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/crt1.o"
+      ],
+      "exitCode": 0,
+      "durationSeconds": 0.017,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/clang-22",
+        "--no-default-config",
+        "--target=wasm32-wasi",
+        "--sysroot=/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/sysroot",
+        "-resource-dir=/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/sysroot/lib/clang/22",
+        "-fuse-ld=/data/toolchains/wasi-sdk-33.0-x86_64-linux/bin/wasm-ld",
+        "-O2",
+        "/home/seorii/dev/hancomac/tmp/container-20261013/producer-sysroot/producer/clang-browser/tool-host/cwd-fixture.c",
+        "-o",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/cwd-fixture.wasm"
+      ],
+      "exitCode": 0,
+      "durationSeconds": 0.269,
+      "stderr": "clang-22: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "argv": [
+        "/home/seorii/.cache/wasm-idle-aux-deps-20261007/node-v24.21.0-linux-x64/bin/node",
+        "/home/seorii/dev/hancomac/tmp/container-20261013/producer-sysroot/producer/clang-browser/tool-host/cwd-fixture.mjs",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/cwd-fixture.wasm",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/fixture-root",
+        "/data/seorii-container-20261014/process-sysroot-20261015T081716Z/work/cwd-fixture.json"
+      ],
+      "exitCode": 0,
+      "durationSeconds": 0.08,
+      "stderr": "(node:879087) ExperimentalWarning: WASI is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+    }
+  ],
+  "crt1": {
+    "path": "lib/wasm32-wasi/crt1.o",
+    "original": {
+      "bytes": 1990,
+      "sha256": "27bf9846868f00d770b724fd0a27e22f799c6d550c335d5e8e770391d6ae3231"
+    },
+    "derived": {
+      "bytes": 2453,
+      "sha256": "a791a2e67e75d6911b435ce63e210a3cc6422a6c62f604aef8f5616ba58a5527"
+    },
+    "originalProfile": {
+      "functionImports": [
+        [
+          "env",
+          "__wasi_init_tp"
+        ],
+        [
+          "env",
+          "__wasm_call_ctors"
+        ],
+        [
+          "env",
+          "__main_void"
+        ],
+        [
+          "env",
+          "__wasm_call_dtors"
+        ],
+        [
+          "env",
+          "__wasi_proc_exit"
+        ]
+      ],
+      "initPriorities": []
+    },
+    "derivedProfile": {
+      "functionImports": [
+        [
+          "env",
+          "__wasi_init_tp"
+        ],
+        [
+          "env",
+          "__wasm_call_ctors"
+        ],
+        [
+          "env",
+          "__main_void"
+        ],
+        [
+          "env",
+          "__wasm_call_dtors"
+        ],
+        [
+          "env",
+          "__wasi_proc_exit"
+        ],
+        [
+          "wasm_idle_process_v1",
+          "initial_cwd"
+        ],
+        [
+          "env",
+          "_Exit"
+        ],
+        [
+          "env",
+          "chdir"
+        ]
+      ],
+      "initPriorities": [
+        101
+      ]
+    }
+  },
+  "initialCwdObject": {
+    "bytes": 783,
+    "sha256": "0f5d8009845448fc0d2213e91503b31145d2bedc0c986d847c4881f63ca2e322"
+  },
+  "entryCounts": {
+    "directory": 117,
+    "file": 2168
+  },
+  "changedEntries": [
+    "lib/wasm32-wasi/crt1.o"
+  ],
+  "linkedFixture": {
+    "bytes": 179784,
+    "sha256": "573480078637ff0b729aa9dad6c426ef1df66710f3ec671f9e9726f8e5df8a28",
+    "functionImports": [
+      [
+        "wasm_idle_process_v1",
+        "initial_cwd"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "args_get"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "args_sizes_get"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_close"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_fdstat_get"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_fdstat_set_flags"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_prestat_get"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_prestat_dir_name"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_read"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_seek"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "fd_write"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "path_filestat_get"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "path_open"
+      ],
+      [
+        "wasi_snapshot_preview1",
+        "proc_exit"
+      ]
+    ]
+  },
+  "cwdFixture": {
+    "passed": true,
+    "node": "v24.21.0",
+    "cwd": "/workspace/\ud55c\uae00 space",
+    "pwdIgnored": true,
+    "relativeFileRead": "cwd-ok\n",
+    "results": [
+      {
+        "mode": "valid",
+        "code": 0
+      },
+      {
+        "mode": "reject",
+        "code": 125
+      },
+      {
+        "mode": "empty",
+        "code": 125
+      },
+      {
+        "mode": "relative",
+        "code": 125
+      },
+      {
+        "mode": "embedded-nul",
+        "code": 125
+      },
+      {
+        "mode": "too-large",
+        "code": 125
+      },
+      {
+        "mode": "missing",
+        "code": 125
+      },
+      {
+        "mode": "valid",
+        "code": 0
+      }
+    ]
+  },
+  "outputs": {
+    "sysroot.tar": {
+      "bytes": 35328000,
+      "sha256": "b5c51389ce2f2b404f8b354788aa4a19a65d7e4af746cf52d24e7276d2eabf7f"
+    }
+  }
+}
