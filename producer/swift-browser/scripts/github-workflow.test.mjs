@@ -25,7 +25,7 @@ test('Swift runtime export workflow is manual and preserves verification gates',
 	assert.match(workflow, /^on:\n\s+workflow_dispatch:/mu);
 	assert.doesNotMatch(workflow, /pull_request:/u);
 	assert.doesNotMatch(workflow, /push:/u);
-	assert.match(workflow, /timeout-minutes:\s+720/u);
+	assert.match(workflow, /timeout-minutes:\s+360/u);
 	assert.match(workflow, /swift_clone_depth:/u);
 	assert.match(workflow, /Optional shallow clone depth for the initial swift\.git clone/u);
 	assert.match(workflow, /swift_clone_filter:/u);
@@ -42,28 +42,18 @@ test('Swift runtime export workflow is manual and preserves verification gates',
 	assert.match(workflow, /Minimum free GiB required for large Swift checkout and build steps/u);
 	assert.match(workflow, /default:\s+"80"/u);
 	assert.match(workflow, /Prepare workflow paths/u);
-	assert.match(workflow, /BOOTSTRAP_RECEIPT="\$\{\{\s*inputs\.source_bootstrap_receipt\s*\}\}"/u);
-	assert.match(workflow, /BOOTSTRAP_RECEIPT="\$RUNNER_TEMP\/wasm-swift-source-bootstrap-receipt\.json"/u);
-	assert.match(workflow, /WASM_SWIFT_BUILD_DIR/u);
-	assert.match(workflow, /WASM_SWIFT_BUILD_PLAN/u);
-	assert.match(workflow, /WASM_SWIFT_WORKFLOW_PREFLIGHT_RECEIPT=\$RUNNER_TEMP\/wasm-swift-workflow-preflight\.json/u);
-	assert.match(workflow, /WASM_SWIFT_BROWSER_BUILD_LOG=\$RUNNER_TEMP\/wasm-swift-browser-build\.log/u);
-	assert.match(workflow, /WASM_SWIFT_RUNNER_WORKER=\$RUNNER_TEMP\/wasm-swift-build\/runner-worker\.js/u);
-	assert.match(workflow, /WASM_SWIFT_SWIFTC_WASM=\$RUNNER_TEMP\/wasm-swift-build\/swiftc\.wasm/u);
-	assert.match(workflow, /WASM_SWIFT_SWIFTPM_WASM=\$RUNNER_TEMP\/wasm-swift-build\/swiftpm\.wasm/u);
-	assert.match(workflow, /WASM_SWIFT_SDK_ARCHIVE=\$RUNNER_TEMP\/wasm-swift-build\/sdk\.tar\.gz/u);
-	assert.match(
-		workflow,
-		/WASM_SWIFT_BOOTSTRAP_RECEIPT=\$BOOTSTRAP_RECEIPT/u
-	);
+	assert.ok(workflow.includes('run: node producer/swift-browser/scripts/workflow-paths.mjs'));
+	for (const input of ['checkout_root', 'source_bootstrap_receipt', 'browser_build_command', 'min_free_gib', 'swift_clone_depth', 'swift_clone_filter']) {
+		assert.ok(workflow.includes(`SWIFT_INPUT_${input.toUpperCase()}: \${{ inputs.${input} }}`));
+	}
 	assert.match(workflow, /pnpm --dir producer\/swift-browser run workflow:preflight/u);
 	assert.match(workflow, /--bootstrap-source/u);
 	assert.match(workflow, /--source-root "\$WASM_SWIFT_SOURCE_ROOT"/u);
 	assert.match(workflow, /--source-bootstrap-receipt "\$WASM_SWIFT_BOOTSTRAP_RECEIPT"/u);
 	assert.match(workflow, /--build-dir "\$WASM_SWIFT_BUILD_DIR"/u);
-	assert.match(workflow, /--min-free-gib "\$\{\{\s*inputs\.min_free_gib\s*\}\}"/u);
-	assert.match(workflow, /--swift-clone-depth "\$\{\{\s*inputs\.swift_clone_depth\s*\}\}"/u);
-	assert.match(workflow, /--swift-clone-filter "\$\{\{\s*inputs\.swift_clone_filter\s*\}\}"/u);
+	assert.match(workflow, /--min-free-gib "\$SWIFT_INPUT_MIN_FREE_GIB"/u);
+	assert.match(workflow, /--swift-clone-depth "\$SWIFT_INPUT_SWIFT_CLONE_DEPTH"/u);
+	assert.match(workflow, /--swift-clone-filter "\$SWIFT_INPUT_SWIFT_CLONE_FILTER"/u);
 	assert.match(workflow, /--browser-build-command/u);
 	assert.match(workflow, /--receipt "\$WASM_SWIFT_WORKFLOW_PREFLIGHT_RECEIPT"/u);
 	assert.match(workflow, /ARGS\+=\(--browser-build-command/u);
@@ -72,12 +62,12 @@ test('Swift runtime export workflow is manual and preserves verification gates',
 	assert.match(workflow, /--run-wasm/u);
 	assert.match(workflow, /--receipt "\$RUNNER_TEMP\/wasm-swift-toolchain-probe\.json"/u);
 	assert.match(workflow, /pnpm --dir producer\/swift-browser run bootstrap:source/u);
-	assert.match(workflow, /--source-root "\$WASM_SWIFT_SOURCE_ROOT"[\s\S]*--min-free-gib "\$\{\{\s*inputs\.min_free_gib\s*\}\}"[\s\S]*--execute/u);
+	assert.match(workflow, /--source-root "\$WASM_SWIFT_SOURCE_ROOT"[\s\S]*--min-free-gib "\$SWIFT_INPUT_MIN_FREE_GIB"[\s\S]*--execute/u);
 	assert.match(workflow, /--receipt "\$WASM_SWIFT_BOOTSTRAP_RECEIPT"/u);
 	assert.match(workflow, /inputs\.swift_clone_depth/u);
-	assert.match(workflow, /ARGS\+=\(--swift-clone-depth "\$\{\{\s*inputs\.swift_clone_depth\s*\}\}"\)/u);
+	assert.match(workflow, /ARGS\+=\(--swift-clone-depth "\$SWIFT_INPUT_SWIFT_CLONE_DEPTH"\)/u);
 	assert.match(workflow, /inputs\.swift_clone_filter/u);
-	assert.match(workflow, /ARGS\+=\(--swift-clone-filter "\$\{\{\s*inputs\.swift_clone_filter\s*\}\}"\)/u);
+	assert.match(workflow, /ARGS\+=\(--swift-clone-filter "\$SWIFT_INPUT_SWIFT_CLONE_FILTER"\)/u);
 	assert.match(workflow, /pnpm --dir producer\/swift-browser run build:browser-compiler/u);
 	assert.match(workflow, /--browser-build-log "\$WASM_SWIFT_BROWSER_BUILD_LOG"/u);
 	assert.match(workflow, /ARGS\+=\(--execute-browser-build-command\)/u);
@@ -108,7 +98,7 @@ test('Swift runtime export workflow is manual and preserves verification gates',
 	assert.match(workflow, /--allow-official-sdk-placeholder/u);
 	assert.match(workflow, /--write-plan/u);
 	assert.match(workflow, /pnpm --dir producer\/swift-browser run run:upstream-baseline/u);
-	assert.match(workflow, /--plan "\$WASM_SWIFT_BUILD_PLAN"[\s\S]*--min-free-gib "\$\{\{\s*inputs\.min_free_gib\s*\}\}"[\s\S]*--preset buildbot_linux_crosscompile_wasm/u);
+	assert.match(workflow, /--plan "\$WASM_SWIFT_BUILD_PLAN"[\s\S]*--min-free-gib "\$SWIFT_INPUT_MIN_FREE_GIB"[\s\S]*--preset buildbot_linux_crosscompile_wasm/u);
 	assert.match(workflow, /pnpm --dir producer\/swift-browser run verify:build-outputs/u);
 	assert.match(workflow, /--require-browser-compiler-contracts/u);
 	assert.match(workflow, /--require-browser-build-command/u);
