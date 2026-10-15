@@ -3,10 +3,12 @@
 //   node package.mjs [--work <workDir>] [--out <artifactDir>]   package, smoke, and write the receipt
 //   node package.mjs --verify [artifactDir]                      verify a packaged release
 import { createHash } from 'node:crypto';
-import { readdir, readFile, mkdir, rm, rename, writeFile, stat } from 'node:fs/promises';
+import { readdir, readFile, writeFile, lstat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync, gzipSync, constants } from 'node:zlib';
+
+import { publishDirectory } from './publish-directory.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PRODUCER = path.dirname(HERE);
@@ -16,6 +18,11 @@ const DEFAULT_WORK = path.join(REPO, 'out/lean-browser-work');
 /** Raw library bytes per chunk; each gzip chunk must stay below static-host file limits. */
 export const CHUNK_BYTES = 48 * 1024 * 1024;
 export const MAX_FILE_BYTES = 24 * 1000 * 1000;
+export const MAX_WASM_BYTES = 512 * 1024 * 1024;
+const SHA256 = /^[0-9a-f]{64}$/;
+const REQUIRED_ASSETS = ['LICENSE', 'LICENSE.libuv', 'lean.mjs', 'lean.wasm.gz', 'lean-init.index.json'];
+const validSize = (value, max) => Number.isSafeInteger(value) && value > 0 && value <= max;
+const validDigest = (asset, max) => validSize(asset?.bytes, max) && typeof asset.sha256 === 'string' && SHA256.test(asset.sha256);
 const LIBRARY_EXTENSIONS = ['.olean', '.olean.server', '.olean.private', '.ir', '.ir.sig'];
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const gzip = (bytes) => gzipSync(bytes, { level: constants.Z_BEST_COMPRESSION });
@@ -41,7 +48,7 @@ export async function producerInputs() {
 		patches.push({ path: patch.path, sha256: patch.sha256 });
 	}
 	const recipe = {};
-	for (const name of ['build.sh', 'build-oleans.mjs', 'run-lean.mjs', 'gen-symtab.py', 'package.mjs', 'smoke.mjs'])
+	for (const name of ['build.sh', 'build-oleans.mjs', 'run-lean.mjs', 'gen-symtab.py', 'package.mjs', 'publish-directory.mjs', 'smoke.mjs'])
 		recipe[`scripts/${name}`] = sha256(await readFile(path.join(HERE, name)));
 	return { manifest, manifestSha256: sha256(manifestBytes), patches, recipe };
 }
@@ -114,34 +121,31 @@ export function assetReceipts(files, wasm) {
 
 export async function packageRelease({ workDir = DEFAULT_WORK, outDir = DEFAULT_OUT } = {}) {
 	const { acceptance } = await import('./smoke.mjs');
-	const inputs = await producerInputs();
-	const { files, wasm } = await assemble(workDir);
-	const staging = `${outDir}.staging`;
-	await rm(staging, { recursive: true, force: true });
-	await mkdir(staging, { recursive: true });
-	for (const [name, bytes] of files) await writeFile(path.join(staging, name), bytes);
-	const node = await acceptance(staging);
-	const receipt = {
-		schemaVersion: 1,
-		producerId: inputs.manifest.producerId,
-		manifestSha256: inputs.manifestSha256,
-		sources: inputs.manifest.sources,
-		bootstrap: inputs.manifest.bootstrap,
-		patches: inputs.patches,
-		recipe: inputs.recipe,
-		runtime: inputs.manifest.runtime,
-		library: JSON.parse(files.get('lean-init.index.json')).modules,
-		assets: assetReceipts(files, wasm),
-		acceptance: { node }
-	};
-	await writeFile(
-		path.join(staging, 'producer-receipt.json'),
-		`${JSON.stringify(receipt, null, '\t')}\n`
-	);
-	await rm(outDir, { recursive: true, force: true });
-	await mkdir(path.dirname(outDir), { recursive: true });
-	await rename(staging, outDir);
-	return verify(outDir);
+	return publishDirectory(outDir, async (staging) => {
+		const inputs = await producerInputs();
+		const { files, wasm } = await assemble(workDir);
+		for (const [name, bytes] of files) await writeFile(path.join(staging, name), bytes);
+		const node = await acceptance(staging);
+		const receipt = {
+			schemaVersion: 1,
+			producerId: inputs.manifest.producerId,
+			manifestSha256: inputs.manifestSha256,
+			sources: inputs.manifest.sources,
+			bootstrap: inputs.manifest.bootstrap,
+			patches: inputs.patches,
+			recipe: inputs.recipe,
+			runtime: inputs.manifest.runtime,
+			library: JSON.parse(files.get('lean-init.index.json')).modules,
+			assets: assetReceipts(files, wasm),
+			acceptance: { node }
+		};
+		await writeFile(
+			path.join(staging, 'producer-receipt.json'),
+			`${JSON.stringify(receipt, null, '\t')}\n`
+		);
+		const result = await verify(staging);
+		return { ...result, directory: path.resolve(outDir) };
+	});
 }
 
 /** Verify a packaged release against its receipt and the current producer inputs. */
@@ -154,41 +158,89 @@ export async function verify(directory = DEFAULT_OUT) {
 		throw new Error('receipt patches differ from the producer patches');
 	if (JSON.stringify(receipt.recipe) !== JSON.stringify(inputs.recipe))
 		throw new Error('receipt recipe hashes differ from the producer scripts');
+	if (receipt.requalification) {
+		const { kind, compilerRebuilt, originalReceipt, originalReceiptSha256 } = receipt.requalification;
+		if (kind !== 'same-byte-repackage' || compilerRebuilt !== false || !originalReceipt ||
+			sha256(`${JSON.stringify(originalReceipt, null, '\t')}\n`) !== originalReceiptSha256)
+			throw new Error('invalid same-byte requalification provenance');
+		for (const field of ['assets', 'sources', 'bootstrap', 'patches', 'manifestSha256', 'runtime'])
+			if (JSON.stringify(originalReceipt[field]) !== JSON.stringify(receipt[field]))
+				throw new Error(`requalification changed original ${field}`);
+		for (const [name, hash] of Object.entries(inputs.recipe))
+			if (!['scripts/package.mjs', 'scripts/publish-directory.mjs'].includes(name) && originalReceipt.recipe?.[name] !== hash)
+				throw new Error(`requalification changed build recipe ${name}`);
+	}
+	if (receipt.schemaVersion !== 1 || !receipt.assets || Array.isArray(receipt.assets))
+		throw new Error('unsupported receipt schema');
+	for (const name of REQUIRED_ASSETS)
+		if (!Object.hasOwn(receipt.assets, name)) throw new Error(`missing required asset: ${name}`);
 	const expected = [...Object.keys(receipt.assets), 'producer-receipt.json'].sort();
 	const actual = (await readdir(directory)).sort();
 	if (JSON.stringify(actual) !== JSON.stringify(expected))
 		throw new Error(`unexpected release entries: ${actual.join(', ')}`);
 	for (const [name, asset] of Object.entries(receipt.assets)) {
+		if (!REQUIRED_ASSETS.includes(name) && !/^lean-init-\d{2,}\.pack\.gz$/.test(name))
+			throw new Error(`invalid release asset path: ${name}`);
+		if (!validDigest(asset, MAX_FILE_BYTES)) throw new Error(`invalid asset receipt: ${name}`);
+		const info = await lstat(path.join(directory, name));
+		if (!info.isFile()) throw new Error(`asset is not a regular file: ${name}`);
+		if (info.size !== asset.bytes) throw new Error(`${name} does not match the receipt`);
 		const bytes = await readFile(path.join(directory, name));
 		if (bytes.length !== asset.bytes || sha256(bytes) !== asset.sha256)
 			throw new Error(`${name} does not match the receipt`);
-		if (bytes.length > MAX_FILE_BYTES) throw new Error(`${name} exceeds ${MAX_FILE_BYTES} bytes`);
-		if (asset.uncompressed) {
-			const raw = gunzipSync(bytes);
+		if (name === 'lean.wasm.gz') {
+			if (!validDigest(asset.uncompressed, MAX_WASM_BYTES)) throw new Error('invalid Wasm uncompressed receipt');
+			const raw = gunzipSync(bytes, { maxOutputLength: asset.uncompressed.bytes });
 			if (raw.length !== asset.uncompressed.bytes || sha256(raw) !== asset.uncompressed.sha256)
 				throw new Error(`${name} decompresses to unexpected bytes`);
-			if (name === 'lean.wasm.gz') await WebAssembly.compile(raw);
-		}
+			await WebAssembly.compile(raw);
+		} else if (asset.uncompressed) throw new Error(`unexpected uncompressed receipt: ${name}`);
 	}
 	const index = JSON.parse(await readFile(path.join(directory, 'lean-init.index.json'), 'utf8'));
+	if (index.schemaVersion !== 1 || index.root !== '/lean/lib/lean' ||
+		!validSize(index.totalBytes, Number.MAX_SAFE_INTEGER) || !validSize(index.modules, Number.MAX_SAFE_INTEGER) ||
+		!SHA256.test(index.sha256) || !Array.isArray(index.chunks) || !index.chunks.length || !Array.isArray(index.files))
+		throw new Error('invalid library index schema');
 	let offset = 0;
-	const digest = createHash('sha256');
+	const chunkPaths = new Set();
+	// Validate every range and path before decompressing any library chunk.
 	for (const chunk of index.chunks) {
-		const raw = gunzipSync(await readFile(path.join(directory, chunk.path)));
-		if (chunk.offset !== offset || raw.length !== chunk.uncompressedBytes || sha256(raw) !== chunk.uncompressedSha256)
-			throw new Error(`${chunk.path} does not match the library index`);
-		digest.update(raw);
-		offset += raw.length;
+		if (typeof chunk.path !== 'string' || !/^lean-init-\d{2,}\.pack\.gz$/.test(chunk.path) ||
+			chunkPaths.has(chunk.path) || !Object.hasOwn(receipt.assets, chunk.path) ||
+			!validDigest(chunk, MAX_FILE_BYTES) || !validSize(chunk.uncompressedBytes, CHUNK_BYTES) ||
+			!SHA256.test(chunk.uncompressedSha256) || !Number.isSafeInteger(chunk.offset) || chunk.offset !== offset ||
+			!Number.isSafeInteger(offset + chunk.uncompressedBytes) || offset + chunk.uncompressedBytes > index.totalBytes ||
+			chunk.bytes !== receipt.assets[chunk.path].bytes || chunk.sha256 !== receipt.assets[chunk.path].sha256)
+			throw new Error(`invalid library chunk: ${chunk.path}`);
+		chunkPaths.add(chunk.path);
+		offset += chunk.uncompressedBytes;
 	}
-	if (offset !== index.totalBytes || digest.digest('hex') !== index.sha256)
-		throw new Error('library pack digest mismatch');
+	if (offset !== index.totalBytes || Object.keys(receipt.assets).some((name) => !REQUIRED_ASSETS.includes(name) && !chunkPaths.has(name)))
+		throw new Error('library chunks do not cover the declared asset set and pack');
 	let next = 0;
+	const paths = new Set();
 	for (const file of index.files) {
-		if (file.offset !== next || !/^Init(\/[A-Za-z0-9_]+)*\.(olean(\.server|\.private)?|ir(\.sig)?)$/.test(file.path))
+		if (typeof file.path !== 'string' || !/^Init(\/[A-Za-z0-9_]+)*\.(olean(\.server|\.private)?|ir(\.sig)?)$/.test(file.path) ||
+			paths.has(file.path) || !Number.isSafeInteger(file.offset) || file.offset !== next ||
+			!validSize(file.bytes, index.totalBytes) || !Number.isSafeInteger(next + file.bytes) || next + file.bytes > index.totalBytes)
 			throw new Error(`invalid library entry ${file.path}`);
+		paths.add(file.path);
 		next += file.bytes;
 	}
 	if (next !== index.totalBytes) throw new Error('library entries do not cover the pack');
+	const modules = [...paths].filter((name) => name.endsWith('.olean'));
+	if (modules.length !== index.modules || !paths.has('Init.olean')) throw new Error('library module count or root is invalid');
+	for (const name of modules)
+		for (const ext of LIBRARY_EXTENSIONS)
+			if (!paths.has(name.replace(/\.olean$/, ext))) throw new Error(`library module ${name} is missing its ${ext} part`);
+	const digest = createHash('sha256');
+	for (const chunk of index.chunks) {
+		const raw = gunzipSync(await readFile(path.join(directory, chunk.path)), { maxOutputLength: chunk.uncompressedBytes });
+		if (raw.length !== chunk.uncompressedBytes || sha256(raw) !== chunk.uncompressedSha256)
+			throw new Error(`${chunk.path} does not match the library index`);
+		digest.update(raw);
+	}
+	if (digest.digest('hex') !== index.sha256) throw new Error('library pack digest mismatch');
 	if (receipt.acceptance?.node?.program?.stdout !== 'Hello, 안녕!\nsum = 40\n')
 		throw new Error('receipt lacks a passing stdin/stdout acceptance run');
 	const sizes = Object.fromEntries(Object.entries(receipt.assets).map(([k, v]) => [k, v.bytes]));
