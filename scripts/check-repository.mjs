@@ -92,6 +92,37 @@ function checkSyntax(filePath) {
 	});
 }
 
+async function parseNodeSource(filePath, source) {
+	let sourceType = filePath.endsWith('.cjs') ? 'script' : 'module';
+	if (filePath.endsWith('.js')) {
+		sourceType = null;
+		let directory = path.dirname(filePath);
+		while (true) {
+			const packageText = await readFile(path.join(directory, 'package.json'), 'utf8').catch((error) => {
+				if (error.code === 'ENOENT') return null;
+				throw error;
+			});
+			if (packageText !== null) {
+				const type = JSON.parse(packageText).type;
+				if (type === 'module') sourceType = 'module';
+				else if (type === 'commonjs') sourceType = 'script';
+				break;
+			}
+			const parent = path.dirname(directory);
+			if (parent === directory) break;
+			directory = parent;
+		}
+	}
+	const parseAs = (type) => parse(source, {
+		ecmaVersion: 'latest', sourceType: type, allowReturnOutsideFunction: type === 'script'
+	});
+	if (sourceType) return parseAs(sourceType);
+	// Node can detect ESM syntax in untyped .js packages; --check below remains
+	// the authority for the installed Node version's module classification.
+	try { return parseAs('script'); }
+	catch { return parseAs('module'); }
+}
+
 export async function inspectProducerRepository(repoRoot = REPO_ROOT) {
 	const errors = [];
 	const rootPackage = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'));
@@ -173,10 +204,7 @@ export async function inspectProducerRepository(repoRoot = REPO_ROOT) {
 			const source = await readFile(filePath, 'utf8');
 			const issues = [];
 			try {
-				const ast = parse(source, {
-					ecmaVersion: 'latest', sourceType: filePath.endsWith('.cjs') ? 'script' : 'module',
-					allowReturnOutsideFunction: filePath.endsWith('.cjs')
-				});
+				const ast = await parseNodeSource(filePath, source);
 				const pending = [ast];
 				while (pending.length) {
 					const node = pending.pop();

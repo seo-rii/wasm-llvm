@@ -67,3 +67,14 @@ test('ignores comments and string contents but checks ordinary JS syntax', async
 	assert.match(report.errors[0], /invalid JavaScript: broken.cjs/);
 	assert.equal(report.modulesChecked, 2);
 });
+
+test('honors nested CommonJS package scope for ordinary .js files', async (t) => {
+	const root = await fixture(t);
+	const directory = path.join(root, 'commonjs');
+	await mkdir(directory);
+	await writeFile(path.join(directory, 'package.json'), JSON.stringify({ type: 'commonjs' }));
+	await writeFile(path.join(directory, 'module.js'), 'if (true) return; module.exports = {};');
+	assert.deepEqual((await inspectProducerRepository(root)).errors, []);
+	await writeFile(path.join(directory, 'module.js'), "if (true) return; require('@seo-rii/wasm-llvm');");
+	assert.deepEqual((await inspectProducerRepository(root)).errors, ['self runtime import remains: commonjs/module.js']);
+});
