@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { gzipSync } from 'node:zlib';
+import { zipFiles, wasm as compilerWasm } from './fixtures/clang/artifacts.mjs';
 import { refreshClangdAssets } from '../producer/clang-browser/scripts/refresh-clangd-assets.mjs';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -32,11 +33,11 @@ async function fixture(t, gzInput = false) {
 	await mkdir(path.join(source, 'clangd'), { recursive: true });
 	await mkdir(prepared);
 	const wasm = stdinWasm();
+	const archives = [];
+	for (const name of ['clang', 'lld', 'memfs', 'sysroot.tar'])
+		archives.push([`${name}.zip`, await zipFiles([[name, name === 'sysroot.tar' ? Buffer.alloc(1024) : compilerWasm]])]);
 	const sourceFiles = new Map([
-		...['clang.zip', 'lld.zip', 'memfs.zip', 'sysroot.tar.zip'].map((name) => [
-			name,
-			Buffer.from(`preserved ${name}`)
-		]),
+		...archives,
 		[
 			'clangd/clangd.js',
 			Buffer.from('function stdin(){return Module.stdinReady()} // original')
@@ -46,10 +47,12 @@ async function fixture(t, gzInput = false) {
 		['LICENSE.memfs-llvm.txt', Buffer.from('preserved license bytes')],
 		['component-refresh-recipe.mjs', Buffer.from('// preserved historical recipe')]
 	]);
+	const manifestBytes = await readFile(new URL('../producer/clang-browser/manifest.json', import.meta.url));
+	const manifest = JSON.parse(manifestBytes);
 	const metadata = {
-		producer: { id: 'wasm-llvm/clang-browser', manifestSha256: 'old', extra: 'preserved' },
+		producer: { id: manifest.producerId, manifest: 'producer/clang-browser/manifest.json', manifestSha256: sha256(manifestBytes), extra: 'preserved' },
 		version: 'llvmorg-22.1.8',
-		llvmCommit: 'fixture-commit',
+		llvmCommit: manifest.sources.llvm.commit,
 		resourceDir: '/lib/clang/22',
 		clangd: {
 			stdinBridge: 'emscripten-asyncify',
@@ -77,7 +80,7 @@ async function fixture(t, gzInput = false) {
 	);
 	const tree = {
 		schemaVersion: 1,
-		version: 'llvmorg-22.1.8:fixture-commit',
+		version: `${metadata.version}:${metadata.llvmCommit}`,
 		targetTriple: 'wasm32-wasi',
 		resourceDir: '/lib/clang/22',
 		files: {
@@ -209,7 +212,7 @@ test('rejects corrupt source assets and incomplete or mismatched prepared header
 		gzipSync(Buffer.from(JSON.stringify(f.tree)))
 	);
 	await assert.rejects(refreshClangdAssets(f.options), /do not match source toolchain/);
-	f.tree.version = 'llvmorg-22.1.8:fixture-commit';
+	f.tree.version = `${f.metadata.version}:${f.metadata.llvmCommit}`;
 	delete f.tree.files['/usr/include/c++/v1/vector'];
 	await writeFile(
 		path.join(f.prepared, 'clangd.headers.json.gz'),
