@@ -67,7 +67,9 @@ on:
 jobs:
     export-runtime:
         runs-on: ubuntu-latest
-        timeout-minutes: 720
+        timeout-minutes: 360
+        # GitHub-hosted jobs have a six-hour execution limit. Longer builds
+        # require separately verified stages or an explicitly managed runner.
         env:
             SWIFT_INPUT_ALLOW_EXISTING_CHECKOUT: ${{ inputs.allow_existing_checkout }}
             SWIFT_INPUT_BOOTSTRAP_SOURCE: ${{ inputs.bootstrap_source }}
