@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { gzip, gunzip } from 'node:zlib';
 import {
-	ZipReader,
 	ZipWriter,
 	Uint8ArrayReader,
 	Uint8ArrayWriter,
@@ -17,7 +16,12 @@ import {
 } from '@zip.js/zip.js';
 import { assertClangdStdinBridge } from './clangd-artifact-contract.mjs';
 import { loadMemfsBuildMetadata } from './memfs-provenance.mjs';
+import { verifyClangBuildReceipt } from './build-provenance.mjs';
 import { createClangdHeaderAsset } from './prepare-clangd-headers.mjs';
+import { readTarEntries } from '../../../scripts/lib/tar.mjs';
+import { readClangZip, assertWasm, MAX_CLANG_ASSET_BYTES } from './archive-contract.mjs';
+import { replaceArtifactDirectory } from './artifact-directory.mjs';
+import { verifyClangArtifacts } from './verify-artifacts.mjs';
 
 configure({ useWebWorkers: false });
 
@@ -46,6 +50,8 @@ const usage = `Usage:
     --emsdk-version 6.0.0
 
 Options:
+  --build-receipt FILE             Source-to-output receipt emitted by build-toolchain.mjs.
+  --allow-unverified-build true    Explicit local packaging without provenance; release is refused.
   --target-dir DIR                 Output directory. Defaults to artifacts/clang-browser.
   --memfs-wasm FILE                Raw MemFS WebAssembly module.
   --memfs-receipt FILE             Verified build receipt; requires sibling MemFS license notices.
@@ -106,35 +112,9 @@ function sha256(bytes) {
 	return crypto.createHash('sha256').update(bytes).digest('hex');
 }
 
-async function readSingleZipEntry(filePath) {
-	const zipBytes = await fs.readFile(filePath);
-	const reader = new ZipReader(new Uint8ArrayReader(zipBytes));
-	try {
-		const entries = await reader.getEntries();
-		const fileEntry = entries.find((entry) => !entry.directory && 'getData' in entry);
-		if (!fileEntry) throw new Error(`No file entry found in ${filePath}`);
-		return await fileEntry.getData(new Uint8ArrayWriter());
-	} finally {
-		await reader.close();
-	}
-}
-
-async function readMaybeZip(filePath) {
-	if (filePath.endsWith('.zip')) return await readSingleZipEntry(filePath);
+async function readMaybeZip(filePath, expectedName) {
+	if (filePath.endsWith('.zip')) return await readClangZip(await fs.readFile(filePath), expectedName);
 	return await fs.readFile(filePath);
-}
-
-async function assertWasm(label, bytes) {
-	if (
-		bytes.length < 8 ||
-		bytes[0] !== 0x00 ||
-		bytes[1] !== 0x61 ||
-		bytes[2] !== 0x73 ||
-		bytes[3] !== 0x6d
-	) {
-		throw new Error(`${label} is not a WebAssembly module`);
-	}
-	await WebAssembly.compile(bytes);
 }
 
 async function zipSingleFile(targetPath, entryName, bytes) {
@@ -179,7 +159,7 @@ async function resolveSysrootTarBytes(sysrootPath, tempDir) {
 		]);
 		return await fs.readFile(tarPath);
 	}
-	if (sysrootPath.endsWith('.tar.zip')) return await readSingleZipEntry(sysrootPath);
+	if (sysrootPath.endsWith('.tar.zip')) return await readClangZip(await fs.readFile(sysrootPath), 'sysroot.tar');
 	if (sysrootPath.endsWith('.tar')) return await fs.readFile(sysrootPath);
 	throw new Error(
 		`Unsupported sysroot input. Expected directory, .tar, or .tar.zip: ${sysrootPath}`
@@ -189,7 +169,7 @@ async function resolveSysrootTarBytes(sysrootPath, tempDir) {
 async function resolveClangdWasmGzip(filePath) {
 	const bytes = await fs.readFile(filePath);
 	if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
-		return { gzipBytes: bytes, wasmBytes: await gunzipAsync(bytes) };
+		return { gzipBytes: bytes, wasmBytes: await gunzipAsync(bytes, { maxOutputLength: MAX_CLANG_ASSET_BYTES }) };
 	}
 	return { gzipBytes: await gzipAsync(bytes, { level: 9 }), wasmBytes: bytes };
 }
@@ -211,25 +191,30 @@ async function main() {
 		? optionalPath(args, 'memfs-wasm', '')
 		: optionalPath(args, 'memfs-zip', path.join(targetDir, 'memfs.zip'));
 
-	const llvmVersion = args.get('llvm-version') || 'custom';
-	const llvmCommit =
-		args.get('llvm-commit') ||
-		(llvmVersion === producerManifest.sources.llvm.version
-			? producerManifest.sources.llvm.commit
-			: undefined);
+	const receiptBytes = args.has('build-receipt') ? await fs.readFile(path.resolve(args.get('build-receipt'))) : null;
+	const buildReceipt = receiptBytes ? JSON.parse(receiptBytes) : null;
+	if (!buildReceipt && args.get('allow-unverified-build') !== 'true')
+		throw new Error('Missing --build-receipt; use --allow-unverified-build true only for local, non-release packaging');
+	if (buildReceipt && args.has('allow-unverified-build')) throw new Error('Do not combine a build receipt with --allow-unverified-build');
+	for (const [option, field] of [['llvm-version', 'llvmVersion'], ['llvm-commit', 'llvmCommit'],
+		['wasi-sdk-version', 'wasiSdkVersion'], ['emsdk-version', 'emsdkVersion']]) {
+		if (buildReceipt && args.has(option) && args.get(option) !== buildReceipt.buildOptions?.[field])
+			throw new Error(`--${option} differs from the build receipt`);
+	}
+	const llvmVersion = buildReceipt?.buildOptions?.llvmVersion || args.get('llvm-version') || 'custom';
+	const llvmCommit = buildReceipt?.sources?.llvm?.commit;
 	const version = args.get('version') || `llvmorg-${llvmVersion}`;
 	const resourceDir = args.get('resource-dir') || `/lib/clang/${llvmVersion}`;
-	const compilerRuntimeLibDir =
-		args.get('compiler-runtime-lib-dir') || `lib/clang/${llvmVersion}/lib/wasi`;
-	const wasiSdkVersion = args.get('wasi-sdk-version');
-	const emsdkVersion = args.get('emsdk-version');
+	const compilerRuntimeLibDir = args.get('compiler-runtime-lib-dir') || `lib/clang/${llvmVersion}/lib/wasi`;
+	const wasiSdkVersion = buildReceipt?.buildOptions?.wasiSdkVersion || args.get('wasi-sdk-version');
+	const emsdkVersion = buildReceipt?.buildOptions?.emsdkVersion || args.get('emsdk-version');
 
 	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wasm-llvm-toolchain-'));
 	try {
-		const clangBytes = await readMaybeZip(clangPath);
-		const lldBytes = await readMaybeZip(lldPath);
+		const clangBytes = await readMaybeZip(clangPath, 'clang');
+		const lldBytes = await readMaybeZip(lldPath, 'lld');
 		const sysrootTarBytes = await resolveSysrootTarBytes(sysrootPath, tempDir);
-		const memfsBytes = await readMaybeZip(memfsPath);
+		const memfsBytes = await readMaybeZip(memfsPath, 'memfs');
 		const clangdJsBytes = await fs.readFile(clangdJsPath);
 		const { gzipBytes: clangdWasmGzipBytes, wasmBytes: clangdWasmBytes } =
 			await resolveClangdWasmGzip(clangdWasmPath);
@@ -245,6 +230,7 @@ async function main() {
 		}) : undefined;
 		const headerGzip = headerBytes ? await gzipAsync(headerBytes, { level: 9 }) : undefined;
 
+		readTarEntries(sysrootTarBytes);
 		await assertWasm('clang', clangBytes);
 		await assertWasm('lld', lldBytes);
 		await assertWasm('memfs', memfsBytes);
@@ -252,77 +238,90 @@ async function main() {
 		const memfs = args.has('memfs-receipt')
 			? await loadMemfsBuildMetadata(path.resolve(required(args, 'memfs-receipt')), memfsBytes)
 			: null;
+		if (buildReceipt && !memfs) throw new Error('Verified Clang packaging requires --memfs-receipt and its license notices');
+		if (buildReceipt) await verifyClangBuildReceipt(buildReceipt, {
+			clang: clangBytes, lld: lldBytes, memfs: memfsBytes,
+			memfsReceipt: memfs?.files.get('memfs-build-receipt.json'), sysroot: sysrootTarBytes,
+			clangdJs: clangdJsBytes, clangdWasm: clangdWasmBytes, clangdHeaders: headerBytes
+		}, { producerRoot });
 
-		await fs.mkdir(path.join(targetDir, 'clangd'), { recursive: true });
-		const assetHashes = {
-			'clang.zip': sha256(
-				await zipSingleFile(path.join(targetDir, 'clang.zip'), 'clang', clangBytes)
-			),
-			'lld.zip': sha256(
-				await zipSingleFile(path.join(targetDir, 'lld.zip'), 'lld', lldBytes)
-			),
-			'sysroot.tar.zip': sha256(
-				await zipSingleFile(
-					path.join(targetDir, 'sysroot.tar.zip'),
-					'sysroot.tar',
-					sysrootTarBytes
-				)
-			),
-			'memfs.zip': sha256(
-				await zipSingleFile(path.join(targetDir, 'memfs.zip'), 'memfs', memfsBytes)
-			),
-			'clangd/clangd.js': sha256(clangdJsBytes),
-			'clangd/clangd.wasm.gz': sha256(clangdWasmGzipBytes)
-		};
+		await replaceArtifactDirectory(targetDir, async (targetDir) => {
+			await fs.mkdir(path.join(targetDir, 'clangd'), { recursive: true });
+			const assetHashes = {
+				'clang.zip': sha256(
+					await zipSingleFile(path.join(targetDir, 'clang.zip'), 'clang', clangBytes)
+				),
+				'lld.zip': sha256(
+					await zipSingleFile(path.join(targetDir, 'lld.zip'), 'lld', lldBytes)
+				),
+				'sysroot.tar.zip': sha256(
+					await zipSingleFile(
+						path.join(targetDir, 'sysroot.tar.zip'),
+						'sysroot.tar',
+						sysrootTarBytes
+					)
+				),
+				'memfs.zip': sha256(
+					await zipSingleFile(path.join(targetDir, 'memfs.zip'), 'memfs', memfsBytes)
+				),
+				'clangd/clangd.js': sha256(clangdJsBytes),
+				'clangd/clangd.wasm.gz': sha256(clangdWasmGzipBytes)
+			};
 
-		await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.js'), clangdJsBytes);
-		await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.wasm.gz'), clangdWasmGzipBytes);
-		if (headerGzip) {
-			await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.headers.json.gz'), headerGzip);
-			assetHashes['clangd/clangd.headers.json.gz'] = sha256(headerGzip);
-		}
-		if (memfs) {
-			for (const [name, bytes] of memfs.files) {
-				await fs.writeFile(path.join(targetDir, name), bytes);
+			await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.js'), clangdJsBytes);
+			await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.wasm.gz'), clangdWasmGzipBytes);
+			if (headerGzip) {
+				await fs.writeFile(path.join(targetDir, 'clangd', 'clangd.headers.json.gz'), headerGzip);
+				assetHashes['clangd/clangd.headers.json.gz'] = sha256(headerGzip);
 			}
-		}
+			if (memfs) {
+				for (const [name, bytes] of memfs.files) {
+					await fs.writeFile(path.join(targetDir, name), bytes);
+				}
+			}
 
-		const metadata = {
-			producer: {
-				id: producerManifest.producerId,
-				manifest: path.relative(repoRoot, producerManifestPath).split(path.sep).join('/'),
-				manifestSha256: sha256(producerManifestBytes)
-			},
-			version,
-			llvmVersion,
-			...(llvmCommit ? { llvmCommit } : {}),
-			...(wasiSdkVersion ? { wasiSdkVersion } : {}),
-			...(emsdkVersion ? { emsdkVersion } : {}),
-			resourceDir,
-			compilerRuntimeLibDir,
-			...(memfs ? { memfs: memfs.metadata } : {}),
-			clangd: {
-				stdinBridge: 'emscripten-asyncify',
-				patch: producerManifest.sources.clangdEmscriptenStdinPatch.path,
-				patchSha256: producerManifest.sources.clangdEmscriptenStdinPatch.sha256,
-				...(headerBytes ? { headers: {
-					asset: 'clangd/clangd.headers.json.gz',
-					format: 'clangd-headers-v1',
-					version: sha256(headerBytes),
-					targetTriple: args.get('target-triple') || 'wasm32-wasi',
-					resourceDir,
-					bytes: headerGzip.length,
-					sha256: sha256(headerGzip),
-					uncompressedBytes: headerBytes.length,
-					uncompressedSha256: sha256(headerBytes)
-				} } : {})
-			},
-			assets: assetHashes
-		};
-		await fs.writeFile(
-			path.join(targetDir, 'toolchain.json'),
-			JSON.stringify(metadata, null, 2) + '\n'
-		);
+			if (receiptBytes) await fs.writeFile(path.join(targetDir, 'clang-build-receipt.json'), receiptBytes);
+			const metadata = {
+				producer: {
+					id: producerManifest.producerId,
+					manifest: path.relative(repoRoot, producerManifestPath).split(path.sep).join('/'),
+					manifestSha256: sha256(producerManifestBytes)
+				},
+				buildProvenance: receiptBytes
+					? { status: 'verified', receipt: 'clang-build-receipt.json', bytes: receiptBytes.length, sha256: sha256(receiptBytes) }
+					: { status: 'unverified', reason: 'Explicit local packaging without a source-to-output build receipt' },
+				version,
+				llvmVersion,
+				...(llvmCommit ? { llvmCommit } : {}),
+				...(wasiSdkVersion ? { wasiSdkVersion } : {}),
+				...(emsdkVersion ? { emsdkVersion } : {}),
+				resourceDir,
+				compilerRuntimeLibDir,
+				...(memfs ? { memfs: memfs.metadata } : {}),
+				clangd: {
+					stdinBridge: 'emscripten-asyncify',
+					patch: producerManifest.sources.clangdEmscriptenStdinPatch.path,
+					patchSha256: producerManifest.sources.clangdEmscriptenStdinPatch.sha256,
+					...(headerBytes ? { headers: {
+						asset: 'clangd/clangd.headers.json.gz',
+						format: 'clangd-headers-v1',
+						version: sha256(headerBytes),
+						targetTriple: args.get('target-triple') || 'wasm32-wasi',
+						resourceDir,
+						bytes: headerGzip.length,
+						sha256: sha256(headerGzip),
+						uncompressedBytes: headerBytes.length,
+						uncompressedSha256: sha256(headerBytes)
+					} } : {})
+				},
+				assets: assetHashes
+			};
+			await fs.writeFile(
+				path.join(targetDir, 'toolchain.json'),
+				JSON.stringify(metadata, null, 2) + '\n'
+			);
+			await verifyClangArtifacts(targetDir);
+		});
 		console.log(`Packaged wasm-llvm toolchain assets in ${targetDir}`);
 		console.log(`Runtime version: ${version}`);
 	} finally {

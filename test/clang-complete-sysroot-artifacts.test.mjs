@@ -96,8 +96,13 @@ test('shipped sysroot retains complete selected SDK header trees and receipt-bou
 	const recipe = await fs.readFile(path.join(artifacts, derivation.regeneration.helper.split('/').at(-1)));
 	assert.deepEqual(digest(recipe), { bytes: derivation.regeneration.bytes, sha256: derivation.regeneration.sha256 });
 	assert.equal(recipe.toString('utf8'), derivation.regeneration.helperSource);
-	for (const [name, receipt] of Object.entries(derivation.source.scripts))
-		assert.deepEqual(digest(await fs.readFile(path.join(repo, name))), receipt, name);
+	for (const [name, receipt] of Object.entries(derivation.source.scripts)) {
+		// This receipt describes the historical assembly recipe, not later verifier changes.
+		const source = name === 'producer/clang-browser/scripts/package-toolchain.mjs'
+			? 'producer/clang-browser/compatibility/package-toolchain-before-release-verification.mjs.txt'
+			: name;
+		assert.deepEqual(digest(await fs.readFile(path.join(repo, source))), receipt, name);
+	}
 });
 
 test('complete-header refresh preserves compiler, linker, language server and MemFS byte identities', async () => {

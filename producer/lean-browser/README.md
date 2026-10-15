@@ -79,6 +79,22 @@ Packaging runs `scripts/smoke.mjs`, which unpacks the release into Emscripten ME
 browser consumer does and runs `fixtures/Main.lean` (UTF-8 stdin to stdout) and
 `fixtures/Invalid.lean` (elaboration error, exit code 1). The receipt records both results.
 
+Verification requires the runtime, licenses and library index independently of the receipt.
+It validates library paths, unique contiguous ranges and complete module parts before bounded
+decompression. Wasm decompression is limited to 512 MiB and library chunks to 48 MiB.
+
+Packaging holds an exclusive `<output>.lock` directory, uses a unique sibling staging directory,
+and verifies the complete staged release before replacement. A failed final rename restores the
+previous directory; successful replacement removes files belonging only to an older release.
+Directory replacement uses two renames, so concurrent readers may briefly see no output path.
+A hard process kill can leave the lock and `.staging-*` transaction directory for manual recovery:
+first confirm that the publisher has stopped, then restore its `previous` directory if the output
+is absent. Do not delete a transaction containing the only copy of a release.
+
+The checked-in receipt records a `same-byte-repackage` requalification: current packaging and real
+Node acceptance were rerun on the existing compiler/library bytes, all asset hashes stayed equal,
+and the entire original receipt is retained. This is not evidence of a clean compiler rebuild.
+
 ## Consumer contract
 
 Create a fresh module instance per run with `noInitialRun: true`, the decoded `wasmBinary`, and,

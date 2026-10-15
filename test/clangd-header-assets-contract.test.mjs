@@ -13,6 +13,8 @@ import {
 	verifyClangdHeaderAsset
 } from '../producer/clang-browser/scripts/clangd-header-asset-contract.mjs';
 
+import { writeClangFixture } from './fixtures/clang/artifacts.mjs';
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const tree = () => ({
 	schemaVersion: 1,
@@ -31,6 +33,7 @@ function headerAsset(headers = tree()) {
 	const raw = Buffer.isBuffer(headers) ? headers : Buffer.from(JSON.stringify(headers));
 	const compressed = gzipSync(raw);
 	return {
+		raw,
 		compressed,
 		metadata: {
 			asset: CLANGD_HEADER_ASSET,
@@ -49,37 +52,21 @@ function headerAsset(headers = tree()) {
 async function artifactFixture(t, separateHeaders) {
 	const root = await mkdtemp(path.join(os.tmpdir(), 'clangd-artifacts-contract-'));
 	t.after(() => rm(root, { recursive: true, force: true }));
-	await mkdir(path.join(root, 'clangd'));
-	const name = Buffer.from('__asyncjs__waitForStdin');
-	const imports = Buffer.concat([
-		Buffer.from([1, 3]),
-		Buffer.from('env'),
-		Buffer.from([name.length]),
-		name,
-		Buffer.from([0, 0])
-	]);
-	const wasm = Buffer.concat([
-		Buffer.from([0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 2, imports.length]),
-		imports
-	]);
-	const files = new Map([
-		...['clang.zip', 'lld.zip', 'memfs.zip', 'sysroot.tar.zip'].map((name) => [
-			name,
-			Buffer.from(name)
-		]),
-		[
-			'clangd/clangd.js',
-			Buffer.from(
-				'function __asyncjs__waitForStdin(){return Asyncify.handleAsync(async()=>{await Module.stdinReady()})}'
-			)
-		],
-		['clangd/clangd.wasm.gz', gzipSync(wasm)]
-	]);
-	const metadata = { resourceDir: '/lib/clang/22', clangd: {}, assets: {} };
+	const { metadata, files } = await writeClangFixture(root);
 	if (separateHeaders) {
 		const asset = headerAsset();
 		files.set(CLANGD_HEADER_ASSET, asset.compressed);
 		metadata.clangd.headers = asset.metadata;
+		// Extend the synthetic build evidence as well as the storage metadata.
+		// Keep every existing raw input (including MemFS) bound to the fixture.
+		const receiptPath = path.join(root, metadata.buildProvenance.receipt);
+		const receipt = JSON.parse(await readFile(receiptPath));
+		receipt.buildOptions.clangdSeparateHeaders = 'ON';
+		receipt.inputs.clangdHeaders = { bytes: asset.raw.length, sha256: sha256(asset.raw) };
+		const receiptBytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
+		await writeFile(receiptPath, receiptBytes);
+		metadata.buildProvenance.bytes = receiptBytes.length;
+		metadata.buildProvenance.sha256 = sha256(receiptBytes);
 	}
 	for (const [name, bytes] of files) {
 		await writeFile(path.join(root, name), bytes);
@@ -96,6 +83,18 @@ test('verifies legacy two-asset clangd bundles and separately versioned three-as
 		const fixture = await artifactFixture(t, headers);
 		assert.deepEqual(await verifyClangArtifacts(fixture.root), { assets: headers ? 7 : 6 });
 	}
+});
+
+test('rejects replaced headers even when storage hashes agree but the build receipt is unchanged', async (t) => {
+	const fixture = await artifactFixture(t, true);
+	const headers = tree();
+	headers.files['/usr/include/extra.h'] = '// different build';
+	const asset = headerAsset(headers);
+	await writeFile(path.join(fixture.root, CLANGD_HEADER_ASSET), asset.compressed);
+	fixture.metadata.clangd.headers = asset.metadata;
+	fixture.metadata.assets[CLANGD_HEADER_ASSET] = sha256(asset.compressed);
+	await fixture.writeMetadata();
+	await assert.rejects(verifyClangArtifacts(fixture.root), /clangdHeaders input identity mismatch/);
 });
 
 test('the producer manifest identifies the separately delivered clangd header asset as optional', async () => {

@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { assemble, assetReceipts, producerInputs, verify } from '../scripts/package.mjs';
+import { assemble, assetReceipts, packageRelease, producerInputs, verify } from '../scripts/package.mjs';
 
 const producer = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const artifacts = path.resolve(producer, '../../artifacts/lean-browser');
@@ -100,6 +100,7 @@ test('packaging indexes every library part and verification detects tampering', 
 		await writeFile(
 			path.join(release, 'producer-receipt.json'),
 			JSON.stringify({
+				schemaVersion: 1,
 				manifestSha256: inputs.manifestSha256,
 				patches: inputs.patches,
 				recipe: inputs.recipe,
@@ -120,10 +121,138 @@ test('packaging indexes every library part and verification detects tampering', 
 	}
 });
 
+async function syntheticRelease(work) {
+	const { files, wasm } = await assemble(work);
+	const release = path.join(work, 'release');
+	await mkdir(release);
+	for (const [name, bytes] of files) await writeFile(path.join(release, name), bytes);
+	const inputs = await producerInputs();
+	const receipt = {
+		schemaVersion: 1,
+		manifestSha256: inputs.manifestSha256,
+		patches: inputs.patches,
+		recipe: inputs.recipe,
+		assets: assetReceipts(files, wasm),
+		acceptance: { node: { program: { stdout: 'Hello, 안녕!\nsum = 40\n' } } }
+	};
+	return { release, receipt, files };
+}
+
+test('package acceptance failure preserves an existing release', async () => {
+	const work = await syntheticWork();
+	const outDir = path.join(work, 'release');
+	try {
+		await mkdir(outDir);
+		await writeFile(path.join(outDir, 'prior-release'), 'unchanged bytes');
+		// This valid Wasm fixture deliberately has no Lean runtime API.
+		await assert.rejects(packageRelease({ workDir: work, outDir }));
+		assert.equal(await readFile(path.join(outDir, 'prior-release'), 'utf8'), 'unchanged bytes');
+	} finally { await rm(work, { recursive: true, force: true }); }
+});
+
+test('requalification cannot rewrite original assets, source pins or build recipes', async () => {
+	const work = await syntheticWork();
+	try {
+		const { release, receipt } = await syntheticRelease(work);
+		const original = structuredClone(receipt);
+		for (const mutate of [
+			(value) => { value.assets['lean.mjs'].sha256 = '0'.repeat(64); },
+			(value) => { value.sources = { lean4: { commit: '0'.repeat(40) } }; },
+			(value) => { value.recipe['scripts/build.sh'] = '0'.repeat(64); }
+		]) {
+			const altered = structuredClone(original);
+			mutate(altered);
+			receipt.requalification = {
+				kind: 'same-byte-repackage', compilerRebuilt: false,
+				originalReceipt: altered,
+				originalReceiptSha256: sha256(`${JSON.stringify(altered, null, '\t')}\n`)
+			};
+			await writeFile(path.join(release, 'producer-receipt.json'), JSON.stringify(receipt));
+			await assert.rejects(verify(release), /requalification changed/);
+		}
+	} finally { await rm(work, { recursive: true, force: true }); }
+});
+
+test('requires runtime and license assets independently of the receipt', async () => {
+	const work = await syntheticWork();
+	try {
+		const { release, receipt, files } = await syntheticRelease(work);
+		for (const name of ['lean.mjs', 'lean.wasm.gz', 'LICENSE', 'LICENSE.libuv', 'lean-init.index.json']) {
+			const broken = structuredClone(receipt);
+			delete broken.assets[name];
+			await rm(path.join(release, name));
+			await writeFile(path.join(release, 'producer-receipt.json'), JSON.stringify(broken));
+			await assert.rejects(verify(release), /missing required asset/);
+			await writeFile(path.join(release, name), files.get(name));
+		}
+	} finally { await rm(work, { recursive: true, force: true }); }
+});
+
+test('rejects unsafe library paths, sizes, duplicate ranges and incomplete module parts', async () => {
+	const work = await syntheticWork();
+	try {
+		const { release, receipt, files } = await syntheticRelease(work);
+		const mutations = [
+			(index) => { index.chunks[0].path = '../outside.gz'; },
+			(index) => { index.chunks[0].path = 'lean-init-99.pack.gz'; },
+			(index) => { index.chunks.push(index.chunks[0]); },
+			(index) => { index.chunks[0].uncompressedBytes = Number.MAX_SAFE_INTEGER; },
+			(index) => { index.chunks[0].offset = -1; },
+			(index) => { index.files[0].bytes = -1; },
+			(index) => { index.files[0].bytes = 0.5; },
+			(index) => { index.files[0].bytes = Number.MAX_SAFE_INTEGER + 1; },
+			(index) => { index.files[1].offset--; },
+			(index) => { index.files[1].path = index.files[0].path; },
+			(index) => { index.files[0].path = 'Init/Other.ir'; },
+			(index) => { index.modules++; },
+			(index) => { index.schemaVersion = 999; }
+		];
+		for (const mutate of mutations) {
+			const index = JSON.parse(files.get('lean-init.index.json'));
+			mutate(index);
+			const bytes = Buffer.from(JSON.stringify(index));
+			receipt.assets['lean-init.index.json'] = { bytes: bytes.length, sha256: sha256(bytes) };
+			await writeFile(path.join(release, 'lean-init.index.json'), bytes);
+			await writeFile(path.join(release, 'producer-receipt.json'), JSON.stringify(receipt));
+			await assert.rejects(verify(release), /invalid library|library chunks|library module/);
+		}
+	} finally { await rm(work, { recursive: true, force: true }); }
+});
+
+test('bounds Wasm and library decompression by validated declared sizes', async () => {
+	const work = await syntheticWork();
+	try {
+		const { release, receipt, files } = await syntheticRelease(work);
+		for (const size of [-1, Number.MAX_SAFE_INTEGER, 7]) {
+			const broken = structuredClone(receipt);
+			broken.assets['lean.wasm.gz'].uncompressed.bytes = size;
+			await writeFile(path.join(release, 'producer-receipt.json'), JSON.stringify(broken));
+			await assert.rejects(verify(release), /uncompressed receipt|larger than/);
+		}
+		const index = JSON.parse(files.get('lean-init.index.json'));
+		index.totalBytes--;
+		index.chunks[0].uncompressedBytes--;
+		index.files.at(-1).bytes--;
+		const bytes = Buffer.from(JSON.stringify(index));
+		receipt.assets['lean-init.index.json'] = { bytes: bytes.length, sha256: sha256(bytes) };
+		await writeFile(path.join(release, 'lean-init.index.json'), bytes);
+		await writeFile(path.join(release, 'producer-receipt.json'), JSON.stringify(receipt));
+		await assert.rejects(verify(release), /larger than/);
+	} finally { await rm(work, { recursive: true, force: true }); }
+});
+
 test('committed release matches its receipt', { skip: !existsSync(artifacts) }, async () => {
 	const result = await verify(artifacts);
 	assert.ok(result.modules > 600);
 	const receipt = JSON.parse(await readFile(path.join(artifacts, 'producer-receipt.json'), 'utf8'));
 	assert.equal(receipt.acceptance.node.program.stdout, 'Hello, 안녕!\nsum = 40\n');
 	assert.equal(receipt.acceptance.node.diagnostic.exitCode, 1);
+	assert.equal(receipt.requalification.kind, 'same-byte-repackage');
+	assert.equal(receipt.requalification.compilerRebuilt, false);
+	const original = receipt.requalification.originalReceipt;
+	for (const field of ['assets', 'sources', 'bootstrap', 'patches', 'manifestSha256', 'runtime'])
+		assert.deepEqual(receipt[field], original[field]);
+	assert.equal(receipt.recipe['scripts/build.sh'], original.recipe['scripts/build.sh']);
+	assert.notEqual(receipt.recipe['scripts/package.mjs'], original.recipe['scripts/package.mjs']);
+	assert.equal(sha256(`${JSON.stringify(original, null, '\t')}\n`), receipt.requalification.originalReceiptSha256);
 });

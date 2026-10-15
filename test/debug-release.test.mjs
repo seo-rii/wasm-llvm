@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
+import { writeClangFixture } from './fixtures/clang/artifacts.mjs';
 import { createBuildReceipt } from '../producer/lldb-browser/scripts/contracts.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -33,32 +34,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 			mkdir(lldb, { recursive: true }),
 			mkdir(wamr, { recursive: true })
 		]);
-		for (const asset of [
-			'clang.zip',
-			'lld.zip',
-			'memfs.zip',
-			'sysroot.tar.zip',
-			'clangd/clangd.js',
-			'clangd/clangd.wasm.gz'
-		]) {
-			await writeFile(path.join(clang, asset), asset);
-		}
-		await writeFile(
-			path.join(clang, 'toolchain.json'),
-			`${JSON.stringify({
-				version: 'llvmorg-22.1.8',
-				llvmVersion: '22.1.8',
-				llvmCommit: llvmRevision,
-				resourceDir: '/lib/clang/22',
-				compilerRuntimeLibDir: 'lib/clang/22/lib/wasi',
-				clangd: {
-					stdinBridge: 'emscripten-asyncify',
-					patch: 'fixture.patch',
-					patchSha256: 'a'.repeat(64)
-				},
-				assets: {}
-			})}\n`
-		);
+		await writeClangFixture(clang);
 
 		const lldbJs = Buffer.from('lldb-js');
 		const lldbWasm = Buffer.from('lldb-wasm');
@@ -231,6 +207,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		assert.equal(manifest.debugger.capabilities.writeMemory, true);
 		assert.deepEqual(await readFile(path.join(output, 'debug/wamr-debug.wasm')), wamrWasm);
 
+		const previousBuild = await readFile(path.join(output, 'runtime-build.json'));
 		await writeFile(path.join(wamr, 'wamr-debug.wasm'), 'corrupt');
 		await assert.rejects(
 			execFileAsync(
@@ -240,12 +217,14 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 					cwd: repoRoot,
 					env: {
 						...releaseEnvironment,
-						WASM_LLVM_CLANG_RELEASE_DIR: path.join(root, 'corrupt-output')
+						WASM_LLVM_CLANG_RELEASE_DIR: output
 					}
 				}
 			),
 			/does not match its producer receipt/u
 		);
+		assert.deepEqual(await readFile(path.join(output, 'runtime-build.json')), previousBuild);
+		assert.deepEqual(await readFile(path.join(output, 'debug/wamr-debug.wasm')), wamrWasm);
 		await writeFile(path.join(wamr, 'wamr-debug.wasm'), wamrWasm);
 
 		const contractCases = [
@@ -388,6 +367,13 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 			);
 			await writeFile(contractCase.file, `${JSON.stringify(contractCase.base)}\n`);
 		}
+		await execFileAsync(process.execPath, ['producer/clang-browser/scripts/prepare-release.mjs'], {
+			cwd: repoRoot, env: { ...releaseEnvironment, WASM_LLVM_CLANG_RELEASE_DIR: output,
+				WASM_LLVM_LLDB_ARTIFACT_DIR: '', WASM_LLVM_WAMR_ARTIFACT_DIR: '' }
+		});
+		await assert.rejects(readFile(path.join(output, 'runtime-manifest.v2.json')), { code: 'ENOENT' });
+		await assert.rejects(readFile(path.join(output, 'debug/wamr-debug.wasm')), { code: 'ENOENT' });
+
 	} finally {
 		await rm(root, { recursive: true, force: true });
 	}

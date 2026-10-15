@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -142,4 +143,34 @@ test('rejects header aliases outside the sysroot and recursive directory aliases
 	await fs.rm(escape);
 	await fs.symlink('.', path.join(options.sysroot, 'include/c++/v1/cycle'));
 	await assert.rejects(prepareClangdHeaders(options), /symlink creates a directory cycle/);
+});
+
+test('preserves UTF-8 bytes including BOM and rejects invalid UTF-8', async (t) => {
+	const options = await fixture(t);
+	await prepareClangdHeaders(options);
+	const resourceIncludeDir = path.join(options.root, 'resource');
+	await fs.mkdir(resourceIncludeDir);
+	const original = Buffer.from('efbbbf23646566696e65205820310a', 'hex');
+	await fs.writeFile(path.join(resourceIncludeDir, 'stddef.h'), original);
+	const input = { includeDir: options.destination, resourceIncludeDir, resourceDir: '/lib/clang/22', targetTriple: options.targetTriple, version: 'test' };
+	const tree = JSON.parse(await createClangdHeaderAsset(input));
+	assert.deepEqual(Buffer.from(tree.files['/lib/clang/22/include/stddef.h']), original);
+	await fs.writeFile(path.join(resourceIncludeDir, 'stddef.h'), Buffer.from([0xff]));
+	await assert.rejects(createClangdHeaderAsset(input), /encoded data|encoding/i);
+});
+
+test('serializes identical header trees identically across host locales', async (t) => {
+	const options = await fixture(t);
+	await prepareClangdHeaders(options);
+	const resourceIncludeDir = path.join(options.root, 'resource');
+	await fs.mkdir(resourceIncludeDir);
+	for (const name of ['ä.h', 'z.h', 'a.h', 'stddef.h']) await fs.writeFile(path.join(resourceIncludeDir, name), name);
+	const input = { includeDir: options.destination, resourceIncludeDir, resourceDir: '/lib/clang/22', targetTriple: options.targetTriple, version: 'test' };
+	const script = `import { createClangdHeaderAsset } from ${JSON.stringify(new URL('../producer/clang-browser/scripts/prepare-clangd-headers.mjs', import.meta.url).href)}; process.stdout.write(await createClangdHeaderAsset(JSON.parse(process.argv[1])));`;
+	const run = (locale) => execFileSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify(input)], {
+		env: { ...process.env, LANG: locale, LC_ALL: locale }
+	});
+	assert.deepEqual(run('en_US.UTF-8'), run('sv_SE.UTF-8'));
+	const names = Object.keys(JSON.parse(run('en_US.UTF-8')).files).filter((name) => name.startsWith('/lib/clang/22/'));
+	assert.deepEqual(names, [...names].sort());
 });

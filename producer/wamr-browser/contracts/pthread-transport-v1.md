@@ -78,3 +78,18 @@ reference is rewritten to the same name.
 - Stale generations and invalid cursor/capacity state fail the transport.
 - stdout, stderr, stdin, and worker lifecycle events remain outside RSP.
 - A target Worker and all of its Emscripten pthread workers are single-session.
+
+Each session must allocate fresh control **and** data buffers for both queues.
+Keep the generation immutable throughout that session. Before releasing its
+buffers, terminate/join every application and pthread worker and remove its
+callbacks; a new session must not reset or reuse those buffers. This applies to
+legacy six-cell controls as well as controls carrying a generation cell.
+Generation checks reject already-stale operations, including close, but are not
+a buffer reuse handshake: separate generation and state atomics cannot prevent a
+concurrent reset between a check and a write. Concurrent reuse is unsupported.
+
+The optional `protocol` field may be omitted for v1 compatibility. When present
+it must equal `shared-ring-v1`. Invalid protocol, generation (outside unsigned
+32-bit nonzero integers), control alignment, or capacity returns `false` from
+transport setup without replacing the installed transport. Control buffers must
+contain a whole number of 32-bit cells before typed-array views are constructed.

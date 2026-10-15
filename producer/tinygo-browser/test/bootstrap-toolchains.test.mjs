@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { test } from 'node:test';
+import { recordTools, verifyBootstrapFile } from '../scripts/verify-bootstrap.mjs';
+
+const sha256 = (data) => createHash('sha256').update(data).digest('hex');
+const pins = JSON.parse(await fs.readFile(new URL('../config/bootstrap-toolchains.json', import.meta.url), 'utf8'));
+async function temporary(t) {
+	const root = await fs.mkdtemp(path.join(os.tmpdir(), 'tinygo-bootstrap-test-'));
+	t.after(() => fs.rm(root, { recursive: true, force: true }));
+	return root;
+}
+
+test('bootstrap verification rejects corrupt and partial downloads before extraction', async (t) => {
+	const root = await temporary(t);
+	const archive = path.join(root, 'archive');
+	const expected = Buffer.from('expected archive');
+	const pin = { url: 'https://example.invalid/archive', sha256: sha256(expected) };
+	for (const bytes of [Buffer.alloc(0), expected.subarray(0, 4), Buffer.from('altered archive')]) {
+		await fs.writeFile(archive, bytes);
+		await assert.rejects(verifyBootstrapFile(archive, pin), /refusing to execute or extract/);
+	}
+	await fs.writeFile(archive, expected);
+	assert.deepEqual(await verifyBootstrapFile(archive, pin), { ...pin, bytes: expected.length });
+});
+
+test('bootstrap receipt records executable bytes and actual version output', async (t) => {
+	const root = await temporary(t);
+	const executable = path.join(root, 'fake tool');
+	const script = '#!/bin/sh\nprintf "test-tool 1.0\\n"\n';
+	await fs.writeFile(executable, script, { mode: 0o755 });
+	const receipt = { inputs: {}, tools: {} };
+	await assert.rejects(recordTools(receipt, [['llvmTablegen', executable]]), /Missing verified bootstrap input/);
+	for (const name of ['llvmInstaller', 'wasiSdk', 'tinygo', 'go']) receipt.inputs[name] = pins[name];
+	await recordTools(receipt, [['llvmTablegen', executable]]);
+	assert.deepEqual(receipt.tools.llvmTablegen, { bytes: Buffer.byteLength(script), sha256: sha256(script), version: 'test-tool 1.0' });
+});
+
+test('workflow verifies every downloaded executable/archive before first use and keys cache by tool identity', async () => {
+	const workflow = await fs.readFile('.github/workflows/tinygo-browser-producer.yml', 'utf8');
+	for (const [pin, usage] of [
+		['llvmInstaller', 'sudo "$RUNNER_TEMP/llvm.sh" 20'],
+		['wasiSdk', 'tar -xzf "$TINYGO_WORK/wasi-sdk.tar.gz"'],
+		['tinygo', 'tar -xzf "$TINYGO_WORK/tinygo.tar.gz"'],
+		['go', 'unzip -q "$TINYGO_GO_ARCHIVE"']
+	]) {
+		const verification = workflow.indexOf(`                    ${pin} "`);
+		assert.ok(verification > 0 && verification < workflow.indexOf(usage), `${pin} must be verified before use`);
+		assert.ok(workflow.includes(pins[pin].url), `${pin} download URL must match its pin`);
+	}
+	assert.match(workflow, /key: tinygo-llvm-wasi-v3-.*TINYGO_BOOTSTRAP_SHA256/);
+	assert.match(workflow, /bootstrap-receipt\.json/);
+});

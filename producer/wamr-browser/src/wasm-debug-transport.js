@@ -6,6 +6,11 @@
 // resolves. That postMessage happens before the pool-ready promise resolves,
 // so the subsequent pthread run message is ordered after the transport data.
 //
+// Ownership: allocate fresh control AND data SABs for each debug session. A
+// generation is immutable until every worker/callback using its buffers has
+// terminated. Changing GENERATION is not a reuse handshake: separate atomic
+// generation/state cells cannot make check-then-write safe against such reuse.
+//
 // The imports intentionally execute in the calling debug-control pthread.
 // They must never be annotated with __proxy because a blocking ring read
 // proxied to the application worker can deadlock while that worker runs WAMR.
@@ -39,7 +44,7 @@ var LibraryWasmIdleDebugTransportV1 = {
 				!(descriptor.data instanceof SharedArrayBuffer)
 			)
 				return null;
-			if (!Number.isSafeInteger(descriptor.generation) || descriptor.generation <= 0)
+			if (!Number.isSafeInteger(descriptor.generation) || descriptor.generation <= 0 || descriptor.generation > 0xffffffff)
 				return null;
 			return {
 				control: descriptor.control,
@@ -49,7 +54,12 @@ var LibraryWasmIdleDebugTransportV1 = {
 		},
 
 		ring: function (descriptor) {
-			if (!descriptor) return null;
+			if (!descriptor ||
+				!(descriptor.control instanceof SharedArrayBuffer) ||
+				!(descriptor.data instanceof SharedArrayBuffer) ||
+				descriptor.control.byteLength % Int32Array.BYTES_PER_ELEMENT !== 0 ||
+				descriptor.control.byteLength < WasmIdleDebugTransportV1.MINIMUM_CONTROL_CELLS * Int32Array.BYTES_PER_ELEMENT
+			) return null;
 			var control = new Int32Array(descriptor.control);
 			var data = new Uint8Array(descriptor.data);
 			if (control.length < WasmIdleDebugTransportV1.MINIMUM_CONTROL_CELLS) return null;
@@ -78,7 +88,7 @@ var LibraryWasmIdleDebugTransportV1 = {
 		},
 
 		normalize: function (transport) {
-			if (!transport) return null;
+			if (!transport || (transport.protocol !== undefined && transport.protocol !== 'shared-ring-v1')) return null;
 			var rspInput = WasmIdleDebugTransportV1.descriptor(transport.rspInput);
 			var rspOutput = WasmIdleDebugTransportV1.descriptor(transport.rspOutput);
 			if (!rspInput || !rspOutput) return null;
@@ -154,7 +164,7 @@ var LibraryWasmIdleDebugTransportV1 = {
 		},
 
 		close: function (ring) {
-			if (!ring) return;
+			if (!ring || !WasmIdleDebugTransportV1.validGeneration(ring)) return;
 			Atomics.store(ring.control, WasmIdleDebugTransportV1.STATE, 1);
 			WasmIdleDebugTransportV1.notify(ring);
 		},
