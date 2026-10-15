@@ -28,6 +28,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Install Chromium for the Swift browser contract fixtures
+        run: pnpm exec playwright-core install --with-deps chromium
       - name: Check every producer repository contract
         run: pnpm check
       - name: Run the complete unit test suite
