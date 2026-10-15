@@ -155,7 +155,11 @@ export async function verifyClangBuildReceipt(receipt, inputs, { producerRoot = 
 		if (patches[index + 1]?.path !== patch.path || patches[index + 1]?.sha256 !== patch.sha256) fail('local patch identity mismatch');
 	}
 
-	for (const name of ['clang', 'lld', 'sysroot', 'clangdJs', 'clangdWasm']) {
+	const inputNames = ['clang', 'lld', 'sysroot', 'clangdJs', 'clangdWasm'];
+	if (receipt.buildOptions?.clangdSeparateHeaders === 'ON') inputNames.push('clangdHeaders');
+	else if (receipt.buildOptions?.clangdSeparateHeaders !== 'OFF' || inputs.clangdHeaders || receipt.inputs?.clangdHeaders)
+		fail('separate header inputs do not match build options');
+	for (const name of inputNames) {
 		const expected = receipt.inputs?.[name];
 		const bytes = inputs[name];
 		if (!identity(expected) || !bytes || expected.bytes !== bytes.length || expected.sha256 !== sha256(bytes)) fail(`${name} input identity mismatch`);

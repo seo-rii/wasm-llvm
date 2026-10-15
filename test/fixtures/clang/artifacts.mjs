@@ -37,7 +37,50 @@ export async function writeClangFixture(directory) {
 		await fs.writeFile(path.join(directory, name), bytes);
 		metadata.assets[name] = sha256(bytes);
 	}
+	await writeBuildReceipt(directory, metadata, { clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm });
 	const writeMetadata = () => fs.writeFile(path.join(directory, 'toolchain.json'), JSON.stringify(metadata));
 	await writeMetadata();
 	return { metadata, files, writeMetadata };
+}
+
+// Synthetic evidence for tiny structural fixtures; never used to qualify production bytes.
+export async function makeBuildReceipt(inputs) {
+	const { fileIdentity } = await import('../../../producer/clang-browser/scripts/build-provenance.mjs');
+	const producerRoot = new URL('../../../producer/clang-browser/', import.meta.url);
+	const manifestBytes = await fs.readFile(new URL('manifest.json', producerRoot));
+	const manifest = JSON.parse(manifestBytes);
+	const identity = (bytes) => ({ bytes: bytes.length, sha256: sha256(bytes) });
+	const files = [];
+	for (const file of ['build-toolchain.mjs', 'build-provenance.mjs', 'build-memfs.mjs',
+		'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh']) {
+		files.push({ path: `scripts/${file}`, ...await fileIdentity(new URL(`scripts/${file}`, producerRoot)) });
+	}
+	const source = { tree: 'b'.repeat(40), diffSha256: sha256('synthetic fixture diff') };
+	return {
+		schemaVersion: 1, producerId: manifest.producerId, kind: 'clang-build-receipt', manifestSha256: sha256(manifestBytes),
+		sources: {
+			llvm: { ...source, repository: manifest.sources.llvm.repository, commit: manifest.sources.llvm.commit,
+				patches: [{ ...manifest.sources.wasiHostPatch, sha256: sha256('synthetic fixture patch') }, manifest.sources.llvmWasiClosePatch,
+					manifest.sources.lldWasmOnlyPatch, manifest.sources.clangdEmscriptenStdinPatch] },
+			emsdk: { ...source, repository: 'https://github.com/emscripten-core/emsdk', commit: manifest.toolchains.emsdk.commit }
+		},
+		buildOptions: { clangdSeparateHeaders: inputs.clangdHeaders ? 'ON' : 'OFF', llvmCommit: manifest.sources.llvm.commit, emsdkCommit: manifest.toolchains.emsdk.commit,
+			llvmVersion: manifest.sources.llvm.version, emsdkVersion: manifest.toolchains.emsdk.version,
+			wasiSdkVersion: manifest.toolchains.wasiSdk.version, yowaspWasiPatchRepo: manifest.sources.wasiHostPatch.repository,
+			yowaspWasiPatchCommit: manifest.sources.wasiHostPatch.commit },
+		inputs: Object.fromEntries(Object.entries(inputs).map(([name, bytes]) => [name, identity(bytes)])),
+		recipe: { files, sha256: sha256(JSON.stringify(files)) },
+		tools: Object.fromEntries(['cmake', 'ninja', 'tar', 'wasiClang', 'wasiLld', 'nativeC', 'nativeCxx',
+			'llvmTablegen', 'clangTablegen', 'emsdkClang', 'wasmOpt', 'emccDriver'].map((name) => [name, identity(Buffer.from(name))])),
+		reproducibility: { independentlyRebuilt: false }
+	};
+}
+
+export async function writeBuildReceipt(directory, metadata, inputs) {
+	const receipt = await makeBuildReceipt(inputs);
+	const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
+	await fs.writeFile(path.join(directory, 'clang-build-receipt.json'), bytes);
+	metadata.buildProvenance = { status: 'verified', receipt: 'clang-build-receipt.json', bytes: bytes.length, sha256: sha256(bytes) };
+	for (const name of ['llvmVersion', 'llvmCommit', 'wasiSdkVersion', 'emsdkVersion']) metadata[name] = receipt.buildOptions[name];
+	return receipt;
 }

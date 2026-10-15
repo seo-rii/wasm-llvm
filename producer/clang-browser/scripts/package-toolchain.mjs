@@ -16,6 +16,7 @@ import {
 } from '@zip.js/zip.js';
 import { assertClangdStdinBridge } from './clangd-artifact-contract.mjs';
 import { loadMemfsBuildMetadata } from './memfs-provenance.mjs';
+import { verifyClangBuildReceipt } from './build-provenance.mjs';
 import { createClangdHeaderAsset } from './prepare-clangd-headers.mjs';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
 import { readClangZip, assertWasm, MAX_CLANG_ASSET_BYTES } from './archive-contract.mjs';
@@ -49,6 +50,8 @@ const usage = `Usage:
     --emsdk-version 6.0.0
 
 Options:
+  --build-receipt FILE             Source-to-output receipt emitted by build-toolchain.mjs.
+  --allow-unverified-build true    Explicit local packaging without provenance; release is refused.
   --target-dir DIR                 Output directory. Defaults to artifacts/clang-browser.
   --memfs-wasm FILE                Raw MemFS WebAssembly module.
   --memfs-receipt FILE             Verified build receipt; requires sibling MemFS license notices.
@@ -188,18 +191,23 @@ async function main() {
 		? optionalPath(args, 'memfs-wasm', '')
 		: optionalPath(args, 'memfs-zip', path.join(targetDir, 'memfs.zip'));
 
-	const llvmVersion = args.get('llvm-version') || 'custom';
-	const llvmCommit =
-		args.get('llvm-commit') ||
-		(llvmVersion === producerManifest.sources.llvm.version
-			? producerManifest.sources.llvm.commit
-			: undefined);
+	const receiptBytes = args.has('build-receipt') ? await fs.readFile(path.resolve(args.get('build-receipt'))) : null;
+	const buildReceipt = receiptBytes ? JSON.parse(receiptBytes) : null;
+	if (!buildReceipt && args.get('allow-unverified-build') !== 'true')
+		throw new Error('Missing --build-receipt; use --allow-unverified-build true only for local, non-release packaging');
+	if (buildReceipt && args.has('allow-unverified-build')) throw new Error('Do not combine a build receipt with --allow-unverified-build');
+	for (const [option, field] of [['llvm-version', 'llvmVersion'], ['llvm-commit', 'llvmCommit'],
+		['wasi-sdk-version', 'wasiSdkVersion'], ['emsdk-version', 'emsdkVersion']]) {
+		if (buildReceipt && args.has(option) && args.get(option) !== buildReceipt.buildOptions?.[field])
+			throw new Error(`--${option} differs from the build receipt`);
+	}
+	const llvmVersion = buildReceipt?.buildOptions?.llvmVersion || args.get('llvm-version') || 'custom';
+	const llvmCommit = buildReceipt?.sources?.llvm?.commit;
 	const version = args.get('version') || `llvmorg-${llvmVersion}`;
 	const resourceDir = args.get('resource-dir') || `/lib/clang/${llvmVersion}`;
-	const compilerRuntimeLibDir =
-		args.get('compiler-runtime-lib-dir') || `lib/clang/${llvmVersion}/lib/wasi`;
-	const wasiSdkVersion = args.get('wasi-sdk-version');
-	const emsdkVersion = args.get('emsdk-version');
+	const compilerRuntimeLibDir = args.get('compiler-runtime-lib-dir') || `lib/clang/${llvmVersion}/lib/wasi`;
+	const wasiSdkVersion = buildReceipt?.buildOptions?.wasiSdkVersion || args.get('wasi-sdk-version');
+	const emsdkVersion = buildReceipt?.buildOptions?.emsdkVersion || args.get('emsdk-version');
 
 	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wasm-llvm-toolchain-'));
 	try {
@@ -223,6 +231,9 @@ async function main() {
 		const headerGzip = headerBytes ? await gzipAsync(headerBytes, { level: 9 }) : undefined;
 
 		readTarEntries(sysrootTarBytes);
+		if (buildReceipt) await verifyClangBuildReceipt(buildReceipt, {
+			clang: clangBytes, lld: lldBytes, sysroot: sysrootTarBytes, clangdJs: clangdJsBytes, clangdWasm: clangdWasmBytes, clangdHeaders: headerBytes
+		}, { producerRoot });
 		await assertWasm('clang', clangBytes);
 		await assertWasm('lld', lldBytes);
 		await assertWasm('memfs', memfsBytes);
@@ -266,12 +277,16 @@ async function main() {
 				}
 			}
 
+			if (receiptBytes) await fs.writeFile(path.join(targetDir, 'clang-build-receipt.json'), receiptBytes);
 			const metadata = {
 				producer: {
 					id: producerManifest.producerId,
 					manifest: path.relative(repoRoot, producerManifestPath).split(path.sep).join('/'),
 					manifestSha256: sha256(producerManifestBytes)
 				},
+				buildProvenance: receiptBytes
+					? { status: 'verified', receipt: 'clang-build-receipt.json', bytes: receiptBytes.length, sha256: sha256(receiptBytes) }
+					: { status: 'unverified', reason: 'Explicit local packaging without a source-to-output build receipt' },
 				version,
 				llvmVersion,
 				...(llvmCommit ? { llvmCommit } : {}),

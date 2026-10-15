@@ -234,10 +234,27 @@ when adopting new artifacts. Asyncify remains enabled with its normal indirect-c
 the stdin wait is reached through the virtual JSON transport loop, so narrowing instrumentation
 requires a rebuilt artifact and verified suspend/resume call paths first.
 
-To package raw outputs from another build:
+The full producer writes `clang-build-receipt.json` before packaging. It verifies the actual LLVM
+working tree against the pinned commit plus expected patches using an isolated Git index, and
+rejects unexpected tracked, untracked or ignored source files. The YoWASP marker records its
+repository, commit and patch digest; marker existence alone never proves the patch is applied.
+The emsdk checkout must have no tracked edits; ignored SDK installation outputs are allowed.
+
+The receipt binds compiler, linker, sysroot TAR, clangd and optional header bytes to source-tree
+and diff identities, recipe files, build options, and the native compiler/linker/tablegen/optimizer
+executable digests and versions. Source, recipe and executable identities are checked again after
+the build. It records build-input evidence, not a signature, independent reproducibility proof or
+runtime acceptance result. A clean independent rebuild and real acceptance remain separate gates.
+
+Downloads use unique temporary files, verify SHA-256 before rename, and replace a corrupt cache
+only after the replacement is verified. SDK extraction uses a digest-specific directory and marker
+and publishes a complete staging directory; interrupted staging is never treated as a valid cache.
+
+To package raw outputs from another build with its matching receipt:
 
 ```sh
 pnpm package:clang -- \
+  --build-receipt /path/to/clang-build-receipt.json \
   --clang-wasm /path/to/clang.wasm \
   --lld-wasm /path/to/wasm-ld.wasm \
   --sysroot /path/to/wasi-sysroot \
@@ -251,6 +268,12 @@ pnpm package:clang -- \
   --wasi-sdk-version 33 \
   --emsdk-version 6.0.0
 ```
+
+An explicit `--allow-unverified-build true` permits local experiments without a build receipt.
+Such packages carry `buildProvenance.status: "unverified"`, never infer an LLVM commit from a
+version string, and cannot be passed to release preparation. Production packaging consumes the
+receipt rather than constructing new source provenance from CLI version labels. Raw sysroot TAR
+bytes must match the receipt exactly; use the build's `sysroot-input.tar` when repackaging.
 
 ## Verify and prepare
 
@@ -269,6 +292,9 @@ source change additionally requires the current MemFS build receipt and verified
 All other source, toolchain and required-output fields must match. CLI output and
 `runtime-build.json.manifestCompatibility` distinguish these historical contracts from a
 current manifest. This compatibility check does not claim a clean rebuild of old binaries.
+Standalone verification remains available for these historical artifacts. Release preparation now
+requires a current, verified Clang build receipt and rejects the committed legacy artifacts until a
+fresh build supplies it. The receipt is retained and its hash checked in the released bundle.
 Both verification commands reject clangd assets that omit either the loader-side
 `Module.stdinReady` callback or the WebAssembly import wired to `__asyncjs__waitForStdin`.
 Optimized Emscripten builds shorten import names when assertions are disabled. Verification

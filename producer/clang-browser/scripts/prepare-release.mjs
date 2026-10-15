@@ -41,11 +41,11 @@ function resolveSourceDir() {
 	return LOCAL_ARTIFACT_DIR;
 }
 
-const { metadata: toolchain, files: verifiedFiles, sidecars: memfsFiles, manifestCompatibility } = await loadVerifiedClangArtifacts(SOURCE_DIR);
+const { metadata: toolchain, files: verifiedFiles, sidecars: provenanceFiles, manifestCompatibility } = await loadVerifiedClangArtifacts(SOURCE_DIR, { requireBuildReceipt: true });
 const releaseAssets = [...assets];
 if (toolchain.clangd?.headers)
 	releaseAssets.push({ source: toolchain.clangd.headers.asset, target: ['clangd', 'clangd.headers.json.gz'] });
-const releaseFiles = new Map(memfsFiles);
+const releaseFiles = new Map(provenanceFiles);
 
 const buildAssets = [];
 for (const asset of releaseAssets) {

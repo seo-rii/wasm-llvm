@@ -9,6 +9,8 @@ import { promisify } from "node:util";
 import test from "node:test";
 import { ZipWriter, Uint8ArrayReader, Uint8ArrayWriter } from "@zip.js/zip.js";
 
+import { makeBuildReceipt } from './fixtures/clang/artifacts.mjs';
+
 const exec = promisify(execFile);
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const scripts = path.join(repo, "producer/clang-browser/scripts");
@@ -79,8 +81,13 @@ async function fixture(t) {
       path.join(root, name),
     );
   }
+  const buildReceipt = await makeBuildReceipt({ clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024),
+    clangdJs: await readFile(path.join(root, "clangd.js")), clangdWasm: await readFile(path.join(root, "clangd.wasm")) });
+  const buildReceiptPath = path.join(root, "clang-build-receipt.json");
+  await writeFile(buildReceiptPath, JSON.stringify(buildReceipt));
   const packageArgs = [
     path.join(scripts, "package-toolchain.mjs"),
+    "--build-receipt", buildReceiptPath,
     "--clang-wasm",
     path.join(root, "module.wasm"),
     "--lld-wasm",

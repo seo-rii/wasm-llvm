@@ -108,34 +108,9 @@ test('clean toolchain checkout rejects tracked and untracked source changes', as
 });
 
 async function receiptFixture() {
-	const { fileIdentity } = await import('../producer/clang-browser/scripts/build-provenance.mjs');
-	const producerRoot = new URL('../producer/clang-browser/', import.meta.url);
-	const manifestBytes = await fs.readFile(new URL('manifest.json', producerRoot));
-	const manifest = JSON.parse(manifestBytes);
+	const { makeBuildReceipt } = await import('./fixtures/clang/artifacts.mjs');
 	const inputs = Object.fromEntries(['clang', 'lld', 'sysroot', 'clangdJs', 'clangdWasm'].map((name) => [name, Buffer.from(name)]));
-	const identity = (bytes) => ({ bytes: bytes.length, sha256: sha256(bytes) });
-	const files = [];
-	for (const file of ['build-toolchain.mjs', 'build-provenance.mjs', 'build-memfs.mjs',
-		'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh']) {
-		files.push({ path: `scripts/${file}`, ...await fileIdentity(new URL(`scripts/${file}`, producerRoot)) });
-	}
-	const source = { commit: 'a'.repeat(40), tree: 'b'.repeat(40), diffSha256: sha256('diff') };
-	return { inputs, receipt: {
-		schemaVersion: 1, producerId: manifest.producerId, kind: 'clang-build-receipt', manifestSha256: sha256(manifestBytes),
-		sources: {
-			llvm: { ...source, repository: manifest.sources.llvm.repository,
-				patches: [{ ...manifest.sources.wasiHostPatch, sha256: sha256('patch') }, manifest.sources.llvmWasiClosePatch,
-					manifest.sources.lldWasmOnlyPatch, manifest.sources.clangdEmscriptenStdinPatch] },
-			emsdk: { ...source, repository: 'https://github.com/emscripten-core/emsdk' }
-		},
-		buildOptions: { llvmCommit: source.commit, emsdkCommit: source.commit, llvmVersion: 'test', emsdkVersion: 'test',
-			wasiSdkVersion: 'test', yowaspWasiPatchRepo: manifest.sources.wasiHostPatch.repository,
-			yowaspWasiPatchCommit: manifest.sources.wasiHostPatch.commit },
-		inputs: Object.fromEntries(Object.entries(inputs).map(([name, bytes]) => [name, identity(bytes)])),
-		recipe: { files, sha256: sha256(JSON.stringify(files)) },
-		tools: Object.fromEntries(['cmake', 'ninja', 'tar', 'wasiClang', 'wasiLld', 'nativeC', 'nativeCxx',
-			'llvmTablegen', 'clangTablegen', 'emsdkClang', 'wasmOpt', 'emccDriver'].map((name) => [name, identity(Buffer.from(name))]))
-	} };
+	return { inputs, receipt: await makeBuildReceipt(inputs) };
 }
 
 test('receipt verification rejects binaries or sysroots from another build', async () => {
@@ -170,4 +145,15 @@ test('ignored source injections are rejected unless explicitly allowed for SDK i
 	await fs.writeFile(path.join(source, 'injected.h'), 'injected');
 	await assert.rejects(verifyPatchedCheckout({ source, commit }), /Unexpected source files/);
 	await verifyPatchedCheckout({ source, commit, allowIgnored: true });
+});
+
+test('receipt header mode and header bytes must agree with the actual package inputs', async () => {
+	const { verifyClangBuildReceipt } = await import('../producer/clang-browser/scripts/build-provenance.mjs');
+	const { inputs, receipt } = await receiptFixture();
+	const headers = Buffer.from('headers');
+	await assert.rejects(verifyClangBuildReceipt(receipt, { ...inputs, clangdHeaders: headers }), /separate header inputs/);
+	receipt.buildOptions.clangdSeparateHeaders = 'ON';
+	receipt.inputs.clangdHeaders = { bytes: headers.length, sha256: sha256(headers) };
+	await assert.rejects(verifyClangBuildReceipt(receipt, inputs), /clangdHeaders input identity mismatch/);
+	await verifyClangBuildReceipt(receipt, { ...inputs, clangdHeaders: headers });
 });

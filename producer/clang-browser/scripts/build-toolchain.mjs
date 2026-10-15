@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
 import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
-import { prepareClangdHeaders } from './prepare-clangd-headers.mjs';
+import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
 import { addWasiSignalStub, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -939,6 +939,12 @@ const inputs = {};
 for (const [name, file] of Object.entries({ clang: clangWasm, lld: lldWasm, sysroot: sysrootTar,
 	clangdJs: path.join(clangdBuild, 'bin', 'clangd.js'), clangdWasm: path.join(clangdBuild, 'bin', 'clangd.wasm')
 })) inputs[name] = await fileIdentity(file);
+if (config.clangdSeparateHeaders === 'ON') {
+	const headers = await createClangdHeaderAsset({ includeDir: clangdIncludeDir, resourceIncludeDir,
+		resourceDir: `/lib/clang/${resourceVersion}`, targetTriple: config.targetTriple,
+		version: `llvmorg-${config.llvmVersion}:${config.llvmCommit}` });
+	inputs.clangdHeaders = { bytes: headers.length, sha256: createHash('sha256').update(headers).digest('hex') };
+}
 const { workDir: _workDir, outDir: _outDir, ...buildOptions } = config;
 const buildReceipt = {
 	schemaVersion: 1, producerId: producerManifest.producerId, kind: 'clang-build-receipt',

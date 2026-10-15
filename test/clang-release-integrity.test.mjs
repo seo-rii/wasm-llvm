@@ -7,8 +7,9 @@ import { promisify } from 'node:util';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { loadVerifiedClangArtifacts, verifyClangArtifacts, verifyClangProducerManifest } from '../producer/clang-browser/scripts/verify-artifacts.mjs';
+import { createClangdHeaderAsset } from '../producer/clang-browser/scripts/prepare-clangd-headers.mjs';
 import { replaceArtifactDirectory } from '../producer/clang-browser/scripts/artifact-directory.mjs';
-import { clangdJs, clangdWasm, sha256, wasm, writeClangFixture, zipFiles } from './fixtures/clang/artifacts.mjs';
+import { clangdJs, clangdWasm, sha256, wasm, writeClangFixture, writeBuildReceipt, makeBuildReceipt, zipFiles } from './fixtures/clang/artifacts.mjs';
 
 const exec = promisify(execFile);
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -50,6 +51,7 @@ test('release rejects changed input hashes and incomplete debugger configuration
 	const changedClang = await zipFiles([['clang', Buffer.concat([wasm, Buffer.from([0, 1, 0])])]]);
 	await fs.writeFile(path.join(f.artifacts, 'clang.zip'), changedClang);
 	f.metadata.assets['clang.zip'] = sha256(changedClang);
+	await writeBuildReceipt(f.artifacts, f.metadata, { clang: Buffer.concat([wasm, Buffer.from([0, 1, 0])]), lld: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm });
 	await f.writeMetadata();
 	await assert.rejects(f.release({ WASM_LLVM_LLDB_ARTIFACT_DIR: f.root }), /Both WASM_LLVM_LLDB_ARTIFACT_DIR/);
 	assert.deepEqual(await snapshot(f.output), before);
@@ -139,11 +141,23 @@ test('packaging validates named ZIP inputs, preserves failure output, and remove
 		await fs.writeFile(path.join(raw, name), '// fixture');
 	}
 	const output = path.join(f.root, 'packaged');
-	const packageArgs = ['--clang-wasm', path.join(raw, 'clang.wasm'), '--lld-wasm', path.join(raw, 'lld.wasm'),
+	const receiptPath = path.join(raw, 'clang-build-receipt.json');
+	await fs.writeFile(receiptPath, JSON.stringify(await makeBuildReceipt({ clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm })));
+	const packageArgs = ['--build-receipt', receiptPath, '--clang-wasm', path.join(raw, 'clang.wasm'), '--lld-wasm', path.join(raw, 'lld.wasm'),
 		'--memfs-wasm', path.join(raw, 'memfs.wasm'), '--sysroot', path.join(raw, 'sysroot.tar'),
 		'--clangd-js', path.join(raw, 'clangd.js'), '--clangd-wasm', path.join(raw, 'clangd.wasm'),
 		'--target-dir', output, '--resource-dir', '/lib/clang/22'];
-	const pack = (extra = []) => exec(process.execPath, [path.join(scripts, 'package-toolchain.mjs'), ...packageArgs, ...extra], { cwd: repo });
+	const pack = async (extra = []) => {
+		const receipt = await makeBuildReceipt({ clang: wasm, lld: wasm, sysroot: Buffer.alloc(1024), clangdJs, clangdWasm });
+		if (extra.includes('--clangd-include')) {
+			const headers = await createClangdHeaderAsset({ includeDir: path.join(raw, 'include'), resourceIncludeDir: path.join(raw, 'resource'),
+				resourceDir: '/lib/clang/22', targetTriple: 'wasm32-wasi', version: `${extra[extra.indexOf('--version') + 1]}:${receipt.buildOptions.llvmCommit}` });
+			receipt.inputs.clangdHeaders = { bytes: headers.length, sha256: sha256(headers) };
+			receipt.buildOptions.clangdSeparateHeaders = 'ON';
+		}
+		await fs.writeFile(receiptPath, JSON.stringify(receipt));
+		return exec(process.execPath, [path.join(scripts, 'package-toolchain.mjs'), ...packageArgs, ...extra], { cwd: repo });
+	};
 	await pack(['--clangd-include', path.join(raw, 'include'), '--clangd-resource-include', path.join(raw, 'resource'), '--version', 'a']);
 	await f.release({ WASM_LLVM_CLANG_ARTIFACT_DIR: output });
 	assert.ok(await fs.readFile(path.join(f.output, 'clangd/clangd.headers.json.gz')));
@@ -198,4 +212,34 @@ test('staging failure and failed publication roll back byte-for-byte, and concur
 	await first;
 	assert.deepEqual(Object.keys(await snapshot(f.output)), ['only']);
 	assert.equal((await fs.readdir(f.root)).some((name) => name.includes('.staging-') || name.endsWith('.lock')), false);
+});
+
+test('packager requires build evidence and explicit unverified packaging cannot be promoted', async (t) => {
+	const f = await fixture(t);
+	const output = path.join(f.root, 'unverified-package');
+	const args = ['--clang-wasm', path.join(f.artifacts, 'clang.zip'), '--lld-wasm', path.join(f.artifacts, 'lld.zip'),
+		'--memfs-zip', path.join(f.artifacts, 'memfs.zip'), '--sysroot', path.join(f.artifacts, 'sysroot.tar.zip'),
+		'--clangd-js', path.join(f.artifacts, 'clangd/clangd.js'), '--clangd-wasm', path.join(f.artifacts, 'clangd/clangd.wasm.gz'),
+		'--llvm-version', f.metadata.llvmVersion, '--target-dir', output];
+	const pack = (extra = []) => exec(process.execPath, [path.join(scripts, 'package-toolchain.mjs'), ...args, ...extra], { cwd: repo });
+	await assert.rejects(pack(), /Missing --build-receipt/);
+	await assert.rejects(fs.stat(output), { code: 'ENOENT' });
+	await pack(['--allow-unverified-build', 'true']);
+	const metadata = JSON.parse(await fs.readFile(path.join(output, 'toolchain.json')));
+	assert.equal(metadata.buildProvenance.status, 'unverified');
+	assert.equal(metadata.llvmCommit, undefined, 'version strings must never imply a verified source commit');
+	await assert.rejects(f.release({ WASM_LLVM_CLANG_ARTIFACT_DIR: output }), /requires a verified source-to-output build receipt/);
+	await assert.rejects(fs.stat(f.output), { code: 'ENOENT' });
+	await pack(['--build-receipt', path.join(f.artifacts, 'clang-build-receipt.json')]);
+	await f.release({ WASM_LLVM_CLANG_ARTIFACT_DIR: output });
+	const before = await snapshot(output);
+	const changed = await zipFiles([['clang', Buffer.concat([wasm, Buffer.from([0, 1, 0])])]]);
+	await fs.writeFile(path.join(f.artifacts, 'clang.zip'), changed);
+	await assert.rejects(pack(['--build-receipt', path.join(f.artifacts, 'clang-build-receipt.json')]), /clang input identity mismatch/);
+	assert.deepEqual(await snapshot(output), before);
+});
+
+test('committed legacy artifacts are inspectable but cannot enter the release path without a fresh build receipt', async () => {
+	await assert.rejects(loadVerifiedClangArtifacts(path.join(repo, 'artifacts/clang-browser'), { requireBuildReceipt: true }),
+		/requires a verified source-to-output build receipt/);
 });
