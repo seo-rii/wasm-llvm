@@ -241,5 +241,20 @@ test("release binds the copied receipt both to metadata and to the delivered Mem
     new Uint8ArrayReader(Buffer.concat([wasm, Buffer.from([0, 1, 0])])),
   );
   await writeFile(path.join(f.artifactDir, "memfs.zip"), await writer.close());
-  await assert.rejects(f.release(), /raw module SHA-256\/size mismatch/);
+  await assert.rejects(f.release(), /Hash mismatch for memfs.zip/);
+});
+
+
+test("historical producer identity requires the rebuilt MemFS receipt bound to delivered bytes", async (t) => {
+  const f = await fixture(t);
+  await f.package();
+  const metadata = JSON.parse(await readFile(path.join(f.artifactDir, "toolchain.json")));
+  metadata.producer.manifestSha256 = "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78";
+  await writeFile(path.join(f.artifactDir, "toolchain.json"), JSON.stringify(metadata));
+  await f.release();
+  const build = JSON.parse(await readFile(path.join(f.releaseDir, "runtime-build.json")));
+  assert.equal(build.manifestCompatibility, "historical-components-requalified");
+  delete metadata.memfs;
+  await writeFile(path.join(f.artifactDir, "toolchain.json"), JSON.stringify(metadata));
+  await assert.rejects(f.release(), /manifest mismatch/);
 });

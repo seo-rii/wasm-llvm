@@ -8,8 +8,8 @@ import {
 	validateBuildReceipt as validateLldbBuildReceipt
 } from '../../lldb-browser/scripts/contracts.mjs';
 import { verifyWamrBrowser } from '../../wamr-browser/scripts/verify.mjs';
-import { loadMemfsReleaseFiles } from './memfs-provenance.mjs';
-import { verifyClangdHeaderAsset } from './clangd-header-asset-contract.mjs';
+import { loadVerifiedClangArtifacts } from './verify-artifacts.mjs';
+import { replaceArtifactDirectory } from './artifact-directory.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const LOCAL_ARTIFACT_DIR = path.resolve(REPO_ROOT, 'artifacts', 'clang-browser');
@@ -19,8 +19,6 @@ const TARGET_DIR = path.resolve(
 		process.argv[2] ||
 		path.join(REPO_ROOT, 'out', 'clang-browser')
 );
-const TARGET_BIN_DIR = path.resolve(TARGET_DIR, 'bin');
-const TARGET_CLANGD_DIR = path.resolve(TARGET_DIR, 'clangd');
 const LLDB_ARTIFACT_DIR = process.env.WASM_LLVM_LLDB_ARTIFACT_DIR
 	? path.resolve(process.env.WASM_LLVM_LLDB_ARTIFACT_DIR)
 	: null;
@@ -43,36 +41,21 @@ function resolveSourceDir() {
 	return LOCAL_ARTIFACT_DIR;
 }
 
-await fs.mkdir(TARGET_BIN_DIR, { recursive: true });
-await fs.mkdir(TARGET_CLANGD_DIR, { recursive: true });
-
-const toolchain = JSON.parse(await fs.readFile(path.resolve(SOURCE_DIR, 'toolchain.json'), 'utf8'));
-if (toolchain.clangd?.headers) {
-	verifyClangdHeaderAsset(
-		await fs.readFile(path.join(SOURCE_DIR, 'clangd/clangd.headers.json.gz')),
-		toolchain.clangd.headers
-	);
-	assets.push({ source: toolchain.clangd.headers.asset, target: ['clangd', 'clangd.headers.json.gz'] });
-}
-const memfsFiles = toolchain.memfs === undefined ? new Map() : await loadMemfsReleaseFiles(
-	SOURCE_DIR, toolchain.memfs, await fs.readFile(path.join(SOURCE_DIR, 'memfs.zip'))
-);
+const { metadata: toolchain, files: verifiedFiles, sidecars: memfsFiles, manifestCompatibility } = await loadVerifiedClangArtifacts(SOURCE_DIR);
+const releaseAssets = [...assets];
+if (toolchain.clangd?.headers)
+	releaseAssets.push({ source: toolchain.clangd.headers.asset, target: ['clangd', 'clangd.headers.json.gz'] });
+const releaseFiles = new Map(memfsFiles);
 
 const buildAssets = [];
-for (const asset of assets) {
-	const sourcePath = path.resolve(SOURCE_DIR, asset.source);
-	const targetPath = path.resolve(TARGET_DIR, ...asset.target);
-	const bytes = await fs.readFile(sourcePath);
-	await fs.mkdir(path.dirname(targetPath), { recursive: true });
-	await fs.writeFile(targetPath, bytes);
+for (const asset of releaseAssets) {
+	const bytes = verifiedFiles.get(asset.source);
+	releaseFiles.set(asset.target.join('/'), bytes);
 	buildAssets.push({
 		asset: asset.source,
 		size: bytes.byteLength,
 		sha256: crypto.createHash('sha256').update(bytes).digest('hex')
 	});
-}
-for (const [name, bytes] of memfsFiles) {
-	await fs.writeFile(path.join(TARGET_DIR, name), bytes);
 }
 
 const manifest = {
@@ -275,8 +258,7 @@ async function prepareDebugRuntimeManifest() {
 	}
 	await verifyWamrBrowser({ artifacts: WAMR_ARTIFACT_DIR });
 
-	const debugDir = path.join(TARGET_DIR, 'debug');
-	await fs.mkdir(debugDir, { recursive: true });
+	const debugDir = 'debug';
 	const debugAssets = [
 		{
 			source: path.join(LLDB_ARTIFACT_DIR, 'lldb-web-dap.js'),
@@ -315,7 +297,7 @@ async function prepareDebugRuntimeManifest() {
 		if (actualSha256 !== asset.sha256) {
 			throw new Error(`Debug runtime asset hash mismatch for ${path.basename(asset.source)}`);
 		}
-		await fs.copyFile(asset.source, asset.target);
+		releaseFiles.set(asset.target, bytes);
 	}
 
 	const runtimeManifestV2 = {
@@ -355,10 +337,7 @@ async function prepareDebugRuntimeManifest() {
 			}
 		}
 	};
-	await fs.writeFile(
-		path.resolve(TARGET_DIR, 'runtime-manifest.v2.json'),
-		JSON.stringify(runtimeManifestV2, null, 2) + '\n'
-	);
+	releaseFiles.set('runtime-manifest.v2.json', Buffer.from(JSON.stringify(runtimeManifestV2, null, 2) + '\n'));
 	return {
 		lldb: lldbManifest,
 		wamr: wamrReceipt
@@ -369,17 +348,24 @@ const debugRuntime = await prepareDebugRuntimeManifest();
 
 const buildInfo = {
 	toolchain,
+	manifestCompatibility,
 	assets: buildAssets,
 	...(debugRuntime ? { debugRuntime } : {})
 };
 
-await fs.writeFile(
-	path.resolve(TARGET_DIR, 'runtime-manifest.v1.json'),
-	JSON.stringify(manifest, null, 2) + '\n'
-);
-await fs.writeFile(
-	path.resolve(TARGET_DIR, 'runtime-build.json'),
-	JSON.stringify(buildInfo, null, 2) + '\n'
-);
-
+releaseFiles.set('runtime-manifest.v1.json', Buffer.from(JSON.stringify(manifest, null, 2) + '\n'));
+releaseFiles.set('runtime-build.json', Buffer.from(JSON.stringify(buildInfo, null, 2) + '\n'));
+await replaceArtifactDirectory(TARGET_DIR, async (staged) => {
+	for (const [name, bytes] of releaseFiles) {
+		const target = path.join(staged, name);
+		await fs.mkdir(path.dirname(target), { recursive: true });
+		await fs.writeFile(target, bytes);
+	}
+	// Verify the exact snapshot that will be published, including debugger and
+	// provenance sidecars. Inputs are never reread while assembling the output.
+	for (const [name, expected] of releaseFiles) {
+		if (!(await fs.readFile(path.join(staged, name))).equals(expected))
+			throw new Error(`Staged release verification failed: ${name}`);
+	}
+});
 console.log(`Prepared the Clang deployment bundle in ${TARGET_DIR}`);

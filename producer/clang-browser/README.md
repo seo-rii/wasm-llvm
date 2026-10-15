@@ -260,7 +260,15 @@ pnpm smoke:clang-artifacts
 pnpm prepare:clang-release
 ```
 
-`verify:clang-artifacts` checks every artifact against `toolchain.json`.
+`verify:clang-artifacts` checks every artifact hash against `toolchain.json`, requires exactly
+one correctly named regular file per ZIP, checks CRC and expanded-size limits, compiles each
+Wasm module, and validates sysroot TAR structure. The producer manifest digest must match.
+Two exact historical manifest snapshots are retained for the committed assets: the additive
+optional-header change is compatible only without optional headers, and the earlier MemFS
+source change additionally requires the current MemFS build receipt and verified delivered bytes.
+All other source, toolchain and required-output fields must match. CLI output and
+`runtime-build.json.manifestCompatibility` distinguish these historical contracts from a
+current manifest. This compatibility check does not claim a clean rebuild of old binaries.
 Both verification commands reject clangd assets that omit either the loader-side
 `Module.stdinReady` callback or the WebAssembly import wired to `__asyncjs__waitForStdin`.
 Optimized Emscripten builds shorten import names when assertions are disabled. Verification
@@ -270,3 +278,19 @@ and requires the matching function import in Wasm. Ambiguous or unsupported mapp
 modules, and checks the sysroot and MemFS payloads. `prepare:clang-release` writes the externally
 hosted bundle to `out/clang-browser` by default, including `runtime-manifest.v1.json` and
 `runtime-build.json` for consumers.
+
+
+Packaging and release preparation validate inputs before writing a unique staging directory.
+Release preparation uses the same verifier and publishes the verified byte snapshot; it cannot
+replace a trusted hash with the hash of a changed input. The complete new directory replaces
+the previous output, so disabled header/debug options and old version files do not survive.
+A per-output `<output>.lock` excludes concurrent writers. Staging verification and write failures
+leave the previous output untouched; a failed publication rename rolls the previous directory back.
+
+Publication uses two directory renames for compatibility with directory consumers. It is not a
+single atomic pointer swap for concurrent readers, nor a crash-safe transaction. A killed process
+may leave its lock and a sibling `.<output>.staging-*` directory; if interrupted between renames,
+the previous output is under that directory's `previous/`. Stop competing writers and inspect those
+paths before restoring the previous directory or removing stale locks. Do not serve this mutable
+assembly path directly: upload a completed version to immutable hosting and switch its deployment
+pointer using the deployment system. Building and publishing remain separate operations.
