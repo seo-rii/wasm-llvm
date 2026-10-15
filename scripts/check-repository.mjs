@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process';
+import { parse } from 'acorn';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,12 @@ const IGNORED_DIRECTORIES = new Set([
 	'browser-compiler-build',
 	'raw-runtime',
 	'source-checkout'
+]);
+// These files are inputs to Emscripten, not standalone Node modules.
+const EMSCRIPTEN_LIBRARIES = new Set([
+	'producer/wamr-browser/src/wasm-debug-transport.js',
+	'producer/wamr-browser/src/wasm-debug-stdin.js',
+	'producer/lldb-browser/overlays/lldb/tools/lldb-web-dap/library_lldb_shared_ring.js'
 ]);
 const FORBIDDEN_PACKAGE_FIELDS = [
 	'bin',
@@ -39,12 +46,14 @@ const REQUIRED_PRODUCERS = [
 	'clang-browser',
 	'cobol-browser',
 	'crystal-browser',
+	'd-browser',
 	'ecl-browser',
 	'emscripten-lld-browser',
 	'kotlin-browser',
 	'lean-browser',
 	'lfortran-browser',
 	'lldb-browser',
+	'nim-browser',
 	'objective-c-browser',
 	'odin-browser',
 	'rust-browser',
@@ -81,6 +90,37 @@ function checkSyntax(filePath) {
 		child.on('error', (error) => resolve(error.message));
 		child.on('close', (code) => resolve(code === 0 ? null : stderr.trim()));
 	});
+}
+
+async function parseNodeSource(filePath, source) {
+	let sourceType = filePath.endsWith('.cjs') ? 'script' : 'module';
+	if (filePath.endsWith('.js')) {
+		sourceType = null;
+		let directory = path.dirname(filePath);
+		while (true) {
+			const packageText = await readFile(path.join(directory, 'package.json'), 'utf8').catch((error) => {
+				if (error.code === 'ENOENT') return null;
+				throw error;
+			});
+			if (packageText !== null) {
+				const type = JSON.parse(packageText).type;
+				if (type === 'module') sourceType = 'module';
+				else if (type === 'commonjs') sourceType = 'script';
+				break;
+			}
+			const parent = path.dirname(directory);
+			if (parent === directory) break;
+			directory = parent;
+		}
+	}
+	const parseAs = (type) => parse(source, {
+		ecmaVersion: 'latest', sourceType: type, allowReturnOutsideFunction: type === 'script'
+	});
+	if (sourceType) return parseAs(sourceType);
+	// Node can detect ESM syntax in untyped .js packages; --check below remains
+	// the authority for the installed Node version's module classification.
+	try { return parseAs('script'); }
+	catch { return parseAs('module'); }
 }
 
 export async function inspectProducerRepository(repoRoot = REPO_ROOT) {
@@ -128,10 +168,10 @@ export async function inspectProducerRepository(repoRoot = REPO_ROOT) {
 		const pendingPins = [[manifest, '']];
 		while (pendingPins.length > 0) {
 			const [value, pointer] = pendingPins.pop();
-			if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+			if (!value || typeof value !== 'object') continue;
 			if (
 				typeof value.repository === 'string' &&
-				!/^\p{ASCII_Hex_Digit}{40}$/u.test(value.commit ?? '')
+				(typeof value.commit !== 'string' || !/^\p{ASCII_Hex_Digit}{40}$/u.test(value.commit))
 			) {
 				errors.push(
 					`producer/${producerName}/manifest.json ${pointer || '<root>'} must pin its repository with a 40-character commit`
@@ -149,21 +189,54 @@ export async function inspectProducerRepository(repoRoot = REPO_ROOT) {
 		errors.push(`browser/runtime TypeScript remains: ${path.relative(repoRoot, filePath)}`);
 	}
 
-	const moduleFiles = files.filter((filePath) => filePath.endsWith('.mjs'));
-	for (const filePath of moduleFiles) {
-		const source = await readFile(filePath, 'utf8');
-		if (
-			/(?:from\s+|import\s*\(|require\s*\()\s*['"]@seo-rii\/wasm-llvm(?:\/|['"])/u.test(
-				source
-			)
-		) {
-			errors.push(`self runtime import remains: ${path.relative(repoRoot, filePath)}`);
+	const moduleFiles = files.filter((filePath) =>
+		/\.(?:mjs|cjs|js)$/u.test(filePath) &&
+		!EMSCRIPTEN_LIBRARIES.has(path.relative(repoRoot, filePath).split(path.sep).join('/'))
+	);
+	// Bound subprocess concurrency while preserving deterministic diagnostics.
+	const diagnostics = new Array(moduleFiles.length);
+	let next = 0;
+	await Promise.all(Array.from({ length: Math.min(8, moduleFiles.length) }, async () => {
+		while (next < moduleFiles.length) {
+			const index = next++;
+			const filePath = moduleFiles[index];
+			const relative = path.relative(repoRoot, filePath);
+			const source = await readFile(filePath, 'utf8');
+			const issues = [];
+			try {
+				const ast = await parseNodeSource(filePath, source);
+				const pending = [ast];
+				while (pending.length) {
+					const node = pending.pop();
+					if (!node || typeof node !== 'object') continue;
+					let specifier;
+					if (['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration', 'ImportExpression'].includes(node.type)) {
+						specifier = node.source;
+					} else if (node.type === 'CallExpression' && node.callee?.type === 'Identifier' && node.callee.name === 'require') {
+						specifier = node.arguments[0];
+					}
+					const name = specifier?.type === 'Literal' ? specifier.value :
+						specifier?.type === 'TemplateLiteral' && specifier.expressions.length === 0 ? specifier.quasis[0].value.cooked : null;
+					if (typeof name === 'string' && (name === '@seo-rii/wasm-llvm' || name.startsWith('@seo-rii/wasm-llvm/'))) {
+						issues.push(`self runtime import remains: ${relative}`);
+						break;
+					}
+					for (const value of Object.values(node)) {
+						if (Array.isArray(value)) pending.push(...value);
+						else if (value && typeof value === 'object') pending.push(value);
+					}
+				}
+			} catch (error) {
+				issues.push(`invalid JavaScript: ${relative}\n${error.message}`);
+			}
+			if (!issues.some((issue) => issue.startsWith('invalid JavaScript:'))) {
+				const syntaxError = await checkSyntax(filePath);
+				if (syntaxError) issues.push(`invalid JavaScript: ${relative}\n${syntaxError}`);
+			}
+			diagnostics[index] = issues;
 		}
-		const syntaxError = await checkSyntax(filePath);
-		if (syntaxError) {
-			errors.push(`invalid JavaScript: ${path.relative(repoRoot, filePath)}\n${syntaxError}`);
-		}
-	}
+	}));
+	errors.push(...diagnostics.flat());
 
 	return {
 		errors,

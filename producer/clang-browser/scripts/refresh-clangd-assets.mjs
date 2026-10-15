@@ -65,7 +65,8 @@ async function snapshotDirectory(directory) {
 }
 
 /**
- * Stage a clangd-only refresh, preserving every other source file and metadata field.
+ * Stage a local clangd-only refresh, preserving source files and historical metadata.
+ * A command receipt is not a full Clang build receipt; refreshed output is unqualified.
  * The output must be empty or absent and disjoint from both input directories.
  */
 export async function refreshClangdAssets({ sourceArtifacts, clangdDir, outDir, buildReceipt }) {
@@ -181,6 +182,11 @@ export async function refreshClangdAssets({ sourceArtifacts, clangdDir, outDir, 
 		[CLANGD_HEADER_ASSET, headersGz]
 	]);
 	const metadata = structuredClone(sourceMetadata);
+	metadata.buildProvenance = {
+		status: 'unverified',
+		reason: 'Local clangd-only refresh has no matching complete source-to-output build receipt',
+		...(sourceMetadata.buildProvenance ? { previous: sourceMetadata.buildProvenance } : {})
+	};
 	metadata.producer = { ...metadata.producer, manifestSha256: digest(manifestBytes).sha256 };
 	metadata.clangd = {
 		...metadata.clangd,

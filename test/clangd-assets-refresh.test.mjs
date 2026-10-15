@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { gzipSync } from 'node:zlib';
+import { zipFiles, wasm as compilerWasm } from './fixtures/clang/artifacts.mjs';
 import { refreshClangdAssets } from '../producer/clang-browser/scripts/refresh-clangd-assets.mjs';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -32,11 +33,11 @@ async function fixture(t, gzInput = false) {
 	await mkdir(path.join(source, 'clangd'), { recursive: true });
 	await mkdir(prepared);
 	const wasm = stdinWasm();
+	const archives = [];
+	for (const name of ['clang', 'lld', 'memfs', 'sysroot.tar'])
+		archives.push([`${name}.zip`, await zipFiles([[name, name === 'sysroot.tar' ? Buffer.alloc(1024) : compilerWasm]])]);
 	const sourceFiles = new Map([
-		...['clang.zip', 'lld.zip', 'memfs.zip', 'sysroot.tar.zip'].map((name) => [
-			name,
-			Buffer.from(`preserved ${name}`)
-		]),
+		...archives,
 		[
 			'clangd/clangd.js',
 			Buffer.from('function stdin(){return Module.stdinReady()} // original')
@@ -46,10 +47,12 @@ async function fixture(t, gzInput = false) {
 		['LICENSE.memfs-llvm.txt', Buffer.from('preserved license bytes')],
 		['component-refresh-recipe.mjs', Buffer.from('// preserved historical recipe')]
 	]);
+	const manifestBytes = await readFile(new URL('../producer/clang-browser/manifest.json', import.meta.url));
+	const manifest = JSON.parse(manifestBytes);
 	const metadata = {
-		producer: { id: 'wasm-llvm/clang-browser', manifestSha256: 'old', extra: 'preserved' },
+		producer: { id: manifest.producerId, manifest: 'producer/clang-browser/manifest.json', manifestSha256: sha256(manifestBytes), extra: 'preserved' },
 		version: 'llvmorg-22.1.8',
-		llvmCommit: 'fixture-commit',
+		llvmCommit: manifest.sources.llvm.commit,
 		resourceDir: '/lib/clang/22',
 		clangd: {
 			stdinBridge: 'emscripten-asyncify',
@@ -77,7 +80,7 @@ async function fixture(t, gzInput = false) {
 	);
 	const tree = {
 		schemaVersion: 1,
-		version: 'llvmorg-22.1.8:fixture-commit',
+		version: `${metadata.version}:${metadata.llvmCommit}`,
 		targetTriple: 'wasm32-wasi',
 		resourceDir: '/lib/clang/22',
 		files: {
@@ -209,7 +212,7 @@ test('rejects corrupt source assets and incomplete or mismatched prepared header
 		gzipSync(Buffer.from(JSON.stringify(f.tree)))
 	);
 	await assert.rejects(refreshClangdAssets(f.options), /do not match source toolchain/);
-	f.tree.version = 'llvmorg-22.1.8:fixture-commit';
+	f.tree.version = `${f.metadata.version}:${f.metadata.llvmCommit}`;
 	delete f.tree.files['/usr/include/c++/v1/vector'];
 	await writeFile(
 		path.join(f.prepared, 'clangd.headers.json.gz'),
@@ -238,4 +241,22 @@ test('rejects overlapping or non-empty output directories without changing their
 	await writeFile(path.join(f.options.outDir, 'existing.txt'), 'keep');
 	await assert.rejects(refreshClangdAssets(f.options), /empty or absent/);
 	assert.equal(await readFile(path.join(f.options.outDir, 'existing.txt'), 'utf8'), 'keep');
+});
+
+test('a clangd-only refresh keeps historical evidence but cannot inherit release qualification', async (t) => {
+	const { writeBuildReceipt } = await import('./fixtures/clang/artifacts.mjs');
+	const { loadVerifiedClangArtifacts, verifyClangArtifacts } = await import('../producer/clang-browser/scripts/verify-artifacts.mjs');
+	const f = await fixture(t);
+	await writeBuildReceipt(f.source, f.metadata, { clang: compilerWasm, lld: compilerWasm,
+		memfs: compilerWasm, sysroot: Buffer.alloc(1024), clangdJs: f.sourceFiles.get('clangd/clangd.js'), clangdWasm: f.wasm });
+	await writeFile(path.join(f.source, 'toolchain.json'), JSON.stringify(f.metadata));
+	await loadVerifiedClangArtifacts(f.source, { requireBuildReceipt: true });
+	const receiptBefore = await readFile(path.join(f.source, 'clang-build-receipt.json'));
+	const result = await refreshClangdAssets(f.options);
+	const metadata = JSON.parse(await readFile(path.join(result.directory, 'toolchain.json')));
+	assert.equal(metadata.buildProvenance.status, 'unverified');
+	assert.deepEqual(metadata.buildProvenance.previous, f.metadata.buildProvenance);
+	assert.deepEqual(await readFile(path.join(result.directory, 'clang-build-receipt.json')), receiptBefore);
+	await verifyClangArtifacts(result.directory);
+	await assert.rejects(loadVerifiedClangArtifacts(result.directory, { requireBuildReceipt: true }), /requires a verified source-to-output build receipt/);
 });

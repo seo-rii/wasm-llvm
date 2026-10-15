@@ -100,14 +100,14 @@ export async function createClangdHeaderAsset({ includeDir, resourceIncludeDir, 
 	}
 	const files = Object.create(null);
 	async function collect(directory, mount) {
-		for (const entry of (await fs.readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+		for (const entry of (await fs.readdir(directory, { withFileTypes: true })).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)) {
 			if (/[\\\x00-\x1f]/u.test(entry.name)) throw new Error('Invalid clangd header filename');
 			const source = path.join(directory, entry.name);
 			const target = `${mount}/${entry.name}`;
 			if (entry.isDirectory()) await collect(source, target);
 			else if (entry.isFile()) {
-				// Fatal decoding prevents silently changing header contents during packaging.
-				files[target] = new TextDecoder('utf-8', { fatal: true }).decode(await fs.readFile(source));
+				// Fatal decoding rejects invalid UTF-8; ignoreBOM preserves the BOM as content.
+				files[target] = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await fs.readFile(source));
 			} else throw new Error(`clangd header asset requires resolved regular files: ${source}`);
 		}
 	}

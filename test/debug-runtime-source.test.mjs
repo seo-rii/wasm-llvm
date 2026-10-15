@@ -96,3 +96,22 @@ test('published runtime source contains a revision-locked LLDB and WAMR bundle',
 		assert.equal(await sha256(filePath), expectedSha256, `${asset} hash must match the manifest`);
 	}
 });
+
+test('WAMR transport qualification is bound to the published session-fix artifacts', async () => {
+	const smoke = JSON.parse(await readFile(path.join(repoRoot, 'producer/wamr-browser/validation/transport-sessions.json')));
+	const manifest = JSON.parse(await readFile(path.join(runtimeSourceDir, 'runtime-manifest.v2.json')));
+	const runtime = manifest.debugger.targetRuntime;
+	assert.equal(smoke.schemaVersion, 1);
+	assert.equal(smoke.kind, 'wamr-transport-smoke');
+	assert.equal(smoke.passed, true);
+	assert.equal(smoke.crossOriginIsolated, true);
+	assert.equal(smoke.text, '+$qXfer:libraries:read+;PacketSize=1000;#65');
+	assert.deepEqual(smoke.cases, ['module-factory', 'pthread-bootstrap', 'shared-ring-qSupported']);
+	assert.deepEqual(smoke.build.provenance, runtime.provenance);
+	for (const key of ['js', 'wasm', 'worker']) {
+		const asset = smoke.assets.find((entry) => entry.path === path.basename(runtime[key]));
+		assert.ok(asset, key);
+		assert.equal(asset.sha256, runtime[`${key}Sha256`]);
+		assert.equal(asset.bytes, (await stat(path.join(runtimeSourceDir, runtime[key]))).size);
+	}
+});
