@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "qualification": "producer Node WASI freestanding CLI smoke; not container/browser/sysroot qualification",
+  "node": "v24.1.0",
+  "platform": "linux",
+  "arch": "x64",
+  "fixtureSha256": "cee57a3e34eff8151377b667ac117867b121c7e2afc21474ace6d19af213b1f0",
+  "producerReceiptSha256": "7db6ac0eff2256c79e0a5435908810d15daa18d2220c57ab64fea2116b7ba9fd",
+  "inputs": {
+    "clang": {
+      "bytes": 51965041,
+      "sha256": "e0b548b70e13ad9620c1f47a1ef3f552b74cea586866ef1d8dcc0558c87f50e3"
+    },
+    "lld": {
+      "bytes": 24938493,
+      "sha256": "3da2fc3d37702d3d56bce834672912334e36d245efaf97fbdda7e4b5e810134a"
+    }
+  },
+  "sourceRevision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+  "linkTimeOptimization": {
+    "mode": "full",
+    "optimizerLevelOverride": 1,
+    "codegenLevelOverride": 1,
+    "partitions": 1,
+    "thinLtoCache": null
+  },
+  "commands": [
+    {
+      "label": "version",
+      "argv": [
+        "clang",
+        "--version"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 384.98278400000027,
+      "stdout": "clang version 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)\nTarget: wasm32-unknown-wasi\nThread model: posix\nInstalledDir: \n",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "label": "response",
+      "argv": [
+        "clang",
+        "@compile.rsp"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 1180.0469509999998,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "label": "object",
+      "argv": [
+        "clang",
+        "--target=wasm32-wasi",
+        "-c",
+        "part two.c",
+        "-o",
+        "part two.o"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 303.5184930000005,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "label": "preprocess",
+      "argv": [
+        "clang",
+        "--target=wasm32-wasi",
+        "-Iinclude",
+        "-DVALUE=40",
+        "-E",
+        "part one.c",
+        "-o",
+        "part one.i"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 154.16409199999998,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "label": "assembly",
+      "argv": [
+        "clang",
+        "--target=wasm32-wasi",
+        "-Iinclude",
+        "-DVALUE=40",
+        "-S",
+        "part one.c",
+        "-o",
+        "part one.s"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 227.2334120000005,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "label": "diagnostic",
+      "argv": [
+        "clang",
+        "--target=wasm32-wasi",
+        "-c",
+        "broken.c",
+        "-o",
+        "broken.o"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 1,
+      "durationMs": 1147.6351110000005,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\nbroken.c:1:13: error: expected parameter declarator\n    1 | int broken( {\n      |             ^\nbroken.c:1:13: error: expected ')'\nbroken.c:1:11: note: to match this '('\n    1 | int broken( {\n      |           ^\nbroken.c:1:14: error: expected function body after function declarator\n    1 | int broken( {\n      |              ^\n3 errors generated.\n"
+    },
+    {
+      "label": "link",
+      "argv": [
+        "clang",
+        "--target=wasm32-wasi",
+        "-fuse-ld=/opt/bin/wasm-ld",
+        "-nostdlib",
+        "-Wl,--no-entry",
+        "-Wl,--export=answer",
+        "part one.o",
+        "part two.o",
+        "-o",
+        "answer.wasm"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 466.3853140000001,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    },
+    {
+      "label": "source-link",
+      "argv": [
+        "clang",
+        "--target=wasm32-wasi",
+        "-fuse-ld=/opt/bin/wasm-ld",
+        "-Iinclude",
+        "-DVALUE=40",
+        "-nostdlib",
+        "-Wl,--no-entry",
+        "-Wl,--export=answer",
+        "part one.c",
+        "part two.c",
+        "-o",
+        "source-answer.wasm"
+      ],
+      "cwd": "/workspace/project space/한글",
+      "code": 0,
+      "durationMs": 2075.7087889999993,
+      "stdout": "",
+      "stderr": "clang: warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead [-Wdeprecated]\n"
+    }
+  ],
+  "dispatches": [
+    {
+      "program": "/opt/bin/wasm-ld",
+      "kind": "lld",
+      "argv": [
+        "/opt/bin/wasm-ld",
+        "-m",
+        "wasm32",
+        "-L/lib/wasm32-wasi",
+        "--no-entry",
+        "--export=answer",
+        "part one.o",
+        "part two.o",
+        "-o",
+        "answer.wasm"
+      ],
+      "flags": 1,
+      "code": 0,
+      "cwd": "/workspace/project space/한글"
+    },
+    {
+      "program": "",
+      "kind": "clang",
+      "argv": [
+        "",
+        "clang",
+        "-cc1",
+        "-triple",
+        "wasm32-unknown-wasi",
+        "-emit-obj",
+        "-dumpdir",
+        "source-answer.wasm-",
+        "-disable-free",
+        "-clear-ast-before-backend",
+        "-disable-llvm-verifier",
+        "-discard-value-names",
+        "-main-file-name",
+        "part one.c",
+        "-mrelocation-model",
+        "static",
+        "-mframe-pointer=none",
+        "-ffp-contract=on",
+        "-fno-rounding-math",
+        "-mconstructor-aliases",
+        "-target-cpu",
+        "generic",
+        "-fvisibility=hidden",
+        "-debugger-tuning=gdb",
+        "-fdebug-compilation-dir=/workspace/project space/한글",
+        "-fcoverage-compilation-dir=/workspace/project space/한글",
+        "-resource-dir",
+        "lib/clang/22",
+        "-I",
+        "include",
+        "-D",
+        "VALUE=40",
+        "-internal-isystem",
+        "lib/clang/22/include",
+        "-internal-isystem",
+        "/include/wasm32-wasi",
+        "-internal-isystem",
+        "/include",
+        "-ferror-limit",
+        "19",
+        "-fgnuc-version=4.2.1",
+        "-fskip-odr-check-in-gmf",
+        "-o",
+        "/tmp/part one-9f53bd.o",
+        "-x",
+        "c",
+        "part one.c"
+      ],
+      "flags": 1,
+      "code": 0,
+      "cwd": "/workspace/project space/한글"
+    },
+    {
+      "program": "",
+      "kind": "clang",
+      "argv": [
+        "",
+        "clang",
+        "-cc1",
+        "-triple",
+        "wasm32-unknown-wasi",
+        "-emit-obj",
+        "-dumpdir",
+        "source-answer.wasm-",
+        "-disable-free",
+        "-clear-ast-before-backend",
+        "-disable-llvm-verifier",
+        "-discard-value-names",
+        "-main-file-name",
+        "part two.c",
+        "-mrelocation-model",
+        "static",
+        "-mframe-pointer=none",
+        "-ffp-contract=on",
+        "-fno-rounding-math",
+        "-mconstructor-aliases",
+        "-target-cpu",
+        "generic",
+        "-fvisibility=hidden",
+        "-debugger-tuning=gdb",
+        "-fdebug-compilation-dir=/workspace/project space/한글",
+        "-fcoverage-compilation-dir=/workspace/project space/한글",
+        "-resource-dir",
+        "lib/clang/22",
+        "-I",
+        "include",
+        "-D",
+        "VALUE=40",
+        "-internal-isystem",
+        "lib/clang/22/include",
+        "-internal-isystem",
+        "/include/wasm32-wasi",
+        "-internal-isystem",
+        "/include",
+        "-ferror-limit",
+        "19",
+        "-fgnuc-version=4.2.1",
+        "-fskip-odr-check-in-gmf",
+        "-o",
+        "/tmp/part two-ad30de.o",
+        "-x",
+        "c",
+        "part two.c"
+      ],
+      "flags": 1,
+      "code": 0,
+      "cwd": "/workspace/project space/한글"
+    },
+    {
+      "program": "/opt/bin/wasm-ld",
+      "kind": "lld",
+      "argv": [
+        "/opt/bin/wasm-ld",
+        "-m",
+        "wasm32",
+        "-L/lib/wasm32-wasi",
+        "--no-entry",
+        "--export=answer",
+        "/tmp/part one-9f53bd.o",
+        "/tmp/part two-ad30de.o",
+        "-o",
+        "source-answer.wasm"
+      ],
+      "flags": 1,
+      "code": 0,
+      "cwd": "/workspace/project space/한글"
+    }
+  ],
+  "rejectedDispatches": [],
+  "executedArtifactResult": 42
+}

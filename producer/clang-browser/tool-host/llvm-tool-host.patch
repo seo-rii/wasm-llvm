@@ -1,0 +1,81 @@
+--- a/llvm/lib/Support/Program.cpp
++++ b/llvm/lib/Support/Program.cpp
+@@ -14,6 +14,27 @@
+ #include "llvm/ADT/StringRef.h"
+ #include "llvm/Config/llvm-config.h"
+ #include "llvm/Support/raw_ostream.h"
++
++#if defined(__wasi__) && defined(LLVM_WASM_IDLE_TOOL_HOST)
++#include <cstdint>
++
++namespace {
++struct WasmIdleString {
++  const char *Data;
++  uint32_t Size;
++};
++static_assert(sizeof(WasmIdleString) == 8, "exec_v1 requires wasm32 slices");
++
++// Synchronous host call; the host owns inherited cwd, filesystem and fd 0/1/2.
++extern "C" __attribute__((__import_module__("wasm_idle_tool_host"),
++                          __import_name__("exec_v1")))
++int32_t wasmIdleExec(const char *Program, uint32_t ProgramSize,
++                    const WasmIdleString *Args, uint32_t ArgCount,
++                    const WasmIdleString *Env, uint32_t EnvCount,
++                    uint32_t Flags);
++} // namespace
++#endif
++
+ using namespace llvm;
+ using namespace sys;
+
+@@ -37,6 +58,42 @@
+                         std::optional<ProcessStatistics> *ProcStat,
+                         BitVector *AffinityMask) {
+   assert(Redirects.empty() || Redirects.size() == 3);
++#if defined(__wasi__) && defined(LLVM_WASM_IDLE_TOOL_HOST)
++  if (ProcStat)
++    *ProcStat = std::nullopt;
++  auto Fail = [&](StringRef Message, int Code = -1) {
++    if (ErrMsg)
++      *ErrMsg = Message.str();
++    if (ExecutionFailed)
++      *ExecutionFailed = true;
++    return Code;
++  };
++  if (SecondsToWait || MemoryLimit || AffinityMask)
++    return Fail("wasm_idle_tool_host exec_v1 does not support per-child timeout, "
++                "memory limit or affinity");
++  for (const auto &Redirect : Redirects)
++    if (Redirect)
++      return Fail("wasm_idle_tool_host exec_v1 does not support redirect files");
++
++  SmallVector<WasmIdleString, 32> ArgSlices;
++  SmallVector<WasmIdleString, 16> EnvSlices;
++  for (StringRef Arg : Args)
++    ArgSlices.push_back({Arg.data(), static_cast<uint32_t>(Arg.size())});
++  if (Env)
++    for (StringRef Entry : *Env)
++      EnvSlices.push_back({Entry.data(), static_cast<uint32_t>(Entry.size())});
++  // An absent environment inherits; an explicitly empty environment stays empty.
++  int Result = wasmIdleExec(Program.data(), Program.size(), ArgSlices.data(),
++                           ArgSlices.size(), EnvSlices.data(), EnvSlices.size(),
++                           Env ? 0 : 1);
++  if (Result < 0)
++    return Fail(Result == -2 ? "wasm_idle_tool_host child terminated abnormally"
++                             : "wasm_idle_tool_host could not start child",
++                Result == -2 ? -2 : -1);
++  if (ExecutionFailed)
++    *ExecutionFailed = false;
++  return Result;
++#else
+   ProcessInfo PI;
+   if (Execute(PI, Program, Args, Env, Redirects, MemoryLimit, ErrMsg,
+               AffinityMask, /*DetachProcess=*/false)) {
+@@ -52,6 +109,7 @@
+     *ExecutionFailed = true;
+
+   return -1;
++#endif
+ }
+
+ ProcessInfo sys::ExecuteNoWait(StringRef Program, ArrayRef<StringRef> Args,

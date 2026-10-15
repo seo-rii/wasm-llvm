@@ -48,6 +48,7 @@ const config = {
 		.map((entry) => entry.trim())
 		.filter(Boolean),
 	clangWasmOpt: process.env.CLANG_WASM_OPT || 'default',
+	clangToolHost: process.env.CLANG_TOOL_HOST || 'OFF',
 	clangdLto: process.env.CLANGD_LTO || 'ON',
 	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
 	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
@@ -69,6 +70,7 @@ const tempDir = path.resolve(process.env.TMPDIR || path.join(config.workDir, 'tm
 process.env.TMPDIR = tempDir;
 
 for (const [name, value] of [
+	['CLANG_TOOL_HOST', config.clangToolHost],
 	['CLANGD_LTO', config.clangdLto],
 	['CLANGD_ASSERTIONS', config.clangdAssertions],
 	['CLANGD_TIDY_CHECKS', config.clangdTidyChecks],
@@ -113,6 +115,7 @@ Environment:
   LLVM_HOT_PATH_OPT=${config.llvmHotPathOpt}
   LLVM_HOT_PATH_DIRS=${config.llvmHotPathDirs.join(',')}
   CLANG_WASM_OPT=${config.clangWasmOpt}
+  CLANG_TOOL_HOST=${config.clangToolHost} (experimental; requires --compiler-only and fresh explicit directories)
   CLANGD_LTO=${config.clangdLto}
   CLANGD_ASSERTIONS=${config.clangdAssertions}
   CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
@@ -130,6 +133,50 @@ then calls package-toolchain.mjs to refresh artifacts/clang-browser. --compiler-
 the WASI clang/wasm-ld modules and writes them with compiler-build.json to
 WASM_LLVM_TOOLCHAIN_OUT_DIR/compiler for benchmark-compiler.mjs.`);
 	process.exit(0);
+}
+
+let toolHostProfile = null;
+if (config.clangToolHost === 'ON') {
+	if (!compilerOnly) throw new Error('CLANG_TOOL_HOST requires --compiler-only; release packaging is not qualified');
+	if (!process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR || !process.env.WASM_LLVM_TOOLCHAIN_OUT_DIR) {
+		throw new Error('CLANG_TOOL_HOST requires explicit WASM_LLVM_TOOLCHAIN_WORK_DIR and WASM_LLVM_TOOLCHAIN_OUT_DIR');
+	}
+	const contains = (parent, child) => {
+		const relative = path.relative(parent, child);
+		return !relative || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
+	};
+	if (contains(config.workDir, config.outDir) || contains(config.outDir, config.workDir)) {
+		throw new Error('CLANG_TOOL_HOST work/output directories must be separate');
+	}
+	for (const directory of [config.workDir, config.outDir]) {
+		try {
+			await fs.lstat(directory);
+			throw new Error(`CLANG_TOOL_HOST requires a fresh directory: ${directory}`);
+		} catch (error) {
+			if (error.code !== 'ENOENT') throw error;
+		}
+	}
+	toolHostProfile = JSON.parse(await fs.readFile(path.join(producerRoot, 'tool-host/profile.json'), 'utf8'));
+	if (config.llvmCommit !== toolHostProfile.llvmCommit || config.hostTriple !== 'wasm32-wasip1') {
+		throw new Error('CLANG_TOOL_HOST requires the profile-pinned LLVM revision and wasm32-wasip1 host');
+	}
+	// The tool-host receipt records the manifest's sources and SDK pins; caller overrides would
+	// build from different inputs (or an unverified WASI_SDK_PATH) under that same identity.
+	const overridden = [
+		['LLVM_VERSION', config.llvmVersion, producerManifest.sources.llvm.version],
+		['YOWASP_WASI_PATCH_REPO', config.yowaspWasiPatchRepo, producerManifest.sources.wasiHostPatch.repository],
+		['YOWASP_WASI_PATCH_COMMIT', config.yowaspWasiPatchCommit, producerManifest.sources.wasiHostPatch.commit],
+		['WASI_SDK_VERSION', config.wasiSdkVersion, producerManifest.toolchains.wasiSdk.version],
+		['EMSDK_VERSION', config.emsdkVersion, producerManifest.toolchains.emsdk.version],
+		['EMSDK_COMMIT', config.emsdkCommit, producerManifest.toolchains.emsdk.commit],
+		['TARGET_TRIPLE', config.targetTriple, producerManifest.target]
+	]
+		.filter(([, actual, expected]) => actual !== expected)
+		.map(([name]) => name);
+	if (process.env.WASI_SDK_PATH) overridden.push('WASI_SDK_PATH');
+	if (overridden.length) {
+		throw new Error(`CLANG_TOOL_HOST requires producer-manifest pinned inputs; unset ${overridden.join(', ')}`);
+	}
 }
 
 const run = (command, args, options = {}) =>
@@ -356,12 +403,14 @@ async function recordPathTool(name, command) {
 
 const ninjaArgs = config.ninjaJobs ? ['-j', config.ninjaJobs] : [];
 const wasiCompileFlags =
-	'-DBYTE_ORDER=1234 -DLITTLE_ENDIAN=1234 -DBIG_ENDIAN=4321 -D_WASI_EMULATED_MMAN -flto';
+	'-DBYTE_ORDER=1234 -DLITTLE_ENDIAN=1234 -DBIG_ENDIAN=4321 -D_WASI_EMULATED_MMAN -flto' +
+	(toolHostProfile ? ' -DLLVM_WASM_IDLE_TOOL_HOST=1' : '');
 // --no-wasm-opt keeps the WASI SDK driver from running whichever Binaryen is on PATH at link time;
 // the pinned Emscripten SDK's wasm-opt applies the same optimization after the build. Like the
 // driver does for its own wasm-opt run, keep target_features so Binaryen enables the same features.
 const wasiLinkerFlags =
-	'-lwasi-emulated-mman -Wl,--max-memory=4294967296 -Wl,-z,stack-size=8388608,--stack-first -flto -Wl,--strip-all -Wl,--keep-section=target_features --no-wasm-opt';
+	'-lwasi-emulated-mman -Wl,--max-memory=4294967296 -Wl,-z,stack-size=8388608,--stack-first -flto -Wl,--strip-all -Wl,--keep-section=target_features --no-wasm-opt' +
+	(toolHostProfile ? ` "${cmakeString(path.join(config.workDir, 'build', 'tool-host-initial-cwd.o'))}"` : '');
 const downloadDir = path.join(config.workDir, 'downloads');
 const sourceDir = path.join(config.workDir, 'src');
 const buildDir = path.join(config.workDir, 'build');
@@ -418,14 +467,29 @@ const yowaspPatch = await patchLlvmForWasiHost();
 await patchLlvmWasiClose();
 await patchLldForWasmOnly();
 await patchClangdForEmscriptenStdin();
+if (toolHostProfile) {
+	// Same pinned patch input as the isolated cached rebuild (build.py); the work dir is fresh.
+	await assertSha256(
+		path.join(llvmSource, 'llvm/lib/Support/Program.cpp'),
+		toolHostProfile.baselineProgramSha256,
+		'tool-host Program.cpp baseline'
+	);
+	await applyChecksumPinnedPatch(
+		{ ...toolHostProfile.patch, path: `tool-host/${toolHostProfile.patch.path}` },
+		'LLVM synchronous tool-host patch',
+		'.wasm-llvm-tool-host.patch'
+	);
+}
 const llvmPatchSpecs = [producerManifest.sources.llvmWasiClosePatch,
-	producerManifest.sources.lldWasmOnlyPatch, producerManifest.sources.clangdEmscriptenStdinPatch];
+	producerManifest.sources.lldWasmOnlyPatch, producerManifest.sources.clangdEmscriptenStdinPatch,
+	...(toolHostProfile ? [{ ...toolHostProfile.patch, path: `tool-host/${toolHostProfile.patch.path}` }] : [])];
 const llvmVerification = {
 	source: llvmSource, commit: config.llvmCommit,
 	patches: [yowaspPatch.patch, ...await Promise.all(llvmPatchSpecs.map((spec) => fs.readFile(path.join(producerRoot, spec.path))))],
 	transforms: [{ file: 'llvm/lib/Support/Signals.cpp', transform: addWasiSignalStub }],
 	allowedUntracked: ['.wasm-llvm-yowasp-wasi-host.patch', '.wasm-llvm-wasi-close.patch',
-		'.wasm-llvm-lld-wasm-only.patch', '.wasm-llvm-clangd-emscripten-stdin.patch']
+		'.wasm-llvm-lld-wasm-only.patch', '.wasm-llvm-clangd-emscripten-stdin.patch',
+		...(toolHostProfile ? ['.wasm-llvm-tool-host.patch'] : [])]
 };
 const llvmSourceIdentity = await verifyPatchedCheckout(llvmVerification);
 await fs.writeFile(yowaspPatch.marker, `${JSON.stringify(yowaspPatch.identity)}\n`);
@@ -458,6 +522,14 @@ await recordBuildTool('wasiClangxx', path.join(wasiSdkPath, 'bin', 'clang++'));
 await recordBuildTool('wasiAr', path.join(wasiSdkPath, 'bin', 'llvm-ar'));
 await recordBuildTool('wasiRanlib', path.join(wasiSdkPath, 'bin', 'llvm-ranlib'));
 await recordBuildTool('wasiLld', path.join(wasiSdkPath, 'bin', 'wasm-ld'));
+if (toolHostProfile) {
+	const initializer = path.join(producerRoot, 'tool-host', toolHostProfile.initialCwd.path);
+	await assertSha256(initializer, toolHostProfile.initialCwd.sha256, 'tool-host cwd initializer');
+	await run(path.join(wasiSdkPath, 'bin', 'clang'), [
+		`--target=${config.hostTriple}`, '-Oz', '-flto', '-c', initializer,
+		'-o', path.join(buildDir, 'tool-host-initial-cwd.o')
+	]);
+}
 
 const sysrootArchive = `wasi-sysroot-${config.wasiSdkVersion}.0+m.tar.gz`;
 const clangRtArchive = `libclang_rt-${config.wasiSdkVersion}.0+m.tar.gz`;
@@ -753,6 +825,26 @@ if (compilerOnly) {
 			sha256: createHash('sha256').update(bytes).digest('hex')
 		};
 	}
+	const toolHostArtifacts = {};
+	if (toolHostProfile) {
+		const profileOutput = path.join(compilerOutDir, 'tool-host');
+		await fs.mkdir(profileOutput);
+		for (const file of ['profile.json', 'llvm-tool-host.patch', 'initial-cwd.c', 'README.md']) {
+			await fs.copyFile(path.join(producerRoot, 'tool-host', file), path.join(profileOutput, file));
+		}
+		await fs.copyFile(path.join(llvmSource, 'llvm/LICENSE.TXT'), path.join(profileOutput, 'LICENSE.LLVM.txt'));
+		await fs.copyFile(path.join(llvmSource, 'llvm/lib/Support/Program.cpp'), path.join(profileOutput, 'Program.cpp'));
+		await fs.copyFile(fileURLToPath(import.meta.url), path.join(profileOutput, 'build-toolchain.mjs'));
+		await fs.writeFile(path.join(profileOutput, 'sources.json'), `${JSON.stringify(producerManifest.sources, null, 2)}\n`);
+		for (const name of ['clang', 'lld']) {
+			await run('node', [path.join(producerRoot, 'tool-host/verify.mjs'), path.join(compilerOutDir, name),
+				path.join(profileOutput, `${name}.module.json`), '--initial-cwd', `--kind=${name}`]);
+		}
+		for (const file of await fs.readdir(profileOutput)) {
+			const bytes = await fs.readFile(path.join(profileOutput, file));
+			toolHostArtifacts[file] = { bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
+		}
+	}
 	await fs.writeFile(
 		path.join(compilerOutDir, 'compiler-build.json'),
 		`${JSON.stringify(
@@ -767,6 +859,7 @@ if (compilerOnly) {
 				llvmHotPathDirs: config.llvmHotPathOpt === 'none' ? [] : config.llvmHotPathDirs,
 				clangWasmOpt: config.clangWasmOpt,
 				wasmOptLevel: effectiveWasmOptLevel ?? 'none',
+				...(toolHostProfile ? { toolHostProfile, toolHostArtifacts } : {}),
 				modules
 			},
 			null,

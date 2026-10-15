@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "profileId": "wasm-llvm/clang-browser/tool-host-exec-v1",
+  "llvmCommit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+  "patch": {
+    "path": "llvm-tool-host.patch",
+    "sha256": "6e76d1c35f3cbe50acde6bafab50861ab817b7c8f3a6e5bd69ba735bf3f34dc2"
+  },
+  "baselineProgramSha256": "69e2fb85804db9d65c4c6dc1b36af51c0e1a23905d882602e969ae3def1f27ad",
+  "define": "LLVM_WASM_IDLE_TOOL_HOST=1",
+  "abi": {
+    "module": "wasm_idle_tool_host",
+    "name": "exec_v1",
+    "parameters": [
+      "i32",
+      "i32",
+      "i32",
+      "i32",
+      "i32",
+      "i32",
+      "i32"
+    ],
+    "results": [
+      "i32"
+    ],
+    "sliceBytes": 8,
+    "inheritEnvironmentFlag": 1
+  },
+  "qualification": "experimental; requires a registered synchronous tool host; default producer unchanged",
+  "license": "Apache-2.0 WITH LLVM-exception",
+  "initialCwd": {
+    "path": "initial-cwd.c",
+    "sha256": "d316c54817d3c636c3a1958d8ea2fbc58faf6fc092f08be324bb416e2d66a060",
+    "module": "wasm_idle_process_v1",
+    "name": "initial_cwd",
+    "parameters": [
+      "i32",
+      "i32"
+    ],
+    "results": [
+      "i32"
+    ],
+    "capacity": 4096,
+    "constructorPriority": 101,
+    "failureExit": 125
+  }
+}
