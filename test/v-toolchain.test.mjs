@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -41,4 +42,29 @@ test('verifies the checked-in V artifacts and their compile/run acceptance', asy
 	assert.equal(receipt.vVersion, '0.5.2');
 	assert.equal(receipt.acceptance.results.stdinStdout, true);
 	assert.equal(receipt.acceptance.results.rejectedInvalidSource, true);
+});
+
+test('rejects truthy acceptance flags, malformed identities and different fixtures', async () => {
+	const directory = await mkdtemp(path.join(os.tmpdir(), 'v-receipt-'));
+	try {
+		await cp(path.join(REPO_ROOT, 'artifacts/v-browser'), directory, { recursive: true });
+		const original = JSON.parse(await readFile(path.join(directory, 'toolchain.json'), 'utf8'));
+		const mutations = [
+			(receipt) => { receipt.acceptance.results.rejectedInvalidSource = 'false'; },
+			(receipt) => { receipt.acceptance.results.translatedSource = 1; },
+			(receipt) => { receipt.acceptance.results.stdinStdout = 'true'; },
+			(receipt) => { receipt.acceptance.results.program.sha256 = 'invalid'; },
+			(receipt) => { receipt.acceptance.results.program.bytes = -1; },
+			(receipt) => { receipt.acceptance.compiler.bytes++; },
+			(receipt) => { receipt.acceptance.fixtures['fixtures/program.v'] = '0'.repeat(64); }
+		];
+		for (const mutate of mutations) {
+			const receipt = structuredClone(original);
+			mutate(receipt);
+			await writeFile(path.join(directory, 'toolchain.json'), JSON.stringify(receipt));
+			await assert.rejects(verify(directory), /acceptance|compiler size|fixture/);
+		}
+	} finally {
+		await rm(directory, { recursive: true, force: true });
+	}
 });

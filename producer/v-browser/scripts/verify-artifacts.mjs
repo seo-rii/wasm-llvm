@@ -6,6 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader, configure } from '@zip.js/zip.js';
 
+import { requireTarFiles } from '../../../scripts/lib/tar.mjs';
+
 configure({ useWebWorkers: false });
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -27,26 +29,10 @@ export async function readSingleEntry(artifactDir, asset, expectedName) {
 		if (entries.length !== 1 || entries[0].directory || entries[0].filename !== expectedName) {
 			throw new Error(`${asset} must contain only ${expectedName}`);
 		}
-		return entries[0].getData(new Uint8ArrayWriter());
+		return entries[0].getData(new Uint8ArrayWriter(), { checkSignature: true });
 	} finally {
 		await reader.close();
 	}
-}
-
-function tarEntries(bytes) {
-	const names = [];
-	for (let offset = 0; offset + 512 <= bytes.length; ) {
-		const header = bytes.subarray(offset, offset + 512);
-		if (header.every((byte) => byte === 0)) break;
-		const text = (start, length) =>
-			new TextDecoder().decode(header.subarray(start, start + length)).replace(/\0.*$/s, '');
-		const prefix = text(345, 155);
-		const name = text(0, 100);
-		const size = Number.parseInt(text(124, 12).trim() || '0', 8);
-		names.push(prefix ? `${prefix}/${name}` : name);
-		offset += 512 + Math.ceil(size / 512) * 512;
-	}
-	return names;
 }
 
 export async function verify(artifactDir) {
@@ -74,28 +60,31 @@ export async function verify(artifactDir) {
 		throw new Error('the accepted compiler differs from v.zip');
 	}
 	await WebAssembly.compile(compiler);
-	const vroot = tarEntries(entries['vroot.tar.zip']);
-	for (const required of ['./v/vlib/builtin/builtin.v', './v/vlib/os/os.v', './v/LICENSE']) {
-		if (!vroot.includes(required)) throw new Error(`vroot.tar is missing ${required}`);
-	}
-	const sysroot = tarEntries(entries['c-sysroot.tar.zip']);
-	for (const required of [
+	requireTarFiles(entries['vroot.tar.zip'],
+		['./v/vlib/builtin/builtin.v', './v/vlib/os/os.v', './v/LICENSE'], 'vroot.tar');
+	requireTarFiles(entries['c-sysroot.tar.zip'], [
 		'./include/wasm32-wasi/stdio.h',
 		'./include/v-wasi/v_wasi_compat.h',
 		'./lib/wasm32-wasi/libc.a',
 		'./lib/wasm32-wasi/libvwasi.a',
 		'./lib/clang/22/lib/wasi/libclang_rt.builtins-wasm32.a'
-	]) {
-		if (!sysroot.includes(required)) throw new Error(`c-sysroot.tar is missing ${required}`);
-	}
+	], 'c-sysroot.tar');
 	const results = receipt.acceptance?.results || {};
 	if (
-		!results.rejectedInvalidSource ||
-		!results.translatedSource ||
-		!results.stdinStdout ||
-		!results.program?.sha256
+		results.rejectedInvalidSource !== true ||
+		results.translatedSource !== true ||
+		results.stdinStdout !== true ||
+		![receipt.acceptance?.compiler, results.generatedC, results.program].every((asset) =>
+			Number.isSafeInteger(asset?.bytes) && asset.bytes > 0 && /^[0-9a-f]{64}$/.test(asset.sha256))
 	) {
 		throw new Error('toolchain.json lacks a passing compile/run acceptance');
+	}
+	if (receipt.acceptance.compiler.bytes !== compiler.length)
+		throw new Error('accepted compiler size differs from v.zip');
+	for (const name of ['program.v', 'invalid.v']) {
+		const fixture = `fixtures/${name}`;
+		if (receipt.acceptance.fixtures?.[fixture] !== sha256(await readFile(path.join(producerRoot, fixture))))
+			throw new Error(`acceptance fixture differs from ${fixture}`);
 	}
 	return receipt;
 }
