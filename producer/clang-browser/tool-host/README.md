@@ -117,6 +117,13 @@ that provides it; it is a container platform profile, not a portable WASI sysroo
 Headers, libraries and the header closure are unchanged. Only command executables,
 which link `crt1.o`, gain the initializer.
 
+[`process-sysroot-evidence.json`](process-sysroot-evidence.json) is the unchanged receipt of
+the run from commit `e8f0f732` with a clean tree. From sysroot
+`91899da37610664152a2a1cbae3632f35ff8803e32f006225c1c4fb50f341402` it derived
+`b5c51389ce2f2b404f8b354788aa4a19a65d7e4af746cf52d24e7276d2eabf7f` (35,328,000 bytes,
+117 directories, 2,168 files). `crt1.o` grew from 1,990 to 2,453 bytes. The cwd fixture
+passed all eight modes. Two earlier runs in a scratch directory produced the same bytes.
+
 ## Isolated cached rebuild
 
 `build.py` uses an existing matching source checkout and Ninja build as read-only
