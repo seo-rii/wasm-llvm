@@ -81,6 +81,42 @@ arguments. Initializing Clang alone is insufficient: LLD must receive the same
 process cwd so relative linker inputs, output paths and response files resolve
 consistently. The consumer must implement this additional import for both modules.
 
+## Process-profile sysroot for user programs
+
+Programs linked against the pinned selected-target sysroot start with WASI libc's
+default cwd `/`. A container runs them in the shell's actual directory, so its
+adapters refuse a non-root cwd unless the module implements the same
+`initial_cwd` contract as Clang and LLD. `process-sysroot.py` derives a sysroot
+whose executables do:
+
+1. It verifies the pinned sysroot tar, the WASI SDK `clang-22` and `wasm-ld`
+   digests, and that `initial-cwd.c` matches `profile.json`.
+2. It compiles `initial-cwd.c` against the pinned sysroot's own headers and
+   resource directory (`--no-default-config`, no SDK sysroot).
+3. `wasm-ld -r` links that object into the sysroot's `lib/wasm32-wasi/crt1.o`.
+   The derived object must import `wasm_idle_process_v1.initial_cwd` and keep the
+   priority-101 init function.
+4. The new tar has the same entries, order and headers. Only `crt1.o` changes,
+   which is checked entry by entry.
+5. `cwd-fixture.c` is linked against the derived sysroot with no extra object or
+   flag, and `cwd-fixture.mjs` runs it in Node's WASI host. `getcwd()` and a
+   relative read must work in a Korean/spaced directory, and every invalid host
+   response must exit 125.
+
+```sh
+python3 -B producer/clang-browser/tool-host/process-sysroot.py \
+  --sysroot /path/to/pinned/sysroot.tar \
+  --sysroot-sha256 91899da37610664152a2a1cbae3632f35ff8803e32f006225c1c4fb50f341402 \
+  --wasi-sdk /path/to/wasi-sdk-33.0-x86_64-linux \
+  --clang-sha256 <clang-22 digest> --wasm-ld-sha256 <lld digest> \
+  --node /path/to/node --output /path/to/new-output
+```
+
+Every executable linked against the result imports `initial_cwd` and needs a host
+that provides it; it is a container platform profile, not a portable WASI sysroot.
+Headers, libraries and the header closure are unchanged. Only command executables,
+which link `crt1.o`, gain the initializer.
+
 ## Isolated cached rebuild
 
 `build.py` uses an existing matching source checkout and Ninja build as read-only
