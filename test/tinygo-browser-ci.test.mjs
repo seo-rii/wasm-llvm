@@ -20,11 +20,11 @@ test('manual TinyGo producer rebuilds and accepts the source-locked upstream too
 	);
 	assert.match(workflow, /uses: actions\/cache\/restore@v4/u);
 	assert.match(workflow, /uses: actions\/cache\/save@v4/u);
-	assert.match(workflow, /key: tinygo-llvm-wasi-v2-/u);
+	assert.match(workflow, /key: tinygo-llvm-wasi-v3-/u);
 	assert.doesNotMatch(workflow, /tinygo-llvm-wasi-v1-/u);
 	const cacheKeyLine = workflow
 		.split('\n')
-		.find((line) => line.includes('key: tinygo-llvm-wasi-v2-'));
+		.find((line) => line.includes('key: tinygo-llvm-wasi-v3-'));
 	assert.ok(cacheKeyLine);
 	assert.doesNotMatch(cacheKeyLine, /sources\.lock\.json/u);
 	assert.match(

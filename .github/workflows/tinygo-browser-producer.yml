@@ -34,7 +34,9 @@ jobs:
 
             - name: Install native LLVM 20 and build tools
               run: |
-                  curl --fail --location --retry 3 https://apt.llvm.org/llvm.sh -o "$RUNNER_TEMP/llvm.sh"
+                  curl --fail --location --retry 3 https://raw.githubusercontent.com/opencollab/llvm-jenkins.debian.net/076c86e05ebae0ab66edeecd2f0f438ae15de0bb/llvm.sh -o "$RUNNER_TEMP/llvm.sh"
+                  node producer/tinygo-browser/scripts/verify-bootstrap.mjs --verify \
+                    llvmInstaller "$RUNNER_TEMP/llvm.sh" "$RUNNER_TEMP/tinygo-bootstrap-receipt.json"
                   chmod +x "$RUNNER_TEMP/llvm.sh"
                   sudo "$RUNNER_TEMP/llvm.sh" 20
                   sudo apt-get install --yes binaryen clang-20 clang-tools-20 lld-20 llvm-20-dev ninja-build
@@ -73,16 +75,20 @@ jobs:
                   curl --fail --location --retry 3 \
                     https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz \
                     -o "$TINYGO_WORK/wasi-sdk.tar.gz"
+                  node producer/tinygo-browser/scripts/verify-bootstrap.mjs --verify \
+                    wasiSdk "$TINYGO_WORK/wasi-sdk.tar.gz" "$RUNNER_TEMP/tinygo-bootstrap-receipt.json"
                   tar -xzf "$TINYGO_WORK/wasi-sdk.tar.gz" -C "$TINYGO_WORK"
                   curl --fail --location --retry 3 \
                     https://github.com/tinygo-org/tinygo/releases/download/v0.40.1/tinygo0.40.1.linux-amd64.tar.gz \
                     -o "$TINYGO_WORK/tinygo.tar.gz"
+                  node producer/tinygo-browser/scripts/verify-bootstrap.mjs --verify \
+                    tinygo "$TINYGO_WORK/tinygo.tar.gz" "$RUNNER_TEMP/tinygo-bootstrap-receipt.json"
                   tar -xzf "$TINYGO_WORK/tinygo.tar.gz" -C "$TINYGO_WORK"
                   curl --fail --location --retry 3 \
                     https://proxy.golang.org/golang.org/toolchain/@v/v0.0.1-go1.24.6.linux-amd64.zip \
                     -o "$TINYGO_GO_ARCHIVE"
-                  test "$(sha256sum "$TINYGO_GO_ARCHIVE" | cut -d ' ' -f 1)" = \
-                    e7f0fd16d1b06c716162a0938744bb7ebf7edbc3248d42432271a1b5c1fde1ce
+                  node producer/tinygo-browser/scripts/verify-bootstrap.mjs --verify \
+                    go "$TINYGO_GO_ARCHIVE" "$RUNNER_TEMP/tinygo-bootstrap-receipt.json"
                   unzip -q "$TINYGO_GO_ARCHIVE" -d "$TINYGO_WORK/go-module"
                   mv "$TINYGO_WORK/go-module/golang.org/toolchain@v0.0.1-go1.24.6.linux-amd64" "$TINYGO_GO_ROOT"
 
@@ -121,6 +127,16 @@ jobs:
                   test "$tinygo_resolved_wasm_opt" = "$TINYGO_NATIVE_ROOT/bin/wasm-opt"
                   "$TINYGO_NATIVE_ROOT/bin/tinygo" version
                   "$TINYGO_WASI_SDK/bin/wasm-ld" --version
+                  node producer/tinygo-browser/scripts/verify-bootstrap.mjs --record-tools \
+                    "$RUNNER_TEMP/tinygo-bootstrap-receipt.json" \
+                    "tinygo=$TINYGO_NATIVE_ROOT/bin/tinygo" \
+                    "wasmOpt=$TINYGO_NATIVE_ROOT/bin/wasm-opt" \
+                    "wasiClang=$TINYGO_WASI_SDK/bin/clang" \
+                    "wasiLld=$TINYGO_WASI_SDK/bin/wasm-ld" \
+                    "llvmTablegen=/usr/lib/llvm-20/bin/llvm-tblgen" \
+                    "clangTablegen=/usr/lib/llvm-20/bin/clang-tblgen" \
+                    "go=$TINYGO_GO_ROOT/bin/go"
+                  echo "TINYGO_BOOTSTRAP_SHA256=$(sha256sum "$RUNNER_TEMP/tinygo-bootstrap-receipt.json" | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
 
             - name: Restore source-locked LLVM WASI build cache
               id: tinygo-llvm-cache
@@ -129,7 +145,7 @@ jobs:
                   path: |
                       ${{ env.TINYGO_LLVM_BUILD }}
                       ${{ env.TINYGO_LLVM_RECEIPT }}
-                  key: tinygo-llvm-wasi-v2-${{ runner.os }}-${{ hashFiles('producer/tinygo-browser/config/llvm-wasi-static.json', 'producer/tinygo-browser/patches/llvm-wasi-c-api-config.patch', 'producer/tinygo-browser/scripts/build-llvm-wasi.mjs') }}
+                  key: tinygo-llvm-wasi-v3-${{ runner.os }}-${{ env.TINYGO_BOOTSTRAP_SHA256 }}-${{ hashFiles('producer/tinygo-browser/config/llvm-wasi-static.json', 'producer/tinygo-browser/patches/llvm-wasi-c-api-config.patch', 'producer/tinygo-browser/scripts/build-llvm-wasi.mjs') }}
 
             - name: Build source-locked LLVM host for WASI
               if: steps.tinygo-llvm-cache.outputs.cache-hit != 'true'
@@ -211,6 +227,7 @@ jobs:
                   cp "$TINYGO_GRAPH_ARTIFACTS/tinygo-package-graph.wasm" "$TINYGO_PRODUCT/"
                   cp "$TINYGO_GRAPH_RECEIPT" "$TINYGO_PRODUCT/package-graph-provider-receipt.json"
                   cp "$TINYGO_SOURCE_RECEIPT" "$TINYGO_PRODUCT/"
+                  cp "$RUNNER_TEMP/tinygo-bootstrap-receipt.json" "$TINYGO_PRODUCT/bootstrap-receipt.json"
                   sha256sum "$TINYGO_PRODUCT"/* | sort
 
             - name: Upload verified TinyGo browser product
