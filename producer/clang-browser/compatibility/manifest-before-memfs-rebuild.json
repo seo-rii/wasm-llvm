@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/clang-browser",
+  "target": "wasm32-wasi",
+  "sources": {
+    "llvm": {
+      "repository": "https://github.com/llvm/llvm-project",
+      "version": "22.1.8",
+      "tag": "llvmorg-22.1.8",
+      "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1"
+    },
+    "wasiHostPatch": {
+      "repository": "https://github.com/YoWASP/llvm-project",
+      "commit": "97196c8eeb1d495fa43bb8af2fb26af5ef5b89fb"
+    },
+    "llvmWasiClosePatch": {
+      "path": "patches/llvm-wasi-close.patch",
+      "sha256": "5a4260bc1a7715174626cc4ca64cc0a583f449ea98b7921f8867843358d9a1b0"
+    },
+    "lldWasmOnlyPatch": {
+      "path": "patches/lld-wasm-only.patch",
+      "sha256": "0b5005499d812c55699b6dd50f93800d5c425001315abab10a54248e7f97f178"
+    },
+    "clangdEmscriptenStdinPatch": {
+      "path": "patches/clangd-emscripten-stdin.patch",
+      "sha256": "e60c4c1299d7e028451e9f46270318c5eb80f8d77ce3af773e2f1ad802b3a022"
+    },
+    "memfs": {
+      "repository": "https://github.com/binji/wasm-clang",
+      "commit": "648c4a89997a351eef75cdaec3ef5b89d4937dec",
+      "path": "memfs",
+      "sha256": "2c72ee42bd9430029dda8c6bafc9f37143f6fe88d5f1ea950a70259ab748bcfe"
+    }
+  },
+  "toolchains": {
+    "wasiSdk": {
+      "version": "33",
+      "archives": {
+        "x86_64-linux": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+        "arm64-linux": "4f98ee738c7abb45c81a94d1461fc53cc569d1cd01498951c8184d841a027844",
+        "x86_64-macos": "18f3f201ba9734e6a4455b0b6410690395a55e9ffa9f6f5066f66083a94b93b3",
+        "arm64-macos": "85c997a2665ead91673b5bb88b7d0df3fc8900df3bfa244f720d478187bbdc78"
+      },
+      "sysrootSha256": "063bc1b56582b9923e08ac9b89e58789618d851763f01530b3ff20b9e5df0ca3",
+      "clangRtSha256": "d3302760b78c8c50f2875650833b3584479131eab9ec2e6c72f7dfec26288be3"
+    },
+    "emsdk": {
+      "version": "6.0.0",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+    }
+  },
+  "outputs": [
+    "clang.zip",
+    "lld.zip",
+    "memfs.zip",
+    "sysroot.tar.zip",
+    "clangd/clangd.js",
+    "clangd/clangd.wasm.gz",
+    "toolchain.json"
+  ]
+}

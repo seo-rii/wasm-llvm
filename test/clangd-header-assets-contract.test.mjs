@@ -13,6 +13,8 @@ import {
 	verifyClangdHeaderAsset
 } from '../producer/clang-browser/scripts/clangd-header-asset-contract.mjs';
 
+import { writeClangFixture } from './fixtures/clang/artifacts.mjs';
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const tree = () => ({
 	schemaVersion: 1,
@@ -49,33 +51,7 @@ function headerAsset(headers = tree()) {
 async function artifactFixture(t, separateHeaders) {
 	const root = await mkdtemp(path.join(os.tmpdir(), 'clangd-artifacts-contract-'));
 	t.after(() => rm(root, { recursive: true, force: true }));
-	await mkdir(path.join(root, 'clangd'));
-	const name = Buffer.from('__asyncjs__waitForStdin');
-	const imports = Buffer.concat([
-		Buffer.from([1, 3]),
-		Buffer.from('env'),
-		Buffer.from([name.length]),
-		name,
-		Buffer.from([0, 0])
-	]);
-	const wasm = Buffer.concat([
-		Buffer.from([0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 2, imports.length]),
-		imports
-	]);
-	const files = new Map([
-		...['clang.zip', 'lld.zip', 'memfs.zip', 'sysroot.tar.zip'].map((name) => [
-			name,
-			Buffer.from(name)
-		]),
-		[
-			'clangd/clangd.js',
-			Buffer.from(
-				'function __asyncjs__waitForStdin(){return Asyncify.handleAsync(async()=>{await Module.stdinReady()})}'
-			)
-		],
-		['clangd/clangd.wasm.gz', gzipSync(wasm)]
-	]);
-	const metadata = { resourceDir: '/lib/clang/22', clangd: {}, assets: {} };
+	const { metadata, files } = await writeClangFixture(root);
 	if (separateHeaders) {
 		const asset = headerAsset();
 		files.set(CLANGD_HEADER_ASSET, asset.compressed);
