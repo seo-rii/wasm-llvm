@@ -242,3 +242,21 @@ test('rejects overlapping or non-empty output directories without changing their
 	await assert.rejects(refreshClangdAssets(f.options), /empty or absent/);
 	assert.equal(await readFile(path.join(f.options.outDir, 'existing.txt'), 'utf8'), 'keep');
 });
+
+test('a clangd-only refresh keeps historical evidence but cannot inherit release qualification', async (t) => {
+	const { writeBuildReceipt } = await import('./fixtures/clang/artifacts.mjs');
+	const { loadVerifiedClangArtifacts, verifyClangArtifacts } = await import('../producer/clang-browser/scripts/verify-artifacts.mjs');
+	const f = await fixture(t);
+	await writeBuildReceipt(f.source, f.metadata, { clang: compilerWasm, lld: compilerWasm,
+		memfs: compilerWasm, sysroot: Buffer.alloc(1024), clangdJs: f.sourceFiles.get('clangd/clangd.js'), clangdWasm: f.wasm });
+	await writeFile(path.join(f.source, 'toolchain.json'), JSON.stringify(f.metadata));
+	await loadVerifiedClangArtifacts(f.source, { requireBuildReceipt: true });
+	const receiptBefore = await readFile(path.join(f.source, 'clang-build-receipt.json'));
+	const result = await refreshClangdAssets(f.options);
+	const metadata = JSON.parse(await readFile(path.join(result.directory, 'toolchain.json')));
+	assert.equal(metadata.buildProvenance.status, 'unverified');
+	assert.deepEqual(metadata.buildProvenance.previous, f.metadata.buildProvenance);
+	assert.deepEqual(await readFile(path.join(result.directory, 'clang-build-receipt.json')), receiptBefore);
+	await verifyClangArtifacts(result.directory);
+	await assert.rejects(loadVerifiedClangArtifacts(result.directory, { requireBuildReceipt: true }), /requires a verified source-to-output build receipt/);
+});

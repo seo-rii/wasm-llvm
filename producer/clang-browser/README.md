@@ -287,6 +287,10 @@ version string, and cannot be passed to release preparation. Production packagin
 receipt rather than constructing new source provenance from CLI version labels. Raw sysroot TAR
 bytes must match the receipt exactly; use the build's `sysroot-input.tar` when repackaging.
 
+`refresh-clangd-assets.mjs` is a local experiment workflow. Replacing clangd always marks the result
+unverified, while retaining the source receipt as historical evidence. Its optional command receipt
+records a relink command and does not qualify the complete refreshed bundle for release.
+
 ## Verify and prepare
 
 ```sh
