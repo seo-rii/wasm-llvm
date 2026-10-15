@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { gunzip } from 'node:zlib';
 import { loadMemfsReleaseFiles } from './memfs-provenance.mjs';
+import { verifyClangBuildReceipt } from './build-provenance.mjs';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
 import { readClangZip, assertWasm, MAX_CLANG_ASSET_BYTES } from './archive-contract.mjs';
 import { assertClangdStdinBridge } from './clangd-artifact-contract.mjs';
@@ -70,7 +71,7 @@ export async function verifyClangProducerManifest(metadata, producerManifestByte
 	return manifestCompatibility;
 }
 
-export async function loadVerifiedClangArtifacts(directory = artifactDir) {
+export async function loadVerifiedClangArtifacts(directory = artifactDir, { requireBuildReceipt = false } = {}) {
 	const metadataPath = path.join(directory, 'toolchain.json');
 	const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf8'));
 	if (
@@ -85,6 +86,8 @@ export async function loadVerifiedClangArtifacts(directory = artifactDir) {
 	const producerManifestPath = path.join(repoRoot, 'producer/clang-browser/manifest.json');
 	const producerManifestBytes = await fs.readFile(producerManifestPath);
 	const manifestCompatibility = await verifyClangProducerManifest(metadata, producerManifestBytes);
+	if (requireBuildReceipt && metadata.buildProvenance?.status !== 'verified')
+		throw new Error('Clang release requires a verified source-to-output build receipt; rebuild legacy or explicitly unverified artifacts');
 	const assets = [...requiredAssets];
 	if (metadata.clangd?.headers !== undefined) {
 		validateClangdHeaderMetadata(metadata.clangd.headers);
@@ -101,6 +104,7 @@ export async function loadVerifiedClangArtifacts(directory = artifactDir) {
 		);
 
 	const files = new Map();
+	const rawFiles = new Map();
 	for (const asset of assets) {
 		const assetPath = path.join(directory, asset);
 		const bytes = await fs.readFile(assetPath);
@@ -119,22 +123,46 @@ export async function loadVerifiedClangArtifacts(directory = artifactDir) {
 		if (asset.endsWith('.zip')) {
 			const name = asset.slice(0, -4);
 			const raw = await readClangZip(bytes, name);
+			rawFiles.set(name, raw);
 			if (name === 'sysroot.tar') readTarEntries(raw);
 			else await assertWasm(name, raw);
 		}
 	}
 
-	await assertClangdStdinBridge(
-		files.get('clangd/clangd.js'),
-		await gunzipAsync(files.get('clangd/clangd.wasm.gz'), { maxOutputLength: MAX_CLANG_ASSET_BYTES })
-	);
+	const clangdWasm = await gunzipAsync(files.get('clangd/clangd.wasm.gz'), { maxOutputLength: MAX_CLANG_ASSET_BYTES });
+	await assertClangdStdinBridge(files.get('clangd/clangd.js'), clangdWasm);
 	if (metadata.clangd?.headers !== undefined)
 		verifyClangdHeaderAsset(
 			files.get(CLANGD_HEADER_ASSET),
 			metadata.clangd.headers
 		);
+	if (metadata.buildProvenance?.status === 'verified' && metadata.memfs === undefined)
+		throw new Error('Verified Clang package requires MemFS build provenance');
 	const sidecars = metadata.memfs === undefined ? new Map() :
 		await loadMemfsReleaseFiles(directory, metadata.memfs, files.get('memfs.zip'));
+	if (metadata.buildProvenance?.status === 'verified') {
+		const provenance = metadata.buildProvenance;
+		if (provenance.receipt !== 'clang-build-receipt.json' || !Number.isSafeInteger(provenance.bytes) ||
+			provenance.bytes <= 0 || provenance.bytes > 1024 * 1024 || !/^[a-f0-9]{64}$/.test(provenance.sha256))
+			throw new Error('Invalid Clang build receipt metadata');
+		const receiptPath = path.join(directory, provenance.receipt);
+		if ((await fs.stat(receiptPath)).size !== provenance.bytes) throw new Error('Clang build receipt size mismatch');
+		const receiptBytes = await fs.readFile(receiptPath);
+		if (sha256(receiptBytes) !== provenance.sha256) throw new Error('Clang build receipt hash mismatch');
+		const receipt = await verifyClangBuildReceipt(JSON.parse(receiptBytes), {
+			clang: rawFiles.get('clang'), lld: rawFiles.get('lld'), memfs: rawFiles.get('memfs'),
+			memfsReceipt: sidecars.get('memfs-build-receipt.json'), sysroot: rawFiles.get('sysroot.tar'),
+			clangdJs: files.get('clangd/clangd.js'), clangdWasm,
+			clangdHeaders: metadata.clangd?.headers ? await gunzipAsync(files.get(CLANGD_HEADER_ASSET), { maxOutputLength: metadata.clangd.headers.uncompressedBytes }) : undefined
+		});
+		for (const field of ['llvmVersion', 'llvmCommit', 'wasiSdkVersion', 'emsdkVersion']) {
+			if (metadata[field] !== receipt.buildOptions[field]) throw new Error(`Clang metadata ${field} differs from its build receipt`);
+		}
+		sidecars.set(provenance.receipt, receiptBytes);
+
+	} else if (metadata.buildProvenance !== undefined && metadata.buildProvenance?.status !== 'unverified') {
+		throw new Error('Unsupported Clang build provenance status');
+	}
 	return { metadata, files, sidecars, manifestCompatibility };
 }
 
@@ -145,5 +173,5 @@ export async function verifyClangArtifacts(directory = artifactDir) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 	const result = await loadVerifiedClangArtifacts();
-	console.log(`Verified ${result.files.size} Clang producer artifacts in ${artifactDir} (manifest: ${result.manifestCompatibility})`);
+	console.log(`Verified ${result.files.size} Clang producer artifacts in ${artifactDir} (manifest: ${result.manifestCompatibility}; build provenance: ${result.metadata.buildProvenance?.status || 'unverified'})`);
 }
