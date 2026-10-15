@@ -99,6 +99,7 @@ node scripts/build.mjs \
   --emsdk /path/to/emsdk
 node scripts/package.mjs --build /path/to/build --output ./artifacts
 node scripts/verify.mjs --artifacts ./artifacts
+node scripts/smoke-transport.mjs --artifacts ./artifacts --receipt ./transport-smoke.json
 node scripts/verify-reproducibility.mjs \
   /path/to/clean-artifacts-a \
   /path/to/clean-artifacts-b
@@ -151,8 +152,10 @@ rebuild. The weekly schedule and `build_product=true` manual dispatch also
 clone the exact WAMR revision into two distinct roots, reuse the LLDB producer's
 pinned Emscripten SDK, build and package both browser interpreters, run the
 standalone and clean-build reproducibility verifiers, and upload the primary
-package beside the LLDB package. Product-binary Chromium acceptance remains in
-the consuming `wasm-idle` repository.
+package beside the LLDB package. The optional `smoke-transport.mjs` command uses Chromium to exercise the real
+module factory, strict pthread bootstrap, and shared-ring `qSupported` response,
+recording the tested artifact digests. Full paired debugger Chromium acceptance
+remains in the consuming `wasm-idle` repository.
 
 The prepare step also installs a forced-include compatibility header. It keeps
 Emscripten's host-side `<wasi/api.h>` declarations from colliding with WAMR's
