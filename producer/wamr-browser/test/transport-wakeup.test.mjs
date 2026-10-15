@@ -136,3 +136,45 @@ test('a stale application worker cannot interrupt a replacement session', () => 
 	assert.equal(Atomics.load(header, 3), 0);
 	assert.equal(library.wasm_idle_rsp_read(0, 1, 0), -1);
 });
+
+test('a stale close leaves the replacement generation state and epoch unchanged', () => {
+	const input = createDescriptor();
+	const output = createDescriptor();
+	const { library } = loadTransport(source, input, output);
+	for (const descriptor of [input, output]) Atomics.store(new Int32Array(descriptor.control), 6, 2);
+	library.wasm_idle_rsp_close();
+	for (const descriptor of [input, output]) {
+		const header = new Int32Array(descriptor.control);
+		assert.equal(Atomics.load(header, 2), 0);
+		assert.equal(Atomics.load(header, 3), 0);
+	}
+});
+
+test('fresh buffers isolate a replacement session from delayed old cleanup', () => {
+	const previous = loadTransport(source, createDescriptor(), createDescriptor());
+	const input = createDescriptor();
+	const replacement = loadTransport(source, input, createDescriptor());
+	previous.library.wasm_idle_rsp_close();
+	assert.equal(Atomics.load(new Int32Array(input.control), 2), 0);
+	assert.equal(replacement.library.wasm_idle_rsp_read(0, 1, 0), 0);
+	replacement.library.wasm_idle_rsp_close();
+	assert.equal(replacement.library.wasm_idle_rsp_read(0, 1, 0), -2);
+});
+
+test('rejects explicit unsupported protocols and malformed control buffers without throwing', () => {
+	const input = createDescriptor();
+	const output = createDescriptor();
+	const { transport } = loadTransport(source, input, output);
+	const previous = transport.rspInput;
+	for (const protocol of ['shared-ring-v999', '', null, 1]) {
+		assert.equal(transport.setTransport({ protocol, rspInput: input, rspOutput: output }), false);
+	}
+	for (const size of [0, 20, 25, 27]) {
+		assert.equal(transport.setTransport({ rspInput: { ...input, control: new SharedArrayBuffer(size) }, rspOutput: output }), false);
+	}
+	for (const generation of [0, -1, 1.5, 0x100000000, '1']) {
+		assert.equal(transport.setTransport({ rspInput: { ...input, generation }, rspOutput: output }), false);
+	}
+	assert.equal(transport.rspInput, previous);
+	assert.equal(transport.setTransport({ protocol: 'shared-ring-v1', rspInput: input, rspOutput: output }), true);
+});
