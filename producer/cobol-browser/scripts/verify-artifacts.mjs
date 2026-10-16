@@ -11,6 +11,7 @@ import { requireTarFiles } from '../../../scripts/lib/tar.mjs';
 configure({ useWebWorkers: false });
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const producerRoot = path.resolve(scriptDir, '..');
 const repoRoot = path.resolve(scriptDir, '..', '..', '..');
 async function readSingleEntry(artifactDir, receipt, asset, expectedName) {
 	const bytes = await readFile(path.join(artifactDir, asset));
@@ -47,6 +48,12 @@ export const REQUIRED_TAR_FILES = Object.freeze({
 
 export async function verify(artifactDir) {
  const receipt = JSON.parse(await readFile(path.join(artifactDir, 'toolchain.json'), 'utf8'));
+ const manifestBytes = await readFile(path.join(producerRoot, 'manifest.json'));
+ const manifest = JSON.parse(manifestBytes);
+ if (receipt.producer?.id !== manifest.producerId ||
+  receipt.producer?.manifest !== 'producer/cobol-browser/manifest.json' ||
+  receipt.producer?.manifestSha256 !== createHash('sha256').update(manifestBytes).digest('hex'))
+  throw new Error('COBOL toolchain producer identity does not match the current producer manifest');
  const cobc = await readSingleEntry(artifactDir, receipt, 'cobc.zip', 'cobc');
  await WebAssembly.compile(cobc);
  for (const [asset, required] of Object.entries(REQUIRED_TAR_FILES)) {
