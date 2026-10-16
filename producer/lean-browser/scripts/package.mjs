@@ -172,6 +172,22 @@ export async function verify(directory = DEFAULT_OUT) {
 	}
 	if (receipt.schemaVersion !== 1 || !receipt.assets || Array.isArray(receipt.assets))
 		throw new Error('unsupported receipt schema');
+	const acceptance = receipt.acceptance?.node;
+	if (typeof acceptance?.engine !== 'string' || !/^node v\d+\.\d+\.\d+(?:[-+].+)?$/.test(acceptance.engine))
+		throw new Error('receipt lacks a valid Node acceptance engine');
+	for (const name of ['Main.lean', 'Invalid.lean']) {
+		const expected = sha256(await readFile(path.join(PRODUCER, 'fixtures', name)));
+		if (acceptance.fixtures?.[name] !== expected)
+			throw new Error(`receipt acceptance fixture differs from ${name}`);
+	}
+	if (acceptance.smokeScriptSha256 !== inputs.recipe['scripts/smoke.mjs'])
+		throw new Error('receipt acceptance smoke script differs from the producer');
+	if (acceptance.program?.stdinSha256 !== sha256('안녕\n1 2 -3 40\n') ||
+		acceptance.program?.stdout !== 'Hello, 안녕!\nsum = 40\n' || acceptance.program?.exitCode !== 0)
+		throw new Error('receipt lacks a passing stdin/stdout acceptance run');
+	if (acceptance.diagnostic?.exitCode !== 1 || typeof acceptance.diagnostic?.firstLine !== 'string' ||
+		!/^\/work\/Main\.lean:2:\d+: error/.test(acceptance.diagnostic.firstLine))
+		throw new Error('receipt lacks a passing diagnostic acceptance run');
 	for (const name of REQUIRED_ASSETS)
 		if (!Object.hasOwn(receipt.assets, name)) throw new Error(`missing required asset: ${name}`);
 	const expected = [...Object.keys(receipt.assets), 'producer-receipt.json'].sort();
@@ -241,8 +257,6 @@ export async function verify(directory = DEFAULT_OUT) {
 		digest.update(raw);
 	}
 	if (digest.digest('hex') !== index.sha256) throw new Error('library pack digest mismatch');
-	if (receipt.acceptance?.node?.program?.stdout !== 'Hello, 안녕!\nsum = 40\n')
-		throw new Error('receipt lacks a passing stdin/stdout acceptance run');
 	const sizes = Object.fromEntries(Object.entries(receipt.assets).map(([k, v]) => [k, v.bytes]));
 	return { directory, modules: index.modules, libraryBytes: index.totalBytes, sizes };
 }
