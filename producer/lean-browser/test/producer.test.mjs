@@ -72,6 +72,19 @@ async function syntheticWork() {
 	return work;
 }
 
+async function passingAcceptance(inputs) {
+	return {
+		node: {
+			engine: `node ${process.version}`,
+			fixtures: Object.fromEntries(await Promise.all(['Main.lean', 'Invalid.lean'].map(async (name) =>
+				[name, sha256(await readFile(path.join(producer, 'fixtures', name)))]))),
+			smokeScriptSha256: inputs.recipe['scripts/smoke.mjs'],
+			program: { stdinSha256: sha256('안녕\n1 2 -3 40\n'), stdout: 'Hello, 안녕!\nsum = 40\n', exitCode: 0 },
+			diagnostic: { exitCode: 1, firstLine: '/work/Main.lean:2:14: error(lean.synthInstanceFailed): fixture' }
+		}
+	};
+}
+
 test('packaging indexes every library part and verification detects tampering', async () => {
 	const work = await syntheticWork();
 	const release = path.join(work, 'release');
@@ -105,7 +118,7 @@ test('packaging indexes every library part and verification detects tampering', 
 				patches: inputs.patches,
 				recipe: inputs.recipe,
 				assets: assetReceipts(files, wasm),
-				acceptance: { node: { program: { stdout: 'Hello, 안녕!\nsum = 40\n' } } }
+				acceptance: await passingAcceptance(inputs)
 			})
 		);
 		assert.equal((await verify(release)).modules, 2);
@@ -133,10 +146,44 @@ async function syntheticRelease(work) {
 		patches: inputs.patches,
 		recipe: inputs.recipe,
 		assets: assetReceipts(files, wasm),
-		acceptance: { node: { program: { stdout: 'Hello, 안녕!\nsum = 40\n' } } }
+		acceptance: await passingAcceptance(inputs)
 	};
 	return { release, receipt, files };
 }
+
+test('acceptance receipts must prove successful exits and matching execution inputs', async () => {
+	const work = await syntheticWork();
+	try {
+		const { release, receipt } = await syntheticRelease(work);
+		const receiptPath = path.join(release, 'producer-receipt.json');
+		await writeFile(receiptPath, JSON.stringify(receipt));
+		assert.equal((await verify(release)).modules, 2);
+		const mutations = [
+			['program failed', (node) => { node.program.exitCode = 125; }],
+			['string exit code', (node) => { node.program.exitCode = '0'; }],
+			['missing program exit', (node) => { delete node.program.exitCode; }],
+			['wrong stdout', (node) => { node.program.stdout = ''; }],
+			['wrong stdin', (node) => { node.program.stdinSha256 = '0'.repeat(64); }],
+			['diagnostic succeeded', (node) => { node.diagnostic.exitCode = 0; }],
+			['string diagnostic exit', (node) => { node.diagnostic.exitCode = '1'; }],
+			['missing diagnostic', (node) => { delete node.diagnostic; }],
+			['wrong diagnostic', (node) => { node.diagnostic.firstLine = 'success'; }],
+			['missing diagnostic line', (node) => { delete node.diagnostic.firstLine; }],
+			['wrong program fixture', (node) => { node.fixtures['Main.lean'] = '0'.repeat(64); }],
+			['wrong invalid fixture', (node) => { node.fixtures['Invalid.lean'] = '0'.repeat(64); }],
+			['missing fixtures', (node) => { delete node.fixtures; }],
+			['wrong smoke script', (node) => { node.smokeScriptSha256 = '0'.repeat(64); }],
+			['wrong engine type', (node) => { node.engine = true; }],
+			['missing engine', (node) => { delete node.engine; }]
+		];
+		for (const [label, mutate] of mutations) {
+			const broken = structuredClone(receipt);
+			mutate(broken.acceptance.node);
+			await writeFile(receiptPath, JSON.stringify(broken));
+			await assert.rejects(verify(release), /receipt.*acceptance/, label);
+		}
+	} finally { await rm(work, { recursive: true, force: true }); }
+});
 
 test('package acceptance failure preserves an existing release', async () => {
 	const work = await syntheticWork();
