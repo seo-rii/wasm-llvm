@@ -23,10 +23,21 @@ export function readTarEntries(bytes) {
 			return decoder.decode(end < 0 ? field : field.subarray(0, end));
 		};
 		const octal = (start, length) => {
-			const value = decoder.decode(header.subarray(start, start + length)).replace(/[\0 ]+$/g, '').trim();
-			if (!/^[0-7]+$/.test(value)) throw new Error('TAR has an invalid octal number');
-			const number = Number.parseInt(value, 8);
-			if (!Number.isSafeInteger(number)) throw new Error('TAR number exceeds the safe integer range');
+			let number = 0;
+			let digits = false;
+			let padding = false;
+			for (const byte of header.subarray(start, start + length)) {
+				if (byte >= 48 && byte <= 55 && !padding) {
+					digits = true;
+					number = number * 8 + byte - 48;
+					if (!Number.isSafeInteger(number)) throw new Error('TAR number exceeds the safe integer range');
+				} else if (byte === 32) {
+					if (digits) padding = true;
+				} else if (byte === 0) {
+					padding = true;
+				} else throw new Error('TAR has an invalid octal number');
+			}
+			if (!digits) throw new Error('TAR has an invalid octal number');
 			return number;
 		};
 		const checksum = octal(148, 8);
