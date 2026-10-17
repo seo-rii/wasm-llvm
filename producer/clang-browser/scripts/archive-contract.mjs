@@ -1,4 +1,5 @@
 import { ZipReader, Uint8ArrayReader } from '@zip.js/zip.js';
+import { assertClangWasiContract } from './clang-wasi-contract.mjs';
 
 export const MAX_CLANG_ASSET_BYTES = 512 * 1024 * 1024;
 
@@ -37,5 +38,6 @@ export async function readClangZip(bytes, expectedName) {
 export async function assertWasm(label, bytes) {
 	if (bytes.length < 8 || bytes[0] !== 0 || bytes[1] !== 0x61 || bytes[2] !== 0x73 || bytes[3] !== 0x6d)
 		throw new Error(`${label} is not a WebAssembly module`);
-	await WebAssembly.compile(bytes);
+	const module = await WebAssembly.compile(bytes);
+	if (label === 'clang' || label === 'lld') assertClangWasiContract(label, bytes, module);
 }
