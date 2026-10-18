@@ -9,7 +9,7 @@ import { promisify } from "node:util";
 import test from "node:test";
 import { ZipWriter, Uint8ArrayReader, Uint8ArrayWriter } from "@zip.js/zip.js";
 
-import { makeBuildReceipt } from './fixtures/clang/artifacts.mjs';
+import { makeBuildReceipt, wasm } from './fixtures/clang/artifacts.mjs';
 
 const exec = promisify(execFile);
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -20,7 +20,6 @@ const producer = JSON.parse(
     "utf8",
   ),
 );
-const wasm = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]);
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const digest = (bytes) => ({ bytes: bytes.length, sha256: sha(bytes) });
 const sidecars = [
@@ -50,7 +49,7 @@ async function fixture(t) {
   await writeFile(
     path.join(root, "clangd.wasm"),
     Buffer.concat([
-      wasm,
+      wasm.subarray(0, 8),
       Buffer.from([1, 4, 1, 96, 0, 0, 2, importSection.length]),
       importSection,
     ]),

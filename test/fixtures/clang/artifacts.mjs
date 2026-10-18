@@ -5,10 +5,19 @@ import { gzipSync } from 'node:zlib';
 import { ZipWriter, Uint8ArrayReader, Uint8ArrayWriter } from '@zip.js/zip.js';
 
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-export const wasm = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]);
+const emptyWasm = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]);
+// A minimal command with the same startup and memory ABI as default Clang/LLD.
+// This is a structural fixture; it does not pretend to compile source code.
+export const wasm = Buffer.concat([emptyWasm, Buffer.from([
+	1, 4, 1, 0x60, 0, 0,
+	3, 2, 1, 0,
+	5, 3, 1, 0, 1,
+	7, 19, 2, 6, ...Buffer.from('memory'), 2, 0, 6, ...Buffer.from('_start'), 0, 0,
+	10, 4, 1, 2, 0, 0x0b
+])]);
 const name = Buffer.from('__asyncjs__waitForStdin');
 const imports = Buffer.from([1, 3, ...Buffer.from('env'), name.length, ...name, 0, 0]);
-export const clangdWasm = Buffer.concat([wasm, Buffer.from([1, 4, 1, 96, 0, 0, 2, imports.length]), imports]);
+export const clangdWasm = Buffer.concat([emptyWasm, Buffer.from([1, 4, 1, 96, 0, 0, 2, imports.length]), imports]);
 export const clangdJs = Buffer.from('Module.stdinReady;');
 
 export async function zipFiles(files) {
