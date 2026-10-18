@@ -40,6 +40,35 @@ for (const size of ['-1000', '8', '00000garbage', '77777777777']) {
 	});
 }
 
+test('TAR size fields accept ASCII octal with space and NUL padding', () => {
+	for (const size of ['5', '000000000005', '   5', '5   ', ' 5\0 ', '5\0\0 ']) {
+		const file = member();
+		file.fill(0, 124, 136);
+		file.write(size, 124);
+		checksum(file.subarray(0, 512));
+		assert.equal(readTarEntries(archive(file)).get('include/test.h').size, 5, JSON.stringify(size));
+	}
+});
+
+test('TAR octal fields reject Unicode whitespace, control bytes and digits after padding', () => {
+	for (const size of ['\u00a05', '5\u00a0', '\u20035', '\ufeff5', '\t5', '5\r', '\n5',
+		'  ', '\0', '\x005', '5\0 1', '5 1']) {
+		const file = member();
+		file.fill(0, 124, 136);
+		file.write(size, 124);
+		checksum(file.subarray(0, 512));
+		assert.throws(() => readTarEntries(archive(file)), /invalid octal/, JSON.stringify(size));
+	}
+	for (const whitespace of ['\u00a0', '\u2003', '\ufeff', '\t', '\n', '\r']) {
+		const file = member();
+		file[148] = 32;
+		const sum = file.subarray(0, 512).reduce((total, byte, index) => total + (index >= 148 && index < 156 ? 32 : byte), 0);
+		file.fill(0, 148, 156);
+		file.write(whitespace + sum.toString(8), 148);
+		assert.throws(() => readTarEntries(archive(file)), /invalid octal/, `checksum ${JSON.stringify(whitespace)}`);
+	}
+});
+
 test('TAR rejects checksum corruption, truncation and invalid termination', () => {
 	const file = member();
 	const corrupt = Buffer.from(file);
