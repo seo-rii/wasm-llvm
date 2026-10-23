@@ -405,7 +405,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-7`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-8`,
   );
 });
 

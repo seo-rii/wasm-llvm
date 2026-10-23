@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import {
+	validateModuleInstantiation,
+	assertModuleInstantiationHook
+} from '../../debug-module-api.mjs';
+
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -29,6 +34,7 @@ export async function verifyWamrBrowser({ artifacts, rawSizeBudget, sizeBudget }
 	const receipt = JSON.parse(
 		await readFile(path.join(artifacts, 'producer-receipt.json'), 'utf8')
 	);
+	validateModuleInstantiation(receipt.moduleInstantiation, 'WAMR receipt');
 	if (receipt.format !== 'wasm-idle-wamr-debug-v1') {
 		throw new Error('unexpected WAMR debugger receipt format');
 	}
@@ -83,13 +89,9 @@ export async function verifyWamrBrowser({ artifacts, rawSizeBudget, sizeBudget }
 
 	const compressed = await readFile(path.join(artifacts, 'wamr-debug.wasm.gz'));
 	const uncompressed = await readFile(path.join(artifacts, 'wamr-debug.wasm'));
-	const rawBudget = rawSizeBudget
-		? Number(rawSizeBudget)
-		: DEFAULT_RAW_SIZE_BUDGET;
+	const rawBudget = rawSizeBudget ? Number(rawSizeBudget) : DEFAULT_RAW_SIZE_BUDGET;
 	if (uncompressed.byteLength > rawBudget) {
-		throw new Error(
-			`wamr-debug.wasm exceeds its ${rawBudget}-byte raw size budget`
-		);
+		throw new Error(`wamr-debug.wasm exceeds its ${rawBudget}-byte raw size budget`);
 	}
 	const budget = sizeBudget ? Number(sizeBudget) : DEFAULT_COMPRESSED_SIZE_BUDGET;
 	if (compressed.byteLength > budget) {
@@ -121,6 +123,10 @@ export async function verifyWamrBrowser({ artifacts, rawSizeBudget, sizeBudget }
 		if (!worker.includes(marker)) {
 			throw new Error(`${PACKAGED_PTHREAD_WORKER} is missing ${marker}`);
 		}
+	}
+	if (receipt.moduleInstantiation) {
+		assertModuleInstantiationHook(loader, 'WAMR loader');
+		assertModuleInstantiationHook(worker, 'WAMR pthread loader');
 	}
 	console.log(`Verified WAMR browser debugger in ${artifacts}`);
 	return receipt;

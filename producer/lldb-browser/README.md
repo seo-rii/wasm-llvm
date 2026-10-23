@@ -366,3 +366,10 @@ target-process exit. The registry must be present in the initial factory
 argument, not assigned afterward. The producer propagates it to all Emscripten
 pthread realms, and connection ids remain realm-independent because LLDB can
 open on one thread and read or interrupt on another.
+
+## Verified immutable Module input
+
+The new producer incoming API and its separately verified local candidate are documented in
+[the module-instantiation experiment](experiments/module-api/README.md). The experiment
+is explicitly derived from a pinned Wasm, cannot be assembled as a release, and does not
+replace any deployed asset.

@@ -1,3 +1,8 @@
+import {
+	assertModuleInstantiationHook,
+	validateModuleInstantiation
+} from '../../debug-module-api.mjs';
+
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -41,10 +46,18 @@ function resolveSourceDir() {
 	return LOCAL_ARTIFACT_DIR;
 }
 
-const { metadata: toolchain, files: verifiedFiles, sidecars: provenanceFiles, manifestCompatibility } = await loadVerifiedClangArtifacts(SOURCE_DIR, { requireBuildReceipt: true });
+const {
+	metadata: toolchain,
+	files: verifiedFiles,
+	sidecars: provenanceFiles,
+	manifestCompatibility
+} = await loadVerifiedClangArtifacts(SOURCE_DIR, { requireBuildReceipt: true });
 const releaseAssets = [...assets];
 if (toolchain.clangd?.headers)
-	releaseAssets.push({ source: toolchain.clangd.headers.asset, target: ['clangd', 'clangd.headers.json.gz'] });
+	releaseAssets.push({
+		source: toolchain.clangd.headers.asset,
+		target: ['clangd', 'clangd.headers.json.gz']
+	});
 const releaseFiles = new Map(provenanceFiles);
 
 const buildAssets = [];
@@ -126,6 +139,8 @@ async function prepareDebugRuntimeManifest() {
 	try {
 		validateLldbArtifactManifest(lldbManifest);
 		validateLldbBuildReceipt(lldbReceipt);
+		if (lldbReceipt.build.derivation !== undefined)
+			throw new Error('Experimental LLDB derivation cannot be assembled as a release');
 		if (
 			typeof lldbManifest.version !== 'string' ||
 			lldbManifest.version.length === 0 ||
@@ -157,6 +172,7 @@ async function prepareDebugRuntimeManifest() {
 	}
 	const lldb = lldbManifest.debugger?.lldb;
 	if (
+		lldbReceipt.build?.moduleInstantiation !== lldb?.moduleInstantiation ||
 		lldbReceipt.source?.patchesSha256 !== lldb?.patchesSha256 ||
 		lldbReceipt.assets?.['lldb-web-dap.js']?.sha256 !== lldb?.jsSha256 ||
 		lldbReceipt.assets?.['lldb-web-dap.wasm']?.sha256 !== lldb?.wasmSha256 ||
@@ -179,6 +195,7 @@ async function prepareDebugRuntimeManifest() {
 			'utf8'
 		)
 	);
+	validateModuleInstantiation(wamrReceipt.moduleInstantiation, 'WAMR receipt');
 	if (
 		wamrReceipt.format !== 'wasm-idle-wamr-debug-v1' ||
 		wamrReceipt.protocolVersion !== 1 ||
@@ -297,6 +314,12 @@ async function prepareDebugRuntimeManifest() {
 		if (actualSha256 !== asset.sha256) {
 			throw new Error(`Debug runtime asset hash mismatch for ${path.basename(asset.source)}`);
 		}
+		if (
+			(asset.target.endsWith('/lldb-web-dap.js') && lldb.moduleInstantiation) ||
+			(asset.target.endsWith('/wamr-debug.js') && wamrReceipt.moduleInstantiation)
+		) {
+			assertModuleInstantiationHook(bytes, asset.target);
+		}
 		releaseFiles.set(asset.target, bytes);
 	}
 
@@ -307,6 +330,9 @@ async function prepareDebugRuntimeManifest() {
 			protocolVersion: 1,
 			transport: 'shared-ring-v1',
 			lldb: {
+				...(lldb.moduleInstantiation
+					? { moduleInstantiation: lldb.moduleInstantiation }
+					: {}),
 				js: 'debug/lldb-web-dap.js',
 				wasm: 'debug/lldb-web-dap.wasm',
 				worker: `debug/${lldb.worker}`,
@@ -319,6 +345,9 @@ async function prepareDebugRuntimeManifest() {
 				sourcesLockSha256: lldbReceipt.producer.sourcesLockSha256
 			},
 			targetRuntime: {
+				...(wamrReceipt.moduleInstantiation
+					? { moduleInstantiation: wamrReceipt.moduleInstantiation }
+					: {}),
 				name: 'wamr',
 				js: 'debug/wamr-debug.js',
 				wasm: 'debug/wamr-debug.wasm',
@@ -337,7 +366,10 @@ async function prepareDebugRuntimeManifest() {
 			}
 		}
 	};
-	releaseFiles.set('runtime-manifest.v2.json', Buffer.from(JSON.stringify(runtimeManifestV2, null, 2) + '\n'));
+	releaseFiles.set(
+		'runtime-manifest.v2.json',
+		Buffer.from(JSON.stringify(runtimeManifestV2, null, 2) + '\n')
+	);
 	return {
 		lldb: lldbManifest,
 		wamr: wamrReceipt
