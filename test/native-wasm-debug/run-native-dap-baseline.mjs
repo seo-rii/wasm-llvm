@@ -15,7 +15,7 @@ function encodeDapMessage(message) {
 	return Buffer.concat([Buffer.from(`Content-Length: ${body.length}\r\n\r\n`), body]);
 }
 
-class NativeDapClient {
+export class NativeDapClient {
 	constructor(input, output, deadline) {
 		this.input = input;
 		this.output = output;
@@ -220,7 +220,7 @@ function protocolSequence(history) {
 	return sequence;
 }
 
-async function startNativeDapAttach(client, options, endpoint) {
+export async function startNativeDapAttach(client, options, endpoint) {
 	await client.request('initialize', {
 		clientID: 'wasm-llvm-native-baseline',
 		clientName: 'wasm-llvm native baseline',

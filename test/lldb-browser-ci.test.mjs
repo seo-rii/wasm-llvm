@@ -14,7 +14,47 @@ test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
 	assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
 });
 
-test('checked runtime provenance remains a required gate without blocking product regeneration', async () => {
+test('native feature gates use rebuilt patched Clang and LLDB for real DAP hit conditions', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+	assert.match(workflow, /HIT_COUNT_PROGRAM_PATH: \/tmp\/wasm-native-debug\/hit-count\.wasm/u);
+	const native = workflow.match(/^    native-baseline:[\s\S]*$/mu)?.[0];
+	assert.ok(native);
+	assert.match(native, /timeout-minutes: 180/u);
+	assert.match(native, /test ! -e "\$NATIVE_FEATURE_ROOT"/u);
+	assert.match(native, /test ! -e "\$NATIVE_FEATURE_BUILD"/u);
+	assert.match(native, /fetch --depth 1 origin ca7933e47d3a3451d81e72ac174dcb5aa28b59d1/u);
+	assert.match(native, /await verifyLockedInputs\(lock\)/u);
+	assert.match(native, /digest\(await fs\.readFile\(file\)\), patch\.sha256/u);
+	assert.match(native, /clang\.sources\.wasmFunctionEndPatch/u);
+	for (const patch of ['0007-wasm-recursive-frame-cfa', '0010-wasm-caller-pc-cache',
+		'0011-libcxx-container-adaptors', '0012-lldb-dap-clear-hit-condition']) {
+		assert.ok(native.includes(`${patch}.patch`));
+	}
+	assert.match(native, /--target clang lldb lldb-dap --parallel 2/u);
+	assert.match(native, /-DLLVM_PARALLEL_LINK_JOBS=1/u);
+	assert.match(native, /-DLLDB_ENABLE_PYTHON=OFF/u);
+	assert.match(native, /--lldb "\$NATIVE_FEATURE_BUILD\/bin\/lldb"[\s\S]*?--program "\$FUNCTION_END_PROGRAM_PATH" --kind function-end/u);
+	assert.match(native, /--lldb "\$NATIVE_FEATURE_BUILD\/bin\/lldb"[\s\S]*?--program "\$CONTAINER_ADAPTORS_PROGRAM_PATH" --kind container-adaptors/u);
+	assert.match(native, /run-native-hit-condition-baseline\.mjs[\s\S]*?--lldb-dap "\$NATIVE_FEATURE_BUILD\/bin\/lldb-dap"[\s\S]*?--program "\$HIT_COUNT_PROGRAM_PATH" --case all/u);
+	const compile = native.match(/- name: Compile and verify debugger feature fixtures with patched Clang[\s\S]*?(?=            - name:)/u)?.[0];
+	assert.ok(compile);
+	assert.equal((compile.match(/"\$NATIVE_FEATURE_BUILD\/bin\/clang"/gu) ?? []).length, 3);
+	assert.equal((compile.match(/-fuse-ld="\$LLVM_ROOT\/bin\/wasm-ld"/gu) ?? []).length, 3);
+	assert.match(compile, /include\/wasm32-wasip1\/noeh\/c\+\+\/v1/u);
+	assert.match(compile, /lib\/wasm32-wasip1\/noeh/u);
+	assert.equal((compile.match(/-stdlib=libc\+\+ -fno-exceptions -nostdinc\+\+/gu) ?? []).length, 2);
+	assert.equal((compile.match(/-isystem "\$FEATURE_CPP_HEADERS" -L"\$FEATURE_CPP_LIBS"/gu) ?? []).length, 2);
+	assert.doesNotMatch(compile, /"\$LLVM_ROOT\/bin\/clang"/u);
+	assert.match(native, /sha256sum --check "\$NATIVE_FEATURE_ROOT\/built-binaries\.sha256"/u);
+	assert.match(native, /"\$NATIVE_FEATURE_BUILD\/lib\/liblldb\.so"/u);
+	assert.doesNotMatch(workflow, /--kind skip-library/u);
+	assert.match(workflow, /llvm-dwarfdump" --verify "\$HIT_COUNT_PROGRAM_PATH"/u);
+	const runner = await fs.readFile('test/native-wasm-debug/run-native-cpp-baseline.mjs', 'utf8');
+	assert.match(runner, /step-avoid-regexp \^\$/u);
+	assert.match(runner, /stop reason = breakpoint 3/u);
+});
+
+test('current artifact provenance stays mandatory and independent of source regeneration', async () => {
 	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
 	const producerContracts = workflow.match(
 		/^    producer-contracts:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
@@ -22,14 +62,27 @@ test('checked runtime provenance remains a required gate without blocking produc
 	const runtimeSourceProvenance = workflow.match(
 		/^    runtime-source-provenance:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
 	)?.[0];
+	const clangArtifactProvenance = workflow.match(
+		/^    clang-artifact-provenance:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
+	)?.[0];
 	const buildProduct = workflow.match(
 		/^    build-product:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
 	)?.[0];
 
 	assert.ok(producerContracts, 'producer-contracts job must exist');
 	assert.ok(runtimeSourceProvenance, 'runtime-source-provenance job must exist');
+	assert.ok(clangArtifactProvenance, 'clang-artifact-provenance job must exist');
 	assert.ok(buildProduct, 'build-product job must exist');
 	assert.doesNotMatch(producerContracts, /debug-runtime-source\.test\.mjs/u);
+	assert.doesNotMatch(producerContracts, /pnpm (?:verify|smoke):clang-artifacts/u);
+	assert.match(clangArtifactProvenance, /uses: actions\/checkout@v4/u);
+	assert.match(clangArtifactProvenance, /uses: actions\/setup-node@v4/u);
+	assert.match(clangArtifactProvenance, /node-version: 24/u);
+	assert.match(clangArtifactProvenance, /uses: pnpm\/action-setup@v4/u);
+	assert.match(clangArtifactProvenance, /pnpm install --frozen-lockfile/u);
+	assert.match(clangArtifactProvenance, /run: pnpm verify:clang-artifacts/u);
+	assert.match(clangArtifactProvenance, /run: pnpm smoke:clang-artifacts/u);
+	assert.doesNotMatch(clangArtifactProvenance, /continue-on-error|^        (?:needs|if):/mu);
 	assert.match(
 		runtimeSourceProvenance,
 		/node --test test\/debug-runtime-source\.test\.mjs/u
@@ -38,6 +91,7 @@ test('checked runtime provenance remains a required gate without blocking produc
 	assert.doesNotMatch(runtimeSourceProvenance, /^\s+needs:/mu);
 	assert.match(buildProduct, /^        needs: producer-contracts$/mu);
 	assert.doesNotMatch(buildProduct, /runtime-source-provenance/u);
+	assert.doesNotMatch(buildProduct, /clang-artifact-provenance/u);
 });
 
 test('documents the two-phase producer regeneration gate', async () => {
@@ -45,7 +99,8 @@ test('documents the two-phase producer regeneration gate', async () => {
 
 	assert.match(readme, /source and patch contracts gate the product build/u);
 	assert.match(readme, /runtime-source provenance runs independently/u);
-	assert.match(readme, /both jobs must be green/u);
+	assert.match(readme, /clang-artifact-provenance/u);
+	assert.match(readme.replace(/\s+/gu, ' '), /All three gates must be green before merge, release, or promotion/u);
 });
 
 test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browser products', async () => {
