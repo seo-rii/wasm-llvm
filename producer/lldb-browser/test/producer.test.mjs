@@ -80,6 +80,26 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   }
 });
 
+test("libc++ adaptors share the native queue provider and include storage-order regressions", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const entry = sourcesLock.patches.find(
+    (patch) => patch.path === "patches/0011-libcxx-container-adaptors.patch",
+  );
+  assert.ok(entry, "container adaptor formatters must be hash locked");
+  const patch = await fs.readFile(path.join(PRODUCER_ROOT, entry.path), "utf8");
+  assert.equal(sha256(patch), entry.sha256);
+  for (const type of ["stack", "priority_queue"]) {
+    assert.ok(patch.includes(`libc++ std::${type} synthetic children`));
+    assert.ok(patch.includes(`libc++ std::${type} summary provider`));
+  }
+  assert.equal((patch.match(/\+  AddCXXSynthetic\(cpp_category_sp, LibcxxQueueFrontEndCreator/g) ?? []).length, 2);
+  assert.match(patch, /heap storage without mistaking it for sorted pop order/);
+  for (const fixture of ["empty_stack", "empty_heap", "vector_stack", "deque_stack", "min_heap", "deque_heap", "nested_stack", "nested_heap"]) {
+    assert.ok(patch.includes(fixture), `missing ${fixture} regression`);
+  }
+  assert.match(patch, /process\.Continue\(\)/);
+});
+
 test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB build", async () => {
   const { sourcesLock } = await loadProducerMetadata();
   const options = {

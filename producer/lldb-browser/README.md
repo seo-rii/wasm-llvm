@@ -68,6 +68,18 @@ launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
 General Clang expression evaluation is not an advertised capability of this
 artifact.
 
+### C++ container values
+
+The C++ language plugin supplies native libc++ synthetic children and summaries
+for vector, deque, map, set, unordered containers and queue. The locked
+`0011-libcxx-container-adaptors.patch` registers the same native queue adaptor
+for `std::stack` and `std::priority_queue`: each forwards to the synthetic view
+of its underlying `c` container. This requires no Python formatter. Stack
+children follow underlying storage order (bottom to top); priority-queue
+children follow heap storage order with the top element first, not sorted pop
+order. Custom comparators, deque storage, nested values, empty containers and
+updates after push/pop are covered by the patch's upstream LLDB API fixture.
+
 The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
 through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP
 `M` packet to guest linear memory. This is a raw-memory operation only: it does

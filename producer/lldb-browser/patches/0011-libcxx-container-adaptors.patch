@@ -1,0 +1,144 @@
+diff --git a/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp b/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp
+--- a/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp
++++ b/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp
+@@ -911,6 +911,14 @@
+   AddCXXSynthetic(cpp_category_sp, LibcxxQueueFrontEndCreator,
+                   "libc++ std::queue synthetic children",
+                   "^std::__[[:alnum:]]+::queue<.+>$", stl_synth_flags, true);
++  // Container adaptors expose their underlying container in storage order.
++  // A priority_queue is a heap; its synthetic children are not sorted pop order.
++  AddCXXSynthetic(cpp_category_sp, LibcxxQueueFrontEndCreator,
++                  "libc++ std::stack synthetic children",
++                  "^std::__[[:alnum:]]+::stack<.+>$", stl_synth_flags, true);
++  AddCXXSynthetic(cpp_category_sp, LibcxxQueueFrontEndCreator,
++                  "libc++ std::priority_queue synthetic children",
++                  "^std::__[[:alnum:]]+::priority_queue<.+>$", stl_synth_flags, true);
+   AddCXXSynthetic(cpp_category_sp, LibcxxTupleFrontEndCreator,
+                   "libc++ std::tuple synthetic children",
+                   "^std::__[[:alnum:]]+::tuple<.*>$", stl_synth_flags, true);
+@@ -1018,6 +1026,14 @@
+                 lldb_private::formatters::ContainerSizeSummaryProvider,
+                 "libc++ std::queue summary provider",
+                 "^std::__[[:alnum:]]+::queue<.+>$", stl_summary_flags, true);
++  AddCXXSummary(cpp_category_sp,
++                lldb_private::formatters::ContainerSizeSummaryProvider,
++                "libc++ std::stack summary provider",
++                "^std::__[[:alnum:]]+::stack<.+>$", stl_summary_flags, true);
++  AddCXXSummary(cpp_category_sp,
++                lldb_private::formatters::ContainerSizeSummaryProvider,
++                "libc++ std::priority_queue summary provider",
++                "^std::__[[:alnum:]]+::priority_queue<.+>$", stl_summary_flags, true);
+   AddCXXSummary(cpp_category_sp,
+                 lldb_private::formatters::ContainerSizeSummaryProvider,
+                 "libc++ std::set summary provider",
+diff --git a/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/Makefile b/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/Makefile
+new file mode 100644
+--- /dev/null
++++ b/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/Makefile
+@@ -0,0 +1,3 @@
++CXX_SOURCES := main.cpp
++
++include Makefile.rules
+diff --git a/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/main.cpp b/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/main.cpp
+new file mode 100644
+--- /dev/null
++++ b/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/main.cpp
+@@ -0,0 +1,32 @@
++#include <deque>
++#include <functional>
++#include <queue>
++#include <stack>
++#include <vector>
++
++struct Greater {
++  bool operator()(int left, int right) const { return left > right; }
++};
++
++int main() {
++  std::stack<int> empty_stack;
++  std::priority_queue<int> empty_heap;
++  std::stack<int> deque_stack(std::deque<int>{1, 2, 3});
++  std::stack<int, std::vector<int>> vector_stack(std::vector<int>{4, 5, 6});
++  std::priority_queue<int> max_heap(std::less<int>(), {1, 4, 2});
++  std::priority_queue<int, std::vector<int>, Greater> min_heap(Greater(), {4, 1, 2});
++  std::priority_queue<int, std::deque<int>, std::greater<int>> deque_heap(
++      std::greater<int>(), {4, 1, 2});
++  std::stack<std::vector<int>> nested_stack;
++  nested_stack.push({7, 8});
++  std::priority_queue<std::vector<int>> nested_heap;
++  nested_heap.push({1, 2});
++  nested_heap.push({3, 4});
++  int stop = 0; // first stop
++  max_heap.pop();
++  min_heap.push(0);
++  deque_stack.pop();
++  vector_stack.push(9);
++  stop += 1; // second stop
++  return stop;
++}
+diff --git a/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/TestLibcxxContainerAdaptors.py b/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/TestLibcxxContainerAdaptors.py
+new file mode 100644
+--- /dev/null
++++ b/lldb/test/API/functionalities/data-formatter/data-formatter-stl/libcxx/container-adaptors/TestLibcxxContainerAdaptors.py
+@@ -0,0 +1,61 @@
++"""The native libc++ container-adaptor providers require no Python formatter."""
++
++import lldb
++from lldbsuite.test.decorators import add_test_categories
++from lldbsuite.test.lldbtest import TestBase
++from lldbsuite.test import lldbutil
++
++
++class TestLibcxxContainerAdaptors(TestBase):
++    def check_ints(self, name, expected, top=None):
++        value = self.frame().FindVariable(name)
++        self.assertSuccess(value.GetError())
++        self.assertEqual(value.GetSummary(), "size=" + str(len(expected)))
++        self.assertEqual(value.GetNumChildren(), len(expected))
++        actual = []
++        for index in range(value.GetNumChildren()):
++            child = value.GetChildAtIndex(index)
++            self.assertSuccess(child.GetError())
++            self.assertEqual(child.GetName(), "[" + str(index) + "]")
++            actual.append(child.GetValueAsSigned())
++        if top is None:
++            self.assertEqual(actual, expected)
++        else:
++            # Validate heap storage without mistaking it for sorted pop order.
++            self.assertEqual(actual[0], top)
++            self.assertEqual(sorted(actual), sorted(expected))
++        return value
++
++    @add_test_categories(["libc++"])
++    def test_adaptors(self):
++        self.build(dictionary={"USE_LIBCPP": 1})
++        target, process, thread, _ = lldbutil.run_to_source_breakpoint(
++            self, "// first stop", lldb.SBFileSpec("main.cpp")
++        )
++        self.check_ints("empty_stack", [])
++        self.check_ints("empty_heap", [])
++        self.check_ints("deque_stack", [1, 2, 3])
++        self.check_ints("vector_stack", [4, 5, 6])
++        self.check_ints("max_heap", [1, 4, 2], top=4)
++        self.check_ints("min_heap", [4, 1, 2], top=1)
++        self.check_ints("deque_heap", [4, 1, 2], top=1)
++        nested_stack = self.frame().FindVariable("nested_stack")
++        self.assertEqual(nested_stack.GetSummary(), "size=1")
++        inner = nested_stack.GetChildAtIndex(0)
++        self.assertEqual(inner.GetSummary(), "size=2")
++        self.assertEqual(inner.GetChildAtIndex(1).GetValueAsSigned(), 8)
++        nested_heap = self.frame().FindVariable("nested_heap")
++        self.assertEqual(nested_heap.GetSummary(), "size=2")
++        self.assertEqual(
++            nested_heap.GetChildAtIndex(0).GetChildAtIndex(0).GetValueAsSigned(), 3
++        )
++
++        breakpoint = target.BreakpointCreateBySourceRegex(
++            "// second stop", lldb.SBFileSpec("main.cpp")
++        )
++        self.assertEqual(breakpoint.GetNumLocations(), 1)
++        self.assertSuccess(process.Continue())
++        self.check_ints("max_heap", [1, 2], top=2)
++        self.check_ints("min_heap", [4, 1, 2, 0], top=0)
++        self.check_ints("deque_stack", [1, 2])
++        self.check_ints("vector_stack", [4, 5, 6, 9])
