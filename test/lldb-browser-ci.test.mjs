@@ -25,7 +25,7 @@ test('native gate qualifies hit counts without advertising unqualified library s
 	assert.match(runner, /stop reason = breakpoint 3/u);
 });
 
-test('checked runtime provenance remains a required gate without blocking product regeneration', async () => {
+test('current artifact provenance stays mandatory and independent of source regeneration', async () => {
 	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
 	const producerContracts = workflow.match(
 		/^    producer-contracts:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
@@ -33,14 +33,27 @@ test('checked runtime provenance remains a required gate without blocking produc
 	const runtimeSourceProvenance = workflow.match(
 		/^    runtime-source-provenance:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
 	)?.[0];
+	const clangArtifactProvenance = workflow.match(
+		/^    clang-artifact-provenance:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
+	)?.[0];
 	const buildProduct = workflow.match(
 		/^    build-product:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu
 	)?.[0];
 
 	assert.ok(producerContracts, 'producer-contracts job must exist');
 	assert.ok(runtimeSourceProvenance, 'runtime-source-provenance job must exist');
+	assert.ok(clangArtifactProvenance, 'clang-artifact-provenance job must exist');
 	assert.ok(buildProduct, 'build-product job must exist');
 	assert.doesNotMatch(producerContracts, /debug-runtime-source\.test\.mjs/u);
+	assert.doesNotMatch(producerContracts, /pnpm (?:verify|smoke):clang-artifacts/u);
+	assert.match(clangArtifactProvenance, /uses: actions\/checkout@v4/u);
+	assert.match(clangArtifactProvenance, /uses: actions\/setup-node@v4/u);
+	assert.match(clangArtifactProvenance, /node-version: 24/u);
+	assert.match(clangArtifactProvenance, /uses: pnpm\/action-setup@v4/u);
+	assert.match(clangArtifactProvenance, /pnpm install --frozen-lockfile/u);
+	assert.match(clangArtifactProvenance, /run: pnpm verify:clang-artifacts/u);
+	assert.match(clangArtifactProvenance, /run: pnpm smoke:clang-artifacts/u);
+	assert.doesNotMatch(clangArtifactProvenance, /continue-on-error|^        (?:needs|if):/mu);
 	assert.match(
 		runtimeSourceProvenance,
 		/node --test test\/debug-runtime-source\.test\.mjs/u
@@ -49,6 +62,7 @@ test('checked runtime provenance remains a required gate without blocking produc
 	assert.doesNotMatch(runtimeSourceProvenance, /^\s+needs:/mu);
 	assert.match(buildProduct, /^        needs: producer-contracts$/mu);
 	assert.doesNotMatch(buildProduct, /runtime-source-provenance/u);
+	assert.doesNotMatch(buildProduct, /clang-artifact-provenance/u);
 });
 
 test('documents the two-phase producer regeneration gate', async () => {
@@ -56,7 +70,8 @@ test('documents the two-phase producer regeneration gate', async () => {
 
 	assert.match(readme, /source and patch contracts gate the product build/u);
 	assert.match(readme, /runtime-source provenance runs independently/u);
-	assert.match(readme, /both jobs must be green/u);
+	assert.match(readme, /clang-artifact-provenance/u);
+	assert.match(readme.replace(/\s+/gu, ' '), /All three gates must be green before merge, release, or promotion/u);
 });
 
 test('scheduled and manual CI rebuild and upload the pinned LLDB and WAMR browser products', async () => {

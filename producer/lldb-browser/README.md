@@ -241,12 +241,17 @@ The scripts are deliberately split so source mutation, compilation, and
 packaging remain auditable:
 
 CI follows the same two-phase contract.
-The source and patch contracts gate the product build.
-Checked-in runtime-source provenance runs independently. A source change may
-therefore leave the provenance job red while the explicitly requested
-replacement product is still built and uploaded. After that product is
-synchronized into `artifacts/runtime-source/debug`, both jobs must be green
-before the revision can be released or promoted.
+The source and patch contracts gate the product build through
+`producer-contracts`. Checked-in runtime-source provenance runs independently
+in `runtime-source-provenance`. Clang delivery validation also runs independently
+in the mandatory `clang-artifact-provenance` job, which executes
+`pnpm verify:clang-artifacts` and `pnpm smoke:clang-artifacts` on pull requests,
+`main` pushes, schedules, and manual dispatches. Neither delivery job is a
+dependency of `build-product`: a source change may leave checked-in artifact
+provenance red while the explicitly requested replacement product is built
+and uploaded. All three gates must be green before merge, release, or
+promotion. Synchronizing a replacement LLDB/WAMR product into
+`artifacts/runtime-source/debug` does not waive the Clang delivery gate.
 
 ```sh
 node producer/lldb-browser/scripts/prepare.mjs
@@ -283,11 +288,14 @@ node --test producer/lldb-browser/test/producer.test.mjs
 The plan modes never clone, patch, configure, or build LLVM.
 Pull requests and `main` pushes run this producer contract together with the
 paired WAMR producer contract in the `LLDB browser producer contracts`
-workflow. The gate verifies locked hashes, patch structure, transport
+workflow. The source gate verifies locked hashes, patch structure, transport
 overlays, pthread sidecars, and receipt/manifest behavior without downloading
-or rebuilding the full LLVM and WAMR binaries. It also verifies the published
-product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
+or rebuilding the full LLVM and WAMR binaries. The independent runtime-source
+provenance gate verifies the published product bundle under
+`artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
+The separate Clang artifact gate validates its existing delivery receipts and
+smoke checks without blocking regeneration of the LLDB/WAMR replacement.
 
 The weekly schedule also performs full clean LLDB and WAMR product builds. It
 builds LLDB sequentially from two distinct empty LLVM source and build roots,
