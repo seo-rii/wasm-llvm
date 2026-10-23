@@ -68,7 +68,7 @@ launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
 General Clang expression evaluation is not an advertised capability of this
 artifact.
 
-### C++ container values
+### C++ values and stepping policy
 
 The C++ language plugin supplies native libc++ synthetic children and summaries
 for vector, deque, map, set, unordered containers and queue. The locked
@@ -79,6 +79,35 @@ children follow underlying storage order (bottom to top); priority-queue
 children follow heap storage order with the top element first, not sorted pop
 order. Custom comparators, deque storage, nested values, empty containers and
 updates after push/pop are covered by the patch's upstream LLDB API fixture.
+
+`hitConditionalBreakpoints` qualifies positive decimal DAP `hitCondition`
+values. LLVM implements these as an ignore count of N - 1: the Nth and every
+subsequent hit stop. This is not an expression condition or an equality-only
+hit filter. Consumers must validate a positive integer in the uint32 range.
+The locked `0012-lldb-dap-clear-hit-condition.patch` resets a pending ignore
+count when an existing breakpoint's hit condition becomes empty or omitted,
+preserving the breakpoint ID. Its upstream DAP regression covers both forms.
+
+`skipLibraryCode` remains false. Native qualification accepts fixed settings
+through attach `initCommands` and DAP `evaluate` with `context: "repl"` and
+the default backtick command prefix, but neither LLDB's upstream `^std::`
+default nor the broader `^(.* )?std::` preset prevented a stop inside the
+fixture's templated `std::sort`. Accepting a setting is not proof that source
+stepping honors it for Wasm. `skip-library.cpp` and the optional native runner
+mode retain this failing qualification case; it is excluded from passing CI
+gates until a real target fix is established. Callback-aware stepping also
+remains outside the qualified behavior.
+
+Conditional expressions, expression logpoints and post-return values remain
+unqualified (`conditionalBreakpoints`, `logPoints`, and `returnValues` are
+false). The Wasm target has no return-value ABI provider. The fixed settings
+commands above do not enable general expression execution.
+
+These are producer source contracts. Existing packaged LLDB bytes, manifests
+and receipts stay unchanged until a verified rebuild is published. The native
+hit-count fixture runs with the pinned native pair; the new
+adaptor registration additionally needs a rebuilt LLDB and real consumer
+Chromium qualification before release.
 
 The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
 through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP

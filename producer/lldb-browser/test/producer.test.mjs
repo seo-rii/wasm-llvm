@@ -49,6 +49,11 @@ test("source lock pins LLVM 22.1.8 and every patch/overlay hash", async () => {
   assert.equal(manifest.capabilities.readMemory, true);
   assert.equal(manifest.capabilities.writeMemory, true);
   assert.equal(manifest.capabilities.dataBreakpoints, true);
+  assert.equal(manifest.capabilities.hitConditionalBreakpoints, true);
+  assert.equal(manifest.capabilities.conditionalBreakpoints, false);
+  assert.equal(manifest.capabilities.logPoints, false);
+  assert.equal(manifest.capabilities.skipLibraryCode, false);
+  assert.equal(manifest.capabilities.returnValues, false);
   assert.deepEqual(manifest.build.reproduciblePathPrefixes, {
     source: "/llvm-project",
     build: "/lldb-web-build",
@@ -98,6 +103,20 @@ test("libc++ adaptors share the native queue provider and include storage-order 
     assert.ok(patch.includes(fixture), `missing ${fixture} regression`);
   }
   assert.match(patch, /process\.Continue\(\)/);
+});
+
+test("clearing a DAP hit condition resets a pending ignore count", async () => {
+  const { sourcesLock } = await loadProducerMetadata();
+  const entry = sourcesLock.patches.find(
+    (patch) => patch.path === "patches/0012-lldb-dap-clear-hit-condition.patch",
+  );
+  assert.ok(entry);
+  const patch = await fs.readFile(path.join(PRODUCER_ROOT, entry.path), "utf8");
+  assert.equal(sha256(patch), entry.sha256);
+  assert.match(patch, /if \(m_hit_condition\.empty\(\)\)/);
+  assert.match(patch, /m_bp\.SetIgnoreCount\(0\)/);
+  assert.match(patch, /enumerate\(\[\{\}, \{"hitCondition": ""\}\]\)/);
+  assert.match(patch, /self\.assertEqual\(breakpoint_ids, cleared_ids\)/);
 });
 
 test("plan modes describe a proxied pthread, static, minimal WebAssembly LLDB build", async () => {
@@ -425,7 +444,7 @@ test("browser plugin lookup avoids std::function callback dispatch", async () =>
 test("patched LLDB browser artifacts use a new product version", () => {
   assert.equal(
     parsePackageArgs([]).version,
-    `llvmorg-${LLVM_VERSION}-lldb-web-7`,
+    `llvmorg-${LLVM_VERSION}-lldb-web-8`,
   );
 });
 
