@@ -513,3 +513,78 @@ The final separate-context [C/C++ Monaco editor evidence](https://github.com/seo
 This final evidence is 1,880 bytes, SHA-256 `67d7a3393f9392331a39fc79fc8d6f2b1862a6169f15c060fb8ab717845e44bd`. The validation process PID was `133666`, completed private log `/home/seorii/logs/wasm-idle-monaco-model-gated3-20261007-7nrn5xnj.log`, final status `0` at the same complete log path plus `.status`. Earlier private attempts exited `1` because the probe read its model hook during remount (`/home/seorii/logs/wasm-idle-monaco-model-gated-20261007-qggljqsk.log`) or incorrectly required zero markers while its valid workload triggered legitimate unused-include warnings (`/home/seorii/logs/wasm-idle-monaco-model-gated2-20261007-7u7nqv0v.log`). Their status files have the same `.log.status` naming. Only validation waits/workloads changed; the existing combined-language file-switch test's timing limitation remains outside these product changes.
 
 All task-owned validation servers were stopped after the checks, and ports 5191/5192 no longer listen. Final private application/probe server logs are `/home/seorii/logs/wasm-idle-final-app-vite-20261007-r4gvq9h5.log` and `/home/seorii/logs/wasm-idle-final-probe-vite-20261007-l7qqhpyn.log`, each with shutdown status `143` in its `.log.status` file. The earlier PCH server log `/home/seorii/logs/wasm-idle-pch-vite-20261007-1lygr5_p.log` has status `143` in its sibling `.status` file; the matrix probe log `/home/seorii/logs/wasm-perf-probe-vite-20261007-nested.log` has status `-15` in its `.log.status` file. These are the expected explicit SIGTERM shutdowns, separate from test exit statuses.
+
+
+## Resource profile experiment, 2026-10-23
+
+The producer now accepts validated `CLANGD_INITIAL_MEMORY_MIB` (128–4096) and
+`CLANGD_PTHREAD_POOL_SIZE` (`auto` or 1–64). Unset values retain the shipped
+2 GiB initial-memory capacity and `Math.max(navigator.hardwareConcurrency, 8)`
+pool expression. Maximum memory remains 4 GiB. These are experimental build
+inputs; this change does not promote different release defaults. The resource
+helper is part of the build recipe receipt and its verifier.
+
+`prepare-resource-experiment.mjs` creates the following screening fixtures from
+receipt-verified consumer clangd assets:
+
+| Profile | Initial capacity MiB | Pthread pool | clangd analysis threads |
+| --- | ---: | --- | --- |
+| baseline | 2048 | hardware-based | existing default |
+| pool4-j2 | 2048 | 4 | 2 |
+| memory512-pool4-j2 | 512 | 4 | 2 |
+| memory256-pool2-j1 | 256 | 2 | 1 |
+
+The fixtures are **generated-artifact transforms, not source-built release
+candidates**. The tool verifies encoded and decoded identities, replaces exact
+single anchors in the generated JavaScript, and changes only the imported shared
+memory minimum in the Wasm import section. It recalculates section lengths,
+preserves the 4 GiB maximum, and validates the resulting Wasm. It rejects unknown
+layouts and reserves a new output directory. `-j` is injected only in these
+benchmark fixtures; it is not a new producer build option.
+
+Initial capacity is not measured resident memory. A smaller import minimum does
+not demonstrate an equivalent reduction in RSS or a successful complete source
+build. The modified Wasm identities may also exercise different consumer
+compatibility handling than the recognized shipped identity; diagnostic failures
+must be investigated before attributing differences to memory capacity.
+
+The runner starts with a short real-browser page-import check and records each
+candidate's exit status, partial results, bounded failure text, settings, and
+asset identities. It continues after a rejected candidate so the remaining
+profiles can be assessed. Workloads use the consumer's existing C/C++ standard
+header diagnostics and completion corpus in empty-cache, persistent-reload, and
+warm phases. A successful probe establishes only those cases. Shared-host timings
+are screening evidence; promotion requires source-built artifacts, a broader
+correctness corpus, stable-machine repeated measurements, and memory telemetry.
+
+Reproduction requires a matching wasm-idle checkout with installed workspace
+package dependencies, prepared pinned clangd assets, and Chromium. The consumer
+performance Vite server must prebundle `vscode-jsonrpc/browser`, as in consumer
+commit `807fc4c9`; prebundling only the common entry leaves its CommonJS browser
+module unusable. Disable Vite filesystem watching for immutable benchmark inputs
+when running several worktrees on a shared host.
+
+```sh
+# RECEIPTS_JSON contains the current runtime lock's clangd.js and
+# clangd.wasm.gz records, keyed by those two basenames.
+node producer/clang-browser/scripts/prepare-resource-experiment.mjs \
+  /path/to/wasm-idle/static/clangd RECEIPTS_JSON /path/to/new-fixtures
+
+# Start the consumer's scripts/performance-vite.config.mjs on port 5197 first.
+node producer/clang-browser/scripts/run-resource-experiment.mjs \
+  --consumer /path/to/wasm-idle \
+  --fixtures /path/to/new-fixtures/fixtures.json \
+  --base-url http://127.0.0.1:5197/wasm-idle/ \
+  --json /path/to/resource-profiles.json \
+  --runs 1 --profiles unconstrained
+```
+
+Use a private log and serialize numeric browser measurements. The runner
+preserves raw per-phase observations and never treats a failed candidate as an
+improvement. Optional `constrained` measurements use the consumer's 10 Mbps
+aggregate payload shaper. No transformed artifact should be published: rebuild
+with the producer settings and qualify matching consumer receipts first.
+
+Focused resource/provenance/release-integrity tests passed (26 tests), as did the
+producer-only repository check. The optional full LLVM source build was not run
+for this resource-screening harness.
