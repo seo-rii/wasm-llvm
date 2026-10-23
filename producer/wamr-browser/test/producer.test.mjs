@@ -542,6 +542,7 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 			path.join(input, 'wamr-debug.js'),
 			[
 				'createWamrDebugModule',
+				'Module["instantiateWasm"](imports, receiveInstance);',
 				'wasm_idle_rsp_read',
 				'wasm_idle_rsp_write',
 				PACKAGED_PTHREAD_WORKER
@@ -555,6 +556,7 @@ test('packages and verifies the pthread sidecar as a hashed artifact', async () 
 			path.join(input, PACKAGED_PTHREAD_WORKER),
 			[
 				'createWamrDebugModule',
+				'Module["instantiateWasm"](imports, receiveInstance);',
 				'wasmIdleDebugTransportV1',
 				'globalThis.onmessage = () => undefined;'
 			].join('\n')

@@ -1,0 +1,142 @@
+{
+  "format": "wasm-llvm-debug-module-api-local-experiment-v1",
+  "baselineManifestSha256": "d4b08c91cd9bc810d0862ea2a5ef5a092e52f6b22a6f3121499ec5d3df2086b5",
+  "candidateManifestSha256": "2aea44a9820f5204438b5dd72d586588448b1b81a1597521ed076a71f3deb529",
+  "lldb": {
+    "schemaVersion": 1,
+    "producer": {
+      "id": "wasm-llvm/lldb-browser",
+      "manifestSha256": "92b7245c4917bdaa5602a6c929d2b44417c109757d62f40999f47c200a4eadb0",
+      "sourcesLockSha256": "1e36651feb328680d3ab72e41881e90c619622cb9354cd030b43ce7c68c1112e"
+    },
+    "source": {
+      "llvmVersion": "22.1.8",
+      "llvmTag": "llvmorg-22.1.8",
+      "llvmRevision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+      "patchesSha256": "5812710a11b6d9a83b30981753123f9de0b0931a1c13eda07d20f4a4556c081f"
+    },
+    "toolchain": {
+      "emscriptenVersion": "6.0.0",
+      "emscriptenRevision": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+    },
+    "build": {
+      "moduleInstantiation": "emscripten-instantiate-wasm-v1",
+      "target": "wasm32-unknown-emscripten",
+      "pthreads": true,
+      "proxyToPthread": true,
+      "pthreadWorker": "lldb-web-dap.pthread.mjs",
+      "registeredPlugins": [
+        "lldbPluginProcessWasm",
+        "lldbPluginProcessGDBRemote",
+        "lldbPluginDynamicLoaderWasmDYLD",
+        "lldbPluginObjectFileWasm",
+        "lldbPluginSymbolVendorWasm",
+        "lldbPluginSymbolFileDWARF",
+        "lldbPluginTypeSystemClang",
+        "lldbPluginCPlusPlusLanguage",
+        "lldbPluginScriptInterpreterNone"
+      ],
+      "excludedFeatures": [
+        "python",
+        "lua",
+        "libedit",
+        "curses",
+        "interactive-lldb-cli",
+        "dynamic-plugin-loader",
+        "native-platform-launchers",
+        "protocol-servers",
+        "tests",
+        "examples",
+        "arbitrary-expression-evaluation"
+      ],
+      "flags": [
+        "-pthread",
+        "-sPTHREAD_POOL_SIZE=8",
+        "-sPROXY_TO_PTHREAD=1",
+        "-sMODULARIZE=1",
+        "-sEXPORT_ES6=1",
+        "-sEXPORT_NAME=createLldbWebDapModule",
+        "-sENVIRONMENT=worker",
+        "-sINVOKE_RUN=0",
+        "-sINCOMING_MODULE_JS_API=['instantiateWasm','locateFile','mainScriptUrlOrBlob','noInitialRun','onAbort','onExit','stdout','stderr','print','printErr']",
+        "-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
+        "-sFILESYSTEM=1",
+        "-sALLOW_MEMORY_GROWTH=1",
+        "-sINITIAL_MEMORY=268435456",
+        "-sMAXIMUM_MEMORY=4294967296",
+        "-sSTACK_SIZE=8388608",
+        "-sWASM_BIGINT=1",
+        "-sASSERTIONS=1",
+        "-sEXIT_RUNTIME=1",
+        "-sERROR_ON_UNDEFINED_SYMBOLS=1",
+        "-Wl,--gc-sections"
+      ],
+      "derivation": {
+        "kind": "post-link-experiment",
+        "proof": "post-link-experiment.json",
+        "sha256": "03dc79dfe86d4d6f76b44aee6df2a4fdaee1f3c8ee9dc1d2e18a45b16de566b0"
+      }
+    },
+    "version": "llvmorg-22.1.8-lldb-web-8-module-api-experiment",
+    "assets": {
+      "lldb-web-dap.js": {
+        "size": 163091,
+        "sha256": "a1500477e01c8071c5fbf2e1b720af8d5d5172c501eb1c9f59881505f53036d0"
+      },
+      "lldb-web-dap.wasm": {
+        "size": 40986922,
+        "sha256": "7a8942ab101dfb1cba1acdd055828ec6049974627e00addf4583df1434f149ec",
+        "compressed": {
+          "format": "gzip",
+          "level": 9,
+          "size": 14593852,
+          "sha256": "86b7d610e5fda5d731a7b5bfc90fe8321c0f3a6d4e5adc369f46ed5256df7a25"
+        }
+      },
+      "lldb-web-dap.pthread.mjs": {
+        "size": 1364,
+        "sha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d"
+      }
+    }
+  },
+  "wamr": {
+    "format": "wasm-idle-wamr-debug-v1",
+    "moduleInstantiation": "emscripten-instantiate-wasm-v1",
+    "protocolVersion": 1,
+    "transport": "shared-ring-v1",
+    "pthreadTransport": "pthread-transport-v1",
+    "wamrRevision": "25bd7eb63e828e4bd242cc9b38d260b4b31c6605",
+    "emscriptenVersion": "6.0.0",
+    "emsdkRevision": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+    "provenance": {
+      "sourcesLockSha256": "18f924fa418c7dccb0c557c1310ae877f5e5ab41ce34256230565879fe1f2727",
+      "producerManifestSha256": "6c34e6544d28e5b235c81320147751e687b9c73c24afd2f03995608f52e8d2e6",
+      "patchesSha256": "6c6bcf6037fc33378ea290a6a263fb60eaaf5a82a12bd6687c6b78fb0cf25289",
+      "overlaysSha256": "59a504fb047a67577202b4ff9a79f056d080fa6a39ca3eb6bd27118d497b14d7"
+    },
+    "assets": [
+      {
+        "path": "wamr-debug.js",
+        "bytes": 111701,
+        "sha256": "b0b55a0f63d0fc8ed620bd1a348531cabf35816b8dc465ee882da9fc5684a5a2"
+      },
+      {
+        "path": "wamr-debug.wasm",
+        "bytes": 278958,
+        "sha256": "35e53c222ec5cde0935d48bdd5fd1897de91622619f78e9b939170e67792b95b"
+      },
+      {
+        "path": "wamr-debug.worker.mjs",
+        "bytes": 111694,
+        "sha256": "7a42988a701fca14caacfbca44611e3809297ea58f946c64d05254ea9908ec82"
+      },
+      {
+        "path": "wamr-debug.wasm.gz",
+        "bytes": 100560,
+        "sha256": "06ab0bbdab5f5672fba1b0ff10bdef04b2ea866bf894352f358f87e2412dee42",
+        "uncompressedBytes": 278958,
+        "uncompressedSha256": "35e53c222ec5cde0935d48bdd5fd1897de91622619f78e9b939170e67792b95b"
+      }
+    ]
+  }
+}

@@ -22,7 +22,7 @@ function sha256(bytes) {
 	return createHash('sha256').update(bytes).digest('hex');
 }
 
-test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR', async () => {
+for (const moduleInstantiation of [undefined, 'emscripten-instantiate-wasm-v1']) test(`assembles a revision-locked RuntimeManifestV2 (${moduleInstantiation ?? 'legacy'})`, async () => {
 	const root = await mkdtemp(path.join(os.tmpdir(), 'wasm-debug-release-'));
 	try {
 		const clang = path.join(root, 'clang');
@@ -36,7 +36,8 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		]);
 		await writeClangFixture(clang);
 
-		const lldbJs = Buffer.from('lldb-js');
+		const hook = moduleInstantiation ? 'Module["instantiateWasm"](imports, receiveInstance);' : '';
+		const lldbJs = Buffer.from('lldb-js;' + hook);
 		const lldbWasm = Buffer.from('lldb-wasm');
 		const lldbWorker = Buffer.from('lldb-worker');
 		await writeFile(path.join(lldb, 'lldb-web-dap.js'), lldbJs);
@@ -48,6 +49,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 			debugger: {
 				protocolVersion: 1,
 				lldb: {
+					...(moduleInstantiation ? { moduleInstantiation } : {}),
 					js: 'lldb-web-dap.js',
 					wasm: 'lldb-web-dap.wasm',
 					worker: 'lldb-web-dap.pthread.mjs',
@@ -94,14 +96,14 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 					wasmBytes: lldbWasm,
 					workerBytes: lldbWorker,
 					patchesSha256: validLldbManifest.debugger.lldb.patchesSha256,
-					buildFlags: []
+					buildFlags: [], moduleInstantiation
 				})
 			)}\n`
 		);
 
 		const wamrJs = Buffer.from(
 			[
-				'createWamrDebugModule',
+				'createWamrDebugModule', hook,
 				'wasm_idle_rsp_read',
 				'wasm_idle_rsp_write',
 				'wamr-debug.worker.mjs'
@@ -109,7 +111,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		);
 		const wamrWasm = Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
 		const wamrWorker = Buffer.from(
-			['createWamrDebugModule', 'wasmIdleDebugTransportV1', 'onmessage'].join('\n')
+			['createWamrDebugModule', hook, 'wasmIdleDebugTransportV1', 'onmessage'].join('\n')
 		);
 		const wamrCompressedWasm = gzipSync(wamrWasm, { level: 9, mtime: 0 });
 		await writeFile(path.join(wamr, 'wamr-debug.js'), wamrJs);
@@ -125,6 +127,7 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		const wamrProducerManifest = JSON.parse(wamrProducerManifestBytes);
 		const validWamrReceipt = {
 			format: 'wasm-idle-wamr-debug-v1',
+			...(moduleInstantiation ? { moduleInstantiation } : {}),
 			protocolVersion: 1,
 			transport: 'shared-ring-v1',
 			pthreadTransport: 'pthread-transport-v1',
@@ -196,6 +199,8 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 			await readFile(path.join(output, 'runtime-manifest.v2.json'), 'utf8')
 		);
 		assert.equal(manifest.manifestVersion, 2);
+		assert.equal(manifest.debugger.lldb.moduleInstantiation, moduleInstantiation);
+		assert.equal(manifest.debugger.targetRuntime.moduleInstantiation, moduleInstantiation);
 		assert.equal(manifest.compiler.provenance.revision, llvmRevision);
 		assert.equal(manifest.debugger.lldb.llvmRevision, llvmRevision);
 		assert.equal(manifest.debugger.lldb.sourcesLockSha256, 'd'.repeat(64));
@@ -227,7 +232,21 @@ test('assembles a revision-locked RuntimeManifestV2 from Clang, LLDB, and WAMR',
 		assert.deepEqual(await readFile(path.join(output, 'debug/wamr-debug.wasm')), wamrWasm);
 		await writeFile(path.join(wamr, 'wamr-debug.wasm'), wamrWasm);
 
+		const validLldbReceipt = JSON.parse(await readFile(path.join(lldb, 'lldb-browser.receipt.json')));
 		const contractCases = [
+			{
+				name: 'experimental derivation cannot release', file: path.join(lldb, 'lldb-browser.receipt.json'), base: validLldbReceipt,
+				mutate(value) { value.build.derivation = {kind:'post-link-experiment', proof:'post-link-experiment.json', sha256:'e'.repeat(64)}; }, error: /Experimental LLDB derivation/u
+			},
+			{
+				name: 'unknown module API', file: path.join(lldb, 'debug-manifest.json'), base: validLldbManifest,
+				mutate(value) { value.debugger.lldb.moduleInstantiation = 'unsupported'; }, error: /moduleInstantiation/u
+			},
+			{
+				name: 'mismatched LLDB module API', file: path.join(lldb, 'debug-manifest.json'), base: validLldbManifest,
+				mutate(value) { if (moduleInstantiation) delete value.debugger.lldb.moduleInstantiation; else value.debugger.lldb.moduleInstantiation = 'emscripten-instantiate-wasm-v1'; }, error: /receipt/u
+			},
+
 			{
 				name: 'missing LLDB manifest version',
 				file: path.join(lldb, 'debug-manifest.json'),

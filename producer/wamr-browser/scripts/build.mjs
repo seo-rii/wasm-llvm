@@ -53,7 +53,7 @@ export const EMSCRIPTEN_LINK_OPTIONS = [
 	'-sBINARYEN_EXTRA_PASSES=--pass-arg=max-func-params@21',
 	'-sEXIT_RUNTIME=1',
 	"-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
-	"-sINCOMING_MODULE_JS_API=['noInitialRun','locateFile','stdin','stdout','stderr','onExit','onAbort','mainScriptUrlOrBlob']"
+	"-sINCOMING_MODULE_JS_API=['instantiateWasm','noInitialRun','locateFile','stdin','stdout','stderr','onExit','onAbort','mainScriptUrlOrBlob']"
 ];
 
 // WAMR's portable invokeNative_general dispatcher deliberately calls one

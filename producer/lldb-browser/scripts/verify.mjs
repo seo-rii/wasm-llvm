@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { assertModuleInstantiationHook } from '../../debug-module-api.mjs';
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -17,6 +19,7 @@ import {
 	verifyLockedInputs
 } from './contracts.mjs';
 import { EMSCRIPTEN_LINK_FLAGS } from './build.mjs';
+import { validatePostLinkExperiment } from './post-link-experiment.mjs';
 
 export async function verifyArtifactDirectory(artifactDir) {
 	const { sourcesLock } = await loadProducerMetadata();
@@ -29,6 +32,9 @@ export async function verifyArtifactDirectory(artifactDir) {
 	]);
 	validateBuildReceipt(receipt);
 	validateArtifactManifest(artifactManifest);
+	if (artifactManifest.debugger.lldb.moduleInstantiation !== receipt.build.moduleInstantiation) {
+		throw new Error('LLDB manifest and receipt moduleInstantiation differ');
+	}
 
 	if (receipt.producer.manifestSha256 !== sha256(producerManifestBytes)) {
 		throw new Error('receipt producer manifest hash is stale');
@@ -55,6 +61,25 @@ export async function verifyArtifactDirectory(artifactDir) {
 		}
 		assets[asset] = bytes;
 	}
+	if (receipt.build.derivation) {
+		const derivation = receipt.build.derivation;
+		if (
+			derivation.kind !== 'post-link-experiment' ||
+			derivation.proof !== 'post-link-experiment.json'
+		)
+			throw new Error('Unknown experimental derivation');
+		const proof = await fs.readFile(path.join(artifactDir, derivation.proof));
+		if (sha256(proof) !== derivation.sha256)
+			throw new Error('Experimental provenance digest mismatch');
+		validatePostLinkExperiment(proof, {
+			jsBytes: assets['lldb-web-dap.js'],
+			wasmBytes: assets['lldb-web-dap.wasm'],
+			buildFlags: EMSCRIPTEN_LINK_FLAGS,
+			emsdkRevision: receipt.toolchain.emscriptenRevision
+		});
+	}
+	if (receipt.build.moduleInstantiation)
+		assertModuleInstantiationHook(assets['lldb-web-dap.js'], 'LLDB loader');
 	const compressedWasm = gzipSync(assets['lldb-web-dap.wasm'], { level: 9, mtime: 0 });
 	const compressedMetadata = receipt.assets['lldb-web-dap.wasm'].compressed;
 	if (

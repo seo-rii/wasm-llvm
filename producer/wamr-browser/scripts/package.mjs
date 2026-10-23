@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import {
+	MODULE_INSTANTIATION_CONTRACT,
+	assertModuleInstantiationHook
+} from '../../debug-module-api.mjs';
+
 import { createHash } from 'node:crypto';
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -25,6 +30,8 @@ export async function packageWamrBrowser({ build, output }) {
 	const js = await readFile(path.join(input, 'wamr-debug.js'));
 	const wasm = await readFile(path.join(input, 'wamr-debug.wasm'));
 	const worker = await readFile(path.join(input, PACKAGED_PTHREAD_WORKER));
+	assertModuleInstantiationHook(js, 'WAMR loader');
+	assertModuleInstantiationHook(worker, 'WAMR pthread loader');
 	const compressedWasm = await gzipAsync(wasm, { level: 9, mtime: 0 });
 	await copyFile(path.join(input, 'wamr-debug.js'), path.join(output, 'wamr-debug.js'));
 	await copyFile(path.join(input, 'wamr-debug.wasm'), path.join(output, 'wamr-debug.wasm'));
@@ -42,6 +49,7 @@ export async function packageWamrBrowser({ build, output }) {
 	const producerManifest = JSON.parse(producerManifestBytes);
 	const receipt = {
 		format: 'wasm-idle-wamr-debug-v1',
+		moduleInstantiation: MODULE_INSTANTIATION_CONTRACT,
 		protocolVersion: 1,
 		transport: 'shared-ring-v1',
 		pthreadTransport: 'pthread-transport-v1',

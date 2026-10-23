@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import {
+	MODULE_INSTANTIATION_CONTRACT,
+	assertModuleInstantiationHook
+} from '../../debug-module-api.mjs';
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -17,6 +22,7 @@ import {
 	verifyLockedInputs
 } from './contracts.mjs';
 import { EMSCRIPTEN_LINK_FLAGS } from './build.mjs';
+import { validatePostLinkExperiment } from './post-link-experiment.mjs';
 
 const defaultTargetDir = path.resolve(
 	process.env.WASM_LLVM_LLDB_OUT_DIR || path.join(REPO_ROOT, 'artifacts', 'lldb-browser')
@@ -25,7 +31,7 @@ const defaultTargetDir = path.resolve(
 export function parsePackageArgs(argv) {
 	const options = {
 		targetDir: defaultTargetDir,
-		version: `llvmorg-${LLVM_VERSION}-lldb-web-7`
+		version: `llvmorg-${LLVM_VERSION}-lldb-web-8`
 	};
 	for (let index = 0; index < argv.length; ++index) {
 		const argument = argv[index];
@@ -39,7 +45,8 @@ export function parsePackageArgs(argv) {
 			argument === '--wasm' ||
 			argument === '--worker' ||
 			argument === '--target-dir' ||
-			argument === '--version'
+			argument === '--version' ||
+			argument === '--experimental-provenance'
 		) {
 			const value = argv[++index];
 			if (!value) throw new Error(`Missing value for ${argument}`);
@@ -48,6 +55,8 @@ export function parsePackageArgs(argv) {
 			if (argument === '--worker') options.workerPath = path.resolve(value);
 			if (argument === '--target-dir') options.targetDir = path.resolve(value);
 			if (argument === '--version') options.version = value;
+			if (argument === '--experimental-provenance')
+				options.experimentalProvenancePath = path.resolve(value);
 			continue;
 		}
 		throw new Error(`Unknown option: ${argument}`);
@@ -83,6 +92,7 @@ export async function packageArtifacts(options) {
 		throw new Error('pthread worker output differs from its locked overlay');
 	}
 	await assertBrowserTransportArtifact(jsBytes, wasmBytes, workerBytes);
+	assertModuleInstantiationHook(jsBytes, 'LLDB loader');
 
 	const receipt = createBuildReceipt({
 		version: options.version,
@@ -92,14 +102,31 @@ export async function packageArtifacts(options) {
 		wasmBytes,
 		workerBytes,
 		patchesSha256: sha256(sourcesLock.patches.map((entry) => entry.sha256).join('\n')),
+		moduleInstantiation: MODULE_INSTANTIATION_CONTRACT,
 		buildFlags: EMSCRIPTEN_LINK_FLAGS
 	});
+	let experimentalProof;
+	if (options.experimentalProvenancePath) {
+		experimentalProof = await fs.readFile(options.experimentalProvenancePath);
+		validatePostLinkExperiment(experimentalProof, {
+			jsBytes,
+			wasmBytes,
+			buildFlags: EMSCRIPTEN_LINK_FLAGS,
+			emsdkRevision: receipt.toolchain.emscriptenRevision
+		});
+		receipt.build.derivation = {
+			kind: 'post-link-experiment',
+			proof: 'post-link-experiment.json',
+			sha256: sha256(experimentalProof)
+		};
+	}
 	const artifactManifest = createArtifactManifest({
 		version: options.version,
 		jsSha256: receipt.assets['lldb-web-dap.js'].sha256,
 		wasmSha256: receipt.assets['lldb-web-dap.wasm'].sha256,
 		workerSha256: receipt.assets['lldb-web-dap.pthread.mjs'].sha256,
 		patchesSha256: receipt.source.patchesSha256,
+		moduleInstantiation: MODULE_INSTANTIATION_CONTRACT,
 		capabilities: manifest.capabilities
 	});
 	validateBuildReceipt(receipt);
@@ -107,6 +134,14 @@ export async function packageArtifacts(options) {
 
 	await fs.mkdir(options.targetDir, { recursive: true });
 	await Promise.all([
+		...(experimentalProof
+			? [
+					writeAtomic(
+						path.join(options.targetDir, 'post-link-experiment.json'),
+						experimentalProof
+					)
+				]
+			: []),
 		writeAtomic(path.join(options.targetDir, 'lldb-web-dap.js'), jsBytes),
 		writeAtomic(path.join(options.targetDir, 'lldb-web-dap.wasm'), wasmBytes),
 		writeAtomic(path.join(options.targetDir, 'lldb-web-dap.pthread.mjs'), workerBytes),
@@ -132,7 +167,8 @@ async function main() {
 
 Options:
   --target-dir DIR   Output directory (defaults to artifacts/lldb-browser).
-  --version VERSION  Runtime artifact version.`);
+  --version VERSION  Runtime artifact version.
+  --experimental-provenance FILE  Bind a post-link proof; rejected by normal release assembly.`);
 		return;
 	}
 	await packageArtifacts(options);
