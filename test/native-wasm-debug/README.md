@@ -19,15 +19,36 @@ listed above.
 
 ## C/C++ feature gates
 
-`hit-count.c` verifies that an ignore count of two stops the third and fourth
-calls with the correct locals. The scheduled/manual native CI job compiles
-this fixture with pinned Clang and executes it with the pinned LLDB/WAMR pair.
+The scheduled/manual feature job builds a fresh pinned native Clang and LLDB,
+applying the checksum-verified function-end patch and LLDB patches 0007, 0010,
+0011 and 0012. It preserves the separate official-binary C, trap and interrupt
+baselines and their frozen fixture hashes. New feature fixtures use the rebuilt
+Clang with the pinned official WebAssembly linker and WASI SDK. C++ fixtures
+explicitly select the SDK's `wasm32-wasip1/noeh` libc++ headers and libraries
+with exceptions disabled; the unmodified upstream driver does not discover
+the SDK's partitioned C++ layout automatically.
+
+`hit-count.c` checks real DAP `setBreakpoints` requests. A positive decimal
+`hitCondition: "3"` must stop the third and fourth calls with live locals.
+Separate sessions set a pending condition, then remove the field or set it to
+an empty string, both before execution and during a stop. Both clearing forms
+must preserve the breakpoint ID and stop the immediate next call. An upstream
+adapter without patch 0012 fails this qualification; `--case setting` explicitly
+qualifies only the unchanged setting behavior.
 
 ```sh
-node test/native-wasm-debug/run-native-cpp-baseline.mjs \
-  --iwasm /path/to/iwasm --lldb /path/to/llvm-22.1.8/bin/lldb \
-  --program /path/to/hit-count.wasm --kind hit-count
+node test/native-wasm-debug/run-native-hit-condition-baseline.mjs \
+  --iwasm /path/to/iwasm --lldb-dap /path/to/patched/bin/lldb-dap \
+  --program /path/to/hit-count.wasm --case all
 ```
+
+`container-adaptors.cpp` qualifies the native libc++ providers with
+`run-native-cpp-baseline.mjs --kind container-adaptors`. Two real source stops
+check empty containers, deque/vector stacks, max and custom-comparator min
+heaps, deque heap storage, nested containers and push/pop updates. Heap checks
+require the comparator's top first and all expected elements; remaining heap
+storage is not assumed to be sorted pop order. CI retains source identities,
+binary and fixture hashes, and the qualification transcripts as artifacts.
 
 `skip-library.cpp` is an optional qualification case retained for future work,
 not a passing CI baseline. `--kind skip-library` enters `std::sort` with `^$`,

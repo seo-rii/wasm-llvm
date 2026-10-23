@@ -14,15 +14,69 @@ function markerLine(source, marker) {
 	return matches[0];
 }
 
+export function verifyNativeContainerAdaptors(stdout) {
+	const first = stdout.indexOf('stop reason = breakpoint 1.1');
+	const second = stdout.indexOf('stop reason = breakpoint 2.1', first + 1);
+	assert.ok(first >= 0 && second > first, 'container-adaptor fixture must reach both source breakpoints');
+	const stages = [stdout.slice(first, second), stdout.slice(second)];
+	const expected = [
+		{ deque_stack: [1, 2, 3], vector_stack: [4, 5, 6], max_heap: [4, 1, 2],
+			min_heap: [1, 4, 2], deque_heap: [1, 4, 2] },
+		{ deque_stack: [1, 2], vector_stack: [4, 5, 6, 9], max_heap: [2, 1],
+			min_heap: [0, 1, 2, 4], deque_heap: [1, 4, 2] }
+	];
+	const escaped = (name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	for (const [index, stage] of stages.entries()) {
+		const size = (name, count) => assert.match(stage,
+			new RegExp(`\\b${name} = size=${count}(?:\\s|$)`), `${name} must expose a synthetic size at stop ${index + 1}`);
+		const scalar = (name) => {
+			const value = stage.match(new RegExp(`^\\([^\\r\\n]+\\) ${escaped(name)} = (-?\\d+)(?:\\r?\\n|$)`, 'm'));
+			assert.ok(value, `${name} must expose a synthetic scalar at stop ${index + 1}`);
+			return Number(value[1]);
+		};
+		size('empty_stack', 0);
+		size('empty_heap', 0);
+		for (const [name, values] of Object.entries(expected[index])) {
+			size(name, values.length);
+			const actual = values.map((_, child) => scalar(`${name}[${child}]`));
+			if (name.endsWith('_heap')) {
+				assert.equal(actual[0], values[0], `${name} must show its comparator's top first`);
+				// A heap's remaining storage is deliberately not asserted as sorted pop order.
+				assert.deepEqual(actual.toSorted((left, right) => left - right), values.toSorted((left, right) => left - right));
+			} else assert.deepEqual(actual, values, `${name} must follow bottom-to-top storage order`);
+		}
+		size('nested_stack', 1);
+		size('nested_heap', 2);
+		assert.equal(scalar('nested_stack[0][0]'), 7);
+		assert.equal(scalar('nested_stack[0][1]'), 8);
+		assert.equal(scalar('nested_heap[0][0]'), 3);
+		assert.equal(scalar('nested_heap[0][1]'), 4);
+	}
+}
+
 export async function runNativeCppBaseline(options) {
 	const hitCount = options.kind === 'hit-count';
 	const skipLibrary = options.kind === 'skip-library';
-	const filename = hitCount ? 'hit-count.c' : skipLibrary ? 'skip-library.cpp' : 'function-end.cpp';
+	const adaptors = options.kind === 'container-adaptors';
+	const filename = hitCount ? 'hit-count.c' : skipLibrary ? 'skip-library.cpp' : adaptors ? 'container-adaptors.cpp' : 'function-end.cpp';
 	const source = await readFile(path.join(fixtureRoot, filename), 'utf8');
 	const location = (marker) => markerLine(source, marker);
 	const commands = ['process connect -p wasm connect://127.0.0.1:1234'];
 	const checks = [];
-	if (skipLibrary) {
+	if (adaptors) {
+		for (const marker of ['adaptors first stop', 'adaptors second stop']) {
+			commands.push(`breakpoint set --file ${filename} --line ${location(marker)}`);
+		}
+		for (const [stackCount, vectorCount, maxCount, minCount] of [[3, 3, 3, 3], [2, 4, 2, 4]]) {
+			commands.push('continue', 'frame variable empty_stack empty_heap deque_stack vector_stack max_heap min_heap deque_heap nested_stack nested_heap');
+			for (const [name, count] of [['deque_stack', stackCount], ['vector_stack', vectorCount],
+				['max_heap', maxCount], ['min_heap', minCount], ['deque_heap', 3]]) {
+				commands.push(`frame variable ${Array.from({ length: count }, (_, index) => `${name}[${index}]`).join(' ')}`);
+			}
+			commands.push('frame variable nested_stack[0][0] nested_stack[0][1] nested_heap[0][0] nested_heap[0][1]');
+		}
+		commands.push('continue', 'quit');
+	} else if (skipLibrary) {
 		commands.push('settings set target.process.thread.step-avoid-regexp ^$',
 			'settings show target.process.thread.step-avoid-regexp');
 		for (const marker of ['library entry', 'callback call', 'comparator breakpoint', 'after call']) {
@@ -72,6 +126,7 @@ export async function runNativeCppBaseline(options) {
 		await writeFile(commandsPath, `${commands.join('\n')}\n`);
 		const result = await runNativeBaseline({ ...options, commandsPath, cwd: fixtureRoot });
 		for (const check of checks) assert.match(result.lldbStdout, check);
+		if (adaptors) verifyNativeContainerAdaptors(result.lldbStdout);
 		assert.match(result.lldbStdout, /Process 1 exited with status = 0/);
 		if (hitCount) {
 			assert.doesNotMatch(result.lldbStdout, /\(int\) n = [12](?:\s|$)/);
@@ -89,12 +144,12 @@ async function main() {
 	const names = { '--iwasm': 'iwasmPath', '--lldb': 'lldbPath', '--program': 'programPath', '--kind': 'kind' };
 	for (let index = 0; index < args.length; index += 2) {
 		const name = names[args[index]];
-		if (!name || !args[index + 1]) throw new Error('expected --iwasm PATH --lldb PATH --program PATH [--kind function-end|hit-count|skip-library]');
+		if (!name || !args[index + 1]) throw new Error('expected --iwasm PATH --lldb PATH --program PATH [--kind function-end|hit-count|skip-library|container-adaptors]');
 		options[name] = args[index + 1];
 	}
 	for (const name of ['iwasmPath', 'lldbPath', 'programPath']) assert.ok(options[name], `${name} is required`);
 	options.kind ??= 'function-end';
-	assert.ok(['function-end', 'hit-count', 'skip-library'].includes(options.kind));
+	assert.ok(['function-end', 'hit-count', 'skip-library', 'container-adaptors'].includes(options.kind));
 	const result = await runNativeCppBaseline(options);
 	process.stdout.write(result.lldbStdout);
 	process.stderr.write(result.lldbStderr);

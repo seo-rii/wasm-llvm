@@ -104,10 +104,13 @@ false). The Wasm target has no return-value ABI provider. The fixed settings
 commands above do not enable general expression execution.
 
 These are producer source contracts. Existing packaged LLDB bytes, manifests
-and receipts stay unchanged until a verified rebuild is published. The native
-hit-count fixture runs with the pinned native pair; the new
-adaptor registration additionally needs a rebuilt LLDB and real consumer
-Chromium qualification before release.
+and receipts stay unchanged until a verified rebuild is published. Native CI
+rebuilds the pinned, patched Clang and LLDB pair from clean source. It checks
+function-end stepping and real LLDB-DAP hit conditions, including both omitted
+and empty clearing requests, through
+`run-native-hit-condition-baseline.mjs --case all`. The adaptor registration
+additionally needs a rebuilt browser LLDB and real consumer Chromium
+qualification before release.
 
 The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
 through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP

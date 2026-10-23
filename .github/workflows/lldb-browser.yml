@@ -194,7 +194,7 @@ jobs:
         runs-on: ubuntu-latest
         container:
             image: debian:12.11-slim@sha256:b1a741487078b369e78119849663d7f1a5341ef2768798f7b7406c4240f86aef
-        timeout-minutes: 90
+        timeout-minutes: 180
         env:
             LLVM_ARCHIVE_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz
             LLVM_ARCHIVE_SHA256: df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384
@@ -213,6 +213,11 @@ jobs:
             TRAP_PROGRAM_PATH: /tmp/wasm-native-debug/trap.wasm
             INTERRUPT_PROGRAM_PATH: /tmp/wasm-native-debug/interrupt.wasm
             HIT_COUNT_PROGRAM_PATH: /tmp/wasm-native-debug/hit-count.wasm
+            FUNCTION_END_PROGRAM_PATH: /tmp/wasm-native-debug/function-end.wasm
+            CONTAINER_ADAPTORS_PROGRAM_PATH: /tmp/wasm-native-debug/container-adaptors.wasm
+            NATIVE_FEATURE_ROOT: /tmp/wasm-native-debug/features
+            NATIVE_FEATURE_SOURCE: /tmp/wasm-native-debug/features/llvm-project
+            NATIVE_FEATURE_BUILD: /tmp/wasm-native-debug/features/build
         steps:
             - name: Install native baseline host dependencies
               run: |
@@ -220,7 +225,7 @@ jobs:
                   apt-get install --yes --no-install-recommends \
                     build-essential ca-certificates cmake curl git \
                     libexpat1 libicu72 libncurses6 libpython3.11 libxml2 \
-                    ninja-build xz-utils zlib1g zstd
+                    lld ninja-build xz-utils zlib1g zlib1g-dev zstd libxml2-dev
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
@@ -337,11 +342,95 @@ jobs:
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$INTERRUPT_PROGRAM_PATH"
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --debug-info "$INTERRUPT_PROGRAM_PATH" |
                     grep --fixed-strings "/workspace/interrupt.c"
-            - name: Compile and verify debugger feature fixtures
+            - name: Prepare clean pinned native feature sources
+              run: |
+                  test ! -e "$NATIVE_FEATURE_ROOT"
+                  mkdir -p "$NATIVE_FEATURE_ROOT"
+                  git init "$NATIVE_FEATURE_SOURCE"
+                  git -C "$NATIVE_FEATURE_SOURCE" remote add origin https://github.com/llvm/llvm-project.git
+                  git -C "$NATIVE_FEATURE_SOURCE" fetch --depth 1 origin ca7933e47d3a3451d81e72ac174dcb5aa28b59d1
+                  git -C "$NATIVE_FEATURE_SOURCE" checkout --detach FETCH_HEAD
+                  node --input-type=module <<'NODE'
+                  import assert from 'node:assert/strict';
+                  import { createHash } from 'node:crypto';
+                  import fs from 'node:fs/promises';
+                  import path from 'node:path';
+                  import { execFileSync } from 'node:child_process';
+                  import { verifyLockedInputs } from './producer/lldb-browser/scripts/contracts.mjs';
+                  const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+                  const clangBytes = await fs.readFile('producer/clang-browser/manifest.json');
+                  const lockBytes = await fs.readFile('producer/lldb-browser/sources.lock.json');
+                  const clang = JSON.parse(clangBytes);
+                  const lock = JSON.parse(lockBytes);
+                  await verifyLockedInputs(lock);
+                  const source = process.env.NATIVE_FEATURE_SOURCE;
+                  const git = (...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8' }).trim();
+                  const revision = git('rev-parse', 'HEAD');
+                  assert.equal(revision, lock.llvm.commit);
+                  assert.equal(revision, clang.sources.llvm.commit);
+                  assert.equal(git('status', '--porcelain'), '');
+                  const wasmPatches = ['0007-wasm-recursive-frame-cfa.patch', '0010-wasm-caller-pc-cache.patch',
+                    '0011-libcxx-container-adaptors.patch', '0012-lldb-dap-clear-hit-condition.patch'];
+                  const patches = [
+                    { root: 'producer/clang-browser', ...clang.sources.wasmFunctionEndPatch },
+                    ...wasmPatches.map(name => {
+                      const spec = lock.patches.find(spec => spec.path === `patches/${name}`);
+                      assert.ok(spec, `native feature patch must be locked: ${name}`);
+                      return { root: 'producer/lldb-browser', ...spec };
+                    })
+                  ];
+                  for (const patch of patches) {
+                    const file = path.resolve(patch.root, patch.path);
+                    assert.equal(digest(await fs.readFile(file)), patch.sha256);
+                    git('apply', '--check', file);
+                    git('apply', file);
+                  }
+                  git('diff', '--check');
+                  const qualificationInputs = {};
+                  for (const file of ['function-end.cpp', 'hit-count.c', 'container-adaptors.cpp',
+                    'run-native-cpp-baseline.mjs', 'run-native-hit-condition-baseline.mjs',
+                    'run-native-dap-baseline.mjs', 'native-processes.mjs']) {
+                    const bytes = await fs.readFile(`test/native-wasm-debug/${file}`);
+                    qualificationInputs[file] = { bytes: bytes.length, sha256: digest(bytes) };
+                  }
+                  await fs.writeFile(path.join(process.env.NATIVE_FEATURE_ROOT, 'source-inputs.json'),
+                    JSON.stringify({ revision, qualificationCommit: process.env.GITHUB_SHA,
+                      qualificationInputs, clangManifestSha256: digest(clangBytes),
+                      lldbSourcesLockSha256: digest(lockBytes), patches,
+                      trackedDiffSha256: digest(git('diff', '--binary', '--full-index')) }, null, 2) + '\n');
+                  NODE
+            - name: Build patched native Clang and LLDB without cached objects
+              run: |
+                  df -h "$NATIVE_ROOT"
+                  test ! -e "$NATIVE_FEATURE_BUILD"
+                  cmake -S "$NATIVE_FEATURE_SOURCE/llvm" -B "$NATIVE_FEATURE_BUILD" -G Ninja \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DLLVM_ENABLE_PROJECTS='clang;lldb' \
+                    -DLLVM_TARGETS_TO_BUILD=WebAssembly \
+                    -DLLVM_USE_LINKER=lld -DLLVM_PARALLEL_LINK_JOBS=1 \
+                    -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DLLDB_INCLUDE_TESTS=OFF \
+                    -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF \
+                    -DLLDB_ENABLE_PYTHON=OFF -DLLDB_ENABLE_LUA=OFF -DLLDB_ENABLE_SWIG=OFF \
+                    -DLLDB_ENABLE_LIBEDIT=OFF -DLLDB_ENABLE_CURSES=OFF -DLLDB_ENABLE_LZMA=OFF \
+                    -DLLDB_ENABLE_LIBXML2=ON -DLLDB_ENABLE_PROTOCOL_SERVERS=OFF \
+                    -DLLDB_BUILD_LLDBRPC=OFF -DLLVM_ENABLE_ASSERTIONS=OFF
+                  cmake --build "$NATIVE_FEATURE_BUILD" --target clang lldb lldb-dap --parallel 2
+                  sha256sum "$NATIVE_FEATURE_BUILD/bin/clang" \
+                    "$NATIVE_FEATURE_BUILD/bin/lldb" "$NATIVE_FEATURE_BUILD/bin/lldb-dap" "$WAMR_ROOT/build/iwasm" \
+                    "$NATIVE_FEATURE_BUILD/lib/liblldb.so" \
+                    > "$NATIVE_FEATURE_ROOT/built-binaries.sha256"
+                  df -h "$NATIVE_ROOT"
+            - name: Compile and verify debugger feature fixtures with patched Clang
               run: |
                   FIXTURE_ROOT="$GITHUB_WORKSPACE/test/native-wasm-debug"
-                  "$LLVM_ROOT/bin/clang" \
+                  FEATURE_CPP_HEADERS="$WASI_ROOT/share/wasi-sysroot/include/wasm32-wasip1/noeh/c++/v1"
+                  FEATURE_CPP_LIBS="$WASI_ROOT/share/wasi-sysroot/lib/wasm32-wasip1/noeh"
+                  test -f "$FEATURE_CPP_HEADERS/deque"
+                  test -f "$FEATURE_CPP_LIBS/libc++.a"
+                  test -f "$FEATURE_CPP_LIBS/libc++abi.a"
+                  "$NATIVE_FEATURE_BUILD/bin/clang" \
                     --target=wasm32-wasi \
+                    -fuse-ld="$LLVM_ROOT/bin/wasm-ld" \
                     --sysroot="$WASI_ROOT/share/wasi-sysroot" \
                     -resource-dir="$WASI_ROOT/lib/clang/22" \
                     -g -O0 -fstandalone-debug \
@@ -349,12 +438,68 @@ jobs:
                     -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
                     "$FIXTURE_ROOT/hit-count.c" -o "$HIT_COUNT_PROGRAM_PATH"
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$HIT_COUNT_PROGRAM_PATH"
-            - name: Run native hit-count baseline
+                  "$NATIVE_FEATURE_BUILD/bin/clang" --driver-mode=g++ \
+                    --target=wasm32-wasi \
+                    -fuse-ld="$LLVM_ROOT/bin/wasm-ld" \
+                    -stdlib=libc++ -fno-exceptions -nostdinc++ \
+                    -isystem "$FEATURE_CPP_HEADERS" -L"$FEATURE_CPP_LIBS" \
+                    --sysroot="$WASI_ROOT/share/wasi-sysroot" \
+                    -resource-dir="$WASI_ROOT/lib/clang/22" \
+                    -g -O0 -fstandalone-debug \
+                    -fdebug-compilation-dir=/workspace \
+                    -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
+                    "$FIXTURE_ROOT/function-end.cpp" -o "$FUNCTION_END_PROGRAM_PATH"
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$FUNCTION_END_PROGRAM_PATH"
+                  "$NATIVE_FEATURE_BUILD/bin/clang" --driver-mode=g++ \
+                    --target=wasm32-wasi \
+                    -fuse-ld="$LLVM_ROOT/bin/wasm-ld" \
+                    -stdlib=libc++ -fno-exceptions -nostdinc++ \
+                    -isystem "$FEATURE_CPP_HEADERS" -L"$FEATURE_CPP_LIBS" \
+                    --sysroot="$WASI_ROOT/share/wasi-sysroot" \
+                    -resource-dir="$WASI_ROOT/lib/clang/22" \
+                    -g -O0 -fstandalone-debug \
+                    -fdebug-compilation-dir=/workspace \
+                    -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
+                    "$FIXTURE_ROOT/container-adaptors.cpp" -o "$CONTAINER_ADAPTORS_PROGRAM_PATH"
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$CONTAINER_ADAPTORS_PROGRAM_PATH"
+                  sha256sum "$HIT_COUNT_PROGRAM_PATH" "$FUNCTION_END_PROGRAM_PATH" \
+                    "$CONTAINER_ADAPTORS_PROGRAM_PATH" > "$NATIVE_FEATURE_ROOT/fixture-modules.sha256"
+            - name: Run native function-end baseline with patched binaries
               run: |
                   node test/native-wasm-debug/run-native-cpp-baseline.mjs \
                     --iwasm "$WAMR_ROOT/build/iwasm" \
-                    --lldb "$LLVM_ROOT/bin/lldb" \
-                    --program "$HIT_COUNT_PROGRAM_PATH" --kind hit-count
+                    --lldb "$NATIVE_FEATURE_BUILD/bin/lldb" \
+                    --program "$FUNCTION_END_PROGRAM_PATH" --kind function-end \
+                    > "$NATIVE_FEATURE_ROOT/function-end.log"
+            - name: Qualify native libc++ container adaptors with patched binaries
+              run: |
+                  node test/native-wasm-debug/run-native-cpp-baseline.mjs \
+                    --iwasm "$WAMR_ROOT/build/iwasm" \
+                    --lldb "$NATIVE_FEATURE_BUILD/bin/lldb" \
+                    --program "$CONTAINER_ADAPTORS_PROGRAM_PATH" --kind container-adaptors \
+                    > "$NATIVE_FEATURE_ROOT/container-adaptors.log"
+            - name: Qualify DAP hit conditions and both clearing forms with patched LLDB
+              run: |
+                  node test/native-wasm-debug/run-native-hit-condition-baseline.mjs \
+                    --iwasm "$WAMR_ROOT/build/iwasm" \
+                    --lldb-dap "$NATIVE_FEATURE_BUILD/bin/lldb-dap" \
+                    --program "$HIT_COUNT_PROGRAM_PATH" --case all \
+                    > "$NATIVE_FEATURE_ROOT/hit-condition.json"
+                  sha256sum --check "$NATIVE_FEATURE_ROOT/built-binaries.sha256"
+                  sha256sum --check "$NATIVE_FEATURE_ROOT/fixture-modules.sha256"
+            - uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: native-debugger-qualification-${{ github.sha }}
+                  path: |
+                      /tmp/wasm-native-debug/features/source-inputs.json
+                      /tmp/wasm-native-debug/features/built-binaries.sha256
+                      /tmp/wasm-native-debug/features/fixture-modules.sha256
+                      /tmp/wasm-native-debug/features/function-end.log
+                      /tmp/wasm-native-debug/features/container-adaptors.log
+                      /tmp/wasm-native-debug/features/hit-condition.json
+                  if-no-files-found: warn
+                  retention-days: 7
             - name: Run native LLDB command baseline
               run: |
                   node test/native-wasm-debug/run-native-baseline.mjs \
