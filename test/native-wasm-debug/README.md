@@ -17,6 +17,42 @@ The release archive digest matches its GitHub SLSA provenance subject. The
 provenance resolves the `llvmorg-22.1.8` workflow input to the LLVM commit
 listed above.
 
+## C/C++ feature gates
+
+`hit-count.c` verifies that an ignore count of two stops the third and fourth
+calls with the correct locals. The scheduled/manual native CI job compiles
+this fixture with pinned Clang and executes it with the pinned LLDB/WAMR pair.
+
+```sh
+node test/native-wasm-debug/run-native-cpp-baseline.mjs \
+  --iwasm /path/to/iwasm --lldb /path/to/llvm-22.1.8/bin/lldb \
+  --program /path/to/hit-count.wasm --kind hit-count
+```
+
+`skip-library.cpp` is an optional qualification case retained for future work,
+not a passing CI baseline. `--kind skip-library` enters `std::sort` with `^$`,
+then checks whether the broader fixed `^(.* )?std::` preset skips a library
+call while preserving an explicit comparator breakpoint. The pinned native
+Wasm pair currently stops inside the templated library function, so this
+qualification fails and `skipLibraryCode` remains false. The settings command
+route itself accepts both presets; that does not qualify their stepping
+behavior. Callback-aware stepping is also unqualified.
+
+Compile `function-end.cpp` with a compiler rebuilt with
+`producer/clang-browser/patches/wasm-function-end-location.patch`, `-O0 -g`
+and a WASI sysroot, then run the same runner with `--kind function-end`.
+It checks actual closing-brace PCs and live scalar locals for ordinary and
+early returns, recursive calls, a C++ destructor and an implicit void return.
+It also checks that Step Out reaches the caller directly. This gate must not
+be run against the unpatched official compiler as a passing product check.
+The patch includes IR regressions for wasm32/wasm64 and unchanged native,
+optimized and nodebug behavior. The libc++ adaptor API regression is included
+inside the LLDB producer patch and needs a rebuilt LLDB to execute.
+
+Source-level contract tests and native fixtures do not update the packaged
+browser artifacts. Both products require verified rebuilds and a real
+Chromium consumer run before the new behavior can be released.
+
 ## C baseline
 
 Compile `main.c` with a WASI sysroot and the pinned Clang:

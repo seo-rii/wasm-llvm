@@ -14,6 +14,17 @@ test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
 	assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
 });
 
+test('native gate qualifies hit counts without advertising unqualified library stepping', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+	assert.match(workflow, /HIT_COUNT_PROGRAM_PATH: \/tmp\/wasm-native-debug\/hit-count\.wasm/u);
+	assert.match(workflow, /run-native-cpp-baseline\.mjs[\s\S]*?--kind hit-count/u);
+	assert.doesNotMatch(workflow, /--kind skip-library/u);
+	assert.match(workflow, /llvm-dwarfdump" --verify "\$HIT_COUNT_PROGRAM_PATH"/u);
+	const runner = await fs.readFile('test/native-wasm-debug/run-native-cpp-baseline.mjs', 'utf8');
+	assert.match(runner, /step-avoid-regexp \^\$/u);
+	assert.match(runner, /stop reason = breakpoint 3/u);
+});
+
 test('checked runtime provenance remains a required gate without blocking product regeneration', async () => {
 	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
 	const producerContracts = workflow.match(

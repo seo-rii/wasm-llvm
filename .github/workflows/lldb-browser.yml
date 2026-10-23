@@ -197,6 +197,7 @@ jobs:
             PROGRAM_PATH: /tmp/wasm-native-debug/program.wasm
             TRAP_PROGRAM_PATH: /tmp/wasm-native-debug/trap.wasm
             INTERRUPT_PROGRAM_PATH: /tmp/wasm-native-debug/interrupt.wasm
+            HIT_COUNT_PROGRAM_PATH: /tmp/wasm-native-debug/hit-count.wasm
         steps:
             - name: Install native baseline host dependencies
               run: |
@@ -321,6 +322,24 @@ jobs:
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$INTERRUPT_PROGRAM_PATH"
                   "$LLVM_ROOT/bin/llvm-dwarfdump" --debug-info "$INTERRUPT_PROGRAM_PATH" |
                     grep --fixed-strings "/workspace/interrupt.c"
+            - name: Compile and verify debugger feature fixtures
+              run: |
+                  FIXTURE_ROOT="$GITHUB_WORKSPACE/test/native-wasm-debug"
+                  "$LLVM_ROOT/bin/clang" \
+                    --target=wasm32-wasi \
+                    --sysroot="$WASI_ROOT/share/wasi-sysroot" \
+                    -resource-dir="$WASI_ROOT/lib/clang/22" \
+                    -g -O0 -fstandalone-debug \
+                    -fdebug-compilation-dir=/workspace \
+                    -ffile-prefix-map="$FIXTURE_ROOT=/workspace" \
+                    "$FIXTURE_ROOT/hit-count.c" -o "$HIT_COUNT_PROGRAM_PATH"
+                  "$LLVM_ROOT/bin/llvm-dwarfdump" --verify "$HIT_COUNT_PROGRAM_PATH"
+            - name: Run native hit-count baseline
+              run: |
+                  node test/native-wasm-debug/run-native-cpp-baseline.mjs \
+                    --iwasm "$WAMR_ROOT/build/iwasm" \
+                    --lldb "$LLVM_ROOT/bin/lldb" \
+                    --program "$HIT_COUNT_PROGRAM_PATH" --kind hit-count
             - name: Run native LLDB command baseline
               run: |
                   node test/native-wasm-debug/run-native-baseline.mjs \
