@@ -202,9 +202,9 @@ export async function verifyClangBuildReceipt(receipt, inputs, { producerRoot = 
 	if (receipt.sources?.llvm?.repository !== manifest.sources.llvm.repository ||
 		receipt.sources?.emsdk?.repository !== 'https://github.com/emscripten-core/emsdk') fail('unexpected source repository');
 	const expectedPatches = [manifest.sources.llvmWasiClosePatch, manifest.sources.lldWasmOnlyPatch,
-		manifest.sources.clangdEmscriptenStdinPatch];
+		manifest.sources.clangdEmscriptenStdinPatch, manifest.sources.wasmFunctionEndPatch];
 	const patches = receipt.sources?.llvm?.patches;
-	if (!Array.isArray(patches) || patches.length !== 4 || !digest(patches[0]?.sha256) ||
+	if (!Array.isArray(patches) || patches.length !== expectedPatches.length + 1 || !digest(patches[0]?.sha256) ||
 		patches[0]?.repository !== receipt.buildOptions?.yowaspWasiPatchRepo ||
 		patches[0]?.commit !== receipt.buildOptions?.yowaspWasiPatchCommit ||
 		!/^[a-f0-9]{40}$/.test(patches[0]?.commit)) fail('incomplete YoWASP patch identity');

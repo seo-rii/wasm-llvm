@@ -12,6 +12,30 @@ const REPO_ROOT = path.resolve(
   "..",
 );
 
+test("pins function-end debug locations to real unoptimized Wasm epilogues", async () => {
+  const producer = path.join(REPO_ROOT, "producer/clang-browser");
+  const manifest = JSON.parse(await readFile(path.join(producer, "manifest.json"), "utf8"));
+  const spec = manifest.sources.wasmFunctionEndPatch;
+  const patchPath = path.join(producer, spec.path);
+  const patch = await readFile(patchPath, "utf8");
+  assert.equal(spec.path, "patches/wasm-function-end-location.patch");
+  assert.equal(createHash("sha256").update(patch).digest("hex"), spec.sha256);
+  assert.match(patch, /Target\.getTriple\(\)\.isWasm\(\)/);
+  assert.match(patch, /OptimizationLevel == 0 && EndLoc\.isValid\(\)/);
+  assert.match(patch, /EmitRetDbgLoc = false/);
+  assert.match(patch, /Loc = Builder\.getCurrentDebugLocation\(\)/);
+  assert.match(patch, /-triple wasm64-unknown-wasi/);
+  assert.match(patch, /-triple x86_64-unknown-linux-gnu/);
+  assert.match(patch, /--check-prefix=OPT/);
+  assert.match(patch, /--check-prefix=NODEBUG/);
+  assert.match(execFileSync("git", ["apply", "--numstat", patchPath], { encoding: "utf8" }), /clang\/test\/DebugInfo\/WebAssembly\/function-end-location\.c/);
+  const build = await readFile(path.join(producer, "scripts/build-toolchain.mjs"), "utf8");
+  const provenance = await readFile(path.join(producer, "scripts/build-provenance.mjs"), "utf8");
+  assert.match(build, /await patchWasmFunctionEnd\(\)/);
+  assert.match(build, /producerManifest\.sources\.wasmFunctionEndPatch/);
+  assert.match(provenance, /manifest\.sources\.wasmFunctionEndPatch/);
+});
+
 test("keeps compiler temporary files inside the configured toolchain work directory", async () => {
   const source = await readFile(
     path.join(REPO_ROOT, "producer/clang-browser/scripts/build-toolchain.mjs"),
