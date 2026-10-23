@@ -239,7 +239,8 @@ export async function verifyClangBuildReceipt(receipt, inputs, { producerRoot = 
 		if (!identity(receipt.tools?.[name])) fail(`missing ${name} executable identity`);
 	}
 	const recipeFiles = ['build-toolchain.mjs', 'build-provenance.mjs', 'build-memfs.mjs',
-		'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh'];
+		'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh',
+		'resource-profile.mjs'];
 	if (!Array.isArray(receipt.recipe?.files) || receipt.recipe.files.length !== recipeFiles.length ||
 		receipt.recipe.sha256 !== sha256(JSON.stringify(receipt.recipe.files))) fail('invalid recipe identity');
 	for (const [index, file] of recipeFiles.entries()) {

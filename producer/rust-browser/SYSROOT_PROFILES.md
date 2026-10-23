@@ -63,3 +63,64 @@ node --test test/rust-sysroot-profiles.test.mjs
 
 The tests use actual gzip with small synthetic sysroot bytes, not a rebuilt rustc or a browser
 latency benchmark. No production cold-start byte reduction is claimed yet.
+
+## Verified full-pack experiment — 2026-10-23
+
+The actual pinned Preview 2 and Preview 3 packs were reconstructed and compared
+with direct full gzip packs. Every one of the 139 files across the three targets
+matched the materialized producer output by SHA-256. This establishes equivalent
+pack contents, not a hot-file trace or a browser startup measurement.
+
+Sizes include compressed pack and index bytes. `Current cold` includes the
+Preview 1 base required by each delta. `Current with base` assumes the exact
+verified base is already cached; it excludes those already available bytes.
+
+| Target | Files | Current cold bytes | Direct full bytes | Cold reduction | Current with base bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `wasm32-wasip1` | 45 | 24,627,197 | 24,627,197 | 0.00% | 24,627,197 |
+| `wasm32-wasip2` | 47 | 32,376,628 | 25,462,314 | 21.36% | 7,749,431 |
+| `wasm32-wasip3` | 47 | 32,491,401 | 25,597,831 | 21.22% | 7,864,204 |
+
+For a cold Preview 2/3 load, the existing `selectSysrootDelivery` policy selects
+the direct pack; with the exact cached base hash it selects the smaller delta.
+The Preview 1 direct pack and index reproduce the current compressed identities.
+No assets, manifests, consumer defaults, or production hosting were changed.
+
+The [raw report](reports/sysroot-delivery-20261023.json) preserves the current
+manifest receipt, decoder source hash, per-target inventory hashes, direct pack
+identities, selections, and five alternating Node decode samples. Inputs came
+from the consumer runtime lock at `f34e21990` and the matching materialized
+`rust/lib/rustlib` output. Node 22.23.3 ran on a heavily shared Linux host.
+
+The decode samples are diagnostic data only. Even the byte-identical Preview 1
+arms have substantially different timings under host load, so these samples do
+not establish a CPU speedup, a browser latency improvement, or statistical
+confidence. Logical decoded-byte totals are not resident-memory measurements.
+A release decision still needs the real compiler/browser corpus and consumer
+manifest integration described above.
+
+Reproduce against trusted, matching local consumer and producer checkouts:
+
+```sh
+node producer/rust-browser/scripts/compare-sysroot-delivery.mjs \
+  /path/to/wasm-idle \
+  /path/to/wasm-idle/static/wasm-rust/runtime \
+  /path/to/producer-output/rust/lib/rustlib \
+  /path/to/sysroot-delivery.json
+```
+
+The comparison rejects receipt mismatches and missing/changed reconstructed
+files. It verifies both the encoded and decoded current assets, the direct gzip
+round trip, and the output of every timed decode. It does not infer hot files
+from library names or sizes.
+
+### ELF-linker removal remains unmeasured
+
+The separate proposal to remove the browser rustc ELF-linker driver requires
+new compiler/linker outputs and browser regression checks; changing a link list
+alone is insufficient. No compatible intermediate Rust compiler build was
+available for a bounded relink. The documented clean-build requirement is at
+least 60 GB of free disk space (see [README](README.md)), while the work disk had
+about 34 GB when the build was considered. No rebuild was launched and no ELF
+size or speed saving is claimed. Native bootstrap ELF support must remain
+intact when that experiment is run on a sufficiently provisioned builder.

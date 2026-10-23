@@ -61,7 +61,8 @@ export async function makeBuildReceipt(inputs) {
 	const identity = (bytes) => ({ bytes: bytes.length, sha256: sha256(bytes) });
 	const files = [];
 	for (const file of ['build-toolchain.mjs', 'build-provenance.mjs', 'build-memfs.mjs',
-		'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh']) {
+		'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh',
+		'resource-profile.mjs']) {
 		files.push({ path: `scripts/${file}`, ...await fileIdentity(new URL(`scripts/${file}`, producerRoot)) });
 	}
 	const source = { tree: 'b'.repeat(40), diffSha256: sha256('synthetic fixture diff') };
