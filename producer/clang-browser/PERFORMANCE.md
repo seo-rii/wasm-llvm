@@ -585,6 +585,76 @@ improvement. Optional `constrained` measurements use the consumer's 10 Mbps
 aggregate payload shaper. No transformed artifact should be published: rebuild
 with the producer settings and qualify matching consumer receipts first.
 
-Focused resource/provenance/release-integrity tests passed (26 tests), as did the
+Focused resource/provenance/release-integrity tests passed (27 tests), as did the
 producer-only repository check. The optional full LLVM source build was not run
 for this resource-screening harness.
+
+
+### Resource-header control and rejected candidates
+
+The first [raw resource matrix](performance/resource-profiles-20261023.json)
+completed with exit 1: baseline and pool4-j2 passed all three phases; the 512 MiB
+and 256 MiB transformed Wasm candidates failed the C++ correctness gate with
+`stddef.h` missing. The consumer repairs the shipped LLVM resource headers only
+for recognized Wasm hashes. Changing the imported-memory minimum changes the
+hash and bypasses that compatibility overlay. This is a consumer/header-contract
+failure, not evidence that the smaller memory capacities cannot run clangd.
+
+To control that difference, the follow-up mounts the **same full header asset in
+all four profiles** through the existing verified explicit-header interface.
+The earlier separate-header receipt is reused: gzip SHA-256
+`70fae69d9d1f59269fcba00da077ed1e3cce3372d2a1ca5bbff520b173f23340`, decoded SHA-256
+`5f130b405bc9e2743d3d6f56e5b93f872ac336ad84fd6b62f16ae2e9a875031f`, 5,533 files,
+5,732,672 compressed bytes and 47,317,802 decoded bytes. Its declared LLVM
+revision matches the compiler, and all 38 resource headers in the consumer's
+pinned repair set were compared byte-for-byte and matched. No consumer integrity
+check or hash allowlist was weakened.
+
+This is a separate delivery envelope: it retains embedded headers and also
+fetches/mounts the explicit tree in every arm. Its startup numbers must not be
+compared directly with the earlier shipped-envelope run as an optimization.
+It isolates resource settings within the explicit-header envelope and does not
+reverse the previous decision against promoting separate headers.
+
+For this control, add the encoded/decoded `clangd.headers.json.gz` receipt to
+`RECEIPTS_JSON` and supply the optional fourth path:
+
+```sh
+node producer/clang-browser/scripts/prepare-resource-experiment.mjs \
+  /path/to/wasm-idle/static/clangd RECEIPTS_JSON /path/to/new-header-fixtures \
+  /path/to/verified/clangd.headers.json.gz
+```
+
+Then run the same resource runner against the new fixture manifest. The generator
+verifies both header receipts and requires the matching LLVM revision, target,
+and resource directory. Tests cover mismatched receipt rejection before output
+reservation and byte-identical header delivery across all profiles.
+
+### Completed controlled-header results
+
+The [controlled-header matrix](performance/resource-profiles-headers-20261023.json)
+exited 0: all four profiles passed C/C++ header diagnostics and completion in all
+three phases (12 observations). Chromium was 153.0.8010.12, consumer commit
+`807fc4c99d2dfce717c893e22ee6ce14106aec0d`, Node 22.23.3, Linux x64 with 8 CPUs.
+The report records the actual initial load average and every raw response/timing.
+
+Each value below is **one observation**, in seconds, on a shared host. Initial
+capacity, pool size, and analysis-thread settings are shown in the profile table
+above. `First C++ diagnostic` includes cold startup; warm diagnostics start after
+the document change. These are different latency boundaries.
+
+| Profile | Cold ready s | First C++ diagnostic s | Reload ready s | Warm C++ diagnostic s |
+| --- | ---: | ---: | ---: | ---: |
+| baseline | 4.18 | 23.74 | 3.02 | 0.40 |
+| pool4-j2 | 4.27 | 27.43 | 5.30 | 1.12 |
+| memory512-pool4-j2 | 5.74 | 34.29 | 5.81 | 1.21 |
+| memory256-pool2-j1 | 5.53 | 38.03 | 6.84 | 1.12 |
+
+The smaller capacities were compatible with this corpus once headers were held
+constant, but none improved the cold-ready time in this run. The 256 MiB setting
+is only an initial-memory capacity: memory growth and resident peak were not
+measured. The single-run, fixed-candidate-order experiment cannot establish a
+reliable speedup or regression under shared-host load. Keep current release
+defaults; source-built candidates, repeated stable-machine tests and actual
+memory measurements are still required before promotion. No new compiler or
+clangd artifact was published.

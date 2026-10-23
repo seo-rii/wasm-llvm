@@ -1,0 +1,1934 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-23T02:03:06.319Z",
+  "experiment": {
+    "kind": "generated-resource-transform",
+    "sourceBuild": false,
+    "baseline": {
+      "clangd.js": {
+        "bytes": 97002,
+        "sha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27",
+        "uncompressedBytes": 97002,
+        "uncompressedSha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27"
+      },
+      "clangd.wasm.gz": {
+        "bytes": 16722963,
+        "sha256": "17a447dff61020664c23dd8c8516e2cd6bdb93cf244a4e6ee19078b0948fe566",
+        "uncompressedBytes": 78993689,
+        "uncompressedSha256": "f712eb98cba42f560121a09b655567a5fbc900e6568a29a9c6949d81a17fec5c"
+      }
+    },
+    "warning": "Resource-only experiment. Do not publish transformed artifacts. Rebuild with producer flags and qualify before release.",
+    "explicitHeaders": {
+      "bytes": 5732672,
+      "sha256": "70fae69d9d1f59269fcba00da077ed1e3cce3372d2a1ca5bbff520b173f23340",
+      "uncompressedBytes": 47317802,
+      "uncompressedSha256": "5f130b405bc9e2743d3d6f56e5b93f872ac336ad84fd6b62f16ae2e9a875031f",
+      "fileCount": 5533,
+      "note": "The same full header asset is mounted in every arm; this differs from shipped embedded-plus-overlay delivery."
+    }
+  },
+  "fixtureSha256": "dd26342bc15d1052eb95677fa5ac1f979cca90854e91ffdb2d1a26f684152fcf",
+  "consumerCommit": "807fc4c99d2dfce717c893e22ee6ce14106aec0d",
+  "consumerTrackedDirty": false,
+  "consumerProbeSha256": "60615a72ed1b611b5955db6c96b0c3bb5a97dcb49b0284d075fea94eabde470b",
+  "host": {
+    "platform": "linux",
+    "arch": "x64",
+    "cpus": 8,
+    "node": "v22.23.3",
+    "initialLoadAverage": [
+      9.88,
+      18.63,
+      42.04
+    ]
+  },
+  "runs": 1,
+  "profiles": [
+    "unconstrained"
+  ],
+  "limitations": [
+    "Generated artifact transforms, not source-built release candidates.",
+    "Initial memory is declared capacity, not measured resident memory.",
+    "Shared-host latency is screening evidence only; no production promotion is implied."
+  ],
+  "candidates": [
+    {
+      "name": "baseline",
+      "profile": {
+        "name": "baseline",
+        "memoryMiB": 2048,
+        "pool": "auto",
+        "threads": 0
+      },
+      "integrity": {
+        "clangd.js": {
+          "bytes": 97002,
+          "sha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27",
+          "uncompressedBytes": 97002,
+          "uncompressedSha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27"
+        },
+        "clangd.wasm.gz": {
+          "bytes": 16722963,
+          "sha256": "17a447dff61020664c23dd8c8516e2cd6bdb93cf244a4e6ee19078b0948fe566",
+          "uncompressedBytes": 78993689,
+          "uncompressedSha256": "f712eb98cba42f560121a09b655567a5fbc900e6568a29a9c6949d81a17fec5c"
+        },
+        "clangd.headers.json.gz": {
+          "bytes": 5732672,
+          "sha256": "70fae69d9d1f59269fcba00da077ed1e3cce3372d2a1ca5bbff520b173f23340",
+          "uncompressedBytes": 47317802,
+          "uncompressedSha256": "5f130b405bc9e2743d3d6f56e5b93f872ac336ad84fd6b62f16ae2e9a875031f"
+        }
+      },
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "data": {
+        "chromium": "153.0.8010.12",
+        "host": {
+          "cpus": 8,
+          "node": "v22.23.3"
+        },
+        "runs": 1,
+        "shaping": {
+          "constrained": {
+            "aggregateBytesPerSecond": 1250000,
+            "requestLatencyMs": 50
+          }
+        },
+        "samples": [
+          {
+            "family": "clangd",
+            "name": "baseline",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "empty-cache",
+            "transferPayloadBytes": 22552637,
+            "requests": 3,
+            "result": {
+              "readyMs": 4178.169999957085,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 1.1799999475479126
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 29.924999952316284
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 2513.604999959469
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 2517.214999973774
+                },
+                {
+                  "stage": "ready",
+                  "ms": 4177.689999997616
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 23735.37999999523,
+                  "afterOpenMs": 19544.384999990463,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 24116.804999947548,
+                  "afterOpenMs": 381.38499999046326,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 342.164999961853,
+                  "count": 1
+                },
+                {
+                  "ms": 8114.680000007153,
+                  "count": 2
+                },
+                {
+                  "ms": 147.3200000524521,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792720990026,
+                  "finishedAt": 1792720990054
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792720990054,
+                  "finishedAt": 1792720992538
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792720992538,
+                  "finishedAt": 1792720992542
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792720992542,
+                  "finishedAt": 1792720994202
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792720994202
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792720994203,
+                  "finishedAt": 1792720994215,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792720994216
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792720994246,
+                  "finishedAt": 1792720994246,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721013760,
+                  "finishedAt": 1792721013760,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721013760
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721014141,
+                  "finishedAt": 1792721014141,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721014145
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721014146,
+                  "finishedAt": 1792721014488,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721014488,
+                  "finishedAt": 1792721022602,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721022592,
+                  "finishedAt": 1792721022592,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721022602,
+                  "finishedAt": 1792721022750,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "baseline",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "persistent-reload",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 3022.689999997616,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 0.3500000238418579
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 11.7950000166893
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 1857.6150000095367
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 1859.8450000286102
+                },
+                {
+                  "stage": "ready",
+                  "ms": 3022.4900000095367
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 11976.510000050068,
+                  "afterOpenMs": 8949.205000042915,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 12128.320000052452,
+                  "afterOpenMs": 151.7750000357628,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 7095.774999976158,
+                  "count": 2
+                },
+                {
+                  "ms": 170.68499994277954,
+                  "count": 1
+                },
+                {
+                  "ms": 132.8550000190735,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721023090,
+                  "finishedAt": 1792721023102
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721023102,
+                  "finishedAt": 1792721024948
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721024948,
+                  "finishedAt": 1792721024950
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721024950,
+                  "finishedAt": 1792721026112
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721026112
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721026113,
+                  "finishedAt": 1792721026117,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721026117
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721026127,
+                  "finishedAt": 1792721026127,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721035066,
+                  "finishedAt": 1792721035066,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721035067
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721035218,
+                  "finishedAt": 1792721035218,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721035218
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721035218,
+                  "finishedAt": 1792721042314,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721042304,
+                  "finishedAt": 1792721042304,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721042314,
+                  "finishedAt": 1792721042485,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721042485,
+                  "finishedAt": 1792721042618,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "baseline",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "warm",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 0,
+              "stages": [
+                {
+                  "stage": "existing-worker",
+                  "ms": 0
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 402.6200000047684,
+                  "afterOpenMs": 402.6200000047684,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 481.49000000953674,
+                  "afterOpenMs": 78.86000001430511,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value1'? (fix available)\n\nperf.c:4:22: note: 'value1' declared here",
+                    "'value1' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value1'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 123.41999995708466,
+                  "count": 1
+                },
+                {
+                  "ms": 122.68000000715256,
+                  "count": 1
+                },
+                {
+                  "ms": 100.60000002384186,
+                  "count": 1
+                }
+              ]
+            }
+          }
+        ],
+        "browserEnvironment": {
+          "hardwareConcurrency": 8,
+          "crossOriginIsolated": true
+        }
+      }
+    },
+    {
+      "name": "pool4-j2",
+      "profile": {
+        "name": "pool4-j2",
+        "memoryMiB": 2048,
+        "pool": 4,
+        "threads": 2
+      },
+      "integrity": {
+        "clangd.js": {
+          "bytes": 96988,
+          "sha256": "b19adb6d9115f517622200dc0d47d0da8001ac672b010857fd9f323f4c58468d",
+          "uncompressedBytes": 96988,
+          "uncompressedSha256": "b19adb6d9115f517622200dc0d47d0da8001ac672b010857fd9f323f4c58468d"
+        },
+        "clangd.wasm.gz": {
+          "bytes": 16722963,
+          "sha256": "17a447dff61020664c23dd8c8516e2cd6bdb93cf244a4e6ee19078b0948fe566",
+          "uncompressedBytes": 78993689,
+          "uncompressedSha256": "f712eb98cba42f560121a09b655567a5fbc900e6568a29a9c6949d81a17fec5c"
+        },
+        "clangd.headers.json.gz": {
+          "bytes": 5732672,
+          "sha256": "70fae69d9d1f59269fcba00da077ed1e3cce3372d2a1ca5bbff520b173f23340",
+          "uncompressedBytes": 47317802,
+          "uncompressedSha256": "5f130b405bc9e2743d3d6f56e5b93f872ac336ad84fd6b62f16ae2e9a875031f"
+        }
+      },
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "data": {
+        "chromium": "153.0.8010.12",
+        "host": {
+          "cpus": 8,
+          "node": "v22.23.3"
+        },
+        "runs": 1,
+        "shaping": {
+          "constrained": {
+            "aggregateBytesPerSecond": 1250000,
+            "requestLatencyMs": 50
+          }
+        },
+        "samples": [
+          {
+            "family": "clangd",
+            "name": "pool4-j2",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "empty-cache",
+            "transferPayloadBytes": 22552623,
+            "requests": 3,
+            "result": {
+              "readyMs": 4273.490000009537,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 1.25
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 32.160000026226044
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 2858.150000035763
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 2860.335000038147
+                },
+                {
+                  "stage": "ready",
+                  "ms": 4272.645000040531
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 27429.585000038147,
+                  "afterOpenMs": 23139.180000007153,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 28456.480000019073,
+                  "afterOpenMs": 1026.8549999594688,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 426.71499997377396,
+                  "count": 1
+                },
+                {
+                  "ms": 49.310000002384186,
+                  "count": 1
+                },
+                {
+                  "ms": 24.12000000476837,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721045934,
+                  "finishedAt": 1792721045965
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721045965,
+                  "finishedAt": 1792721048791
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721048791,
+                  "finishedAt": 1792721048793
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721048793,
+                  "finishedAt": 1792721050205
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721050205
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721050207,
+                  "finishedAt": 1792721050223,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721050224
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721050268,
+                  "finishedAt": 1792721050268,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721073362,
+                  "finishedAt": 1792721073362,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721073363
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721074389,
+                  "finishedAt": 1792721074389,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721074391
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721074391,
+                  "finishedAt": 1792721074817,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721074817,
+                  "finishedAt": 1792721074867,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721074867,
+                  "finishedAt": 1792721074891,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "pool4-j2",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "persistent-reload",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 5304.134999990463,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 0.41499996185302734
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 15.339999973773956
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 3428.899999976158
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 3430.6699999570847
+                },
+                {
+                  "stage": "ready",
+                  "ms": 5303.974999964237
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 18677.939999997616,
+                  "afterOpenMs": 13369.030000030994,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 19045.560000002384,
+                  "afterOpenMs": 367.60000002384186,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 175.7849999666214,
+                  "count": 1
+                },
+                {
+                  "ms": 12.25,
+                  "count": 1
+                },
+                {
+                  "ms": 6.524999976158142,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721076480,
+                  "finishedAt": 1792721076495
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721076495,
+                  "finishedAt": 1792721079908
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721079908,
+                  "finishedAt": 1792721079910
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721079910,
+                  "finishedAt": 1792721081783
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721081783
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721081784,
+                  "finishedAt": 1792721081788,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721081789
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721081800,
+                  "finishedAt": 1792721081800,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721095157,
+                  "finishedAt": 1792721095157,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721095160
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721095525,
+                  "finishedAt": 1792721095525,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721095525
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721095525,
+                  "finishedAt": 1792721095701,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721095701,
+                  "finishedAt": 1792721095713,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721095713,
+                  "finishedAt": 1792721095720,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "pool4-j2",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "warm",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 0,
+              "stages": [
+                {
+                  "stage": "existing-worker",
+                  "ms": 0
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 1116.4950000047684,
+                  "afterOpenMs": 1116.4900000095367,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 1246.5799999833107,
+                  "afterOpenMs": 130.07499998807907,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value1'? (fix available)\n\nperf.c:4:22: note: 'value1' declared here",
+                    "'value1' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value1'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 7.7049999833106995,
+                  "count": 1
+                },
+                {
+                  "ms": 30.194999992847443,
+                  "count": 1
+                },
+                {
+                  "ms": 4.930000007152557,
+                  "count": 1
+                }
+              ]
+            }
+          }
+        ],
+        "browserEnvironment": {
+          "hardwareConcurrency": 8,
+          "crossOriginIsolated": true
+        }
+      }
+    },
+    {
+      "name": "memory512-pool4-j2",
+      "profile": {
+        "name": "memory512-pool4-j2",
+        "memoryMiB": 512,
+        "pool": 4,
+        "threads": 2
+      },
+      "integrity": {
+        "clangd.js": {
+          "bytes": 96987,
+          "sha256": "b527691471c858c970b3f522a5639b79c97a99d9c97d343abc0d8190c1e96066",
+          "uncompressedBytes": 96987,
+          "uncompressedSha256": "b527691471c858c970b3f522a5639b79c97a99d9c97d343abc0d8190c1e96066"
+        },
+        "clangd.wasm.gz": {
+          "bytes": 16722963,
+          "sha256": "a9d764a48768b308307ee01595e359ba9f50f3cff2ab0fff4979238f7fadd544",
+          "uncompressedBytes": 78993688,
+          "uncompressedSha256": "db418c011545868cfbbd049de69dc3707e4b2d5b430c17f88c5cedf4d4236b2e"
+        },
+        "clangd.headers.json.gz": {
+          "bytes": 5732672,
+          "sha256": "70fae69d9d1f59269fcba00da077ed1e3cce3372d2a1ca5bbff520b173f23340",
+          "uncompressedBytes": 47317802,
+          "uncompressedSha256": "5f130b405bc9e2743d3d6f56e5b93f872ac336ad84fd6b62f16ae2e9a875031f"
+        }
+      },
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "data": {
+        "chromium": "153.0.8010.12",
+        "host": {
+          "cpus": 8,
+          "node": "v22.23.3"
+        },
+        "runs": 1,
+        "shaping": {
+          "constrained": {
+            "aggregateBytesPerSecond": 1250000,
+            "requestLatencyMs": 50
+          }
+        },
+        "samples": [
+          {
+            "family": "clangd",
+            "name": "memory512-pool4-j2",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "empty-cache",
+            "transferPayloadBytes": 22552622,
+            "requests": 3,
+            "result": {
+              "readyMs": 5743.120000004768,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 1.175000011920929
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 54.34999996423721
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 3630.0199999809265
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 3633.1200000047684
+                },
+                {
+                  "stage": "ready",
+                  "ms": 5742.399999976158
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 34288.05000001192,
+                  "afterOpenMs": 28521.560000002384,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 35485.56999999285,
+                  "afterOpenMs": 1197.4850000143051,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 442.4099999666214,
+                  "count": 1
+                },
+                {
+                  "ms": 18.35499995946884,
+                  "count": 1
+                },
+                {
+                  "ms": 4.050000011920929,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721100038,
+                  "finishedAt": 1792721100091
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721100091,
+                  "finishedAt": 1792721103667
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721103667,
+                  "finishedAt": 1792721103670
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721103670,
+                  "finishedAt": 1792721105779
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721105779
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721105781,
+                  "finishedAt": 1792721105803,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721105805
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721105852,
+                  "finishedAt": 1792721105852,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721134325,
+                  "finishedAt": 1792721134325,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721134326
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721135522,
+                  "finishedAt": 1792721135522,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721135523
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721135523,
+                  "finishedAt": 1792721135965,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721135965,
+                  "finishedAt": 1792721135983,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721135984,
+                  "finishedAt": 1792721135988,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "memory512-pool4-j2",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "persistent-reload",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 5807.300000011921,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 0.4950000047683716
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 37.69499999284744
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 4072.6949999928474
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 4075.235000014305
+                },
+                {
+                  "stage": "ready",
+                  "ms": 5807.100000023842
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 18941.310000002384,
+                  "afterOpenMs": 13127.514999985695,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 19368.650000035763,
+                  "afterOpenMs": 427.31999999284744,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 337.2450000047684,
+                  "count": 1
+                },
+                {
+                  "ms": 13.504999995231628,
+                  "count": 1
+                },
+                {
+                  "ms": 8.339999973773956,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721136981,
+                  "finishedAt": 1792721137018
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721137018,
+                  "finishedAt": 1792721141053
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721141053,
+                  "finishedAt": 1792721141056
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721141056,
+                  "finishedAt": 1792721142787
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721142787
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721142788,
+                  "finishedAt": 1792721142794,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721142794
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721142810,
+                  "finishedAt": 1792721142810,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721155922,
+                  "finishedAt": 1792721155922,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721155922
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721156349,
+                  "finishedAt": 1792721156349,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721156349
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721156349,
+                  "finishedAt": 1792721156686,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721156686,
+                  "finishedAt": 1792721156700,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721156700,
+                  "finishedAt": 1792721156708,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "memory512-pool4-j2",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "warm",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 0,
+              "stages": [
+                {
+                  "stage": "existing-worker",
+                  "ms": 0
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 1210.6000000238419,
+                  "afterOpenMs": 1210.5900000333786,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 1390.6399999856949,
+                  "afterOpenMs": 180.02999997138977,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value1'? (fix available)\n\nperf.c:4:22: note: 'value1' declared here",
+                    "'value1' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value1'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 6.475000023841858,
+                  "count": 1
+                },
+                {
+                  "ms": 3.685000002384186,
+                  "count": 1
+                },
+                {
+                  "ms": 3.6049999594688416,
+                  "count": 1
+                }
+              ]
+            }
+          }
+        ],
+        "browserEnvironment": {
+          "hardwareConcurrency": 8,
+          "crossOriginIsolated": true
+        }
+      }
+    },
+    {
+      "name": "memory256-pool2-j1",
+      "profile": {
+        "name": "memory256-pool2-j1",
+        "memoryMiB": 256,
+        "pool": 2,
+        "threads": 1
+      },
+      "integrity": {
+        "clangd.js": {
+          "bytes": 96987,
+          "sha256": "cd54630f813d46c95df17e9c31297826e49476bebe8b52a2210a6c857203feab",
+          "uncompressedBytes": 96987,
+          "uncompressedSha256": "cd54630f813d46c95df17e9c31297826e49476bebe8b52a2210a6c857203feab"
+        },
+        "clangd.wasm.gz": {
+          "bytes": 16722963,
+          "sha256": "5b46dcb81547543f30f39ba7404f497da48d3173d77caf20f0425968bc819965",
+          "uncompressedBytes": 78993688,
+          "uncompressedSha256": "2f0d01dc865e150a1adf83bf1331e64b9486a771c19ddd6f35a8bc48752d91a2"
+        },
+        "clangd.headers.json.gz": {
+          "bytes": 5732672,
+          "sha256": "70fae69d9d1f59269fcba00da077ed1e3cce3372d2a1ca5bbff520b173f23340",
+          "uncompressedBytes": 47317802,
+          "uncompressedSha256": "5f130b405bc9e2743d3d6f56e5b93f872ac336ad84fd6b62f16ae2e9a875031f"
+        }
+      },
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "data": {
+        "chromium": "153.0.8010.12",
+        "host": {
+          "cpus": 8,
+          "node": "v22.23.3"
+        },
+        "runs": 1,
+        "shaping": {
+          "constrained": {
+            "aggregateBytesPerSecond": 1250000,
+            "requestLatencyMs": 50
+          }
+        },
+        "samples": [
+          {
+            "family": "clangd",
+            "name": "memory256-pool2-j1",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "empty-cache",
+            "transferPayloadBytes": 22552622,
+            "requests": 3,
+            "result": {
+              "readyMs": 5534.635000050068,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 1.550000011920929
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 39.37999999523163
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 3469.8250000476837
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 3472.395000040531
+                },
+                {
+                  "stage": "ready",
+                  "ms": 5533.8550000190735
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 38032.660000026226,
+                  "afterOpenMs": 32474.185000002384,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 39156.905000030994,
+                  "afterOpenMs": 1124.214999973774,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 17277.44999998808,
+                  "count": 2
+                },
+                {
+                  "ms": 369.4150000214577,
+                  "count": 1
+                },
+                {
+                  "ms": 264.30000001192093,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721160950,
+                  "finishedAt": 1792721160988
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721160988,
+                  "finishedAt": 1792721164419
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721164419,
+                  "finishedAt": 1792721164421
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721164421,
+                  "finishedAt": 1792721166483
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721166483
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721166484,
+                  "finishedAt": 1792721166507,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721166508
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721166686,
+                  "finishedAt": 1792721166686,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721198981,
+                  "finishedAt": 1792721198981,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721198992
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721200106,
+                  "finishedAt": 1792721200106,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721200106
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721200106,
+                  "finishedAt": 1792721217383,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721217339,
+                  "finishedAt": 1792721217339,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721217383,
+                  "finishedAt": 1792721217753,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721217753,
+                  "finishedAt": 1792721218017,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "memory256-pool2-j1",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "persistent-reload",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 6835.284999966621,
+              "stages": [
+                {
+                  "stage": "startup",
+                  "ms": 0.4049999713897705
+                },
+                {
+                  "stage": "asset-download",
+                  "ms": 31.27999997138977
+                },
+                {
+                  "stage": "module-loading",
+                  "ms": 4703.604999959469
+                },
+                {
+                  "stage": "wasm-initialization",
+                  "ms": 4706.319999992847
+                },
+                {
+                  "stage": "ready",
+                  "ms": 6835.125
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 23296.82499998808,
+                  "afterOpenMs": 16454.485000014305,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 24047.304999947548,
+                  "afterOpenMs": 750.3849999904633,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value0'? (fix available)\n\nperf.c:4:22: note: 'value0' declared here",
+                    "'value0' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value0'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 17831.59000003338,
+                  "count": 2
+                },
+                {
+                  "ms": 343.38499999046326,
+                  "count": 1
+                },
+                {
+                  "ms": 267.1850000023842,
+                  "count": 1
+                }
+              ],
+              "capabilities": {
+                "completionProvider": true
+              },
+              "trace": [
+                {
+                  "method": "startup",
+                  "sentAt": 1792721218973,
+                  "finishedAt": 1792721219004
+                },
+                {
+                  "method": "asset-download",
+                  "sentAt": 1792721219004,
+                  "finishedAt": 1792721223676
+                },
+                {
+                  "method": "module-loading",
+                  "sentAt": 1792721223676,
+                  "finishedAt": 1792721223679
+                },
+                {
+                  "method": "wasm-initialization",
+                  "sentAt": 1792721223679,
+                  "finishedAt": 1792721225808
+                },
+                {
+                  "method": "worker-ready",
+                  "sentAt": 1792721225808
+                },
+                {
+                  "requestId": 1,
+                  "method": "initialize",
+                  "sentAt": 1792721225808,
+                  "finishedAt": 1792721225815,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721225815
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/.clangd",
+                  "sentAt": 1792721225912,
+                  "finishedAt": 1792721225912,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.cpp",
+                  "version": 1,
+                  "sentAt": 1792721242269,
+                  "finishedAt": 1792721242269,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721242270
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/perf.c",
+                  "version": 1,
+                  "sentAt": 1792721243020,
+                  "finishedAt": 1792721243020,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/didOpen",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721243020
+                },
+                {
+                  "requestId": 2,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721243020,
+                  "finishedAt": 1792721260852,
+                  "outcome": "response"
+                },
+                {
+                  "method": "textDocument/publishDiagnostics",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721260842,
+                  "finishedAt": 1792721260842,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 3,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721260852,
+                  "finishedAt": 1792721261195,
+                  "outcome": "response"
+                },
+                {
+                  "requestId": 4,
+                  "method": "textDocument/completion",
+                  "uri": "file:///workspace/complete.cpp",
+                  "version": 1,
+                  "sentAt": 1792721261195,
+                  "finishedAt": 1792721261462,
+                  "outcome": "response"
+                }
+              ]
+            }
+          },
+          {
+            "family": "clangd",
+            "name": "memory256-pool2-j1",
+            "profile": "unconstrained",
+            "run": 0,
+            "phase": "warm",
+            "transferPayloadBytes": 0,
+            "requests": 0,
+            "result": {
+              "readyMs": 0,
+              "stages": [
+                {
+                  "stage": "existing-worker",
+                  "ms": 0
+                }
+              ],
+              "diagnostics": [
+                {
+                  "languageId": "cpp",
+                  "fromStartMs": 1119.5,
+                  "afterOpenMs": 1119.4900000095367,
+                  "diagnostics": [
+                    "Cannot initialize a variable of type 'int' with an lvalue of type 'const char[4]'",
+                    "Included header filesystem is not used directly (fix available)"
+                  ]
+                },
+                {
+                  "languageId": "c",
+                  "fromStartMs": 1356.6200000047684,
+                  "afterOpenMs": 237.11500000953674,
+                  "diagnostics": [
+                    "Incompatible pointer to integer conversion initializing 'int' with an expression of type 'char[4]'",
+                    "Use of undeclared identifier 'value'; did you mean 'value1'? (fix available)\n\nperf.c:4:22: note: 'value1' declared here",
+                    "'value1' declared here\n\nperf.c:4:45: error: use of undeclared identifier 'value'; did you mean 'value1'?",
+                    "Included header stdio.h is not used directly (fixes available)",
+                    "Included header wchar.h is not used directly (fixes available)",
+                    "Included header math.h is not used directly (fixes available)"
+                  ]
+                }
+              ],
+              "completion": [
+                {
+                  "ms": 273.6700000166893,
+                  "count": 1
+                },
+                {
+                  "ms": 221.68000000715256,
+                  "count": 1
+                },
+                {
+                  "ms": 231.4549999833107,
+                  "count": 1
+                }
+              ]
+            }
+          }
+        ],
+        "browserEnvironment": {
+          "hardwareConcurrency": 8,
+          "crossOriginIsolated": true
+        }
+      }
+    }
+  ],
+  "chromium": "153.0.8010.12"
+}

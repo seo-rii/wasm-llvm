@@ -144,7 +144,7 @@ export function transformGlue(source, profile, analysisThreads) {
   return result;
 }
 
-export async function prepare({ directory, expected, out }) {
+export async function prepare({ directory, expected, out, headersPath }) {
   const js = await readFile(path.join(directory, "clangd.js"));
   const gzip = await readFile(path.join(directory, "clangd.wasm.gz"));
   for (const [name, bytes] of [
@@ -156,6 +156,28 @@ export async function prepare({ directory, expected, out }) {
   }
   const wasm = gunzipSync(gzip, { maxOutputLength: 128 * 1024 ** 2 });
   assert.equal(sha(wasm), expected["clangd.wasm.gz"].uncompressedSha256);
+  let headerAsset;
+  if (headersPath) {
+    const encoded = await readFile(headersPath);
+    const headerReceipt = expected["clangd.headers.json.gz"];
+    assert(
+      headerReceipt,
+      "Explicit headers require encoded and decoded receipts",
+    );
+    assert.equal(encoded.length, headerReceipt.bytes);
+    assert.equal(sha(encoded), headerReceipt.sha256);
+    const raw = gunzipSync(encoded, { maxOutputLength: 128 * 1024 ** 2 });
+    assert.equal(raw.length, headerReceipt.uncompressedBytes);
+    assert.equal(sha(raw), headerReceipt.uncompressedSha256);
+    const tree = JSON.parse(raw);
+    assert.equal(
+      tree.version,
+      "llvmorg-22.1.8:ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+    );
+    assert.equal(tree.targetTriple, "wasm32-wasi");
+    assert.equal(tree.resourceDir, "/lib/clang/22");
+    headerAsset = { encoded, raw, fileCount: Object.keys(tree.files).length };
+  }
   await mkdir(out, { recursive: false });
   const fixtures = {
     schemaVersion: 1,
@@ -180,6 +202,12 @@ export async function prepare({ directory, expected, out }) {
     { name: "memory512-pool4-j2", memoryMiB: 512, pool: 4, threads: 2 },
     { name: "memory256-pool2-j1", memoryMiB: 256, pool: 2, threads: 1 },
   ];
+  if (headerAsset)
+    fixtures.experiment.explicitHeaders = {
+      ...receipt(headerAsset.encoded, headerAsset.raw),
+      fileCount: headerAsset.fileCount,
+      note: "The same full header asset is mounted in every arm; this differs from shipped embedded-plus-overlay delivery.",
+    };
   for (const profile of profiles) {
     const raw =
       profile.memoryMiB === 2048
@@ -199,6 +227,7 @@ export async function prepare({ directory, expected, out }) {
     for (const [name, bytes] of [
       ["clangd.js", source],
       ["clangd.wasm.gz", encoded],
+      ...(headerAsset ? [["clangd.headers.json.gz", headerAsset.encoded]] : []),
     ]) {
       const filename = path.join(target, name);
       await writeFile(filename, bytes);
@@ -207,10 +236,18 @@ export async function prepare({ directory, expected, out }) {
     fixtures.clangd[profile.name] = {
       basePath: `/${profile.name}/clangd/`,
       implementation: "current",
-      headers: false,
+      headers: headerAsset ? "clangd.headers.json.gz" : false,
       integrity: {
         "clangd.js": receipt(source),
         "clangd.wasm.gz": receipt(encoded, raw),
+        ...(headerAsset
+          ? {
+              "clangd.headers.json.gz": receipt(
+                headerAsset.encoded,
+                headerAsset.raw,
+              ),
+            }
+          : {}),
       },
       profile,
     };
@@ -225,14 +262,15 @@ if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const [directory, receiptFile, out] = process.argv.slice(2);
+  const [directory, receiptFile, out, headersPath] = process.argv.slice(2);
   if (!directory || !receiptFile || !out)
     throw new Error(
-      "Usage: prepare-resource-experiment.mjs BASELINE_DIR RECEIPTS_JSON NEW_OUT_DIR",
+      "Usage: prepare-resource-experiment.mjs BASELINE_DIR RECEIPTS_JSON NEW_OUT_DIR [HEADERS_GZIP]",
     );
   await prepare({
     directory,
     expected: JSON.parse(await readFile(receiptFile, "utf8")),
     out,
+    headersPath,
   });
 }
