@@ -85,7 +85,7 @@ jobs:
             --output "$RUNNER_TEMP/gcc-bundle"
           node producer/gcc-browser/qualification/run.mjs \
             --bundle "$RUNNER_TEMP/gcc-bundle" \
-            --output "$RUNNER_TEMP/gcc-node-qualification" --native-cxx g++-13
+            --output "$RUNNER_TEMP/gcc-node-qualification" --native-cxx g++-13 --native-cc gcc-13
       - uses: actions/upload-artifact@v4
         with:
           name: gcc-wasm-cross-bundle-${{ github.sha }}
@@ -104,5 +104,55 @@ jobs:
             ${{ runner.temp }}/gcc-work/build/**/config.log
             ${{ runner.temp }}/gcc-sysroot-source.json
             ${{ runner.temp }}/gcc-node-qualification/
+          if-no-files-found: warn
+          retention-days: 7
+
+  browser:
+    needs: producer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: producer-repo
+          persist-credentials: false
+      - name: Check out the GCC consumer being qualified
+        uses: actions/checkout@v4
+        with:
+          repository: seo-rii/wasm-idle
+          ref: bdac057cf23057916f16c590532689e69e8eeba9
+          path: consumer
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: consumer/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: consumer/pnpm-lock.yaml
+      - name: Install consumer dependencies and Chromium
+        working-directory: consumer
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright-core install --with-deps chromium
+      - name: Check Worker transport and failure boundaries (synthetic modules only)
+        working-directory: consumer
+        run: node --test scripts/gcc-worker-contract.browser.test.mjs
+      - uses: actions/download-artifact@v4
+        with:
+          name: gcc-wasm-cross-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-bundle
+      - name: Compile real GCC fixtures in a Chromium Worker and execute baseline ELF on Linux
+        run: |
+          node consumer/scripts/verify-x86-cross-gcc.mjs \
+            "$RUNNER_TEMP/gcc-bundle/gcc-toolchain.v1.json" \
+            "$GITHUB_WORKSPACE/producer-repo/producer/gcc-browser/qualification" \
+            "$RUNNER_TEMP/gcc-browser-qualification"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gcc-wasm-browser-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-browser-qualification/
           if-no-files-found: warn
           retention-days: 7
