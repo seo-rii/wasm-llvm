@@ -3,10 +3,10 @@ name: Clang x86-64 cross compiler
 on:
   pull_request:
     paths:
-      - 'producer/clang-browser/cross/**'
-      - 'producer/clang-browser/patches/lld-elf-only.patch'
-      - 'producer/clang-browser/scripts/build-toolchain.mjs'
-      - 'producer/clang-browser/tool-host/**'
+      - 'producer/clang-browser/**'
+      - 'scripts/lib/tar.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
       - 'test/clang-native-*.test.mjs'
       - '.github/workflows/clang-native-cross.yml'
   workflow_dispatch:
@@ -38,7 +38,7 @@ jobs:
           sudo apt-get install --yes cmake ninja-build g++ libc6-dev linux-libc-dev
       - name: Check native profile and sysroot contracts
         run: |
-          node --test test/clang-native-cross.test.mjs test/clang-native-sysroot.test.mjs
+          node --test test/clang-native-cross.test.mjs test/clang-native-sysroot.test.mjs test/clang-native-workflow.test.mjs
           node producer/clang-browser/cross/import-sysroot.mjs --preflight
       - name: Build pinned Wasm-hosted X86 compiler and ELF linker
         env:
