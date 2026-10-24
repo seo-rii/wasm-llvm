@@ -70,8 +70,10 @@ export async function compileReal(bundle, request) {
 		const stageOut = [];
 		const stageErr = [];
 		const start = performance.now();
-		let module = await factory({ noInitialRun: true, wasmBinary: wasm,
-			print: (line) => stageOut.push(String(line)), printErr: (line) => stageErr.push(String(line)) });
+		let exitCode = 0;
+		let module = await factory({ noInitialRun: true, noExitRuntime: false, wasmBinary: wasm,
+			print: (line) => stageOut.push(String(line)), printErr: (line) => stageErr.push(String(line)),
+			onExit: (status) => { exitCode = status; } });
 		assert(module.FS && typeof module.callMain === 'function', `${tool} lacks the Emscripten runtime contract`);
 		module.FS.mkdirTree('/work');
 		module.FS.mkdirTree('/tmp');
@@ -87,14 +89,25 @@ export async function compileReal(bundle, request) {
 		}
 		for (const [name, bytes] of artifacts) module.FS.writeFile(name, bytes);
 		module.FS.chdir('/work');
-		let exitCode = 0;
+		const previousHostExitCode = process.exitCode;
+		let normalExit = false;
 		try {
-			const returned = module.callMain(argv);
+			const returned = module.callMain([...argv]);
 			if (Number.isInteger(returned)) exitCode = returned;
+			normalExit = true;
 		} catch (error) {
-			if (error?.name === 'ExitStatus' && Number.isInteger(error.status)) exitCode = error.status;
+			if (error?.name === 'ExitStatus' && Number.isInteger(error.status)) {
+				exitCode = error.status;
+				normalExit = true;
+			}
 			else throw error;
+		} finally {
+			// Emscripten's Node quit_ sets process.exitCode even when callMain
+			// catches ExitStatus. A compiler diagnostic is a result, not failure
+			// of this qualification host. Unexpected runtime errors still fail.
+			if (normalExit) process.exitCode = previousHostExitCode;
 		}
+		assert(Number.isInteger(exitCode), `${tool} returned an invalid exit code`);
 		const peakMemoryBytes = module.HEAPU8?.buffer.byteLength;
 		assert(Number.isSafeInteger(peakMemoryBytes) && peakMemoryBytes > 0, `${tool} does not expose Wasm linear memory`);
 		stages.push({ tool, argv, exitCode, milliseconds: performance.now() - start, peakMemoryBytes,
