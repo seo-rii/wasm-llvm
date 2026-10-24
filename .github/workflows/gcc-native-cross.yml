@@ -118,7 +118,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: seo-rii/wasm-idle
-          ref: bdac057cf23057916f16c590532689e69e8eeba9
+          ref: 75f92f77e09a7d3bd1dcc986b8516714edcc2e2f
           path: consumer
           persist-credentials: false
       - uses: pnpm/action-setup@v4
@@ -136,7 +136,7 @@ jobs:
           pnpm exec playwright-core install --with-deps chromium
       - name: Check Worker transport and failure boundaries (synthetic modules only)
         working-directory: consumer
-        run: node --test scripts/gcc-worker-contract.browser.test.mjs
+        run: pnpm run test:browser:gcc-worker-contract
       - uses: actions/download-artifact@v4
         with:
           name: gcc-wasm-cross-bundle-${{ github.sha }}
