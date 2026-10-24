@@ -62,11 +62,16 @@ jobs:
         with:
           path: ${{ runner.temp }}/gcc-compiler
           key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
+      - name: Archive actual compiler with its recorded file modes
+        run: |
+          # upload-artifact normalizes permissions. The receipt hashes directory
+          # and header modes, so preserve them inside a tar archive for reuse.
+          tar -czf "$RUNNER_TEMP/gcc-compiler.tar.gz" -C "$RUNNER_TEMP" gcc-compiler
       - name: Preserve actual compiler even if later qualification fails
         uses: actions/upload-artifact@v4
         with:
           name: gcc-wasm-raw-compiler-${{ github.sha }}
-          path: ${{ runner.temp }}/gcc-compiler/
+          path: ${{ runner.temp }}/gcc-compiler.tar.gz
           if-no-files-found: error
           retention-days: 7
       - name: Import actual glibc, GNU C++ library, libgcc and CRT
