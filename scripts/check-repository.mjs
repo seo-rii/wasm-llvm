@@ -49,6 +49,7 @@ const REQUIRED_PRODUCERS = [
 	'd-browser',
 	'ecl-browser',
 	'emscripten-lld-browser',
+	'gcc-browser',
 	'kotlin-browser',
 	'lean-browser',
 	'lfortran-browser',
