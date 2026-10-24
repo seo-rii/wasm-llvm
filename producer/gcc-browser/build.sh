@@ -19,6 +19,7 @@ python3 "$script_dir/build-support.py" --work "$work" --minimum-free-gib "${GCC_
 # emsdk_env.sh is part of the revision-verified SDK, not untrusted shell output.
 # shellcheck disable=SC1091
 source "$work/emsdk/emsdk_env.sh"
+export EM_CACHE="$work/emscripten-cache" EM_PORTS="$work/emscripten-ports"
 [[ $(emcc --version | head -1) == *'4.0.23'* ]] || { echo 'Unexpected Emscripten version' >&2; exit 2; }
 source_root="$work/sources"
 gcc_source="$source_root/gcc-13.3.0"
@@ -130,5 +131,6 @@ for component in gcc-13.3.0 binutils-2.42 gmp-6.3.0 mpfr-4.2.1 mpc-1.3.1; do
 done
 install -m644 "$gcc_source/COPYING.RUNTIME" "$output/licenses/gcc-13.3.0/COPYING.RUNTIME"
 install -m644 "$work/emsdk/upstream/emscripten/LICENSE" "$output/licenses/emscripten-LICENSE"
+install -m644 "$EM_PORTS/zlib/zlib-1.3.1/LICENSE" "$output/licenses/zlib-1.3.1-LICENSE"
 node "$script_dir/build-receipt.mjs" --compiler "$output" --work "$work"
 printf 'GCC Wasm compiler built: %s\n' "$output"

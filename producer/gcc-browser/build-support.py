@@ -60,6 +60,10 @@ def prepare(work: pathlib.Path, minimum_free_gib: int):
         raise RuntimeError('Emsdk release mapping differs from lock')
     subprocess.run([str(sdk / 'emsdk'), 'install', lock['emsdk']['version']], check=True)
     subprocess.run([str(sdk / 'emsdk'), 'activate', lock['emsdk']['version']], check=True)
+    port = (sdk / 'upstream/emscripten/tools/ports/zlib.py').read_text()
+    expected_port = lock['emscriptenPorts']['zlib']
+    if f"VERSION = '{expected_port['version']}'" not in port or f"HASH = '{expected_port['sha512']}'" not in port:
+        raise RuntimeError('Emscripten zlib port identity differs from lock')
     print(json.dumps({'sourcesVerified': list(lock['sources']), 'emsdkRevision': revision}))
 
 

@@ -39,6 +39,7 @@ const receipt = {
     nativeGenerators: true, buildTriple: execFileSync('gcc-13', ['-dumpmachine'], { encoding: 'utf8' }).trim(),
     emsdkRevision: lock.emsdk.revision, emscriptenVersion: lock.emsdk.version,
     hostDependencies: ['gmp', 'mpfr', 'mpc'].map((name) => ({ name, ...lock.sources[name], role: 'compiler host only; WebAssembly' })),
+    hostPorts: lock.emscriptenPorts,
     targetRuntime: 'separate real GNU/Linux x86-64 sysroot; not linked into compiler host',
     ...bootstrap
   },
