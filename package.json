@@ -112,7 +112,11 @@
 		"collect:d-inputs": "node ./producer/d-browser/scripts/collect-wasm-idle-assets.mjs",
 		"finalize:d-inputs": "node ./producer/d-browser/scripts/package-wasm-idle-assets.mjs",
 		"verify:d-inputs": "node ./producer/d-browser/scripts/check-wasm-idle-assets.mjs",
-		"probe:d-frontend": "bash ./producer/d-browser/scripts/probe-dmd-wasi-frontend.sh"
+		"probe:d-frontend": "bash ./producer/d-browser/scripts/probe-dmd-wasi-frontend.sh",
+		"build:gcc-native": "bash ./producer/gcc-browser/build.sh",
+		"package:gcc-native": "node ./producer/gcc-browser/package.mjs",
+		"qualify:gcc-native": "node ./producer/gcc-browser/qualification/run.mjs",
+		"test:gcc-native": "node --test ./producer/gcc-browser/test/*.test.mjs"
 	},
 	"devDependencies": {
 		"@bjorn3/browser_wasi_shim": "0.4.2",
