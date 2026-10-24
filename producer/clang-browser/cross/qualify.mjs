@@ -139,7 +139,7 @@ export async function qualifyCross(bundleArgument, outputArgument) {
 		chmodSync(path.join(root, destination), 0o700);
 	}
 	const sources = {
-		'main.c': '#include <stdio.h>\n_Static_assert(sizeof(long)==8,"LP64");\nint main(void){ puts("native cross"); return 0; }\n',
+		'main.c': '#include <stdio.h>\n#include <math.h>\n_Static_assert(sizeof(long)==8,"LP64");\nint main(void){ double value; if(scanf("%lf", &value)!=1) return 2; printf("%.6f\\n", sin(value)); return 0; }\n',
 		'ps.cpp': '#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace __gnu_pbds;\nstatic_assert(sizeof(void*)==8 && __LDBL_MANT_DIG__==64);\nint main(){ tree<int,null_type,std::less<int>,rb_tree_tag,tree_order_statistics_node_update> s; s.insert(42); try { throw 7; } catch(int n){ std::cout << *s.find_by_order(0)+n; } }\n',
 		'avx.cpp': '#include <immintrin.h>\n__attribute__((noinline,used)) __m256i sum(__m256i a,__m256i b){ return _mm256_add_epi32(a,b); }\nint main(){return 0;}\n',
 		'broken.cpp': 'int main( {\n'
@@ -166,7 +166,7 @@ export async function qualifyCross(bundleArgument, outputArgument) {
 	let passed = false;
 	try {
 		assert.match(command('targets', ['--print-targets']).stdout, /\bx86-64\b/);
-		command('c', [...common, '-march=x86-64', '-O2', 'main.c', '-o', 'main.elf']);
+		command('c', [...common, '-march=x86-64', '-O2', 'main.c', '-lm', '-o', 'main.elf']);
 		assertStaticExecutable(readFileSync(path.join(root, 'work/main.elf')));
 		command('cpp', [...common, '--driver-mode=g++', '-march=x86-64', '-std=gnu++20', '-stdlib=libstdc++', '-O2', 'ps.cpp', '-o', 'ps.elf']);
 		assertStaticExecutable(readFileSync(path.join(root, 'work/ps.elf')));
