@@ -135,3 +135,28 @@ That test requires Chromium and consumer development dependencies. It checks
 Worker termination on cancellation, downloaded bytes, and native Linux I/O.
 Only reports from a completed build establish working Wasm GCC support. Keep
 the PR in Draft while actual build or qualification is incomplete.
+
+## Reproducible fuzz campaigns
+
+[The fuzz harness](fuzz/README.md) generates bounded C/C++ programs from a seed,
+compares real Wasm GCC and native GCC outputs against an independent arithmetic
+oracle, and preserves the corpus before compilation. Generated cases cover
+unsigned expressions and control flow, GNU STL/PBDS, exceptions, and dynamic-input
+AVX2/FMA with GCC pragma push/pop restoration. These are structured differential
+campaigns, not coverage-guided compiler fuzzing. Contract fixtures are reported
+separately from actual compiler execution.
+
+The GCC workflow runs 24 generated cases by default, then replays the same corpus
+through the pinned consumer's public Chromium Worker API. Only baseline static
+ELF programs execute on Linux; AVX2 cases are checked in assembly. Each stage has
+a 900-second budget. Manual dispatch accepts a uint32 `fuzz_seed`, 1–100
+`fuzz_cases`, and a 30–900-second `fuzz_seconds` budget per stage. The campaign
+fails when its budget expires before all requested cases complete.
+
+The `gcc-wasm-fuzz-evidence-*` Actions artifact retains generated source, stdin,
+expected output, requests, compiler and sysroot identities, stage measurements,
+compiled outputs and failure diagnostics for seven days. Preserve that artifact
+to replay a failure with the exact seed/index and bundle. The consumer's
+`scripts/GCC_FUZZ.md` documents Worker replay, and its `fuzz:gcc-contract` command
+independently fuzzes manifest, asset-integrity, path and option validation without
+claiming to execute GCC.
