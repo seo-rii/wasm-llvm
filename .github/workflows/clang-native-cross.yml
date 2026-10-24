@@ -1,0 +1,127 @@
+name: Clang x86-64 cross compiler
+
+on:
+  pull_request:
+    paths:
+      - 'producer/clang-browser/cross/**'
+      - 'producer/clang-browser/patches/lld-elf-only.patch'
+      - 'producer/clang-browser/scripts/build-toolchain.mjs'
+      - 'producer/clang-browser/tool-host/**'
+      - 'test/clang-native-*.test.mjs'
+      - '.github/workflows/clang-native-cross.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clang-native-cross-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  producer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install native build and GNU sysroot inputs
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes cmake ninja-build g++ libc6-dev linux-libc-dev
+      - name: Check native profile and sysroot contracts
+        run: |
+          node --test test/clang-native-cross.test.mjs test/clang-native-sysroot.test.mjs
+          node producer/clang-browser/cross/import-sysroot.mjs --preflight
+      - name: Build pinned Wasm-hosted X86 compiler and ELF linker
+        env:
+          CLANG_TARGET_PROFILE: x86_64-linux-gnu
+          NINJA_JOBS: '2'
+          WASM_LLVM_TOOLCHAIN_WORK_DIR: ${{ runner.temp }}/x86-work
+          WASM_LLVM_TOOLCHAIN_OUT_DIR: ${{ runner.temp }}/x86-compiler
+        shell: bash
+        run: |
+          umask 077
+          set +e
+          node producer/clang-browser/scripts/build-toolchain.mjs --compiler-only > "$RUNNER_TEMP/x86-build.log" 2>&1
+          status=$?
+          printf '{"exitCode":%s}\n' "$status" > "$RUNNER_TEMP/x86-build.status.json"
+          tail -n 80 "$RUNNER_TEMP/x86-build.log"
+          exit "$status"
+      - name: Import installed GNU runtime with package and file identities
+        run: |
+          node producer/clang-browser/cross/import-sysroot.mjs \
+            --output "$RUNNER_TEMP/gnu-sysroot" \
+            --provenance "$RUNNER_TEMP/gnu-sysroot-source.json"
+      - name: Package and qualify actual compiler output in Node WASI
+        run: |
+          node producer/clang-browser/cross/package.mjs \
+            --compiler "$RUNNER_TEMP/x86-compiler/compiler" \
+            --sysroot "$RUNNER_TEMP/gnu-sysroot" \
+            --provenance "$RUNNER_TEMP/gnu-sysroot-source.json" \
+            --output "$RUNNER_TEMP/x86-bundle"
+          node producer/clang-browser/cross/qualify.mjs \
+            --bundle "$RUNNER_TEMP/x86-bundle" \
+            --output "$RUNNER_TEMP/x86-node-qualification"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: x86-cross-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/x86-bundle/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: x86-cross-build-evidence-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/x86-build.log
+            ${{ runner.temp }}/x86-build.status.json
+            ${{ runner.temp }}/gnu-sysroot-source.json
+            ${{ runner.temp }}/x86-node-qualification/*.json
+            ${{ runner.temp }}/x86-node-qualification/*.stdout
+            ${{ runner.temp }}/x86-node-qualification/*.stderr
+          if-no-files-found: warn
+          retention-days: 7
+
+  browser:
+    needs: producer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      # Pin the consumer implementation used to qualify this producer contract.
+      # This does not deploy or publish either repository.
+      - uses: actions/checkout@v4
+        with:
+          repository: seo-rii/wasm-idle
+          ref: 99cf0eb1f664986d5c6e1254de9187235e0c332e
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright-core install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: x86-cross-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/x86-bundle
+      - name: Compile in Chromium Worker and verify native Linux stdin/stdout
+        run: |
+          node scripts/verify-x86-cross-clang.mjs \
+            "$RUNNER_TEMP/x86-bundle/cross-toolchain.v1.json" \
+            "$RUNNER_TEMP/x86-browser-qualification"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: x86-cross-browser-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/x86-browser-qualification/
+          if-no-files-found: warn
+          retention-days: 7
