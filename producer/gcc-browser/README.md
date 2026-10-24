@@ -6,11 +6,12 @@ and GNU linker run in a browser Worker and emit x86-64 assembly, ELF objects, or
 static ELF executables. The consumer downloads those bytes; it never runs x86
 code in the browser.
 
-This branch is stacked on [wasm-llvm #53](https://github.com/seo-rii/wasm-llvm/pull/53)
-for its GNU/Linux sysroot importer, archive validation, and deterministic USTAR
-packager. The GCC work does not modify the Clang compiler branch or artifacts.
-Its consumer is the `feat/gcc-wasm-x86-64-20261024` branch of wasm-idle, stacked
-on [wasm-idle #320](https://github.com/seo-rii/wasm-idle/pull/320).
+This producer uses the GNU/Linux sysroot importer, archive validation, and
+deterministic USTAR packager merged in
+[wasm-llvm #53](https://github.com/seo-rii/wasm-llvm/pull/53).
+Its standalone `@wasm-idle/gcc` consumer is
+[wasm-idle #321](https://github.com/seo-rii/wasm-idle/pull/321), targeting main
+after the shared Clang changes were merged.
 
 ## Build inputs and boundaries
 
