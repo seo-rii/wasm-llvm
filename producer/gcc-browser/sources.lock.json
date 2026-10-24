@@ -15,6 +15,14 @@
     "revision": "c0bb220cb6e6f4e0fabb6f6db9efd53390ef5e56",
     "releasesRevision": "aaa43392544d695232b70eda706d751f18980c2a"
   },
+  "emscriptenPorts": {
+    "zlib": {
+      "version": "1.3.1",
+      "url": "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz",
+      "sha512": "8c9642495bafd6fad4ab9fb67f09b268c69ff9af0f4f20cf15dfc18852ff1f312bd8ca41de761b3f8d8e90e77d79f2ccacd3d4c5b19e475ecf09d021fdfe9088",
+      "verifiedBy": "emscripten/tools/ports/zlib.py at the locked SDK release"
+    }
+  },
   "precedents": [
     { "repository": "https://github.com/begeistert/wasm-toolchains", "revision": "66af4dcbaa49c2f16699ac88b4b16fc697683ca5", "files": ["src/avr-gcc/build.sh", "src/arm-gcc/build.sh", "src/arm-gcc/Dockerfile"], "gccVersions": ["15.2.0", "14.3.0"], "target": "AVR/ARM only; not x86-64 validation", "reusedApproach": "Native build-time generators, Wasm GMP/MPFR/MPC, direct cc1/cc1plus and binutils modules, explicit FS/callMain orchestration" },
     { "repository": "https://github.com/horang-corp/avr-gcc-wasm", "revision": "e3a563f765b041623734991125d5640c7e56053e", "files": ["README.md", "firmware-builder.js", "THIRD_PARTY_NOTICES.md"], "target": "AVR only; not x86-64 validation", "reusedApproach": "One dedicated Worker per compilation with actual GCC, assembler and linker stages" }
