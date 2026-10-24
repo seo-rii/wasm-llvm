@@ -56,9 +56,14 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   assert.equal(gnu.compilerVersion, profile.gccVersion, 'GNU target libraries must match the compiler version');
   const files = await readNativeTree(sysroot);
   const layout = validateGnuSysroot(files, gnu);
+  // The compiler's upstream limits.h/stdint.h wrappers delegate to this target
+  // libc. Header generation deliberately never copies the build host's headers.
+  for (const name of ['usr/include/limits.h', 'usr/include/stdint.h']) {
+    assert(files.some(file => file.path === name && file.bytes.length), `GNU sysroot is missing ${name}`);
+  }
   const resourceDir = `${layout.gccInstallation}/include`;
   const resources = await readNativeTree(path.join(compiler, 'resource-include'));
-  for (const name of ['stddef.h', 'stdarg.h', 'limits.h', 'immintrin.h', 'avxintrin.h', 'avx2intrin.h', 'fmaintrin.h']) {
+  for (const name of ['stddef.h', 'stdarg.h', 'limits.h', 'syslimits.h', 'stdint.h', 'immintrin.h', 'avxintrin.h', 'avx2intrin.h', 'fmaintrin.h']) {
     assert(resources.some(file => file.path === name && file.bytes.length), `GCC internal headers lack ${name}`);
   }
   const occupied = new Set(files.map(file => file.path));

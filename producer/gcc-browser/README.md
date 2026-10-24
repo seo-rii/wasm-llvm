@@ -33,6 +33,15 @@ files. It does not claim to have fetched the original Debian source archives.
 Compiler source archives remain reproducible from the lock; compiler and host
 dependency license notices are retained in `licenses/`.
 
+`/sysroot` is the compiler's browser runtime path, not a build-machine directory.
+The recipe disables fixincludes and uses GCC's original `stmp-int-hdrs` rule to
+generate its internal headers. `LIMITS_H_TEST=true` selects the upstream glibc
+forwarding wrapper; the recipe checks its bytes against `limitx.h`,
+`glimits.h`, `limity.h`, and `gsyslimits.h` in the pinned GCC source.
+Packaging requires the real target `limits.h` and `stdint.h` to which those
+wrappers delegate. No build-host libc headers enter the resource overlay.
+See the [GCC 13.3 header generation rule](https://github.com/gcc-mirror/gcc/blob/releases/gcc-13.3.0/gcc/Makefile.in).
+
 The approach follows the pinned
 [AVR](https://github.com/begeistert/wasm-toolchains/blob/66af4dcbaa49c2f16699ac88b4b16fc697683ca5/src/avr-gcc/build.sh)
 and [ARM](https://github.com/begeistert/wasm-toolchains/blob/66af4dcbaa49c2f16699ac88b4b16fc697683ca5/src/arm-gcc/build.sh)

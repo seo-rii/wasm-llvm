@@ -34,7 +34,8 @@ async function fixture(t) {
   };
   const gcc = 'usr/lib/gcc/x86_64-linux-gnu/13', cpp = 'usr/include/c++/13';
   const files = [
-    'usr/include/stdio.h', 'usr/include/stdlib.h', 'usr/include/features.h', `${cpp}/vector`,
+    'usr/include/stdio.h', 'usr/include/stdlib.h', 'usr/include/features.h',
+    'usr/include/limits.h', 'usr/include/stdint.h', `${cpp}/vector`,
     `${cpp}/ext/pb_ds/assoc_container.hpp`, `${cpp}/ext/pb_ds/detail/rb_tree_map_/rb_tree_.hpp`,
     `${cpp}/ext/pb_ds/detail/tree_policy/order_statistics_imp.hpp`,
     'usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h',
@@ -51,7 +52,7 @@ async function fixture(t) {
     licenseFiles: ['usr/share/doc/libc/copyright'] };
   const provenancePath = path.join(root, 'gnu.json');
   await fs.writeFile(provenancePath, JSON.stringify(provenance));
-  for (const name of ['stddef.h', 'stdarg.h', 'limits.h', 'immintrin.h', 'avxintrin.h', 'avx2intrin.h', 'fmaintrin.h'])
+  for (const name of ['stddef.h', 'stdarg.h', 'limits.h', 'syslimits.h', 'stdint.h', 'immintrin.h', 'avxintrin.h', 'avx2intrin.h', 'fmaintrin.h'])
     await write(compiler, `resource-include/${name}`, synthetic);
   await write(compiler, 'licenses/fixture.txt', synthetic);
   const modules = {};
@@ -101,6 +102,15 @@ test('target libraries must match the actual GCC version', async t => {
   await fs.writeFile(input.provenance, JSON.stringify(provenance));
   await assert.rejects(packageGcc(input), /must match the compiler version/);
 });
+
+for (const name of ['usr/include/limits.h', 'usr/include/stdint.h']) {
+  test(`the GCC wrappers require target ${name} before packaging`, async t => {
+    const input = await fixture(t);
+    await fs.rm(path.join(input.sysroot, name));
+    await assert.rejects(packageGcc(input), new RegExp(`GNU sysroot is missing ${name.replaceAll('.', '\\.')}`));
+    await assert.rejects(fs.access(input.output), /ENOENT/);
+  });
+}
 
 test('source pins and resource headers are bound to the build receipt', async t => {
   const input = await fixture(t);
