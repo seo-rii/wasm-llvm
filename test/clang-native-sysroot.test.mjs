@@ -20,7 +20,7 @@ function archive(bytes = elf()) {
 	return Buffer.concat([Buffer.from('!<arch>\n'), header, bytes, ...(bytes.length % 2 ? [Buffer.from('\n')] : [])]);
 }
 
-async function fixture(t) {
+async function fixture(t, { linuxArchitecture = 'amd64' } = {}) {
 	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'gnu-sysroot-import-'));
 	t.after(() => fs.rm(directory, { recursive: true, force: true }));
 	const root = path.join(directory, 'native');
@@ -35,9 +35,10 @@ async function fixture(t) {
 		await fs.mkdir(path.dirname(filename), { recursive: true });
 		await fs.writeFile(filename, bytes);
 	}
-	async function addPackage(name, version, sourcePackage, sourceVersion, entries) {
-		records.set(`${name}:amd64`, [`${name}:amd64`, version, sourcePackage, sourceVersion, 'amd64', 'installed'].join('\t') + '\n');
-		manifests.set(`${name}:amd64`, ['/.', '/usr', '/usr/include', ...Object.keys(entries)]);
+	async function addPackage(name, version, sourcePackage, sourceVersion, entries, architecture = 'amd64') {
+		const binaryPackage = architecture === 'all' ? name : `${name}:${architecture}`;
+		records.set(`${name}:${architecture}`, [binaryPackage, version, sourcePackage, sourceVersion, architecture, 'installed'].join('\t') + '\n');
+		manifests.set(binaryPackage, ['/.', '/usr', '/usr/include', ...Object.keys(entries)]);
 		for (const [filename, bytes] of Object.entries(entries)) await write(filename, bytes);
 		await write(`/usr/share/doc/${name}/copyright`, 'GNU notice; see /usr/share/common-licenses/GPL-3.\n');
 	}
@@ -51,7 +52,7 @@ async function fixture(t) {
 		'/usr/lib/x86_64-linux-gnu/libm.a': 'GROUP ( /usr/lib/x86_64-linux-gnu/libm-2.36.a )\n',
 		'/usr/lib/x86_64-linux-gnu/libm-2.36.a': archive()
 	});
-	await addPackage('linux-libc-dev', '6.1-1', 'linux', '6.1-1', { '/usr/include/linux/types.h': '/* Linux types */\n' });
+	await addPackage('linux-libc-dev', '6.1-1', 'linux', '6.1-1', { '/usr/include/linux/types.h': '/* Linux types */\n' }, linuxArchitecture);
 	await addPackage('libgcc-12-dev', '12.2.0-1', 'gcc-12', '12.2.0-1', {
 		...Object.fromEntries(['crtbeginT.o', 'crtend.o'].map((name) => [`/usr/lib/gcc/x86_64-linux-gnu/12/${name}`, elf()])),
 		...Object.fromEntries(['libgcc.a', 'libgcc_eh.a', 'libatomic.a'].map((name) => [`/usr/lib/gcc/x86_64-linux-gnu/12/${name}`, archive()])),
@@ -75,7 +76,10 @@ async function fixture(t) {
 		if (command === 'g++' && args[0] === '-dumpmachine') return { stdout: `${state.target}\n` };
 		if (command === 'g++' && args[0] === '-dumpfullversion') return { stdout: '12.2.0\n' };
 		if (command === 'g++' && args[0] === '-print-libgcc-file-name') return { stdout: '/usr/lib/gcc/x86_64-linux-gnu/12/libgcc.a\n' };
-		if (command === 'dpkg-query' && args[0] === '-W' && records.has(args.at(-1))) return { stdout: records.get(args.at(-1)) };
+		if (command === 'dpkg-query' && args[0] === '-W') {
+			if (records.has(args.at(-1))) return { stdout: records.get(args.at(-1)) };
+			throw Object.assign(new Error(`No packages found matching ${args.at(-1)}`), { code: 1 });
+		}
 		if (command === 'dpkg-query' && args[0] === '-L' && manifests.has(args[1])) return { stdout: `${manifests.get(args[1]).join('\n')}\n` };
 		throw new Error(`Unexpected process: ${command} ${args.join(' ')}`);
 	}
@@ -136,6 +140,46 @@ test('preflight is read-only and requires the expected native target and matchin
 	f.records.set('libstdc++-12-dev:amd64', 'libstdc++-12-dev:amd64\t12.3.0-1\tgcc-12\t12.3.0-1\tamd64\tinstalled\n');
 	await assert.rejects(planNativeSysroot(f), /different source versions/);
 });
+
+for (const architecture of ['amd64', 'all']) {
+	test(`imports ${architecture} Linux headers using the package's returned binary identity`, async (t) => {
+		const f = await fixture(t, { linuxArchitecture: architecture });
+		await importNativeSysroot(f);
+		const receipt = JSON.parse(await fs.readFile(f.provenance, 'utf8'));
+		const linux = receipt.source.packages.find((record) => record.sourcePackage === 'linux');
+		assert.equal(linux.architecture, architecture);
+		assert.equal(linux.name, architecture === 'all' ? 'linux-libc-dev' : 'linux-libc-dev:amd64');
+		assert.equal(await fs.readFile(path.join(f.output, 'usr/include/linux/types.h'), 'utf8'), '/* Linux types */\n');
+		const queries = f.calls.filter(([command, args]) => command === 'dpkg-query' && args[0] === '-W' && args.at(-1).startsWith('linux-libc-dev'));
+		assert.deepEqual(queries.map(([, args]) => args.at(-1)), architecture === 'all'
+			? ['linux-libc-dev:amd64', 'linux-libc-dev:all'] : ['linux-libc-dev:amd64']);
+		assert(f.calls.some(([command, args]) => command === 'dpkg-query' && args[0] === '-L' && args[1] === linux.name));
+		validateGnuSysroot(await readNativeTree(f.output), receipt);
+	});
+}
+
+test('rejects foreign Linux headers and does not retry failed dpkg operations as missing packages', async (t) => {
+	const f = await fixture(t);
+	f.records.set('linux-libc-dev:amd64', 'linux-libc-dev:arm64\t6.1-1\tlinux\t6.1-1\tarm64\tinstalled\n');
+	await assert.rejects(planNativeSysroot(f), /wrong architecture/);
+	const error = Object.assign(new Error('dpkg database is unreadable'), { code: 2 });
+	await assert.rejects(planNativeSysroot({ ...f, run: async (command, args) => {
+		if (command === 'dpkg-query' && args[0] === '-W' && args.at(-1) === 'linux-libc-dev:amd64') throw error;
+		return f.run(command, args);
+	} }), (failure) => failure === error);
+	assert(!f.calls.some(([, args]) => args.at(-1) === 'linux-libc-dev:all'));
+});
+
+for (const name of ['libc6-dev', 'libgcc-12-dev', 'libstdc++-12-dev']) {
+	test(`retains the amd64 requirement for ${name}`, async (t) => {
+		const f = await fixture(t, { linuxArchitecture: 'all' });
+		const record = f.records.get(`${name}:amd64`).trim().split('\t');
+		record[0] = name; record[4] = 'all';
+		f.records.set(`${name}:amd64`, `${record.join('\t')}\n`);
+		await assert.rejects(importNativeSysroot(f), /Native development package must be amd64/);
+		await assert.rejects(fs.stat(f.output), { code: 'ENOENT' });
+	});
+}
 
 test('refuses nonempty output and existing receipts without modifying them', async (t) => {
 	const f = await fixture(t);

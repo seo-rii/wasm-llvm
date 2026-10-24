@@ -124,10 +124,20 @@ export async function planNativeSysroot({ root = '/', compiler = 'g++', run = ex
 	const packages = [];
 	const owned = new Set();
 	for (const name of ['libc6-dev:amd64', 'linux-libc-dev:amd64', `libgcc-${major}-dev:amd64`, `libstdc++-${major}-dev:amd64`]) {
-		const record = packageRecord(await query(run, 'dpkg-query', ['-W', `-f=${PACKAGE_FORMAT}`, name]), name);
-		assert.equal(record.architecture, 'amd64', `Native development package must be amd64: ${name}`);
+		let metadata;
+		try { metadata = await query(run, 'dpkg-query', ['-W', `-f=${PACKAGE_FORMAT}`, name]); }
+		catch (error) {
+			// Debian 13 ships all architecture-specific Linux headers in one all
+			// package. Keep the amd64 query first to disambiguate older multiarch hosts.
+			if (name !== 'linux-libc-dev:amd64' || error.code !== 1) throw error;
+			metadata = await query(run, 'dpkg-query', ['-W', `-f=${PACKAGE_FORMAT}`, 'linux-libc-dev:all']);
+		}
+		const record = packageRecord(metadata, name);
+		if (name !== 'linux-libc-dev:amd64') {
+			assert.equal(record.architecture, 'amd64', `Native development package must be amd64: ${name}`);
+		}
 		packages.push(record);
-		for (const filename of (await query(run, 'dpkg-query', ['-L', name])).trim().split('\n')) {
+		for (const filename of (await query(run, 'dpkg-query', ['-L', record.name])).trim().split('\n')) {
 			if (filename === '/.') continue;
 			owned.add(absolutePackagePath(filename));
 		}
