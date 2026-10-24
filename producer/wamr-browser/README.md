@@ -10,6 +10,12 @@ replaces only the socket boundary with two generation-scoped
 `SharedArrayBuffer` byte rings supplied by `@wasm-idle/llvm-core`. Program
 stdout/stderr remain separate from the RSP byte stream.
 
+The module-name announcement uses WAMR's verbose logger instead of an
+unconditional `printf`. It is silent at `-v=0`, as used by wasm-idle, and remains
+available at verbose log levels. Guest stdout/stderr are unchanged, including
+output emitted during module initialization; consumers do not need to filter
+program text to hide this debugger diagnostic.
+
 The stdin JS library preserves short reads across multiple WASI iovecs. The
 consumer installs a blocking whole-read stdin device; one `readv` gathers at
 most 64 KiB with one device read, then scatters the available bytes into the
