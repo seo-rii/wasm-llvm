@@ -33,6 +33,14 @@ files. It does not claim to have fetched the original Debian source archives.
 Compiler source archives remain reproducible from the lock; compiler and host
 dependency license notices are retained in `licenses/`.
 
+The GCC target is configured with `--enable-threads=posix`, matching the imported
+Linux GNU runtime. This controls target features such as `__STDCPP_THREADS__`;
+the Wasm compiler host still runs in its dedicated Worker without Emscripten
+pthreads. The build checks the generated `configargs.h` before GCC compilation
+and rejects a resumed directory configured with the old `single` target model.
+Use a fresh isolated build directory when that check fails. See GCC's
+[target thread configuration](https://gcc.gnu.org/install/configure.html).
+
 `/sysroot` is the compiler's browser runtime path, not a build-machine directory.
 The recipe disables fixincludes and uses GCC's original `stmp-int-hdrs` rule to
 generate its internal headers. `LIMITS_H_TEST=true` selects the upstream glibc

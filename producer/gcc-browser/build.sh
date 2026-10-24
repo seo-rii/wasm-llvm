@@ -100,11 +100,13 @@ cd "$build"
 # GCC_VERSION selects a non-evaluating assertion macro with --disable-checking,
 # aliasing unrelated call summaries and crashing IPA-SRA. Keep the normal GCC
 # release checks so compiler-host assertions preserve their required effects.
+# --enable-threads configures the Linux target, not the Wasm compiler host.
+# Its POSIX model must agree with the separately imported GNU target runtime.
 if [[ ! -f Makefile ]]; then
   emconfigure "$gcc_source/configure" --build="$build_triple" --host="$host" --target="$target" \
     --prefix=/opt/gcc-wasm --with-sysroot=/sysroot --enable-languages=c,c++ \
     --with-gmp="$wasmdeps" --with-mpfr="$wasmdeps" --with-mpc="$wasmdeps" \
-    --disable-bootstrap --disable-shared --disable-threads --disable-nls \
+    --disable-bootstrap --disable-shared --enable-threads=posix --disable-nls \
     --disable-multilib --disable-libssp --disable-libada --disable-libquadmath \
     --disable-libgomp --disable-libvtv --disable-libstdcxx --disable-libsanitizer \
     --disable-libatomic --disable-libcc1 --disable-libitm --disable-lto --disable-plugin \
@@ -112,10 +114,18 @@ if [[ ! -f Makefile ]]; then
     CC_FOR_BUILD=gcc-13 CXX_FOR_BUILD=g++-13 CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
     GCC_FOR_TARGET=gcc-13 CXX_FOR_TARGET=g++-13 MAKEINFO=true
 fi
-# Validate the generated host configuration before compiling any GCC objects,
+# Validate the generated host/target configuration before compiling GCC objects,
 # including when a caller resumes an existing build directory.
 emmake make -j"$jobs" configure-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
   GCC_FOR_TARGET=gcc-13 CXX_FOR_TARGET=g++-13 MAKEINFO=true
+python3 - <<'PY'
+from pathlib import Path
+
+# GCC 13.3 writes this target model into configargs.h for the C++ front end.
+# Checking generated output also rejects a Makefile resumed from the old recipe.
+if 'static const char thread_model[] = "posix";' not in Path('gcc/configargs.h').read_text().splitlines():
+    raise SystemExit('GCC Linux target requires POSIX threads; use a fresh isolated build directory')
+PY
 em++ -x c++ -fsyntax-only -I gcc - <<'EOF'
 #include "auto-host.h"
 #if !defined(ENABLE_ASSERT_CHECKING) || !ENABLE_ASSERT_CHECKING
