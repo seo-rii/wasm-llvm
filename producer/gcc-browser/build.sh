@@ -35,7 +35,17 @@ mkdir -p "$work/build" "$wasmdeps" "$output"
 export CC_FOR_BUILD=gcc-13 CXX_FOR_BUILD=g++-13 HOST_CC=gcc-13 HOST_CXX=g++-13 BUILD_CC=gcc-13
 export CFLAGS_FOR_BUILD='-O2' CXXFLAGS_FOR_BUILD='-O2'
 export CONFIG_SITE="$work/emscripten.config.site"
-printf 'am_cv_ar_has_plugin=no\nam_cv_ranlib_has_plugin=no\n' > "$CONFIG_SITE"
+cat > "$CONFIG_SITE" <<'EOF'
+am_cv_ar_has_plugin=no
+am_cv_ranlib_has_plugin=no
+# Emscripten 4.0.23 exports _Unwind_Backtrace, but its _Unwind_GetIPInfo
+# aborts. Select libbacktrace's upstream nounwind fallback so reporting a GCC
+# internal compiler error preserves the original diagnostic and exit status.
+# Native generators and the separate x86-64 exception runtime are unaffected.
+case "${host_alias:-}" in
+  wasm32-*-emscripten) ac_cv_func__Unwind_Backtrace=no ;;
+esac
+EOF
 hostflags='-Os -g0 -DHAVE_PSIGNAL=1 -DELIDE_CODE'
 # FS and callMain implement the explicit Worker pipeline. No gcc/g++ driver is
 # shipped: fork/exec/collect2 are not a browser process API. No source rewriting.
