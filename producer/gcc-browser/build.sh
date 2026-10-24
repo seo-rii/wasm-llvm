@@ -96,6 +96,10 @@ done
 build="$work/build/gcc"
 mkdir -p "$build"
 cd "$build"
+# GCC 13.3 increments cgraph edge IDs inside gcc_assert. Clang's compatibility
+# GCC_VERSION selects a non-evaluating assertion macro with --disable-checking,
+# aliasing unrelated call summaries and crashing IPA-SRA. Keep the normal GCC
+# release checks so compiler-host assertions preserve their required effects.
 if [[ ! -f Makefile ]]; then
   emconfigure "$gcc_source/configure" --build="$build_triple" --host="$host" --target="$target" \
     --prefix=/opt/gcc-wasm --with-sysroot=/sysroot --enable-languages=c,c++ \
@@ -104,10 +108,20 @@ if [[ ! -f Makefile ]]; then
     --disable-multilib --disable-libssp --disable-libada --disable-libquadmath \
     --disable-libgomp --disable-libvtv --disable-libstdcxx --disable-libsanitizer \
     --disable-libatomic --disable-libcc1 --disable-libitm --disable-lto --disable-plugin \
-    --disable-werror --disable-checking --disable-fixincludes --without-headers --with-arch=x86-64 --with-tune=generic \
+    --disable-werror --enable-checking=release --disable-fixincludes --without-headers --with-arch=x86-64 --with-tune=generic \
     CC_FOR_BUILD=gcc-13 CXX_FOR_BUILD=g++-13 CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
     GCC_FOR_TARGET=gcc-13 CXX_FOR_TARGET=g++-13 MAKEINFO=true
 fi
+# Validate the generated host configuration before compiling any GCC objects,
+# including when a caller resumes an existing build directory.
+emmake make -j"$jobs" configure-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
+  GCC_FOR_TARGET=gcc-13 CXX_FOR_TARGET=g++-13 MAKEINFO=true
+em++ -x c++ -fsyntax-only -I gcc - <<'EOF'
+#include "auto-host.h"
+#if !defined(ENABLE_ASSERT_CHECKING) || !ENABLE_ASSERT_CHECKING
+#error GCC Wasm requires assertion checking; use a fresh isolated build directory
+#endif
+EOF
 # Configure support libraries and native gen* dependencies using the normal GCC
 # graph. all-gcc includes unused gcov tools needing ftw(), absent in Emscripten.
 # Record this bootstrap pass's status, then strictly require each shipped target.
