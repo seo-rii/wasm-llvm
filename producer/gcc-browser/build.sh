@@ -39,7 +39,7 @@ printf 'am_cv_ar_has_plugin=no\nam_cv_ranlib_has_plugin=no\n' > "$CONFIG_SITE"
 hostflags='-Os -g0 -DHAVE_PSIGNAL=1 -DELIDE_CODE'
 # FS and callMain implement the explicit Worker pipeline. No gcc/g++ driver is
 # shipped: fork/exec/collect2 are not a browser process API. No source rewriting.
-moduleflags='-Os -g0 -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createModule -sENVIRONMENT=worker,node -sINVOKE_RUN=0 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,callMain -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=2GB -sSTACK_SIZE=16MB -sUSE_ZLIB=1'
+moduleflags='-Os -g0 -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createModule -sENVIRONMENT=worker,node -sINVOKE_RUN=0 -sEXIT_RUNTIME=1 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,callMain,HEAPU8 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=2GB -sSTACK_SIZE=16MB -sUSE_ZLIB=1'
 
 for component in gmp-6.3.0 mpfr-4.2.1 mpc-1.3.1; do
   build="$work/build/$component"
