@@ -37,6 +37,9 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   const profileBytes = await fs.readFile(path.join(here, 'profile.json'));
   const profile = JSON.parse(profileBytes);
   const lockBytes = await fs.readFile(path.join(here, 'sources.lock.json'));
+  const producer = JSON.parse(await fs.readFile(path.join(here, 'manifest.json')));
+  assert.equal(producer.producerId, 'wasm-llvm/gcc-browser', 'Wrong producer identity');
+  assert.equal(producer.sources.lock.sha256, digest(lockBytes), 'Producer source lock pin changed');
   const receiptBytes = await fs.readFile(path.join(compiler, 'compiler-build.json'));
   const receipt = JSON.parse(receiptBytes);
   assert.equal(receipt.schemaVersion, 1, 'Unsupported compiler receipt');
