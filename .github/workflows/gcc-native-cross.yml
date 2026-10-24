@@ -1,10 +1,27 @@
 name: GCC Wasm x86-64 cross compiler
 
 on:
-  push:
-    branches: ['feat/gcc-wasm-x86-64-*']
+  # Do not restrict the PR base: GCC also needs qualification while stacked
+  # on the shared GNU sysroot branch, and on ordinary contributor branches.
+  pull_request:
     paths:
       - 'producer/gcc-browser/**'
+      - 'producer/clang-browser/cross/import-sysroot.mjs'
+      - 'producer/clang-browser/cross/package.mjs'
+      - 'producer/clang-browser/scripts/build-provenance.mjs'
+      - 'producer/clang-browser/scripts/package-language-sysroots.mjs'
+      - 'scripts/lib/tar.mjs'
+      - '.github/workflows/gcc-native-cross.yml'
+  # PR updates already run above; only main needs a separate push build.
+  push:
+    branches: [main]
+    paths:
+      - 'producer/gcc-browser/**'
+      - 'producer/clang-browser/cross/import-sysroot.mjs'
+      - 'producer/clang-browser/cross/package.mjs'
+      - 'producer/clang-browser/scripts/build-provenance.mjs'
+      - 'producer/clang-browser/scripts/package-language-sysroots.mjs'
+      - 'scripts/lib/tar.mjs'
       - '.github/workflows/gcc-native-cross.yml'
   workflow_dispatch:
 
