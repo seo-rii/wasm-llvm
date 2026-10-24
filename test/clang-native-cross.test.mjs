@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { closeSync, openSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { assertX86Elf, digest, identity, packageCross, readNativeTree, validateGnuSysroot } from '../producer/clang-browser/cross/package.mjs';
-import { assertStaticExecutable, qualifyCross } from '../producer/clang-browser/cross/qualify.mjs';
+import { assertStaticExecutable, createCrossToolRunner, qualifyCross } from '../producer/clang-browser/cross/qualify.mjs';
 import { directoryIdentity } from '../producer/clang-browser/scripts/build-provenance.mjs';
 import { readTarEntries } from '../scripts/lib/tar.mjs';
 
@@ -66,6 +67,116 @@ function abiModule() {
 		...section(7, [2, ...name('memory'), 2, 0, ...name('_start'), 0, 2]),
 		...section(10, [1, 2, 0, 0x0b])]);
 }
+
+// A parent dispatches the supplied ABI packet; the child returns its WASI argc.
+// This tests transport/adaptation only, never compiler or X86 qualification.
+function dispatchFixture(program, argv) {
+	const leb = (value, signed = false) => {
+		const result = [];
+		do {
+			const byte = value & 0x7f; value >>= 7;
+			const more = signed ? value !== (byte & 0x40 ? -1 : 0) : value !== 0;
+			result.push(byte | (more ? 0x80 : 0));
+			if (!more) return result;
+		} while (true);
+	};
+	const name = (value) => [...leb(Buffer.byteLength(value)), ...Buffer.from(value)];
+	const section = (id, bytes) => [id, ...leb(bytes.length), ...bytes];
+	const constant = (value) => [0x41, ...leb(value, true)];
+	const data = Buffer.alloc(1024);
+	let cursor = 256;
+	const text = (value) => { const bytes = Buffer.from(value); const offset = cursor; bytes.copy(data, cursor); cursor += bytes.length; return [offset, bytes.length]; };
+	const [programPointer, programLength] = text(program);
+	argv.forEach((value, index) => { const [pointer, length] = text(value); data.writeUInt32LE(pointer, 64 + index * 8); data.writeUInt32LE(length, 68 + index * 8); });
+	const code = [0, ...constant(0), ...constant(4), 0x10, 1, 0x1a,
+		...constant(0), 0x28, 2, 0, ...constant(1), 0x46, 0x04, 0x40,
+		...constant(programPointer), ...constant(programLength), ...constant(64), ...constant(argv.length),
+		...constant(0), ...constant(0), ...constant(1), 0x10, 0, 0x10, 2,
+		0x05, ...constant(0), 0x28, 2, 0, 0x10, 2, 0x0b, 0x0b];
+	return new WebAssembly.Module(Buffer.from([0, 97, 115, 109, 1, 0, 0, 0,
+		...section(1, [4, 0x60, 7, ...Array(7).fill(0x7f), 1, 0x7f, 0x60, 2, 0x7f, 0x7f, 1, 0x7f, 0x60, 1, 0x7f, 0, 0x60, 0, 0]),
+		...section(2, [3, ...name('wasm_idle_tool_host'), ...name('exec_v1'), 0, 0,
+			...name('wasi_snapshot_preview1'), ...name('args_sizes_get'), 0, 1,
+			...name('wasi_snapshot_preview1'), ...name('proc_exit'), 0, 2]),
+		...section(3, [1, 3]), ...section(5, [1, 0, 1]),
+		...section(7, [2, ...name('memory'), 2, 0, ...name('_start'), 0, 3]),
+		...section(10, [1, ...leb(code.length), ...code]),
+		...section(11, [1, 0, ...constant(0), 0x0b, ...leb(cursor), ...data.subarray(0, cursor)])]));
+}
+
+test('Node cross host adapts only resolved multicall cc1 jobs and preserves the original packet', async (t) => {
+	const root = await temporary(t);
+	const descriptor = openSync('/dev/null', 'r+'); t.after(() => closeSync(descriptor));
+	for (const [program, childArgv, expectedArgv] of [
+		['/bin/clang', ['/bin/clang', 'clang', '-cc1', 'space arg'], ['/bin/clang', '-cc1', 'space arg']],
+		['/bin/clang', ['/bin/clang', 'clang', '-cc1as', ''], ['/bin/clang', '-cc1as', '']],
+		['', ['', 'clang', '-cc1', 'space arg'], ['', 'clang', '-cc1', 'space arg']],
+		['/bin/ld.lld', ['/bin/ld.lld', 'clang', '-cc1', 'space arg'], ['/bin/ld.lld', 'clang', '-cc1', 'space arg']]
+	]) {
+		const module = dispatchFixture(program, childArgv), dispatches = [];
+		const invoke = createCrossToolRunner({ root, modules: { clang: module, lld: module }, compilerPath: '/bin/clang', linkerPath: '/bin/ld.lld', dispatches });
+		assert.equal(invoke('clang', ['/bin/clang'], {}, [descriptor, descriptor, descriptor]), expectedArgv.length);
+		assert.deepEqual(dispatches[0].argv, childArgv);
+		assert.deepEqual(dispatches[0].wasiArgv, expectedArgv);
+		assert.equal(dispatches[0].kind, program === '/bin/ld.lld' ? 'lld' : 'clang');
+	}
+	for (const [program, childArgv] of [
+		['/other/clang', ['/other/clang', 'clang', '-cc1']],
+		['/bin/clang', ['/bin/clang', 'clang', '--help']],
+		['/bin/clang', ['/bin/clang', 'clang', '-cc1extra']]
+	]) {
+		const module = dispatchFixture(program, childArgv);
+		const invoke = createCrossToolRunner({ root, modules: { clang: module, lld: module }, compilerPath: '/bin/clang', linkerPath: '/bin/ld.lld', dispatches: [] });
+		assert.throws(() => invoke('clang', ['/bin/clang'], {}, [descriptor, descriptor, descriptor]), /Unexpected child executable/);
+	}
+});
+
+test('real pinned Clang dispatches resolved cc1 jobs and links through the Node cross host', {
+	skip: process.env.WASM_LLVM_CLANG_HOST_FIXTURE_DIR ? false : 'set WASM_LLVM_CLANG_HOST_FIXTURE_DIR to the pinned Wasm-only Clang 22 fixture'
+}, async (t) => {
+	// This checks the actual LLVM multicall entry point and host ABI, not X86 codegen.
+	const fixture = process.env.WASM_LLVM_CLANG_HOST_FIXTURE_DIR;
+	const bytes = { clang: await fs.readFile(path.join(fixture, 'clang.wasm')), lld: await fs.readFile(path.join(fixture, 'lld.wasm')) };
+	assert.equal(digest(bytes.clang), 'e0b548b70e13ad9620c1f47a1ef3f552b74cea586866ef1d8dcc0558c87f50e3');
+	assert.equal(digest(bytes.lld), '3da2fc3d37702d3d56bce834672912334e36d245efaf97fbdda7e4b5e810134a');
+	const root = await temporary(t);
+	for (const directory of ['bin', 'tmp', 'work']) await fs.mkdir(path.join(root, directory));
+	for (const [name, file] of [['clang', 'clang'], ['lld', 'wasm-ld']]) await fs.writeFile(path.join(root, 'bin', file), bytes[name], { mode: 0o700 });
+	await fs.writeFile(path.join(root, 'work/main.c'), 'int answer(void) { return 42; }\n');
+	const dispatches = [], results = [];
+	const invoke = createCrossToolRunner({ root, modules: { clang: new WebAssembly.Module(bytes.clang), lld: new WebAssembly.Module(bytes.lld) }, compilerPath: '/bin/clang', linkerPath: '/bin/wasm-ld', dispatches });
+	async function run(label, args) {
+		const stdout = path.join(root, label + '.stdout'), stderr = path.join(root, label + '.stderr');
+		const descriptors = [openSync('/dev/null', 'r'), openSync(stdout, 'wx', 0o600), openSync(stderr, 'wx', 0o600)];
+		let code;
+		try { code = invoke('clang', ['/bin/clang', ...args], { LANG: 'C' }, descriptors); }
+		finally { descriptors.forEach(closeSync); }
+		const result = { label, code, stdout: await fs.readFile(stdout, 'utf8'), stderr: await fs.readFile(stderr, 'utf8') };
+		results.push(result); return result;
+	}
+	// Demonstrate that the fixture really exercises the CI failure, rather than
+	// silently accepting the duplicated subcommand like an ABI-only stub might.
+	const unadapted = await run('unadapted', ['clang', '-cc1', '-version']);
+	assert.notEqual(unadapted.code, 0);
+	assert.match(unadapted.stderr, /unknown argument.*-cc1/);
+	const compiled = await run('object', ['--target=wasm32-wasip1', '-fno-integrated-cc1', '-ffreestanding', '-nostdinc', '-O2', '-c', 'main.c', '-o', 'main.o']);
+	assert.equal(compiled.code, 0, compiled.stderr);
+	const object = await fs.readFile(path.join(root, 'work/main.o'));
+	assert.deepEqual([...object.subarray(0, 4)], [0, 97, 115, 109]);
+	const linked = await run('link', ['--target=wasm32-wasip1', '-fno-integrated-cc1', '-ffreestanding', '-nostdlib', '-O2', '-fuse-ld=lld', '--ld-path=/bin/wasm-ld', '-Wl,--no-entry', '-Wl,--export=answer', 'main.c', '-o', 'main.wasm']);
+	assert.equal(linked.code, 0, linked.stderr);
+	const executable = await fs.readFile(path.join(root, 'work/main.wasm'));
+	assert.equal(new WebAssembly.Instance(new WebAssembly.Module(executable)).exports.answer(), 42);
+	const compilerChildren = dispatches.filter((entry) => entry.kind === 'clang');
+	assert.equal(compilerChildren.length, 2);
+	for (const child of compilerChildren) {
+		assert.equal(child.program, '/bin/clang'); assert.equal(child.code, 0);
+		assert.deepEqual(child.argv.slice(0, 3), ['/bin/clang', 'clang', '-cc1']);
+		assert.deepEqual(child.wasiArgv, [child.argv[0], ...child.argv.slice(2)]);
+	}
+	assert(dispatches.some((entry) => entry.kind === 'lld' && entry.program === '/bin/wasm-ld' && entry.code === 0));
+	t.diagnostic(JSON.stringify({ scope: 'real Wasm-only Clang 22 host; not X86 qualification', compilerSha256: digest(bytes.clang), linkerSha256: digest(bytes.lld), object: identity(object), executable: identity(executable), cases: results.map(({ label, code }) => ({ label, code })), dispatches: dispatches.map(({ kind, program, argv, wasiArgv, code }) => ({ kind, program, argvPrefix: argv.slice(0, 4), wasiArgvPrefix: wasiArgv.slice(0, 4), code })) }));
+});
 
 test('opt-in native profile preserves the WASI host and fails before build for unsafe overrides', () => {
 	const script = path.join(producer, 'scripts/build-toolchain.mjs');

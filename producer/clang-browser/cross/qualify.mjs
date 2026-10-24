@@ -20,6 +20,81 @@ export function assertStaticExecutable(bytes) {
 	assert.notEqual(bytes.readBigUInt64LE(24), 0n, 'Executable has no entry point');
 }
 
+// Kept separate so the real WASI dispatch path can be tested without claiming
+// that a host-only fixture provides the X86 backend required by qualifyCross.
+export function createCrossToolRunner({ modules, root, compilerPath, linkerPath, dispatches }) {
+	const decoder = new TextDecoder('utf-8', { fatal: true });
+	function invoke(kind, argv, env, descriptors, depth = 0) {
+		assert(depth <= 1, 'Nested tool dispatch is not allowed');
+		const wasi = new WASI({ version: 'preview1', args: argv, env, preopens: { '/': root }, returnOnExit: true,
+			stdin: descriptors[0], stdout: descriptors[1], stderr: descriptors[2] });
+		let instance;
+		const string = (pointer, length) => {
+			pointer >>>= 0; length >>>= 0;
+			const memory = new Uint8Array(instance.exports.memory.buffer);
+			assert(length <= 1048576 && pointer <= memory.length && length <= memory.length - pointer, 'Invalid guest string');
+			const value = decoder.decode(memory.subarray(pointer, pointer + length));
+			assert(!value.includes('\0'), 'NUL in guest string');
+			return value;
+		};
+		const table = (pointer, count) => {
+			pointer >>>= 0; count >>>= 0;
+			const memory = instance.exports.memory.buffer;
+			assert(count <= 4096 && pointer <= memory.byteLength && count * 8 <= memory.byteLength - pointer, 'Invalid guest table');
+			const view = new DataView(memory);
+			const values = [];
+			let total = 0;
+			for (let index = 0; index < count; index += 1) {
+				const offset = pointer + index * 8;
+				const length = view.getUint32(offset + 4, true);
+				total += length;
+				assert(total <= 1048576, 'Guest table exceeds byte budget');
+				values.push(string(view.getUint32(offset, true), length));
+			}
+			return values;
+		};
+		const imports = {
+			...wasi.getImportObject(),
+			wasm_idle_process_v1: { initial_cwd(pointer, capacity) {
+				pointer >>>= 0; capacity >>>= 0;
+				const memory = new Uint8Array(instance.exports.memory.buffer);
+				const encoded = new TextEncoder().encode('/work\0');
+				assert(pointer <= memory.length && capacity <= memory.length - pointer, 'Invalid cwd buffer');
+				if (capacity < encoded.length) return -1;
+				memory.set(encoded, pointer);
+				return encoded.length;
+			} },
+			wasm_idle_tool_host: { exec_v1(programPointer, programLength, argvPointer, argc, envPointer, envc, flags) {
+				if (kind !== 'clang' || depth !== 0) return -1;
+				assert(flags === 0 || flags === 1, 'Unsupported tool-host flags');
+				if (flags === 1) assert.equal(envc, 0, 'Inherited environment must not carry a table');
+				const program = string(programPointer, programLength);
+				const childArgv = table(argvPointer, argc);
+				const self = ['', compilerPath].includes(program) && childArgv[0] === program &&
+					childArgv[1] === 'clang' && ['-cc1', '-cc1as'].includes(childArgv[2]);
+				assert(self || program === linkerPath, `Unexpected child executable: ${program}`);
+				const childEnv = flags === 1 ? env : Object.create(null);
+				if (flags === 0) for (const item of table(envPointer, envc)) {
+					const at = item.indexOf('='); assert(at > 0, 'Invalid environment entry');
+					childEnv[item.slice(0, at)] = item.slice(at + 1);
+				}
+				const childKind = self ? 'clang' : 'lld';
+				// LLVM's multicall driver prepends its 'clang' subcommand after
+				// canonicalizing the executable path. Our mounted regular file is
+				// itself named clang, so argv[0] already selects that entry point.
+				// Adapt only this verified self-job; preserve the original ABI packet.
+				const wasiArgv = self && program === compilerPath ? [childArgv[0], ...childArgv.slice(2)] : childArgv;
+				const code = invoke(childKind, wasiArgv, childEnv, descriptors, depth + 1);
+				dispatches.push({ kind: childKind, program, argv: childArgv, wasiArgv, code });
+				return code;
+			} }
+		};
+		instance = new WebAssembly.Instance(modules[kind], imports);
+		return wasi.start(instance);
+	}
+	return invoke;
+}
+
 export async function qualifyCross(bundleArgument, outputArgument) {
 	const bundle = realpathSync(bundleArgument);
 	const output = path.resolve(outputArgument);
@@ -72,70 +147,7 @@ export async function qualifyCross(bundleArgument, outputArgument) {
 	for (const [name, source] of Object.entries(sources)) writeFileSync(path.join(root, 'work', name), source);
 	const commands = [];
 	const dispatches = [];
-	const decoder = new TextDecoder('utf-8', { fatal: true });
-	function invoke(kind, argv, env, descriptors, depth = 0) {
-		assert(depth <= 1, 'Nested tool dispatch is not allowed');
-		const wasi = new WASI({ version: 'preview1', args: argv, env, preopens: { '/': root }, returnOnExit: true,
-			stdin: descriptors[0], stdout: descriptors[1], stderr: descriptors[2] });
-		let instance;
-		const string = (pointer, length) => {
-			pointer >>>= 0; length >>>= 0;
-			const memory = new Uint8Array(instance.exports.memory.buffer);
-			assert(length <= 1048576 && pointer <= memory.length && length <= memory.length - pointer, 'Invalid guest string');
-			const value = decoder.decode(memory.subarray(pointer, pointer + length));
-			assert(!value.includes('\0'), 'NUL in guest string');
-			return value;
-		};
-		const table = (pointer, count) => {
-			pointer >>>= 0; count >>>= 0;
-			const memory = instance.exports.memory.buffer;
-			assert(count <= 4096 && pointer <= memory.byteLength && count * 8 <= memory.byteLength - pointer, 'Invalid guest table');
-			const view = new DataView(memory);
-			const values = [];
-			let total = 0;
-			for (let index = 0; index < count; index += 1) {
-				const offset = pointer + index * 8;
-				const length = view.getUint32(offset + 4, true);
-				total += length;
-				assert(total <= 1048576, 'Guest table exceeds byte budget');
-				values.push(string(view.getUint32(offset, true), length));
-			}
-			return values;
-		};
-		const imports = {
-			...wasi.getImportObject(),
-			wasm_idle_process_v1: { initial_cwd(pointer, capacity) {
-				pointer >>>= 0; capacity >>>= 0;
-				const memory = new Uint8Array(instance.exports.memory.buffer);
-				const encoded = new TextEncoder().encode('/work\0');
-				assert(pointer <= memory.length && capacity <= memory.length - pointer, 'Invalid cwd buffer');
-				if (capacity < encoded.length) return -1;
-				memory.set(encoded, pointer);
-				return encoded.length;
-			} },
-			wasm_idle_tool_host: { exec_v1(programPointer, programLength, argvPointer, argc, envPointer, envc, flags) {
-				if (kind !== 'clang' || depth !== 0) return -1;
-				assert(flags === 0 || flags === 1, 'Unsupported tool-host flags');
-				if (flags === 1) assert.equal(envc, 0, 'Inherited environment must not carry a table');
-				const program = string(programPointer, programLength);
-				const childArgv = table(argvPointer, argc);
-				const self = ['', manifest.compilerPath].includes(program) && childArgv[0] === program &&
-					childArgv[1] === 'clang' && ['-cc1', '-cc1as'].includes(childArgv[2]);
-				assert(self || program === manifest.linkerPath, `Unexpected child executable: ${program}`);
-				const childEnv = flags === 1 ? env : Object.create(null);
-				if (flags === 0) for (const item of table(envPointer, envc)) {
-					const at = item.indexOf('='); assert(at > 0, 'Invalid environment entry');
-					childEnv[item.slice(0, at)] = item.slice(at + 1);
-				}
-				const childKind = self ? 'clang' : 'lld';
-				const code = invoke(childKind, childArgv, childEnv, descriptors, depth + 1);
-				dispatches.push({ kind: childKind, program, argv: childArgv, code });
-				return code;
-			} }
-		};
-		instance = new WebAssembly.Instance(modules[kind], imports);
-		return wasi.start(instance);
-	}
+	const invoke = createCrossToolRunner({ modules, root, compilerPath: manifest.compilerPath, linkerPath: manifest.linkerPath, dispatches });
 	function command(label, args, success = true) {
 		const stdout = path.join(output, `${label}.stdout`);
 		const stderr = path.join(output, `${label}.stderr`);
