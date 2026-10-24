@@ -10,6 +10,32 @@ import { readTarEntries } from '../../../scripts/lib/tar.mjs';
 
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+// Keep the first diagnostic, which usually explains the failure before GCC's
+// backtrace itself encounters a host limitation. Bound each stream even if a
+// failing module produces an unbounded sequence of diagnostics.
+function diagnosticStream() {
+	const limit = 128 * 1024;
+	const chunks = [];
+	let bytes = 0;
+	let truncated = false;
+	return {
+		write(line) {
+			const remaining = limit - bytes;
+			if (remaining === 0) { truncated = true; return; }
+			const chunk = Buffer.from(`${String(line)}\n`);
+			if (chunk.length > remaining) truncated = true;
+			// Copy a truncated prefix so it cannot retain the oversized backing buffer.
+			const retained = chunk.length > remaining ? Buffer.from(chunk.subarray(0, remaining)) : chunk;
+			chunks.push(retained);
+			bytes += retained.length;
+		},
+		text() {
+			return Buffer.concat(chunks, bytes).toString('utf8').replace(/\n$/, '') +
+				(truncated ? '\n[GCC qualification diagnostics truncated after 131072 bytes per stream]' : '');
+		}
+	};
+}
+
 export async function loadBundle(directory, expectedManifestSha256) {
 	const root = await fs.realpath(directory);
 	const manifestBytes = await fs.readFile(path.join(root, 'gcc-toolchain.v1.json'));
@@ -67,60 +93,74 @@ export async function compileReal(bundle, request) {
 		assert(wasm.subarray(0, 4).equals(Buffer.from([0, 0x61, 0x73, 0x6d])), `${tool} is not a WebAssembly binary`);
 		const factory = (await import(pathToFileURL(await bundle.assetPath(`${tool}Js`)).href)).default;
 		assert.equal(typeof factory, 'function', `${tool} loader does not export a module factory`);
-		const stageOut = [];
-		const stageErr = [];
+		const stageOut = diagnosticStream();
+		const stageErr = diagnosticStream();
 		const start = performance.now();
 		let exitCode = 0;
-		let module = await factory({ noInitialRun: true, noExitRuntime: false, wasmBinary: wasm,
-			print: (line) => stageOut.push(String(line)), printErr: (line) => stageErr.push(String(line)),
-			onExit: (status) => { exitCode = status; } });
-		assert(module.FS && typeof module.callMain === 'function', `${tool} lacks the Emscripten runtime contract`);
-		module.FS.mkdirTree('/work');
-		module.FS.mkdirTree('/tmp');
-		module.FS.mkdirTree('/sysroot');
-		for (const [name, entry] of entries) {
-			if (!name) continue;
-			const destination = `/sysroot/${name}`;
-			if (entry.directory) module.FS.mkdirTree(destination);
-			else {
-				module.FS.mkdirTree(path.posix.dirname(destination));
-				module.FS.writeFile(destination, sysroot.subarray(entry.offset, entry.offset + entry.size));
-			}
-		}
-		for (const [name, bytes] of artifacts) module.FS.writeFile(name, bytes);
-		module.FS.chdir('/work');
-		const previousHostExitCode = process.exitCode;
-		let normalExit = false;
+		let module;
 		try {
-			const returned = module.callMain([...argv]);
-			if (Number.isInteger(returned)) exitCode = returned;
-			normalExit = true;
-		} catch (error) {
-			if (error?.name === 'ExitStatus' && Number.isInteger(error.status)) {
-				exitCode = error.status;
-				normalExit = true;
+			module = await factory({ noInitialRun: true, noExitRuntime: false, wasmBinary: wasm,
+				print: stageOut.write, printErr: stageErr.write,
+				onExit: (status) => { exitCode = status; } });
+			assert(module.FS && typeof module.callMain === 'function', `${tool} lacks the Emscripten runtime contract`);
+			module.FS.mkdirTree('/work');
+			module.FS.mkdirTree('/tmp');
+			module.FS.mkdirTree('/sysroot');
+			for (const [name, entry] of entries) {
+				if (!name) continue;
+				const destination = `/sysroot/${name}`;
+				if (entry.directory) module.FS.mkdirTree(destination);
+				else {
+					module.FS.mkdirTree(path.posix.dirname(destination));
+					module.FS.writeFile(destination, sysroot.subarray(entry.offset, entry.offset + entry.size));
+				}
 			}
-			else throw error;
+			for (const [name, bytes] of artifacts) module.FS.writeFile(name, bytes);
+			module.FS.chdir('/work');
+			const previousHostExitCode = process.exitCode;
+			let normalExit = false;
+			try {
+				const returned = module.callMain([...argv]);
+				if (Number.isInteger(returned)) exitCode = returned;
+				normalExit = true;
+			} catch (error) {
+				if (error?.name === 'ExitStatus' && Number.isInteger(error.status)) {
+					exitCode = error.status;
+					normalExit = true;
+				}
+				else throw error;
+			} finally {
+				// Emscripten's Node quit_ sets process.exitCode even when callMain
+				// catches ExitStatus. A compiler diagnostic is a result, not failure
+				// of this qualification host. Unexpected runtime errors still fail.
+				if (normalExit) process.exitCode = previousHostExitCode;
+			}
+			assert(Number.isInteger(exitCode), `${tool} returned an invalid exit code`);
+			const peakMemoryBytes = module.HEAPU8?.buffer.byteLength;
+			assert(Number.isSafeInteger(peakMemoryBytes) && peakMemoryBytes > 0, `${tool} does not expose Wasm linear memory`);
+			const stageStdout = stageOut.text(), stageStderr = stageErr.text();
+			stages.push({ tool, argv, exitCode, milliseconds: performance.now() - start, peakMemoryBytes,
+				loaderSha256: sha256(loader), wasmSha256: sha256(wasm), stdout: stageStdout, stderr: stageStderr });
+			if (stageStdout) stdout.push(stageStdout);
+			if (stageStderr) stderr.push(stageStderr);
+			if (exitCode === 0) {
+				const output = module.FS.readFile(outputPath);
+				assert(output.length > 0, `${tool} exited successfully without producing ${outputPath}`);
+				artifacts.set(outputPath, new Uint8Array(output));
+			}
+			return exitCode;
+		} catch (error) {
+			// A Wasm abort must remain an unsuccessful host invocation. Retain the
+			// compiler's preceding diagnostics in the thrown error so the CLI and
+			// qualification report cannot replace the original cause with only a
+			// secondary Emscripten backtrace failure. No artifact is returned.
+			throw new Error(`${tool} host failed: ${error?.stack ?? String(error)}\n` +
+				`--- ${tool} stdout ---\n${stageOut.text()}\n` +
+				`--- ${tool} stderr ---\n${stageErr.text()}`, { cause: error });
 		} finally {
-			// Emscripten's Node quit_ sets process.exitCode even when callMain
-			// catches ExitStatus. A compiler diagnostic is a result, not failure
-			// of this qualification host. Unexpected runtime errors still fail.
-			if (normalExit) process.exitCode = previousHostExitCode;
+			module = null;
+			globalThis.gc?.();
 		}
-		assert(Number.isInteger(exitCode), `${tool} returned an invalid exit code`);
-		const peakMemoryBytes = module.HEAPU8?.buffer.byteLength;
-		assert(Number.isSafeInteger(peakMemoryBytes) && peakMemoryBytes > 0, `${tool} does not expose Wasm linear memory`);
-		stages.push({ tool, argv, exitCode, milliseconds: performance.now() - start, peakMemoryBytes,
-			loaderSha256: sha256(loader), wasmSha256: sha256(wasm), stdout: stageOut.join('\n'), stderr: stageErr.join('\n') });
-		stdout.push(...stageOut); stderr.push(...stageErr);
-		if (exitCode === 0) {
-			const output = module.FS.readFile(outputPath);
-			assert(output.length > 0, `${tool} exited successfully without producing ${outputPath}`);
-			artifacts.set(outputPath, new Uint8Array(output));
-		}
-		module = null;
-		globalThis.gc?.();
-		return exitCode;
 	};
 	const standard = request.standard ?? (language === 'c' ? 'gnu17' : 'gnu++20');
 	const cpuArgs = ['-march=x86-64', ...(cpu === 'avx2-fma' ? ['-mavx2', '-mfma'] : [])];
