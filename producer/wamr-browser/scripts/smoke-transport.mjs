@@ -74,6 +74,12 @@ try {
   browser: await browser.version(), node: process.version,
   producerReceiptSha256: createHash('sha256').update(await readFile(path.join(root, 'producer-receipt.json'))).digest('hex'),
   assets: producerReceipt.assets, cases: ['module-factory', 'pthread-bootstrap', 'shared-ring-qSupported'],
-  ...result }, null, 2) + '\n');
+  ...result,
+  build: {
+   wamrRevision: producerReceipt.wamrRevision,
+   emscriptenVersion: producerReceipt.emscriptenVersion,
+   emsdkRevision: producerReceipt.emsdkRevision,
+   provenance: producerReceipt.provenance
+  } }, null, 2) + '\n');
  console.log(JSON.stringify(result));
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

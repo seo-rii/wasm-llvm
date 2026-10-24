@@ -10,6 +10,12 @@ replaces only the socket boundary with two generation-scoped
 `SharedArrayBuffer` byte rings supplied by `@wasm-idle/llvm-core`. Program
 stdout/stderr remain separate from the RSP byte stream.
 
+The module-name announcement uses WAMR's verbose logger instead of an
+unconditional `printf`. It is silent at `-v=0`, as used by wasm-idle, and remains
+available at verbose log levels. Guest stdout/stderr are unchanged, including
+output emitted during module initialization; consumers do not need to filter
+program text to hide this debugger diagnostic.
+
 The stdin JS library preserves short reads across multiple WASI iovecs. The
 consumer installs a blocking whole-read stdin device; one `readv` gathers at
 most 64 KiB with one device read, then scatters the available bytes into the
@@ -119,8 +125,8 @@ uncompressed Wasm asset, its reproducible gzip copy, Wasm validity, and the
 raw and compressed asset-size budgets. Missing, duplicate, and unexpected
 receipt paths are rejected before any runtime asset is read.
 The product gate caps `wamr-debug.wasm` at 1 MiB raw and 512 KiB as a
-deterministic level-9 gzip. The current pinned product is 278,958 bytes raw and
-100,560 bytes compressed, leaving explicit headroom without allowing accidental
+deterministic level-9 gzip. The current pinned product is 278,960 bytes raw and
+100,559 bytes compressed, leaving explicit headroom without allowing accidental
 multi-megabyte growth.
 Before publishing a rebuilt interpreter, build it in two distinct clean
 directories and run `verify-reproducibility.mjs` on their packages. The
