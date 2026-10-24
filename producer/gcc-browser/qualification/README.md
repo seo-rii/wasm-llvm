@@ -25,6 +25,15 @@ compared when the selected compiler is installed; the report records whether its
 exact version matches the Wasm GCC version. A missing comparison compiler is
 recorded explicitly; it does not bypass the mandatory native execution gate.
 
+`target-threads.cpp` requires the compiler's predefined `__STDCPP_THREADS__`
+macro to equal `1`, then uses `std::thread` and a nontrivial `thread_local`
+destructor in a baseline static executable. The worker consumes runtime stdin;
+joining it makes its ordinary writes and TLS destruction visible before the
+expected stdout is checked. Main-thread TLS must remain independent. This checks
+the Linux output's POSIX thread model, not parallel execution inside the Wasm
+compiler host; no macro override or source rewriting substitutes for it. The case
+is shared by the Node and Chromium gates, and its ELF runs only on native Linux.
+
 `pragma.cpp` is compiled at `-O0 -march=x86-64`. Only its unmodified GCC pragmas
 enable AVX2/FMA and O3. Pointer inputs prevent constant folding of the SIMD work.
 Assembly assertions require `vpaddd` on YMM registers and packed FMA, removal of

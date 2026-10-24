@@ -12,6 +12,8 @@ export const cases = [
 	{ id: 'ps-object', fixture: 'ps.cpp', request: { language: 'cpp', emit: 'object', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' } },
 	{ id: 'ps-executable', fixture: 'ps.cpp', request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' },
 		stdin: '6 5\n9 1 5 3 9 -2\n', stdout: '5 3 3 25 1 handled\n' },
+	{ id: 'target-threads-executable', fixture: 'target-threads.cpp', request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' },
+		stdin: '17\n', stdout: '51 51 1 7\n' },
 	{ id: 'pragma-assembly', fixture: 'pragma.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'x86-64', optimization: '0', standard: 'gnu++20' },
 		check: 'pragma' },
 	{ id: 'pragma-object', fixture: 'pragma.cpp', request: { language: 'cpp', emit: 'object', cpu: 'x86-64', optimization: '0', standard: 'gnu++20' },
