@@ -60,17 +60,22 @@ jobs:
           node producer/clang-browser/cross/import-sysroot.mjs \
             --output "$RUNNER_TEMP/gnu-sysroot" \
             --provenance "$RUNNER_TEMP/gnu-sysroot-source.json"
-      - name: Package and qualify actual compiler output in Node WASI
+      - name: Package actual compiler output
+        id: package
         run: |
           node producer/clang-browser/cross/package.mjs \
             --compiler "$RUNNER_TEMP/x86-compiler/compiler" \
             --sysroot "$RUNNER_TEMP/gnu-sysroot" \
             --provenance "$RUNNER_TEMP/gnu-sysroot-source.json" \
             --output "$RUNNER_TEMP/x86-bundle"
+      - name: Qualify actual compiler output in Node WASI
+        run: |
           node producer/clang-browser/cross/qualify.mjs \
             --bundle "$RUNNER_TEMP/x86-bundle" \
             --output "$RUNNER_TEMP/x86-node-qualification"
       - uses: actions/upload-artifact@v4
+        # Keep the unverified bundle available to reproduce qualification failures.
+        if: ${{ !cancelled() && steps.package.conclusion == 'success' }}
         with:
           name: x86-cross-bundle-${{ github.sha }}
           path: ${{ runner.temp }}/x86-bundle/

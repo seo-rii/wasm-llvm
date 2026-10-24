@@ -101,7 +101,9 @@ and supports manual dispatch. Its second job checks out the pinned wasm-idle con
 compiles in a Chromium Worker, disassembles AVX2 object output, and runs the generated
 baseline executables on Linux with stdin/stdout checks, including PBDS and exception
 unwinding. Compiler build logs, exit status, Node reports, browser reports and the bundle
-are retained as workflow artifacts for seven days. It does not publish a release.
+are retained as workflow artifacts for seven days. A successfully packaged bundle is
+retained even if qualification fails; its presence does not establish qualification.
+It does not publish a release.
 The two jobs use separate runners so the LLVM build tree does not compete for disk with
 the browser test dependencies. Runner capacity and end-to-end success must still be
 established by an actual successful workflow run.
