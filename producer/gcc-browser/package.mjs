@@ -47,6 +47,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   for (const field of ['host', 'target', 'gccVersion']) assert.equal(receipt[field], profile[field], `Wrong compiler ${field}`);
   assert.equal(receipt.sourcesLockSha256, digest(lockBytes), 'Compiler sources differ from the pinned recipe');
   assert.deepEqual(receipt.resourceHeaders, await directoryIdentity(path.join(compiler, 'resource-include')), 'GCC resource headers changed after build');
+  assert.deepEqual(receipt.licenses, await directoryIdentity(path.join(compiler, 'licenses')), 'Compiler host dependency notices differ from their build receipt');
 
   const provenanceBytes = await fs.readFile(provenance);
   const gnu = validateProvenance(JSON.parse(provenanceBytes));

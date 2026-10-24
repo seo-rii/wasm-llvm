@@ -55,6 +55,7 @@ async function fixture(t) {
   for (const name of ['stddef.h', 'stdarg.h', 'limits.h', 'syslimits.h', 'stdint.h', 'immintrin.h', 'avxintrin.h', 'avx2intrin.h', 'fmaintrin.h'])
     await write(compiler, `resource-include/${name}`, synthetic);
   await write(compiler, 'licenses/fixture.txt', synthetic);
+  await write(compiler, 'licenses/gcc/COPYING.RUNTIME', synthetic);
   const modules = {};
   for (const name of ['cc1', 'cc1plus', 'as', 'ld']) for (const [suffix, extension, bytes] of [
     ['Js', 'mjs', Buffer.from('export default () => { throw new Error("fixture is not a compiler"); };')],
@@ -63,7 +64,8 @@ async function fixture(t) {
   const receipt = { schemaVersion: 1, kind: 'gcc-build-receipt', gccVersion: '13.3.0',
     host: 'wasm32-emscripten', target: 'x86_64-linux-gnu', modules,
     sourcesLockSha256: digest(await fs.readFile(path.join(producer, 'sources.lock.json'))),
-    resourceHeaders: await directoryIdentity(path.join(compiler, 'resource-include')) };
+    resourceHeaders: await directoryIdentity(path.join(compiler, 'resource-include')),
+    licenses: await directoryIdentity(path.join(compiler, 'licenses')) };
   const receiptPath = path.join(compiler, 'compiler-build.json');
   await fs.writeFile(receiptPath, JSON.stringify(receipt));
   return { compiler, sysroot, provenance: provenancePath, output: path.join(root, 'bundle'), root, receipt, receiptPath };
@@ -81,6 +83,11 @@ test('synthetic ABI packaging preserves GNU provenance and stays unverified', as
   assert.deepEqual(manifest.cpuProfiles, ['x86-64', 'avx2-fma']);
   for (const entry of Object.values(manifest.assets))
     assert.deepEqual(identity(await fs.readFile(path.join(input.output, entry.path))), { bytes: entry.bytes, sha256: entry.sha256 });
+  for (const entry of manifest.provenance.hostLicenseFiles) {
+    const packaged = await fs.readFile(path.join(input.output, entry.path));
+    assert.deepEqual(identity(packaged), { bytes: entry.bytes, sha256: entry.sha256 });
+    assert(packaged.equals(await fs.readFile(path.join(input.compiler, entry.path))));
+  }
   assert((await fs.readFile(path.join(input.output, 'gnu-provenance.json'))).equals(await fs.readFile(input.provenance)));
   const tar = readTarEntries(await fs.readFile(path.join(input.output, 'sysroot.tar')));
   assert(tar.has('usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h'));
@@ -92,6 +99,29 @@ test('changed host module is rejected before a manifest can appear', async t => 
   const input = await fixture(t);
   await fs.appendFile(path.join(input.compiler, 'cc1plus.mjs'), '\n// changed');
   await assert.rejects(packageGcc(input), /differs from its compiler receipt/);
+  await assert.rejects(fs.access(input.output), /ENOENT/);
+});
+
+test('changed host dependency notice is rejected before output is written', async t => {
+  const input = await fixture(t);
+  await fs.appendFile(path.join(input.compiler, 'licenses/gcc/COPYING.RUNTIME'), 'changed');
+  await assert.rejects(packageGcc(input), /host dependency notices differ from their build receipt/);
+  await assert.rejects(fs.access(input.output), /ENOENT/);
+});
+
+test('deleted host dependency notice is rejected even when other notices remain', async t => {
+  const input = await fixture(t);
+  await fs.rm(path.join(input.compiler, 'licenses/gcc/COPYING.RUNTIME'));
+  assert((await fs.readFile(path.join(input.compiler, 'licenses/fixture.txt'))).length > 0);
+  await assert.rejects(packageGcc(input), /host dependency notices differ from their build receipt/);
+  await assert.rejects(fs.access(input.output), /ENOENT/);
+});
+
+test('host dependency notices require an identity in the compiler receipt', async t => {
+  const input = await fixture(t);
+  delete input.receipt.licenses;
+  await fs.writeFile(input.receiptPath, JSON.stringify(input.receipt));
+  await assert.rejects(packageGcc(input), /host dependency notices differ from their build receipt/);
   await assert.rejects(fs.access(input.output), /ENOENT/);
 });
 
