@@ -154,7 +154,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: seo-rii/wasm-idle
-          ref: 9ff7dc4d1b083b85f671fa7794ade8e1aef383ca
+          ref: b1eaa1f585c821ae7cb2e90e008047ac6fa9824f
           path: consumer
           persist-credentials: false
       - uses: pnpm/action-setup@v4
@@ -173,6 +173,12 @@ jobs:
       - name: Check Worker transport and failure boundaries (synthetic modules only)
         working-directory: consumer
         run: pnpm run test:browser:gcc-worker-contract
+      - name: Build the standalone GCC host package
+        working-directory: consumer
+        run: |
+          pnpm --dir packages/core build
+          pnpm --dir packages/gcc build
+          pnpm --dir packages/gcc run verify:package-boundary
       - uses: actions/download-artifact@v4
         with:
           name: gcc-wasm-cross-bundle-${{ github.sha }}
@@ -208,7 +214,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: seo-rii/wasm-idle
-          ref: 9ff7dc4d1b083b85f671fa7794ade8e1aef383ca
+          ref: b1eaa1f585c821ae7cb2e90e008047ac6fa9824f
           path: consumer
           persist-credentials: false
       - uses: pnpm/action-setup@v4
@@ -244,6 +250,12 @@ jobs:
         with:
           name: gcc-wasm-cross-bundle-${{ github.sha }}
           path: ${{ runner.temp }}/gcc-bundle
+      - name: Build the standalone GCC host package
+        working-directory: consumer
+        run: |
+          pnpm --dir packages/core build
+          pnpm --dir packages/gcc build
+          pnpm --dir packages/gcc run verify:package-boundary
       - name: Compare generated programs with real Wasm GCC, native GCC and a JavaScript oracle
         id: differential
         run: |
