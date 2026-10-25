@@ -1,0 +1,289 @@
+name: GCC Wasm x86-64 cross compiler
+
+on:
+  # Do not restrict the PR base: GCC also needs qualification while stacked
+  # on the shared GNU sysroot branch, and on ordinary contributor branches.
+  pull_request:
+    paths:
+      - 'producer/gcc-browser/**'
+      - 'producer/clang-browser/cross/import-sysroot.mjs'
+      - 'producer/clang-browser/cross/package.mjs'
+      - 'producer/clang-browser/scripts/build-provenance.mjs'
+      - 'producer/clang-browser/scripts/package-language-sysroots.mjs'
+      - 'scripts/lib/tar.mjs'
+      - '.github/workflows/gcc-native-cross.yml'
+  # PR updates already run above; only main needs a separate push build.
+  push:
+    branches: [main]
+    paths:
+      - 'producer/gcc-browser/**'
+      - 'producer/clang-browser/cross/import-sysroot.mjs'
+      - 'producer/clang-browser/cross/package.mjs'
+      - 'producer/clang-browser/scripts/build-provenance.mjs'
+      - 'producer/clang-browser/scripts/package-language-sysroots.mjs'
+      - 'scripts/lib/tar.mjs'
+      - '.github/workflows/gcc-native-cross.yml'
+  workflow_dispatch:
+    inputs:
+      fuzz_seed:
+        description: 'Unsigned 32-bit seed for reproducible generated programs'
+        type: string
+        default: '20261024'
+      fuzz_cases:
+        description: 'Generated cases (1–100); includes C, C++, PBDS, exceptions and pragma SIMD'
+        type: string
+        default: '24'
+      fuzz_seconds:
+        description: 'Time budget per real-compiler fuzz stage (30–900 seconds)'
+        type: string
+        default: '900'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gcc-native-cross-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  producer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install native generators and actual GNU target runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gcc-13 g++-13 libc6-dev linux-libc-dev make bison flex texinfo libgmp-dev libmpfr-dev libmpc-dev python3 xz-utils
+          df -h . "$RUNNER_TEMP"
+          g++-13 -dumpfullversion
+          node producer/clang-browser/cross/import-sysroot.mjs --preflight --compiler g++-13
+      - name: Validate GCC packaging contract (fixtures only)
+        run: node --test producer/gcc-browser/test/*.test.mjs
+      - name: Restore previously completed compiler built from identical sources and recipe
+        id: compiler-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/gcc-compiler
+          key: gcc-wasm-ubuntu24-${{ hashFiles('producer/gcc-browser/build*', 'producer/gcc-browser/sources.lock.json', 'producer/gcc-browser/patches/**') }}
+      - name: Build actual GCC, host math libraries, GNU assembler and linker
+        if: steps.compiler-cache.outputs.cache-hit != 'true'
+        env:
+          GCC_WASM_WORK_DIR: ${{ runner.temp }}/gcc-work
+          GCC_WASM_OUT_DIR: ${{ runner.temp }}/gcc-compiler
+          GCC_WASM_JOBS: '2'
+        shell: bash
+        run: |
+          umask 077
+          set +e
+          /usr/bin/time -v bash producer/gcc-browser/build.sh > "$RUNNER_TEMP/gcc-build.log" 2>&1
+          status=$?
+          printf '{"exitCode":%s}\n' "$status" > "$RUNNER_TEMP/gcc-build.status.json"
+          tail -n 100 "$RUNNER_TEMP/gcc-build.log"
+          exit "$status"
+      - name: Save successfully completed compiler
+        if: steps.compiler-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/gcc-compiler
+          key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
+      - name: Archive actual compiler with its recorded file modes
+        run: |
+          # upload-artifact normalizes permissions. The receipt hashes directory
+          # and header modes, so preserve them inside a tar archive for reuse.
+          tar -czf "$RUNNER_TEMP/gcc-compiler.tar.gz" -C "$RUNNER_TEMP" gcc-compiler
+      - name: Preserve actual compiler even if later qualification fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-wasm-raw-compiler-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-compiler.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Import actual glibc, GNU C++ library, libgcc and CRT
+        run: |
+          node producer/clang-browser/cross/import-sysroot.mjs --compiler g++-13 \
+            --output "$RUNNER_TEMP/gcc-sysroot" \
+            --provenance "$RUNNER_TEMP/gcc-sysroot-source.json"
+      - name: Package and compile actual C and C++ with Wasm GCC
+        run: |
+          node producer/gcc-browser/package.mjs \
+            --compiler "$RUNNER_TEMP/gcc-compiler" \
+            --sysroot "$RUNNER_TEMP/gcc-sysroot" \
+            --provenance "$RUNNER_TEMP/gcc-sysroot-source.json" \
+            --output "$RUNNER_TEMP/gcc-bundle"
+          node producer/gcc-browser/qualification/run.mjs \
+            --bundle "$RUNNER_TEMP/gcc-bundle" \
+            --output "$RUNNER_TEMP/gcc-node-qualification" --native-cxx g++-13 --native-cc gcc-13
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gcc-wasm-cross-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-bundle/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve build diagnostics after success or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-wasm-build-evidence-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/gcc-build.log
+            ${{ runner.temp }}/gcc-build.status.json
+            ${{ runner.temp }}/gcc-work/gcc-bootstrap.status.json
+            ${{ runner.temp }}/gcc-work/build/**/config.log
+            ${{ runner.temp }}/gcc-sysroot-source.json
+            ${{ runner.temp }}/gcc-node-qualification/
+          if-no-files-found: warn
+          retention-days: 7
+
+  browser:
+    needs: producer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: producer-repo
+          persist-credentials: false
+      - name: Check out the GCC consumer being qualified
+        uses: actions/checkout@v4
+        with:
+          repository: seo-rii/wasm-idle
+          ref: 13b30934b220947dd24eb6796ede25517fbfb030
+          path: consumer
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: consumer/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: consumer/pnpm-lock.yaml
+      - name: Install consumer dependencies and Chromium
+        working-directory: consumer
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright-core install --with-deps chromium
+      - name: Check Worker transport and failure boundaries (synthetic modules only)
+        working-directory: consumer
+        run: pnpm run test:browser:gcc-worker-contract
+      - name: Build the standalone GCC host package
+        working-directory: consumer
+        run: |
+          pnpm --dir packages/core build
+          pnpm --dir packages/gcc build
+          pnpm --dir packages/gcc run verify:package-boundary
+      - uses: actions/download-artifact@v4
+        with:
+          name: gcc-wasm-cross-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-bundle
+      - name: Compile real GCC fixtures in a Chromium Worker and execute baseline ELF on Linux
+        run: |
+          node consumer/scripts/verify-x86-cross-gcc.mjs \
+            "$RUNNER_TEMP/gcc-bundle/gcc-toolchain.v1.json" \
+            "$GITHUB_WORKSPACE/producer-repo/producer/gcc-browser/qualification" \
+            "$RUNNER_TEMP/gcc-browser-qualification"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gcc-wasm-browser-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-browser-qualification/
+          if-no-files-found: warn
+          retention-days: 7
+
+  fuzz:
+    needs: producer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      FUZZ_SEED: ${{ inputs.fuzz_seed || '20261024' }}
+      FUZZ_CASES: ${{ inputs.fuzz_cases || '24' }}
+      FUZZ_SECONDS: ${{ inputs.fuzz_seconds || '900' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: producer-repo
+          persist-credentials: false
+      - name: Check out the exact consumer used for Chromium corpus replay
+        uses: actions/checkout@v4
+        with:
+          repository: seo-rii/wasm-idle
+          ref: 13b30934b220947dd24eb6796ede25517fbfb030
+          path: consumer
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: consumer/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: consumer/pnpm-lock.yaml
+      - name: Validate bounded campaign inputs
+        run: |
+          node --input-type=module <<'JS'
+          for (const [name, min, max] of [
+            ['FUZZ_SEED', 0, 0xffffffff], ['FUZZ_CASES', 1, 100], ['FUZZ_SECONDS', 30, 900],
+          ]) {
+            const raw = process.env[name];
+            if (!/^(0|[1-9][0-9]*)$/.test(raw) || Number(raw) < min || Number(raw) > max) {
+              throw new Error(`${name} must be an integer in ${min}..${max}`);
+            }
+          }
+          JS
+      - name: Install native GCC for differential comparison
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gcc-13 g++-13
+      - name: Install consumer dependencies and Chromium
+        working-directory: consumer
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright-core install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: gcc-wasm-cross-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/gcc-bundle
+      - name: Build the standalone GCC host package
+        working-directory: consumer
+        run: |
+          pnpm --dir packages/core build
+          pnpm --dir packages/gcc build
+          pnpm --dir packages/gcc run verify:package-boundary
+      - name: Compare generated programs with real Wasm GCC, native GCC and a JavaScript oracle
+        id: differential
+        run: |
+          manifest_sha=$(sha256sum "$RUNNER_TEMP/gcc-bundle/gcc-toolchain.v1.json" | cut -d ' ' -f 1)
+          node producer-repo/producer/gcc-browser/fuzz/run.mjs \
+            --bundle "$RUNNER_TEMP/gcc-bundle" --manifest-sha256 "$manifest_sha" \
+            --output "$RUNNER_TEMP/gcc-fuzz-native" \
+            --seed "$FUZZ_SEED" --cases "$FUZZ_CASES" --max-seconds "$FUZZ_SECONDS" \
+            --native-cc gcc-13 --native-cxx g++-13
+      - name: Replay the same corpus in actual Chromium Workers and execute baseline ELF on Linux
+        # A compiler mismatch must not hide evidence from the independent Worker path.
+        if: ${{ !cancelled() && (steps.differential.outcome == 'success' || steps.differential.outcome == 'failure') }}
+        run: |
+          manifest_sha=$(sha256sum "$RUNNER_TEMP/gcc-bundle/gcc-toolchain.v1.json" | cut -d ' ' -f 1)
+          test -f "$RUNNER_TEMP/gcc-fuzz-native/corpus.json"
+          corpus_sha=$(sha256sum "$RUNNER_TEMP/gcc-fuzz-native/corpus.json" | cut -d ' ' -f 1)
+          node consumer/scripts/fuzz-x86-cross-gcc.mjs \
+            "$RUNNER_TEMP/gcc-bundle/gcc-toolchain.v1.json" \
+            "$RUNNER_TEMP/gcc-fuzz-native/corpus.json" "$RUNNER_TEMP/gcc-fuzz-browser" \
+            --manifest-sha256 "$manifest_sha" --corpus-sha256 "$corpus_sha" \
+            --max-cases "$FUZZ_CASES" --max-seconds "$FUZZ_SECONDS"
+      - name: Preserve seeds, source, artifacts, identities and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-wasm-fuzz-evidence-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/gcc-fuzz-native/
+            ${{ runner.temp }}/gcc-fuzz-browser/
+          if-no-files-found: warn
+          retention-days: 7
