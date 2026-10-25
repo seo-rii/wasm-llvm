@@ -13,7 +13,7 @@ work=$(realpath "$work")
 [[ ! -e $output ]] || { echo "Output already exists: $output" >&2; exit 2; }
 output=$(realpath -m "$output")
 case "$output/" in "$work/sources/"*|"$work/emsdk/"*|"$work/build/"*) echo 'Output overlaps build inputs' >&2; exit 2;; esac
-for tool in python3 node make gcc-13 g++-13 bison flex git curl xz; do command -v "$tool" >/dev/null; done
+for tool in python3 node make gcc-13 g++-13 bison flex git curl xz patch; do command -v "$tool" >/dev/null; done
 [[ $(g++-13 -dumpfullversion) == 13.3.0 ]] || { echo 'Native GCC 13.3.0 required to match the GNU target headers/runtime' >&2; exit 2; }
 python3 "$script_dir/build-support.py" --work "$work" --minimum-free-gib "${GCC_WASM_MIN_FREE_GIB:-16}"
 # emsdk_env.sh is part of the revision-verified SDK, not untrusted shell output.

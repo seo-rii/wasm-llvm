@@ -28,10 +28,12 @@ for (const tool of ['cc1', 'cc1plus', 'as', 'ld']) {
   }
 }
 const bootstrap = JSON.parse(await fs.readFile(path.join(options.work, 'gcc-bootstrap.status.json'), 'utf8'));
+const sourcePatches = JSON.parse(execFileSync('python3', [path.join(here, 'build-support.py'),
+  '--work', options.work, '--verify-patches'], { encoding: 'utf8' }));
 const receipt = {
   schemaVersion: 1, kind: 'gcc-build-receipt', host: lock.host, target: lock.target,
   gccVersion: lock.sources.gcc.version, binutilsVersion: lock.sources.binutils.version,
-  sourcesLockSha256: sha256(lockBytes), modules,
+  sourcesLockSha256: sha256(lockBytes), sourcePatches, modules,
   resourceHeaders: await directoryIdentity(path.join(options.compiler, 'resource-include')),
   licenses: await directoryIdentity(path.join(options.compiler, 'licenses')),
   build: {

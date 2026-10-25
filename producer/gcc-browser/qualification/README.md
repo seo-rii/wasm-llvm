@@ -42,6 +42,21 @@ the fixed-count loop inside the optimize region, restoration of the loop after
 the actual object instructions. The separate explicit AVX2/FMA profile must
 compile intrinsics that are rejected under the baseline profile.
 
+`pragma-static-init.cpp` and `pragma-deferred-template.cpp` are the original
+upstream regression cases for PR109753 and PR115403. They check that artificial
+static initialization functions inherit target pragmas while deferred templates
+retain the options at their definition. `pragma-stl.cpp` places AVX2/O3 pragmas
+before the real GNU C++ headers, exercises implicit vector/allocator members,
+and requires YMM integer auto-vectorization of a loop with runtime inputs.
+The Node and Chromium gates must compile it to assembly and assemble an ELF
+object. Its source requires AVX2, so this qualification does not execute it on an
+arbitrary baseline host. The existing push/pop restoration and baseline intrinsic
+rejection cases remain independent checks of target scope.
+
+These new gates require a rebuilt compiler containing both upstream backports.
+Patch application and synthetic integrity tests alone do not establish compiler
+or browser acceptance; an older bundle is expected to fail the new regression.
+
 `qualification.json` records each command, real compiler diagnostics, artifact
 hash/size, elapsed time, each module's maximum allocated Wasm linear memory, and
 the fresh Node process's peak resident memory. Linear-memory allocation is

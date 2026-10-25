@@ -1,0 +1,57 @@
+From e397f8524a7982004eb616217477434ce350e80f Mon Sep 17 00:00:00 2001
+From: Jason Merrill <jason@redhat.com>
+Date: Thu, 25 Jul 2024 17:36:09 -0400
+Subject: [PATCH] c++: #pragma target and deferred instantiation [PR115403]
+
+My patch for 109753 applies the current #pragma target/optimize to a
+function when we compile it, which was a problem for a template
+instantiation deferred until EOF, where different #pragmas are active.  So
+let's only do this for artificial functions.
+
+	PR c++/115403
+	PR c++/109753
+
+gcc/cp/ChangeLog:
+
+	* decl.cc (start_preparsed_function): Only call decl_attributes for
+	artificial functions.
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/ext/pragma-target1.C: New test.
+---
+ gcc/cp/decl.cc                            | 7 +++++--
+ gcc/testsuite/g++.dg/ext/pragma-target1.C | 6 ++++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+ create mode 100644 gcc/testsuite/g++.dg/ext/pragma-target1.C
+
+diff --git a/gcc/cp/decl.cc b/gcc/cp/decl.cc
+index 6b686d75a49f9..279af21eed036 100644
+--- a/gcc/cp/decl.cc
++++ b/gcc/cp/decl.cc
+@@ -17882,8 +17882,11 @@ start_preparsed_function (tree decl1, tree attrs, int flags)
+ 	doing_friend = true;
+     }
+ 
+-  /* Adjust for #pragma target/optimize.  */
+-  decl_attributes (&decl1, NULL_TREE, 0);
++  /* Adjust for #pragma target/optimize if this is an artificial function that
++     (probably) didn't go through grokfndecl.  We particularly don't want this
++     for deferred instantiations, which should match their template.  */
++  if (DECL_ARTIFICIAL (decl1))
++    decl_attributes (&decl1, NULL_TREE, 0);
+ 
+   if (DECL_DECLARED_INLINE_P (decl1)
+       && lookup_attribute ("noinline", attrs))
+diff --git a/gcc/testsuite/g++.dg/ext/pragma-target1.C b/gcc/testsuite/g++.dg/ext/pragma-target1.C
+new file mode 100644
+index 0000000000000..0ce2438da2fea
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/ext/pragma-target1.C
+@@ -0,0 +1,6 @@
++// PR c++/115403
++// { dg-do compile { target x86_64-*-* } }
++
++template <typename> __attribute__((always_inline)) inline void AssertEqual() {}
++void TestAllF16FromF32() { AssertEqual<float>(); }
++#pragma GCC target "sse4.1"

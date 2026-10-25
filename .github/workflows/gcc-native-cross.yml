@@ -59,12 +59,14 @@ jobs:
       - name: Install native generators and actual GNU target runtime
         run: |
           sudo apt-get update
-          sudo apt-get install --yes gcc-13 g++-13 libc6-dev linux-libc-dev make bison flex texinfo libgmp-dev libmpfr-dev libmpc-dev python3 xz-utils
+          sudo apt-get install --yes gcc-13 g++-13 libc6-dev linux-libc-dev make bison flex texinfo libgmp-dev libmpfr-dev libmpc-dev python3 xz-utils patch
           df -h . "$RUNNER_TEMP"
           g++-13 -dumpfullversion
           node producer/clang-browser/cross/import-sysroot.mjs --preflight --compiler g++-13
       - name: Validate GCC packaging contract (fixtures only)
-        run: node --test producer/gcc-browser/test/*.test.mjs
+        run: |
+          python3 -m unittest discover -s producer/gcc-browser/test -p '*_test.py'
+          node --test producer/gcc-browser/test/*.test.mjs
       - name: Restore previously completed compiler built from identical sources and recipe
         id: compiler-cache
         uses: actions/cache/restore@v4
