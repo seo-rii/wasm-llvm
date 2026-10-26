@@ -10,7 +10,8 @@ LLVM `wasm-ld` + WASI CRT/libc/libm/runtime → WASI Preview 1 execution. Emscri
 builds the compiler host; Clang never compiles user source in this path.
 
 See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
-[completed native and Chromium results](../../docs/gcc-wasi-validation.md),
+[initial native and Chromium results](../../docs/gcc-wasi-validation.md),
+[backend review and SIMD qualification](../../docs/gcc-wasi-backend-review.md),
 [source pins](sources.lock.json), and [runtime pins](runtime.lock.json).
 The June 2026 GCC announcement approved a development direction; this backend is
 an unmerged author port, not a released upstream GCC target. Keeping its GCC 17
@@ -23,7 +24,7 @@ compiler's existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local backend patches | `0001-void-type-return.patch` and `0002-host-width-format.patch`, SHA-256 pinned in `sources.lock.json` |
+| Local backend patches | `0001`–`0005`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -47,9 +48,16 @@ sizes or relocation addends. Real browser compilation exposed the wrong
 string output; the patch uses GCC's host-width format macros and types. The
 suite includes multiple literals and signed/unsigned values above 32 bits.
 
+The subsequent patches add [optional SIMD128 code generation](SIMD.md), fix
+singleton/empty aggregate and narrow integer calling conventions, and correct
+the external compare-exchange libcall signature. The ABI suite links real GCC
+and Clang caller/callee objects in both directions. Clang is an independent test
+oracle here, not a compilation fallback. The atomic test provider validates the
+five-argument ABI only; it is not distributed as an atomic runtime.
+
 ## Reproduction
 
-Use Linux x86-64, Python 3.11+, Node 24+, GNU make, GCC/G++, git, bison, flex,
+Use Linux x86-64, Python 3.11+, Node 22.18+ or 24.10+, GNU make, GCC/G++, git, bison, flex,
 cmake, curl, patch, tar, xz, and native GMP/MPFR/MPC development packages. Install
 the exact SDK and emsdk revisions above. Build paths must not contain whitespace.
 `out/` is local, ignored build/evidence storage. A separate wasm-idle checkout
@@ -80,6 +88,20 @@ node producer/gcc-wasi/qualify-native.mjs \
   --suite producer/gcc-wasi/abi-probes.mjs \
   --cases abi-cpp-typedef-void-o0,abi-cpp-typedef-void-o2 \
   --output "$GCC_WASI_WORK_DIR/typedef-void"
+
+node producer/gcc-wasi/abi-interop.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/abi-qualification"
+node producer/gcc-wasi/test-atomic-libcall.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/atomic-abi-qualification"
+node producer/gcc-wasi/test-simd.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/simd-qualification"
 
 bash producer/gcc-wasi/build-host-deps.sh
 bash producer/gcc-wasi/build-browser.sh
@@ -117,6 +139,8 @@ node producer/gcc-wasi/test-libstdcxx.mjs "$GCC_LIBSTDCXX_WORK_DIR/qualification
 
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
+  --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
+  --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
@@ -126,6 +150,16 @@ contains only core C++ language support. Packaging verifies input inventories,
 source identities, the native gate and module formats. It writes a fresh output
 directory and the final v2 manifest last. It always emits `qualification.status:
 "unverified"`; artifact integrity is not compiler qualification.
+The optional `--simd-qualification` must contain all enabled and disabled native
+cases from the exact compiler binary and current test inputs. It enables the
+manifest's SIMD capability; that provisional bundle still needs real Chromium
+qualification. Omitting it keeps SIMD unavailable through the SDK.
+
+When the backend ABI changes, rebuild GNU libstdc++ in a fresh runtime directory.
+The packager rejects runtime receipts from a different compiler or patch set.
+For incremental compiler builds the recipes rerun target option discovery, so
+new `.opt` files cannot leave stale generated headers. Preserve earlier native
+gates and receipts separately before qualifying a newly built compiler.
 
 Run the consumer's actual Chromium Worker pipeline after building its package:
 
@@ -174,8 +208,10 @@ targets. C++ uses `-fno-exceptions -fno-rtti -fuse-cxa-atexit
 objects are constructed and destroyed. GNU library/STL support is gated by its
 own build and execution tests, independently of the C++ frontend.
 
-Exceptions, RTTI, threads/TLS/atomics, shared/dynamic linking and Wasm SIMD are not
-supported. x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
+SIMD128 is available with explicit SDK `simd: true` and a qualified capable bundle;
+the default scalar profile passes `-mno-simd128`. See [the exact SIMD scope](SIMD.md).
+Exceptions, RTTI, threads/TLS/atomics and shared/dynamic linking are unsupported.
+x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
 x86 API. Unsupported target attributes/pragmas are GCC errors in this profile.
 The GNU C++ time-zone database, C++26 debugger functions and prebuilt `std`
 modules are omitted because they require unsupported atomic or signal
@@ -184,13 +220,13 @@ qualification requires `std::chrono::get_tzdb`, `std::is_debugger_present` and
 `import std` to fail at linking or compilation. The SDK accepts source/header
 inputs through C++23; it does not accept precompiled modules.
 
-Two ABI limitations remain and must not be hidden by passing scalar tests:
+ABI limitations remain and must not be hidden by passing scalar tests:
 
 - GCC `long double` is binary64 (8 bytes); WASI libc expects binary128 (16).
   Long-double runtime interfaces and their varargs are unsupported.
-- Single-scalar aggregate calling conventions differ from LLVM's Basic C ABI.
-  GCC-only translation units agree, but arbitrary Clang object interoperation
-  is unsupported. Argument-only mismatches can silently pass the wrong value.
+- Singleton and empty aggregate interoperation now passes the focused Basic C
+  ABI suite. Vector arguments/returns still use the port's indirect convention;
+  direct LLVM `v128` ABI, vector aggregates and `__int128` are not qualified.
 
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user

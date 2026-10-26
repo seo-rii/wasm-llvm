@@ -68,3 +68,10 @@ All use real stdin/stdout and WASI Preview 1. The negative feature-macro check
 also passed. This qualification records emitted instructions for the tested
 expressions; it does not establish every implemented pattern or arbitrary
 vector program as correct.
+
+The integrated Wasm-host GCC also passes all 25 cases through Chromium Worker,
+with independent Node WASI execution of each resulting program. Captured GCC
+WAT and assembled objects pass `verify-simd-worker.mjs`: it checks the exact
+fixture/manifest/artifact identities, frontend options and required disassembled
+opcodes. See the [integrated review report](../../docs/gcc-wasi-backend-review.md)
+for the qualified bundle hash and reproducible Worker commands.

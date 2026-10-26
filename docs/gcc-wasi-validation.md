@@ -1,5 +1,8 @@
 # GCC WebAssembly qualification — 2026-10-26
 
+This is the historical initial profile. The [2026-10-27 backend review](gcc-wasi-backend-review.md)
+records subsequent SIMD, ABI and SDK corrections and their separate qualification.
+
 The implemented path compiles original C/C++ through real GCC frontends and its
 RTL WebAssembly backend, assembles GCC's annotated WAT with the pinned WABT fork,
 and links WASI Preview 1 programs with external LLVM `wasm-ld`. It works with a
