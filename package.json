@@ -12,7 +12,7 @@
 	},
 	"scripts": {
 		"check": "node ./scripts/check-repository.mjs",
-		"test": "node --test ./producer/gcc-browser/test/*.test.mjs ./producer/d-browser/test/*.test.mjs ./producer/nim-browser/test/*.test.mjs ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs ./producer/lean-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm --dir ./producer/swift-browser test",
+		"test": "node --test ./producer/gcc-browser/test/*.test.mjs ./producer/d-browser/test/*.test.mjs ./producer/nim-browser/test/*.test.mjs ./producer/c3-browser/test/*.test.mjs ./producer/ecl-browser/test/*.test.mjs ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs ./producer/lean-browser/test/*.test.mjs ./producer/lfortran-browser/test/*.test.mjs ./producer/lldb-browser/test/*.test.mjs ./producer/odin-browser/test/*.test.mjs ./producer/rust-browser/test/*.test.mjs ./producer/tinygo-browser/test/*.test.mjs ./producer/wamr-browser/test/*.test.mjs ./test/*.test.mjs && pnpm run test:gcc-wasi && pnpm --dir ./producer/swift-browser test",
 		"audit:kotlin-source": "node ./producer/kotlin-browser/scripts/audit.mjs",
 		"ledger:kotlin-fixtures": "node ./producer/kotlin-browser/scripts/fixtures.mjs",
 		"test:kotlin-producer": "node --test ./producer/kotlin-browser/test/*.test.mjs ./producer/kotlin-browser/build/*.test.mjs ./producer/kotlin-browser/stdlib-probe/*.test.mjs",
@@ -117,7 +117,8 @@
 		"package:gcc-native": "node ./producer/gcc-browser/package.mjs",
 		"qualify:gcc-native": "node ./producer/gcc-browser/qualification/run.mjs",
 		"fuzz:gcc-native": "node ./producer/gcc-browser/fuzz/run.mjs",
-		"test:gcc-native": "node --test ./producer/gcc-browser/test/*.test.mjs"
+		"test:gcc-native": "node --test ./producer/gcc-browser/test/*.test.mjs",
+		"test:gcc-wasi": "node --test ./producer/gcc-wasi/*.test.mjs && python3 ./producer/gcc-wasi/prepare-runtime.test.py"
 	},
 	"devDependencies": {
 		"@bjorn3/browser_wasi_shim": "0.4.2",
