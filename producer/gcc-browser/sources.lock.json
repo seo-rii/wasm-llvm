@@ -3,7 +3,52 @@
   "target": "x86_64-linux-gnu",
   "host": "wasm32-emscripten",
   "sources": {
-    "gcc": { "version": "13.3.0", "url": "https://ftp.gnu.org/gnu/gcc/gcc-13.3.0/gcc-13.3.0.tar.xz", "sha256": "0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083", "directory": "gcc-13.3.0" },
+    "gcc": {
+      "version": "13.3.0",
+      "url": "https://ftp.gnu.org/gnu/gcc/gcc-13.3.0/gcc-13.3.0.tar.xz",
+      "sha256": "0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083",
+      "directory": "gcc-13.3.0",
+      "patches": [
+        {
+          "path": "patches/0001-pr109753.patch",
+          "sha256": "3b1ed561a47cabeeaf8bfbbbe3cbd8938c4beb59d7d369a33ba2239ac709ed2c",
+          "upstreamCommits": [
+            "https://github.com/gcc-mirror/gcc/commit/eff00046409a7289bfdc1861e68b532895f91c0e"
+          ],
+          "files": {
+            "gcc/c-family/c-attribs.cc": {
+              "beforeSha256": "1426cc6d62518a2db264e2be3f166edf4b29e78c6d31189d7bd1f0a8645db31b",
+              "afterSha256": "b6e09a4f165e0f076622866585643110a3ac2b561f7d213f8ac9d419ccd468a0"
+            },
+            "gcc/cp/decl.cc": {
+              "beforeSha256": "df85a5a7fc89b995596a9a96e0640532a052a0431f958e920f1756c3fb496de9",
+              "afterSha256": "b1ed40b8e0f651278941ca7a0c51164c086c00b83c5cc1eeef5a8b5cfa1ebbd7"
+            },
+            "gcc/testsuite/g++.dg/opt/always_inline1.C": {
+              "beforeSha256": null,
+              "afterSha256": "8785468df2bfe20476aa6504e7a72a6b234846b341368e0ce94323fe4acb1402"
+            }
+          }
+        },
+        {
+          "path": "patches/0002-pr115403.patch",
+          "sha256": "f4752c155b993a70fd7bd3913962cdc3d14894b6ecaf2f8249a3f751024e39dd",
+          "upstreamCommits": [
+            "https://github.com/gcc-mirror/gcc/commit/e397f8524a7982004eb616217477434ce350e80f"
+          ],
+          "files": {
+            "gcc/cp/decl.cc": {
+              "beforeSha256": "b1ed40b8e0f651278941ca7a0c51164c086c00b83c5cc1eeef5a8b5cfa1ebbd7",
+              "afterSha256": "083d648e75fb7aa8117fc2df7dce9b77e176272209656043452b073e377881e4"
+            },
+            "gcc/testsuite/g++.dg/ext/pragma-target1.C": {
+              "beforeSha256": null,
+              "afterSha256": "77bc63f21acbdb3ff711e06e991ab9c6ba4ee6440ef580f452158cde83a01ca3"
+            }
+          }
+        }
+      ]
+    },
     "binutils": { "version": "2.42", "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.xz", "sha256": "f6e4d41fd5fc778b06b7891457b3620da5ecea1006c6a4a41ae998109f85a800", "directory": "binutils-2.42" },
     "gmp": { "version": "6.3.0", "url": "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz", "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898", "directory": "gmp-6.3.0" },
     "mpfr": { "version": "4.2.1", "url": "https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.1.tar.xz", "sha256": "277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2", "directory": "mpfr-4.2.1" },

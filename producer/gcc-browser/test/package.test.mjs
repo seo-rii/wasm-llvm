@@ -64,6 +64,9 @@ async function fixture(t) {
   const receipt = { schemaVersion: 1, kind: 'gcc-build-receipt', gccVersion: '13.3.0',
     host: 'wasm32-emscripten', target: 'x86_64-linux-gnu', modules,
     sourcesLockSha256: digest(await fs.readFile(path.join(producer, 'sources.lock.json'))),
+    sourcePatches: Object.entries(JSON.parse(await fs.readFile(path.join(producer, 'sources.lock.json'))).sources)
+      .flatMap(([source, item]) => (item.patches ?? [])
+        .map(({ path, sha256, upstreamCommits }) => ({ source, path, sha256, upstreamCommits }))),
     resourceHeaders: await directoryIdentity(path.join(compiler, 'resource-include')),
     licenses: await directoryIdentity(path.join(compiler, 'licenses')) };
   const receiptPath = path.join(compiler, 'compiler-build.json');
@@ -81,6 +84,9 @@ test('synthetic ABI packaging preserves GNU provenance and stays unverified', as
   assert.equal(manifest.host, 'wasm32-emscripten');
   assert.equal(manifest.target, 'x86_64-linux-gnu');
   assert.deepEqual(manifest.cpuProfiles, ['x86-64', 'avx2-fma']);
+  assert.deepEqual(manifest.provenance.sourcePatches, input.receipt.sourcePatches);
+  for (const patch of manifest.provenance.sourcePatches)
+    assert.equal(digest(await fs.readFile(path.join(input.output, patch.path))), patch.sha256);
   for (const entry of Object.values(manifest.assets))
     assert.deepEqual(identity(await fs.readFile(path.join(input.output, entry.path))), { bytes: entry.bytes, sha256: entry.sha256 });
   for (const entry of manifest.provenance.hostLicenseFiles) {
@@ -151,6 +157,14 @@ test('source pins and resource headers are bound to the build receipt', async t 
   await fs.writeFile(input.receiptPath, JSON.stringify(input.receipt));
   await fs.appendFile(path.join(input.compiler, 'resource-include/immintrin.h'), 'changed');
   await assert.rejects(packageGcc(input), /headers changed/);
+});
+
+test('an unpatched compiler receipt cannot be relabeled with the patched source lock', async t => {
+  const input = await fixture(t);
+  delete input.receipt.sourcePatches;
+  await fs.writeFile(input.receiptPath, JSON.stringify(input.receipt));
+  await assert.rejects(packageGcc(input), /source patches differ/);
+  await assert.rejects(fs.access(input.output), /ENOENT/);
 });
 
 test('output aliases cannot overwrite either compiler or target tree', async t => {

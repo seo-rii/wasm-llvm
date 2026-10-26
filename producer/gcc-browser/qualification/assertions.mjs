@@ -71,6 +71,11 @@ export function assertCaseResult(test, result) {
 		require(/\.ident\s+"GCC:/.test(assembly), `${test.id}: assembly lacks a GCC identity`);
 		if (test.milestone) require(/triangular:/.test(assembly) && /%r[a-z0-9]+/.test(assembly), 'Preprocessed milestone lacks x86-64 function');
 		if (test.check === 'pragma') assertPragmaAssembly(assembly);
+		if (test.check === 'pragma-stl') {
+			const body = functionAssembly(assembly, 'pragma_stl_transform');
+			require(/\bvpaddd\b/.test(body) && /\bvpxor\b/.test(body) && /%ymm\d+/.test(body),
+				'Pragmas before STL headers did not enable AVX2 auto-vectorization');
+		}
 		if (test.check === 'avx2-fma') {
 			require(/\bvpaddd\b/.test(assembly) && /%ymm\d+/.test(assembly), 'AVX2 profile lacks integer SIMD');
 			require(/\bvfmadd(?:132|213|231)ps\b/.test(assembly), 'AVX2/FMA profile lacks FMA');

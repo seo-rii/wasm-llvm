@@ -18,6 +18,13 @@ export const cases = [
 		check: 'pragma' },
 	{ id: 'pragma-object', fixture: 'pragma.cpp', request: { language: 'cpp', emit: 'object', cpu: 'x86-64', optimization: '0', standard: 'gnu++20' },
 		check: 'pragma-object' },
+	{ id: 'pragma-static-init', fixture: 'pragma-static-init.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'x86-64', optimization: '0', standard: 'c++17' } },
+	{ id: 'pragma-deferred-template', fixture: 'pragma-deferred-template.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'x86-64', optimization: '0', standard: 'c++17' } },
+	{ id: 'pragma-stl-assembly', fixture: 'pragma-stl.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: 'c++17' },
+		check: 'pragma-stl' },
+	// Source pragmas require AVX2 despite the baseline command-line profile.
+	// Assemble an ELF object without requiring AVX2 execution on the CI host.
+	{ id: 'pragma-stl-object', fixture: 'pragma-stl.cpp', request: { language: 'cpp', emit: 'object', cpu: 'x86-64', optimization: '2', standard: 'c++17' } },
 	{ id: 'profile-assembly', fixture: 'avx2-profile.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'avx2-fma', optimization: '2', standard: 'gnu++20' },
 		check: 'avx2-fma' },
 	{ id: 'profile-baseline-reject', fixture: 'avx2-profile.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' },

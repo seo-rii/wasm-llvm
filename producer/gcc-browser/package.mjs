@@ -37,6 +37,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   const profileBytes = await fs.readFile(path.join(here, 'profile.json'));
   const profile = JSON.parse(profileBytes);
   const lockBytes = await fs.readFile(path.join(here, 'sources.lock.json'));
+  const lock = JSON.parse(lockBytes);
   const producer = JSON.parse(await fs.readFile(path.join(here, 'manifest.json')));
   assert.equal(producer.producerId, 'wasm-llvm/gcc-browser', 'Wrong producer identity');
   assert.equal(producer.sources.lock.sha256, digest(lockBytes), 'Producer source lock pin changed');
@@ -46,6 +47,15 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   assert.equal(receipt.kind, 'gcc-build-receipt', 'Expected a GCC build receipt');
   for (const field of ['host', 'target', 'gccVersion']) assert.equal(receipt[field], profile[field], `Wrong compiler ${field}`);
   assert.equal(receipt.sourcesLockSha256, digest(lockBytes), 'Compiler sources differ from the pinned recipe');
+  const sourcePatches = Object.entries(lock.sources).flatMap(([source, item]) =>
+    (item.patches ?? []).map(({ path, sha256, upstreamCommits }) => ({ source, path, sha256, upstreamCommits })));
+  assert.deepEqual(receipt.sourcePatches, sourcePatches, 'Compiler source patches differ from the pinned recipe');
+  const patchFiles = [];
+  for (const patch of sourcePatches) {
+    const bytes = await fs.readFile(path.join(here, patch.path));
+    assert.equal(digest(bytes), patch.sha256, `Source patch changed: ${patch.path}`);
+    patchFiles.push({ path: patch.path, bytes });
+  }
   assert.deepEqual(receipt.resourceHeaders, await directoryIdentity(path.join(compiler, 'resource-include')), 'GCC resource headers changed after build');
   assert.deepEqual(receipt.licenses, await directoryIdentity(path.join(compiler, 'licenses')), 'Compiler host dependency notices differ from their build receipt');
 
@@ -109,6 +119,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
       sources: { path: 'sources.lock.json', ...identity(lockBytes) },
       profile: { path: 'profile.json', ...identity(profileBytes) },
       inventory: { path: 'sysroot-files.json', ...identity(inventoryBytes) },
+      sourcePatches,
       resourceHeaders: receipt.resourceHeaders, hostLicenseFiles: noticeInventory },
     unsupported: profile.unsupported,
     qualification: { status: 'unverified', note: 'Packaging and ABI fixture tests do not qualify a compiler. Real Node, Chromium Worker and native Linux evidence must name these exact hashes.' }
@@ -122,6 +133,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
     { path: 'sources.lock.json', bytes: lockBytes },
     { path: 'profile.json', bytes: profileBytes },
     { path: 'sysroot-files.json', bytes: inventoryBytes },
+    ...patchFiles,
     ...notices.map(file => ({ path: `licenses/${file.path}`, bytes: file.bytes })));
   for (const file of payloads) {
     await fs.mkdir(path.dirname(path.join(out, file.path)), { recursive: true });

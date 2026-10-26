@@ -19,7 +19,7 @@ after the shared Clang changes were merged.
 | --- | --- |
 | Native build tools and generators | Linux x86-64, GCC/G++ 13.3.0 |
 | Compiler host | Emscripten 4.0.23, Wasm32, MEMFS |
-| Compiler | Unmodified GCC 13.3.0 C and C++ front ends and x86 backend |
+| Compiler | GCC 13.3.0 C and C++ front ends and x86 backend, with two pinned upstream C++ pragma fixes |
 | Assembler/linker | GNU binutils 2.42, x86_64-linux-gnu |
 | Host arithmetic libraries | GMP 6.3.0, MPFR 4.2.1, MPC 1.3.1, built as Wasm |
 | User-program runtime | Actual GNU/Linux x86-64 glibc, libstdc++, libgcc and CRT |
@@ -33,6 +33,24 @@ versions, distribution, glibc version, per-file SHA-256 values, and copyright
 files. It does not claim to have fetched the original Debian source archives.
 Compiler source archives remain reproducible from the lock; compiler and host
 dependency license notices are retained in `licenses/`.
+
+The source build applies the upstream fixes for
+[PR109753](https://github.com/gcc-mirror/gcc/commit/eff00046409a7289bfdc1861e68b532895f91c0e)
+and its deferred-template follow-up
+[PR115403](https://github.com/gcc-mirror/gcc/commit/e397f8524a7982004eb616217477434ce350e80f).
+They apply target/optimization pragmas to compiler-generated C++ functions while
+preserving the options of ordinary deferred template instantiations. This fixes
+`#pragma GCC target("avx2")` before STL headers failing with an `always_inline`
+target mismatch. User source, GNU runtime headers and the baseline CPU profile
+are unchanged. Both original upstream patches, including their regression tests,
+are retained under `patches/` and copied into the bundle.
+
+The lock records each patch and every affected file before and after application.
+The build uses zero patch fuzz, verifies the final source bytes on resume and
+before writing the compiler receipt, and rejects source trees without the matching
+patch stamp. Use a fresh isolated work directory when upgrading an older recipe.
+The source lock and patch identities bind the build receipt; the CI compiler-cache
+key includes the patches so it rebuilds the actual Wasm compiler for this change.
 
 The GCC target is configured with `--enable-threads=posix`, matching the imported
 Linux GNU runtime. This controls target features such as `__STDCPP_THREADS__`;
