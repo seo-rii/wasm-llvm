@@ -66,6 +66,11 @@ if [[ ! -f Makefile ]]; then
     CC_FOR_BUILD=gcc CXX_FOR_BUILD=g++ CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
     GCC_FOR_TARGET="$work/gcc-native/gcc/xgcc -B$work/gcc-native/gcc/" MAKEINFO=true
 fi
+# Re-run target option discovery when reusing a build predating new .opt files.
+# config.status preserves the original Canadian-cross configure arguments.
+if [[ -f gcc/config.status ]]; then
+  (cd gcc && emconfigure ./config.status --recheck && ./config.status)
+fi
 # The normal graph builds native generators and host support libraries. gcov's
 # ftw() is absent in Emscripten; cc1/cc1plus are verified independently below.
 set +e

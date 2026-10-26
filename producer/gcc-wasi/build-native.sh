@@ -33,6 +33,11 @@ if [[ ! -f Makefile ]]; then
     --disable-werror --enable-checking=release --disable-fixincludes --without-headers \
     CFLAGS='-O1 -g0' CXXFLAGS='-O1 -g0' MAKEINFO=true
 fi
+# Target .opt files are discovered at configure time. An incremental build from
+# an older patch set must rediscover added files before regenerating options.h.
+if [[ -f gcc/config.status ]]; then
+  (cd gcc && ./config.status --recheck && ./config.status)
+fi
 # The draft target's driver injects -stdlib=libc++, which this pinned cc1plus
 # does not recognize. Runtime/header choice belongs to our explicit pipeline.
 # Clear that driver-only spec for the build's real C/C++ frontend smoke tests.
