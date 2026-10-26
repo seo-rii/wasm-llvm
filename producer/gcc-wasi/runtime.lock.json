@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "wasiLibc": {
+    "repository": "https://github.com/WebAssembly/wasi-libc",
+    "commit": "161b3195fc2558d2b1ba3eb9ffae3b2b47407623",
+    "version": "wasi-sdk-33",
+    "sdkRepository": "https://github.com/WebAssembly/wasi-sdk",
+    "sdkCommit": "c10c0507deb3e5aad506f1f9f32084e49a21834b",
+    "sdkArchiveSha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+    "patches": [
+      {
+        "path": "patches/wasi-libc-errno.patch",
+        "sha256": "a2a5927c52b3c31e9f53c2f969676aa64b491d41830d65755ef379a16ee86cf7",
+        "purpose": "Match the real single-thread WASI libc errno storage without claiming a GCC TLS ABI."
+      }
+    ]
+  },
+  "browserLinker": {
+    "repository": "https://github.com/llvm/llvm-project",
+    "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+    "version": "22.1.8",
+    "host": "wasm32-wasi",
+    "archive": "artifacts/clang-browser/lld.zip",
+    "archiveSha256": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039",
+    "producerManifest": "producer/gcc-wasi/snapshots/llvm-producer-7974451.json",
+    "producerManifestRevision": "7974451468cb09e271f068fd4d6a1af285b22acd",
+    "producerManifestOriginalPath": "producer/clang-browser/manifest.json",
+    "producerManifestSha256": "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78",
+    "toolchainReceipt": "artifacts/clang-browser/toolchain.json",
+    "toolchainReceiptSha256": "237a4d29d5a0a7edbec9e78f5a61c303b5e3d90eeb2ff7d4b4bb7b8fe77e5ae8",
+    "note": "Only the real wasm-ld linker is reused; GCC emits all user-code instructions. Existing LLVM producer carries its WASI host and wasm-only linker patches."
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "host": "wasm32-emscripten",
+  "target": "wasm32-wasi",
+  "gcc": {
+    "version": "17.0.0",
+    "repository": "https://forge.sourceware.org/feedable/gcc-TEST.git",
+    "branch": "gcc-wasm-2",
+    "commit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "upstreamBase": "33ac889aa27d9917e6e7d07c282015b7c48e0440",
+    "backendCommit": "8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1 for eligible runtime files; compiler GPL-3.0-or-later",
+    "status": "experimental, unmerged author port",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures."
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets."
+      }
+    ]
+  },
+  "wabt": {
+    "version": "1.0.37",
+    "repository": "https://github.com/feedab1e/wabt.git",
+    "commit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173",
+    "license": "Apache-2.0",
+    "purpose": "Assembler for GCC's annotated relocatable WAT; upstream WABT is insufficient"
+  },
+  "wasiSdk": {
+    "version": "33.0",
+    "repository": "https://github.com/WebAssembly/wasi-sdk",
+    "tag": "wasi-sdk-33",
+    "archive": "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz",
+    "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+    "llvmVersion": "22.1.0",
+    "llvmCommit": "4434dabb69916856b824f68a64b029c67175e532",
+    "purpose": "Native wasm-ld, WASI Preview 1 libc/CRT and compiler-rt builtins; never compiles user source"
+  },
+  "emsdk": {
+    "version": "6.0.0",
+    "repository": "https://github.com/emscripten-core/emsdk.git",
+    "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+    "emscriptenCommit": "afa15e0c56d1292e073c2c91bafc1d5e0cdf0dd3"
+  }
+}

@@ -1,0 +1,287 @@
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -5,6 +5,16 @@
+ AC_DEFUN([GLIBCXX_CROSSCONFIG],[
+ # Base decisions on target environment.
+ case "${host}" in
++  wasm32-*-wasi*)
++    # WASI Preview 1 with the real GCC Wasm compiler and wasi-libc sysroot.
++    # Discover declarations and linkable functions with that toolchain; do not
++    # copy another OS's HAVE_* answers into this cross configuration.
++    GLIBCXX_CHECK_COMPILER_FEATURES
++    GLIBCXX_CHECK_MATH_SUPPORT
++    GLIBCXX_CHECK_STDLIB_SUPPORT
++    AC_CHECK_FUNCS(aligned_alloc posix_memalign timespec_get)
++    ;;
++
+   arm*-*-symbianelf*)
+     # This is a freestanding configuration; there is nothing to do here.
+     ;;
+--- a/libstdc++-v3/configure.host
++++ b/libstdc++-v3/configure.host
+@@ -394,7 +394,8 @@
+ # THIS TABLE IS SORTED.  KEEP IT THAT WAY.
+ case "${host}" in
+   amdgcn-*-amdhsa \
+-  | nvptx-*-none )
++  | nvptx-*-none \
++  | wasm32-*-wasi* )
+     # For 'make all-target-libstdc++-v3' and 'make check-target-libstdc++-v3',
+     # exception handling is not supported: in case that exception handling
+     # constructs survive compiler optimizations, the back ends error out:
+--- a/libstdc++-v3/libsupc++/tinfo.cc
++++ b/libstdc++-v3/libsupc++/tinfo.cc
+@@ -53,7 +53,13 @@
+ 
+ bool
+ std::type_info::__equal (const std::type_info& arg) const _GLIBCXX_NOEXCEPT
++#if defined(__wasm32__)
++// The experimental Wasm backend cannot emit symbol aliases. Preserve the
++// same comparison semantics with a real forwarding function.
++{ return *this == arg; }
++#else
+ __attribute__((alias("_ZNKSt9type_infoeqERKS_")));
++#endif
+ #endif
+ 
+ namespace std {
+--- a/libstdc++-v3/configure.ac
++++ b/libstdc++-v3/configure.ac
+@@ -642,6 +642,16 @@
+ # For libsupc++/eh_alloc.cc defaults.
+ GLIBCXX_EMERGENCY_EH_ALLOC
+ 
++# WASI lacks the atomics/signals required by these optional interfaces.
++# Omit their implementations and module manifests; do not supply fake stubs.
++case "${host}" in
++  wasm32-*-wasi*) glibcxx_build_tzdb=no ;;
++  *) glibcxx_build_tzdb=yes ;;
++esac
++AM_CONDITIONAL(GLIBCXX_BUILD_TZDB, test "$glibcxx_build_tzdb" = yes)
++AM_CONDITIONAL(GLIBCXX_BUILD_DEBUGGING, test "$glibcxx_build_tzdb" = yes)
++AM_CONDITIONAL(GLIBCXX_BUILD_STD_MODULES, test "$glibcxx_build_tzdb" = yes)
++
+ # For src/c++20/tzdb.cc defaults.
+ GLIBCXX_ZONEINFO_DIR
+ 
+--- a/libstdc++-v3/src/c++20/Makefile.am
++++ b/libstdc++-v3/src/c++20/Makefile.am
+@@ -45,7 +45,13 @@
+ inst_sources =
+ endif
+ 
+-sources = tzdb.cc format.cc atomic.cc clock.cc syncbuf.cc
++if GLIBCXX_BUILD_TZDB
++tzdb_sources = tzdb.cc
++else
++tzdb_sources =
++endif
++
++sources = $(tzdb_sources) format.cc atomic.cc clock.cc syncbuf.cc
+ 
+ vpath % $(top_srcdir)/src/c++20
+ 
+--- a/libstdc++-v3/src/c++20/Makefile.in
++++ b/libstdc++-v3/src/c++20/Makefile.in
+@@ -123,7 +123,8 @@
+ CONFIG_CLEAN_VPATH_FILES =
+ LTLIBRARIES = $(noinst_LTLIBRARIES)
+ libc__20convenience_la_LIBADD =
+-am__objects_1 = tzdb.lo format.lo atomic.lo clock.lo syncbuf.lo
++@GLIBCXX_BUILD_TZDB_TRUE@am__tzdb_objects = tzdb.lo
++am__objects_1 = $(am__tzdb_objects) format.lo atomic.lo clock.lo syncbuf.lo
+ @ENABLE_DUAL_ABI_TRUE@am__objects_2 = cow-string-inst.lo
+ @ENABLE_EXTERN_TEMPLATE_TRUE@am__objects_3 = sstream-inst.lo \
+ @ENABLE_EXTERN_TEMPLATE_TRUE@	format-inst.lo string-inst.lo \
+@@ -443,7 +444,9 @@
+ @ENABLE_EXTERN_TEMPLATE_TRUE@	string-inst.cc \
+ @ENABLE_EXTERN_TEMPLATE_TRUE@	$(extra_string_inst_sources)
+ 
+-sources = tzdb.cc format.cc atomic.cc clock.cc syncbuf.cc
++@GLIBCXX_BUILD_TZDB_TRUE@tzdb_sources = tzdb.cc
++@GLIBCXX_BUILD_TZDB_FALSE@tzdb_sources =
++sources = $(tzdb_sources) format.cc atomic.cc clock.cc syncbuf.cc
+ @GLIBCXX_HOSTED_FALSE@libc__20convenience_la_SOURCES = 
+ @GLIBCXX_HOSTED_TRUE@libc__20convenience_la_SOURCES = $(sources)  $(inst_sources)
+ 
+--- a/libstdc++-v3/src/c++23/Makefile.am
++++ b/libstdc++-v3/src/c++23/Makefile.am
+@@ -25,14 +25,24 @@
+ # Convenience library for C++23 runtime.
+ # This libc++23convenience.la one isn't linked into libstdc++.la yet,
+ # so build an additional libmodulesconvenience.la which is linked in.
++if GLIBCXX_BUILD_STD_MODULES
+ noinst_LTLIBRARIES = libc++23convenience.la libmodulesconvenience.la
++module_manifest = libstdc++.modules.json
++module_interfaces = std.cc std.compat.cc
++module_stamps = stamp-module-manifest stamp-modules-bits
++else
++noinst_LTLIBRARIES = libc++23convenience.la
++module_manifest =
++module_interfaces =
++module_stamps =
++endif
+ 
+ # Module std support.
+ # Let's install the interface units in the bits subdirectory.
+ # We also compile them and include them in libmodulesconvenience.la
+-toolexeclib_DATA = libstdc++.modules.json
++toolexeclib_DATA = $(module_manifest)
+ includebitsdir = $(gxx_include_dir)/bits
+-includebits_DATA = std.cc std.compat.cc
++includebits_DATA = $(module_interfaces)
+ 
+ # The manifest to be installed uses the relative path between install dirs.
+ libstdc++.modules.json: libstdc++.modules.json.in
+@@ -60,7 +70,7 @@
+ 	-cd $(top_builddir)/include/bits && $(LN_S) $(abspath $?) . 2>/dev/null
+ 	@$(STAMP) $@
+ 
+-all-local: stamp-module-manifest stamp-modules-bits
++all-local: $(module_stamps)
+ 
+ clean-local:
+ 	rm -rf stamp* libstdc++.modules.json std.cc std.compat.cc gcm.cache
+--- a/libstdc++-v3/src/c++23/Makefile.in
++++ b/libstdc++-v3/src/c++23/Makefile.in
+@@ -464,14 +464,21 @@
+ # Convenience library for C++23 runtime.
+ # This libc++23convenience.la one isn't linked into libstdc++.la yet,
+ # so build an additional libmodulesconvenience.la which is linked in.
+-noinst_LTLIBRARIES = libc++23convenience.la libmodulesconvenience.la
++@GLIBCXX_BUILD_STD_MODULES_TRUE@noinst_LTLIBRARIES = libc++23convenience.la libmodulesconvenience.la
++@GLIBCXX_BUILD_STD_MODULES_FALSE@noinst_LTLIBRARIES = libc++23convenience.la
++@GLIBCXX_BUILD_STD_MODULES_TRUE@module_manifest = libstdc++.modules.json
++@GLIBCXX_BUILD_STD_MODULES_FALSE@module_manifest =
++@GLIBCXX_BUILD_STD_MODULES_TRUE@module_interfaces = std.cc std.compat.cc
++@GLIBCXX_BUILD_STD_MODULES_FALSE@module_interfaces =
++@GLIBCXX_BUILD_STD_MODULES_TRUE@module_stamps = stamp-module-manifest stamp-modules-bits
++@GLIBCXX_BUILD_STD_MODULES_FALSE@module_stamps =
+ 
+ # Module std support.
+ # Let's install the interface units in the bits subdirectory.
+ # We also compile them and include them in libmodulesconvenience.la
+-toolexeclib_DATA = libstdc++.modules.json
++toolexeclib_DATA = $(module_manifest)
+ includebitsdir = $(gxx_include_dir)/bits
+-includebits_DATA = std.cc std.compat.cc
++includebits_DATA = $(module_interfaces)
+ headers = 
+ # XTEMPLATE_FLAGS =
+ @ENABLE_EXTERN_TEMPLATE_FALSE@inst_sources = 
+@@ -868,7 +875,7 @@
+ 	-cd $(top_builddir)/include/bits && $(LN_S) $(abspath $?) . 2>/dev/null
+ 	@$(STAMP) $@
+ 
+-all-local: stamp-module-manifest stamp-modules-bits
++all-local: $(module_stamps)
+ 
+ clean-local:
+ 	rm -rf stamp* libstdc++.modules.json std.cc std.compat.cc gcm.cache
+--- a/libstdc++-v3/src/c++26/Makefile.am
++++ b/libstdc++-v3/src/c++26/Makefile.am
+@@ -35,9 +35,13 @@
+ inst_sources =
+ endif
+ 
+-sources = \
+-	  debugging.cc \
+-	  text_encoding.cc
++if GLIBCXX_BUILD_DEBUGGING
++debugging_sources = debugging.cc
++else
++debugging_sources =
++endif
++
++sources = $(debugging_sources) text_encoding.cc
+ 
+ vpath % $(top_srcdir)/src/c++26
+ 
+--- a/libstdc++-v3/src/c++26/Makefile.in
++++ b/libstdc++-v3/src/c++26/Makefile.in
+@@ -123,7 +123,8 @@
+ CONFIG_CLEAN_VPATH_FILES =
+ LTLIBRARIES = $(noinst_LTLIBRARIES)
+ libc__26convenience_la_LIBADD =
+-am__objects_1 = debugging.lo text_encoding.lo
++@GLIBCXX_BUILD_DEBUGGING_TRUE@am__debugging_objects = debugging.lo
++am__objects_1 = $(am__debugging_objects) text_encoding.lo
+ am__objects_2 =
+ @GLIBCXX_HOSTED_TRUE@am_libc__26convenience_la_OBJECTS =  \
+ @GLIBCXX_HOSTED_TRUE@	$(am__objects_1) $(am__objects_2)
+@@ -433,9 +434,9 @@
+ 
+ # XTEMPLATE_FLAGS = -fno-implicit-templates
+ @ENABLE_EXTERN_TEMPLATE_TRUE@inst_sources = 
+-sources = \
+-	  debugging.cc \
+-	  text_encoding.cc
++@GLIBCXX_BUILD_DEBUGGING_TRUE@debugging_sources = debugging.cc
++@GLIBCXX_BUILD_DEBUGGING_FALSE@debugging_sources =
++sources = $(debugging_sources) text_encoding.cc
+ 
+ @GLIBCXX_HOSTED_FALSE@libc__26convenience_la_SOURCES = 
+ @GLIBCXX_HOSTED_TRUE@libc__26convenience_la_SOURCES = $(sources)  $(inst_sources)
+--- a/libstdc++-v3/src/Makefile.am
++++ b/libstdc++-v3/src/Makefile.am
+@@ -121,6 +121,12 @@
+ 	compatibility-parallel_list.cc  compatibility-parallel_list-2.cc
+ 
+ 
++if GLIBCXX_BUILD_STD_MODULES
++module_convenience = $(top_builddir)/src/c++23/libmodulesconvenience.la
++else
++module_convenience =
++endif
++
+ cxx98_sources = \
+ 	compatibility.cc \
+ 	compatibility-debug_list.cc \
+@@ -146,7 +152,7 @@
+ 	$(top_builddir)/src/c++11/libc++11convenience.la \
+ 	$(top_builddir)/src/c++17/libc++17convenience.la \
+ 	$(top_builddir)/src/c++20/libc++20convenience.la \
+-	$(top_builddir)/src/c++23/libmodulesconvenience.la
++	$(module_convenience)
+ 
+ libstdc___la_DEPENDENCIES = \
+ 	${version_dep} \
+@@ -155,7 +161,7 @@
+ 	$(top_builddir)/src/c++11/libc++11convenience.la \
+ 	$(top_builddir)/src/c++17/libc++17convenience.la \
+ 	$(top_builddir)/src/c++20/libc++20convenience.la \
+-	$(top_builddir)/src/c++23/libmodulesconvenience.la
++	$(module_convenience)
+ 
+ if ENABLE_DARWIN_AT_RPATH
+ libstdc___darwin_rpath = -Wc,-nodefaultrpaths
+--- a/libstdc++-v3/src/Makefile.in
++++ b/libstdc++-v3/src/Makefile.in
+@@ -535,6 +535,9 @@
+ parallel_compat_sources = \
+ 	compatibility-parallel_list.cc  compatibility-parallel_list-2.cc
+ 
++@GLIBCXX_BUILD_STD_MODULES_TRUE@module_convenience = $(top_builddir)/src/c++23/libmodulesconvenience.la
++@GLIBCXX_BUILD_STD_MODULES_FALSE@module_convenience =
++
+ cxx98_sources = \
+ 	compatibility.cc \
+ 	compatibility-debug_list.cc \
+@@ -556,7 +559,7 @@
+ 	$(top_builddir)/src/c++11/libc++11convenience.la \
+ 	$(top_builddir)/src/c++17/libc++17convenience.la \
+ 	$(top_builddir)/src/c++20/libc++20convenience.la \
+-	$(top_builddir)/src/c++23/libmodulesconvenience.la
++	$(module_convenience)
+ 
+ libstdc___la_DEPENDENCIES = \
+ 	${version_dep} \
+@@ -565,7 +568,7 @@
+ 	$(top_builddir)/src/c++11/libc++11convenience.la \
+ 	$(top_builddir)/src/c++17/libc++17convenience.la \
+ 	$(top_builddir)/src/c++20/libc++20convenience.la \
+-	$(top_builddir)/src/c++23/libmodulesconvenience.la
++	$(module_convenience)
+ 
+ @ENABLE_DARWIN_AT_RPATH_TRUE@libstdc___darwin_rpath =  \
+ @ENABLE_DARWIN_AT_RPATH_TRUE@	-Wc,-nodefaultrpaths \
