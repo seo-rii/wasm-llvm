@@ -42,8 +42,10 @@ def prepare(source, apply=False):
         expected = prefixes[-1]
 
         def source_diff():
+            # GCC configure can consume ignored in-tree GMP/MPFR/MPC sources.
+            # Ignore rules must not exempt any additional compilation inputs.
             untracked = set(filter(None, git(
-                'ls-files', '--others', '--exclude-standard', '-z').split(b'\0')))
+                'ls-files', '--others', '-z').split(b'\0')))
             if untracked - added_paths:
                 raise RuntimeError('GCC source contains untracked inputs')
             # Include precisely the new paths introduced by locked patches.

@@ -14,7 +14,8 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		const git = (...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 		git('init', '-q');
 		await fs.writeFile(path.join(source, 'target.cc'), 'first\nsecond\nthird\n');
-		git('add', 'target.cc');
+		await fs.writeFile(path.join(source, '.gitignore'), '/gmp*/\n');
+		git('add', 'target.cc', '.gitignore');
 		git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'test: source fixture');
 		const commit = git('rev-parse', 'HEAD').trim();
 		const script = path.join(temp, 'prepare-source.py');
@@ -62,5 +63,10 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		await fs.writeFile(path.join(source, 'target.cc'), 'FIRST\nSECOND\nthird\n');
 		await fs.writeFile(path.join(source, 'unexpected.h'), 'untracked input\n');
 		assert.notEqual(run().status, 0, 'untracked compilation inputs must fail verification');
+		await fs.unlink(path.join(source, 'unexpected.h'));
+		await fs.mkdir(path.join(source, 'gmp'));
+		await fs.writeFile(path.join(source, 'gmp/configure'), '#!/bin/sh\n');
+		assert.equal(git('check-ignore', 'gmp/configure').trim(), 'gmp/configure');
+		assert.notEqual(run().status, 0, 'ignored in-tree dependencies must not bypass source verification');
 	} finally { await fs.rm(temp, { recursive: true, force: true }); }
 });
