@@ -21,7 +21,9 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		await fs.copyFile(new URL('./prepare-source.py', import.meta.url), script);
 		const patches = [
 			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n-first\n+FIRST\n second\n third\n',
-			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n FIRST\n-second\n+SECOND\n third\n'
+			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n FIRST\n-second\n+SECOND\n third\n',
+			'--- /dev/null\n+++ b/target.opt\n@@ -0,0 +1,2 @@\n+msimd128\n+Target Mask(SIMD128)\n',
+			'--- a/target.opt\n+++ b/target.opt\n@@ -1,2 +1,2 @@\n msimd128\n-Target Mask(SIMD128)\n+Target Mask(SIMD128) Init(0)\n'
 		];
 		const pins = [];
 		for (const [index, contents] of patches.entries()) {
@@ -36,10 +38,24 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.equal(run(true).status, 0);
 		assert.equal(await fs.readFile(path.join(source, 'target.cc'), 'utf8'), 'FIRST\nsecond\nthird\n');
 		await lock(2);
-		assert.equal(run(true).status, 0, 'exact prefix should permit the next locked patch');
+		{ const result = run(true); assert.equal(result.status, 0, `exact prefix should permit the next locked patch: ${result.stderr}`); }
 		assert.equal(run().status, 0);
 		assert.equal(run(true).status, 0, 'already patched source should be idempotent');
 		assert.equal(git('diff', '--cached'), '', 'preparation must not stage source changes');
+		git('add', 'target.cc');
+		const stagedBefore = git('diff', '--cached', '--binary');
+		await lock(3);
+		assert.equal(run(true).status, 0, 'a locked patch may introduce a target source file');
+		assert.equal(run().status, 0, 'the exact newly added file is a verified input');
+		assert.equal(git('diff', '--cached', '--binary'), stagedBefore, 'the real index must remain unchanged');
+		await fs.writeFile(path.join(source, 'target.opt'), 'unlocked option\n');
+		assert.notEqual(run(true).status, 0, 'new-file content drift must not be accepted');
+		await fs.writeFile(path.join(source, 'target.opt'), 'msimd128\nTarget Mask(SIMD128)\n');
+		await lock(4);
+		assert.equal(run(true).status, 0, 'a later locked patch may update the new file');
+		assert.equal(run().status, 0);
+		assert.equal(await fs.readFile(path.join(source, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
+		assert.equal(git('diff', '--cached', '--binary'), stagedBefore);
 		await fs.writeFile(path.join(source, 'target.cc'), 'unknown local work\n');
 		assert.notEqual(run(true).status, 0, 'unknown source changes must never be patched over');
 		assert.equal(await fs.readFile(path.join(source, 'target.cc'), 'utf8'), 'unknown local work\n');

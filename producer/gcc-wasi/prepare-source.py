@@ -19,8 +19,6 @@ def prepare(source, apply=False):
 
     if git('rev-parse', 'HEAD').decode().strip() != lock['commit']:
         raise RuntimeError('GCC source revision differs from the lock')
-    if git('ls-files', '--others', '--exclude-standard').strip():
-        raise RuntimeError('GCC source contains untracked inputs')
     patches = []
     for patch in lock.get('patches', []):
         name = pathlib.PurePosixPath(patch['path'])
@@ -34,18 +32,40 @@ def prepare(source, apply=False):
         env = dict(os.environ, GIT_INDEX_FILE=str(pathlib.Path(temp) / 'index'))
         git('read-tree', 'HEAD', env=env)
         prefixes = [b'']
+        added_paths = set()
         for patch in patches:
             git('apply', '--cached', str(patch), env=env)
             prefixes.append(git('diff', '--cached', '--binary', '--no-ext-diff', 'HEAD', env=env))
+            added_paths.update(filter(None, git(
+                'diff', '--cached', '--name-only', '--diff-filter=A', '-z', 'HEAD',
+                env=env).split(b'\0')))
         expected = prefixes[-1]
-    actual = git('diff', '--binary', '--no-ext-diff', 'HEAD', '--', '.')
-    if apply and actual != expected and actual in prefixes:
-        # Reuse an incremental build only when its source is an exact prefix of
-        # the newly locked patch set. Never apply over unrelated local changes.
-        remaining = patches[prefixes.index(actual):]
-        git('apply', '--check', *map(str, remaining))
-        git('apply', *map(str, remaining))
-        actual = git('diff', '--binary', '--no-ext-diff', 'HEAD', '--', '.')
+
+        def source_diff():
+            untracked = set(filter(None, git(
+                'ls-files', '--others', '--exclude-standard', '-z').split(b'\0')))
+            if untracked - added_paths:
+                raise RuntimeError('GCC source contains untracked inputs')
+            # Include precisely the new paths introduced by locked patches.
+            # A normal working-tree diff omits untracked files such as a new
+            # target .opt file. Hash the working files into a fresh temporary
+            # index; copying the real index could reuse stale stat-cache data.
+            git('read-tree', 'HEAD', env=env)
+            git('add', '-u', '--', '.', env=env)
+            for name in sorted(added_paths):
+                path = source / os.fsdecode(name)
+                if path.exists() or path.is_symlink():
+                    git('add', '-f', '--', os.fsdecode(name), env=env)
+            return git('diff', '--cached', '--binary', '--no-ext-diff', 'HEAD', env=env)
+
+        actual = source_diff()
+        if apply and actual != expected and actual in prefixes:
+            # Reuse an incremental build only when its source is an exact prefix
+            # of the newly locked patch set, including any added source files.
+            remaining = patches[prefixes.index(actual):]
+            git('apply', '--check', *map(str, remaining))
+            git('apply', *map(str, remaining))
+            actual = source_diff()
     if actual != expected:
         raise RuntimeError('GCC source differs from exactly the locked patch set')
     return {
