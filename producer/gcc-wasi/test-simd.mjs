@@ -42,7 +42,11 @@ const report = {
   fixture: await identify(path.join(here, 'simd-fixtures.mjs')),
   testRecipe: await identify(fileURLToPath(import.meta.url)),
   assembler: await identify(path.join(work, 'wabt-native/wat2wasm')),
-  linker: await identify(path.join(sdk, 'bin/wasm-ld')), cases: []
+  linker: await identify(path.join(sdk, 'bin/wasm-ld')),
+  runtime: Object.fromEntries(await Promise.all([
+    ...['crt1-command.o', 'libc.a', 'libm.a'].map(name => [name, path.join(library, name)]),
+    ['libclang_rt.builtins-wasm32.a', builtins]
+  ].map(async ([name, file]) => [name, await identify(file)]))), cases: []
 };
 const runner = path.join(output, 'run-wasi.mjs');
 await fs.writeFile(runner, `import { WASI } from 'node:wasi';

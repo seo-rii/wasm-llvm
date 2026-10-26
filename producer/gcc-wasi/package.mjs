@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync, brotliCompressSync, constants } from 'node:zlib';
 import { identity, readNativeTree, relativePath } from '../clang-browser/cross/package.mjs';
 import { deterministicTar } from '../clang-browser/scripts/package-language-sysroots.mjs';
+import { cases as simdCases, disabledCases } from './simd-fixtures.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const json = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -36,7 +37,45 @@ export function checkWasm(bytes, label, executable = false) {
 	assert(exports.some((e) => e.kind === 'memory'), `${label}: no exported memory`);
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx }) {
+export function verifySimdQualification(report, expected) {
+	assert.equal(report.kind, 'gcc-wasi-native-simd-qualification');
+	assert.equal(report.status, 'passed', 'SIMD qualification did not pass');
+	assert.equal(report.gccCommit, expected.gccCommit);
+	assert.equal(report.compiler?.sha256, expected.compilerSha256, 'SIMD qualification covers another GCC binary');
+	assert.deepEqual(report.fixture, expected.fixture, 'SIMD fixture changed after qualification');
+	assert.deepEqual(report.testRecipe, expected.testRecipe, 'SIMD test recipe changed after qualification');
+	assert.deepEqual(report.assembler, expected.assembler, 'SIMD assembler changed after qualification');
+	assert.deepEqual(report.linker, expected.linker, 'SIMD linker changed after qualification');
+	assert.deepEqual(report.runtime, expected.runtime, 'SIMD runtime differs from the packaged runtime');
+	const fixtures = [...simdCases, ...disabledCases];
+	assert.deepEqual(report.cases.map((test) => test.id).sort(), fixtures.map((test) => test.id).sort(), 'SIMD qualification is incomplete');
+	for (const test of report.cases) {
+		const fixture = fixtures.find((f) => f.id === test.id);
+		assert.equal(test.status, 'passed', `SIMD fixture failed: ${test.id}`);
+		assert.deepEqual(test.source, identity(Buffer.from(fixture.request.code)), 'SIMD source differs from its fixture');
+		assert.equal(test.stdout, fixture.stdout, 'SIMD execution output differs from the fixture');
+		assert(Number.isSafeInteger(test.wasm?.bytes) && test.wasm.bytes > 8 && /^[a-f0-9]{64}$/.test(test.wasm.sha256), 'Missing SIMD program identity');
+		assert.equal(test.commands?.length, 5, 'Missing SIMD compile/assemble/disassemble/link/execute evidence');
+		for (const command of test.commands) {
+			assert.equal(command.status, 0, 'SIMD command failed');
+			assert.equal(command.signal, null, 'SIMD command was interrupted');
+			assert(!command.error, 'SIMD command did not execute');
+		}
+		assert.deepEqual(test.commands.slice(0, 4).map((command) => path.basename(command.command)), ['cc1', 'wat2wasm', 'wasm-objdump', 'wasm-ld']);
+		assert(test.commands[0].argv.includes(fixture.request.simd ? '-msimd128' : '-mno-simd128'));
+		assert.equal(test.commands[4].stdout, fixture.stdout);
+		assert.equal(test.commands[4].stderr, '');
+		assert(Array.isArray(test.imports) && test.imports.every((entry) => entry.module === 'wasi_snapshot_preview1' && entry.kind === 'function'));
+		assert(test.exports?.some((entry) => entry.name === 'memory' && entry.kind === 'memory'));
+		assert(test.exports.some((entry) => entry.name === '_start' && entry.kind === 'function'));
+	}
+	for (const field of ['disabledDiagnostic', 'defaultDiagnostic']) {
+		assert.equal(report[field]?.status, 1, 'SIMD disabled-profile diagnostic was not verified');
+		assert.match(report[field].stderr, /SIMD128 is disabled/);
+	}
+}
+
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -74,6 +113,11 @@ export async function packageWasi({ work, runtime, output, libstdcxx }) {
 	assert.equal(JSON.parse(nativeGate).buildReceiptSha256, identity(nativeReceiptBytes).sha256);
 	assert.equal(JSON.parse(nativeGate).sourceLockSha256, identity(lockBytes).sha256);
 	assert.equal(nativeReceipt.sourceLockSha256, identity(lockBytes).sha256);
+	let simdProof;
+	if (simdQualification) {
+		assert(nativeLinker, '--simd-qualification requires --native-linker');
+		simdProof = await fs.readFile(simdQualification);
+	}
 
 	const asRoot = path.join(work, 'wabt-browser');
 	const asReceipt = await readJson(path.join(asRoot, 'provenance.json'));
@@ -90,6 +134,26 @@ export async function packageWasi({ work, runtime, output, libstdcxx }) {
 	assert.deepEqual(runtimeReceipt.patches, runtimeLock.wasiLibc.patches || []);
 	const sysroot = await readNativeTree(path.join(runtime, 'sysroot'));
 	verifyInventory(sysroot, runtimeReceipt.files, 'WASI sysroot');
+	if (simdProof) {
+		const report = JSON.parse(simdProof);
+		verifySimdQualification(report, {
+			gccCommit: lock.gcc.commit,
+			compilerSha256: nativeReceipt.tools.cc1.sha256,
+			fixture: identity(await fs.readFile(path.join(here, 'simd-fixtures.mjs'))),
+			testRecipe: identity(await fs.readFile(path.join(here, 'test-simd.mjs'))),
+			assembler: identity(await fs.readFile(path.join(work, 'wabt-native/wat2wasm'))),
+			linker: identity(await fs.readFile(nativeLinker)),
+			runtime: Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a'].map((name) => [name, identity(sysroot.find((f) => f.path === `lib/wasm32-wasi/${name}`).bytes)]))
+		});
+		for (const test of report.cases) {
+			const bytes = await fs.readFile(path.join(path.dirname(simdQualification), test.id, 'main.wasm'));
+			assert.deepEqual(identity(bytes), test.wasm, 'SIMD program differs from its qualification');
+			checkWasm(bytes, `SIMD ${test.id}`, true);
+			const module = new WebAssembly.Module(bytes);
+			assert.deepEqual(WebAssembly.Module.imports(module), test.imports);
+			assert.deepEqual(WebAssembly.Module.exports(module), test.exports);
+		}
+	}
 	const linker = await fs.readFile(path.join(runtime, 'ld.wasm'));
 	assert.deepEqual(identity(linker), { bytes: runtimeReceipt.linker.bytes, sha256: runtimeReceipt.linker.sha256 });
 	assert.equal(runtimeReceipt.linker.commit, runtimeLock.browserLinker.commit);
@@ -189,13 +253,14 @@ export async function packageWasi({ work, runtime, output, libstdcxx }) {
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
 		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a'],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: false },
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			'long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.',
-			'Single-field aggregate ABI differs from Clang. Only GCC-produced user translation units are supported; arbitrary external objects are not.',
+			'Arbitrary external objects are outside the SDK input contract; direct LLVM v128 and vector aggregate ABI interoperability are not supported.',
 			'C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.',
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
+			...(simdProof ? ['SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization, wasm_simd128.h intrinsics and cross-toolchain vector ABI are not qualified.'] : []),
 			'x86 AVX2/FMA intrinsics and target pragmas do not provide Wasm SIMD.'
 		],
 		qualification: { status: 'unverified' }
@@ -208,6 +273,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx }) {
 		...llvmProofs
 	]);
 	if (stdReceipt) provenanceFiles.set('libstdcxx-build.json', json(stdReceipt));
+	if (simdProof) provenanceFiles.set('native-simd-qualification.json', simdProof);
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
 	for (const patch of lock.gcc.patches || []) {
@@ -252,9 +318,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR]');
-			assert(!opts[key], `Duplicate option: ${key}`);
-			opts[key] = process.argv[i + 1];
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(!opts[field], `Duplicate option: ${key}`);
+			opts[field] = process.argv[i + 1];
 		}
 		assert(opts.work && opts.runtime && opts.output, 'Required: --work DIR --runtime DIR --output NEW_DIR');
 		console.log(JSON.stringify(await packageWasi(opts)));
