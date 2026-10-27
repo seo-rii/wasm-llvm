@@ -61,7 +61,8 @@ const REQUIRED_PRODUCERS = [
 	'swift-browser',
 	'tinygo-browser',
 	'v-browser',
-	'wamr-browser'
+	'wamr-browser',
+	'zig-browser'
 ];
 
 async function exists(filePath) {
