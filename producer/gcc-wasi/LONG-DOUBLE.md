@@ -22,7 +22,9 @@ little-endian i64 locals. Moves expand to word operations even at O0; scalar
 binary128 does not require SIMD or use a `v128` local. GCC's generic argument
 assembly also introduces internal TImode storage. The patch supports those
 containers, whole-value bit copies and their DI or narrow integer word views.
-This does not enable the public `__int128` type or integer arithmetic in TI mode.
+Patch `0008` alone does not enable public int128 arithmetic. The subsequent
+[public-int128 patch](INT128.md) adds that separate feature and qualification
+while preserving this binary128 representation.
 
 Arithmetic, comparisons and numeric conversions use GCC's soft-float optabs and
 the pinned WASI compiler-rt archive. The runtime helpers execute binary128
@@ -167,9 +169,11 @@ sizes do not describe a new binary128 build.
 
 ## Boundaries and distribution
 
-Public `__int128` is unsupported. `_Float128` and complex long-double arithmetic
-have only small boundary probes and are outside this formal qualification
-matrix. The matrix does not establish complete ISO C/C++ or C ABI conformance,
+Public int128 is covered separately by [patch `0009` and its matrix](INT128.md);
+its support does not follow from this binary128 proof. `_Float128` and complex
+long-double arithmetic have only small boundary probes and remain outside this
+formal qualification matrix. The matrix does not establish complete ISO C/C++
+or C ABI conformance,
 all math-library accuracy guarantees or every floating-point environment mode.
 Exceptions, RTTI, threads/TLS/atomics, shared memory, dynamic linking and external
 binary inputs retain their existing unsupported status. Binary128 alone does

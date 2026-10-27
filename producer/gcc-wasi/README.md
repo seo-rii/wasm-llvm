@@ -17,6 +17,8 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [additional SIMD operations and vector ABI](../../docs/gcc-wasi-simd-extension.md),
 [binary128 implementation and reproduction](LONG-DOUBLE.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
+[public int128 implementation and reproduction](INT128.md),
+[int128 qualification results](../../docs/gcc-wasi-int128.md),
 [source pins](sources.lock.json), and [runtime pins](runtime.lock.json).
 The June 2026 GCC announcement approved a development direction; this backend is
 an unmerged author port, not a released upstream GCC target. Keeping its GCC 17
@@ -29,7 +31,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0008`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI and binary128 lowering; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0009`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128 and public int128 lowering; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -69,6 +71,12 @@ library call before its argument setup. This changes the output ABI; GNU
 libstdc++ must be rebuilt with the patched compiler. The binary128 document
 defines the qualification matrix; completed results and loading sizes belong
 in the separate validation report linked above.
+Patch `0009` adds [public signed/unsigned int128](INT128.md), reusing TI pair
+storage with the WASI two-i64 argument/indirect-result ABI and generic integer
+optabs. It adds the scalar complement word optab and i32 runtime shift counts.
+Native execution also exposed a host-buffer overread while emitting 16-byte
+`CONST_INT` initializers; the serializer now emits explicit bounded zero/sign
+extension. The int128 document defines the full 42-program/116-run matrix.
 
 ## Reproduction
 
@@ -78,8 +86,8 @@ the exact SDK and emsdk revisions above. Build paths must not contain whitespace
 `out/` is local, ignored build/evidence storage. A separate wasm-idle checkout
 with the matching GCC API changes provides the browser qualification harness.
 Use the same Node executable for the native qualifications and packaging:
-the binary128 gate binds the executed Node binary as well as compiler and
-runtime inputs. Exact versions used by a completed run belong in its report.
+the binary128 and int128 gates bind the executed Node binary as well as
+compiler and runtime inputs. Exact versions used by a completed run belong in its report.
 
 ```sh
 export GCC_WASI_WORK_DIR="$PWD/out/gcc-wasi-work"
@@ -161,8 +169,8 @@ a TLS ABI or alter user source. The imported archive bytes and patched header
 identities are both recorded in `runtime-build.json`.
 
 ```sh
-# Select a new directory after the binary128 ABI change; preserve old runtimes.
-export GCC_LIBSTDCXX_WORK_DIR="$GCC_WASI_WORK_DIR/libstdcxx-binary128"
+# Select a new directory for the current wide scalar compiler; preserve old runtimes.
+export GCC_LIBSTDCXX_WORK_DIR="$GCC_WASI_WORK_DIR/libstdcxx-int128"
 bash producer/gcc-wasi/build-libstdcxx.sh
 node producer/gcc-wasi/test-libstdcxx.mjs "$GCC_LIBSTDCXX_WORK_DIR/qualification"
 
@@ -173,6 +181,13 @@ node producer/gcc-wasi/test-long-double.mjs \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
   --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
   --output "$GCC_WASI_WORK_DIR/long-double-qualification"
+node producer/gcc-wasi/test-int128.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" \
+  --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/int128-qualification"
 
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
@@ -180,15 +195,16 @@ node producer/gcc-wasi/package.mjs \
   --simd-extended-qualification "$GCC_WASI_WORK_DIR/simd-extended-qualification/qualification.json" \
   --vector-abi-qualification "$GCC_WASI_WORK_DIR/vector-abi-qualification/report.json" \
   --long-double-qualification "$GCC_WASI_WORK_DIR/long-double-qualification/report.json" \
+  --int128-qualification "$GCC_WASI_WORK_DIR/int128-qualification/report.json" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current eight-patch compiler, `--long-double-qualification`, the native
-linker and a freshly rebuilt, qualified `--libstdcxx` runtime are required.
-The full binary128 matrix includes GNU library interfaces, so a C-only proof
-cannot satisfy that gate. Earlier compiler profiles can omit `--libstdcxx` and
-advertise `libstdcxx: false` with core C++ language support. Every supplied GNU
+For the current nine-patch compiler, `--long-double-qualification`,
+`--int128-qualification`, the native linker and a freshly rebuilt, qualified
+`--libstdcxx` runtime are required. Both wide-scalar matrices include GNU library
+interfaces, so a C-only proof cannot satisfy either complete gate. Earlier
+compiler profiles can omit `--libstdcxx` and advertise `libstdcxx: false` with core C++ language support. Every supplied GNU
 runtime must have a successful real native qualification receipt.
 Packaging verifies input inventories, source identities, the native gate and
 module formats. It writes a fresh output directory and the final v2 manifest
@@ -209,6 +225,12 @@ GCC/Clang runs, the pinned print/scan extension and the rebuilt GNU archives.
 It checks both actual Clang invocations, executed tool paths, header inventories,
 runtime hashes and reopened Wasm artifacts. A passing native gate enables
 `capabilities.longDouble`; it does not replace Chromium qualification.
+The public-int128 gate independently requires all 42 fixtures and 116 applicable
+native runs, matching source/tool/header/runtime identities and actual ABI/I/O.
+It enables optional `capabilities.int128`, defaulting to false for older
+manifests without changing their link plan. It selects no synthetic compiler
+implementation or additional runtime library; existing compiler-rt supplies the
+wide helpers. Bundle qualification additionally requires real Worker execution.
 
 When the backend ABI changes, rebuild GNU libstdc++ in a fresh runtime directory.
 The packager rejects runtime receipts from a different compiler or patch set.
@@ -229,6 +251,10 @@ node scripts/verify-gcc-wasi.mjs \
   --manifest /absolute/path/to/wasm-llvm/out/gcc-wasi-bundle/gcc-toolchain.v2.json \
   --suite /absolute/path/to/wasm-llvm/producer/gcc-wasi/long-double-fixtures.mjs \
   --save-intermediates --output out/gcc-wasi-long-double-browser
+node scripts/verify-gcc-wasi.mjs \
+  --manifest /absolute/path/to/wasm-llvm/out/gcc-wasi-bundle/gcc-toolchain.v2.json \
+  --suite /absolute/path/to/wasm-llvm/producer/gcc-wasi/int128-fixtures.mjs \
+  --save-intermediates --output out/gcc-wasi-int128-browser
 ```
 
 This harness compiles the original C/C++ fixtures inside a Chromium Worker,
@@ -238,8 +264,9 @@ the source manifest digest. Its transfer report covers all compiler/runtime
 assets and actual requested SDK Worker modules. `loading-sizes.json` separately
 records deterministic raw, gzip level 9 and Brotli quality 6 bundle estimates;
 those estimates do not pretend to be a measured browser transfer.
-The binary128 invocation schedules all 42 fixtures, compiling with the real
-Wasm-host GCC and executing each resulting program in Chromium and Node WASI.
+Each wide-scalar invocation schedules its own complete 42-fixture suite,
+compiling with real Wasm-host GCC and executing each resulting program in
+Chromium and Node WASI.
 The native mixed-compiler directions are separate from this GCC-only Worker
 pipeline. Commands and suite counts are reproduction requirements, not a claim
 that a particular bundle has passed; consult the linked qualification results.
@@ -293,15 +320,24 @@ ABI limitations remain and must not be hidden by passing scalar tests:
   false; their original link command is preserved, and their binary64
   long-double library/variadic interfaces remain unsupported. See
   [the binary128 scope and tests](LONG-DOUBLE.md).
+- Patch `0009` enables public signed/unsigned `__int128`, with 16-byte layout
+  and low/high i64 arguments and indirect results. Its complete native matrix
+  gates `capabilities.int128`; actual Worker qualification is separate. Scalar
+  int128 needs no SIMD opt-in. See [the exact integer scope and tests](INT128.md).
 - Singleton and empty aggregate interoperation passes the focused Basic C ABI
   suite. With `-msimd128`, the six vector modes and qualified singleton vector
   aggregates use direct `v128` arguments/results. Both sides must select this
   profile; disabled SIMD retains indirect vector calls. The vector convention
   is compared against pinned Clang 22.1.0, not every future compiler version.
-  Public `__int128` remains unsupported; internal TI copy containers do not
-  enable it. `_Float128` and complex long-double arithmetic have only small
-  boundary probes and are outside the formal qualification scope. Complete C
+  Public int128 is separately covered by patch `0009`. `_Float128` and complex
+  long-double arithmetic have only small boundary probes and are outside the
+  formal qualification scope. Complete C
   ABI compatibility remains unqualified.
+- The trivial C++ type `struct alignas(16) Empty {};` retains a pre-existing
+  GCC/Clang ABI mismatch at O0/O2: GCC passes/returns it indirectly, while the
+  pinned Clang omits it from signatures. GCC callers and callees agree with
+  each other. The preserved eight-patch compiler behaves identically; patch
+  `0009` does not introduce this limitation.
 
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user
