@@ -152,7 +152,8 @@ const COMPILER_HOST_OBJECTS = [
 	}
 ];
 const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
-const EMBED_OBJECT_PATTERN = /^embed-([0-9a-f]{32})-[0-9]+\.o$/u;
+// TinyGo 0.43 names these by payload hash and the recorded source-path hash.
+const EMBED_OBJECT_PATTERN = /^embed-([0-9a-f]{32})-([0-9a-f]{16})\.o$/u;
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
@@ -2040,12 +2041,21 @@ export async function buildBrowserCompiler(
 						continue;
 					}
 					const match = entry.isFile() ? EMBED_OBJECT_PATTERN.exec(entry.name) : null;
-					if (match) discoveredEmbedObjects.push({ embeddedFileHash: match[1], path: entryPath });
+					if (match) {
+						discoveredEmbedObjects.push({
+							embeddedFileHash: match[1],
+							sourcePathHash: match[2],
+							path: entryPath
+						});
+					}
 				}
 			}
 			discoveredEmbedObjects.sort((left, right) => {
 				if (left.embeddedFileHash !== right.embeddedFileHash) {
 					return left.embeddedFileHash < right.embeddedFileHash ? -1 : 1;
+				}
+				if (left.sourcePathHash !== right.sourcePathHash) {
+					return left.sourcePathHash < right.sourcePathHash ? -1 : 1;
 				}
 				return left.path < right.path ? -1 : left.path > right.path ? 1 : 0;
 			});
@@ -2053,33 +2063,38 @@ export async function buildBrowserCompiler(
 				discoveredEmbedObjects.length > 0,
 				'native TinyGo build did not retain its generated embed object inputs'
 			);
-			const embedObjectByHash = new Map();
+			const embedObjectByIdentity = new Map();
 			for (const discovered of discoveredEmbedObjects) {
 				const evidence = await inspectFile(discovered.path, { wasmObject: true });
-				const prior = embedObjectByHash.get(discovered.embeddedFileHash);
+				const identity = `${discovered.embeddedFileHash}-${discovered.sourcePathHash}`;
+				const prior = embedObjectByIdentity.get(identity);
 				if (prior) {
 					assert(
 						prior.bytes === evidence.bytes && prior.sha256 === evidence.sha256,
-						`TinyGo generated conflicting embed objects for ${discovered.embeddedFileHash}`
+						`TinyGo generated conflicting embed objects for ${identity}`
 					);
 					continue;
 				}
-				embedObjectByHash.set(discovered.embeddedFileHash, evidence);
+				embedObjectByIdentity.set(identity, { ...discovered, ...evidence });
 			}
 			const embedObjectOutputs = [];
-			for (const [embeddedFileHash, sourceEvidence] of embedObjectByHash) {
+			for (const [identity, sourceEvidence] of embedObjectByIdentity) {
 				const outputPath = path.join(
 					receipt.paths.hostLinkInputDir,
-					`embed-${embeddedFileHash}.o`
+					`embed-${identity}.o`
 				);
 				await cp(sourceEvidence.path, outputPath, { preserveTimestamps: true });
 				const outputEvidence = await inspectFile(outputPath, { wasmObject: true });
 				assert(
 					outputEvidence.bytes === sourceEvidence.bytes &&
 						outputEvidence.sha256 === sourceEvidence.sha256,
-					`copied TinyGo embed object ${embeddedFileHash} differs from its generated input`
+					`copied TinyGo embed object ${identity} differs from its generated input`
 				);
-				embedObjectOutputs.push({ embeddedFileHash, ...outputEvidence });
+				embedObjectOutputs.push({
+					embeddedFileHash: sourceEvidence.embeddedFileHash,
+					sourcePathHash: sourceEvidence.sourcePathHash,
+					...outputEvidence
+				});
 			}
 			receipt.build.generatedEmbedObjects.status = 'captured';
 			receipt.build.generatedEmbedObjects.outputs = embedObjectOutputs;

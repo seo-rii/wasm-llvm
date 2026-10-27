@@ -448,7 +448,13 @@ function result({ exitCode = 0, stdout = '', stderr = '', signal = null } = {}) 
 
 function createCommandRunner(
 	fixture,
-	{ execute = false, badVersion = false, omitEmbedObject = false, failCompilerOptimizer = false } = {}
+	{
+		execute = false,
+		badVersion = false,
+		omitEmbedObject = false,
+		conflictingEmbedObject = false,
+		failCompilerOptimizer = false
+	} = {}
 ) {
 	const calls = [];
 	const runner = async (command, args, runOptions = {}) => {
@@ -639,9 +645,23 @@ function createCommandRunner(
 			if (!omitEmbedObject) {
 				await writeFixtureFile(
 					path.join(runOptions.env.TMPDIR, 'tinygo-fixture'),
-					'embed-7ce70651d3f6149edd504627b500a7e5-123.o',
-					Buffer.concat([WASM_HEADER, Buffer.from('fixture embed object')])
+					'embed-7ce70651d3f6149edd504627b500a7e5-a123456789abcdef.o',
+					Buffer.concat([WASM_HEADER, Buffer.from('fixture embed object, source a')])
 				);
+				// Equal payloads at different source paths have different DWARF and
+				// source-path hashes; upstream includes both objects in the link.
+				await writeFixtureFile(
+					path.join(runOptions.env.TMPDIR, 'tinygo-fixture'),
+					'embed-7ce70651d3f6149edd504627b500a7e5-b123456789abcdef.o',
+					Buffer.concat([WASM_HEADER, Buffer.from('fixture embed object, source b')])
+				);
+				if (conflictingEmbedObject) {
+					await writeFixtureFile(
+						path.join(runOptions.env.TMPDIR, 'tinygo-other'),
+						'embed-7ce70651d3f6149edd504627b500a7e5-a123456789abcdef.o',
+						Buffer.concat([WASM_HEADER, Buffer.from('conflicting embed object')])
+					);
+				}
 			}
 			return result();
 		}
@@ -1036,12 +1056,20 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		[
 			path.join(
 				receipt.paths.hostLinkInputDir,
-				'embed-7ce70651d3f6149edd504627b500a7e5.o'
+				'embed-7ce70651d3f6149edd504627b500a7e5-a123456789abcdef.o'
+			),
+			path.join(
+				receipt.paths.hostLinkInputDir,
+				'embed-7ce70651d3f6149edd504627b500a7e5-b123456789abcdef.o'
 			)
 		]
 	);
 	assert.ok(
-		linkCall.args.includes(receipt.build.generatedEmbedObjects.outputs[0].path)
+		receipt.build.generatedEmbedObjects.outputs.every((output) => linkCall.args.includes(output.path))
+	);
+	assert.deepEqual(
+		receipt.build.generatedEmbedObjects.outputs.map((output) => output.sourcePathHash),
+		['a123456789abcdef', 'b123456789abcdef']
 	);
 	assert.ok(linkCall.args.includes('stack-size=8388608'));
 	assert.ok(linkCall.args.includes('--max-memory=1342177280'));
@@ -1159,6 +1187,26 @@ test('fails closed when TinyGo omits generated embed objects from the external l
 		JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status,
 		'failed'
 	);
+});
+
+test('rejects conflicting embed objects with the same content and source-path identity', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, {
+		execute: true,
+		conflictingEmbedObject: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/conflicting embed objects for 7ce70651d3f6149edd504627b500a7e5-a123456789abcdef/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.nativeWasmLd && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
 });
 
 test('fails closed on bootstrap impersonation, go-llvm drift, and unsafe receipts', async () => {

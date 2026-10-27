@@ -46,6 +46,11 @@ TinyGo's own C/runtime cache uses the XDG cache directory; setting only `GOCACHE
 archives from an older native LLVM toolchain. The generated `go.work` version also comes
 from the pinned Go bootstrap, so it accepts the upstream compiler module's Go requirement.
 
+The external linker captures TinyGo 0.43 embed objects using both their payload hash and
+their recorded source-path hash. Equal embedded contents at different paths can have different
+DWARF bytes, so both objects are retained, matching upstream linking. Conflicting objects with
+the same complete identity are rejected before linking.
+
 ## Strip compiler debug names
 
 Fresh compiler builds remove only the WebAssembly `name` custom sections before
