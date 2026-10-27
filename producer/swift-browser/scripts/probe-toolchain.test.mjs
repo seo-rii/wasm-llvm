@@ -151,7 +151,7 @@ test('selects a full Swift Wasm SDK and rejects embedded-only SDKs', () => {
 		/Requested Swift Wasm SDK was not found/u
 	);
 	assert.throws(
-		() => selectWasmSdkId('swift-6.3.3-RELEASE_wasm_embedded\n'),
+		() => selectWasmSdkId('swift-6.4.1-RELEASE_wasm_embedded\n'),
 		/embedded Swift Wasm SDKs[\s\S]*requires a full Swift Wasm SDK/u
 	);
 	assert.throws(() => selectWasmSdkId(''), /No Swift Wasm SDK was found/u);
@@ -164,7 +164,7 @@ test('probes the Swift toolchain through an injectable command runner', async ()
 		runWasm: true,
 		runCommand: async (command, args, options = {}) => {
 			calls.push({ command, args, cwd: options.cwd, input: options.input });
-			if (args.join(' ') === '--version') return { stdout: 'Swift version 6.3.3\n', stderr: '' };
+			if (args.join(' ') === '--version') return { stdout: 'Swift version 6.4.1\n', stderr: '' };
 			if (args.join(' ') === 'sdk list') {
 				return { stdout: `${OFFICIAL_WASM_SDK_ID}\n`, stderr: '' };
 			}
@@ -185,7 +185,7 @@ test('probes the Swift toolchain through an injectable command runner', async ()
 		}
 	});
 
-	assert.equal(result.hostSwift, 'Swift version 6.3.3');
+	assert.equal(result.hostSwift, 'Swift version 6.4.1');
 	assert.equal(result.selectedSdk, OFFICIAL_WASM_SDK_ID);
 	assert.equal(result.wasmBytes, 8);
 	assert.equal(result.runStdout, 'swift-stdin:hello wasm-idle\n');
@@ -221,7 +221,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const args = process.argv.slice(2);
 if (args.join(' ') === '--version') {
-  process.stdout.write('Swift version 6.3.3\\n');
+  process.stdout.write('Swift version 6.4.1\\n');
   process.exit(0);
 }
 if (args.join(' ') === 'sdk list') {

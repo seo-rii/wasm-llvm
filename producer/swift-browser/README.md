@@ -9,6 +9,26 @@ and every local patch hash. Build plans and exported bundles carry the effective
 commands, output checksums, and browser contract receipts so an artifact can be traced back to its
 producer inputs.
 
+The recipe targets Swift 6.4.1 and its matching full Wasm SDK. The SDK URL and checksum
+come from the [official Wasm installation instructions](https://www.swift.org/documentation/articles/wasm-getting-started.html).
+The WASI patches were checked against the `swift-6.4.1-RELEASE` source commits:
+
+| Repository | Commit |
+| --- | --- |
+| `swiftlang/swift` | `6e2c19458fdccc3257f9abdad2cfeacf27c6c1a4` |
+| `swiftlang/llvm-project` | `51091bd668a61591b761afe08e2776476e20ff1c` |
+| `swiftlang/swift-syntax` | `050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf` |
+
+Swift 6.4.1 uses its own LLVM 21.1 fork, so the native Clang resource directory remains
+`lib/clang/21`. Its dependency scanner now shares daemon code between Unix and Windows;
+the WASI patch excludes the daemon while retaining inline dependency scanning. The patch
+also preserves the upstream retry handling for interrupted file-lock operations.
+
+Patch application and producer tests do not qualify a rebuilt compiler. Native baseline,
+WASI frontend, Chromium target and complete browser compiler validation must be repeated
+for 6.4.1 before publishing artifacts. The [recorded 6.3.3 acceptance](browser-target-audit.md)
+remains historical evidence for that earlier toolchain.
+
 ## Artifact contract
 
 A raw browser compiler build must produce:
@@ -26,7 +46,7 @@ files are uploaded to external static hosting; they are never npm package conten
 ## Prerequisites
 
 The source checkout and compiler build require a large Linux workspace. The default disk preflight
-requires 80 GiB free. A native Swift 6.3.3 installation and the matching Wasm SDK are used to prove
+requires 80 GiB free. A native Swift 6.4.1 installation and the matching Wasm SDK are used to prove
 the upstream baseline before browser compiler artifacts are accepted.
 
 ```sh
@@ -71,16 +91,20 @@ should run.
 ```sh
 pnpm --dir producer/swift-browser run bootstrap:source -- \
   --source-root /data/wasm-llvm-swift/source \
-  --swift-ref swift-6.3.3-RELEASE \
-  --dependency-scheme release/6.3 \
+  --swift-ref swift-6.4.1-RELEASE \
+  --dependency-scheme release/6.4.1 \
   --swift-clone-depth 1 \
   --swift-clone-filter blob:none \
   --receipt /data/wasm-llvm-swift/source-bootstrap-receipt.json \
   --execute
 ```
 
-The default ref resolves to commit `064859e41d68596f486c5d724401cb370f260409`. The bootstrap
-receipt records the selected repository and ref, clone options, dependency scheme, disk probe,
+The default ref resolves to commit `6e2c19458fdccc3257f9abdad2cfeacf27c6c1a4`. For the default
+repository/ref/scheme combination, bootstrap adds `--tag swift-6.4.1-RELEASE` to
+`update-checkout` so the dependency update retains the release instead of switching Swift
+to the newer release-branch tip. Custom repository/ref/scheme combinations retain their
+requested scheme behavior. The bootstrap receipt records the selected repository and ref,
+clone options, dependency scheme and release tag, disk probe,
 commands, required checkout files, and pass/fail status. Retain that receipt with the build plan.
 
 ## Build plan
@@ -144,8 +168,8 @@ match the plan.
 pnpm --dir producer/swift-browser run package:from-plan -- \
   --plan /data/wasm-llvm-swift/build/wasm-idle-swift-browser-build-plan.json \
   --dist-dir producer/swift-browser/dist \
-  --swift-version 6.3.3 \
-  --wasm-sdk-id swift-6.3.3-RELEASE_wasm \
+  --swift-version 6.4.1 \
+  --wasm-sdk-id swift-6.4.1-RELEASE_wasm \
   --source 'pinned source build' \
   --require-upstream-baseline-receipt \
   --require-browser-compiler-contracts \
