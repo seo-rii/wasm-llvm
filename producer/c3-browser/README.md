@@ -62,7 +62,9 @@ The compiler module was 39,987,618 bytes; both engines produced the same 19 relo
 and 492,903-byte guest from `fixtures/program.c3`. Version output, valid compilation/linking,
 and invalid-source diagnostics contained no unsupported host-syscall warnings. The exact
 checksums and diagnostic are preserved in the qualification evidence and generated receipts.
-Generated artifacts are ignored by Git and are not deployed by these commands.
+Local build outputs are ignored by Git. The qualified delivery copy is checked in under
+[`artifacts/c3-browser`](../../artifacts/c3-browser/README.md), with gzip compression for the
+compiler Wasm, so consumers can pin its immutable Git commit. These commands do not deploy it.
 
 ## Compiler invocation contract
 
