@@ -94,6 +94,7 @@ class PackagingTests(unittest.TestCase):
         output, receipt = self.fixture()
         for key, value, expected in [
             ("version", "0.11.0", "mismatched version"),
+            ("debug", {"patchSha256": "0" * 64}, "mismatched debug"),
             ("validation", {"passed": False}, "successful qualification"),
         ]:
             with self.subTest(key=key):

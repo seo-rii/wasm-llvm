@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "producerId": "wasm-llvm/zig-browser",
-  "profileId": "zigc-wasm-0.17.0",
+  "profileId": "zigc-wasm-0.17.0-ir",
   "version": "0.17.0",
   "sourceLock": "sources.lock.json",
-  "sourceLockSha256": "bee1658ee3c4a52216e3b5fd05ce7f9bc8e4788f0590352613090ec82c043309",
+  "sourceLockSha256": "af89ffa665385747edb3620cab4721195e5fe244e07522567c66c8cff97579a0",
   "sources": {
     "port": {
       "repository": "https://github.com/seo-rii/zigc-wasm",
@@ -13,7 +13,7 @@
   },
   "target": "wasm32-wasi",
   "wasi": "preview1",
-  "backend": "self-hosted-wasm",
+  "backend": "self-hosted-wasm-and-llvm-bitcode",
   "outputs": [
     "zig.wasm",
     "lib.tar.gz",
@@ -21,7 +21,7 @@
     "producer-receipt.json"
   ],
   "unsupported": [
-    "LLVM",
+    "LLVM machine-code generation",
     "C/C++",
     "native targets",
     "build-lib",
@@ -29,5 +29,11 @@
     "run",
     "test",
     "incremental compilation"
-  ]
+  ],
+  "debug": {
+    "format": "llvm-bitcode",
+    "api": "-femit-llvm-bc",
+    "sourceRoot": "/workspace",
+    "usesLlvmLibraries": false
+  }
 }

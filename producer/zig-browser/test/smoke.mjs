@@ -209,6 +209,38 @@ try {
   assert.equal(await runWasi('hello-wasi.wasm'), 'zigc-wasm 0.17.0\n');
   console.log('ok: compile and execute a WASI program with stdout');
 
+  mkdirSync(join(project, 'nested'), { recursive: true });
+  for (const name of ['debug-main.zig', 'debug-helper.zig']) {
+    copyFileSync(join(testDirectory, 'fixtures', name), join(project, 'nested', name));
+  }
+  const irFlags = [
+    '-target', 'wasm32-wasi', '-mcpu=mvp', '-O', 'debug',
+    '-fllvm', '-fno-libllvm', '-fno-lld', '-fno-emit-bin', '-fno-compiler-rt',
+  ];
+  runCompiler([
+    'build-exe', 'nested/debug-main.zig', ...irFlags,
+    '-femit-llvm-bc=debug.bc', '-femit-llvm-ir=debug.ll',
+  ]);
+  assert.deepEqual([...readFileSync(join(project, 'debug.bc')).subarray(0, 4)], [0x42, 0x43, 0xc0, 0xde]);
+  const debugIr = readFileSync(join(project, 'debug.ll'), 'utf8');
+  assert.ok(/target triple = "wasm32-unknown-wasip1-unknown"/.test(debugIr), "WASI target triple");
+  assert.ok(/DIFile\(filename: "nested\/debug-main\.zig", directory: "\/workspace"\)/.test(debugIr), "main source has canonical workspace path");
+  assert.ok(/DIFile\(filename: "nested\/debug-helper\.zig", directory: "\/workspace"\)/.test(debugIr), "imported source has canonical workspace path");
+  assert.ok(/DIFile\(filename: "std\/Io\/Writer\.zig", directory: "\/lib"\)/.test(debugIr), "standard library retains its own source root");
+  assert.match(debugIr, /DILocalVariable\(name: "input", arg: 1/);
+  assert.match(debugIr, /DILocalVariable\(name: "result"/);
+  assert.match(debugIr, /DILocation\(line: 3,/);
+  assert.doesNotMatch(debugIr, /DIFile\(filename: "\.\.\/\.\//);
+  // Single-component relative filenames must also retain their complete name.
+  runCompiler(['build-exe', 'hello-wasi.zig', ...irFlags, '-femit-llvm-ir=relative.ll']);
+  assert.match(readFileSync(join(project, 'relative.ll'), 'utf8'), /DIFile\(filename: "hello-wasi\.zig", directory: "\/workspace"\)/);
+  runCompiler(['build-obj', '/lib/compiler_rt.zig', ...irFlags, '-femit-llvm-bc=compiler_rt.bc', '-femit-llvm-ir=compiler_rt.ll']);
+  assert.ok(/DIFile\(filename: "compiler_rt\.zig", directory: "\/lib"\)/.test(readFileSync(join(project, 'compiler_rt.ll'), 'utf8')), "compiler runtime retains its own source root");
+  assert.deepEqual([...readFileSync(join(project, 'compiler_rt.bc')).subarray(0, 4)], [0x42, 0x43, 0xc0, 0xde]);
+  const invalidIr = runCompiler(['build-obj', 'invalid.zig', ...irFlags, '--color', 'off', '-femit-llvm-bc=invalid.bc'], 1);
+  assert.match(invalidIr.stderr, /invalid\.zig:\d+:\d+: error:/);
+  console.log('ok: supported LLVM bitcode/IR output preserves canonical nested and relative source paths, locals, compiler_rt, and diagnostics');
+
   mkdirSync(join(project, 'source/nested'), { recursive: true });
   writeFileSync(join(project, 'source/nested/input.txt'), 'read nested input\n');
   runCompiler([
