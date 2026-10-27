@@ -109,10 +109,10 @@ Use `--check-patch` to verify the locked revision and patch without modifying th
 CMake/Ninja. A passed receipt hashes all static archives plus the Clang C API, LLVM C API, and
 generated LLVM configuration headers. Merely producing a CMake plan does not satisfy readiness.
 
-The 2026-07-30 execution produced a passed receipt for all 106 requested archives
+The historical LLVM 20.1.1 build on 2026-07-30 produced a passed receipt for its 106 archives
 (210,586,374 bytes total). Its static `libclang.a` is 1,438,430 bytes with SHA-256
-`920cd4211bc77c60d09f92f89b7c45e3ae68737b9f4c16002ddedb7cd56adcd2`. This closes the
-LLVM-platform-patch question; it does not by itself establish a working TinyGo compiler.
+`920cd4211bc77c60d09f92f89b7c45e3ae68737b9f4c16002ddedb7cd56adcd2`. This receipt does not
+qualify the new LLVM 22.1.4 source or its expanded 118-archive closure.
 
 ## Build the upstream TinyGo compiler adapter
 
@@ -147,11 +147,11 @@ pnpm build:tinygo-browser -- \
 ```
 
 Without `--execute`, the command validates inputs and writes an intermediate dry-run receipt. The
-executed 2026-08-10 hardened build produced a 70,294,650-byte `tinygo-compiler.wasm` with SHA-256
+historical TinyGo 0.40.1 build on 2026-08-10 produced a 70,294,650-byte `tinygo-compiler.wasm` with SHA-256
 `441bfe526d407019137b8ede9c27b76dfcf91d4c3f789e4e24fdbcfa250697f8` and a 24,266,537-byte
 deterministic `tinygoroot.tar.gz` with SHA-256
 `1cdf9188dfcba8f49fd9a5755d24a409fda01c1f9272e83a8d4ecadd0b648082`. The reduced root merges
-the pinned Go 1.26.10 standard library, TinyGo overrides and targets, the runtime link closure, and
+the then-pinned Go 1.24.6 standard library, TinyGo overrides and targets, the runtime link closure, and
 the receipt-bound Clang/wasi-libc header closure while omitting unrelated board data. The build
 captures TinyGo-generated embed and target-C/C++/assembly objects under deterministic names, links compiler-rt's
 128-bit builtins and `libdl`, and rejects the final compiler if it retains any import outside
