@@ -14,8 +14,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 def prepare(source, apply=False):
     lock = json.loads((HERE / 'sources.lock.json').read_text())['gcc']
 
-    def git(*args, env=None):
-        return subprocess.check_output(['git', '-C', str(source), *args], env=env)
+    def git(*args, env=None, input=None):
+        return subprocess.check_output(
+            ['git', '-C', str(source), *args], env=env, input=input)
 
     if git('rev-parse', 'HEAD').decode().strip() != lock['commit']:
         raise RuntimeError('GCC source revision differs from the lock')
@@ -40,6 +41,7 @@ def prepare(source, apply=False):
                 'diff', '--cached', '--name-only', '--diff-filter=A', '-z', 'HEAD',
                 env=env).split(b'\0')))
         expected = prefixes[-1]
+        expected_tree = git('write-tree', env=env).decode().strip()
 
         def source_diff():
             # GCC configure can consume ignored in-tree GMP/MPFR/MPC sources.
@@ -64,9 +66,15 @@ def prepare(source, apply=False):
         if apply and actual != expected and actual in prefixes:
             # Reuse an incremental build only when its source is an exact prefix
             # of the newly locked patch set, including any added source files.
-            remaining = patches[prefixes.index(actual):]
-            git('apply', '--check', *map(str, remaining))
-            git('apply', *map(str, remaining))
+            # A single `git apply --check patch1 patch2` checks every patch
+            # against the current working tree, so dependent patches fail on
+            # a clean checkout. The temporary index has already verified the
+            # ordered series. Apply its combined transition atomically instead.
+            actual_tree = git('write-tree', env=env).decode().strip()
+            transition = git('diff', '--binary', '--no-ext-diff',
+                             actual_tree, expected_tree)
+            git('apply', '--check', input=transition)
+            git('apply', input=transition)
             actual = source_diff()
     if actual != expected:
         raise RuntimeError('GCC source differs from exactly the locked patch set')

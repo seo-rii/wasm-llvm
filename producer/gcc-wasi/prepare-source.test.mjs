@@ -57,6 +57,16 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.equal(run().status, 0);
 		assert.equal(await fs.readFile(path.join(source, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
 		assert.equal(git('diff', '--cached', '--binary'), stagedBefore);
+		// A fresh build applies the complete ordered series at once, including
+		// patches that modify files introduced by an earlier patch.
+		const fresh = path.join(temp, 'fresh');
+		git('clone', '-q', '--no-hardlinks', source, fresh);
+		const freshResult = spawnSync('python3', [script, '--source', fresh, '--apply'], { encoding: 'utf8' });
+		assert.equal(freshResult.status, 0, `clean checkout must accept all dependent patches: ${freshResult.stderr}`);
+		assert.equal(await fs.readFile(path.join(fresh, 'target.cc'), 'utf8'), 'FIRST\nSECOND\nthird\n');
+		assert.equal(await fs.readFile(path.join(fresh, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
+		assert.equal(execFileSync('git', ['-C', fresh, 'diff', '--cached'], { encoding: 'utf8' }), '');
+		assert.equal(spawnSync('python3', [script, '--source', fresh], { encoding: 'utf8' }).status, 0);
 		await fs.writeFile(path.join(source, 'target.cc'), 'unknown local work\n');
 		assert.notEqual(run(true).status, 0, 'unknown source changes must never be patched over');
 		assert.equal(await fs.readFile(path.join(source, 'target.cc'), 'utf8'), 'unknown local work\n');
