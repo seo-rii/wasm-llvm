@@ -196,6 +196,15 @@ diff --git a/llvm/lib/Support/Signals.cpp b/llvm/lib/Support/Signals.cpp
 diff --git a/llvm/lib/Support/Unix/Process.inc b/llvm/lib/Support/Unix/Process.inc
 --- a/llvm/lib/Support/Unix/Process.inc
 +++ b/llvm/lib/Support/Unix/Process.inc
+@@ -50,7 +50,7 @@ using namespace sys;
+ 
+ static std::pair<std::chrono::microseconds, std::chrono::microseconds>
+ getRUsageTimes() {
+-#if defined(HAVE_GETRUSAGE)
++#if defined(HAVE_GETRUSAGE) && !defined(__wasi__)
+   struct rusage RU;
+   ::getrusage(RUSAGE_SELF, &RU);
+   return {toDuration(RU.ru_utime), toDuration(RU.ru_stime)};
 @@ -76,7 +76,12 @@ Process::Pid Process::getProcessId() {
  // On Cygwin, getpagesize() returns 64k(AllocationGranularity) and
  // offset in mmap(3) should be aligned to the AllocationGranularity.

@@ -504,7 +504,7 @@ test('keeps the TinyGo port patch to WASI host compatibility without compiler su
 	assert.match(patch, /defined\(__wasi__\)/u);
 	assert.match(patch, /#include "llvm\/Config\/config\.h"/u);
 	assert.match(patch, /HAVE_SETJMP/u);
-	// LLVM 22 already guards PreventCoreFiles with HAVE_SYS_RESOURCE_H.
+	// The upstream WASI patch guards PreventCoreFiles; subprocess limits remain local.
 	assert.match(patch, /static void SetMemoryLimits\(unsigned size\)/u);
 	assert.match(patch, /WASI does not support waiting for subprocesses/u);
 	assert.match(patch, /static bool printMarkupContext\(raw_ostream &, const char \*\)/u);
