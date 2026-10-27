@@ -610,7 +610,6 @@ function createCommandRunner(
 			const extraFiles = await Promise.all(
 				[
 					['asm-tinygowasm.bc', WASM_HEADER],
-					['gc-boehm.bc', LLVM_BITCODE_HEADER],
 					['task-asyncify-wasm.bc', WASM_HEADER]
 				].map(
 					([name, header]) =>
@@ -742,15 +741,14 @@ test('parses a dry-run plan and rejects a standard Go compiler path', async () =
 
 test('extracts the exact TinyGo runtime closure from one linker trace', () => {
 	const closure = parseTinyGoRuntimeLinkTrace(
-		'/opt/wasm-ld /tmp/main.o /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/gc.bc /cache/task.bc /cache/wasi-libc-profile/lib.a -o out.wasm\n'
+		'/opt/wasm-ld /tmp/main.o /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/task.bc /cache/wasi-libc-profile/lib.a -o out.wasm\n'
 	);
 	assert.equal(closure.compilerRT, '/cache/compiler-rt-profile/lib.a');
 	assert.equal(closure.wasiLibc, '/cache/wasi-libc-profile/lib.a');
-	assert.deepEqual(Object.values(closure.extraFiles), [
-		'/cache/asm.bc',
-		'/cache/gc.bc',
-		'/cache/task.bc'
-	]);
+	assert.deepEqual(closure.extraFiles, {
+		'src/runtime/asm_tinygowasm.S': '/cache/asm.bc',
+		'src/internal/task/task_asyncify_wasm.S': '/cache/task.bc'
+	});
 	assert.throws(
 		() => parseTinyGoRuntimeLinkTrace(''),
 		/exactly one wasm-ld command/u
@@ -760,7 +758,14 @@ test('extracts the exact TinyGo runtime closure from one linker trace', () => {
 			parseTinyGoRuntimeLinkTrace(
 				'/opt/wasm-ld /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/wasi-libc-profile/lib.a\n'
 			),
-		/3 extra bitcode files/u
+		/2 extra bitcode files/u
+	);
+	assert.throws(
+		() => parseTinyGoRuntimeLinkTrace(
+			'/opt/wasm-ld /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/gc.bc /cache/task.bc /cache/wasi-libc-profile/lib.a\n'
+		),
+		/2 extra bitcode files/u,
+		'the precise profile must reject the old Boehm runtime input'
 	);
 });
 
@@ -1121,7 +1126,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 				receipt.rootArchive.runtimeClosure.manifest.value.extraFiles
 			)
 		].map((asset) => asset.id),
-		['compiler-rt', 'wasi-libc', 'libcxx', 'libcxxabi', 'extra-0', 'extra-1', 'extra-2']
+		['compiler-rt', 'wasi-libc', 'libcxx', 'libcxxabi', 'extra-0', 'extra-1']
 	);
 	assert.deepEqual(
 		Object.values(
@@ -1129,8 +1134,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		).map((asset) => [asset.path, asset.format]),
 		[
 			['runtime/wasip1-asyncify-precise-o1/extra-0.o', 'wasm-object'],
-			['runtime/wasip1-asyncify-precise-o1/extra-1.bc', 'llvm-bitcode'],
-			['runtime/wasip1-asyncify-precise-o1/extra-2.o', 'wasm-object']
+			['runtime/wasip1-asyncify-precise-o1/extra-1.o', 'wasm-object']
 		]
 	);
 	const tarCall = calls.find((call) => call.command === 'tar');

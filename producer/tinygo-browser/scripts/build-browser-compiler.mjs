@@ -72,14 +72,9 @@ const RUNTIME_EXTRA_INPUTS = [
 		outputName: 'extra-0.o'
 	},
 	{
-		source: 'src/runtime/gc_boehm.c',
-		format: 'llvm-bitcode',
-		outputName: 'extra-1.bc'
-	},
-	{
 		source: 'src/internal/task/task_asyncify_wasm.S',
 		format: 'wasm-object',
-		outputName: 'extra-2.o'
+		outputName: 'extra-1.o'
 	}
 ];
 const RUNTIME_EXTRA_SOURCES = RUNTIME_EXTRA_INPUTS.map((input) => input.source);
