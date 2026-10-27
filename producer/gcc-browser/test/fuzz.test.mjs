@@ -79,7 +79,8 @@ test('generated C/C++ native executions match the oracle, including STL/PBDS/exc
 			const source = `${prefix}.${item.request.language === 'c' ? 'c' : 'cpp'}`;
 			const output = prefix + (item.request.emit === 'assembly' ? '.s' : '.elf');
 			await fs.writeFile(source, item.request.code);
-			const compiler = item.request.language === 'c' ? 'gcc' : 'g++';
+			const compiler = item.request.language === 'c'
+				? (process.env.CC_FOR_BUILD ?? 'gcc') : (process.env.CXX_FOR_BUILD ?? 'g++');
 			const result = spawnSync(compiler, [`-std=${item.request.standard}`, `-O${item.request.optimization}`,
 				'-march=x86-64', ...(item.request.cpu === 'avx2-fma' ? ['-mavx2', '-mfma'] : []),
 				...(item.request.emit === 'assembly' ? ['-S'] : []), source, '-o', output],
@@ -153,7 +154,8 @@ async function syntheticBundle(directory) {
 test('synthetic campaign rejects native version mismatch and preserves replay before host failure', async t => {
 	const directory = await temporary(t);
 	const identity = await syntheticBundle(directory);
-	const options = { ...identity, seed: 1, cases: 1, maxSeconds: 10, nativeCc: 'gcc', nativeCxx: 'g++' };
+	const options = { ...identity, seed: 1, cases: 1, maxSeconds: 10,
+		nativeCc: process.env.CC_FOR_BUILD ?? 'gcc', nativeCxx: process.env.CXX_FOR_BUILD ?? 'g++' };
 	const mismatch = path.join(directory, 'mismatch');
 	await assert.rejects(fuzz({ ...options, output: mismatch }), /differs from Wasm GCC/);
 	const mismatchReport = JSON.parse(await fs.readFile(path.join(mismatch, 'fuzz-report.json')));

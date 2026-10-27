@@ -74,11 +74,16 @@ jobs:
         with:
           node-version: 24
       - name: Check native compiler and GNU sysroot layout
+        id: native-toolchain
         run: |
+          echo "temp=$RUNNER_TEMP" >> "$GITHUB_OUTPUT"
           df -h . "$RUNNER_TEMP"
           test "$(g++-16 -dumpfullversion)" = 16.2.0
           node producer/clang-browser/cross/import-sysroot.mjs --preflight --compiler g++-16
       - name: Validate GCC packaging contract (fixtures only)
+        env:
+          CC_FOR_BUILD: gcc-16
+          CXX_FOR_BUILD: g++-16
         run: |
           python3 -m unittest discover -s producer/gcc-browser/test -p '*_test.py'
           node --test producer/gcc-browser/test/*.test.mjs
@@ -158,14 +163,14 @@ jobs:
         with:
           name: gcc-wasm-build-evidence-${{ github.sha }}
           path: |
-            ${{ runner.temp }}/gcc-build.log
-            ${{ runner.temp }}/gcc-build.status.json
-            ${{ runner.temp }}/gcc-build.pid
-            ${{ runner.temp }}/gcc-build-log-path.txt
-            ${{ runner.temp }}/gcc-work/gcc-bootstrap.status.json
-            ${{ runner.temp }}/gcc-work/build/**/config.log
-            ${{ runner.temp }}/gcc-sysroot-source.json
-            ${{ runner.temp }}/gcc-node-qualification/
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-build.log
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-build.status.json
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-build.pid
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-build-log-path.txt
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-work/gcc-bootstrap.status.json
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-work/build/**/config.log
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-sysroot-source.json
+            ${{ steps.native-toolchain.outputs.temp }}/gcc-node-qualification/
           if-no-files-found: warn
           retention-days: 7
 
