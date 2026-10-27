@@ -36,9 +36,9 @@ async function syntheticInvocation(t, behavior) {
 			{ path: name, bytes: bytes.length, sha256: sha256(bytes) };
 	}
 	const manifest = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: 'gcc-x86_64-linux-gnu',
-		host: 'wasm32-emscripten', target: 'x86_64-linux-gnu', compiler: { family: 'gcc', version: '13.3.0' },
-		linkMode: 'static', sysrootPath: '/sysroot', gccInstallation: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/13',
-		resourceDir: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/13/include', gnu: { gccVersion: '13' },
+		host: 'wasm32-emscripten', target: 'x86_64-linux-gnu', compiler: { family: 'gcc', version: '16.2.0' },
+		linkMode: 'static', sysrootPath: '/sysroot', gccInstallation: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/16',
+		resourceDir: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/16/include', gnu: { gccVersion: '16' },
 		cpuProfiles: ['x86-64', 'avx2-fma'], assets }));
 	await fs.writeFile(path.join(root, 'gcc-toolchain.v1.json'), manifest);
 	const request = path.join(root, 'request.json');
