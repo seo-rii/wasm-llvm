@@ -11,6 +11,11 @@ producer inputs.
 
 The recipe targets Swift 6.4.1 and its matching full Wasm SDK. The SDK URL and checksum
 come from the [official Wasm installation instructions](https://www.swift.org/documentation/articles/wasm-getting-started.html).
+The complete 92,759,931-byte SDK archive was downloaded on 2026-10-27 and matched the pinned
+SHA-256. [The observed input receipt](validation/6.4.1-sdk.json) records the full and embedded
+SDK metadata, target triple, archive structure, and selected standard-library hashes. This
+qualifies the target SDK input; the browser-hosted compiler still requires its full build and
+acceptance checks below.
 The WASI patches were checked against the `swift-6.4.1-RELEASE` source commits:
 
 | Repository | Commit |
