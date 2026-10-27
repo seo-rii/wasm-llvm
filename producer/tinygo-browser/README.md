@@ -27,6 +27,12 @@ together after producer acceptance. Keep the separate LLVM 16 Emception profile 
 The existing artifacts and August acceptance receipts remain evidence for TinyGo 0.40.1,
 LLVM 20.1.1, and Go 1.24.6 only.
 
+The LLVM cross build requires native `llvm-tblgen` and `clang-tblgen` built from the same
+locked TinyGo LLVM source. Distribution LLVM 22 tools lack the fork's ESP vector builtin
+generator. The producer workflow builds both tools first, exercises that generator, and
+records their actual hashes before constructing the WASI archive cache key. Supply that
+native build's `bin` directory to `build-llvm-wasi.mjs --native-tool-dir` for local builds.
+
 ## Strip compiler debug names
 
 Fresh compiler builds remove only the WebAssembly `name` custom sections before

@@ -50,6 +50,7 @@ jobs:
                     echo "TINYGO_SOURCE=$RUNNER_TEMP/tinygo-browser-producer/tinygo-source"
                     echo "TINYGO_SOURCE_RECEIPT=$RUNNER_TEMP/tinygo-browser-producer/tinygo-source-receipt.json"
                     echo "TINYGO_LLVM_SOURCE=$RUNNER_TEMP/tinygo-browser-producer/llvm-project"
+                    echo "TINYGO_NATIVE_TABLEGEN=$RUNNER_TEMP/tinygo-browser-producer/native-tablegen"
                     echo "TINYGO_LLVM_BUILD=$RUNNER_TEMP/tinygo-browser-producer/llvm-wasi-build"
                     echo "TINYGO_LLVM_RECEIPT=$RUNNER_TEMP/tinygo-browser-producer/llvm-wasi-build.json"
                     echo "TINYGO_GO_LLVM_SOURCE=$RUNNER_TEMP/tinygo-browser-producer/go-llvm"
@@ -108,6 +109,26 @@ jobs:
                   git -C "$TINYGO_GO_LLVM_SOURCE" checkout --detach \
                     185673ef46a59528c40d0fdc220c6735606c0ebc
 
+            - name: Build matching native TableGen tools
+              run: |
+                  cmake -G Ninja -S "$TINYGO_LLVM_SOURCE/llvm" -B "$TINYGO_NATIVE_TABLEGEN" \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22 \
+                    -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=WebAssembly \
+                    -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF \
+                    -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_DOCS=OFF \
+                    -DCLANG_INCLUDE_TESTS=OFF -DLLVM_ENABLE_ZLIB=OFF \
+                    -DLLVM_ENABLE_ZSTD=OFF -DLLVM_ENABLE_LIBXML2=OFF \
+                    -DLLVM_ENABLE_LIBEDIT=OFF -DLLVM_ENABLE_TERMINFO=OFF
+                  cmake --build "$TINYGO_NATIVE_TABLEGEN" --target llvm-tblgen clang-tblgen --parallel 4
+                  "$TINYGO_NATIVE_TABLEGEN/bin/clang-tblgen" \
+                    -gen-riscv-espv-builtin-codegen \
+                    -I "$TINYGO_LLVM_SOURCE/clang/include" \
+                    -I "$TINYGO_LLVM_SOURCE/llvm/include" \
+                    "$TINYGO_LLVM_SOURCE/clang/include/clang/Basic/riscv_espv.td" \
+                    -o "$TINYGO_NATIVE_TABLEGEN/riscv_espv_builtin_cg.inc"
+                  test -s "$TINYGO_NATIVE_TABLEGEN/riscv_espv_builtin_cg.inc"
+
             - name: Verify native TinyGo bootstrap inputs
               run: |
                   test -f "$TINYGO_SOURCE/go.mod"
@@ -131,8 +152,8 @@ jobs:
                     "wasmOpt=$TINYGO_NATIVE_ROOT/bin/wasm-opt" \
                     "wasiClang=$TINYGO_WASI_SDK/bin/clang" \
                     "wasiLld=$TINYGO_WASI_SDK/bin/wasm-ld" \
-                    "llvmTablegen=/usr/lib/llvm-22/bin/llvm-tblgen" \
-                    "clangTablegen=/usr/lib/llvm-22/bin/clang-tblgen" \
+                    "llvmTablegen=$TINYGO_NATIVE_TABLEGEN/bin/llvm-tblgen" \
+                    "clangTablegen=$TINYGO_NATIVE_TABLEGEN/bin/clang-tblgen" \
                     "go=$TINYGO_GO_ROOT/bin/go"
                   echo "TINYGO_BOOTSTRAP_SHA256=$(sha256sum "$RUNNER_TEMP/tinygo-bootstrap-receipt.json" | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
 
@@ -151,7 +172,7 @@ jobs:
                   node producer/tinygo-browser/scripts/build-llvm-wasi.mjs \
                     --source-root "$TINYGO_LLVM_SOURCE" \
                     --wasi-sdk "$TINYGO_WASI_SDK" \
-                    --native-tool-dir /usr/lib/llvm-22/bin \
+                    --native-tool-dir "$TINYGO_NATIVE_TABLEGEN/bin" \
                     --build-dir "$TINYGO_LLVM_BUILD" \
                     --receipt "$TINYGO_LLVM_RECEIPT" \
                     --jobs 4 \

@@ -61,9 +61,16 @@ test('bootstrap inputs and recorded native tools match the producer source lock'
 	assert.equal(pins.go.url, `https://proxy.golang.org/${sources.goToolchain.module}/@v/${sources.goToolchain.archiveFilename}`);
 	assert.equal(pins.go.sha256, sources.goToolchain.archiveSha256);
 	assert.equal(pins.tinygo.url, `https://github.com/tinygo-org/tinygo/releases/download/${sources.tinygo.ref}/tinygo${sources.tinygo.version}.linux-amd64.tar.gz`);
-	const llvmMajor = sources.llvm.version.split('.')[0];
 	for (const [name, binary] of [['llvmTablegen', 'llvm-tblgen'], ['clangTablegen', 'clang-tblgen']]) {
-		assert.ok(workflow.includes(`"${name}=/usr/lib/llvm-${llvmMajor}/bin/${binary}"`));
+		assert.ok(workflow.includes(`"${name}=$TINYGO_NATIVE_TABLEGEN/bin/${binary}"`));
 	}
-	assert.ok(workflow.includes(`--native-tool-dir /usr/lib/llvm-${llvmMajor}/bin`));
+	assert.ok(workflow.includes('--native-tool-dir "$TINYGO_NATIVE_TABLEGEN/bin"'));
+	const sourceCheckout = workflow.indexOf(`git -C "$TINYGO_LLVM_SOURCE" checkout --detach`);
+	const nativeBuild = workflow.indexOf('cmake --build "$TINYGO_NATIVE_TABLEGEN" --target llvm-tblgen clang-tblgen');
+	const forkProbe = workflow.indexOf('-gen-riscv-espv-builtin-codegen');
+	const toolReceipt = workflow.indexOf('--record-tools');
+	const crossBuild = workflow.indexOf('name: Build source-locked LLVM host for WASI');
+	assert.ok(sourceCheckout > 0 && sourceCheckout < nativeBuild);
+	assert.ok(nativeBuild < forkProbe && forkProbe < toolReceipt && toolReceipt < crossBuild);
+	assert.ok(workflow.includes('-S "$TINYGO_LLVM_SOURCE/llvm" -B "$TINYGO_NATIVE_TABLEGEN"'));
 });
