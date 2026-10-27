@@ -354,7 +354,9 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 			'SupportBindings.cpp',
 			'SupportBindings.h',
 			'backports.cpp',
-			'backports.h'
+			'backports.h',
+			'deprecated.c',
+			'deprecated.h'
 		]
 	);
 	assert.equal(contract.lock.llvm.commit, '2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2');

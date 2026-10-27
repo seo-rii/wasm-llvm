@@ -47,7 +47,9 @@ const GO_LLVM_HOST_FILES = [
 	'SupportBindings.cpp',
 	'SupportBindings.h',
 	'backports.cpp',
-	'backports.h'
+	'backports.h',
+	'deprecated.c',
+	'deprecated.h'
 ];
 const HOST_ARCHIVES = [
 	{
@@ -94,15 +96,33 @@ function encodeUleb(value) {
 	return Buffer.from(bytes);
 }
 
-function wasmWithIdentity(strings) {
+function wasmWithIdentity(strings, imports = []) {
 	const name = Buffer.from('tinygo.provenance');
 	const payload = Buffer.from(strings.join('\0'));
 	const section = Buffer.concat([encodeUleb(name.length), name, payload]);
-	return Buffer.concat([
+	const identityModule = Buffer.concat([
 		WASM_HEADER,
 		Buffer.from([0x00]),
 		encodeUleb(section.length),
 		section
+	]);
+	if (imports.length === 0) return identityModule;
+	const importSection = Buffer.concat([
+		encodeUleb(imports.length),
+		...imports.flatMap(({ module, name }) => {
+			const moduleBytes = Buffer.from(module);
+			const nameBytes = Buffer.from(name);
+			return [
+				encodeUleb(moduleBytes.length), moduleBytes,
+				encodeUleb(nameBytes.length), nameBytes,
+				Buffer.from([0x00, 0x00])
+			];
+		})
+	]);
+	return Buffer.concat([
+		identityModule,
+		Buffer.from([0x01, 0x04, 0x01, 0x60, 0x00, 0x00]),
+		Buffer.from([0x02]), encodeUleb(importSection.length), importSection
 	]);
 }
 
@@ -453,7 +473,10 @@ function createCommandRunner(
 		badVersion = false,
 		omitEmbedObject = false,
 		conflictingEmbedObject = false,
-		failCompilerOptimizer = false
+		failCompilerOptimizer = false,
+		missingWrapperSymbol = false,
+		linkedImports = [],
+		preserveLinkedImports = false
 	} = {}
 ) {
 	const calls = [];
@@ -519,7 +542,14 @@ function createCommandRunner(
 			if (failCompilerOptimizer) return result({ exitCode: 1, stderr: 'optimizer failed' });
 			const outputIndex = args.indexOf('--output');
 			assert.ok(outputIndex > 0);
-			await cp(args[outputIndex - 1], args[outputIndex + 1]);
+			if (linkedImports.length && !preserveLinkedImports) {
+				await writeFile(args[outputIndex + 1], wasmWithIdentity(
+					fixture.contract.manifest.upstreamCompiler.requiredArtifactIdentityStrings,
+					linkedImports.filter((entry) => entry.module !== 'asyncify')
+				));
+			} else {
+				await cp(args[outputIndex - 1], args[outputIndex + 1]);
+			}
 			return result();
 		}
 		if (command === 'unzip') {
@@ -565,6 +595,9 @@ function createCommandRunner(
 		}
 		if (command === fixture.tools.ranlib) return result();
 		if (command === fixture.tools.nm) {
+			if (path.basename(args[1]) === 'go-llvm-deprecated-c-api.o') {
+				return result({ stdout: missingWrapperSymbol ? '' : '00000000 T LLVMGetGlobalContext_wrap\n' });
+			}
 			return result({
 				stdout: Object.values(HOST_ARCHIVES)
 					.flatMap((archive) => archive.requiredSymbols)
@@ -670,7 +703,8 @@ function createCommandRunner(
 				path.dirname(output),
 				path.basename(output),
 				wasmWithIdentity(
-					fixture.contract.manifest.upstreamCompiler.requiredArtifactIdentityStrings
+					fixture.contract.manifest.upstreamCompiler.requiredArtifactIdentityStrings,
+					linkedImports
 				)
 			);
 			return result();
@@ -903,8 +937,13 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	assert.ok(receipt.build.linkCommand.includes('--max-memory=1342177280'));
 	assert.deepEqual(
 		receipt.hostSupport.compilerObjects.inputs.map((object) => object.id),
-		['tinygo-runtime-stack', 'tinygo-asyncify-tasks', 'tinygo-libclang-abi']
+		['tinygo-runtime-stack', 'tinygo-asyncify-tasks', 'tinygo-libclang-abi', 'go-llvm-deprecated-c-api']
 	);
+	const wrapper = receipt.hostSupport.compilerObjects.inputs.at(-1);
+	assert.equal(wrapper.source, path.join(receipt.paths.patchedGoLlvmRoot, 'deprecated.c'));
+	assert.equal(wrapper.compileCommand[wrapper.compileCommand.indexOf('-x') + 1], 'c');
+	assert.ok(wrapper.compileCommand.includes('-std=c11'));
+	assert.deepEqual(wrapper.requiredSymbols, ['LLVMGetGlobalContext_wrap']);
 	assert.ok(
 		receipt.hostSupport.compilerObjects.inputs.every((object) =>
 			receipt.build.linkCommand.includes(object.path)
@@ -916,7 +955,7 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 		)
 	);
 	assert.ok(!receipt.build.command.includes('go'));
-	assert.equal(receipt.goLlvmSource.files.length, 6);
+	assert.equal(receipt.goLlvmSource.files.length, 8);
 	assert.match(receipt.llvm.compilerRtBuiltins.source.sha256, /^[0-9a-f]{64}$/u);
 });
 
@@ -985,7 +1024,8 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.hostSupport.status, 'passed');
 	assert.equal(receipt.hostSupport.outputs.length, 2);
 	assert.equal(receipt.hostSupport.compilerObjects.status, 'passed');
-	assert.equal(receipt.hostSupport.compilerObjects.outputs.length, 3);
+	assert.equal(receipt.hostSupport.compilerObjects.outputs.length, 4);
+	assert.deepEqual(receipt.hostSupport.compilerObjects.outputs.at(-1).requiredSymbols, ['LLVMGetGlobalContext_wrap']);
 	await access(
 		path.join(
 			receipt.nativeTinyGo.clangResource.archivePath,
@@ -1014,10 +1054,10 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 			(output) => output.bytes === 15 && /^[0-9a-f]{64}$/u.test(output.sha256)
 		)
 	);
-	assert.equal(calls.filter((call) => call.command === fixture.tools.cxx).length, 9);
+	assert.equal(calls.filter((call) => call.command === fixture.tools.cxx).length, 10);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.ar).length, 5);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.ranlib).length, 3);
-	assert.equal(calls.filter((call) => call.command === fixture.tools.nm).length, 2);
+	assert.equal(calls.filter((call) => call.command === fixture.tools.nm).length, 3);
 	const buildCall = calls.find(
 		(call) =>
 			call.command === fixture.nativeTinyGo &&
@@ -1147,6 +1187,84 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.assets.length, 2);
 	assert.ok(WebAssembly.validate(await readFile(receipt.paths.compilerPath)));
 	assert.deepEqual(JSON.parse(await readFile(fixture.receiptPath, 'utf8')), receipt);
+});
+
+test('rejects a missing go-llvm wrapper definition before building compiler bitcode', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, {
+		execute: true,
+		missingWrapperSymbol: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/go-llvm-deprecated-c-api is missing required upstream symbol LLVMGetGlobalContext_wrap/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
+for (const unresolvedImport of [
+	{ module: 'env', name: 'LLVMGetGlobalContext_wrap' },
+	{ module: 'asyncify', name: 'unexpected' }
+]) {
+	test(`rejects ${unresolvedImport.module}.${unresolvedImport.name} before optimizing compiler`, async () => {
+		const fixture = await createFixture();
+		fixture.options.execute = true;
+		const { calls, runner } = createCommandRunner(fixture, {
+			execute: true,
+			linkedImports: [unresolvedImport]
+		});
+		await assert.rejects(
+			buildBrowserCompiler(fixture.options, {
+				contract: fixture.contract,
+				verifySource: async () => fixture.sourceReceipt,
+				run: runner,
+				copySource: copyPatchedSource
+			}),
+			/unresolved imports before optimization/u
+		);
+		assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+		const failed = JSON.parse(await readFile(fixture.receiptPath, 'utf8'));
+		assert.equal(failed.status, 'failed');
+		assert.deepEqual(failed.build.compilerOptimization.inputImports, [{ ...unresolvedImport, kind: 'function' }]);
+		await assert.rejects(access(failed.paths.compilerPath), /ENOENT/u);
+	});
+}
+
+test('allows upstream Asyncify intrinsics before optimization and requires their removal afterward', async () => {
+	const linkedImports = [
+		{ module: 'wasi_snapshot_preview1', name: 'fd_write' },
+		...['start_unwind', 'stop_unwind', 'start_rewind', 'stop_rewind'].map((name) => ({ module: 'asyncify', name }))
+	];
+	for (const preserveLinkedImports of [false, true]) {
+		const fixture = await createFixture();
+		fixture.options.execute = true;
+		const { runner } = createCommandRunner(fixture, {
+			execute: true,
+			linkedImports,
+			preserveLinkedImports
+		});
+		const build = buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			run: runner,
+			copySource: copyPatchedSource
+		});
+		if (preserveLinkedImports) {
+			await assert.rejects(build, /browser compiler retains non-WASI imports: asyncify.start_unwind/u);
+		} else {
+			const receipt = await build;
+			assert.equal(receipt.status, 'passed');
+			assert.equal(receipt.build.compilerOptimization.inputImports.length, 5);
+			assert.deepEqual(receipt.build.imports, [{ ...linkedImports[0], kind: 'function' }]);
+		}
+	}
 });
 
 test('rejects a failed compiler asyncify transformation before publishing assets', async () => {

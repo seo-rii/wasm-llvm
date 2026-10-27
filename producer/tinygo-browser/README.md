@@ -51,6 +51,14 @@ their recorded source-path hash. Equal embedded contents at different paths can 
 DWARF bytes, so both objects are retained, matching upstream linking. Conflicting objects with
 the same complete identity are rejected before linking.
 
+Bitcode-only TinyGo builds return before compiling package C files. The external link therefore
+also compiles the pinned go-llvm `deprecated.c`, which forwards `LLVMGetGlobalContext_wrap` to
+LLVM's original global context. Both its source and header are hash-locked, and the object must
+define that symbol before the compiler build starts. The unoptimized compiler may import only
+WASI functions and the four upstream Asyncify unwind/rewind intrinsics; any other unresolved
+import fails before optimization. The final compiler still requires WASI-only function imports.
+Build receipts record linker and optimizer durations separately.
+
 The `wasip1-asyncify-precise-o1` guest runtime contains the stack and Asyncify task assembly
 objects. TinyGo 0.43 adds `gc_boehm.c` only for its separate Boehm GC option; it is not a linker
 input for this precise-GC profile. The producer and consumer must verify this two-object closure.

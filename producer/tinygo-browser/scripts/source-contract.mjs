@@ -40,7 +40,9 @@ const REQUIRED_GO_LLVM_HOST_SUPPORT_PATHS = [
 	'SupportBindings.cpp',
 	'SupportBindings.h',
 	'backports.cpp',
-	'backports.h'
+	'backports.h',
+	'deprecated.c',
+	'deprecated.h'
 ];
 const REQUIRED_PATCH_PATHS = [
 	'patches/tinygo-wasi-adapter.patch',

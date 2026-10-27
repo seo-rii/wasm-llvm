@@ -144,6 +144,14 @@ const COMPILER_HOST_OBJECTS = [
 		source: 'cgo/libclang_stubs.c',
 		language: 'c',
 		flags: ['-std=c11']
+	},
+	{
+		id: 'go-llvm-deprecated-c-api',
+		owner: 'go-llvm',
+		source: 'deprecated.c',
+		language: 'c',
+		flags: ['-std=c11'],
+		requiredSymbols: ['LLVMGetGlobalContext_wrap']
 	}
 ];
 const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
@@ -935,10 +943,15 @@ export async function createBrowserCompilerBuildPlan(
 		...llvmInputs.hostSupport.definitions.map((definition) => `-D${definition}`),
 		...llvmInputs.hostSupport.includeRoots.map((root) => `-I${root}`),
 		`-ffile-prefix-map=${patchedSourceRoot}=/tinygo`,
-		`-fdebug-prefix-map=${patchedSourceRoot}=/tinygo`
+		`-fdebug-prefix-map=${patchedSourceRoot}=/tinygo`,
+		`-ffile-prefix-map=${patchedGoLlvmRoot}=/go-llvm`,
+		`-fdebug-prefix-map=${patchedGoLlvmRoot}=/go-llvm`
 	];
 	const compilerHostObjects = COMPILER_HOST_OBJECTS.map((object) => {
-		const source = path.join(patchedSourceRoot, object.source);
+		const source = path.join(
+			object.owner === 'go-llvm' ? patchedGoLlvmRoot : patchedSourceRoot,
+			object.source
+		);
 		const outputPath = path.join(compilerHostObjectDir, `${object.id}.o`);
 		return {
 			...object,
@@ -1864,8 +1877,27 @@ export async function buildBrowserCompiler(
 					compiled.exitCode === 0,
 					`${object.id} compiler host object failed with ${compiled.signal ?? compiled.exitCode}`
 				);
+				if (object.requiredSymbols?.length) {
+					const symbols = await run(
+						receipt.hostSupport.tools.nm,
+						['--defined-only', object.path],
+						{ capture: true }
+					);
+					assert(
+						symbols.exitCode === 0,
+						`${object.id} symbol verification failed: ${symbols.stderr}`
+					);
+					const symbolTokens = new Set(symbols.stdout.split(/\s+/u).filter(Boolean));
+					for (const symbol of object.requiredSymbols) {
+						assert(
+							symbolTokens.has(symbol),
+							`${object.id} is missing required upstream symbol ${symbol}`
+						);
+					}
+				}
 				compilerObjectOutputs.push({
 					id: object.id,
+					requiredSymbols: [...(object.requiredSymbols ?? [])],
 					source: {
 						path: object.source,
 						bytes: sourceEvidence.bytes,
@@ -2102,11 +2134,13 @@ export async function buildBrowserCompiler(
 				0,
 				...embedObjectOutputs.map((output) => output.path)
 			);
+			const linkStartedAt = performance.now();
 			const linked = await run(
 				receipt.build.linkCommand[0],
 				receipt.build.linkCommand.slice(1),
 				{ cwd: receipt.paths.patchedSourceRoot, env: buildEnvironment }
 			);
+			receipt.build.linkDurationMs = Math.round(performance.now() - linkStartedAt);
 			assert(
 				linked.exitCode === 0,
 				`external wasm-ld browser compiler link failed with ${linked.signal ?? linked.exitCode}`
@@ -2115,10 +2149,32 @@ export async function buildBrowserCompiler(
 				receipt.paths.unoptimizedCompilerPath,
 				{ wasmObject: true }
 			);
+			receipt.build.compilerOptimization.inputImports = WebAssembly.Module.imports(
+				new WebAssembly.Module(await readFile(receipt.paths.unoptimizedCompilerPath))
+			);
+			const asyncifyIntrinsics = new Set([
+				'start_unwind', 'stop_unwind', 'start_rewind', 'stop_rewind'
+			]);
+			const unresolvedImports = receipt.build.compilerOptimization.inputImports.filter(
+				(entry) => entry.kind !== 'function' || (
+					entry.module !== 'wasi_snapshot_preview1' &&
+					!(entry.module === 'asyncify' && asyncifyIntrinsics.has(entry.name))
+				)
+			);
+			assert(
+				unresolvedImports.length === 0,
+				`browser compiler has unresolved imports before optimization: ${unresolvedImports
+					.map((entry) => `${entry.module}.${entry.name}`)
+					.join(', ')}`
+			);
+			const optimizationStartedAt = performance.now();
 			const optimized = await run(
 				receipt.build.compilerOptimization.command[0],
 				receipt.build.compilerOptimization.command.slice(1),
 				{ cwd: receipt.paths.patchedSourceRoot, env: buildEnvironment }
+			);
+			receipt.build.compilerOptimization.durationMs = Math.round(
+				performance.now() - optimizationStartedAt
 			);
 			assert(
 				optimized.exitCode === 0,
@@ -2146,7 +2202,7 @@ export async function buildBrowserCompiler(
 			);
 			receipt.build.imports = WebAssembly.Module.imports(linkedCompilerModule);
 			const nonWasiImports = receipt.build.imports.filter(
-				(entry) => entry.module !== 'wasi_snapshot_preview1'
+				(entry) => entry.kind !== 'function' || entry.module !== 'wasi_snapshot_preview1'
 			);
 			assert(
 				nonWasiImports.length === 0,
