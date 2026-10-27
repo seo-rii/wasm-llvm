@@ -27,6 +27,15 @@ export function verifyInventory(files, expected, label) {
 	assert.deepEqual(ordered(inventory(files)), ordered(canonical), `${label}: files differ from the build receipt`);
 }
 
+export function verifyRuntimeLibraryIdentities(files, locked = {}) {
+	for (const [name, expected] of Object.entries(locked)) {
+		assert(/^[a-zA-Z0-9_+-][a-zA-Z0-9_.+-]*\.a$/.test(name), `Invalid locked runtime library: ${name}`);
+		const file = files.find(file => file.path === `lib/wasm32-wasi/${name}`);
+		assert(file, `Locked runtime library missing: ${name}`);
+		assert.deepEqual(identity(file.bytes), expected, `Runtime library differs from its lock: ${name}`);
+	}
+}
+
 export function checkWasm(bytes, label, executable = false) {
 	assert(bytes.subarray(0, 8).equals(Buffer.from([0, 97, 115, 109, 1, 0, 0, 0])), `${label}: expected WebAssembly`);
 	// Relocatable objects can have placeholders that do not validate until linked.
@@ -121,7 +130,7 @@ export function verifyVectorAbiQualification(report, expected, fixtures) {
 		assert(test.exports.some(entry => entry.name === 'memory' && entry.kind === 'memory'));
 		assert(test.exports.some(entry => entry.name === '_start' && entry.kind === 'function'));
 		assert(Number.isSafeInteger(test.program?.bytes) && test.program.bytes > 8 && /^[a-f0-9]{64}$/.test(test.program.sha256));
-		const units = [fixture.request.code, ...fixture.request.sources.map(name => fixture.request.files.find(file => file.path === name).contents)];
+		const units = [fixture.request.code, ...(fixture.request.sources || []).map(name => fixture.request.files.find(file => file.path === name).contents)];
 		assert.equal(test.units.length, units.length, `${id}: missing translation unit`);
 		const stages = [];
 		for (const [index, source] of units.entries()) {
@@ -146,7 +155,92 @@ export function verifyVectorAbiQualification(report, expected, fixtures) {
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, vectorAbiQualification, nativeLinker }) {
+export function verifyLongDoubleQualification(report, expected, fixtures) {
+	assert.equal(report.kind, 'gcc-wasi-long-double-qualification');
+	assert.equal(report.status, 'passed', 'Binary128 qualification failed');
+	assert.equal(report.inputsUnchanged, true, 'Binary128 inputs changed');
+	assert.equal(report.compilerHost, 'native');
+	assert.equal(report.outputTarget, 'wasm32-wasi');
+	assert.equal(report.gccCommit, expected.gccCommit);
+	const content = receipt => ({ bytes: receipt?.bytes, sha256: receipt?.sha256 });
+	const contents = map => Object.fromEntries(Object.entries(map).map(([name, receipt]) => [name, content(receipt)]));
+	assert.deepEqual(contents(report.targetSource), expected.targetSource, 'Binary128 backend sources differ');
+	assert.deepEqual(contents(report.recipes), expected.recipes, 'Binary128 qualification recipes differ');
+	for (const group of ['tools', 'runtime'])
+		for (const [name, receipt] of Object.entries(expected[group]))
+			assert.deepEqual(content(report[group]?.[name]), receipt, `Binary128 ${group} differs: ${name}`);
+	for (const [name, files] of Object.entries(expected.headers))
+		assert.deepEqual(contents(report.headers[name]), files, `Binary128 headers differ: ${name}`);
+	const directions = ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang'];
+	assert.deepEqual(report.directions, directions);
+	assert.deepEqual(report.selectedCases, fixtures.map(fixture => fixture.id));
+	const matrix = fixtures.flatMap(fixture => directions
+		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.map(direction => ({ fixture, direction, id: `${fixture.id}-${direction}` })));
+	assert.deepEqual(report.cases.map(test => test.id).sort(), matrix.map(test => test.id).sort(), 'Binary128 qualification is incomplete');
+	assert.deepEqual(report.counts, { total: matrix.length, passed: matrix.length, failed: 0 });
+	for (const { fixture, direction, id } of matrix) {
+		const test = report.cases.find(test => test.id === id);
+		assert.equal(test.status, 'passed', `${id}: failed`);
+		assert.equal(test.fixture, fixture.id);
+		assert.equal(test.direction, direction);
+		assert.equal(test.optimization, fixture.request.optimization);
+		assert.equal(test.stdin, fixture.stdin);
+		assert.equal(test.stdout, fixture.stdout, `${id}: incorrect output`);
+		assert.equal(test.stderr, '');
+		assert.deepEqual(test.abi.exports._start, { params: [], results: [] });
+		assert.equal(test.abi.memories.length, 1);
+		assert.equal(test.abi.memories[0].shared, false);
+		for (const [symbol, signature] of Object.entries(fixture.signatures))
+			assert.deepEqual(test.abi.exports[symbol], signature, `${id}: ${symbol} ABI differs`);
+		assert(test.imports.every(entry => entry.module === 'wasi_snapshot_preview1' && entry.kind === 'function'));
+		assert(test.exports.some(entry => entry.name === 'memory' && entry.kind === 'memory'));
+		assert(test.exports.some(entry => entry.name === '_start' && entry.kind === 'function'));
+		const units = [fixture.request.code, ...(fixture.request.sources || []).map(name => fixture.request.files.find(file => file.path === name).contents)];
+		assert.equal(test.units.length, units.length, `${id}: missing translation unit`);
+		const stages = [];
+		for (const [index, source] of units.entries()) {
+			const family = direction.split('-')[index === 0 ? 0 : 1];
+			assert.equal(test.units[index].compiler, family);
+			assert.deepEqual(content(test.units[index].source), identity(Buffer.from(source)), `${id}: source differs`);
+			// Clang emits reference IR and the actual object in separate invocations.
+			// Both must use the profile whose result is being qualified.
+			for (let step = 0; step < (family === 'clang' ? 2 : 1); ++step) {
+				const argv = test.commands[stages.length + step]?.argv || [];
+				assert.deepEqual(argv.filter(arg => /^-O/.test(arg)), [`-O${fixture.request.optimization}`]);
+				assert.deepEqual(argv.filter(arg => arg.startsWith('-std=')), [`-std=${fixture.request.standard}`]);
+				assert.deepEqual(argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), [fixture.request.simd ? '-msimd128' : '-mno-simd128'], 'Binary128 SIMD profile differs');
+				assert.deepEqual(argv.filter(arg => arg.startsWith('-D')), ['-D__GCC_WASI_SINGLE_THREAD__=1', ...(fixture.request.defines || []).map(define => `-D${define}`)], 'Binary128 macro definitions differ');
+				if (family === 'clang')
+					assert.deepEqual(argv.filter(arg => ['-S', '-emit-llvm', '-c'].includes(arg)), step === 0 ? ['-S', '-emit-llvm'] : ['-c'], 'Binary128 Clang compilation stage differs');
+			}
+			stages.push(family === 'clang' ? 'clang' : fixture.request.language === 'cpp' ? 'gccCpp' : 'gcc', family === 'clang' ? 'clang' : 'assembler', 'inspector');
+		}
+		stages.push('linker', 'node');
+		assert.equal(test.commands.length, stages.length, `${id}: unexpected compilation path`);
+		for (const [index, command] of test.commands.entries()) {
+			const tool = stages[index], recorded = report.tools[tool];
+			assert(expected.tools[tool], `Binary128 tool has no expected fingerprint: ${tool}`);
+			assert.deepEqual(content(recorded), expected.tools[tool], `Binary128 tool differs: ${tool}`);
+			assert(typeof recorded.path === 'string' && path.isAbsolute(recorded.path), `Binary128 tool path is not absolute: ${tool}`);
+			assert(typeof command.command === 'string' && path.isAbsolute(command.command), `Binary128 executed tool path is not absolute: ${tool}`);
+			// Lexical aliases remain portable when the original proof directory is
+			// relocated.  A same-named binary in another directory is not an alias.
+			assert.equal(path.normalize(command.command), path.normalize(recorded.path), `Binary128 executed tool differs from its fingerprint: ${tool}`);
+			assert.equal(command.status, 0); assert.equal(command.signal, null); assert(!command.error);
+		}
+		const link = test.commands.at(-2).argv;
+		assert(link.includes('--fatal-warnings'), 'Binary128 linking must reject signature warnings');
+		if (fixture.printscan) {
+			const extension = link.indexOf(report.runtime.printscan.path);
+			assert(extension >= 0 && extension < link.indexOf('-lc'), 'Binary128 print/scan extension must precede libc');
+		}
+		assert.equal(test.commands.at(-1).stdout, fixture.stdout);
+		assert.equal(test.commands.at(-1).stderr, '');
+	}
+}
+
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, vectorAbiQualification, longDoubleQualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -203,6 +297,13 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	}
 	if (simdProof && lock.gcc.patches.some(patch => patch.path === 'patches/0007-vector-abi.patch'))
 		assert(vectorAbiProof, 'This backend requires --vector-abi-qualification before advertising SIMD');
+	let longDoubleProof;
+	if (longDoubleQualification) {
+		assert(nativeLinker && libstdcxx, '--long-double-qualification requires --native-linker and --libstdcxx');
+		longDoubleProof = await fs.readFile(longDoubleQualification);
+	}
+	if (lock.gcc.patches.some(patch => patch.path === 'patches/0008-binary128-long-double.patch'))
+		assert(longDoubleProof, 'This backend requires --long-double-qualification');
 
 	const asRoot = path.join(work, 'wabt-browser');
 	const asReceipt = await readJson(path.join(asRoot, 'provenance.json'));
@@ -219,7 +320,9 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	assert.deepEqual(runtimeReceipt.patches, runtimeLock.wasiLibc.patches || []);
 	const sysroot = await readNativeTree(path.join(runtime, 'sysroot'));
 	verifyInventory(sysroot, runtimeReceipt.files, 'WASI sysroot');
-	const targetSource = simdProof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
+	verifyRuntimeLibraryIdentities(sysroot, runtimeLock.wasiLibc.libraryIdentities);
+	const targetSource = simdProof || longDoubleProof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
+	const runtimeHeaders = sysroot.filter(file => file.path.startsWith('include/')).map(file => ({ ...file, path: file.path.slice('include/'.length) }));
 	for (const [proof, qualificationPath, fixtureName, recipeName, kind] of [
 		[simdProof, simdQualification, 'simd-fixtures.mjs', 'test-simd.mjs', 'gcc-wasi-native-simd-qualification'],
 		[simdExtendedProof, simdExtendedQualification, 'simd-extended-fixtures.mjs', 'test-simd-extended.mjs', 'gcc-wasi-native-simd-extended-qualification']
@@ -349,6 +452,66 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysroot.push(...files);
 	}
 	assert.equal(new Set(sysroot.map((f) => f.path)).size, sysroot.length, 'Duplicate merged sysroot path');
+	if (longDoubleProof) {
+		const report = JSON.parse(longDoubleProof);
+		const suite = await import('./long-double-fixtures.mjs');
+		for (const tool of ['cc1', 'cc1plus'])
+			assert.equal(identity(await fs.readFile(path.join(work, 'gcc-native/gcc', tool))).sha256, nativeReceipt.tools[tool].sha256, `Binary128 ${tool} differs from the compiler build receipt`);
+		const indexed = files => Object.fromEntries(inventory(files).map(({ path: name, ...receipt }) => [name, receipt]));
+		const sdkRoot = path.resolve(path.dirname(nativeLinker), '..');
+		const runtimeFiles = {
+			'crt1-command.o': 'crt1-command.o', 'libc.a': 'libc.a', 'libm.a': 'libm.a',
+			builtins: 'libclang_rt.builtins-wasm32.a', printscan: 'libc-printscan-long-double.a',
+			gnuCpp: 'libstdc++.a', gnuAbi: 'libsupc++.a'
+		};
+		const runtimeIdentities = Object.fromEntries(Object.entries(runtimeFiles).map(([name, archive]) => {
+			const file = sysroot.find(file => file.path === `lib/wasm32-wasi/${archive}`);
+			assert(file, `Binary128 runtime missing: ${archive}`);
+			return [name, identity(file.bytes)];
+		}));
+		for (const [name, archive] of [['clangCpp', 'libc++.a'], ['clangAbi', 'libc++abi.a']])
+			runtimeIdentities[name] = identity(await fs.readFile(path.join(sdkRoot, 'share/wasi-sysroot/lib/wasm32-wasi/noeh', archive)));
+		const recipes = {};
+		for (const [name, file] of [['fixtures', 'long-double-fixtures.mjs'], ['harness', 'test-long-double.mjs'], ['inspector', 'inspect-vector-abi.mjs']])
+			recipes[name] = identity(await fs.readFile(path.join(here, file)));
+		const cxxPrefix = `include/c++/${lock.gcc.version}/`;
+		verifyLongDoubleQualification(report, {
+			gccCommit: lock.gcc.commit, targetSource, recipes,
+			tools: {
+				gcc: identity(await fs.readFile(path.join(work, 'gcc-native/gcc/cc1'))),
+				gccCpp: identity(await fs.readFile(path.join(work, 'gcc-native/gcc/cc1plus'))),
+				clang: identity(await fs.readFile(path.join(path.dirname(nativeLinker), 'clang'))),
+				assembler: identity(await fs.readFile(path.join(work, 'wabt-native/wat2wasm'))),
+				inspector: identity(await fs.readFile(path.join(work, 'wabt-native/wasm-objdump'))),
+				linker: identity(await fs.readFile(nativeLinker)),
+				node: identity(await fs.readFile(process.execPath))
+			},
+			runtime: runtimeIdentities,
+			headers: {
+				libc: indexed(runtimeHeaders),
+					clangLibc: indexed(await readNativeTree(path.join(sdkRoot, 'share/wasi-sysroot/include'))),
+					clangResource: indexed(await readNativeTree(path.join(sdkRoot, 'lib/clang/22/include'))),
+				gcc: indexed(await readNativeTree(path.join(work, 'gcc-native/gcc/include'))),
+				gnuCpp: indexed(sysroot.filter(file => file.path.startsWith(cxxPrefix)).map(file => ({ ...file, path: file.path.slice(cxxPrefix.length) })))
+			}
+		}, suite.cases);
+		for (const test of report.cases) {
+			const directory = path.join(path.dirname(longDoubleQualification), test.id);
+			for (const [index, unit] of test.units.entries()) {
+				for (const [kind, name] of [['object', `unit${index}.o`], ['assembly', `unit${index}.${unit.compiler === 'gcc' ? 'wat' : 'll'}`]]) {
+					const bytes = await fs.readFile(path.join(directory, name));
+					assert.deepEqual(identity(bytes), { bytes: unit[kind].bytes, sha256: unit[kind].sha256 }, `Binary128 ${kind} differs: ${test.id}`);
+				}
+			}
+			const bytes = await fs.readFile(path.join(directory, 'program.wasm'));
+			assert.deepEqual(identity(bytes), { bytes: test.program.bytes, sha256: test.program.sha256 }, `Binary128 program differs: ${test.id}`);
+			checkWasm(bytes, `Binary128 ${test.id}`, true);
+			assert.deepEqual(inspectVectorAbi(bytes), test.abi, `Binary128 binary types/memory differ: ${test.id}`);
+			const module = new WebAssembly.Module(bytes);
+			assert.deepEqual(WebAssembly.Module.imports(module), test.imports);
+			assert.deepEqual(WebAssembly.Module.exports(module), test.exports);
+		}
+	}
 	for (const name of ['include/wasm32-wasi/stdio.h', `${gccDirectory}/include/stddef.h`, 'lib/wasm32-wasi/crt1-command.o', 'lib/wasm32-wasi/libc.a', 'lib/wasm32-wasi/libm.a', 'lib/wasm32-wasi/libclang_rt.builtins-wasm32.a'])
 		assert(sysroot.some((f) => f.path === name), `Required sysroot file missing: ${name}`);
 	assert(!sysroot.some((f) => /(?:^|\/)libc\+\+/.test(f.path)), 'GCC profile must not silently substitute libc++');
@@ -375,10 +538,10 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
 		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a'],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, longDouble: Boolean(longDoubleProof), exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
-			'long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.',
+			...(longDoubleProof ? [] : ['long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.']),
 			'Arbitrary external objects are outside the SDK input contract.',
 			'C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.',
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
@@ -401,6 +564,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (simdProof) provenanceFiles.set('native-simd-qualification.json', simdProof);
 	if (simdExtendedProof) provenanceFiles.set('native-simd-extended-qualification.json', simdExtendedProof);
 	if (vectorAbiProof) provenanceFiles.set('native-vector-abi-qualification.json', vectorAbiProof);
+	if (longDoubleProof) provenanceFiles.set('native-long-double-qualification.json', longDoubleProof);
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
 	for (const patch of lock.gcc.patches || []) {
@@ -445,8 +609,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'vector-abi-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --vector-abi-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'vector-abi-qualification', 'long-double-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}

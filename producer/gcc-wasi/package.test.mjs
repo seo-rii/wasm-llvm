@@ -1,8 +1,137 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { identity } from '../clang-browser/cross/package.mjs';
-import { verifyInventory, checkWasm, verifySimdQualification, verifyVectorAbiQualification } from './package.mjs';
+import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification } from './package.mjs';
 import { cases, disabledCases } from './simd-fixtures.mjs';
+
+function binary128ProofFixture(simd = false) {
+	const fixture = {
+		id: 'long-double-probe-o0', interop: true, printscan: true, stdin: '1.25\n', stdout: '113 1.25\n',
+		request: { language: 'c', standard: 'gnu11', optimization: '0', simd, code: 'main source', defines: ['ONLINE_JUDGE=1'], sources: ['provider.c'], files: [{ path: 'provider.c', contents: 'provider source' }] },
+		signatures: { probe: { params: ['i32', 'i64', 'i64'], results: [] } }
+	};
+	const names = { gcc: 'cc1', gccCpp: 'cc1plus', clang: 'clang', assembler: 'wat2wasm', inspector: 'wasm-objdump', linker: 'wasm-ld', node: 'node' };
+	const expected = {
+		gccCommit: 'a'.repeat(40), targetSource: { 'tf.md': identity(Buffer.from('target')) }, recipes: { fixtures: identity(Buffer.from('fixtures')) },
+		tools: Object.fromEntries(Object.entries(names).map(([key, name]) => [key, identity(Buffer.from(name))])),
+		runtime: { printscan: identity(Buffer.from('printscan')) },
+		headers: {
+			libc: { 'stdio.h': identity(Buffer.from('stdio')) },
+			clangLibc: { 'wasm32-wasi/stdio.h': identity(Buffer.from('clang stdio')) },
+			clangResource: { 'stddef.h': identity(Buffer.from('clang stddef')) }
+		}
+	};
+	const report = { kind: 'gcc-wasi-long-double-qualification', status: 'passed', inputsUnchanged: true, compilerHost: 'native', outputTarget: 'wasm32-wasi', ...structuredClone(expected), selectedCases: [fixture.id], directions: ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang'] };
+	for (const [key, name] of Object.entries(names)) report.tools[key].path = `/verified/tools/${name}`;
+	report.runtime.printscan.path = '/sysroot/lib/wasm32-wasi/libc-printscan-long-double.a';
+	report.cases = report.directions.map(direction => {
+		const families = direction.split('-');
+		const common = ['-O0', '-std=gnu11', simd ? '-msimd128' : '-mno-simd128', '-D__GCC_WASI_SINGLE_THREAD__=1', '-DONLINE_JUDGE=1'];
+		const commands = families.flatMap(family => {
+			const keys = family === 'gcc' ? ['gcc', 'assembler', 'inspector'] : ['clang', 'clang', 'inspector'];
+			return keys.map((key, index) => ({
+				command: report.tools[key].path,
+				argv: family === 'clang' && index < 2 ? [...common, ...(index === 0 ? ['-S', '-emit-llvm'] : ['-c'])] : index === 0 ? [...common] : [],
+				status: 0, signal: null, stdout: '', stderr: ''
+			}));
+		});
+		commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', report.runtime.printscan.path, '-lc'], status: 0, signal: null }, { command: report.tools.node.path, argv: [], status: 0, signal: null, stdout: fixture.stdout, stderr: '' });
+		return { id: `${fixture.id}-${direction}`, fixture: fixture.id, direction, status: 'passed', optimization: '0', stdin: fixture.stdin, stdout: fixture.stdout, stderr: '', commands,
+			units: families.map((compiler, index) => ({ compiler, source: identity(Buffer.from(index ? 'provider source' : fixture.request.code)) })),
+			abi: { memories: [{ shared: false }], exports: { _start: { params: [], results: [] }, ...fixture.signatures } }, imports: [], exports: [{ name: 'memory', kind: 'memory' }, { name: '_start', kind: 'function' }] };
+	});
+	report.counts = { total: 4, passed: 4, failed: 0 };
+	return { fixture, expected, report };
+}
+
+test('binary128 capability rejects incomplete interop, changed inputs and invalid library ordering (synthetic receipts)', () => {
+	const { fixture, expected, report } = binary128ProofFixture();
+	verifyLongDoubleQualification(report, expected, [fixture]);
+	for (const mutate of [
+		r => r.cases.pop(),
+		r => { r.inputsUnchanged = false; },
+		r => { r.tools.gcc.sha256 = 'b'.repeat(64); },
+		r => { r.runtime.printscan.sha256 = 'c'.repeat(64); },
+		r => { r.headers.libc['stdio.h'].sha256 = 'd'.repeat(64); },
+		r => { r.cases[0].abi.exports.probe = { params: ['f64'], results: ['f64'] }; },
+		r => { r.cases[0].commands[0].argv[2] = '-msimd128'; },
+		r => { r.cases[0].commands[0].argv.pop(); },
+		r => { r.cases[0].commands.at(-2).argv.reverse(); },
+		r => { r.cases[0].stdout = '53 1.25\n'; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyLongDoubleQualification(changed, expected, [fixture]));
+	}
+});
+
+test('binary128 verifies both Clang invocations against the scalar or SIMD fixture', () => {
+	for (const simd of [false, true]) {
+		const { fixture, expected, report } = binary128ProofFixture(simd);
+		verifyLongDoubleQualification(report, expected, [fixture]);
+		for (const mutate of [
+			argv => { argv[0] = '-O3'; },
+			argv => { argv[1] = '-std=gnu99'; },
+			argv => { argv[2] = simd ? '-mno-simd128' : '-msimd128'; },
+			argv => { argv[4] = '-DONLINE_JUDGE=0'; },
+			argv => { argv.push('-DONLINE_JUDGE=0'); },
+			argv => { argv.splice(3, 1); },
+			argv => { argv.pop(); }
+		]) {
+			// Test both the main and provider object compile, whose preceding IR
+			// commands still retain the correct fixture profile.
+			for (const index of [1, 4]) {
+				const changed = structuredClone(report);
+				mutate(changed.cases.find(test => test.direction === 'clang-clang').commands[index].argv);
+				assert.throws(() => verifyLongDoubleQualification(changed, expected, [fixture]));
+			}
+		}
+		const irMismatch = structuredClone(report);
+		irMismatch.cases.find(test => test.direction === 'clang-clang').commands[0].argv.pop();
+		assert.throws(() => verifyLongDoubleQualification(irMismatch, expected, [fixture]), /Clang compilation stage/);
+	}
+});
+
+test('binary128 binds every executed tool path to its measured compiler or runtime', () => {
+	const { fixture, expected, report } = binary128ProofFixture();
+	const alias = structuredClone(report);
+	alias.cases[0].commands[0].command = '/verified/../verified/tools/cc1';
+	verifyLongDoubleQualification(alias, expected, [fixture]);
+	for (const index of [0, 1, 2, 6, 7]) {
+		const changed = structuredClone(report);
+		changed.cases[0].commands[index].command = changed.cases[0].commands[index].command.replace('/verified/', '/unqualified/');
+		assert.throws(() => verifyLongDoubleQualification(changed, expected, [fixture]), /executed tool differs/);
+	}
+	const clang = structuredClone(report);
+	clang.cases.find(test => test.direction === 'clang-clang').commands[1].command = '/other/clang';
+	assert.throws(() => verifyLongDoubleQualification(clang, expected, [fixture]), /executed tool differs/);
+	const node = structuredClone(report);
+	node.tools.node.sha256 = 'f'.repeat(64);
+	assert.throws(() => verifyLongDoubleQualification(node, expected, [fixture]), /tools differs: node/);
+	const unbound = structuredClone(expected);
+	delete unbound.tools.node;
+	assert.throws(() => verifyLongDoubleQualification(report, unbound, [fixture]), /no expected fingerprint: node/);
+});
+
+test('binary128 checks both Clang sysroot and resource headers against the reference SDK', () => {
+	const { fixture, expected, report } = binary128ProofFixture();
+	for (const name of ['clangLibc', 'clangResource']) {
+		const changed = structuredClone(report);
+		Object.values(changed.headers[name])[0].sha256 = 'f'.repeat(64);
+		assert.throws(() => verifyLongDoubleQualification(changed, expected, [fixture]), /Binary128 headers differ/);
+	}
+});
+
+test('locked runtime library bytes cannot be replaced by updating a self-consistent build receipt', () => {
+	const name = 'libc-printscan-long-double.a';
+	const original = { path: `lib/wasm32-wasi/${name}`, bytes: Buffer.from('locked printscan') };
+	const locked = { [name]: identity(original.bytes) };
+	verifyRuntimeLibraryIdentities([original], locked);
+	verifyRuntimeLibraryIdentities([], undefined); // Older runtime locks have no extra pins.
+	const changed = { ...original, bytes: Buffer.from('different printscan') };
+	verifyInventory([changed], [{ path: changed.path, ...identity(changed.bytes) }], 'self-consistent receipt');
+	assert.throws(() => verifyRuntimeLibraryIdentities([changed], locked), /differs from its lock/);
+	assert.throws(() => verifyRuntimeLibraryIdentities([], locked), /Locked runtime library missing/);
+});
 
 test('build receipt rejects modified, missing, extra, and duplicate compiler inputs', () => {
 	const file = { path: 'cc1.wasm', bytes: Buffer.from('compiler bytes') };

@@ -73,6 +73,7 @@ builtins="$sdk/lib/clang/22/lib/wasm32-unknown-wasi/libclang_rt.builtins.a"
 test -s "$builtins"
 sysroot="$sdk/share/wasi-sysroot"
 test -s "$sysroot/lib/wasm32-wasi/crt1-command.o"
+test -s "$sysroot/lib/wasm32-wasi/libc-printscan-long-double.a"
 mkdir -p "$runtime/driver/include" "$runtime/build" "$runtime/install"
 # Port only the target libc header. Preserve the SDK and never erase TLS keywords
 # in user source or define _Thread_local globally.
@@ -87,7 +88,7 @@ cat > "$runtime/driver/runtime.specs" <<EOF
 $sysroot/lib/wasm32-wasi/crt1-command.o
 
 *lib:
--lm -lc
+-lc-printscan-long-double -lm -lc
 
 *libgcc:
 $builtins

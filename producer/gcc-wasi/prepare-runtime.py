@@ -60,7 +60,10 @@ def prepare(archive, output):
     libs = prefix + 'share/wasi-sysroot/lib/wasm32-wasi/'
     builtins = prefix + 'lib/clang/22/lib/wasm32-unknown-wasi/libclang_rt.builtins.a'
     inventory = []
-    required_libs = {'crt1-command.o', 'libc.a', 'libm.a'}
+    # The ordinary WASI libc deliberately aborts long-double formatted I/O.
+    # This SDK extension supplies the real binary128 print/scan implementation
+    # and must precede libc when linking programs that use this profile.
+    required_libs = {'crt1-command.o', 'libc.a', 'libm.a', 'libc-printscan-long-double.a'}
     with tarfile.open(archive) as source:
         for member in source:
             relative = None
@@ -101,6 +104,11 @@ def prepare(archive, output):
     for name in required_libs | {'libclang_rt.builtins-wasm32.a'}:
         if not (sysroot / 'lib/wasm32-wasi' / name).is_file():
             raise RuntimeError(f'Missing target library: {name}')
+    for name, expected in lock['wasiLibc'].get('libraryIdentities', {}).items():
+        if name not in required_libs:
+            raise RuntimeError(f'Unexpected locked target library: {name}')
+        if identity((sysroot / 'lib/wasm32-wasi' / name).read_bytes()) != expected:
+            raise RuntimeError(f'Target library identity mismatch: {name}')
     for name in ['stdio.h', 'stdlib.h', 'math.h', 'stdint.h']:
         if not (sysroot / 'include/wasm32-wasi' / name).is_file():
             raise RuntimeError(f'Missing target header: {name}')
