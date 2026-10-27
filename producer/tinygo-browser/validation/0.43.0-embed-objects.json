@@ -1,0 +1,154 @@
+{
+  "format": "tinygo043-embed-capture-evidence-v1",
+  "status": "passed",
+  "scope": "Minimal exact-native go:embed object capture; not full compiler qualification",
+  "capturedAt": "2026-10-27T09:48:43.952206+00:00",
+  "tinygoCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+  "toolchain": "tinygo version 0.43.0 linux/amd64 (using go version go1.26.10 and LLVM version 22.1.4)",
+  "cacheIsolation": [
+    "XDG_CACHE_HOME",
+    "GOCACHE",
+    "TMPDIR"
+  ],
+  "source": "fixture/main.go",
+  "payloadFiles": [
+    "fixture/a.txt",
+    "fixture/b.txt",
+    "fixture/c.txt"
+  ],
+  "expectedOutput": "expected.stdout",
+  "oldPatternMatches": 0,
+  "newPatternMatches": 3,
+  "pattern": "^embed-([0-9a-f]{32})-([0-9a-f]{16})\\.o$",
+  "contentIdentity": "first16bytes SHA256(payload), lowercase hex",
+  "sourceIdentity": "first8bytes SHA256(filepath.ToSlash(filepath.Join(recorded source directory, source filename))), lowercase hex",
+  "samePayloadDistinctSourceObjectsDiffer": true,
+  "objectBytesEqualBetweenBitcodeAndWasmBuilds": true,
+  "upstreamLinkIncludesEveryObject": true,
+  "nativeRun": {
+    "exitCode": 0,
+    "stdout": "a.txt:shared embed payload\nb.txt:shared embed payload\nc.txt:distinct embed payload\n",
+    "stderr": "(node:925213) ExperimentalWarning: WASI is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nmemoryBytes=262144\n"
+  },
+  "upstreamSource": {
+    "sha256": "d1bfcd56ea440b8bd1fdfaa62dc9440e3686f69a43ed61d97196bbeaedd360e2",
+    "url": "https://github.com/tinygo-org/tinygo/blob/108a95cb26df6d5011366312dde0639b08d753cf/builder/build.go"
+  },
+  "files": [
+    {
+      "path": "fixture/main.go",
+      "bytes": 267,
+      "sha256": "d64bd887c68b44009a29e7bd02db33cdb737211f4fb33aa51b6cb7b64c3a6a6c",
+      "text": "package main\nimport (\"embed\"; \"fmt\")\n//go:embed a.txt b.txt c.txt\nvar assets embed.FS\nfunc main() {\n for _, name := range []string{\"a.txt\", \"b.txt\", \"c.txt\"} {\n  data, err := assets.ReadFile(name)\n  if err != nil { panic(err) }\n  fmt.Printf(\"%s:%s\", name, data)\n }\n}\n"
+    },
+    {
+      "path": "fixture/a.txt",
+      "bytes": 21,
+      "sha256": "81b74fff8a05c42da404b0261576bc51aa1b31c978d33fdd79600659442d20b4",
+      "text": "shared embed payload\n"
+    },
+    {
+      "path": "fixture/b.txt",
+      "bytes": 21,
+      "sha256": "81b74fff8a05c42da404b0261576bc51aa1b31c978d33fdd79600659442d20b4",
+      "text": "shared embed payload\n"
+    },
+    {
+      "path": "fixture/c.txt",
+      "bytes": 23,
+      "sha256": "035ef768e7f8484416bafe308634bae6832d41125931181abf7d88d6be08240e",
+      "text": "distinct embed payload\n"
+    },
+    {
+      "path": "expected.stdout",
+      "bytes": 83,
+      "sha256": "0c3d522f66911975ed9f40074b627d73f495f03c6ed7ae4fc917b7f62b6a621b",
+      "text": "a.txt:shared embed payload\nb.txt:shared embed payload\nc.txt:distinct embed payload\n"
+    }
+  ],
+  "bootstrap": {
+    "schemaVersion": 1,
+    "producerId": "wasm-llvm/tinygo-browser",
+    "manifestSha256": "7e413765ff84b573bbf3de3701d4fff7f964ee9cea971f9204d5e7b1b47f3621",
+    "inputs": {
+      "tinygo": {
+        "url": "https://github.com/tinygo-org/tinygo/releases/download/v0.43.0/tinygo0.43.0.linux-amd64.tar.gz",
+        "sha256": "ca9fc6d055e3889462dea4450a2e42a92242d88b5c362a7ec39bdb563413d78a",
+        "bytes": 186793787
+      }
+    },
+    "tools": {}
+  },
+  "outputs": [
+    {
+      "path": "embedded.bc",
+      "bytes": 1048908,
+      "sha256": "b2aec71e22a969e91a37b2b6d0302c9797199bda94b5defec7088501c25afd2d"
+    },
+    {
+      "path": "embedded.wasm",
+      "bytes": 216564,
+      "sha256": "c653b3c99b3f374ac2ccad751a7f6aea37ae959aa06997c5c9726049df57e28c"
+    },
+    {
+      "path": "objects/embed-035ef768e7f8484416bafe308634bae6-acf20e1cde4582b2.o",
+      "bytes": 1099,
+      "sha256": "7a49a05851ad5a5449ed6691377011c6fffeadc96dde367784d25e70b97969ff"
+    },
+    {
+      "path": "objects/embed-81b74fff8a05c42da404b0261576bc51-5dbc302548ad293a.o",
+      "bytes": 1097,
+      "sha256": "f917c58ef6bfc8f4e490201e83fbab127c816556b967e86f5a40df54d80572a5"
+    },
+    {
+      "path": "objects/embed-81b74fff8a05c42da404b0261576bc51-fd1de9f51a9ada53.o",
+      "bytes": 1097,
+      "sha256": "6ecdfb64867a263d73a24cfa518ad043b2eb3cbf498aeb40054b224fbffa9250"
+    }
+  ],
+  "bitcodeBuild": {
+    "exitCode": 0,
+    "objectIdentities": [
+      {
+        "name": "embed-035ef768e7f8484416bafe308634bae6-acf20e1cde4582b2.o",
+        "fixture": "c.txt",
+        "embeddedFileHash": "035ef768e7f8484416bafe308634bae6",
+        "sourcePathHash": "acf20e1cde4582b2",
+        "payload": {
+          "bytes": 23,
+          "sha256": "035ef768e7f8484416bafe308634bae6832d41125931181abf7d88d6be08240e"
+        },
+        "bytes": 1099,
+        "sha256": "7a49a05851ad5a5449ed6691377011c6fffeadc96dde367784d25e70b97969ff"
+      },
+      {
+        "name": "embed-81b74fff8a05c42da404b0261576bc51-5dbc302548ad293a.o",
+        "fixture": "b.txt",
+        "embeddedFileHash": "81b74fff8a05c42da404b0261576bc51",
+        "sourcePathHash": "5dbc302548ad293a",
+        "payload": {
+          "bytes": 21,
+          "sha256": "81b74fff8a05c42da404b0261576bc51aa1b31c978d33fdd79600659442d20b4"
+        },
+        "bytes": 1097,
+        "sha256": "f917c58ef6bfc8f4e490201e83fbab127c816556b967e86f5a40df54d80572a5"
+      },
+      {
+        "name": "embed-81b74fff8a05c42da404b0261576bc51-fd1de9f51a9ada53.o",
+        "fixture": "a.txt",
+        "embeddedFileHash": "81b74fff8a05c42da404b0261576bc51",
+        "sourcePathHash": "fd1de9f51a9ada53",
+        "payload": {
+          "bytes": 21,
+          "sha256": "81b74fff8a05c42da404b0261576bc51aa1b31c978d33fdd79600659442d20b4"
+        },
+        "bytes": 1097,
+        "sha256": "6ecdfb64867a263d73a24cfa518ad043b2eb3cbf498aeb40054b224fbffa9250"
+      }
+    ]
+  },
+  "wasmBuild": {
+    "exitCode": 0,
+    "upstreamLinkIncludesAllObjects": true
+  }
+}
