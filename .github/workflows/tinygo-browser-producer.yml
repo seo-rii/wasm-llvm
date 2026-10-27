@@ -257,3 +257,23 @@ jobs:
                   path: ${{ env.TINYGO_PRODUCT }}
                   if-no-files-found: error
                   retention-days: 14
+
+            - name: Preserve failed producer diagnostics
+              if: ${{ failure() && env.TINYGO_COMPILER_BUILD != '' }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: tinygo-unqualified-diagnostics-${{ github.sha }}
+                  path: |
+                      ${{ env.TINYGO_ARTIFACTS }}
+                      ${{ env.TINYGO_BUILD_RECEIPT }}
+                      ${{ env.TINYGO_COMPILER_BUILD }}/tinygo-compiler.bc
+                      ${{ env.TINYGO_COMPILER_BUILD }}/tinygo-compiler.unoptimized.wasm
+                      ${{ env.TINYGO_COMPILER_BUILD }}/host-support
+                      ${{ env.TINYGO_COMPILER_BUILD }}/host-link-inputs
+                      ${{ env.TINYGO_GRAPH_ARTIFACTS }}
+                      ${{ env.TINYGO_GRAPH_RECEIPT }}
+                      ${{ env.TINYGO_SOURCE_RECEIPT }}
+                      ${{ env.TINYGO_PRODUCT }}
+                      ${{ runner.temp }}/tinygo-bootstrap-receipt.json
+                  if-no-files-found: warn
+                  retention-days: 7
