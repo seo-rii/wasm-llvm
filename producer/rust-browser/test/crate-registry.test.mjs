@@ -8,7 +8,7 @@ import { buildCrateRegistry, inventoryDirectory, parseCrateRegistryPlan, sha256 
 
 const json = (value) => JSON.stringify(value, null, 2) + '\n';
 const commit = '1'.repeat(40);
-const version = `rustc 1.99.0\ncommit-hash: ${commit}\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 22.1.8\n`;
+const version = `rustc 1.99.1\ncommit-hash: ${commit}\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n`;
 
 async function fixture(t, mode = 'success') {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'crate-registry-test-'));
