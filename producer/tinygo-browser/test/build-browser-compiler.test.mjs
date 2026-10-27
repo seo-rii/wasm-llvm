@@ -992,6 +992,11 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(buildCall.runOptions.env.GOROOT, receipt.paths.goToolchainRoot);
 	assert.equal(buildCall.runOptions.env.GOVERSION, 'go1.26.10');
 	assert.equal(buildCall.runOptions.env.GOWORK, receipt.paths.goWorkPath);
+	assert.equal(
+		(await readFile(receipt.paths.goWorkPath, 'utf8')).split('\n')[0],
+		'go 1.26.10',
+		'the build workspace must accept the pinned TinyGo module Go requirement'
+	);
 	const linkCall = calls.find(
 		(call) => call.command === fixture.nativeWasmLd && call.args[0] !== '--version'
 	);

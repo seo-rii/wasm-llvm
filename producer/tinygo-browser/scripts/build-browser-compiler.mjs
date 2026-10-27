@@ -1740,7 +1740,7 @@ export async function buildBrowserCompiler(
 			receipt.goToolchain.patch.status = 'applied';
 			await writeFile(
 				receipt.paths.goWorkPath,
-				`go 1.24.0\n\nuse ${JSON.stringify(receipt.paths.patchedSourceRoot)}\n\nreplace ${receipt.goLlvmSource.module} => ${JSON.stringify(receipt.paths.patchedGoLlvmRoot)}\n`,
+				`go ${receipt.goToolchain.version.slice(2)}\n\nuse ${JSON.stringify(receipt.paths.patchedSourceRoot)}\n\nreplace ${receipt.goLlvmSource.module} => ${JSON.stringify(receipt.paths.patchedGoLlvmRoot)}\n`,
 				'utf8'
 			);
 			const archivedClangResource = await lstat(
