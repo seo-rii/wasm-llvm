@@ -15,9 +15,15 @@ libraries is unavailable; this recipe reproduces the C3 build from that binary i
 claim to rebuild LLVM or produce byte-identical binaries across machines.
 
 The 0.8.5_1 source update includes the upstream Wasm regression fix and retains LLVM 22.1.8,
-which is within C3's supported LLVM 19–24 range. The browser subprocess patch applies to the
-new source revision. New compiler artifacts still require the full build and both acceptance
-runs below; the historical 0.8.3 results do not qualify the updated compiler.
+which is within C3's supported LLVM 19–24 range. The browser patches reject external subprocesses
+and skip native page-protection/advice calls when committing already-backed Wasm arena memory.
+The latter applies only under `__EMSCRIPTEN__` and retains the upstream allocation accounting
+and bounds checks. Both Node and Chromium acceptance reject unsupported host-syscall warnings.
+
+The complete fresh-SDK build, Node/Chromium acceptance, packaging, and strict artifact verification
+passed on 2026-10-27. [Qualification evidence](validation/0.8.5_1.json) records the source and
+patch identities, prepared-input hashes, compiler asset hashes, acceptance inputs, and observed
+guest outputs for this 0.8.5_1 build.
 
 ## Build and verify
 
@@ -51,9 +57,11 @@ compiled real source, rejected invalid source, linked a guest, and executed arit
 input/output; a Wasm header or successful `--version` is insufficient. Verification checks those
 receipts and loads the compiler Wasm with `WebAssembly.compile`.
 
-On 2026-09-05 the complete acceptance passed in Node 24.1.0 and Chromium. The compiler module was
-39,058,650 bytes; both engines produced the same 280,763-byte guest from `fixtures/program.c3`.
-The exact browser version, checksums, and diagnostic are preserved in the generated receipts.
+On 2026-10-27 the complete acceptance passed in Node 24.22.1 and Chromium 156.0.8078.4.
+The compiler module was 39,987,618 bytes; both engines produced the same 19 relocatable objects
+and 492,903-byte guest from `fixtures/program.c3`. Version output, valid compilation/linking,
+and invalid-source diagnostics contained no unsupported host-syscall warnings. The exact
+checksums and diagnostic are preserved in the qualification evidence and generated receipts.
 Generated artifacts are ignored by Git and are not deployed by these commands.
 
 ## Compiler invocation contract
