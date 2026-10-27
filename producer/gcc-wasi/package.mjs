@@ -8,6 +8,7 @@ import { gzipSync, brotliCompressSync, constants } from 'node:zlib';
 import { identity, readNativeTree, relativePath } from '../clang-browser/cross/package.mjs';
 import { deterministicTar } from '../clang-browser/scripts/package-language-sysroots.mjs';
 import { cases as simdCases, disabledCases } from './simd-fixtures.mjs';
+import { inspectVectorAbi } from './inspect-vector-abi.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const json = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -38,7 +39,7 @@ export function checkWasm(bytes, label, executable = false) {
 }
 
 export function verifySimdQualification(report, expected) {
-	assert.equal(report.kind, 'gcc-wasi-native-simd-qualification');
+	assert.equal(report.kind, expected.kind || 'gcc-wasi-native-simd-qualification');
 	assert.equal(report.status, 'passed', 'SIMD qualification did not pass');
 	assert.equal(report.gccCommit, expected.gccCommit);
 	assert.equal(report.compiler?.sha256, expected.compilerSha256, 'SIMD qualification covers another GCC binary');
@@ -47,7 +48,10 @@ export function verifySimdQualification(report, expected) {
 	assert.deepEqual(report.assembler, expected.assembler, 'SIMD assembler changed after qualification');
 	assert.deepEqual(report.linker, expected.linker, 'SIMD linker changed after qualification');
 	assert.deepEqual(report.runtime, expected.runtime, 'SIMD runtime differs from the packaged runtime');
-	const fixtures = [...simdCases, ...disabledCases];
+	assert.deepEqual(report.targetSource, expected.targetSource, 'SIMD backend sources differ');
+	const fixtures = expected.fixtures || [...simdCases, ...disabledCases];
+	if (fixtures.some(fixture => fixture.request.language === 'cpp'))
+		assert.equal(report.compilerCpp?.sha256, expected.compilerCppSha256, 'SIMD qualification covers another C++ compiler');
 	assert.deepEqual(report.cases.map((test) => test.id).sort(), fixtures.map((test) => test.id).sort(), 'SIMD qualification is incomplete');
 	for (const test of report.cases) {
 		const fixture = fixtures.find((f) => f.id === test.id);
@@ -61,8 +65,12 @@ export function verifySimdQualification(report, expected) {
 			assert.equal(command.signal, null, 'SIMD command was interrupted');
 			assert(!command.error, 'SIMD command did not execute');
 		}
-		assert.deepEqual(test.commands.slice(0, 4).map((command) => path.basename(command.command)), ['cc1', 'wat2wasm', 'wasm-objdump', 'wasm-ld']);
-		assert(test.commands[0].argv.includes(fixture.request.simd ? '-msimd128' : '-mno-simd128'));
+		assert.deepEqual(test.commands.map((command) => path.basename(command.command)), [fixture.request.language === 'cpp' ? 'cc1plus' : 'cc1', 'wat2wasm', 'wasm-objdump', 'wasm-ld', 'node']);
+		assert(test.commands[3].argv.includes('--fatal-warnings'), 'SIMD linking must reject signature warnings');
+		const argv = test.commands[0].argv;
+		assert.deepEqual(argv.filter(arg => /^-O/.test(arg)), [`-O${fixture.request.optimization}`], 'SIMD optimization differs from fixture');
+		assert.deepEqual(argv.filter(arg => arg.startsWith('-std=')), [`-std=${fixture.request.standard}`], 'SIMD language standard differs from fixture');
+		assert.deepEqual(argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), [fixture.request.simd ? '-msimd128' : '-mno-simd128'], 'SIMD profile differs from fixture');
 		assert.equal(test.commands[4].stdout, fixture.stdout);
 		assert.equal(test.commands[4].stderr, '');
 		assert(Array.isArray(test.imports) && test.imports.every((entry) => entry.module === 'wasi_snapshot_preview1' && entry.kind === 'function'));
@@ -75,7 +83,70 @@ export function verifySimdQualification(report, expected) {
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, nativeLinker }) {
+export function verifyVectorAbiQualification(report, expected, fixtures) {
+	assert.equal(report.kind, 'gcc-wasi-vector-abi-interop');
+	assert.equal(report.status, 'passed', 'Vector ABI qualification failed');
+	assert.equal(report.inputsUnchanged, true, 'Vector ABI inputs were not stable');
+	assert.equal(report.compilerHost, 'native');
+	assert.equal(report.outputTarget, 'wasm32-wasi');
+	assert.equal(report.gccCommit, expected.gccCommit);
+	const content = receipt => ({ bytes: receipt?.bytes, sha256: receipt?.sha256 });
+	assert.deepEqual(content(report.fixtures), expected.fixture, 'Vector ABI fixtures changed');
+	assert.deepEqual(content(report.harness), expected.testRecipe, 'Vector ABI recipe changed');
+	assert.deepEqual(content(report.inspectionRecipe), expected.inspectionRecipe, 'Vector ABI inspection recipe changed');
+	assert.deepEqual(Object.fromEntries(Object.entries(report.targetSource).map(([name, receipt]) => [name, content(receipt)])), expected.targetSource, 'Vector ABI backend sources differ');
+	for (const [name, sha256] of Object.entries(expected.tools))
+		assert.equal(report.tools?.[name]?.sha256, sha256, `Vector ABI tool differs: ${name}`);
+	for (const [name, receipt] of Object.entries(expected.runtime))
+		assert.deepEqual(content(report.runtime?.[name]), receipt, `Vector ABI runtime differs: ${name}`);
+	const matrix = fixtures.flatMap(fixture => ['0', '2'].flatMap(optimization =>
+		(fixture.request.simd ? ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang'] : ['gcc-gcc'])
+			.map(direction => ({ fixture, optimization, direction, id: `${fixture.id}-o${optimization}-${direction}` }))));
+	assert.deepEqual(report.cases?.map(test => test.id).sort(), matrix.map(test => test.id).sort(), 'Vector ABI matrix is incomplete');
+	assert.deepEqual(report.counts, { total: matrix.length, passed: matrix.length, failed: 0 });
+	for (const { fixture, optimization, direction, id } of matrix) {
+		const test = report.cases.find(entry => entry.id === id);
+		assert.equal(test.status, 'passed', `${id}: failed`);
+		assert.equal(test.fixture, fixture.id);
+		assert.equal(test.optimization, optimization);
+		assert.equal(test.direction, direction);
+		assert.equal(test.simd, fixture.request.simd);
+		assert.equal(test.stdout, fixture.stdout, `${id}: execution output differs`);
+		assert.deepEqual(test.abi?.exports?._start, { params: [], results: [] });
+		assert.equal(test.abi.memories.length, 1);
+		assert.equal(test.abi.memories[0].shared, false);
+		for (const [symbol, signature] of Object.entries(fixture.signatures))
+			assert.deepEqual(test.abi.exports[symbol], signature, `${id}: ${symbol} signature differs`);
+		assert(test.imports.every(entry => entry.module === 'wasi_snapshot_preview1' && entry.kind === 'function'));
+		assert(test.exports.some(entry => entry.name === 'memory' && entry.kind === 'memory'));
+		assert(test.exports.some(entry => entry.name === '_start' && entry.kind === 'function'));
+		assert(Number.isSafeInteger(test.program?.bytes) && test.program.bytes > 8 && /^[a-f0-9]{64}$/.test(test.program.sha256));
+		const units = [fixture.request.code, ...fixture.request.sources.map(name => fixture.request.files.find(file => file.path === name).contents)];
+		assert.equal(test.units.length, units.length, `${id}: missing translation unit`);
+		const stages = [];
+		for (const [index, source] of units.entries()) {
+			const family = direction.split('-')[index === 0 ? 0 : 1];
+			assert.equal(test.units[index].compiler, family);
+			assert.deepEqual(content(test.units[index].source), identity(Buffer.from(source)), `${id}: source differs`);
+			const frontend = family === 'clang' ? 'clang' : fixture.request.language === 'cpp' ? 'cc1plus' : 'cc1';
+			const argv = test.commands[stages.length]?.argv || [];
+			assert.deepEqual(argv.filter(arg => /^-O/.test(arg)), [`-O${optimization}`], `${id}: optimization differs`);
+			assert.deepEqual(argv.filter(arg => arg.startsWith('-std=')), [`-std=${fixture.request.standard}`], `${id}: standard differs`);
+			assert.deepEqual(argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), [fixture.request.simd ? '-msimd128' : '-mno-simd128'], `${id}: SIMD profile differs`);
+			stages.push(frontend, ...(family === 'gcc' ? ['wat2wasm'] : []), 'wasm-objdump');
+		}
+		stages.push('wasm-ld', 'node');
+		assert.deepEqual(test.commands.map(command => path.basename(command.command)), stages, `${id}: unexpected compilation path`);
+		for (const command of test.commands) {
+			assert.equal(command.status, 0); assert.equal(command.signal, null); assert(!command.error);
+		}
+		assert(test.commands.at(-2).argv.includes('--fatal-warnings'));
+		assert.equal(test.commands.at(-1).stdout, fixture.stdout);
+		assert.equal(test.commands.at(-1).stderr, '');
+	}
+}
+
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, vectorAbiQualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -118,6 +189,20 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		assert(nativeLinker, '--simd-qualification requires --native-linker');
 		simdProof = await fs.readFile(simdQualification);
 	}
+	let simdExtendedProof;
+	if (simdExtendedQualification) {
+		assert(simdProof, '--simd-extended-qualification requires --simd-qualification');
+		simdExtendedProof = await fs.readFile(simdExtendedQualification);
+	}
+	if (simdProof && lock.gcc.patches.some(patch => patch.path === 'patches/0006-simd-operations.patch'))
+		assert(simdExtendedProof, 'This backend requires --simd-extended-qualification before advertising SIMD');
+	let vectorAbiProof;
+	if (vectorAbiQualification) {
+		assert(simdProof, '--vector-abi-qualification requires --simd-qualification');
+		vectorAbiProof = await fs.readFile(vectorAbiQualification);
+	}
+	if (simdProof && lock.gcc.patches.some(patch => patch.path === 'patches/0007-vector-abi.patch'))
+		assert(vectorAbiProof, 'This backend requires --vector-abi-qualification before advertising SIMD');
 
 	const asRoot = path.join(work, 'wabt-browser');
 	const asReceipt = await readJson(path.join(asRoot, 'provenance.json'));
@@ -134,21 +219,58 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	assert.deepEqual(runtimeReceipt.patches, runtimeLock.wasiLibc.patches || []);
 	const sysroot = await readNativeTree(path.join(runtime, 'sysroot'));
 	verifyInventory(sysroot, runtimeReceipt.files, 'WASI sysroot');
-	if (simdProof) {
-		const report = JSON.parse(simdProof);
+	const targetSource = simdProof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
+	for (const [proof, qualificationPath, fixtureName, recipeName, kind] of [
+		[simdProof, simdQualification, 'simd-fixtures.mjs', 'test-simd.mjs', 'gcc-wasi-native-simd-qualification'],
+		[simdExtendedProof, simdExtendedQualification, 'simd-extended-fixtures.mjs', 'test-simd-extended.mjs', 'gcc-wasi-native-simd-extended-qualification']
+	]) {
+		if (!proof) continue;
+		const report = JSON.parse(proof);
+		const suite = await import(new URL(fixtureName, import.meta.url));
 		verifySimdQualification(report, {
+			kind, fixtures: [...suite.cases, ...(suite.disabledCases || [])], targetSource,
 			gccCommit: lock.gcc.commit,
 			compilerSha256: nativeReceipt.tools.cc1.sha256,
-			fixture: identity(await fs.readFile(path.join(here, 'simd-fixtures.mjs'))),
-			testRecipe: identity(await fs.readFile(path.join(here, 'test-simd.mjs'))),
+			compilerCppSha256: nativeReceipt.tools.cc1plus.sha256,
+			fixture: identity(await fs.readFile(path.join(here, fixtureName))),
+			testRecipe: identity(await fs.readFile(path.join(here, recipeName))),
 			assembler: identity(await fs.readFile(path.join(work, 'wabt-native/wat2wasm'))),
 			linker: identity(await fs.readFile(nativeLinker)),
 			runtime: Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a'].map((name) => [name, identity(sysroot.find((f) => f.path === `lib/wasm32-wasi/${name}`).bytes)]))
 		});
 		for (const test of report.cases) {
-			const bytes = await fs.readFile(path.join(path.dirname(simdQualification), test.id, 'main.wasm'));
+			const bytes = await fs.readFile(path.join(path.dirname(qualificationPath), test.id, 'main.wasm'));
 			assert.deepEqual(identity(bytes), test.wasm, 'SIMD program differs from its qualification');
 			checkWasm(bytes, `SIMD ${test.id}`, true);
+			const module = new WebAssembly.Module(bytes);
+			assert.deepEqual(WebAssembly.Module.imports(module), test.imports);
+			assert.deepEqual(WebAssembly.Module.exports(module), test.exports);
+		}
+	}
+	if (vectorAbiProof) {
+		const report = JSON.parse(vectorAbiProof);
+		const suite = await import('./vector-abi-cases.mjs');
+		verifyVectorAbiQualification(report, {
+			targetSource,
+			gccCommit: lock.gcc.commit,
+			fixture: identity(await fs.readFile(path.join(here, 'vector-abi-cases.mjs'))),
+			testRecipe: identity(await fs.readFile(path.join(here, 'test-vector-abi.mjs'))),
+			inspectionRecipe: identity(await fs.readFile(path.join(here, 'inspect-vector-abi.mjs'))),
+			tools: {
+				gcc: nativeReceipt.tools.cc1.sha256, gccCpp: nativeReceipt.tools.cc1plus.sha256,
+				assembler: identity(await fs.readFile(path.join(work, 'wabt-native/wat2wasm'))).sha256,
+				inspector: identity(await fs.readFile(path.join(work, 'wabt-native/wasm-objdump'))).sha256,
+				linker: identity(await fs.readFile(nativeLinker)).sha256,
+				clang: identity(await fs.readFile(path.join(path.dirname(nativeLinker), 'clang'))).sha256
+			},
+			runtime: Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a'].map(name =>
+				[name === 'libclang_rt.builtins-wasm32.a' ? 'builtins' : name, identity(sysroot.find(file => file.path === `lib/wasm32-wasi/${name}`).bytes)]))
+		}, [...suite.cases, ...suite.disabledCases]);
+		for (const test of report.cases) {
+			const bytes = await fs.readFile(path.join(path.dirname(vectorAbiQualification), test.id, 'program.wasm'));
+			assert.deepEqual(identity(bytes), { bytes: test.program.bytes, sha256: test.program.sha256 }, 'Vector ABI program differs from qualification');
+			checkWasm(bytes, `Vector ABI ${test.id}`, true);
+			assert.deepEqual(inspectVectorAbi(bytes), test.abi, `Vector ABI ${test.id}: binary types/memory differ from qualification`);
 			const module = new WebAssembly.Module(bytes);
 			assert.deepEqual(WebAssembly.Module.imports(module), test.imports);
 			assert.deepEqual(WebAssembly.Module.exports(module), test.exports);
@@ -257,10 +379,13 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			'long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.',
-			'Arbitrary external objects are outside the SDK input contract; direct LLVM v128 and vector aggregate ABI interoperability are not supported.',
+			'Arbitrary external objects are outside the SDK input contract.',
 			'C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.',
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
-			...(simdProof ? ['SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization, wasm_simd128.h intrinsics and cross-toolchain vector ABI are not qualified.'] : []),
+			...(simdProof ? ['SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization and wasm_simd128.h intrinsics are not qualified.'] : []),
+			...(vectorAbiProof
+				? ['Direct v128 and qualified vector aggregate ABI require -msimd128 on both sides; the disabled profile retains indirect vector arguments/results.']
+				: ['Direct LLVM v128 and vector aggregate ABI interoperability are not qualified.']),
 			'x86 AVX2/FMA intrinsics and target pragmas do not provide Wasm SIMD.'
 		],
 		qualification: { status: 'unverified' }
@@ -274,6 +399,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	]);
 	if (stdReceipt) provenanceFiles.set('libstdcxx-build.json', json(stdReceipt));
 	if (simdProof) provenanceFiles.set('native-simd-qualification.json', simdProof);
+	if (simdExtendedProof) provenanceFiles.set('native-simd-extended-qualification.json', simdExtendedProof);
+	if (vectorAbiProof) provenanceFiles.set('native-vector-abi-qualification.json', vectorAbiProof);
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
 	for (const patch of lock.gcc.patches || []) {
@@ -318,8 +445,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'vector-abi-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --vector-abi-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}

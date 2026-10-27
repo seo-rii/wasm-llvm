@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Verify actual Chromium GCC SIMD captures; this script does not compile code.
 // First run wasm-idle/scripts/verify-gcc-wasi.mjs with --manifest, --suite pointing
-// to this directory's simd-fixtures.mjs, and --save-intermediates (all 25 cases).
+// to a trusted local SIMD suite, and --save-intermediates (all suite cases).
 // Usage: node producer/gcc-wasi/verify-simd-worker.mjs \
 //   --qualification /path/to/qualification.json \
 //   --objdump /path/to/native/wasm-objdump --output /path/to/NEW.json
@@ -13,10 +13,9 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const recipePath = fileURLToPath(import.meta.url);
-const fixturePath = fileURLToPath(new URL('./simd-fixtures.mjs', import.meta.url));
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const identify = bytes => ({ bytes: bytes.length, sha256: sha256(bytes) });
 const simdMnemonic = /^(?:v128|i8x16|i16x8|i32x4|i64x2|f32x4|f64x2)\.[a-z0-9_]+$/;
@@ -24,16 +23,17 @@ const options = {};
 for (let index = 2; index < process.argv.length; index++) {
   const key = process.argv[index];
   if (key === '--help') {
-    console.log('Usage: node producer/gcc-wasi/verify-simd-worker.mjs --qualification QUALIFICATION.json --objdump NATIVE_WASM_OBJDUMP --output NEW.json\nRequires the complete 25-case Chromium GCC SIMD suite captured with --save-intermediates.');
+    console.log('Usage: node producer/gcc-wasi/verify-simd-worker.mjs --qualification QUALIFICATION.json --objdump NATIVE_WASM_OBJDUMP --output NEW.json [--suite TRUSTED_LOCAL_MODULE.mjs]\nRequires every case in the selected Chromium GCC SIMD suite, captured with --save-intermediates. The default is simd-fixtures.mjs.');
     process.exit(0);
   }
-  assert(['--qualification', '--objdump', '--output'].includes(key), `Unknown argument ${key}`);
+  assert(['--qualification', '--objdump', '--output', '--suite'].includes(key), `Unknown argument ${key}`);
   assert(!Object.hasOwn(options, key.slice(2)), `Duplicate argument ${key}`);
   const value = process.argv[++index];
   assert(value && !value.startsWith('--'), `Missing value for ${key}`);
   options[key.slice(2)] = value;
 }
 for (const name of ['qualification', 'objdump', 'output']) assert(options[name], `Required --${name}`);
+const fixturePath = options.suite || fileURLToPath(new URL('./simd-fixtures.mjs', import.meta.url));
 const output = path.resolve(options.output);
 await fs.mkdir(path.dirname(output), { recursive: true });
 const outputFile = await fs.open(output, 'wx', 0o600);
@@ -154,7 +154,8 @@ function checkCompilation(compilation, fixture, emit) {
   const label = `${fixture.id}: ${emit}`;
   assert.equal(compilation?.exitCode, 0, `${label}: compilation failed`);
   assert(Array.isArray(compilation.stages), `${label}: missing stages`);
-  const expected = emit === 'assembly' ? ['cc1'] : emit === 'object' ? ['cc1', 'as'] : ['cc1', 'as', 'ld'];
+  const frontend = fixture.request.language === 'cpp' ? 'cc1plus' : 'cc1';
+  const expected = emit === 'assembly' ? [frontend] : emit === 'object' ? [frontend, 'as'] : [frontend, 'as', 'ld'];
   assert.deepEqual(compilation.stages.map(stage => stage.tool), expected, `${label}: unexpected compiler stages`);
   for (const stage of compilation.stages) {
     assert.equal(stage.exitCode, 0, `${label}: ${stage.tool} failed`);
@@ -164,21 +165,28 @@ function checkCompilation(compilation, fixture, emit) {
   const flag = fixture.request.simd ? '-msimd128' : '-mno-simd128';
   assert.deepEqual(argv.filter(arg => /^-O/.test(arg)), [`-O${fixture.request.optimization}`], `${label}: optimization mismatch`);
   assert.deepEqual(argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), [flag], `${label}: SIMD option mismatch`);
-  assert(argv.includes(`-std=${fixture.request.standard}`), `${label}: language standard mismatch`);
+  assert.deepEqual(argv.filter(arg => arg.startsWith('-std=')), [`-std=${fixture.request.standard}`], `${label}: language standard mismatch`);
+  if (emit === 'executable') assert(compilation.stages.at(-1).argv.includes('--fatal-warnings'), `${label}: linker must reject signature warnings`);
 }
 
 try {
   report.recipe = (await readInput(recipePath)).receipt;
   const suiteInput = await readInput(fixturePath);
   report.suite = suiteInput.receipt;
-  const { cases, disabledCases } = await import('./simd-fixtures.mjs');
+  const { cases, disabledCases = [] } = await import(pathToFileURL(suiteInput.receipt.path));
+  assert(Array.isArray(cases) && cases.length > 0, 'Expected enabled SIMD fixtures');
+  assert(Array.isArray(disabledCases), 'Expected disabledCases array');
   const fixtures = [...cases, ...disabledCases];
-  assert.equal(cases.length, 19, 'Expected 19 enabled SIMD fixtures');
-  assert.equal(disabledCases.length, 6, 'Expected six disabled SIMD fixtures');
   assert(cases.every(fixture => fixture.request.simd === true));
   assert(disabledCases.every(fixture => fixture.request.simd === false));
+  for (const fixture of fixtures) {
+    assert(['c', 'cpp'].includes(fixture.request.language), 'Opcode capture requires a C/C++ fixture');
+    assert(!fixture.request.sources?.length && !fixture.request.files?.length, 'Opcode capture requires a single translation unit');
+    assert(Array.isArray(fixture.requiredInstructions), 'Missing requiredInstructions');
+    assert(!fixture.forbiddenInstructions || Array.isArray(fixture.forbiddenInstructions), 'Invalid forbiddenInstructions');
+  }
   const ids = fixtures.map(fixture => fixture.id);
-  assert.equal(new Set(ids).size, 25, 'Expected exactly 25 unique fixtures');
+  assert.equal(new Set(ids).size, ids.length, 'Duplicate SIMD fixture id');
   assert(ids.every(id => /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id)), 'Unsafe fixture id');
   const qualificationInput = await readInput(options.qualification);
   report.qualification = qualificationInput.receipt;
@@ -198,7 +206,7 @@ try {
   assert.deepEqual(qualification.execution, ['node-wasi-preview1', 'chromium-worker-wasi-preview1']);
   assert.equal(typeof qualification.browser, 'string', 'Missing Chromium version');
   assert(qualification.browser.length > 0, 'Missing Chromium version');
-  assert.deepEqual(qualification.selectedCases, ids, 'Qualification must select all 25 SIMD fixtures in suite order');
+  assert.deepEqual(qualification.selectedCases, ids, 'Qualification must select all SIMD fixtures in suite order');
   assert.deepEqual(qualification.unselectedCases, [], 'Qualification omitted fixtures');
   assert.deepEqual(qualification.cases?.map(entry => entry.id), ids, 'Qualification case set mismatch');
   assert.deepEqual(qualification.fixtures?.map(entry => entry.id), ids, 'Qualification fixture set mismatch');
@@ -267,6 +275,11 @@ try {
       assert(watCounts[instruction] > 0, `${fixture.id}: GCC WAT omitted ${instruction}`);
       assert(objectCounts[instruction] > 0, `${fixture.id}: Wasm object omitted ${instruction}`);
     }
+    for (const instruction of fixture.forbiddenInstructions || []) {
+      assert(simdMnemonic.test(instruction), `${fixture.id}: invalid forbidden instruction ${instruction}`);
+      assert(!watCounts[instruction], `${fixture.id}: GCC WAT emitted forbidden ${instruction}`);
+      assert(!objectCounts[instruction], `${fixture.id}: Wasm object emitted forbidden ${instruction}`);
+    }
     if (!fixture.request.simd) {
       assert.equal(wat.simd.length, 0, `${fixture.id}: disabled profile emitted SIMD WAT`);
       assert.equal(wat.v128Types, 0, `${fixture.id}: disabled profile emitted v128 types`);
@@ -275,6 +288,7 @@ try {
     Object.assign(result, {
       assembly: assembly.receipt, object: object.receipt, executable: executable.receipt,
       requiredInstructions: fixture.requiredInstructions,
+      forbiddenInstructions: fixture.forbiddenInstructions || [],
       watInstructionCounts: watCounts,
       disassembly: {
         command: dumped.command, argv: dumped.argv, exitCode: dumped.exitCode,
