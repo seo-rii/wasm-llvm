@@ -54,8 +54,10 @@ upstream, so the old patch for that export is no longer needed.
 
 The refresh has source-level validation: immutable upstream blobs, forward and reverse patch
 application, reconstructed complete Git tree identities, and the producer's focused tests.
-Stage0 checksums come from the pinned upstream `src/stage0`; archive sizes were checked using
-HTTP metadata, and preparation still verifies downloaded archive bytes before use.
+Stage0 checksums come from the pinned upstream `src/stage0`. All three complete compressed
+archives were downloaded on 2026-10-27 and matched the locked byte lengths and SHA-256 hashes;
+[the observed input receipt](validation/1.99.1-stage0.json) binds that check to this manifest.
+Preparation independently verifies the downloaded archive bytes before use.
 A full LLVM/Rust rebuild and browser acceptance remain required before publishing 1.99.1
 artifacts. Existing consumer receipts still identify the previously built 1.99.0 source snapshot.
 The producer retains its development build channel because the browser consumer uses `-Z`
