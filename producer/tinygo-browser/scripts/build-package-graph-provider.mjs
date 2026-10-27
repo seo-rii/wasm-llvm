@@ -71,6 +71,7 @@ export const TINYGO_PACKAGE_GRAPH_TAGS = [
 	'math_big_pure_go',
 	'gc.precise',
 	'scheduler.asyncify',
+	'tinygo.unwind.asyncify',
 	'serial.none',
 	'tinygo.unicore',
 	...Array.from({ length: 26 }, (_, index) => `go1.${index + 1}`)
@@ -499,12 +500,22 @@ async function main() {
 		assert(fixturePackage?.EmbedFiles?.includes('greeting.txt'), 'acceptance graph omitted go:embed file');
 		assert(localDependency?.GoFiles?.includes('platform_tinygo.go'), 'acceptance graph omitted tinygo.wasm build-tag file');
 		assert(!localDependency?.GoFiles?.includes('platform_other.go'), 'acceptance graph selected the wrong build-tag file');
+		const runtimePackage = wasiPackages.find((pkg) => pkg.ImportPath === 'runtime');
+		const runtimeUnwindSources = [
+			'panic_unwind_asyncify.go',
+			'panic_unwind_return.go',
+			'panic_unwind_signal_unicore.go'
+		];
+		for (const source of runtimeUnwindSources) {
+			assert(runtimePackage?.GoFiles?.includes(source), `acceptance graph omitted Asyncify runtime source ${source}`);
+		}
 
 		receipt.acceptance = {
 			status: 'passed',
 			fixture: path.relative(PRODUCER_ROOT, options.fixture).replaceAll(path.sep, '/'),
 			comparison: 'same-pinned-native-cmd-go-exact-json',
 			packageCount: wasiPackages.length,
+			runtimeUnwindSources,
 			packageJSON: await evidence(wasiOutput, 'acceptance/package-list.json'),
 			fixtureSources: await Promise.all(
 				ACCEPTANCE_FIXTURE_SOURCES.map(async (sourcePath) =>

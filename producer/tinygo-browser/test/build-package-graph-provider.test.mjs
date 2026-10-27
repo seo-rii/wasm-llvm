@@ -58,6 +58,10 @@ test('pins list-only cmd/go fields and the complete TinyGo wasip1 tag profile', 
 	]);
 	assert.deepEqual(plan.protocol.moduleModes, ['readonly', 'vendor']);
 	assert.equal(TINYGO_PACKAGE_GRAPH_TAGS.at(-1), 'go1.26');
+	assert.ok(
+		TINYGO_PACKAGE_GRAPH_TAGS.includes('tinygo.unwind.asyncify'),
+		'TinyGo 0.43 requires its unwind tag to select all three runtime panic source files'
+	);
 	assert.ok(plan.upstream.identityPackages.includes('cmd/go/internal/list'));
 	assert.equal(plan.protocol.environment.GOPROXY, 'off');
 	assert.equal(plan.protocol.environment.GOTOOLCHAIN, 'local');

@@ -63,6 +63,12 @@ The `wasip1-asyncify-precise-o1` guest runtime contains the stack and Asyncify t
 objects. TinyGo 0.43 adds `gc_boehm.c` only for its separate Boehm GC option; it is not a linker
 input for this precise-GC profile. The producer and consumer must verify this two-object closure.
 
+The package graph also includes `tinygo.unwind.asyncify`, as required by TinyGo 0.43's
+`BuildTags`/`PanicUnwind` configuration. Without it, cmd/go omits three runtime panic source
+files even though its native and WASI graphs agree with each other. Provider acceptance now
+requires those files. A native TinyGo comparison of all selected fields across 45 packages
+is recorded in `validation/0.43.0-package-graph.json`.
+
 Failed workflow runs retain available compiler/link inputs and receipts for seven days in an
 explicitly unqualified diagnostic artifact. Only the separate verified product upload follows
 successful producer acceptance and strict verification.
