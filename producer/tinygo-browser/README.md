@@ -33,6 +33,19 @@ generator. The producer workflow builds both tools first, exercises that generat
 records their actual hashes before constructing the WASI archive cache key. Supply that
 native build's `bin` directory to `build-llvm-wasi.mjs --native-tool-dir` for local builds.
 
+The 0.43 compiler host uses the upstream WASI Asyncify scheduler because SSA construction
+and I/O deadline handling can start goroutines. Its external link includes the upstream
+task-switching assembly, then the verified native `wasm-opt` runs `--asyncify -Oz -g` before
+name stripping and final WASI-only import verification. The 8 MiB task and system stacks
+remain separate. The compiler build receipt records optimizer input/output hashes and is
+uploaded with the verified product. Native host Binaryen comes from the pinned TinyGo
+distribution; the independently pinned consumer Binaryen applies to compiled guest programs.
+
+Both compiler and guest-runtime builds isolate `XDG_CACHE_HOME` as well as `GOCACHE`.
+TinyGo's own C/runtime cache uses the XDG cache directory; setting only `GOCACHE` can reuse
+archives from an older native LLVM toolchain. The generated `go.work` version also comes
+from the pinned Go bootstrap, so it accepts the upstream compiler module's Go requirement.
+
 ## Strip compiler debug names
 
 Fresh compiler builds remove only the WebAssembly `name` custom sections before

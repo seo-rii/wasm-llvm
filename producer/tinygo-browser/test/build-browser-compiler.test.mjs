@@ -169,6 +169,11 @@ async function createFixture() {
 		'.global tinygo_getCurrentStackPointer\n'
 	);
 	await writeFixtureFile(sourceRoot, 'src/runtime/runtime.go', 'package runtime\n');
+	await writeFixtureFile(
+		sourceRoot,
+		'src/internal/task/task_asyncify_wasm.S',
+		'.global tinygo_task_start\n'
+	);
 
 	const goLlvmContents = new Map();
 	for (const relativePath of GO_LLVM_HOST_FILES) {
@@ -443,7 +448,7 @@ function result({ exitCode = 0, stdout = '', stderr = '', signal = null } = {}) 
 
 function createCommandRunner(
 	fixture,
-	{ execute = false, badVersion = false, omitEmbedObject = false } = {}
+	{ execute = false, badVersion = false, omitEmbedObject = false, failCompilerOptimizer = false } = {}
 ) {
 	const calls = [];
 	const runner = async (command, args, runOptions = {}) => {
@@ -504,6 +509,13 @@ function createCommandRunner(
 			return result({ stdout: 'wasm-opt version 123\n' });
 		}
 		if (!execute) throw new Error(`unexpected dry-run command: ${command} ${args.join(' ')}`);
+		if (command === fixture.wasmOpt) {
+			if (failCompilerOptimizer) return result({ exitCode: 1, stderr: 'optimizer failed' });
+			const outputIndex = args.indexOf('--output');
+			assert.ok(outputIndex > 0);
+			await cp(args[outputIndex - 1], args[outputIndex + 1]);
+			return result();
+		}
 		if (command === 'unzip') {
 			const extractRoot = path.join(
 				args[args.indexOf('-d') + 1],
@@ -851,7 +863,7 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	assert.ok(
 		receipt.build.command.includes('./cmd/tinygo-browser-adapter')
 	);
-	assert.equal(receipt.build.targetConfig.scheduler, 'none');
+	assert.equal(receipt.build.targetConfig.scheduler, 'asyncify');
 	assert.equal(receipt.build.targetConfig['default-stack-size'], 8 * 1024 * 1024);
 	assert.deepEqual(receipt.build.targetConfig['build-tags'], [
 		'byollvm',
@@ -866,7 +878,7 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	assert.ok(receipt.build.linkCommand.includes('--max-memory=1342177280'));
 	assert.deepEqual(
 		receipt.hostSupport.compilerObjects.inputs.map((object) => object.id),
-		['tinygo-runtime-stack', 'tinygo-libclang-abi']
+		['tinygo-runtime-stack', 'tinygo-asyncify-tasks', 'tinygo-libclang-abi']
 	);
 	assert.ok(
 		receipt.hostSupport.compilerObjects.inputs.every((object) =>
@@ -948,7 +960,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.hostSupport.status, 'passed');
 	assert.equal(receipt.hostSupport.outputs.length, 2);
 	assert.equal(receipt.hostSupport.compilerObjects.status, 'passed');
-	assert.equal(receipt.hostSupport.compilerObjects.outputs.length, 2);
+	assert.equal(receipt.hostSupport.compilerObjects.outputs.length, 3);
 	await access(
 		path.join(
 			receipt.nativeTinyGo.clangResource.archivePath,
@@ -977,7 +989,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 			(output) => output.bytes === 15 && /^[0-9a-f]{64}$/u.test(output.sha256)
 		)
 	);
-	assert.equal(calls.filter((call) => call.command === fixture.tools.cxx).length, 8);
+	assert.equal(calls.filter((call) => call.command === fixture.tools.cxx).length, 9);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.ar).length, 5);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.ranlib).length, 3);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.nm).length, 2);
@@ -992,6 +1004,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(buildCall.runOptions.env.GOROOT, receipt.paths.goToolchainRoot);
 	assert.equal(buildCall.runOptions.env.GOVERSION, 'go1.26.10');
 	assert.equal(buildCall.runOptions.env.GOWORK, receipt.paths.goWorkPath);
+	assert.equal(buildCall.runOptions.env.XDG_CACHE_HOME, path.join(fixture.buildDir, 'xdg-cache'));
 	assert.equal(
 		(await readFile(receipt.paths.goWorkPath, 'utf8')).split('\n')[0],
 		'go 1.26.10',
@@ -1001,6 +1014,18 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		(call) => call.command === fixture.nativeWasmLd && call.args[0] !== '--version'
 	);
 	assert.ok(linkCall.args.includes(receipt.paths.compilerBitcodePath));
+	assert.equal(linkCall.args[linkCall.args.indexOf('-o') + 1], receipt.paths.unoptimizedCompilerPath);
+	const optimizerCall = calls.find(
+		(call) => call.command === fixture.wasmOpt && call.args[0] === '--asyncify'
+	);
+	assert.deepEqual(optimizerCall.args, [
+		'--asyncify', '-Oz', '-g', receipt.paths.unoptimizedCompilerPath,
+		'--output', receipt.paths.compilerPath
+	]);
+	assert.ok(calls.indexOf(optimizerCall) > calls.indexOf(linkCall));
+	assert.equal(receipt.build.compilerOptimization.status, 'passed');
+	assert.equal(receipt.build.compilerOptimization.input.path, receipt.paths.unoptimizedCompilerPath);
+	assert.equal(receipt.build.compilerOptimization.output.path, receipt.paths.compilerPath);
 	assert.ok(
 		receipt.hostSupport.compilerObjects.outputs.every((object) =>
 			linkCall.args.includes(object.path)
@@ -1030,7 +1055,12 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		await readFile(receipt.paths.targetConfigPath, 'utf8')
 	);
 	assert.ok(targetConfig.ldflags.includes(receipt.hostSupport.outputs[0].path));
-	assert.equal(targetConfig.scheduler, 'none');
+	assert.equal(targetConfig.scheduler, 'asyncify');
+	for (const call of calls.filter((call) =>
+		call.command === fixture.nativeTinyGo && (call.args[0] === 'build' || call.args[0] === 'list')
+	)) {
+		assert.equal(call.runOptions.env.XDG_CACHE_HOME, path.join(fixture.buildDir, 'xdg-cache'));
+	}
 	assert.match(receipt.hostSupport.filteredWasiLibc.sha256, /^[0-9a-f]{64}$/u);
 	assert.equal(receipt.rootArchive.mergedGoRoot.status, 'passed');
 	assert.deepEqual(
@@ -1085,6 +1115,28 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.assets.length, 2);
 	assert.ok(WebAssembly.validate(await readFile(receipt.paths.compilerPath)));
 	assert.deepEqual(JSON.parse(await readFile(fixture.receiptPath, 'utf8')), receipt);
+});
+
+test('rejects a failed compiler asyncify transformation before publishing assets', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { runner } = createCommandRunner(fixture, {
+		execute: true,
+		failCompilerOptimizer: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/compiler asyncify transformation failed with 1/u
+	);
+	const failed = JSON.parse(await readFile(fixture.receiptPath, 'utf8'));
+	assert.equal(failed.status, 'failed');
+	assert.equal(failed.build.compilerOptimization.status, 'planned');
+	await assert.rejects(access(failed.paths.compilerPath), /ENOENT/u);
 });
 
 test('fails closed when TinyGo omits generated embed objects from the external link handoff', async () => {

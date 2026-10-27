@@ -139,6 +139,12 @@ const COMPILER_HOST_OBJECTS = [
 		flags: []
 	},
 	{
+		id: 'tinygo-asyncify-tasks',
+		source: 'src/internal/task/task_asyncify_wasm.S',
+		language: 'assembler-with-cpp',
+		flags: []
+	},
+	{
 		id: 'tinygo-libclang-abi',
 		source: 'cgo/libclang_stubs.c',
 		language: 'c',
@@ -818,6 +824,7 @@ export async function createBrowserCompilerBuildPlan(
 	const goWorkPath = path.join(options.buildDir, 'go.work');
 	const targetConfigPath = path.join(options.buildDir, 'tinygo-browser-host.json');
 	const compilerBitcodePath = path.join(options.buildDir, 'tinygo-compiler.bc');
+	const unoptimizedCompilerPath = path.join(options.buildDir, 'tinygo-compiler.unoptimized.wasm');
 	const compilerPath = path.join(options.artifactDir, 'tinygo-compiler.wasm');
 	const tinygoRootPath = path.join(options.artifactDir, 'tinygoroot.tar.gz');
 	const hostSupportDir = path.join(options.buildDir, 'host-support');
@@ -956,7 +963,7 @@ export async function createBrowserCompilerBuildPlan(
 	});
 	const targetConfig = {
 		inherits: ['wasip1'],
-		scheduler: 'none',
+		scheduler: 'asyncify',
 		'default-stack-size': COMPILER_HOST_STACK_SIZE,
 		'build-tags': ['byollvm', 'osusergo', 'tinygo.browsercompiler'],
 		cflags: [
@@ -1047,7 +1054,7 @@ export async function createBrowserCompilerBuildPlan(
 		'--strip-debug',
 		'--compress-relocations',
 		'-o',
-		compilerPath,
+		unoptimizedCompilerPath,
 		compilerBitcodePath,
 		...compilerHostObjects.map((object) => object.path),
 		'-mllvm',
@@ -1178,6 +1185,7 @@ export async function createBrowserCompilerBuildPlan(
 			artifactDir: options.artifactDir,
 			targetConfigPath,
 			compilerBitcodePath,
+			unoptimizedCompilerPath,
 			compilerPath,
 			tinygoRootPath
 		},
@@ -1256,6 +1264,13 @@ export async function createBrowserCompilerBuildPlan(
 			...compilerReceiptSeed.build,
 			command: buildCommand,
 			linkCommand,
+			compilerOptimization: {
+				status: 'planned',
+				command: null,
+				arguments: ['--asyncify', '-Oz', '-g', unoptimizedCompilerPath, '--output', compilerPath],
+				input: null,
+				output: null
+			},
 			generatedEmbedObjects: {
 				status: 'planned',
 				discoveryRoot: path.join(options.buildDir, 'tmp'),
@@ -1272,6 +1287,7 @@ export async function createBrowserCompilerBuildPlan(
 				GOWORK: goWorkPath,
 				SOURCE_DATE_EPOCH: '0',
 				GOCACHE: path.join(options.buildDir, 'cache'),
+				XDG_CACHE_HOME: path.join(options.buildDir, 'xdg-cache'),
 				TMPDIR: path.join(options.buildDir, 'tmp')
 			},
 			targetConfig
@@ -1569,6 +1585,10 @@ export async function buildBrowserCompiler(
 			version: `${wasmOptVersionResult.stdout}\n${wasmOptVersionResult.stderr}`.trim()
 		};
 		receipt.build.environment.WASMOPT = wasmOptPath;
+		receipt.build.compilerOptimization.command = [
+			wasmOptPath,
+			...receipt.build.compilerOptimization.arguments
+		];
 
 		if (options.execute) {
 			await Promise.all([
@@ -2081,6 +2101,24 @@ export async function buildBrowserCompiler(
 				linked.exitCode === 0,
 				`external wasm-ld browser compiler link failed with ${linked.signal ?? linked.exitCode}`
 			);
+			receipt.build.compilerOptimization.input = await inspectFile(
+				receipt.paths.unoptimizedCompilerPath,
+				{ wasmObject: true }
+			);
+			const optimized = await run(
+				receipt.build.compilerOptimization.command[0],
+				receipt.build.compilerOptimization.command.slice(1),
+				{ cwd: receipt.paths.patchedSourceRoot, env: buildEnvironment }
+			);
+			assert(
+				optimized.exitCode === 0,
+				`compiler asyncify transformation failed with ${optimized.signal ?? optimized.exitCode}`
+			);
+			receipt.build.compilerOptimization.output = await inspectFile(
+				receipt.paths.compilerPath,
+				{ wasmObject: true }
+			);
+			receipt.build.compilerOptimization.status = 'passed';
 			const unstrippedCompiler = await readFile(receipt.paths.compilerPath);
 			const strippedCompiler = stripCompilerNames(unstrippedCompiler);
 			await writeFile(receipt.paths.compilerPath, strippedCompiler.output);
@@ -2114,6 +2152,8 @@ export async function buildBrowserCompiler(
 				GOVERSION: receipt.goToolchain.version,
 				GOWORK: 'off',
 				TINYGOROOT: receipt.paths.patchedSourceRoot,
+				GOCACHE: receipt.build.environment.GOCACHE,
+				XDG_CACHE_HOME: receipt.build.environment.XDG_CACHE_HOME,
 				WASMOPT: receipt.nativeTinyGo.binaryen.path
 			};
 			const mergedRootResult = await run(
