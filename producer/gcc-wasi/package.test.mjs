@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { identity } from '../clang-browser/cross/package.mjs';
-import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification } from './package.mjs';
+import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions } from './package.mjs';
 import { cases, disabledCases } from './simd-fixtures.mjs';
+import { cases as int128Cases } from './int128-fixtures.mjs';
 
 function binary128ProofFixture(simd = false) {
 	const fixture = {
@@ -43,6 +44,143 @@ function binary128ProofFixture(simd = false) {
 	report.counts = { total: 4, passed: 4, failed: 0 };
 	return { fixture, expected, report };
 }
+
+function int128ProofFixture() {
+	const { expected } = binary128ProofFixture();
+	expected.targetSource = { 'wasm-cg.cc': identity(Buffer.from('TI target')) };
+	expected.recipes = Object.fromEntries(['fixtures', 'harness', 'inspector'].map(name => [name, identity(Buffer.from(`int128 ${name}`))]));
+	expected.runtime = Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'builtins', 'gnuCpp', 'gnuAbi', 'clangCpp', 'clangAbi'].map(name => [name, identity(Buffer.from(name))]));
+	expected.headers.gcc = { 'stddef.h': identity(Buffer.from('GCC stddef')) };
+	expected.headers.gnuCpp = { vector: identity(Buffer.from('GNU vector')) };
+	const report = {
+		...structuredClone(expected), kind: 'gcc-wasi-int128-qualification', status: 'passed', inputsUnchanged: true,
+		compilerHost: 'native', outputTarget: 'wasm32-wasi', selectedCases: int128Cases.map(fixture => fixture.id),
+		suiteSha256: identity(Buffer.from(JSON.stringify(int128Cases))).sha256,
+		directions: ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang']
+	};
+	for (const [key, name] of Object.entries({ gcc: 'cc1', gccCpp: 'cc1plus', clang: 'clang', assembler: 'wat2wasm', inspector: 'wasm-objdump', linker: 'wasm-ld', node: 'node' }))
+		report.tools[key].path = `/verified/tools/${name}`;
+	report.cases = int128Cases.flatMap(fixture => report.directions
+		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.map(direction => {
+			const families = direction.split('-');
+			const sources = [fixture.request.code, ...(fixture.request.sources || []).map(name => fixture.request.files.find(file => file.path === name).contents)];
+			const common = [`-O${fixture.request.optimization}`, `-std=${fixture.request.standard}`, fixture.request.simd ? '-msimd128' : '-mno-simd128', '-D__GCC_WASI_SINGLE_THREAD__=1', '-DONLINE_JUDGE=1'];
+			const commands = [];
+			const units = sources.map((source, index) => {
+				const family = families[index === 0 ? 0 : 1];
+				const frontend = fixture.request.language === 'cpp' ? 'gccCpp' : 'gcc';
+				const tools = family === 'gcc' ? [frontend, 'assembler', 'inspector'] : ['clang', 'clang', 'inspector'];
+				for (const [step, tool] of tools.entries()) commands.push({
+					command: report.tools[tool].path,
+					argv: family === 'clang' && step < 2 ? [...common, ...(step === 0 ? ['-S', '-emit-llvm'] : ['-c'])] : step === 0 ? [...common] : [],
+					status: 0, signal: null, stdout: '', stderr: ''
+				});
+				return { compiler: family, source: identity(Buffer.from(source)) };
+			});
+			commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', '-lc'], status: 0, signal: null },
+				{ command: report.tools.node.path, argv: [], status: 0, signal: null, stdout: fixture.stdout, stderr: '' });
+			return {
+				id: `${fixture.id}-${direction}`, fixture: fixture.id, fixtureSha256: identity(Buffer.from(JSON.stringify(fixture))).sha256,
+				direction, optimization: fixture.request.optimization, status: 'passed', stdin: fixture.stdin,
+				stdout: fixture.stdout, stderr: '', units, commands,
+				abi: { memories: [{ shared: false }], exports: { _start: { params: [], results: [] }, ...fixture.signatures } },
+				imports: [], exports: [{ name: 'memory', kind: 'memory' }, { name: '_start', kind: 'function' }]
+			};
+		}));
+	report.counts = { total: report.cases.length, passed: report.cases.length, failed: 0 };
+	return { fixtures: int128Cases, expected, report };
+}
+
+test('locked binary128 and int128 backends require complete native proof and a qualified GNU runtime', () => {
+	const old = { path: 'patches/0008-binary128-long-double.patch' };
+	const integer = { path: 'patches/0009-int128.patch' };
+	verifyWideScalarQualificationOptions([], {}); // Existing profiles without either patch keep optional proofs.
+	verifyWideScalarQualificationOptions([old], { longDoubleQualification: 'TF.json', nativeLinker: 'wasm-ld', libstdcxx: 'GNU' });
+	const complete = { longDoubleQualification: 'TF.json', int128Qualification: 'TI.json', nativeLinker: 'wasm-ld', libstdcxx: 'GNU' };
+	verifyWideScalarQualificationOptions([old, integer], complete);
+	assert.throws(() => verifyWideScalarQualificationOptions([old], {}), /requires --long-double-qualification/);
+	assert.throws(() => verifyWideScalarQualificationOptions([integer], {}), /requires --int128-qualification/);
+	for (const field of ['longDoubleQualification', 'int128Qualification', 'nativeLinker', 'libstdcxx']) {
+		const changed = { ...complete }; delete changed[field];
+		assert.throws(() => verifyWideScalarQualificationOptions([old, integer], changed));
+	}
+});
+
+test('int128 rejects absent or partial native proof rather than advertising a capability (synthetic receipts)', () => {
+	const { fixtures, expected, report } = int128ProofFixture();
+	assert.equal(fixtures.length, 42);
+	assert.deepEqual(report.counts, { total: 116, passed: 116, failed: 0 });
+	verifyInt128Qualification(report, expected, fixtures);
+	assert.throws(() => verifyInt128Qualification(undefined, expected, fixtures), /requires native qualification proof/);
+	for (const mutate of [
+		r => { r.counts = { total: 42, passed: 42, failed: 0 }; r.cases = r.cases.filter(test => test.direction === 'gcc-gcc'); },
+		r => { r.cases.pop(); },
+		r => { r.cases[0] = structuredClone(r.cases[1]); },
+		r => { r.selectedCases.pop(); },
+		r => { r.directions.pop(); },
+		r => { r.status = 'failed'; },
+		r => { r.inputsUnchanged = false; },
+		r => { r.suiteSha256 = 'f'.repeat(64); },
+		r => { r.cases[0].fixtureSha256 = 'e'.repeat(64); }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyInt128Qualification(changed, expected, fixtures));
+	}
+});
+
+test('int128 binds source, current compiler/runtime/headers and exact ABI (synthetic receipts)', () => {
+	const { fixtures, expected, report } = int128ProofFixture();
+	for (const mutate of [
+		r => { r.tools.gcc.sha256 = 'b'.repeat(64); },
+		r => { r.tools.gccCpp.sha256 = 'c'.repeat(64); },
+		r => { r.tools.node.sha256 = 'd'.repeat(64); },
+		r => { r.runtime.builtins.sha256 = 'e'.repeat(64); },
+		r => { r.runtime.gnuCpp.sha256 = 'e'.repeat(64); },
+		r => { r.headers.gnuCpp.vector.sha256 = 'e'.repeat(64); },
+		r => { r.headers.clangResource['stddef.h'].sha256 = 'e'.repeat(64); },
+		r => { r.targetSource = {}; },
+		r => { r.recipes.harness.sha256 = 'e'.repeat(64); },
+		r => { r.cases[0].units[0].source.sha256 = 'e'.repeat(64); },
+		r => { r.cases.find(test => test.fixture === 'int128-abi-scalar-o0').abi.exports.ti_modify = { params: ['f64'], results: ['f64'] }; },
+		r => { r.cases[0].abi.memories[0].shared = true; },
+		r => { r.cases[0].imports.push({ module: 'env', kind: 'function', name: 'foreign' }); },
+		r => { r.cases[0].exports.shift(); },
+		r => { r.cases[0].stdout = 'wrong output\n'; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyInt128Qualification(changed, expected, fixtures));
+	}
+});
+
+test('int128 checks GCC and both Clang invocations, macros, SIMD flags and executed tool paths (synthetic receipts)', () => {
+	const { fixtures, expected, report } = int128ProofFixture();
+	for (const family of ['gcc', 'clang']) {
+		for (const mutate of [
+			argv => argv.push('-O3'),
+			argv => argv.push('-std=gnu99'),
+			argv => argv.push('-msimd128'),
+			argv => argv.push('-DONLINE_JUDGE=0'),
+			argv => argv.splice(argv.indexOf('-DONLINE_JUDGE=1'), 1)
+		]) {
+			const changed = structuredClone(report);
+			const test = changed.cases.find(entry => entry.fixture === 'int128-abi-scalar-o0' && entry.direction === `${family}-${family}`);
+			mutate(test.commands[family === 'clang' ? 1 : 0].argv);
+			assert.throws(() => verifyInt128Qualification(changed, expected, fixtures));
+		}
+	}
+	for (const mutate of [
+		r => { r.cases[0].commands[0].command = '/other/cc1'; },
+		r => { r.cases.find(test => test.direction === 'clang-clang').commands[1].command = '/other/clang'; },
+		r => { r.cases[0].commands.at(-2).argv = ['-lc']; },
+		r => { r.cases[0].commands.at(-1).stdout = 'wrong\n'; },
+		r => { r.cases[0].commands[0].status = 1; },
+		r => { r.cases[0].commands[0].signal = 'SIGTERM'; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyInt128Qualification(changed, expected, fixtures));
+	}
+});
 
 test('binary128 capability rejects incomplete interop, changed inputs and invalid library ordering (synthetic receipts)', () => {
 	const { fixture, expected, report } = binary128ProofFixture();

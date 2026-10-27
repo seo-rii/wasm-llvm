@@ -155,29 +155,58 @@ export function verifyVectorAbiQualification(report, expected, fixtures) {
 	}
 }
 
+export function verifyWideScalarQualificationOptions(patches, options) {
+	for (const [patch, field, option] of [
+		['patches/0008-binary128-long-double.patch', 'longDoubleQualification', 'long-double-qualification'],
+		['patches/0009-int128.patch', 'int128Qualification', 'int128-qualification']
+	]) {
+		if (options[field])
+			assert(options.nativeLinker && options.libstdcxx, `--${option} requires --native-linker and --libstdcxx`);
+		if (patches.some(entry => entry.path === patch))
+			assert(options[field], `This backend requires --${option}`);
+	}
+}
+
 export function verifyLongDoubleQualification(report, expected, fixtures) {
-	assert.equal(report.kind, 'gcc-wasi-long-double-qualification');
-	assert.equal(report.status, 'passed', 'Binary128 qualification failed');
-	assert.equal(report.inputsUnchanged, true, 'Binary128 inputs changed');
+	return verifyWideScalarQualification(report, expected, fixtures, 'gcc-wasi-long-double-qualification', 'Binary128');
+}
+
+export function verifyInt128Qualification(report, expected, fixtures) {
+	assert(report, 'Int128 requires native qualification proof');
+	assert.equal(report.counts?.total, 116, 'Int128 requires the complete 116-case native qualification');
+	assert.equal(report.suiteSha256, identity(Buffer.from(JSON.stringify(fixtures))).sha256, 'Int128 fixture matrix changed');
+	const fixtureHashes = new Map(fixtures.map(fixture => [fixture.id, identity(Buffer.from(JSON.stringify(fixture))).sha256]));
+	for (const test of report.cases)
+		assert.equal(test.fixtureSha256, fixtureHashes.get(test.fixture), `Int128 fixture differs: ${test.id}`);
+	return verifyWideScalarQualification(report, expected, fixtures, 'gcc-wasi-int128-qualification', 'Int128');
+}
+
+// Both real harnesses have the same compiler-direction matrix and artifact
+// contract. Keep their provenance and ABI validation identical while retaining
+// the binary128 verifier's established diagnostics and public test entry point.
+function verifyWideScalarQualification(report, expected, fixtures, kind, label) {
+	assert.equal(report.kind, kind);
+	assert.equal(report.status, 'passed', `${label} qualification failed`);
+	assert.equal(report.inputsUnchanged, true, `${label} inputs changed`);
 	assert.equal(report.compilerHost, 'native');
 	assert.equal(report.outputTarget, 'wasm32-wasi');
 	assert.equal(report.gccCommit, expected.gccCommit);
 	const content = receipt => ({ bytes: receipt?.bytes, sha256: receipt?.sha256 });
 	const contents = map => Object.fromEntries(Object.entries(map).map(([name, receipt]) => [name, content(receipt)]));
-	assert.deepEqual(contents(report.targetSource), expected.targetSource, 'Binary128 backend sources differ');
-	assert.deepEqual(contents(report.recipes), expected.recipes, 'Binary128 qualification recipes differ');
+	assert.deepEqual(contents(report.targetSource), expected.targetSource, `${label} backend sources differ`);
+	assert.deepEqual(contents(report.recipes), expected.recipes, `${label} qualification recipes differ`);
 	for (const group of ['tools', 'runtime'])
 		for (const [name, receipt] of Object.entries(expected[group]))
-			assert.deepEqual(content(report[group]?.[name]), receipt, `Binary128 ${group} differs: ${name}`);
+			assert.deepEqual(content(report[group]?.[name]), receipt, `${label} ${group} differs: ${name}`);
 	for (const [name, files] of Object.entries(expected.headers))
-		assert.deepEqual(contents(report.headers[name]), files, `Binary128 headers differ: ${name}`);
+		assert.deepEqual(contents(report.headers[name]), files, `${label} headers differ: ${name}`);
 	const directions = ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang'];
 	assert.deepEqual(report.directions, directions);
 	assert.deepEqual(report.selectedCases, fixtures.map(fixture => fixture.id));
 	const matrix = fixtures.flatMap(fixture => directions
 		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
 		.map(direction => ({ fixture, direction, id: `${fixture.id}-${direction}` })));
-	assert.deepEqual(report.cases.map(test => test.id).sort(), matrix.map(test => test.id).sort(), 'Binary128 qualification is incomplete');
+	assert.deepEqual(report.cases.map(test => test.id).sort(), matrix.map(test => test.id).sort(), `${label} qualification is incomplete`);
 	assert.deepEqual(report.counts, { total: matrix.length, passed: matrix.length, failed: 0 });
 	for (const { fixture, direction, id } of matrix) {
 		const test = report.cases.find(test => test.id === id);
@@ -209,10 +238,10 @@ export function verifyLongDoubleQualification(report, expected, fixtures) {
 				const argv = test.commands[stages.length + step]?.argv || [];
 				assert.deepEqual(argv.filter(arg => /^-O/.test(arg)), [`-O${fixture.request.optimization}`]);
 				assert.deepEqual(argv.filter(arg => arg.startsWith('-std=')), [`-std=${fixture.request.standard}`]);
-				assert.deepEqual(argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), [fixture.request.simd ? '-msimd128' : '-mno-simd128'], 'Binary128 SIMD profile differs');
-				assert.deepEqual(argv.filter(arg => arg.startsWith('-D')), ['-D__GCC_WASI_SINGLE_THREAD__=1', ...(fixture.request.defines || []).map(define => `-D${define}`)], 'Binary128 macro definitions differ');
+				assert.deepEqual(argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), [fixture.request.simd ? '-msimd128' : '-mno-simd128'], `${label} SIMD profile differs`);
+				assert.deepEqual(argv.filter(arg => arg.startsWith('-D')), ['-D__GCC_WASI_SINGLE_THREAD__=1', ...(fixture.request.defines || []).map(define => `-D${define}`)], `${label} macro definitions differ`);
 				if (family === 'clang')
-					assert.deepEqual(argv.filter(arg => ['-S', '-emit-llvm', '-c'].includes(arg)), step === 0 ? ['-S', '-emit-llvm'] : ['-c'], 'Binary128 Clang compilation stage differs');
+					assert.deepEqual(argv.filter(arg => ['-S', '-emit-llvm', '-c'].includes(arg)), step === 0 ? ['-S', '-emit-llvm'] : ['-c'], `${label} Clang compilation stage differs`);
 			}
 			stages.push(family === 'clang' ? 'clang' : fixture.request.language === 'cpp' ? 'gccCpp' : 'gcc', family === 'clang' ? 'clang' : 'assembler', 'inspector');
 		}
@@ -220,27 +249,27 @@ export function verifyLongDoubleQualification(report, expected, fixtures) {
 		assert.equal(test.commands.length, stages.length, `${id}: unexpected compilation path`);
 		for (const [index, command] of test.commands.entries()) {
 			const tool = stages[index], recorded = report.tools[tool];
-			assert(expected.tools[tool], `Binary128 tool has no expected fingerprint: ${tool}`);
-			assert.deepEqual(content(recorded), expected.tools[tool], `Binary128 tool differs: ${tool}`);
-			assert(typeof recorded.path === 'string' && path.isAbsolute(recorded.path), `Binary128 tool path is not absolute: ${tool}`);
-			assert(typeof command.command === 'string' && path.isAbsolute(command.command), `Binary128 executed tool path is not absolute: ${tool}`);
+			assert(expected.tools[tool], `${label} tool has no expected fingerprint: ${tool}`);
+			assert.deepEqual(content(recorded), expected.tools[tool], `${label} tool differs: ${tool}`);
+			assert(typeof recorded.path === 'string' && path.isAbsolute(recorded.path), `${label} tool path is not absolute: ${tool}`);
+			assert(typeof command.command === 'string' && path.isAbsolute(command.command), `${label} executed tool path is not absolute: ${tool}`);
 			// Lexical aliases remain portable when the original proof directory is
 			// relocated.  A same-named binary in another directory is not an alias.
-			assert.equal(path.normalize(command.command), path.normalize(recorded.path), `Binary128 executed tool differs from its fingerprint: ${tool}`);
+			assert.equal(path.normalize(command.command), path.normalize(recorded.path), `${label} executed tool differs from its fingerprint: ${tool}`);
 			assert.equal(command.status, 0); assert.equal(command.signal, null); assert(!command.error);
 		}
 		const link = test.commands.at(-2).argv;
-		assert(link.includes('--fatal-warnings'), 'Binary128 linking must reject signature warnings');
+		assert(link.includes('--fatal-warnings'), `${label} linking must reject signature warnings`);
 		if (fixture.printscan) {
 			const extension = link.indexOf(report.runtime.printscan.path);
-			assert(extension >= 0 && extension < link.indexOf('-lc'), 'Binary128 print/scan extension must precede libc');
+			assert(extension >= 0 && extension < link.indexOf('-lc'), `${label} print/scan extension must precede libc`);
 		}
 		assert.equal(test.commands.at(-1).stdout, fixture.stdout);
 		assert.equal(test.commands.at(-1).stderr, '');
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, vectorAbiQualification, longDoubleQualification, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -297,13 +326,9 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	}
 	if (simdProof && lock.gcc.patches.some(patch => patch.path === 'patches/0007-vector-abi.patch'))
 		assert(vectorAbiProof, 'This backend requires --vector-abi-qualification before advertising SIMD');
-	let longDoubleProof;
-	if (longDoubleQualification) {
-		assert(nativeLinker && libstdcxx, '--long-double-qualification requires --native-linker and --libstdcxx');
-		longDoubleProof = await fs.readFile(longDoubleQualification);
-	}
-	if (lock.gcc.patches.some(patch => patch.path === 'patches/0008-binary128-long-double.patch'))
-		assert(longDoubleProof, 'This backend requires --long-double-qualification');
+	verifyWideScalarQualificationOptions(lock.gcc.patches, { longDoubleQualification, int128Qualification, nativeLinker, libstdcxx });
+	const longDoubleProof = longDoubleQualification && await fs.readFile(longDoubleQualification);
+	const int128Proof = int128Qualification && await fs.readFile(int128Qualification);
 
 	const asRoot = path.join(work, 'wabt-browser');
 	const asReceipt = await readJson(path.join(asRoot, 'provenance.json'));
@@ -321,7 +346,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const sysroot = await readNativeTree(path.join(runtime, 'sysroot'));
 	verifyInventory(sysroot, runtimeReceipt.files, 'WASI sysroot');
 	verifyRuntimeLibraryIdentities(sysroot, runtimeLock.wasiLibc.libraryIdentities);
-	const targetSource = simdProof || longDoubleProof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
+	const targetSource = simdProof || longDoubleProof || int128Proof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
 	const runtimeHeaders = sysroot.filter(file => file.path.startsWith('include/')).map(file => ({ ...file, path: file.path.slice('include/'.length) }));
 	for (const [proof, qualificationPath, fixtureName, recipeName, kind] of [
 		[simdProof, simdQualification, 'simd-fixtures.mjs', 'test-simd.mjs', 'gcc-wasi-native-simd-qualification'],
@@ -452,30 +477,35 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysroot.push(...files);
 	}
 	assert.equal(new Set(sysroot.map((f) => f.path)).size, sysroot.length, 'Duplicate merged sysroot path');
-	if (longDoubleProof) {
-		const report = JSON.parse(longDoubleProof);
-		const suite = await import('./long-double-fixtures.mjs');
+	for (const [proof, qualificationPath, fixtureName, harnessName, verify, label] of [
+		[longDoubleProof, longDoubleQualification, 'long-double-fixtures.mjs', 'test-long-double.mjs', verifyLongDoubleQualification, 'Binary128'],
+		[int128Proof, int128Qualification, 'int128-fixtures.mjs', 'test-int128.mjs', verifyInt128Qualification, 'Int128']
+	]) {
+		if (!proof) continue;
+		const report = JSON.parse(proof);
+		const suite = await import(new URL(fixtureName, import.meta.url));
 		for (const tool of ['cc1', 'cc1plus'])
-			assert.equal(identity(await fs.readFile(path.join(work, 'gcc-native/gcc', tool))).sha256, nativeReceipt.tools[tool].sha256, `Binary128 ${tool} differs from the compiler build receipt`);
+			assert.equal(identity(await fs.readFile(path.join(work, 'gcc-native/gcc', tool))).sha256, nativeReceipt.tools[tool].sha256, `${label} ${tool} differs from the compiler build receipt`);
 		const indexed = files => Object.fromEntries(inventory(files).map(({ path: name, ...receipt }) => [name, receipt]));
 		const sdkRoot = path.resolve(path.dirname(nativeLinker), '..');
 		const runtimeFiles = {
 			'crt1-command.o': 'crt1-command.o', 'libc.a': 'libc.a', 'libm.a': 'libm.a',
-			builtins: 'libclang_rt.builtins-wasm32.a', printscan: 'libc-printscan-long-double.a',
+			builtins: 'libclang_rt.builtins-wasm32.a',
+			...(suite.cases.some(fixture => fixture.printscan) ? { printscan: 'libc-printscan-long-double.a' } : {}),
 			gnuCpp: 'libstdc++.a', gnuAbi: 'libsupc++.a'
 		};
 		const runtimeIdentities = Object.fromEntries(Object.entries(runtimeFiles).map(([name, archive]) => {
 			const file = sysroot.find(file => file.path === `lib/wasm32-wasi/${archive}`);
-			assert(file, `Binary128 runtime missing: ${archive}`);
+			assert(file, `${label} runtime missing: ${archive}`);
 			return [name, identity(file.bytes)];
 		}));
 		for (const [name, archive] of [['clangCpp', 'libc++.a'], ['clangAbi', 'libc++abi.a']])
 			runtimeIdentities[name] = identity(await fs.readFile(path.join(sdkRoot, 'share/wasi-sysroot/lib/wasm32-wasi/noeh', archive)));
 		const recipes = {};
-		for (const [name, file] of [['fixtures', 'long-double-fixtures.mjs'], ['harness', 'test-long-double.mjs'], ['inspector', 'inspect-vector-abi.mjs']])
+		for (const [name, file] of [['fixtures', fixtureName], ['harness', harnessName], ['inspector', 'inspect-vector-abi.mjs']])
 			recipes[name] = identity(await fs.readFile(path.join(here, file)));
 		const cxxPrefix = `include/c++/${lock.gcc.version}/`;
-		verifyLongDoubleQualification(report, {
+		verify(report, {
 			gccCommit: lock.gcc.commit, targetSource, recipes,
 			tools: {
 				gcc: identity(await fs.readFile(path.join(work, 'gcc-native/gcc/cc1'))),
@@ -496,17 +526,21 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			}
 		}, suite.cases);
 		for (const test of report.cases) {
-			const directory = path.join(path.dirname(longDoubleQualification), test.id);
+			const directory = path.join(path.dirname(qualificationPath), test.id);
 			for (const [index, unit] of test.units.entries()) {
 				for (const [kind, name] of [['object', `unit${index}.o`], ['assembly', `unit${index}.${unit.compiler === 'gcc' ? 'wat' : 'll'}`]]) {
 					const bytes = await fs.readFile(path.join(directory, name));
-					assert.deepEqual(identity(bytes), { bytes: unit[kind].bytes, sha256: unit[kind].sha256 }, `Binary128 ${kind} differs: ${test.id}`);
+					assert.deepEqual(identity(bytes), { bytes: unit[kind].bytes, sha256: unit[kind].sha256 }, `${label} ${kind} differs: ${test.id}`);
+					if (kind === 'object') {
+						checkWasm(bytes, `${label} ${test.id} object`);
+						assert.equal(WebAssembly.Module.customSections(new WebAssembly.Module(bytes), 'linking').length, 1, `${label} object has no linking metadata: ${test.id}`);
+					}
 				}
 			}
 			const bytes = await fs.readFile(path.join(directory, 'program.wasm'));
-			assert.deepEqual(identity(bytes), { bytes: test.program.bytes, sha256: test.program.sha256 }, `Binary128 program differs: ${test.id}`);
-			checkWasm(bytes, `Binary128 ${test.id}`, true);
-			assert.deepEqual(inspectVectorAbi(bytes), test.abi, `Binary128 binary types/memory differ: ${test.id}`);
+			assert.deepEqual(identity(bytes), { bytes: test.program.bytes, sha256: test.program.sha256 }, `${label} program differs: ${test.id}`);
+			checkWasm(bytes, `${label} ${test.id}`, true);
+			assert.deepEqual(inspectVectorAbi(bytes), test.abi, `${label} binary types/memory differ: ${test.id}`);
 			const module = new WebAssembly.Module(bytes);
 			assert.deepEqual(WebAssembly.Module.imports(module), test.imports);
 			assert.deepEqual(WebAssembly.Module.exports(module), test.exports);
@@ -538,10 +572,11 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
 		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a'],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, longDouble: Boolean(longDoubleProof), exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			...(longDoubleProof ? [] : ['long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.']),
+			...(int128Proof ? [] : ['Signed/unsigned __int128 is not qualified in this compiler profile.']),
 			'Arbitrary external objects are outside the SDK input contract.',
 			'C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.',
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
@@ -565,6 +600,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (simdExtendedProof) provenanceFiles.set('native-simd-extended-qualification.json', simdExtendedProof);
 	if (vectorAbiProof) provenanceFiles.set('native-vector-abi-qualification.json', vectorAbiProof);
 	if (longDoubleProof) provenanceFiles.set('native-long-double-qualification.json', longDoubleProof);
+	if (int128Proof) provenanceFiles.set('native-int128-qualification.json', int128Proof);
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
 	for (const patch of lock.gcc.patches || []) {
@@ -609,8 +645,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'vector-abi-qualification', 'long-double-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}
