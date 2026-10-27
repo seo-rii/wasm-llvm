@@ -15,18 +15,20 @@ extraction, scalar splats, addition and subtraction, integer multiplication for
 integer bitwise operations. Unsupported vector operations can use GCC's scalar
 lowering; accepting `-msimd128` does not promise that every expression vectorizes.
 There is no `i8x16.mul` instruction or pattern. Integer vector division,
-comparisons, shifts, shuffles, saturating arithmetic, and SIMD conversions do not
-have dedicated patterns in this patch.
+saturating arithmetic, and SIMD conversions do not have dedicated patterns.
+The additional `0006` patch supplies comparisons, scalar-count shifts, condition
+selection and fixed-width constant shuffles; see [its exact scope](SIMD-EXTENDED.md).
 The focused qualification requires the corresponding instructions in both GCC
 assembly and the assembled Wasm object, then links and executes each program.
 
 This does not provide x86 intrinsic compatibility, a `wasm_simd128.h` intrinsic
 API, relaxed SIMD, or an auto-vectorization performance guarantee. It does not
-change the draft backend's vector calling convention. The six tested vector
-types pass by value between GCC functions using indirect memory arguments and a
-hidden result pointer. Pass vectors through
-pointers to scalar/aggregate storage at interfaces with independently compiled
-libraries; direct LLVM `v128` argument/return ABI interoperability is not claimed.
+by itself change the draft backend's vector calling convention. Bundles with
+patch `0003` alone use indirect memory arguments and a hidden result pointer.
+Patch `0007` adds [direct vector ABI support](VECTOR-ABI.md) when both translation
+units enable SIMD, with separate GCC/Clang interoperation qualification. The
+disabled profile keeps its indirect convention. Do not mix those two profiles
+across vector interfaces or infer compatibility from a shared GCC version string.
 Existing scalar WASI libc calls keep their ordinary ABI.
 
 The pinned WABT assembler emits the relocatable `linking` section but does not
@@ -75,3 +77,6 @@ WAT and assembled objects pass `verify-simd-worker.mjs`: it checks the exact
 fixture/manifest/artifact identities, frontend options and required disassembled
 opcodes. See the [integrated review report](../../docs/gcc-wasi-backend-review.md)
 for the qualified bundle hash and reproducible Worker commands.
+Those results describe the original five-patch bundle. The subsequent
+[extension report](../../docs/gcc-wasi-simd-extension.md) identifies the seven-patch
+compiler, new operations and vector ABI, including its own browser qualification.

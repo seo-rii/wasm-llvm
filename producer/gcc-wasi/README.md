@@ -12,6 +12,7 @@ builds the compiler host; Clang never compiles user source in this path.
 See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [initial native and Chromium results](../../docs/gcc-wasi-validation.md),
 [backend review and SIMD qualification](../../docs/gcc-wasi-backend-review.md),
+[additional SIMD operations and vector ABI](../../docs/gcc-wasi-simd-extension.md),
 [source pins](sources.lock.json), and [runtime pins](runtime.lock.json).
 The June 2026 GCC announcement approved a development direction; this backend is
 an unmerged author port, not a released upstream GCC target. Keeping its GCC 17
@@ -24,7 +25,7 @@ compiler's existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local backend patches | `0001`–`0005`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls; SHA-256 pinned in `sources.lock.json` |
+| Local backend patches | `0001`–`0007`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations and vector ABI; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -54,6 +55,9 @@ the external compare-exchange libcall signature. The ABI suite links real GCC
 and Clang caller/callee objects in both directions. Clang is an independent test
 oracle here, not a compilation fallback. The atomic test provider validates the
 five-argument ABI only; it is not distributed as an atomic runtime.
+Patches `0006` and `0007` add [SIMD operations](SIMD-EXTENDED.md) and
+[direct vector calls](VECTOR-ABI.md), with native mixed-compiler qualification
+and a separate Wasm-host GCC Worker qualification.
 
 ## Reproduction
 
@@ -83,12 +87,6 @@ node producer/gcc-wasi/qualify-native.mjs \
   --suite "$GCC_WASI_PLAYWRIGHT_PROJECT/scripts/gcc-wasi-fixtures.mjs" \
   --cases c-hello,c-core,c-libm,c-wide-integers-o0,c-wide-integers-o2,c-errno,c-multiple,c-defines,c-wasm32-abi,cpp-core,cpp-static-lifecycle,cpp-typedef-void-o0,cpp-typedef-void-o2 \
   --output "$GCC_WASI_WORK_DIR/native-programs"
-node producer/gcc-wasi/qualify-native.mjs \
-  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
-  --suite producer/gcc-wasi/abi-probes.mjs \
-  --cases abi-cpp-typedef-void-o0,abi-cpp-typedef-void-o2 \
-  --output "$GCC_WASI_WORK_DIR/typedef-void"
-
 node producer/gcc-wasi/abi-interop.mjs \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
@@ -102,6 +100,16 @@ node producer/gcc-wasi/test-simd.mjs \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
   --output "$GCC_WASI_WORK_DIR/simd-qualification"
+node producer/gcc-wasi/test-simd-extended.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" --oracle clang \
+  --output "$GCC_WASI_WORK_DIR/simd-extended-qualification"
+node producer/gcc-wasi/test-vector-abi.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/vector-abi-qualification"
 
 bash producer/gcc-wasi/build-host-deps.sh
 bash producer/gcc-wasi/build-browser.sh
@@ -112,6 +120,12 @@ exit-status file. Keep sources, recipes and native compiler binaries stable
 until dependent builds finish. Check process/status files while running; inspect
 bounded log excerpts after exit. A completed native compile/link/run receipt is
 mandatory before `build-browser.sh` starts. Its source/patch identity must match.
+`qualify-native.mjs` preserves an existing `native-qualification.json` so it
+cannot replace a gate while another build consumes it. When reusing a work
+directory after rebuilding GCC, first finish all consumers of the old gate and
+archive it. Replace it with the new successful `provenance.json` only after
+checking that its `gccSource` and `buildReceiptSha256` match the new native build.
+A fresh work directory needs no gate replacement.
 
 The native driver in the draft port injects unsupported `-stdlib=libc++`; the
 recipe clears that driver spec for the real frontend self-tests. The browser
@@ -140,6 +154,8 @@ node producer/gcc-wasi/test-libstdcxx.mjs "$GCC_LIBSTDCXX_WORK_DIR/qualification
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
+  --simd-extended-qualification "$GCC_WASI_WORK_DIR/simd-extended-qualification/qualification.json" \
+  --vector-abi-qualification "$GCC_WASI_WORK_DIR/vector-abi-qualification/report.json" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
@@ -154,6 +170,11 @@ The optional `--simd-qualification` must contain all enabled and disabled native
 cases from the exact compiler binary and current test inputs. It enables the
 manifest's SIMD capability; that provisional bundle still needs real Chromium
 qualification. Omitting it keeps SIMD unavailable through the SDK.
+The seven-patch compiler also requires the complete extended SIMD and vector
+ABI receipts to advertise SIMD. These bind source files, C/C++ compiler hashes,
+exact frontend options, runtime bytes and all O0/O2 caller/callee combinations.
+The packager reopens the actual programs and checks their Wasm types and memory;
+receipt JSON alone cannot establish the vector ABI.
 
 When the backend ABI changes, rebuild GNU libstdc++ in a fresh runtime directory.
 The packager rejects runtime receipts from a different compiler or patch set.
@@ -183,7 +204,7 @@ those estimates do not pretend to be a measured browser transfer.
 Additional focused checks:
 
 ```sh
-node --test producer/gcc-wasi/package.test.mjs producer/gcc-wasi/prepare-source.test.mjs
+node --test producer/gcc-wasi/*.test.mjs
 python3 producer/gcc-wasi/prepare-runtime.test.py -v
 GCC_WASI_WASM_LD="$WASI_SDK_PATH/bin/wasm-ld" node producer/gcc-wasi/test-wabt.mjs
 node producer/gcc-wasi/test-wabt-browser.mjs
@@ -224,9 +245,12 @@ ABI limitations remain and must not be hidden by passing scalar tests:
 
 - GCC `long double` is binary64 (8 bytes); WASI libc expects binary128 (16).
   Long-double runtime interfaces and their varargs are unsupported.
-- Singleton and empty aggregate interoperation now passes the focused Basic C
-  ABI suite. Vector arguments/returns still use the port's indirect convention;
-  direct LLVM `v128` ABI, vector aggregates and `__int128` are not qualified.
+- Singleton and empty aggregate interoperation passes the focused Basic C ABI
+  suite. With `-msimd128`, the six vector modes and qualified singleton vector
+  aggregates use direct `v128` arguments/results. Both sides must select this
+  profile; disabled SIMD retains indirect vector calls. The vector convention
+  is compared against pinned Clang 22.1.0, not every future compiler version.
+  `__int128` and complete C ABI compatibility remain unqualified.
 
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user
