@@ -13,17 +13,17 @@ The build script downloads a Linux x86_64/aarch64 native compiler automatically;
 other platforms can pass `--zig /path/to/zig-0.17.0`.
 
 ```bash
-pnpm build:zig
-pnpm package:zig
-pnpm verify:zig-artifacts
-pnpm test:zig-producer
+python3 -B producer/zig-browser/scripts/build.py
+python3 -B producer/zig-browser/scripts/package.py
+python3 -B producer/zig-browser/scripts/package.py --verify
+python3 -B -m unittest discover -s producer/zig-browser/test -p 'test_*.py'
 ```
 
-`build:zig` writes intermediates and a raw bundle to `out/zig-browser`.
-`--work-dir` and `--output` select other build paths. `package:zig` accepts
+`build.py` writes intermediates and a raw bundle to `out/zig-browser`.
+`--work-dir` and `--output` select other build paths. `package.py` accepts
 `--bundle` and `--output`, writes a deterministic full-library archive, extracts
 that archive, and runs the actual compiler smoke suite before issuing a successful
-receipt. `verify:zig-artifacts --smoke` also executes the checked-in package.
+receipt. `package.py --verify --smoke` also executes the checked-in package.
 
 The smoke suite covers standard-library imports, u128 runtime helpers, relocatable
 and stripped MVP object linking, diagnostics, formatting, streaming stdout, nested

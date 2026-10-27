@@ -143,9 +143,9 @@ pnpm probe:tinygo-native-split -- --help
 pnpm verify:tinygo-artifacts -- --help
 
 # Zig 0.17.0 WASI compiler and complete matching library
-pnpm build:zig
-pnpm package:zig
-pnpm verify:zig-artifacts
+python3 -B producer/zig-browser/scripts/build.py
+python3 -B producer/zig-browser/scripts/package.py
+python3 -B producer/zig-browser/scripts/package.py --verify
 
 # Legacy LLVM 16 worker synchronization (not a TinyGo compiler)
 pnpm sync:tinygo -- out/tinygo-browser/emception.worker.js
