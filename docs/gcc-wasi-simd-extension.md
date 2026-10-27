@@ -4,7 +4,9 @@ This follow-up extends the actual GCC 17 WebAssembly backend with comparisons,
 scalar-count shifts, conditional selection, constant shuffles, and direct
 `v128` calling conventions. The compilation path remains GCC C/C++ frontend →
 GCC RTL → annotated WAT → pinned WABT → external LLD → WASI Preview 1.
-Clang is used only for explicitly independent comparison objects and programs.
+Test programs use Clang only in explicitly independent comparison runs.
+Emscripten's pinned Clang builds the GCC compiler's Wasm-host binaries; those
+binaries compile application source through the GCC frontend and RTL backend.
 
 The integrated seven-patch native compiler passed 992 execution/ABI cases,
 62 additional independent Clang oracle programs, and two GNU runtime programs.
