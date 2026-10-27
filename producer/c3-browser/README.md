@@ -4,7 +4,7 @@ This producer builds the upstream C3 compiler itself as an Emscripten module. Th
 C3 source in its virtual filesystem, emits relocatable WebAssembly objects, reports source
 diagnostics, and links bare WebAssembly programs using its embedded LLVM/LLD libraries.
 
-The source pin is C3 0.8.3 (`1d155ee04d3b607261b99aa15ed5eefd6d7db284`), built with the pinned
+The source pin is C3 0.8.5_1 (`d1b1e4451716a34e9c5eb46b78999ff92e71c3a1`), built with the pinned
 Emscripten 6.0.0 SDK. The producer imports a size- and SHA-256-verified LLVM-for-C3 Emscripten archive.
 Preparation rejects hidden Git index flags and all untracked or ignored C3 source inputs; the SDK
 installation directories and generated configuration are removed before every install, then the
@@ -13,6 +13,11 @@ Although that archive is published under `llvm_22.1.10`, its `LLVMConfig.cmake` 
 Both values are recorded in the manifest. The original SDK version used to build those LLVM
 libraries is unavailable; this recipe reproduces the C3 build from that binary input and does not
 claim to rebuild LLVM or produce byte-identical binaries across machines.
+
+The 0.8.5_1 source update includes the upstream Wasm regression fix and retains LLVM 22.1.8,
+which is within C3's supported LLVM 19–24 range. The browser subprocess patch applies to the
+new source revision. New compiler artifacts still require the full build and both acceptance
+runs below; the historical 0.8.3 results do not qualify the updated compiler.
 
 ## Build and verify
 
@@ -90,6 +95,6 @@ Worker/FS adapter, terminal/std::io integration, deployment, and source debuggin
 consumer work. This producer does not advertise support in wasm-idle.
 
 Upstream licensing remains applicable to generated artifacts: see C3's pinned
-[`LICENSE`](https://github.com/c3lang/c3c/blob/1d155ee04d3b607261b99aa15ed5eefd6d7db284/LICENSE)
-and [`LICENSE_SRC`](https://github.com/c3lang/c3c/blob/1d155ee04d3b607261b99aa15ed5eefd6d7db284/LICENSE_SRC),
+[`LICENSE`](https://github.com/c3lang/c3c/blob/d1b1e4451716a34e9c5eb46b78999ff92e71c3a1/LICENSE)
+and [`LICENSE_SRC`](https://github.com/c3lang/c3c/blob/d1b1e4451716a34e9c5eb46b78999ff92e71c3a1/LICENSE_SRC),
 [LLVM license](https://llvm.org/LICENSE.txt), and the installed Emscripten `LICENSE`.
