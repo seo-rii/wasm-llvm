@@ -1,0 +1,41 @@
+name: Zig 0.17.0 WASI producer
+
+on:
+  pull_request:
+    paths:
+      - producer/zig-browser/**
+      - artifacts/zig-browser/**
+      - .github/workflows/zig-browser-producer.yml
+  push:
+    branches: [main]
+    paths:
+      - producer/zig-browser/**
+      - artifacts/zig-browser/**
+      - .github/workflows/zig-browser-producer.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test producer packaging and verify committed artifacts
+        run: |
+          python3 -B -m unittest discover -s producer/zig-browser/test -p 'test_*.py'
+          python3 -B producer/zig-browser/scripts/package.py --verify
+      - name: Build from pinned source archives
+        run: python3 -B producer/zig-browser/scripts/build.py --jobs 2
+      - name: Package and execute the rebuilt compiler
+        run: python3 -B producer/zig-browser/scripts/package.py --output "$RUNNER_TEMP/zig-browser"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zig-browser-0.17.0
+          path: ${{ runner.temp }}/zig-browser/
+          if-no-files-found: error
