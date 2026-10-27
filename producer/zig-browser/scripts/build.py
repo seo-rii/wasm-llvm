@@ -89,8 +89,13 @@ def main():
         raise RuntimeError("Source lock does not match producer manifest")
     if patch_hash != LOCK["port"]["sha256"]:
         raise RuntimeError("WASI patch does not match pinned port")
+    debug_patch = ROOT / LOCK["debug"]["patch"]
+    debug_patch_hash = digest(debug_patch)
+    if debug_patch_hash != LOCK["debug"]["sha256"]:
+        raise RuntimeError("LLVM bitcode patch does not match pinned debug profile")
     source_name = f"zig-{VERSION}"
-    source = work / (source_name + "-" + patch_hash[:16])
+    input_hash = hashlib.sha256((patch_hash + debug_patch_hash).encode()).hexdigest()
+    source = work / (source_name + "-" + input_hash[:16])
     if not source.exists():
         source_archive = archive(work, source_name)
         with tempfile.TemporaryDirectory(dir=work) as tmp:
@@ -101,10 +106,25 @@ def main():
             subprocess.run(["git", "init", "--quiet"], cwd=prepared, check=True)
             subprocess.run(["git", "apply", "--check", str(patch)], cwd=prepared, check=True)
             subprocess.run(["git", "apply", str(patch)], cwd=prepared, check=True)
+            subprocess.run(["git", "apply", "--check", str(debug_patch)], cwd=prepared, check=True)
+            subprocess.run(["git", "apply", str(debug_patch)], cwd=prepared, check=True)
             prepared.rename(source)
     # Refuse a partially applied patch instead of silently compiling wrong code.
     subprocess.run(["git", "init", "--quiet"], cwd=source, check=True)
-    subprocess.run(["git", "apply", "--reverse", "--check", str(patch)], cwd=source, check=True)
+    subprocess.run(["git", "apply", "--reverse", "--check", str(debug_patch)], cwd=source, check=True)
+    # The overlay changes dev.zig inside the original port's context. Validate
+    # the base port after reversing only the overlay in an isolated index-free
+    # copy of the touched files, without mutating the build source.
+    with tempfile.TemporaryDirectory(dir=work) as tmp:
+        checked = Path(tmp)
+        subprocess.run(["git", "init", "--quiet"], cwd=checked, check=True)
+        for line in (patch.read_text() + debug_patch.read_text()).splitlines():
+            if line.startswith("+++ b/"):
+                relative = line.removeprefix("+++ b/")
+                (checked / relative).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source / relative, checked / relative)
+        subprocess.run(["git", "apply", "--reverse", str(debug_patch)], cwd=checked, check=True)
+        subprocess.run(["git", "apply", "--reverse", "--check", str(patch)], cwd=checked, check=True)
 
     if args.zig:
         zig = Path(shutil.which(args.zig) or args.zig).resolve()
@@ -127,7 +147,7 @@ def main():
     if version != VERSION:
         parser.error(f"Native Zig must be {VERSION}; found {version}")
 
-    prefix = work / ("install-" + patch_hash[:16])
+    prefix = work / ("install-" + input_hash[:16])
     command = [
         str(zig), "build",
         "-Dtarget=wasm32-wasi", "-Ddev=wasm_wasi",
@@ -151,6 +171,7 @@ def main():
         "target": "wasm32-wasi",
         "source_sha256": SHA256[source_name],
         "patch_sha256": patch_hash,
+        "debug_patch_sha256": debug_patch_hash,
         "wasm_sha256": digest(output / "zig.wasm"),
         "native_version": version,
         "source_lock_sha256": hashlib.sha256(LOCK_BYTES).hexdigest(),

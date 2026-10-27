@@ -43,6 +43,8 @@ def load_contract():
         raise ValueError("Source lock does not match producer manifest")
     if sha256(ROOT / lock["port"]["patch"]) != lock["port"]["sha256"]:
         raise ValueError("WASI patch does not match pinned port")
+    if sha256(ROOT / lock["debug"]["patch"]) != lock["debug"]["sha256"]:
+        raise ValueError("LLVM bitcode patch does not match pinned debug profile")
     source = lock["archives"][f"zig-{lock['version']}"]
     identity = {
         "schemaVersion": 1,
@@ -56,6 +58,10 @@ def load_contract():
             "repository": lock["port"]["repository"],
             "revision": lock["port"]["commit"],
             "patchSha256": lock["port"]["sha256"],
+        },
+        "debug": {
+            **manifest["debug"],
+            "patchSha256": lock["debug"]["sha256"],
         },
         "sourceLockSha256": sha256(lock_path),
         "manifestSha256": sha256(manifest_path),
@@ -173,6 +179,7 @@ def package(bundle, output):
         "target": identity["target"],
         "source_sha256": identity["source"]["sha256"],
         "patch_sha256": identity["port"]["patchSha256"],
+        "debug_patch_sha256": identity["debug"]["patchSha256"],
         "source_lock_sha256": identity["sourceLockSha256"],
         "wasm_sha256": sha256(bundle / "zig.wasm"),
     }
@@ -198,7 +205,7 @@ def package(bundle, output):
                 "suite": "producer/zig-browser/test/smoke.mjs",
                 "suiteSha256": sha256(ROOT / "test" / "smoke.mjs"),
                 "libraryFiles": file_count,
-                "checks": ["version", "stdio", "filesystem", "diagnostics", "compiler-rt", "object-linking", "stripped-mvp-object"],
+                "checks": ["version", "stdio", "filesystem", "diagnostics", "compiler-rt", "object-linking", "stripped-mvp-object", "llvm-bitcode", "debug-source-paths"],
             },
         }
         (staged / "producer-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
