@@ -32,21 +32,21 @@ async function fixture(t) {
     await fs.mkdir(path.dirname(file), { recursive: true });
     await fs.writeFile(file, bytes);
   };
-  const gcc = 'usr/lib/gcc/x86_64-linux-gnu/13', cpp = 'usr/include/c++/13';
+  const gcc = 'usr/lib/gcc/x86_64-linux-gnu/16', cpp = 'usr/include/c++/16';
   const files = [
     'usr/include/stdio.h', 'usr/include/stdlib.h', 'usr/include/features.h',
     'usr/include/limits.h', 'usr/include/stdint.h', `${cpp}/vector`,
     `${cpp}/ext/pb_ds/assoc_container.hpp`, `${cpp}/ext/pb_ds/detail/rb_tree_map_/rb_tree_.hpp`,
     `${cpp}/ext/pb_ds/detail/tree_policy/order_statistics_imp.hpp`,
-    'usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h',
-    'usr/include/x86_64-linux-gnu/c++/13/bits/stdc++.h', 'usr/share/doc/libc/copyright'
+    'usr/include/x86_64-linux-gnu/c++/16/bits/c++config.h',
+    'usr/include/x86_64-linux-gnu/c++/16/bits/stdc++.h', 'usr/share/doc/libc/copyright'
   ].map(name => ({ path: name, bytes: synthetic }));
   for (const name of [`${gcc}/crtbeginT.o`, `${gcc}/crtend.o`,
     ...['crt1.o', 'crti.o', 'crtn.o'].map(name => `usr/lib/x86_64-linux-gnu/${name}`)]) files.push({ path: name, bytes: elf() });
   for (const name of [`${gcc}/libstdc++.a`, `${gcc}/libgcc.a`, `${gcc}/libgcc_eh.a`,
     'usr/lib/x86_64-linux-gnu/libc.a', 'usr/lib/x86_64-linux-gnu/libm.a']) files.push({ path: name, bytes: archive() });
   for (const file of files) await write(sysroot, file.path, file.bytes);
-  const provenance = { schemaVersion: 1, target: 'x86_64-linux-gnu', gccVersion: '13', compilerVersion: '13.3.0',
+  const provenance = { schemaVersion: 1, target: 'x86_64-linux-gnu', gccVersion: '16', compilerVersion: '16.2.0',
     glibcVersion: '2.39', distribution: 'synthetic packaging fixture',
     sources: [{ url: 'https://example.invalid/gnu-source', sha256: digest('fixture') }],
     licenseFiles: ['usr/share/doc/libc/copyright'] };
@@ -61,7 +61,7 @@ async function fixture(t) {
     ['Js', 'mjs', Buffer.from('export default () => { throw new Error("fixture is not a compiler"); };')],
     ['Wasm', 'wasm', Buffer.from('0061736d01000000', 'hex')]
   ]) { await write(compiler, `${name}.${extension}`, bytes); modules[`${name}${suffix}`] = identity(bytes); }
-  const receipt = { schemaVersion: 1, kind: 'gcc-build-receipt', gccVersion: '13.3.0',
+  const receipt = { schemaVersion: 1, kind: 'gcc-build-receipt', gccVersion: '16.2.0',
     host: 'wasm32-emscripten', target: 'x86_64-linux-gnu', modules,
     sourcesLockSha256: digest(await fs.readFile(path.join(producer, 'sources.lock.json'))),
     sourcePatches: Object.entries(JSON.parse(await fs.readFile(path.join(producer, 'sources.lock.json'))).sources)
@@ -96,7 +96,7 @@ test('synthetic ABI packaging preserves GNU provenance and stays unverified', as
   }
   assert((await fs.readFile(path.join(input.output, 'gnu-provenance.json'))).equals(await fs.readFile(input.provenance)));
   const tar = readTarEntries(await fs.readFile(path.join(input.output, 'sysroot.tar')));
-  assert(tar.has('usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h'));
+  assert(tar.has('usr/lib/gcc/x86_64-linux-gnu/16/include/immintrin.h'));
   assert(![...tar.keys()].some(name => name.endsWith('.wasm') || name.endsWith('.mjs')));
   await assert.rejects(packageGcc(input), /EEXIST/);
 });
@@ -134,7 +134,7 @@ test('host dependency notices require an identity in the compiler receipt', asyn
 test('target libraries must match the actual GCC version', async t => {
   const input = await fixture(t);
   const provenance = JSON.parse(await fs.readFile(input.provenance));
-  provenance.compilerVersion = '13.2.0';
+  provenance.compilerVersion = '16.1.0';
   await fs.writeFile(input.provenance, JSON.stringify(provenance));
   await assert.rejects(packageGcc(input), /must match the compiler version/);
 });
@@ -159,7 +159,7 @@ test('source pins and resource headers are bound to the build receipt', async t 
   await assert.rejects(packageGcc(input), /headers changed/);
 });
 
-test('an unpatched compiler receipt cannot be relabeled with the patched source lock', async t => {
+test('a compiler receipt must record the source patch identity, including an empty set', async t => {
   const input = await fixture(t);
   delete input.receipt.sourcePatches;
   await fs.writeFile(input.receiptPath, JSON.stringify(input.receipt));

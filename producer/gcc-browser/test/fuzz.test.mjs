@@ -143,8 +143,8 @@ async function syntheticBundle(directory) {
 	assets.sysroot = { path: 'sysroot.tar', bytes: tar.length, sha256: sha256(tar) };
 	const manifest = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: 'gcc-x86_64-linux-gnu', host: 'wasm32-emscripten',
 		target: 'x86_64-linux-gnu', compiler: { family: 'gcc', version: '0.0.0-synthetic' }, linkMode: 'static',
-		sysrootPath: '/sysroot', gccInstallation: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/13',
-		resourceDir: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/13/include', gnu: { gccVersion: '13' },
+		sysrootPath: '/sysroot', gccInstallation: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/16',
+		resourceDir: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/16/include', gnu: { gccVersion: '16' },
 		cpuProfiles: ['x86-64', 'avx2-fma'], assets }));
 	await fs.writeFile(path.join(bundle, 'gcc-toolchain.v1.json'), manifest);
 	return { bundle, manifestSha256: sha256(manifest) };

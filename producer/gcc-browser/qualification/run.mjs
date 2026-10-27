@@ -134,7 +134,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const options = {};
 		const fields = { '--bundle': 'bundle', '--output': 'output', '--manifest-sha256': 'manifestSha256', '--native-cxx': 'nativeCxx', '--native-cc': 'nativeCc' };
 		for (let i = 0; i < args.length; i += 2) {
-			assert(fields[args[i]] && args[i + 1], 'Usage: node qualification/run.mjs --bundle DIR --output NEW_DIR [--manifest-sha256 HEX] [--native-cxx g++-13] [--native-cc gcc-13]');
+			assert(fields[args[i]] && args[i + 1], 'Usage: node qualification/run.mjs --bundle DIR --output NEW_DIR [--manifest-sha256 HEX] [--native-cxx g++-16] [--native-cc gcc-16]');
 			assert(!(fields[args[i]] in options), `Duplicate ${args[i]}`);
 			options[fields[args[i]]] = args[i + 1];
 		}
