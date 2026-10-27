@@ -17,9 +17,9 @@ after the shared Clang changes were merged.
 
 | Role | Implementation |
 | --- | --- |
-| Native build tools and generators | Linux x86-64, GCC/G++ 13.3.0 |
+| Native build tools and generators | Linux x86-64, GCC/G++ 16.2.0 |
 | Compiler host | Emscripten 4.0.23, Wasm32, MEMFS |
-| Compiler | GCC 13.3.0 C and C++ front ends and x86 backend, with two pinned upstream C++ pragma fixes |
+| Compiler | GCC 16.2.0 C and C++ front ends and x86 backend |
 | Assembler/linker | GNU binutils 2.42, x86_64-linux-gnu |
 | Host arithmetic libraries | GMP 6.3.0, MPFR 4.2.1, MPC 1.3.1, built as Wasm |
 | User-program runtime | Actual GNU/Linux x86-64 glibc, libstdc++, libgcc and CRT |
@@ -27,14 +27,14 @@ after the shared Clang changes were merged.
 `sources.lock.json` fixes archive hashes and source revisions. Build-time GCC
 generators and dependency generators execute natively. The host math libraries
 are linked into the Wasm compiler; they are **not** target program libraries.
-Ubuntu 24.04's installed GCC 13 development packages provide the matching GNU
+Ubuntu 26.10's installed GCC 16 development packages provide the matching GNU
 target headers/libraries. The importer records exact binary/source package
 versions, distribution, glibc version, per-file SHA-256 values, and copyright
 files. It does not claim to have fetched the original Debian source archives.
 Compiler source archives remain reproducible from the lock; compiler and host
 dependency license notices are retained in `licenses/`.
 
-The source build applies the upstream fixes for
+GCC 16.2.0 already contains the upstream fixes for
 [PR109753](https://github.com/gcc-mirror/gcc/commit/eff00046409a7289bfdc1861e68b532895f91c0e)
 and its deferred-template follow-up
 [PR115403](https://github.com/gcc-mirror/gcc/commit/e397f8524a7982004eb616217477434ce350e80f).
@@ -42,15 +42,14 @@ They apply target/optimization pragmas to compiler-generated C++ functions while
 preserving the options of ordinary deferred template instantiations. This fixes
 `#pragma GCC target("avx2")` before STL headers failing with an `always_inline`
 target mismatch. User source, GNU runtime headers and the baseline CPU profile
-are unchanged. Both original upstream patches, including their regression tests,
-are retained under `patches/` and copied into the bundle.
+are unchanged. The two GCC 13 backports are removed from this recipe; the original
+regression cases remain in the Node and Chromium qualification suites.
 
-The lock records each patch and every affected file before and after application.
-The build uses zero patch fuzz, verifies the final source bytes on resume and
-before writing the compiler receipt, and rejects source trees without the matching
-patch stamp. Use a fresh isolated work directory when upgrading an older recipe.
-The source lock and patch identities bind the build receipt; the CI compiler-cache
-key includes the patches so it rebuilds the actual Wasm compiler for this change.
+The compiler receipt binds the exact source lock, which also invalidates the CI
+compiler cache when the GCC release changes. Use a fresh isolated work directory
+when upgrading an older recipe. The GCC archive's SHA-256 was computed from the
+official release bytes after verifying the published
+[SHA-512 checksum](https://gcc.gnu.org/pub/gcc/releases/gcc-16.2.0/sha512.sum).
 
 The GCC target is configured with `--enable-threads=posix`, matching the imported
 Linux GNU runtime. This controls target features such as `__STDCPP_THREADS__`;
@@ -67,7 +66,7 @@ forwarding wrapper; the recipe checks its bytes against `limitx.h`,
 `glimits.h`, `limity.h`, and `gsyslimits.h` in the pinned GCC source.
 Packaging requires the real target `limits.h` and `stdint.h` to which those
 wrappers delegate. No build-host libc headers enter the resource overlay.
-See the [GCC 13.3 header generation rule](https://github.com/gcc-mirror/gcc/blob/releases/gcc-13.3.0/gcc/Makefile.in).
+See the [GCC 16.2 header generation rule](https://github.com/gcc-mirror/gcc/blob/releases/gcc-16.2.0/gcc/Makefile.in).
 
 The approach follows the pinned
 [AVR](https://github.com/begeistert/wasm-toolchains/blob/66af4dcbaa49c2f16699ac88b4b16fc697683ca5/src/avr-gcc/build.sh)
@@ -79,21 +78,29 @@ Those are AVR/ARM precedents, not evidence that this x86-64 build succeeds.
 
 Use an isolated Linux build directory with at least 16 GiB free. The recipe
 checks available space before downloading sources. The GCC workflow supplies
-Ubuntu 24.04, native build dependencies, isolated directories, and retained logs.
+an Ubuntu 26.10 container pinned by digest, matching GCC 16.2.0 development
+packages, isolated directories, and retained logs. Chromium gates run separately
+on supported Ubuntu 24.04 runners. Native differential fuzzing runs in the same
+Ubuntu 26.10 environment as the compiler build and preserves its corpus for the
+independent Chromium replay, including when a native comparison fails.
 It publishes Actions artifacts only; it does not deploy or create a release.
+
+The recipe disables GCC 16's optional gcov, C++ mapper-server and libgdiagnostics
+tools. Both the complete `all-gcc` build and the separately linked `cc1`/`cc1plus`
+modules must succeed; an auxiliary-tool build failure is no longer accepted.
 
 ```sh
 GCC_WASM_WORK_DIR=/large-disk/gcc-work \
 GCC_WASM_OUT_DIR=/large-disk/gcc-compiler \
 GCC_WASM_JOBS=2 bash producer/gcc-browser/build.sh
 
-node producer/clang-browser/cross/import-sysroot.mjs --compiler g++-13 \
+node producer/clang-browser/cross/import-sysroot.mjs --compiler g++-16 \
   --output /large-disk/gcc-sysroot --provenance /large-disk/gnu-provenance.json
 node producer/gcc-browser/package.mjs \
   --compiler /large-disk/gcc-compiler --sysroot /large-disk/gcc-sysroot \
   --provenance /large-disk/gnu-provenance.json --output /large-disk/gcc-bundle
 node producer/gcc-browser/qualification/run.mjs \
-  --bundle /large-disk/gcc-bundle --output /large-disk/gcc-evidence --native-cxx g++-13
+  --bundle /large-disk/gcc-bundle --output /large-disk/gcc-evidence --native-cxx g++-16
 ```
 
 Outputs must be new directories. The compiler receipt binds each generated
