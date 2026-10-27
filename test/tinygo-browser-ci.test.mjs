@@ -9,11 +9,11 @@ test('manual TinyGo producer rebuilds and accepts the source-locked upstream too
 
 	assert.match(workflow, /workflow_dispatch:/u);
 	assert.match(workflow, /timeout-minutes: 360/u);
-	assert.match(workflow, /670759811adc85df52f410d7306788fabfc6242d/u);
-	assert.match(workflow, /db9f1182f5f2a64ea496752899626578d2b313a7/u);
-	assert.match(workflow, /b8f170971e747fec20a03b25a4490f627140709a/u);
+	assert.match(workflow, /2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2/u);
+	assert.match(workflow, /108a95cb26df6d5011366312dde0639b08d753cf/u);
+	assert.match(workflow, /185673ef46a59528c40d0fdc220c6735606c0ebc/u);
 	assert.match(workflow, /wasi-sdk-33\.0-x86_64-linux\.tar\.gz/u);
-	assert.match(workflow, /v0\.0\.1-go1\.24\.6\.linux-amd64\.zip/u);
+	assert.match(workflow, /v0\.0\.1-go1\.26\.10\.linux-amd64\.zip/u);
 	assert.match(
 		workflow,
 		/Verify native TinyGo bootstrap inputs[\s\S]*TINYGOROOT="\$TINYGO_SOURCE"[\s\S]*"\$TINYGO_WASI_SDK\/bin\/wasm-ld" --version[\s\S]*Build source-locked LLVM host for WASI/u

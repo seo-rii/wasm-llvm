@@ -5,8 +5,8 @@ diff --git a/clang/include/clang/Support/Compiler.h b/clang/include/clang/Suppor
  #define CLANG_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
  #define CLANG_TEMPLATE_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
  #define CLANG_EXPORT_TEMPLATE
--#elif defined(__MACH__) || defined(__WASM__)
-+#elif defined(__MACH__) || defined(__wasm__)
+-#elif defined(__MACH__) || defined(__WASM__) || defined(__EMSCRIPTEN__)
++#elif defined(__MACH__) || defined(__wasm__) || defined(__EMSCRIPTEN__)
  #define CLANG_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
  #define CLANG_TEMPLATE_ABI
  #define CLANG_EXPORT_TEMPLATE
@@ -59,13 +59,13 @@ diff --git a/llvm/cmake/config-ix.cmake b/llvm/cmake/config-ix.cmake
 diff --git a/llvm/include/llvm/Support/Compiler.h b/llvm/include/llvm/Support/Compiler.h
 --- a/llvm/include/llvm/Support/Compiler.h
 +++ b/llvm/include/llvm/Support/Compiler.h
-@@ -203,7 +203,7 @@
- #define LLVM_TEMPLATE_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+@@ -201,7 +201,7 @@
+ #define LLVM_TEMPLATE_ABI LLVM_ABI
  #define LLVM_EXPORT_TEMPLATE
- #define LLVM_ABI_EXPORT LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
--#elif defined(__MACH__) || defined(__WASM__)
-+#elif defined(__MACH__) || defined(__wasm__)
- #define LLVM_ABI LLVM_ATTRIBUTE_VISIBILITY_DEFAULT
+ #define LLVM_ABI_EXPORT LLVM_ABI
+-#elif defined(__MACH__) || defined(__WASM__) || defined(__EMSCRIPTEN__)
++#elif defined(__MACH__) || defined(__wasm__) || defined(__EMSCRIPTEN__)
+ #define LLVM_ABI __attribute__((visibility("default")))
  #define LLVM_TEMPLATE_ABI
  #define LLVM_EXPORT_TEMPLATE
 diff --git a/llvm/lib/Support/CrashRecoveryContext.cpp b/llvm/lib/Support/CrashRecoveryContext.cpp
@@ -162,7 +162,7 @@ diff --git a/llvm/lib/Support/CrashRecoveryContext.cpp b/llvm/lib/Support/CrashR
 diff --git a/llvm/lib/Support/Signals.cpp b/llvm/lib/Support/Signals.cpp
 --- a/llvm/lib/Support/Signals.cpp
 +++ b/llvm/lib/Support/Signals.cpp
-@@ -126,6 +126,12 @@ static bool findModulesAndOffsets(void **StackTrace, int Depth,
+@@ -131,6 +131,12 @@ static bool findModulesAndOffsets(void **StackTrace, int Depth,
                                    const char **Modules, intptr_t *Offsets,
                                    const char *MainExecutableName,
                                    StringSaver &StrPool);
@@ -172,20 +172,20 @@ diff --git a/llvm/lib/Support/Signals.cpp b/llvm/lib/Support/Signals.cpp
 +  return false;
 +}
 +#endif
- 
+
  /// Format a pointer value as hexadecimal. Zero pad it out so its always the
  /// same width.
-@@ -256,6 +262,9 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
- }
- 
+@@ -334,6 +340,9 @@ void sys::symbolizeAddresses(AddressSet &Addresses,
+ #endif
+
  static bool printMarkupContext(raw_ostream &OS, const char *MainExecutableName);
 +#if defined(__wasi__)
 +static bool printMarkupContext(raw_ostream &, const char *) { return false; }
 +#endif
- 
+
  LLVM_ATTRIBUTE_USED
  static bool printMarkupStackTrace(StringRef Argv0, void **StackTrace, int Depth,
-@@ -275,6 +284,7 @@ static bool printMarkupStackTrace(StringRef Argv0, void **StackTrace, int Depth,
+@@ -355,6 +364,7 @@ static bool printMarkupStackTrace(StringRef Argv0, void **StackTrace, int Depth,
  // Include the platform-specific parts of this class.
  #if defined(__wasi__)
  // WASI does not have signals.
@@ -196,23 +196,23 @@ diff --git a/llvm/lib/Support/Signals.cpp b/llvm/lib/Support/Signals.cpp
 diff --git a/llvm/lib/Support/Unix/Process.inc b/llvm/lib/Support/Unix/Process.inc
 --- a/llvm/lib/Support/Unix/Process.inc
 +++ b/llvm/lib/Support/Unix/Process.inc
-@@ -70,7 +70,12 @@ Process::Pid Process::getProcessId() {
+@@ -76,7 +76,12 @@ Process::Pid Process::getProcessId() {
  // On Cygwin, getpagesize() returns 64k(AllocationGranularity) and
  // offset in mmap(3) should be aligned to the AllocationGranularity.
  Expected<unsigned> Process::getPageSize() {
--#if defined(HAVE_GETPAGESIZE)
+-#if defined(HAVE_GETAUXVAL)
 +#if defined(__wasi__)
 +  // WebAssembly linear memory grows in fixed 64 KiB pages. Avoid wasi-libc's
 +  // getpagesize implementation, which depends on the final module layout
 +  // symbol __wasm_first_page_end.
 +  static const int page_size = 65536;
-+#elif defined(HAVE_GETPAGESIZE)
++#elif defined(HAVE_GETAUXVAL)
+   static const int page_size = ::getauxval(AT_PAGESZ);
+ #elif defined(HAVE_GETPAGESIZE)
    static const int page_size = ::getpagesize();
- #elif defined(HAVE_SYSCONF)
-   static long page_size = ::sysconf(_SC_PAGE_SIZE);
-@@ -84,7 +89,12 @@ Expected<unsigned> Process::getPageSize() {
+@@ -94,7 +99,12 @@ Expected<unsigned> Process::getPageSize() {
  }
- 
+
  size_t Process::GetMallocUsage() {
 -#if defined(HAVE_MALLINFO2)
 +#if defined(__wasi__)
@@ -224,26 +224,10 @@ diff --git a/llvm/lib/Support/Unix/Process.inc b/llvm/lib/Support/Unix/Process.i
    struct mallinfo2 mi;
    mi = ::mallinfo2();
    return mi.uordblks;
-@@ -131,6 +131,7 @@
- // their operation. To prevent the disk from filling up, this function
- // does what's necessary to prevent their generation.
- void Process::PreventCoreFiles() {
-+#if !defined(__wasi__)
-   struct rlimit rlim;
-   getrlimit(RLIMIT_CORE, &rlim);
- #ifdef __linux__
-@@ -181,6 +182,7 @@
-   signal(SIGSEGV, _exit);
-   signal(SIGBUS, _exit);
- #endif
-+#endif
- 
-   coreFilesPrevented = true;
- }
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
-@@ -63,6 +63,7 @@ ProcessInfo::ProcessInfo() : Pid(0), ReturnCode(0) {}
+@@ -62,6 +62,7 @@ ProcessInfo::ProcessInfo() : Pid(0), ReturnCode(0) {}
  ErrorOr<std::string> sys::findProgramByName(StringRef Name,
                                              ArrayRef<StringRef> Paths) {
    assert(!Name.empty() && "Must have a name!");
@@ -251,14 +235,14 @@ diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.i
    // Use the given path verbatim if it contains any slashes; this matches
    // the behavior of sh(1) and friends.
    if (Name.contains('/'))
-@@ -85,12 +86,14 @@ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
+@@ -84,12 +85,14 @@ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
      if (sys::fs::can_execute(FilePath.c_str()))
        return std::string(FilePath); // Found the executable!
    }
 +#endif
    return errc::no_such_file_or_directory;
  }
- 
+
  static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMsg) {
    if (!Path) // Noop
      return false;
@@ -266,33 +250,33 @@ diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.i
    std::string File;
    if (Path->empty())
      // Redirect empty paths to /dev/null
-@@ -113,6 +116,7 @@ static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMs
+@@ -112,6 +115,7 @@ static bool RedirectIO(std::optional<StringRef> Path, int FD, std::string *ErrMs
      return true;
    }
    close(InFD); // Close the original FD
 +#endif
    return false;
  }
- 
-@@ -138,6 +142,9 @@ static bool RedirectIO_PS(const std::string *Path, int FD, std::string *ErrMsg,
+
+@@ -137,6 +141,9 @@ static bool RedirectIO_PS(const std::string *Path, int FD, std::string *ErrMsg,
  static void TimeOutHandler(int Sig) {}
- 
+
  static void SetMemoryLimits(unsigned size) {
 +#if defined(__wasi__)
 +  (void)size;
 +#else
    struct rlimit r;
    __typeof__(r.rlim_cur) limit = (__typeof__(r.rlim_cur))(size)*1048576;
- 
-@@ -151,6 +158,7 @@ static void SetMemoryLimits(unsigned size) {
+
+@@ -150,6 +157,7 @@ static void SetMemoryLimits(unsigned size) {
    r.rlim_cur = limit;
    setrlimit(RLIMIT_RSS, &r);
  #endif
 +#endif
  }
- 
+
  static std::vector<const char *>
-@@ -168,6 +176,11 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+@@ -167,6 +175,11 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
                      ArrayRef<std::optional<StringRef>> Redirects,
                      unsigned MemoryLimit, std::string *ErrMsg,
                      BitVector *AffinityMask, bool DetachProcess) {
@@ -301,27 +285,27 @@ diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.i
 +    *ErrMsg = std::string("WASI does not support spawning subprocesses");
 +  return false;
 +#else
-   if (!llvm::sys::fs::exists(Program)) {
-     if (ErrMsg)
-       *ErrMsg = std::string("Executable \"") + Program.str() +
-@@ -337,6 +350,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+   assert(!AffinityMask && "Starting a process with an affinity mask is "
+                           "currently not supported on Unix!");
+
+@@ -329,6 +342,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
    PI.Process = child;
- 
+
    return true;
 +#endif
  }
- 
+
  namespace llvm {
-@@ -344,7 +358,7 @@ namespace sys {
- 
+@@ -336,7 +350,7 @@ namespace sys {
+
  #if defined(_AIX)
  static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
 -#elif !defined(__Fuchsia__)
 +#elif !defined(__Fuchsia__) && !defined(__wasi__)
  using ::wait4;
  #endif
- 
-@@ -390,6 +404,13 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+
+@@ -382,6 +396,13 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
                              std::string *ErrMsg,
                              std::optional<ProcessStatistics> *ProcStat,
                              bool Polling) {
@@ -334,12 +318,12 @@ diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.i
 +#else
    struct sigaction Act, Old;
    assert(PI.Pid && "invalid pid to wait on, process not started?");
- 
-@@ -507,6 +528,7 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+
+@@ -499,6 +520,7 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
      WaitResult.ReturnCode = -2;
    }
    return WaitResult;
 +#endif
  }
- 
+
  std::error_code llvm::sys::ChangeStdinMode(fs::OpenFlags Flags) {

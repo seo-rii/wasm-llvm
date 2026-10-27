@@ -15,6 +15,8 @@ const COMMIT_PATTERN = /^[0-9a-f]{40}$/u;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
 const REQUIRED_IDENTITY_PATHS = [
 	'GNUmakefile',
+	'make/llvm.mk',
+	'llvm-version.txt',
 	'builder/build.go',
 	'builder/cc.go',
 	'builder/cc1as.cpp',
@@ -138,12 +140,12 @@ export function validateTinyGoSourceLock(lock) {
 	}
 	const goToolchain = lock.goToolchain;
 	assert(goToolchain?.module === 'golang.org/toolchain', 'unexpected Go toolchain module identity');
-	assert(goToolchain?.version === 'go1.24.6', 'Go toolchain must be pinned to go1.24.6');
+	assert(goToolchain?.version === 'go1.26.10', 'Go toolchain must be pinned to go1.26.10');
 	assert(goToolchain?.platform === 'linux-amd64', 'Go bootstrap platform must be linux-amd64');
 	assert(
-		goToolchain.archiveFilename === 'v0.0.1-go1.24.6.linux-amd64.zip' &&
+		goToolchain.archiveFilename === 'v0.0.1-go1.26.10.linux-amd64.zip' &&
 			goToolchain.archiveRoot ===
-				'golang.org/toolchain@v0.0.1-go1.24.6.linux-amd64',
+				'golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64',
 		'Go bootstrap archive identity is invalid'
 	);
 	assert(
@@ -156,8 +158,8 @@ export function validateTinyGoSourceLock(lock) {
 		'Go bootstrap patch source is invalid'
 	);
 	assertSha256(goToolchain.patchedSource.sha256, 'Go bootstrap patch source SHA-256');
-	assert(lock.llvm.ref === 'tinygo_20.x', 'LLVM must use the TinyGo 20.x branch');
-	assert(lock.llvm.version === '20.1.1', 'LLVM source version must be 20.1.1');
+	assert(lock.llvm.ref === 'tinygo_22.x', 'LLVM must use the TinyGo 22.x branch');
+	assert(lock.llvm.version === '22.1.4', 'LLVM source version must be 22.1.4');
 	const wasiHostPatch = lock.wasiHostPatch;
 	assert(
 		typeof wasiHostPatch?.repository === 'string' &&
@@ -301,7 +303,7 @@ export function validateTinyGoManifest(manifest, lock) {
 	assert(
 		JSON.stringify(manifest?.compileProtocol?.targetNativeValidation) ===
 			JSON.stringify({
-				llvmToolchain: 'llvm-20.1.1',
+				llvmToolchain: 'llvm-22.1.4',
 				targetTriple: 'wasm32-unknown-wasi',
 				dataLayout:
 					'e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20',

@@ -26,7 +26,7 @@ const (
 	packageJSONEnvironment     = "TINYGO_BROWSER_PACKAGE_JSON"
 	compilerBuildIDEnvironment = "TINYGO_BROWSER_COMPILER_BUILD_ID"
 	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v6"
-	llvmValidationToolchain    = "llvm-20.1.1"
+	llvmValidationToolchain    = "llvm-22.1.4"
 	wasmTargetTriple           = "wasm32-unknown-wasi"
 	wasmTargetDataLayout       = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
 )
@@ -191,6 +191,7 @@ func run(args []string) error {
 	}
 
 	options := &compileopts.Options{
+		BuildVCS:      "false",
 		GOOS:          "wasip1",
 		GOARCH:        "wasm",
 		Directory:     request.WorkingDirectory,
@@ -956,7 +957,7 @@ func validateLLVMObject(path, expectedDataLayout string) (llvmObjectValidation, 
 	defer context.Dispose()
 	module, err := context.ParseBitcodeFile(path)
 	if err != nil {
-		return validation, errors.New("LLVM 20 bitreader rejected the module")
+		return validation, errors.New("LLVM 22 bitreader rejected the module")
 	}
 	defer module.Dispose()
 	if err := llvm.VerifyModule(module, llvm.ReturnStatusAction); err != nil {

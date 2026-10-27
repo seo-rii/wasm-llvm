@@ -48,6 +48,7 @@ test('the adapter delegates Go semantics to the upstream TinyGo builder', async 
 	assert.match(source, /"github\.com\/tinygo-org\/tinygo\/cgo"/);
 	assert.match(source, /libclang/);
 	assert.match(source, /builder\.NewConfig\(/);
+	assert.match(source, /BuildVCS:\s+"false"/);
 	assert.match(source, /builder\.Build\([^;]*temporaryObject/s);
 	assert.doesNotMatch(source, /"go\/(?:ast|parser|scanner|token)"/);
 	assert.doesNotMatch(source, /\b(?:parseGo|lower|emitWasm|emitLLVM)\b/i);
@@ -203,6 +204,7 @@ test('the upstream patch adapts only WASI host services and the wasm32 libclang 
 	assert.match(patch, /diff --git a\/cgo\/libclang\.go/);
 	assert.match(patch, /diff --git a\/cgo\/libclang_stubs\.c/);
 	assert.match(patch, /tinygo_wasm_clang_getArgType/);
+	assert.match(patch, /tinygo_wasm_clang_getCanonicalType/);
 	assert.match(patch, /tinygo_clang_globals_visitor_bridge_ptr/);
 	assert.match(patch, /diff --git a\/builder\/jobs\.go/);
 	assert.match(patch, /type BuildAuxiliaryObject struct/);
@@ -213,7 +215,7 @@ test('the upstream patch adapts only WASI host services and the wasm32 libclang 
 	assert.match(patch, /runtime\.GOOS == "wasip1"/);
 	assert.match(patch, /RunTool\("clang"/);
 	assert.match(patch, /ValidateWasmObject/);
-	assert.match(patch, /sort\.Strings\(embedFileNames\)/);
+	assert.match(patch, /slices\.Sort\(embedNames\)/);
 	assert.match(patch, /SourceSHA256/);
 	assert.match(patch, /EmbeddedFileHash/);
 	assert.match(patch, /A WASI-hosted browser compiler has no process or thread service/);

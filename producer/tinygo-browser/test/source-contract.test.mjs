@@ -26,8 +26,9 @@ import {
 
 const tempDirs = [];
 const fixtureSources = {
-	'GNUmakefile':
-		'git clone -b tinygo_20.x --depth=1 https://github.com/tinygo-org/llvm-project llvm-project\n',
+	'GNUmakefile': 'include make/llvm.mk\n',
+	'make/llvm.mk': 'LLVM_REVISION = $(shell cat llvm-version.txt)\ngit remote add origin https://github.com/tinygo-org/llvm-project\ngit checkout $(LLVM_REVISION)\n',
+	'llvm-version.txt': '2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2\n',
 	'builder/build.go': `package builder
 import (
 	"github.com/tinygo-org/tinygo/compiler"
@@ -91,12 +92,12 @@ func CompilePackage(
 `,
 	'go.mod': `module github.com/tinygo-org/tinygo
 
-go 1.22.0
+go 1.25.0
 
-require tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74
+require tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5
 `,
-	'go.sum': `tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74 h1:ovavgTdIBWCH8YWlcfq9gkpoyT1+IxMKSn+Df27QwE8=
-tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74/go.mod h1:GFbusT2VTA4I+l4j80b17KFK+6whv69Wtny5U+T8RR0=
+	'go.sum': `tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5 h1:0PKRhM1INWAi7PdIng1BHMPTDaRcOmv1UymdTgZ76Jo=
+tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5/go.mod h1:GFbusT2VTA4I+l4j80b17KFK+6whv69Wtny5U+T8RR0=
 `,
 	'interp/interp.go': `package interp
 import "tinygo.org/x/go-llvm"
@@ -251,7 +252,7 @@ function createCompilerReceipt({ contract, sourceReceiptBytes, compilerBytes, ti
 			status: 'passed',
 			identityMode: 'upstream-package-graph',
 			compilerVersion:
-				'tinygo version 0.40.1 linux/amd64 (using go version go1.22 and LLVM version 20.1.1)',
+				'tinygo version 0.43.0 linux/amd64 (using go version go1.26.10 and LLVM version 22.1.4)',
 			acceptance: {
 				status: 'passed',
 				fixture: {
@@ -343,8 +344,8 @@ async function createFixtureContract() {
 
 test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', async () => {
 	const contract = await loadTinyGoProducerContract();
-	assert.equal(contract.lock.tinygo.commit, 'db9f1182f5f2a64ea496752899626578d2b313a7');
-	assert.equal(contract.lock.goLlvm.commit, 'b8f170971e747fec20a03b25a4490f627140709a');
+	assert.equal(contract.lock.tinygo.commit, '108a95cb26df6d5011366312dde0639b08d753cf');
+	assert.equal(contract.lock.goLlvm.commit, '185673ef46a59528c40d0fdc220c6735606c0ebc');
 	assert.deepEqual(
 		contract.lock.goLlvm.hostSupportSources.map((entry) => entry.path),
 		[
@@ -356,7 +357,7 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 			'backports.h'
 		]
 	);
-	assert.equal(contract.lock.llvm.commit, '670759811adc85df52f410d7306788fabfc6242d');
+	assert.equal(contract.lock.llvm.commit, '2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2');
 	assert.deepEqual(contract.manifest.compileProtocol.targetNativeSourcePolicy, {
 		cgoFiles: 'program-object-with-source-closure-v6',
 		cFiles: 'thinlto-object-set-v6',
@@ -408,7 +409,7 @@ test('pins the actual upstream TinyGo compiler, go-llvm, and LLVM identities', a
 		'target-cgo-linker-flags'
 	]);
 	assert.deepEqual(contract.manifest.compileProtocol.targetNativeValidation, {
-		llvmToolchain: 'llvm-20.1.1',
+		llvmToolchain: 'llvm-22.1.4',
 		targetTriple: 'wasm32-unknown-wasi',
 		dataLayout:
 			'e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20',
@@ -582,7 +583,7 @@ test('initializes missing submodules in an existing TinyGo checkout', async () =
 test('verifies source contents and creates a deterministic upstream compiler receipt', async () => {
 	const contract = await createFixtureContract();
 	assert.equal(contract.sourceReceipt.source.clean, true);
-	assert.equal(contract.sourceReceipt.compilerIdentity.sourceFiles.length, 17);
+	assert.equal(contract.sourceReceipt.compilerIdentity.sourceFiles.length, 19);
 	assert.ok(
 		contract.sourceReceipt.compilerIdentity.requiredPackages.includes(
 			'github.com/tinygo-org/tinygo/cgo'
@@ -614,7 +615,7 @@ test('rejects go-llvm checksum drift in the pinned upstream go.sum', async () =>
 	const sourceDir = await createSourceFixture();
 	const lock = fixtureLock(contract);
 	const goSumWithoutGoModChecksum =
-		'tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74 h1:ovavgTdIBWCH8YWlcfq9gkpoyT1+IxMKSn+Df27QwE8=\n';
+		'tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5 h1:0PKRhM1INWAi7PdIng1BHMPTDaRcOmv1UymdTgZ76Jo=\n';
 	await writeFile(path.join(sourceDir, 'go.sum'), goSumWithoutGoModChecksum);
 	const goSumIdentity = lock.compilerIdentity.requiredSources.find(
 		(entry) => entry.path === 'go.sum'

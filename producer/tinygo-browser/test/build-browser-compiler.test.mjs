@@ -461,7 +461,7 @@ function createCommandRunner(
 						'tinygo_cgo_unsigned.go',
 						'package llvm\n'
 					);
-				} else if (path.basename(runOptions.cwd) === 'tinygo-v0.40.1-wasi') {
+				} else if (path.basename(runOptions.cwd) === 'tinygo-v0.43.0-wasi') {
 					await writeFixtureFile(
 						runOptions.cwd,
 						'cmd/tinygo-browser-adapter/main.go',
@@ -482,8 +482,8 @@ function createCommandRunner(
 		if (command === fixture.nativeTinyGo && args[0] === 'version') {
 			return result({
 				stdout: badVersion
-					? 'go version go1.24.0 linux/amd64\n'
-					: 'tinygo version 0.40.1 linux/amd64 (using go version go1.24.0 and LLVM version 20.1.1)\n'
+					? 'go version go1.26.10 linux/amd64\n'
+					: 'tinygo version 0.43.0 linux/amd64 (using go version go1.26.10 and LLVM version 22.1.4)\n'
 			});
 		}
 		if (
@@ -897,7 +897,7 @@ test('dry-run verifies the native TinyGo binary/root and writes no build artifac
 	assert.equal(receipt.goLlvmSource.patch.status, 'applicable');
 	assert.equal(receipt.goToolchain.archive.path, fixture.goToolchainArchive);
 	assert.match(receipt.nativeLinker.version, /^LLD 21\.0\.0/u);
-	assert.match(receipt.nativeTinyGo.version, /^tinygo version 0\.40\.1/u);
+	assert.match(receipt.nativeTinyGo.version, /^tinygo version 0\.43\.0/u);
 	assert.match(receipt.nativeTinyGo.binary.sha256, /^[0-9a-f]{64}$/u);
 	assert.deepEqual(
 		receipt.nativeTinyGo.rootIdentity.map((entry) => entry.path),
@@ -990,7 +990,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(buildCall.runOptions.env.WASMOPT, fixture.wasmOpt);
 	assert.equal(buildCall.runOptions.env.TINYGOROOT, receipt.paths.patchedSourceRoot);
 	assert.equal(buildCall.runOptions.env.GOROOT, receipt.paths.goToolchainRoot);
-	assert.equal(buildCall.runOptions.env.GOVERSION, 'go1.24.6');
+	assert.equal(buildCall.runOptions.env.GOVERSION, 'go1.26.10');
 	assert.equal(buildCall.runOptions.env.GOWORK, receipt.paths.goWorkPath);
 	const linkCall = calls.find(
 		(call) => call.command === fixture.nativeWasmLd && call.args[0] !== '--version'
@@ -1113,7 +1113,7 @@ test('fails closed on bootstrap impersonation, go-llvm drift, and unsafe receipt
 			verifySource: async () => badBootstrap.sourceReceipt,
 			run: badRunner.runner
 		}),
-		/native compiler must be TinyGo 0\.40\.1 with LLVM 20/u
+		/native compiler must be TinyGo 0\.43\.0 with LLVM 22/u
 	);
 	assert.equal(
 		JSON.parse(await readFile(badBootstrap.receiptPath, 'utf8')).status,

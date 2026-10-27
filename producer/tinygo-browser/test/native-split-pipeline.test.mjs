@@ -54,7 +54,7 @@ function validLinkPlan() {
         sourceSha256: "b".repeat(64),
         dependencies: [],
         llvmValidation: {
-          toolchain: "llvm-20.1.1",
+          toolchain: "llvm-22.1.4",
           moduleVerified: true,
           targetTriple: "wasm32-unknown-wasi",
           dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
@@ -77,7 +77,7 @@ function validLinkPlan() {
         dependencies: [],
         compilerFlags: ["-DTINYGO_CXX_SCALE=2"],
         llvmValidation: {
-          toolchain: "llvm-20.1.1",
+          toolchain: "llvm-22.1.4",
           moduleVerified: true,
           targetTriple: "wasm32-unknown-wasi",
           dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",

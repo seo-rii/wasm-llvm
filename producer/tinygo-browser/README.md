@@ -9,36 +9,23 @@ This producer separates three things that were previously easy to confuse:
   browser compiler.
 - `sources.lock.json`, `scripts/build-llvm-wasi.mjs`, and
   `scripts/build-browser-compiler.mjs` define a fail-closed path for a real upstream TinyGo browser
-  compiler. It pins TinyGo 0.40.1, its exact `go-llvm` module revision and checksum, and the
-  TinyGo LLVM 20.1.1 fork commit.
+  compiler. It pins TinyGo 0.43.0, its exact `go-llvm` module revision and checksum, and the
+  TinyGo LLVM 22.1.4 fork commit.
 - `package-graph.lock.json` and `scripts/build-package-graph-provider.mjs` build the pinned Go
-  1.24.6 `cmd/go` itself for WASI. This is the browser package selector; it is not a handwritten
+  1.26.10 `cmd/go` itself for WASI. This is the browser package selector; it is not a handwritten
   import scanner.
 
-The full LLVM/Clang/LLD cross-build passed on 2026-07-30. On 2026-08-24 the source-locked producer
-built a self-contained upstream TinyGo compiler Wasm and deterministic TinyGo root archive with
-the Clang resource headers and generated wasi-libc header closure required by CGo, then compiled
-and executed the acceptance fixture through external LLD and Binaryen. The
-[completed-build audit](audits/2026-08-01-upstream-compiler.md) records the exact inputs, output
-hashes, imports, and execution evidence. wasm-idle now also owns an independent receipt-verified
-VFS/package-graph/compiler/raw-LLD/Binaryen path. The package provider matches the same pinned
-native `cmd/go` JSON exactly, and a 45-package local-module workspace with `CgoFiles`, target
-`CFile`/`CXXFile`/uppercase `.S`, and `go:embed` passed end to end in Node and headless Chromium.
-Compile protocol v6 publishes TinyGo's program/embed objects, CGo source evidence, target-C,
-hosted C++17 ThinLTO bitcode with libc++/libc++abi, and Clang assembler-with-cpp WebAssembly
-objects with per-source dependency and object hashes for external LLD. Restricted CXXFLAGS and
-library-oriented linker flags are preserved exactly; offline external modules use the standard
-`vendor/modules.txt` and `-mod=vendor` contract. Before publishing native entries, the adapter uses
-the pinned LLVM 20.1.1 bitreader and verifier for bitcode and LLVMObject's WebAssembly parser for
-relocatable `.S` objects. `manifest.json` records `readiness.ready: true`, which enables the strict
-verifier but does not replace it: only a fresh workflow run whose expanded fixture passes may issue
-public artifacts.
-The Emception worker and handwritten Go-to-C subset remain
-ineligible as TinyGo implementations. See the
-[package-graph audit](audits/2026-08-01-package-graph-provider.md) and the
-[historical compile-protocol-v2 audit](audits/2026-08-01-compile-protocol-v2.md). The current
-evidence is recorded in the [public-product audit](audits/2026-08-24-public-product.md); earlier
-protocol audits remain point-in-time history.
+The 2026-10-27 source update pins TinyGo 0.43.0, its matching LLVM 22.1.4 fork, and
+Go 1.26.10. The adapter preserves upstream trim-path handling and uses the new manual
+allocator API, including freeing the original allocation behind an aligned pointer.
+Source identities, patches, and producer contract tests are checked independently of binary
+qualification. New LLVM archives, compiler/root/provider artifacts, and Node/Chromium
+acceptance receipts must be rebuilt before the wasm-idle consumer pins can be promoted.
+The wasm-idle promotion must update its `upstream-contract.ts` Go version and release tags,
+`upstream-runtime.ts` LLVM validation identity, and compiler/root/package-graph asset receipts
+together after producer acceptance. Keep the separate LLVM 16 Emception profile unchanged.
+The existing artifacts and August acceptance receipts remain evidence for TinyGo 0.40.1,
+LLVM 20.1.1, and Go 1.24.6 only.
 
 ## Strip compiler debug names
 
@@ -101,7 +88,7 @@ Modified sources or injected paths such as `wasmbridge/tinygobackend` fail this 
 
 ## Build the LLVM, Clang, libclang, and LLD host
 
-The first build stage cross-compiles the pinned TinyGo LLVM 20.1.1 fork for `wasm32-wasip1`. It
+The first build stage cross-compiles the pinned TinyGo LLVM 22.1.4 fork for `wasm32-wasip1`. It
 uses native `llvm-tblgen` and `clang-tblgen`, and requires WASI SDK tools and libc++. The plan
 includes static libclang, the Clang driver libraries, every LLD driver library used by upstream
 `builder/lld.cpp`, and the LLVM static closure needed by `go-llvm`.
@@ -130,7 +117,7 @@ LLVM-platform-patch question; it does not by itself establish a working TinyGo c
 ## Build the upstream TinyGo compiler adapter
 
 The second stage validates a passed LLVM receipt, the clean TinyGo source receipt, the exact
-`go-llvm` source tree, and a native TinyGo 0.40.1 bootstrap compiler using LLVM 20. It compiles the
+`go-llvm` source tree, and a native TinyGo 0.43.0 bootstrap compiler using LLVM 22. It compiles the
 six upstream C++ translation units that Go package metadata does not compile automatically:
 
 - TinyGo `builder/cc1as.cpp`, `builder/clang.cpp`, and `builder/lld.cpp`;
@@ -152,7 +139,7 @@ pnpm build:tinygo-browser -- \
   --llvm-receipt /path/to/tinygo-llvm-wasi-build.json \
   --tinygo /path/to/native/tinygo \
   --native-wasm-ld /path/to/wasm-ld \
-  --go-toolchain-archive /path/to/go1.24.6.linux-amd64.zip \
+  --go-toolchain-archive /path/to/go1.26.10.linux-amd64.zip \
   --artifact-dir /path/to/tinygo-browser-artifacts \
   --build-dir /path/to/tinygo-browser-build \
   --receipt /path/to/tinygo-browser-build.json \
@@ -164,7 +151,7 @@ executed 2026-08-10 hardened build produced a 70,294,650-byte `tinygo-compiler.w
 `441bfe526d407019137b8ede9c27b76dfcf91d4c3f789e4e24fdbcfa250697f8` and a 24,266,537-byte
 deterministic `tinygoroot.tar.gz` with SHA-256
 `1cdf9188dfcba8f49fd9a5755d24a409fda01c1f9272e83a8d4ecadd0b648082`. The reduced root merges
-the pinned Go 1.24.6 standard library, TinyGo overrides and targets, the runtime link closure, and
+the pinned Go 1.26.10 standard library, TinyGo overrides and targets, the runtime link closure, and
 the receipt-bound Clang/wasi-libc header closure while omitting unrelated board data. The build
 captures TinyGo-generated embed and target-C/C++/assembly objects under deterministic names, links compiler-rt's
 128-bit builtins and `libdl`, and rejects the final compiler if it retains any import outside
@@ -173,7 +160,7 @@ captures TinyGo-generated embed and target-C/C++/assembly objects under determin
 
 ## Build the upstream package-graph provider
 
-The provider cross-compiles the source-locked Go 1.24.6 `cmd/go` entrypoint to WASI. It runs a
+The provider cross-compiles the source-locked Go 1.26.10 `cmd/go` entrypoint to WASI. It runs a
 field-limited `go list -deps -e -mod=readonly` with fixed TinyGo target tags, network module
 resolution disabled, and the reduced TinyGo/Go root mounted read-only. The only source patch skips
 advisory file locks on `wasip1`, where the browser host is single-process and the command is
@@ -181,7 +168,7 @@ read-only:
 
 ```sh
 pnpm build:tinygo-package-graph -- \
-  --go-toolchain-archive /path/to/v0.0.1-go1.24.6.linux-amd64.zip \
+  --go-toolchain-archive /path/to/v0.0.1-go1.26.10.linux-amd64.zip \
   --root-archive /path/to/tinygoroot.tar.gz \
   --fixture producer/tinygo-browser/fixtures/package-graph-module \
   --artifact-dir /path/to/package-graph-artifacts \
@@ -248,9 +235,37 @@ The receipt-producing acceptance command is also exposed as
 `pnpm accept:tinygo-browser -- <explicit named options>`. Its fail-closed parser requires every
 input and output path; inspect `scripts/accept-browser-compiler.mjs` for the current option set.
 
-## Remaining browser work
+## Previously qualified 0.40.1 build
 
-The compiler-host blockers from the initial audit are closed in the registered patch set. A
+The following records the previously qualified 0.40.1 artifacts and consumer. It is not
+acceptance evidence for the new source pins.
+
+The full LLVM/Clang/LLD cross-build passed on 2026-07-30. On 2026-08-24 the source-locked producer
+built a self-contained upstream TinyGo compiler Wasm and deterministic TinyGo root archive with
+the Clang resource headers and generated wasi-libc header closure required by CGo, then compiled
+and executed the acceptance fixture through external LLD and Binaryen. The
+[completed-build audit](audits/2026-08-01-upstream-compiler.md) records the exact inputs, output
+hashes, imports, and execution evidence. wasm-idle now also owns an independent receipt-verified
+VFS/package-graph/compiler/raw-LLD/Binaryen path. The package provider matches the same pinned
+native `cmd/go` JSON exactly, and a 45-package local-module workspace with `CgoFiles`, target
+`CFile`/`CXXFile`/uppercase `.S`, and `go:embed` passed end to end in Node and headless Chromium.
+Compile protocol v6 publishes TinyGo's program/embed objects, CGo source evidence, target-C,
+hosted C++17 ThinLTO bitcode with libc++/libc++abi, and Clang assembler-with-cpp WebAssembly
+objects with per-source dependency and object hashes for external LLD. Restricted CXXFLAGS and
+library-oriented linker flags are preserved exactly; offline external modules use the standard
+`vendor/modules.txt` and `-mod=vendor` contract. Before publishing native entries, the adapter uses
+the pinned LLVM 20.1.1 bitreader and verifier for bitcode and LLVMObject's WebAssembly parser for
+relocatable `.S` objects. `manifest.json` records `readiness.ready: true`, which enables the strict
+verifier but does not replace it: only a fresh workflow run whose expanded fixture passes may issue
+public artifacts.
+The Emception worker and handwritten Go-to-C subset remain
+ineligible as TinyGo implementations. See the
+[package-graph audit](audits/2026-08-01-package-graph-provider.md) and the
+[historical compile-protocol-v2 audit](audits/2026-08-01-compile-protocol-v2.md). The current
+evidence is recorded in the [public-product audit](audits/2026-08-24-public-product.md); earlier
+protocol audits remain point-in-time history.
+
+The compiler-host blockers from the initial audit were closed in that patch set. A
 pointer-only C ABI layer covers structure-valued libclang calls and cursor callbacks. TinyGo's
 GC allocator now supplies aligned allocation and the producer removes WASI libc's `dlmalloc.c.obj`
 before final linkage, so a single allocator owns malloc/free paths. The build also uses a pinned

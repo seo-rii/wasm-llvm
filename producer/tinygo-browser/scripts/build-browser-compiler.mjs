@@ -794,7 +794,7 @@ export async function createBrowserCompilerBuildPlan(
 		bytes: null,
 		sha256: null
 	}));
-	const patchedSourceRoot = path.join(options.buildDir, 'tinygo-v0.40.1-wasi');
+	const patchedSourceRoot = path.join(options.buildDir, 'tinygo-v0.43.0-wasi');
 	const compilerRtBuiltinsSourcePath = path.join(
 		llvmReceipt.paths.sourceRoot,
 		'compiler-rt',
@@ -1410,7 +1410,7 @@ export async function buildBrowserCompiler(
 		assert(
 			goToolchainArchive.bytes === receipt.goToolchain.expectedArchive.bytes &&
 				goToolchainArchive.sha256 === receipt.goToolchain.expectedArchive.sha256,
-			'Go bootstrap archive differs from the locked go1.24.6 linux-amd64 distribution'
+			'Go bootstrap archive differs from the locked go1.26.10 linux-amd64 distribution'
 		);
 		receipt.goToolchain.archive = goToolchainArchive;
 
@@ -1442,10 +1442,10 @@ export async function buildBrowserCompiler(
 		const compilerVersion = versionResult.stdout.trim();
 		assert(
 			new RegExp(
-				`^tinygo version ${receipt.nativeTinyGo.expectedVersion.replaceAll('.', '\\.')}(?:\\s|$).*LLVM version 20\\.`,
+				`^tinygo version ${receipt.nativeTinyGo.expectedVersion.replaceAll('.', '\\.')}(?:\\s|$).*LLVM version 22\\.`,
 				'u'
 			).test(compilerVersion),
-			`native compiler must be TinyGo ${receipt.nativeTinyGo.expectedVersion} with LLVM 20, received ${compilerVersion || '<empty>'}`
+			`native compiler must be TinyGo ${receipt.nativeTinyGo.expectedVersion} with LLVM 22, received ${compilerVersion || '<empty>'}`
 		);
 		receipt.nativeTinyGo.version = compilerVersion;
 
@@ -2453,7 +2453,7 @@ export async function buildBrowserCompiler(
 function usage() {
 	return `Usage: node scripts/build-browser-compiler.mjs --source-root <tinygo> --source-receipt <receipt.json> --go-llvm-source-root <go-llvm> --llvm-receipt <llvm-build.json> --tinygo <native-tinygo> --native-wasm-ld <wasm-ld> --go-toolchain-archive <go.zip> --artifact-dir <dir> [options]
 
-Verifies the clean TinyGo v0.40.1 checkout and the passed LLVM+Clang WASI receipt,
+Verifies the clean TinyGo v0.43.0 checkout and the passed LLVM+Clang WASI receipt,
 the locked go-llvm C++ bindings, and a native TinyGo bootstrap compiler. It then
 plans deterministic WASI host-support archives and a real upstream
 cmd/tinygo-browser-adapter build. The default only performs read-only
@@ -2462,9 +2462,9 @@ verification and writes a dry-run receipt. No standard Go fallback is permitted.
 Options:
   --go-llvm-source-root <dir>  Locked go-llvm module source tree
   --native-wasm-ld <file>      External native wasm-ld used for the final compiler link
-  --go-toolchain-archive <zip> Locked Go 1.24.6 linux-amd64 toolchain archive
+  --go-toolchain-archive <zip> Locked Go 1.26.10 linux-amd64 toolchain archive
   --native-tinygo-root <dir>   Verified source root used by the native bootstrap
-  --clang-resource-dir <dir>   LLVM 20 built-in headers archived with TinyGo
+  --clang-resource-dir <dir>   LLVM 22 built-in headers archived with TinyGo
   --wasm-opt <file>             Explicit Binaryen executable used by the bootstrap
   --build-dir <dir>            Isolated patched source and build directory
   --receipt <file>             Deterministic intermediate build receipt

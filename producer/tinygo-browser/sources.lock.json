@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "tinygo": {
     "repository": "https://github.com/tinygo-org/tinygo.git",
-    "version": "0.40.1",
-    "ref": "v0.40.1",
-    "commit": "db9f1182f5f2a64ea496752899626578d2b313a7",
+    "version": "0.43.0",
+    "ref": "v0.43.0",
+    "commit": "108a95cb26df6d5011366312dde0639b08d753cf",
     "module": "github.com/tinygo-org/tinygo",
-    "goVersion": "1.22.0"
+    "goVersion": "1.25.0"
   },
   "goLlvm": {
     "repository": "https://github.com/tinygo-org/go-llvm.git",
     "module": "tinygo.org/x/go-llvm",
-    "version": "v0.0.0-20250422114502-b8f170971e74",
-    "commit": "b8f170971e747fec20a03b25a4490f627140709a",
-    "sum": "h1:ovavgTdIBWCH8YWlcfq9gkpoyT1+IxMKSn+Df27QwE8=",
+    "version": "v0.0.0-20260721072906-185673ef46a5",
+    "commit": "185673ef46a59528c40d0fdc220c6735606c0ebc",
+    "sum": "h1:0PKRhM1INWAi7PdIng1BHMPTDaRcOmv1UymdTgZ76Jo=",
     "goModSum": "h1:GFbusT2VTA4I+l4j80b17KFK+6whv69Wtny5U+T8RR0=",
     "hostSupportSources": [
       {
@@ -44,30 +44,32 @@
   },
   "goToolchain": {
     "module": "golang.org/toolchain",
-    "version": "go1.24.6",
+    "version": "go1.26.10",
     "platform": "linux-amd64",
-    "archiveFilename": "v0.0.1-go1.24.6.linux-amd64.zip",
-    "archiveRoot": "golang.org/toolchain@v0.0.1-go1.24.6.linux-amd64",
-    "archiveBytes": 82904480,
-    "archiveSha256": "e7f0fd16d1b06c716162a0938744bb7ebf7edbc3248d42432271a1b5c1fde1ce",
+    "archiveFilename": "v0.0.1-go1.26.10.linux-amd64.zip",
+    "archiveRoot": "golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64",
+    "archiveBytes": 71735438,
+    "archiveSha256": "f64ecb0807852be2c98899561c45288a9ad57f4e88f3cd002ffabeccbd03bfe1",
     "patchedSource": {
       "path": "src/os/exec/exec.go",
-      "sha256": "bce3db06ef8c2543dd12993d4c55af516d7cebfe418b16c0c03fea578490b72f"
+      "sha256": "0bbfd988045f66e78e7416a1a0d47016ea966c65323d2c6ca7a18cdf4b7b5df0"
     }
   },
   "llvm": {
     "repository": "https://github.com/tinygo-org/llvm-project.git",
-    "version": "20.1.1",
-    "ref": "tinygo_20.x",
-    "commit": "670759811adc85df52f410d7306788fabfc6242d"
+    "version": "22.1.4",
+    "ref": "tinygo_22.x",
+    "commit": "2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2"
   },
   "wasiHostPatch": {
     "repository": "https://github.com/YoWASP/llvm-project.git",
-    "commit": "1516a9b2d598e438845abd68fb32c5bc3b3e1418",
-    "parent": "87f0227cb60147a26a1eeb4fb06e3b505e9c7261",
+    "commit": "97196c8eeb1d495fa43bb8af2fb26af5ef5b89fb",
+    "parent": "4434dabb69916856b824f68a64b029c67175e532",
     "expectedPaths": [
       "clang/include/clang/Support/Compiler.h",
       "clang/lib/Driver/Driver.cpp",
+      "libcxx/src/filesystem/operations.cpp",
+      "lld/Common/Filesystem.cpp",
       "llvm/cmake/config-ix.cmake",
       "llvm/cmake/modules/HandleLLVMOptions.cmake",
       "llvm/include/llvm/ADT/bit.h",
@@ -76,7 +78,9 @@
       "llvm/lib/ExecutionEngine/Interpreter/ExternalFunctions.cpp",
       "llvm/lib/Support/CrashRecoveryContext.cpp",
       "llvm/lib/Support/InitLLVM.cpp",
+      "llvm/lib/Support/Jobserver.cpp",
       "llvm/lib/Support/LockFileManager.cpp",
+      "llvm/lib/Support/ProgramStack.cpp",
       "llvm/lib/Support/Signals.cpp",
       "llvm/lib/Support/Unix/Memory.inc",
       "llvm/lib/Support/Unix/Path.inc",
@@ -86,17 +90,17 @@
       "llvm/lib/Support/Unix/Watchdog.inc",
       "llvm/lib/Support/raw_socket_stream.cpp"
     ],
-      "excludedPaths": [
-        "clang/include/clang/Support/Compiler.h",
-        "llvm/include/llvm/Support/Compiler.h",
-        "llvm/lib/Support/CrashRecoveryContext.cpp",
-        "llvm/lib/Support/Unix/Program.inc"
-      ]
+    "excludedPaths": [
+      "clang/include/clang/Support/Compiler.h",
+      "llvm/include/llvm/Support/Compiler.h",
+      "llvm/lib/Support/CrashRecoveryContext.cpp",
+      "llvm/lib/Support/Unix/Program.inc"
+    ]
   },
   "compilerIdentity": {
     "module": "github.com/tinygo-org/tinygo",
     "entrypoint": "main.go",
-    "goLlvmRequirement": "v0.0.0-20250422114502-b8f170971e74",
+    "goLlvmRequirement": "v0.0.0-20260721072906-185673ef46a5",
     "requiredPackages": [
       "github.com/tinygo-org/tinygo/builder",
       "github.com/tinygo-org/tinygo/cgo",
@@ -109,14 +113,30 @@
     "requiredSources": [
       {
         "path": "GNUmakefile",
-        "sha256": "f01498c9b5eec2407c55b10de8ce05c4aadf47532a869c05e7bc1fe34fae8606",
+        "sha256": "539674e0007d271620ec32af9d72267bdf071706e2a938fb1e0c0bd561646604",
         "requiredText": [
-          "git clone -b tinygo_20.x --depth=1 https://github.com/tinygo-org/llvm-project"
+          "include make/llvm.mk"
+        ]
+      },
+      {
+        "path": "make/llvm.mk",
+        "sha256": "72eda1ef2ab098f3793c51b0c678e19233ca45cb000449f38ed37aa89e62acf5",
+        "requiredText": [
+          "LLVM_REVISION = $(shell cat llvm-version.txt)",
+          "git remote add origin https://github.com/tinygo-org/llvm-project",
+          "git checkout $(LLVM_REVISION)"
+        ]
+      },
+      {
+        "path": "llvm-version.txt",
+        "sha256": "e85f530671c637bcfc442af6ea5f74a219ec034adc8ade206001a01c530fc3ab",
+        "requiredText": [
+          "2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2"
         ]
       },
       {
         "path": "builder/build.go",
-        "sha256": "d5885fee1c0ad15a21fee09eac06ae67200b7daae90684aab3857f1d92a2ea46",
+        "sha256": "d1bfcd56ea440b8bd1fdfaa62dc9440e3686f69a43ed61d97196bbeaedd360e2",
         "package": "builder",
         "requiredText": [
           "\"github.com/tinygo-org/tinygo/compiler\"",
@@ -129,7 +149,7 @@
       },
       {
         "path": "builder/cc.go",
-        "sha256": "18343f908cb03c2c6f8dd616ea12161172566f1f47cd14bff1c1317b3679e863",
+        "sha256": "5e8578b5abf29fa4394b9459baabed49a0cdfadc985c415e14837d9f83f2b9d0",
         "package": "builder",
         "requiredText": [
           "func compileAndCacheCFile(",
@@ -139,7 +159,7 @@
       },
       {
         "path": "builder/cc1as.cpp",
-        "sha256": "d0e40dbc34b412f2685bdb68f0d2af727a2488f5424848c80f9cd1fcc43d0077",
+        "sha256": "bcb4c65e8cb50c01c4c6c67fd83bc201fe18969dd77369922d37b80320c684fd",
         "requiredText": [
           "AssemblerInvocation::CreateFromArgs",
           "ExecuteAssembler("
@@ -147,7 +167,7 @@
       },
       {
         "path": "builder/cc1as.h",
-        "sha256": "3b834cfe519a2a2e635059cb18d6bd188654a0282268e33fef997d2851f35e08",
+        "sha256": "0a85d3fa64cd2e4ee9dba75dc596221f6dc11d10df943777be74eeab59a03c2a",
         "requiredText": [
           "struct AssemblerInvocation",
           "ExecuteAssembler("
@@ -155,7 +175,7 @@
       },
       {
         "path": "builder/clang.cpp",
-        "sha256": "9a33f32ef4209a82938a4ddd1fc12203b66fdfb071bfbfab109e980b0f08ba10",
+        "sha256": "30c6faf14756696913ac1d24ec7d752c8f0e2e3bee5375298d10ca92ab57f6ed",
         "requiredText": [
           "bool tinygo_clang_driver(",
           "ExecuteCompilerInvocation("
@@ -171,7 +191,7 @@
       },
       {
         "path": "builder/tools-builtin.go",
-        "sha256": "4f29fd5c637ea6fa2bedcdd61a81ffaa50b8738faa3fef28bcb1d90f2a015418",
+        "sha256": "1c72ea505fc7bc93d6bc7c79b1bbdb7784797a6e7721728bbfffe42abbf7b816",
         "package": "builder",
         "requiredText": [
           "//go:build byollvm",
@@ -181,7 +201,7 @@
       },
       {
         "path": "cgo/cgo.go",
-        "sha256": "7d7ae5455b76ac62fef50f3d889d2f61512d8f27de13fe3ad5e0478cc92acca1",
+        "sha256": "f0a797639fab0f8825e12ba240c22d3f64369ee6e408d58bb4d023c582f7f47b",
         "package": "cgo",
         "requiredText": [
           "func Process(",
@@ -191,7 +211,7 @@
       },
       {
         "path": "cgo/libclang.go",
-        "sha256": "783fcb8bd929246417cc2653cf7988c57ca9a43c1a470e9ab48b512a368ced8d",
+        "sha256": "ee813ef519a4657f30aef866a1bbf4505d9fad195adea95ee33bb9a8e7d99472",
         "package": "cgo",
         "requiredText": [
           "#include <clang-c/Index.h>",
@@ -201,7 +221,7 @@
       },
       {
         "path": "compiler/compiler.go",
-        "sha256": "39f18a2123b91a5daaa5193be3669fadf7d4f693047840546bca4a1a635a939b",
+        "sha256": "2b6d6a170ac0834e17c775468310c88c05b82bc03075e5b406b934c30a7c4005",
         "package": "compiler",
         "requiredText": [
           "\"github.com/tinygo-org/tinygo/loader\"",
@@ -211,23 +231,23 @@
       },
       {
         "path": "go.mod",
-        "sha256": "a8c28fe6adb5502d2e08422913ad0f636f3276447bfb9cf4e1a317916693b434",
+        "sha256": "da33a7d63b544c2df53f3714236b922aa44cd9eec0b2960b53ad720f3bff9160",
         "requiredText": [
           "module github.com/tinygo-org/tinygo",
-          "tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74"
+          "tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5"
         ]
       },
       {
         "path": "go.sum",
-        "sha256": "2c5ba90a40c35666734fb26331650313b6e9c02ee2aab13ee539bb4f9e1c41af",
+        "sha256": "4a3c287a2995efeadd05c1569676476e579eb71343e201a097794bf062fc095f",
         "requiredText": [
-          "tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74 h1:ovavgTdIBWCH8YWlcfq9gkpoyT1+IxMKSn+Df27QwE8=",
-          "tinygo.org/x/go-llvm v0.0.0-20250422114502-b8f170971e74/go.mod h1:GFbusT2VTA4I+l4j80b17KFK+6whv69Wtny5U+T8RR0="
+          "tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5 h1:0PKRhM1INWAi7PdIng1BHMPTDaRcOmv1UymdTgZ76Jo=",
+          "tinygo.org/x/go-llvm v0.0.0-20260721072906-185673ef46a5/go.mod h1:GFbusT2VTA4I+l4j80b17KFK+6whv69Wtny5U+T8RR0="
         ]
       },
       {
         "path": "interp/interp.go",
-        "sha256": "0c61094a2861b7ee1f3adfd0531638e2771aa3e7f8c2f39901690b7a382ba065",
+        "sha256": "1787b54eee035e733e19866a4ca7c98648bba769f422770bbbec18960e53061b",
         "package": "interp",
         "requiredText": [
           "\"tinygo.org/x/go-llvm\"",
@@ -236,7 +256,7 @@
       },
       {
         "path": "loader/loader.go",
-        "sha256": "c3ee40274916be989a367e06353da5d6da0a6edfc84513abf82ca0e1c1a9263f",
+        "sha256": "9f2695e91e7ad84e980e925bc3e7a1d999f23eb5bfb5101e2a9306f5fb3b9f6f",
         "package": "loader",
         "requiredText": [
           "package loader"
@@ -244,7 +264,7 @@
       },
       {
         "path": "main.go",
-        "sha256": "28e35f8f73f7b7202f21543d18399e609442edab661f10077f107e8a3c575bcd",
+        "sha256": "afa54c0098dcd5792388df8b4aa96d3d18b14f01e19cf9617816e89dd666912a",
         "package": "main",
         "requiredText": [
           "\"github.com/tinygo-org/tinygo/builder\"",
@@ -265,7 +285,7 @@
   "patches": [
     {
       "path": "patches/tinygo-wasi-adapter.patch",
-      "sha256": "6dfcbc9a42bf213d50d708a6b22da30a733e41a9de957c220a1dec8a1d29ef5c"
+      "sha256": "d995f145877ecc3b53bfc9b108ebffff6234730d900fff19ae3c65a134cf23a3"
     },
     {
       "path": "patches/go-llvm-wasi-cgo-alias.patch",
@@ -273,11 +293,11 @@
     },
     {
       "path": "patches/go-toolchain-wasip1-exec.patch",
-      "sha256": "1e3d01e435ec4410355dd7160f9c45b93e825eb20eb679246292729e8b483e57"
+      "sha256": "7437d3dabc1947b2e35186e1a31dd70a74b8d1b9b4d2b563e2eb3e29bf4bdd42"
     },
     {
       "path": "patches/llvm-wasi-c-api-config.patch",
-      "sha256": "ebc6a405f6459bd141904cf488d1ac606bdfd2d75a41a5ccd3f6127e883f7d01"
+      "sha256": "c90ad8e399f107dae2943ffc1359fe6d4376be7e3ee1a0e8e6cb39af6cebb1b6"
     }
   ]
 }

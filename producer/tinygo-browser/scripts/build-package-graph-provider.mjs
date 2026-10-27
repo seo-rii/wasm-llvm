@@ -73,7 +73,7 @@ export const TINYGO_PACKAGE_GRAPH_TAGS = [
 	'scheduler.asyncify',
 	'serial.none',
 	'tinygo.unicore',
-	...Array.from({ length: 24 }, (_, index) => `go1.${index + 1}`)
+	...Array.from({ length: 26 }, (_, index) => `go1.${index + 1}`)
 ];
 const REQUIRED_FLAGS = new Map([
 	['--go-toolchain-archive', 'goToolchainArchive'],
