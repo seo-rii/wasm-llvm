@@ -314,7 +314,7 @@ async function verifyLinkPlanSourceEvidence({
   );
 }
 
-async function loadRuntimeClosure({ rootPath, compilerEvidence }) {
+export async function loadRuntimeClosure({ rootPath, compilerEvidence }) {
   const manifestPath = path.join(
     rootPath,
     "runtime",
@@ -325,13 +325,24 @@ async function loadRuntimeClosure({ rootPath, compilerEvidence }) {
   assert(manifest.format === RUNTIME_CLOSURE_FORMAT, "unexpected TinyGo runtime closure format");
   assert(manifest.compilerSha256 === compilerEvidence.sha256, "runtime closure compiler hash differs");
   assert(manifest.profile?.id === RUNTIME_PROFILE_ID, "runtime closure profile differs");
+  assert(
+    JSON.stringify(Object.keys(manifest.extraFiles ?? {})) === JSON.stringify([
+      "src/runtime/asm_tinygowasm.S",
+      "src/internal/task/task_asyncify_wasm.S",
+    ]),
+    "precise runtime closure must contain only the stack and Asyncify task objects",
+  );
+  assert(
+    Object.values(manifest.extraFiles).every((asset) => asset.format === "wasm-object"),
+    "runtime assembly inputs must be wasm objects",
+  );
   const assets = [
     manifest.compilerRT,
     manifest.wasiLibc,
     ...Object.values(manifest.extraFiles ?? {}),
   ];
   assets.push(manifest.libCxx, manifest.libCxxAbi);
-  assert(assets.length === 7, "runtime closure must contain exactly seven link inputs");
+  assert(assets.length === 6, "runtime closure must contain exactly six link inputs");
   for (const asset of assets) {
     assert(typeof asset?.path === "string", "runtime closure asset path is missing");
     const assetPath = path.join(rootPath, asset.path);
