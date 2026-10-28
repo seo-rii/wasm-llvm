@@ -45,6 +45,15 @@ target mismatch. User source, GNU runtime headers and the baseline CPU profile
 are unchanged. The two GCC 13 backports are removed from this recipe; the original
 regression cases remain in the Node and Chromium qualification suites.
 
+One downstream patch, `patches/0001-emscripten-pch-relocation.patch`, lets the
+Wasm `cc1plus` load a precompiled header. Emscripten's `mmap` rejects every address
+hint with `EINVAL`, so GCC's default `mmap_gt_pch_use_address` failed every PCH with
+`PCH allocation failure`. On Emscripten hosts the hook now maps without a hint and
+reports the new base; `gt_pch_restore` relocates the image (supported since GCC 12,
+as `linux_gt_pch_use_address` already relies on). Other hosts are unchanged. The
+manifest declares this as `capabilities.precompiledHeaders`. A PCH remains valid
+only for the exact `cc1plus` and flags that created it; GCC rejects any other.
+
 The compiler receipt binds the exact source lock, which also invalidates the CI
 compiler cache when the GCC release changes. Use a fresh isolated work directory
 when upgrading an older recipe. The GCC archive's SHA-256 was computed from the
@@ -121,8 +130,9 @@ The browser API schedules real `cc1`/`cc1plus → as → ld` invocations because
 GCC driver relies on processes (`fork`/`exec`/`collect2`) absent from a browser.
 One translation unit and optional user headers are supported. The public
 allowlist covers language/standard, `-O0/1/2/3/s`, output kind and CPU profile.
-Arbitrary driver arguments, PCH, plugins, LTO, dynamic linking and shared-library
-outputs are excluded. No pragma is removed, translated, or emulated.
+Arbitrary driver arguments, user-supplied PCH files, plugins, LTO, dynamic linking
+and shared-library outputs are excluded. A consumer may let this exact `cc1plus`
+precompile a GNU header and reuse it with identical flags. No pragma is removed, translated, or emulated.
 
 `x86-64` selects `-march=x86-64 -mtune=generic`. `avx2-fma` additionally enables
 `-mavx2 -mfma`. The browser's CPU is not used to select the target, and

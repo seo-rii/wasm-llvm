@@ -108,7 +108,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   const manifest = {
     schemaVersion: 1, kind: profile.id, host: profile.host, target: profile.target,
     compiler: { family: 'gcc', version: profile.gccVersion },
-    cpuProfiles: profile.cpuProfiles, linkMode: profile.linkMode,
+    cpuProfiles: profile.cpuProfiles, linkMode: profile.linkMode, capabilities: profile.capabilities,
     sysrootPath: '/sysroot', gccInstallation: layout.gccInstallation, resourceDir,
     assets, fileCount: files.length,
     gnu: { gccVersion: gnu.gccVersion, compilerVersion: gnu.compilerVersion,

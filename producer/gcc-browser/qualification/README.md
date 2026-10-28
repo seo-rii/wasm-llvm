@@ -25,6 +25,12 @@ compared when the selected compiler is installed; the report records whether its
 exact version matches the Wasm GCC version. A missing comparison compiler is
 recorded explicitly; it does not bypass the mandatory native execution gate.
 
+`ps-pch-assembly` first lets the actual `cc1plus` precompile GNU `bits/stdc++.h`
+with the case's flags, then compiles `ps.cpp` with that PCH first on the include
+path. `-H` must report the PCH as loaded (`! /pch/bits/stdc++.h.gch`) and the
+assembly must be byte-identical to `ps-assembly`. Other hosts, including the
+Chromium gate, compile this case's request normally.
+
 `target-threads.cpp` requires the compiler's predefined `__STDCPP_THREADS__`
 macro to equal `1`, then uses `std::thread` and a nontrivial `thread_local`
 destructor in a baseline static executable. The worker consumes runtime stdin;

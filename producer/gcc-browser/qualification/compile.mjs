@@ -71,6 +71,8 @@ export async function loadBundle(directory, expectedManifestSha256) {
 	return { root, manifest, manifestSha256, assetPath, readAsset };
 }
 
+const pchPath = '/pch/bits/stdc++.h.gch';
+
 export async function compileReal(bundle, request) {
 	const { manifest } = bundle;
 	const language = request.language ?? 'cpp';
@@ -115,7 +117,11 @@ export async function compileReal(bundle, request) {
 					module.FS.writeFile(destination, sysroot.subarray(entry.offset, entry.offset + entry.size));
 				}
 			}
-			for (const [name, bytes] of artifacts) module.FS.writeFile(name, bytes);
+			for (const [name, bytes] of artifacts) {
+				module.FS.mkdirTree(path.posix.dirname(name));
+				module.FS.writeFile(name, bytes);
+			}
+			module.FS.mkdirTree(path.posix.dirname(outputPath));
 			module.FS.chdir('/work');
 			const previousHostExitCode = process.exitCode;
 			let normalExit = false;
@@ -170,11 +176,23 @@ export async function compileReal(bundle, request) {
 		`/sysroot/usr/include/c++/${manifest.gnu.gccVersion}/backward`
 	] : [];
 	includes.push(manifest.resourceDir, '/sysroot/usr/include/x86_64-linux-gnu', '/sysroot/usr/include');
-	const ccArgs = ['-quiet', '-imultiarch', 'x86_64-linux-gnu', '-isysroot', '/sysroot', '-nostdinc',
+	const ccFlags = (pch) => ['-quiet', '-imultiarch', 'x86_64-linux-gnu', '-isysroot', '/sysroot', '-nostdinc',
+		...(pch ? ['-H', '-Winvalid-pch', '-isystem', '/pch'] : []),
 		...includes.flatMap((name) => ['-isystem', name]), `-std=${standard}`, `-O${optimization}`, ...cpuArgs,
 		'-fno-pie', '-fno-pic', '-fasynchronous-unwind-tables', ...(language === 'cpp' ? ['-fexceptions', '-D_GNU_SOURCE'] : []),
-		...(request.preprocessed ? ['-fpreprocessed'] : []), sourceName, '-o', '/work/main.s'];
-	let exitCode = await invoke(language === 'c' ? 'cc1' : 'cc1plus', ccArgs, '/work/main.s');
+		...(request.preprocessed ? ['-fpreprocessed'] : [])];
+	let exitCode = 0;
+	if (request.precompiledHeader) {
+		// Precompile GNU bits/stdc++.h with the request's own flags, then let GCC
+		// find it first on the include path. -H reports "! FILE.gch" only for a
+		// PCH that was valid and loaded; -Winvalid-pch explains a rejected one.
+		assert(language === 'cpp' && !request.preprocessed, 'PCH qualification requires ordinary C++ source');
+		const header = `/sysroot/usr/include/x86_64-linux-gnu/c++/${manifest.gnu.gccVersion}/bits/stdc++.h`;
+		exitCode = await invoke('cc1plus', [...ccFlags(false), header, '-o', '/work/pch.s', '--output-pch', pchPath], pchPath);
+	}
+	if (exitCode === 0)
+		exitCode = await invoke(language === 'c' ? 'cc1' : 'cc1plus',
+			[...ccFlags(request.precompiledHeader), sourceName, '-o', '/work/main.s'], '/work/main.s');
 	if (exitCode === 0 && emit !== 'assembly') {
 		exitCode = await invoke('as', ['--64', '-o', '/work/main.o', '/work/main.s'], '/work/main.o');
 	}
@@ -189,6 +207,11 @@ export async function compileReal(bundle, request) {
 		exitCode = await invoke('ld', ldArgs, '/work/main.elf');
 	}
 	const result = { exitCode, stdout: stdout.join('\n'), stderr: stderr.join('\n'), stages };
+	if (request.precompiledHeader && exitCode === 0) {
+		const pch = artifacts.get(pchPath);
+		result.precompiledHeader = { bytes: pch.length, sha256: sha256(pch),
+			used: /^! \/pch\/bits\/stdc\+\+\.h\.gch$/m.test(stages.at(-1).stderr) };
+	}
 	if (exitCode === 0) {
 		const extension = { assembly: 's', object: 'o', executable: 'elf' }[emit];
 		result.artifact = { compiler: 'gcc', compilerHost: manifest.host, target: manifest.target,

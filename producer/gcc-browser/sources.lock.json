@@ -7,7 +7,20 @@
       "version": "16.2.0",
       "url": "https://ftp.gnu.org/gnu/gcc/gcc-16.2.0/gcc-16.2.0.tar.xz",
       "sha256": "e6738e29597f733270731aa90600f37ffdc045079dfc27ec7e8192cc81085c3e",
-      "directory": "gcc-16.2.0"
+      "directory": "gcc-16.2.0",
+      "patches": [
+        {
+          "path": "patches/0001-emscripten-pch-relocation.patch",
+          "sha256": "1ee4f749dbc661e645d8267d8726edc1eeb036165ebe5b1443819731e408e5e7",
+          "upstreamCommits": [],
+          "files": {
+            "gcc/ggc-common.cc": {
+              "beforeSha256": "a5a41143b78a22376c6d830215ee856616db68bbf4432987479f4e4b8ded4627",
+              "afterSha256": "d1df43658fa7827674d03cc49629e31ba1f4150807342b7aa9b0c4dec34434a8"
+            }
+          }
+        }
+      ]
     },
     "binutils": { "version": "2.42", "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.xz", "sha256": "f6e4d41fd5fc778b06b7891457b3620da5ecea1006c6a4a41ae998109f85a800", "directory": "binutils-2.42" },
     "gmp": { "version": "6.3.0", "url": "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz", "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898", "directory": "gmp-6.3.0" },
