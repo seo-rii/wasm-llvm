@@ -22,9 +22,11 @@ patch_digest=$(sha256sum "$patch_file" | cut -d' ' -f1)
 errno_patch="$recipe/patches/wasi-libc-errno.patch"
 errno_patch_digest=$(sha256sum "$errno_patch" | cut -d' ' -f1)
 recipe_digest=$(sha256sum "$recipe/build-libstdcxx.sh" | cut -d' ' -f1)
+math_probe="$recipe/fp-extension-math-probe.py"
+math_probe_digest=$(sha256sum "$math_probe" | cut -d' ' -f1)
 source="$runtime/source"
 if [[ -d $source ]]; then
-  [[ $(cat "$runtime/source-inputs.txt") == "$revision $patch_digest $source_digest $errno_patch_digest $recipe_digest" ]] || {
+  [[ $(cat "$runtime/source-inputs.txt") == "$revision $patch_digest $source_digest $errno_patch_digest $recipe_digest $math_probe_digest" ]] || {
     echo 'Runtime source inputs changed; select a new GCC_LIBSTDCXX_WORK_DIR' >&2; exit 2;
   }
 else
@@ -39,7 +41,7 @@ else
   done
   for file in BASE-VER DATESTAMP DEV-PHASE; do cp -p "$work/gcc/gcc/$file" "$source/gcc/"; done
   patch --batch --forward -d "$source" -p1 < "$patch_file"
-  printf '%s %s %s %s %s\n' "$revision" "$patch_digest" "$source_digest" "$errno_patch_digest" "$recipe_digest" > "$runtime/source-inputs.txt"
+  printf '%s %s %s %s %s %s\n' "$revision" "$patch_digest" "$source_digest" "$errno_patch_digest" "$recipe_digest" "$math_probe_digest" > "$runtime/source-inputs.txt"
 fi
 
 printf '%s\n' "$gcc_source" > "$runtime/gcc-source.json"
@@ -136,9 +138,20 @@ export AR="$sdk/bin/llvm-ar" RANLIB="$sdk/bin/llvm-ranlib" NM="$sdk/bin/llvm-nm"
 export AS="$runtime/driver/as" LD="$runtime/driver/ld"
 export CFLAGS='-O0' CXXFLAGS='-O0 -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics'
 export MAKEINFO=true
+# AC_CHECK_FUNCS uses char fn(), which gives a false negative when Wasm's
+# strict linker compares it to an actual math.h function type. Cache only
+# answers measured by real GCC -> WABT -> fatal-warning LLD typed probes.
+if [[ ! -f $runtime/math-probes/report.json ]]; then
+  python3 "$math_probe" --work "$work" --sdk "$sdk" \
+    --source "$source/libstdc++-v3" --target-headers "$runtime/target-headers" \
+    --output "$runtime/math-probes"
+else
+  python3 "$math_probe" --output "$runtime/math-probes" --verify
+fi
 build_triple=$("$source/config.guess")
 cd "$runtime/build"
 if [[ ! -f Makefile ]]; then
+  CONFIG_SITE="$runtime/math-probes/config.site" \
   "$source/libstdc++-v3/configure" --build="$build_triple" --host=wasm32-wasi \
     --prefix="$runtime/install" --libdir="$runtime/install/lib" \
     --with-gxx-include-dir="$runtime/install/include/c++/17.0.0" \
@@ -153,6 +166,7 @@ make -j"$jobs" all MAKEINFO=true
 make install MAKEINFO=true
 test -s "$runtime/install/lib/libstdc++.a"
 test -s "$runtime/install/lib/libsupc++.a"
+python3 "$math_probe" --output "$runtime/math-probes" --verify
 python3 - "$runtime" "$work" "$recipe" <<'PY'
 import hashlib, json, pathlib, subprocess, sys
 runtime, work, recipe = map(pathlib.Path, sys.argv[1:])
@@ -164,6 +178,9 @@ if compiler != json.loads((runtime/'compiler-inputs.json').read_text()):
 gcc_source = json.loads(subprocess.check_output(['python3', str(recipe/'prepare-source.py'), '--source', str(work/'gcc')], text=True))
 if gcc_source != json.loads((runtime/'gcc-source.json').read_text()):
     raise SystemExit('GCC source inputs changed during runtime build')
+math_probe = json.loads((runtime/'math-probes/report.json').read_text())
+if math_probe['status'] != 'passed' or not math_probe['inputsUnchanged'] or math_probe['missingRequired']:
+    raise SystemExit('Typed math probes are not complete and unchanged')
 receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-wasi',
     'gccCommit': json.loads((recipe/'sources.lock.json').read_text())['gcc']['commit'],
     'recipe': identity(recipe/'build-libstdcxx.sh'),
@@ -172,6 +189,9 @@ receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-w
     'errnoHeader': identity(runtime/'target-headers/include/wasm32-wasi/__errno.h'),
     'nativeCompiler': compiler, 'gccSource': gcc_source,
     'configure': identity(runtime/'source/libstdc++-v3/configure'),
+    'typedMathProbes': {'recipe': identity(recipe/'fp-extension-math-probe.py'),
+        'report': identity(runtime/'math-probes/report.json'),
+        'cache': identity(runtime/'math-probes/config.site'), 'evidence': math_probe},
     'libraries': {name: identity(runtime/'install/lib'/name) for name in ['libstdc++.a', 'libsupc++.a']},
     'exceptions': False, 'rtti': False, 'threads': False, 'timezoneDatabase': False, 'debugger': False, 'stdModules': False}
 (runtime/'build.json').write_text(json.dumps(receipt, indent=2)+'\n')
