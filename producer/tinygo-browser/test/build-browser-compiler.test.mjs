@@ -475,6 +475,7 @@ function createCommandRunner(
 		conflictingEmbedObject = false,
 		failCompilerOptimizer = false,
 		missingWrapperSymbol = false,
+		failRootDiscovery = false,
 		linkedImports = [],
 		preserveLinkedImports = false
 	} = {}
@@ -606,6 +607,13 @@ function createCommandRunner(
 			});
 		}
 		if (command === fixture.nativeTinyGo && args[0] === 'list') {
+			assert.equal(
+				runOptions.env.PATH.split(path.delimiter)[0],
+				path.join(runOptions.env.GOROOT, 'bin'),
+				'native TinyGo invokes go from PATH; GOROOT and GOVERSION alone are insufficient'
+			);
+			assert.equal(runOptions.env.GOTOOLCHAIN, 'local');
+			if (failRootDiscovery) return result({ exitCode: 1, stderr: 'wrong native Go version' });
 			const mergedRoot = path.join(fixture.root, 'merged-goroot');
 			await mkdir(path.join(mergedRoot, 'src'), { recursive: true });
 			await symlink(
@@ -632,6 +640,8 @@ function createCommandRunner(
 			args[0] === 'build' &&
 			args.includes('-x')
 		) {
+			assert.equal(runOptions.env.PATH.split(path.delimiter)[0], path.join(runOptions.env.GOROOT, 'bin'));
+			assert.equal(runOptions.env.GOTOOLCHAIN, 'local');
 			const output = args.find((argument) => argument.startsWith('-o=')).slice(3);
 			await writeFixtureFile(path.dirname(output), path.basename(output), WASM_HEADER);
 			const runtimeCache = path.join(fixture.root, 'runtime-cache');
@@ -1187,6 +1197,27 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.assets.length, 2);
 	assert.ok(WebAssembly.validate(await readFile(receipt.paths.compilerPath)));
 	assert.deepEqual(JSON.parse(await readFile(fixture.receiptPath, 'utf8')), receipt);
+});
+
+test('rejects merged root discovery before compiling or optimizing the browser compiler', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, {
+		execute: true,
+		failRootDiscovery: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/native TinyGo merged GOROOT discovery failed: wrong native Go version/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
 });
 
 test('rejects a missing go-llvm wrapper definition before building compiler bitcode', async () => {

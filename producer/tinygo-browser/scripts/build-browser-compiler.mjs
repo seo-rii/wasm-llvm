@@ -1293,6 +1293,7 @@ export async function createBrowserCompilerBuildPlan(
 				GOFLAGS: '-mod=readonly',
 				GOROOT: goToolchainRoot,
 				GOVERSION: contract.lock.goToolchain.version,
+				GOTOOLCHAIN: 'local',
 				GOWORK: goWorkPath,
 				SOURCE_DATE_EPOCH: '0',
 				GOCACHE: path.join(options.buildDir, 'cache'),
@@ -1859,6 +1860,85 @@ export async function buildBrowserCompiler(
 			await access(path.join(receipt.paths.patchedSourceRoot, ADAPTER_ENTRYPOINT));
 			receipt.patch.status = 'applied';
 
+			const browserProfileEnvironment = {
+				...process.env,
+				GO111MODULE: 'off',
+				GOROOT: receipt.paths.goToolchainRoot,
+				PATH: `${path.join(receipt.paths.goToolchainRoot, 'bin')}${path.delimiter}${process.env.PATH ?? ''}`,
+				GOTOOLCHAIN: 'local',
+				GOVERSION: receipt.goToolchain.version,
+				GOWORK: 'off',
+				TINYGOROOT: receipt.paths.patchedSourceRoot,
+				GOCACHE: receipt.build.environment.GOCACHE,
+				XDG_CACHE_HOME: receipt.build.environment.XDG_CACHE_HOME,
+				WASMOPT: receipt.nativeTinyGo.binaryen.path
+			};
+			const mergedRootResult = await run(
+				receipt.rootArchive.mergedGoRoot.command[0],
+				receipt.rootArchive.mergedGoRoot.command.slice(1),
+				{
+					cwd: receipt.rootArchive.mergedGoRoot.workingDirectory,
+					env: browserProfileEnvironment,
+					capture: true
+				}
+			);
+			assert(
+				mergedRootResult.exitCode === 0,
+				`native TinyGo merged GOROOT discovery failed: ${mergedRootResult.stderr}`
+			);
+			let runtimePackage;
+			try {
+				runtimePackage = JSON.parse(mergedRootResult.stdout);
+			} catch (error) {
+				throw new Error(
+					`native TinyGo merged GOROOT discovery did not emit one JSON package: ${error instanceof Error ? error.message : String(error)}`
+				);
+			}
+			assert(
+				runtimePackage?.ImportPath === 'runtime' &&
+					path.isAbsolute(runtimePackage?.Root ?? ''),
+				'native TinyGo runtime package did not identify an absolute merged GOROOT'
+			);
+			const mergedGoRoot = runtimePackage.Root;
+			const mergedRootIdentity = [];
+			for (const identity of [
+				{
+					id: 'tinygo-runtime',
+					path: path.join(mergedGoRoot, 'src', 'runtime', 'runtime.go'),
+					expectedRoot: receipt.paths.patchedSourceRoot
+				},
+				{
+					id: 'go-standard-library',
+					path: path.join(mergedGoRoot, 'src', 'fmt', 'print.go'),
+					expectedRoot: receipt.paths.goToolchainRoot
+				},
+				{
+					id: 'go-environment',
+					path: path.join(mergedGoRoot, 'go.env'),
+					expectedRoot: receipt.paths.goToolchainRoot
+				}
+			]) {
+				const resolvedSource = await realpath(identity.path);
+				const relativeSource = path.relative(identity.expectedRoot, resolvedSource);
+				assert(
+					relativeSource !== '..' &&
+						!relativeSource.startsWith(`..${path.sep}`) &&
+						!path.isAbsolute(relativeSource),
+					`merged GOROOT ${identity.id} does not resolve inside ${identity.expectedRoot}`
+				);
+				mergedRootIdentity.push({
+					id: identity.id,
+					resolvedSource,
+					...(await inspectFile(identity.path))
+				});
+			}
+			receipt.rootArchive.mergedGoRoot = {
+				...receipt.rootArchive.mergedGoRoot,
+				status: 'passed',
+				path: mergedGoRoot,
+				identity: mergedRootIdentity
+			};
+
 			const hostSupportOutputs = [];
 			const hostSupportEnvironment = {
 				...process.env,
@@ -2210,83 +2290,6 @@ export async function buildBrowserCompiler(
 					.map((entry) => `${entry.module}.${entry.name}`)
 					.join(', ')}`
 			);
-
-			const browserProfileEnvironment = {
-				...process.env,
-				GO111MODULE: 'off',
-				GOROOT: receipt.paths.goToolchainRoot,
-				GOVERSION: receipt.goToolchain.version,
-				GOWORK: 'off',
-				TINYGOROOT: receipt.paths.patchedSourceRoot,
-				GOCACHE: receipt.build.environment.GOCACHE,
-				XDG_CACHE_HOME: receipt.build.environment.XDG_CACHE_HOME,
-				WASMOPT: receipt.nativeTinyGo.binaryen.path
-			};
-			const mergedRootResult = await run(
-				receipt.rootArchive.mergedGoRoot.command[0],
-				receipt.rootArchive.mergedGoRoot.command.slice(1),
-				{
-					cwd: receipt.rootArchive.mergedGoRoot.workingDirectory,
-					env: browserProfileEnvironment,
-					capture: true
-				}
-			);
-			assert(
-				mergedRootResult.exitCode === 0,
-				`native TinyGo merged GOROOT discovery failed: ${mergedRootResult.stderr}`
-			);
-			let runtimePackage;
-			try {
-				runtimePackage = JSON.parse(mergedRootResult.stdout);
-			} catch (error) {
-				throw new Error(
-					`native TinyGo merged GOROOT discovery did not emit one JSON package: ${error instanceof Error ? error.message : String(error)}`
-				);
-			}
-			assert(
-				runtimePackage?.ImportPath === 'runtime' &&
-					path.isAbsolute(runtimePackage?.Root ?? ''),
-				'native TinyGo runtime package did not identify an absolute merged GOROOT'
-			);
-			const mergedGoRoot = runtimePackage.Root;
-			const mergedRootIdentity = [];
-			for (const identity of [
-				{
-					id: 'tinygo-runtime',
-					path: path.join(mergedGoRoot, 'src', 'runtime', 'runtime.go'),
-					expectedRoot: receipt.paths.patchedSourceRoot
-				},
-				{
-					id: 'go-standard-library',
-					path: path.join(mergedGoRoot, 'src', 'fmt', 'print.go'),
-					expectedRoot: receipt.paths.goToolchainRoot
-				},
-				{
-					id: 'go-environment',
-					path: path.join(mergedGoRoot, 'go.env'),
-					expectedRoot: receipt.paths.goToolchainRoot
-				}
-			]) {
-				const resolvedSource = await realpath(identity.path);
-				const relativeSource = path.relative(identity.expectedRoot, resolvedSource);
-				assert(
-					relativeSource !== '..' &&
-						!relativeSource.startsWith(`..${path.sep}`) &&
-						!path.isAbsolute(relativeSource),
-					`merged GOROOT ${identity.id} does not resolve inside ${identity.expectedRoot}`
-				);
-				mergedRootIdentity.push({
-					id: identity.id,
-					resolvedSource,
-					...(await inspectFile(identity.path))
-				});
-			}
-			receipt.rootArchive.mergedGoRoot = {
-				...receipt.rootArchive.mergedGoRoot,
-				status: 'passed',
-				path: mergedGoRoot,
-				identity: mergedRootIdentity
-			};
 
 			const runtimeProbeResult = await run(
 				receipt.rootArchive.runtimeClosure.command[0],

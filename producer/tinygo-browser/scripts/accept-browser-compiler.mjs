@@ -370,6 +370,8 @@ export async function acceptBrowserCompiler(options, dependencies = {}) {
           ...process.env,
           GO111MODULE: "off",
           GOROOT: options.nativeGoRootPath,
+          PATH: `${path.join(options.nativeGoRootPath, "bin")}${path.delimiter}${process.env.PATH ?? ""}`,
+          GOTOOLCHAIN: "local",
           GOWORK: "off",
           TINYGOROOT: options.rootPath,
         },

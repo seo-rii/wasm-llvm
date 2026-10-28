@@ -45,6 +45,10 @@ Both compiler and guest-runtime builds isolate `XDG_CACHE_HOME` as well as `GOCA
 TinyGo's own C/runtime cache uses the XDG cache directory; setting only `GOCACHE` can reuse
 archives from an older native LLVM toolchain. The generated `go.work` version also comes
 from the pinned Go bootstrap, so it accepts the upstream compiler module's Go requirement.
+Native TinyGo obtains its Go version by executing `go env` through `PATH`. Compiler,
+runtime preparation, and acceptance commands must put the pinned Go bootstrap's `bin`
+directory first and disable automatic toolchain selection. Merged-root discovery runs before
+compiler compilation and optimization, so an incompatible host Go fails early.
 
 The external linker captures TinyGo 0.43 embed objects using both their payload hash and
 their recorded source-path hash. Equal embedded contents at different paths can have different
