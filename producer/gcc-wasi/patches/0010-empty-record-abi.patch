@@ -1,0 +1,55 @@
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -121,6 +121,32 @@
+ #define TARGET_RETURN_IN_MEMORY wasm_return_in_memory
+ #define TARGET_SPLIT_COMPLEX_ARG [] (auto ...) { return false; }
+ 
++/* The Basic C ABI ignores trivial empty records even when C++ gives the
++   object nonzero storage or explicit alignment.  Set TYPE_EMPTY_P during
++   layout so generic parameter/result expansion and Wasm signatures agree.
++   Ordinary nonzero-sized C++ members remain significant, including arrays
++   and unions of empty classes; only ABI-ignored bases/no_unique_address
++   fields, padding, unnamed bitfields and zero-sized fields are empty.  */
++#define TARGET_EMPTY_RECORD_P wasm_empty_record_p
++static bool
++wasm_empty_record_p (const_tree type)
++{
++  if (type == error_mark_node || !RECORD_OR_UNION_TYPE_P (type)
++      || TREE_ADDRESSABLE (type))
++    return false;
++  for (tree field = TYPE_FIELDS (type); field; field = DECL_CHAIN (field))
++    {
++      if (TREE_CODE (field) != FIELD_DECL || DECL_PADDING_P (field)
++          || DECL_FIELD_ABI_IGNORED (field))
++        continue;
++      if (DECL_BIT_FIELD (field) && !DECL_NAME (field))
++        continue;
++      if (!DECL_SIZE (field) || !integer_zerop (DECL_SIZE (field)))
++        return false;
++    }
++  return true;
++}
++
+ #define TARGET_SCALAR_MODE_SUPPORTED_P default_scalar_mode_supported_p
+ 
+ /* The WASI C ABI uses binary128, independently of the compiler's host ABI.  */
+--- a/gcc/function.cc
++++ b/gcc/function.cc
+@@ -3209,6 +3209,17 @@
+   else
+     rtl = parmreg;
+ 
++  /* The ABI has no incoming value for an empty record.  As with the
++     block and stack setup paths, do not copy its padding from the
++     parameter area.  A nonzero-sized aligned C++ empty type can have
++     an integer register mode even though it is ignored.  Its local
++     RTL may remain uninitialized: an empty record has no value bits.  */
++  if (TYPE_EMPTY_P (data->arg.type))
++    {
++      set_parm_rtl (parm, rtl);
++      return;
++    }
++
+   assign_parm_remove_parallels (data);
+ 
+   /* Copy the value into the register, thus bridging between

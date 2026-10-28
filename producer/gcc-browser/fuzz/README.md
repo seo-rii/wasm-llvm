@@ -11,7 +11,7 @@ node producer/gcc-browser/fuzz/run.mjs \
   --bundle /absolute/path/to/gcc-bundle \
   --manifest-sha256 EXPECTED_64_DIGIT_SHA256 \
   --output /absolute/path/to/new-evidence-directory \
-  --native-cc gcc-13 --native-cxx g++-13 \
+  --native-cc gcc-16 --native-cxx g++-16 \
   --seed 20261024 --cases 24 --max-seconds 600
 ```
 
@@ -70,7 +70,7 @@ node producer/gcc-browser/fuzz/run.mjs \
   --bundle /absolute/path/to/the/same/bundle \
   --manifest-sha256 SAME_EXPECTED_SHA256 \
   --output /absolute/path/to/new-replay-directory \
-  --native-cc gcc-13 --native-cxx g++-13 \
+  --native-cc gcc-16 --native-cxx g++-16 \
   --seed 20261024 --case-index 17 --max-seconds 180
 ```
 

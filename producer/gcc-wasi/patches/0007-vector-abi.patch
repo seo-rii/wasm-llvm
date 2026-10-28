@@ -1,0 +1,91 @@
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -585,7 +585,8 @@
+ }
+ 
+ /* Basic C ABI single-element aggregates have the same Wasm value type as
+-   their sole scalar.  Keep this classification shared with signature output:
++   their sole scalar, including supported SIMD vectors.  Keep classification
++   shared with signature output:
+    an i32 pointer/value mismatch is not detectable by the Wasm linker.  */
+ bool
+ wasm_abi_empty_type_p (const_tree type)
+@@ -637,7 +638,8 @@
+     {
+       machine_mode mode = TYPE_MODE (type);
+       if (mode == QImode || mode == HImode || mode == SImode
+-          || mode == DImode || mode == SFmode || mode == DFmode)
++          || mode == DImode || mode == SFmode || mode == DFmode
++          || (VECTOR_MODE_P (mode) && targetm.vector_mode_supported_p (mode)))
+         return type;
+       return NULL_TREE;
+     }
+@@ -793,12 +795,12 @@
+       if (TREE_CODE (arg.type) == COMPLEX_TYPE)
+ 	return true;
+       if (TREE_CODE (arg.type) == VECTOR_TYPE)
+-	return true;
++	return !targetm.vector_mode_supported_p (TYPE_MODE (arg.type));
+     }
+   if (COMPLEX_MODE_P (arg.mode))
+     return true;
+   if (VECTOR_MODE_P (arg.mode))
+-    return true;
++    return !targetm.vector_mode_supported_p (arg.mode);
+   if (arg.aggregate_type_p ())
+     return !wasm_abi_empty_type_p (arg.type)
+       && !wasm_abi_singleton_type (arg.type);
+@@ -814,9 +816,9 @@
+   if (TREE_CODE (type) == COMPLEX_TYPE)
+     return true;
+   if (TREE_CODE (type) == VECTOR_TYPE)
+-    return true;
++    return !targetm.vector_mode_supported_p (TYPE_MODE (type));
+   if (VECTOR_MODE_P (TYPE_MODE (type)))
+-    return true;
++    return !targetm.vector_mode_supported_p (TYPE_MODE (type));
+   if (COMPLEX_MODE_P (TYPE_MODE (type)))
+     return true;
+   return false;
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -165,6 +165,39 @@
+   return true;
+ }
+ 
++/* A v128 result occupies one Wasm local.  Counting it as two hard regs
++   would overlap $return (reg 0) with the unrelated $stack (reg 1) in DF.  */
++#define TARGET_HARD_REGNO_NREGS \
++  [] (unsigned int regno, machine_mode mode) \
++    { return wasm_vector_mode_supported_p (mode) \
++        ? 1 : default_hard_regno_nregs (regno, mode); }
++
++/* A v128 local is not an integer pair.  In particular, lower-subreg must
++   not split a vector copy through TImode and invent unsupported subregs.  */
++#define TARGET_MODES_TIEABLE_P wasm_modes_tieable_p
++static bool
++wasm_modes_tieable_p (machine_mode from, machine_mode to)
++{
++  if (TARGET_SIMD128 && (VECTOR_MODE_P (from) || VECTOR_MODE_P (to)))
++    return wasm_vector_mode_supported_p (from)
++      && wasm_vector_mode_supported_p (to);
++  return true;
++}
++
++/* Keep vector-containing aggregates in memory internally, instead of
++   constructing integer container registers for their ABI parallel values.
++   The call hooks still pass singleton vectors directly as v128.  */
++#define TARGET_MEMBER_TYPE_FORCES_BLK wasm_member_type_forces_blk
++static bool
++wasm_member_type_forces_blk (const_tree field, machine_mode)
++{
++  const_tree type = TREE_CODE (field) == FIELD_DECL ? TREE_TYPE (field) : field;
++  while (TREE_CODE (type) == ARRAY_TYPE)
++    type = TREE_TYPE (type);
++  return TREE_CODE (type) == VECTOR_TYPE
++    && wasm_vector_mode_supported_p (TYPE_MODE (type));
++}
++
+ #define TARGET_EXCEPT_UNWIND_INFO [] (auto ...) { return UI_NONE; }
+ 
+ #define TARGET_HAVE_STRUB_SUPPORT_FOR hook_bool_tree_false

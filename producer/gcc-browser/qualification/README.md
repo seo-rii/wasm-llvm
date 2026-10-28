@@ -7,7 +7,7 @@ the GNU/Linux target sysroot:
 node producer/gcc-browser/qualification/run.mjs \
   --bundle /absolute/path/to/gcc-bundle \
   --output /absolute/path/to/new-qualification-directory \
-  --native-cxx g++-13 --native-cc gcc-13
+  --native-cxx g++-16 --native-cc gcc-16
 ```
 
 The output parent must exist, and the output directory must be new and outside
@@ -53,9 +53,9 @@ object. Its source requires AVX2, so this qualification does not execute it on a
 arbitrary baseline host. The existing push/pop restoration and baseline intrinsic
 rejection cases remain independent checks of target scope.
 
-These new gates require a rebuilt compiler containing both upstream backports.
-Patch application and synthetic integrity tests alone do not establish compiler
-or browser acceptance; an older bundle is expected to fail the new regression.
+These gates cover both upstream fixes included in GCC 16.2.0. Synthetic integrity
+tests alone do not establish compiler or browser acceptance; the new release
+must pass the real Node and Chromium gates with its matching GNU runtime.
 
 `qualification.json` records each command, real compiler diagnostics, artifact
 hash/size, elapsed time, each module's maximum allocated Wasm linear memory, and
@@ -74,7 +74,7 @@ tests hard cancellation by terminating its Worker and retains its own evidence.
 The repository's lightweight tests and native fixture control checks are also
 separate from real Wasm qualification. The fixtures and assembly assertions were
 checked locally with native GCC 12.2.0; that check established fixture validity,
-not GCC 13.3.0 Wasm build or browser success.
+not GCC 16.2.0 Wasm build or browser success.
 
 The explicit stage orchestration intentionally implements the supported single
 translation-unit compile/link options. It does not invoke `fork`/`exec`, the GCC

@@ -5,12 +5,12 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-export const OFFICIAL_SWIFT_VERSION = '6.3.3';
-export const OFFICIAL_WASM_SDK_ID = 'swift-6.3.3-RELEASE_wasm';
+export const OFFICIAL_SWIFT_VERSION = '6.4.1';
+export const OFFICIAL_WASM_SDK_ID = 'swift-6.4.1-RELEASE_wasm';
 export const OFFICIAL_WASM_SDK_URL =
-	'https://download.swift.org/swift-6.3.3-release/wasm-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz';
+	'https://download.swift.org/swift-6.4.1-release/wasm-sdk/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz';
 export const OFFICIAL_WASM_SDK_CHECKSUM =
-	'cabfa08b73bb8ac783927ecd15fa386e99d0c139c5f232445067bcf58379cae7';
+	'783e6128d174d9f975b4eda68be02a5960681b723ef372e6876a7c2543a365d8';
 
 export function swiftWasmMetadata() {
 	return {

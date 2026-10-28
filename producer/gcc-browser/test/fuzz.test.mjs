@@ -79,7 +79,8 @@ test('generated C/C++ native executions match the oracle, including STL/PBDS/exc
 			const source = `${prefix}.${item.request.language === 'c' ? 'c' : 'cpp'}`;
 			const output = prefix + (item.request.emit === 'assembly' ? '.s' : '.elf');
 			await fs.writeFile(source, item.request.code);
-			const compiler = item.request.language === 'c' ? 'gcc' : 'g++';
+			const compiler = item.request.language === 'c'
+				? (process.env.CC_FOR_BUILD ?? 'gcc') : (process.env.CXX_FOR_BUILD ?? 'g++');
 			const result = spawnSync(compiler, [`-std=${item.request.standard}`, `-O${item.request.optimization}`,
 				'-march=x86-64', ...(item.request.cpu === 'avx2-fma' ? ['-mavx2', '-mfma'] : []),
 				...(item.request.emit === 'assembly' ? ['-S'] : []), source, '-o', output],
@@ -143,8 +144,8 @@ async function syntheticBundle(directory) {
 	assets.sysroot = { path: 'sysroot.tar', bytes: tar.length, sha256: sha256(tar) };
 	const manifest = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: 'gcc-x86_64-linux-gnu', host: 'wasm32-emscripten',
 		target: 'x86_64-linux-gnu', compiler: { family: 'gcc', version: '0.0.0-synthetic' }, linkMode: 'static',
-		sysrootPath: '/sysroot', gccInstallation: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/13',
-		resourceDir: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/13/include', gnu: { gccVersion: '13' },
+		sysrootPath: '/sysroot', gccInstallation: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/16',
+		resourceDir: '/sysroot/usr/lib/gcc/x86_64-linux-gnu/16/include', gnu: { gccVersion: '16' },
 		cpuProfiles: ['x86-64', 'avx2-fma'], assets }));
 	await fs.writeFile(path.join(bundle, 'gcc-toolchain.v1.json'), manifest);
 	return { bundle, manifestSha256: sha256(manifest) };
@@ -153,7 +154,8 @@ async function syntheticBundle(directory) {
 test('synthetic campaign rejects native version mismatch and preserves replay before host failure', async t => {
 	const directory = await temporary(t);
 	const identity = await syntheticBundle(directory);
-	const options = { ...identity, seed: 1, cases: 1, maxSeconds: 10, nativeCc: 'gcc', nativeCxx: 'g++' };
+	const options = { ...identity, seed: 1, cases: 1, maxSeconds: 10,
+		nativeCc: process.env.CC_FOR_BUILD ?? 'gcc', nativeCxx: process.env.CXX_FOR_BUILD ?? 'g++' };
 	const mismatch = path.join(directory, 'mismatch');
 	await assert.rejects(fuzz({ ...options, output: mismatch }), /differs from Wasm GCC/);
 	const mismatchReport = JSON.parse(await fs.readFile(path.join(mismatch, 'fuzz-report.json')));

@@ -1,0 +1,48 @@
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -184,7 +184,7 @@
+ 	       func_p ? "functable" : "data");
+       wasm_print_operand (stream, x, 'l');
+       if (addend)
+-	fprintf (stream, " %+ld", addend);
++	fprintf (stream, " %+" HOST_WIDE_INT_PRINT "d", addend);
+       fprintf (stream, ")");
+       return true;
+     }
+@@ -724,7 +724,7 @@
+     }
+   assemble_visibility (stream, decl);
+   assemble_sym_name (stream, name);
+-  fprintf (stream, " (size %ld)", size);
++  fprintf (stream, " (size " HOST_WIDE_INT_PRINT_DEC ")", size);
+   fprintf (stream, ")");
+ }
+ 
+@@ -814,7 +814,8 @@
+ 	rtx addr = XEXP (value, 0);
+ 	if (GET_CODE (addr) == PLUS)
+ 	  {
+-	    fprintf (stream, "offset=%lu ", UINTVAL (XEXP (addr, 1)));
++	    fprintf (stream, "offset=" HOST_WIDE_INT_PRINT_UNSIGNED " ",
++		     UINTVAL (XEXP (addr, 1)));
+ 	    addr = XEXP (addr, 0);
+ 	  }
+ 
+@@ -870,7 +871,7 @@
+     case CONST_INT:
+       if (mode == 'i')
+ 	fprintf (stream, "(i32.const ");
+-      fprintf (stream, "%ld", INTVAL (value));
++      fprintf (stream, HOST_WIDE_INT_PRINT_DEC, INTVAL (value));
+       if (mode == 'i')
+ 	fprintf (stream, ")");
+       break;
+@@ -936,7 +937,7 @@
+   if (!strcmp (pfx, "L"))
+     sprint_ul (buf, get_cf_label (no));
+   else
+-    sprintf (buf, "%s" HOST_WIDE_INT_PRINT_DEC, pfx, no);
++    sprintf (buf, "%s" HOST_SIZE_T_PRINT_UNSIGNED, pfx, (fmt_size_t) no);
+ }
+ 
+ /* Implemetation of TARGET_ASM_INTERNAL_LABEL.  */

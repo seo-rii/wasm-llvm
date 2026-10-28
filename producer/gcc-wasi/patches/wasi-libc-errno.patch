@@ -1,0 +1,20 @@
+--- a/include/wasm32-wasi/__errno.h
++++ b/include/wasm32-wasi/__errno.h
+@@ -5,7 +5,17 @@
+ extern "C" {
+ #endif
+ 
++#if defined(__wasm32__) && defined(__GNUC__) && !defined(__clang__)
++/* The GCC Wasm port currently has no TLS ABI. In the explicitly selected
++ * single-thread WASI sysroot, wasm-ld places libc's errno in ordinary linear
++ * memory. Match that existing storage; do not provide emulated TLS. */
++#if !defined(__GCC_WASI_SINGLE_THREAD__) || __GCC_WASI_SINGLE_THREAD__ != 1 || defined(_REENTRANT)
++#error "GCC WASI errno requires the explicit single-thread target profile"
++#endif
++extern int errno;
++#else
+ extern _Thread_local int errno;
++#endif
+ 
+ #define errno errno
+ 

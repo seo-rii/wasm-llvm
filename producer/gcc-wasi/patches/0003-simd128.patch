@@ -1,0 +1,312 @@
+diff --git a/gcc/config/wasm/constraints.md b/gcc/config/wasm/constraints.md
+index d8d084fb7..6809e106c 100644
+--- a/gcc/config/wasm/constraints.md
++++ b/gcc/config/wasm/constraints.md
+@@ -20,6 +20,9 @@
+ 
+ (define_predicate "symbol_operand"
+   (match_code "symbol_ref"))
++
++(define_predicate "wasm_const_vector_operand"
++  (match_code "const_vector"))
+ (define_predicate "funcref_operand"
+   (match_code "symbol_ref")
+   {
+@@ -103,4 +106,4 @@
+ 	return false;
+     }
+   return true;
+-})
+\ No newline at end of file
++})
+diff --git a/gcc/config/wasm/simd.md b/gcc/config/wasm/simd.md
+new file mode 100644
+index 000000000..c686aad13
+--- /dev/null
++++ b/gcc/config/wasm/simd.md
+@@ -0,0 +1,134 @@
++;; WebAssembly fixed-width SIMD instructions.
++;; Copyright (C) 2026 Free Software Foundation, Inc.
++;; This file is part of GCC and is distributed under the GNU General Public
++;; License, version 3 or later.  See COPYING3 for details.
++
++(define_mode_iterator V128 [V16QI V8HI V4SI V2DI V4SF V2DF])
++(define_mode_iterator VI128 [V16QI V8HI V4SI V2DI])
++(define_mode_iterator VIMUL128 [V8HI V4SI V2DI])
++(define_mode_iterator VF128 [V4SF V2DF])
++(define_mode_attr lanes [(V16QI "i8x16") (V8HI "i16x8")
++  (V4SI "i32x4") (V2DI "i64x2") (V4SF "f32x4") (V2DF "f64x2")])
++(define_mode_attr VUNIT [(V16QI "QI") (V8HI "HI") (V4SI "SI")
++  (V2DI "DI") (V4SF "SF") (V2DF "DF")])
++(define_mode_attr vunit [(V16QI "qi") (V8HI "hi") (V4SI "si")
++  (V2DI "di") (V4SF "sf") (V2DF "df")])
++(define_mode_attr extract_sign [(V16QI "_s") (V8HI "_s")
++  (V4SI "") (V2DI "") (V4SF "") (V2DF "")])
++(define_code_iterator vaddsub [plus minus])
++(define_code_iterator vlogic [and ior xor])
++(define_code_iterator vfloatmuldiv [mult div])
++
++(define_expand "mov<mode>"
++  [(set (match_operand:V128 0 "nonimmediate_operand")
++        (match_operand:V128 1 "general_operand"))]
++  "TARGET_SIMD128"
++{
++  if (wasm_expand_mov (operands[0], operands[1], <MODE>mode))
++    DONE;
++  FAIL;
++})
++
++(define_insn "*simd_const<mode>"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (match_operand:V128 1 "wasm_const_vector_operand"))]
++  "TARGET_SIMD128"
++  "(%o0 %1)")
++
++(define_insn "*simd_move<mode>"
++  [(set (match_operand:V128 0 "wasm_subregister_operand")
++        (match_operand:V128 1 "wasm_subregister_operand"))]
++  "TARGET_SIMD128
++   && VECTOR_MODE_P (wasm_real_register_mode (operands[0]))
++   && VECTOR_MODE_P (wasm_real_register_mode (operands[1]))"
++  "(%o0 %i1)")
++
++(define_insn "*simd_load<mode>"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (match_operand:V128 1 "memory_operand"))]
++  "TARGET_SIMD128"
++  "(%o0 (v128.load %m1))")
++
++(define_insn "*simd_store<mode>"
++  [(set (match_operand:V128 0 "memory_operand")
++        (match_operand:V128 1 "wasm_register_operand"))]
++  "TARGET_SIMD128"
++  "(v128.store %m0 %i1)")
++
++(define_insn "<vaddsub:opname_rt><mode>3"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (vaddsub:V128 (match_operand:V128 1 "wasm_register_operand")
++                     (match_operand:V128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.<vaddsub:opname> %i1 %i2))")
++
++(define_insn "mul<mode>3"
++  [(set (match_operand:VIMUL128 0 "wasm_register_operand")
++        (mult:VIMUL128 (match_operand:VIMUL128 1 "wasm_register_operand")
++                      (match_operand:VIMUL128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.mul %i1 %i2))")
++
++(define_insn "<vfloatmuldiv:opname_rt><mode>3"
++  [(set (match_operand:VF128 0 "wasm_register_operand")
++        (vfloatmuldiv:VF128 (match_operand:VF128 1 "wasm_register_operand")
++                           (match_operand:VF128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.<vfloatmuldiv:opnamef> %i1 %i2))")
++
++(define_insn "<vlogic:opname_rt><mode>3"
++  [(set (match_operand:VI128 0 "wasm_register_operand")
++        (vlogic:VI128 (match_operand:VI128 1 "wasm_register_operand")
++                     (match_operand:VI128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (v128.<vlogic:opname> %i1 %i2))")
++
++(define_insn "neg<mode>2"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (neg:V128 (match_operand:V128 1 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.neg %i1))")
++
++(define_insn "one_cmpl<mode>2"
++  [(set (match_operand:VI128 0 "wasm_register_operand")
++        (not:VI128 (match_operand:VI128 1 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (v128.not %i1))")
++
++(define_insn "vec_duplicate<mode>"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (vec_duplicate:V128 (match_operand:<VUNIT> 1 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.splat %i1))")
++
++(define_insn "vec_extract<mode><vunit>"
++  [(set (match_operand:<VUNIT> 0 "wasm_register_operand")
++        (vec_select:<VUNIT>
++          (match_operand:V128 1 "wasm_register_operand")
++          (parallel [(match_operand:SI 2 "const_int_operand")])))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.extract_lane<extract_sign> %2 %i1))")
++
++(define_expand "vec_set<mode>"
++  [(match_operand:V128 0 "wasm_register_operand")
++   (match_operand:<VUNIT> 1 "wasm_register_operand")
++   (match_operand:SI 2 "const_int_operand")]
++  "TARGET_SIMD128"
++{
++  gcc_assert (UINTVAL (operands[2]) < (16 / GET_MODE_UNIT_SIZE (<MODE>mode)));
++  rtx mask = GEN_INT (HOST_WIDE_INT_1U << UINTVAL (operands[2]));
++  rtx dup = gen_rtx_VEC_DUPLICATE (<MODE>mode, operands[1]);
++  rtx merged = gen_rtx_VEC_MERGE (<MODE>mode, dup, operands[0], mask);
++  emit_insn (gen_rtx_SET (operands[0], merged));
++  DONE;
++})
++
++(define_insn "*simd_replace<mode>"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (vec_merge:V128
++          (vec_duplicate:V128 (match_operand:<VUNIT> 1 "wasm_register_operand"))
++          (match_operand:V128 2 "wasm_register_operand")
++          (match_operand:SI 3 "const_int_operand")))]
++  "TARGET_SIMD128 && exact_log2 (UINTVAL (operands[3])) >= 0
++   && exact_log2 (UINTVAL (operands[3])) < (16 / GET_MODE_UNIT_SIZE (<MODE>mode))"
++  "(%o0 (<lanes>.replace_lane %L3 %i2 %i1))")
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+index 91fe3820b..fde5a1337 100644
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -224,6 +224,10 @@ print_type (FILE *stream, const_tree type, bool first = false)
+       fprintf (stream, "%s%s", delim,
+ 	       TYPE_PRECISION (type) > 32 ? "f64" : "f32");
+       break;
++    case VECTOR_TYPE:
++      gcc_assert (TARGET_SIMD128 && GET_MODE_SIZE (TYPE_MODE (type)) == 16);
++      fprintf (stream, "%sv128", delim);
++      break;
+     case FUNCTION_TYPE:
+     case METHOD_TYPE:
+       function_args_iterator it;
+@@ -773,6 +777,8 @@ wasm_print_operand (FILE *stream, rtx value, int mode)
+       fprintf (stream, "global");
+     else
+       fprintf (stream, "local");
++  else if (mode == 'L') /* Convert a single-lane merge mask to its lane.  */
++    fprintf (stream, "%d", exact_log2 (UINTVAL (value)));
+   else if (mode == 'A') /* Print a call insn arglist.  */
+     {
+       gcc_assert (GET_CODE (value) == PARALLEL);
+@@ -915,6 +921,21 @@ wasm_print_operand (FILE *stream, rtx value, int mode)
+ 	  fprintf (stream, ")");
+ 	break;
+       }
++    case CONST_VECTOR:
++      {
++        machine_mode m = GET_MODE (value);
++        unsigned lanes = 16 / GET_MODE_UNIT_SIZE (m);
++        const char *kind = GET_MODE_CLASS (m) == MODE_VECTOR_INT ? "i" : "f";
++        unsigned bits = GET_MODE_UNIT_BITSIZE (m);
++        fprintf (stream, "(v128.const %s%ux%u", kind, bits, lanes);
++        for (unsigned i = 0; i < lanes; ++i)
++          {
++            fputc (' ', stream);
++            wasm_print_operand (stream, CONST_VECTOR_ELT (value, i), 0);
++          }
++        fputc (')', stream);
++        break;
++      }
+     default:
+       gcc_unreachable ();
+     }
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+index 83264caad..2281e3e00 100644
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -132,6 +132,7 @@ static bool
+ expand_const (rtx dest, rtx src, machine_mode mode)
+ {
+   if (!const_int_operand (src, mode) && !const_double_operand (src, mode)
++      && !(TARGET_SIMD128 && GET_CODE (src) == CONST_VECTOR)
+       && GET_CODE (src) != LABEL_REF && !symref_p (src))
+     return false;
+   if (symref_p (src))
+@@ -401,6 +402,8 @@ wasm_regno_mode_ok (unsigned regno, machine_mode mode)
+     return mode < TImode;
+   if (GET_MODE_CLASS (mode) == MODE_FLOAT)
+     return mode == DFmode || mode == SFmode;
++  if (VECTOR_MODE_P (mode))
++    return TARGET_SIMD128 && GET_MODE_SIZE (mode) == 16;
+   return false;
+ }
+ 
+diff --git a/gcc/config/wasm/wasm-modes.def b/gcc/config/wasm/wasm-modes.def
+index e69de29bb..45cbaf907 100644
+--- a/gcc/config/wasm/wasm-modes.def
++++ b/gcc/config/wasm/wasm-modes.def
+@@ -0,0 +1,7 @@
++/* WebAssembly's fixed-width SIMD value is always 128 bits.  */
++VECTOR_MODE (INT, QI, 16);
++VECTOR_MODE (INT, HI, 8);
++VECTOR_MODE (INT, SI, 4);
++VECTOR_MODE (INT, DI, 2);
++VECTOR_MODE (FLOAT, SF, 4);
++VECTOR_MODE (FLOAT, DF, 2);
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index 1016ddc78..d05b75519 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -120,6 +120,15 @@ bool wasm_return_in_memory (const_tree type, const_tree fntype);
+ #define TARGET_SCALAR_MODE_SUPPORTED_P [](scalar_mode m) \
+   { return default_scalar_mode_supported_p (m) && m != TImode; }
+ 
++#define TARGET_VECTOR_MODE_SUPPORTED_P wasm_vector_mode_supported_p
++static bool
++wasm_vector_mode_supported_p (machine_mode mode)
++{
++  return TARGET_SIMD128
++    && (mode == V16QImode || mode == V8HImode || mode == V4SImode
++        || mode == V2DImode || mode == V4SFmode || mode == V2DFmode);
++}
++
+ #define TARGET_EXCEPT_UNWIND_INFO [] (auto ...) { return UI_NONE; }
+ 
+ #define TARGET_HAVE_STRUB_SUPPORT_FOR hook_bool_tree_false
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+index 3d4c6ea79..05cdf407e 100644
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -46,6 +46,8 @@
+       builtin_assert ("cpu=wasm32");	  \
+       cpp_define (parse_in, "__wasm32__");\
+       cpp_define (parse_in, "__wasi__");  \
++      if (TARGET_SIMD128)                  \
++        cpp_define (parse_in, "__wasm_simd128__"); \
+     }					  \
+   while (0)
+ 
+diff --git a/gcc/config/wasm/wasm.md b/gcc/config/wasm/wasm.md
+index 8f0e7b3ee..a370d68c2 100644
+--- a/gcc/config/wasm/wasm.md
++++ b/gcc/config/wasm/wasm.md
+@@ -20,6 +20,7 @@
+ 
+ (include "attrs.md")
+ (include "constraints.md")
++(include "simd.md")
+ 
+ (define_insn "nop"
+   [(const_int 0)]
+@@ -415,4 +416,4 @@
+   [(set (subreg:REG (match_operand:<REG2F> 0 "wasm_register_operand") 0)
+ 	(match_operand:REG 1 "wasm_register_operand"))]
+   ""
+-  "(%M0.set %0 (<reg2f_types>.reinterpret_<REG:types> (%M1.get %1)))")
+\ No newline at end of file
++  "(%M0.set %0 (<reg2f_types>.reinterpret_<REG:types> (%M1.get %1)))")
+diff --git a/gcc/config/wasm/wasm.opt b/gcc/config/wasm/wasm.opt
+new file mode 100644
+index 000000000..aa44b974f
+--- /dev/null
++++ b/gcc/config/wasm/wasm.opt
+@@ -0,0 +1,7 @@
++; WebAssembly target options.
++; This file is part of GCC and is distributed under the GNU General Public
++; License, version 3 or later.  See COPYING3 for details.
++
++msimd128
++Target Mask(SIMD128)
++Enable WebAssembly 128-bit SIMD instructions.
+diff --git a/gcc/config/wasm/wasm.opt.urls b/gcc/config/wasm/wasm.opt.urls
+new file mode 100644
+index 000000000..3dc78acdf
+--- /dev/null
++++ b/gcc/config/wasm/wasm.opt.urls
+@@ -0,0 +1 @@
++; No upstream manual URL exists for the experimental wasm target options.

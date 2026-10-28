@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/swift-browser",
+  "validation": "official-sdk-archive-byte-verification",
+  "observedAt": "2026-10-27T07:00:55.833460+00:00",
+  "manifestSha256": "0ea56d824031078f85d99955f8b5dec632ce3c539c7a6312f22459bd2969c84f",
+  "sdk": {
+    "id": "swift-6.4.1-RELEASE_wasm",
+    "url": "https://download.swift.org/swift-6.4.1-release/wasm-sdk/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz",
+    "sha256": "783e6128d174d9f975b4eda68be02a5960681b723ef372e6876a7c2543a365d8",
+    "bytes": 92759931
+  },
+  "archive": {
+    "entryCount": 3553,
+    "regularFileBytes": 354693848,
+    "metadata": {
+      "swift-6.4.1-RELEASE_wasm.artifactbundle/info.json": {
+        "artifacts": {
+          "swift-6.4.1-RELEASE_wasm": {
+            "type": "swiftSDK",
+            "variants": [
+              {
+                "path": "swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/swift-sdk.json"
+              }
+            ],
+            "version": "0.0.1"
+          },
+          "swift-6.4.1-RELEASE_wasm-embedded": {
+            "type": "swiftSDK",
+            "variants": [
+              {
+                "path": "swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/embedded-swift-sdk.json"
+              }
+            ],
+            "version": "0.0.1"
+          }
+        },
+        "schemaVersion": "1.0"
+      },
+      "swift-6.4.1-RELEASE_wasm.artifactbundle/swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/embedded-swift-sdk.json": {
+        "schemaVersion": "4.0",
+        "targetTriples": {
+          "wasm32-unknown-wasip1": {
+            "sdkRootPath": "WASI.sdk",
+            "swiftResourcesPath": "swift.xctoolchain/usr/lib/swift",
+            "swiftStaticResourcesPath": "swift.xctoolchain/usr/lib/swift_static",
+            "toolsetPaths": [
+              "embedded-toolset.json"
+            ]
+          }
+        }
+      },
+      "swift-6.4.1-RELEASE_wasm.artifactbundle/swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/embedded-toolset.json": {
+        "cCompiler": {
+          "extraCLIOptions": [
+            "-D__EMBEDDED_SWIFT__"
+          ]
+        },
+        "cxxCompiler": {
+          "extraCLIOptions": [
+            "-D__EMBEDDED_SWIFT__"
+          ]
+        },
+        "rootPath": "swift.xctoolchain/usr/bin",
+        "schemaVersion": "1.0",
+        "swiftCompiler": {
+          "extraCLIOptions": [
+            "-static-stdlib",
+            "-enable-experimental-feature",
+            "Embedded",
+            "-wmo",
+            "-Xlinker",
+            "-lc++",
+            "-Xlinker",
+            "-lswift_Concurrency"
+          ]
+        }
+      },
+      "swift-6.4.1-RELEASE_wasm.artifactbundle/swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/swift-sdk.json": {
+        "schemaVersion": "4.0",
+        "targetTriples": {
+          "wasm32-unknown-wasip1": {
+            "sdkRootPath": "WASI.sdk",
+            "swiftResourcesPath": "swift.xctoolchain/usr/lib/swift_static",
+            "swiftStaticResourcesPath": "swift.xctoolchain/usr/lib/swift_static",
+            "toolsetPaths": [
+              "toolset.json"
+            ]
+          }
+        }
+      },
+      "swift-6.4.1-RELEASE_wasm.artifactbundle/swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/toolset.json": {
+        "rootPath": "swift.xctoolchain/usr/bin",
+        "schemaVersion": "1.0",
+        "swiftCompiler": {
+          "extraCLIOptions": [
+            "-static-stdlib"
+          ]
+        }
+      }
+    },
+    "selectedLibraries": [
+      {
+        "path": "swift-6.4.1-RELEASE_wasm.artifactbundle/swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/WASI.sdk/lib/wasm32-wasip1/libc.a",
+        "bytes": 1065770,
+        "sha256": "e139ba2ffd97d3e47fea499bc7ec6a7de8ab501ffcfb97d81eecf733eab82b55"
+      },
+      {
+        "path": "swift-6.4.1-RELEASE_wasm.artifactbundle/swift-6.4.1-RELEASE_wasm/wasm32-unknown-wasip1/swift.xctoolchain/usr/lib/swift_static/wasi/libswiftCore.a",
+        "bytes": 11920856,
+        "sha256": "7145267973d67f7df3885d8c2bd4fa1c8c53a1d2c3d6bfa46e6211aa2a2383dd"
+      }
+    ]
+  },
+  "scope": "Verified official target SDK bytes, archive structure, metadata, and standard libraries. This does not build or qualify a browser-hosted Swift compiler."
+}

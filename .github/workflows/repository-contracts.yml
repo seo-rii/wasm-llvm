@@ -32,5 +32,9 @@ jobs:
         run: pnpm exec playwright-core install --with-deps chromium
       - name: Check every producer repository contract
         run: pnpm check
+      - name: Check GCC WASI source, package and runtime contracts
+        run: |
+          node --test producer/gcc-wasi/*.test.mjs
+          python3 producer/gcc-wasi/prepare-runtime.test.py -v
       - name: Run the complete unit test suite
         run: pnpm test

@@ -50,7 +50,7 @@ function checkAssembly(test, bytes) {
 }
 
 export async function fuzz({ bundle: bundleDirectory, output, manifestSha256, seed = 20261024, cases = 24, caseIndex,
-	nativeCc = 'gcc-13', nativeCxx = 'g++-13', maxSeconds = 600, caseTimeoutSeconds = 90, allowNativeVersionMismatch = false }) {
+	nativeCc = 'gcc-16', nativeCxx = 'g++-16', maxSeconds = 600, caseTimeoutSeconds = 90, allowNativeVersionMismatch = false }) {
 	assert(/^[a-f0-9]{64}$/.test(manifestSha256 ?? ''), '--manifest-sha256 must pin the bundle digest');
 	assert(Number.isInteger(maxSeconds) && maxSeconds >= 1 && maxSeconds <= 3600, 'max seconds must be 1..3600');
 	assert(Number.isInteger(caseTimeoutSeconds) && caseTimeoutSeconds >= 1 && caseTimeoutSeconds <= 300, 'case timeout seconds must be 1..300');
