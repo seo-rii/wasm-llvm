@@ -72,6 +72,9 @@ The package graph also includes `tinygo.unwind.asyncify`, as required by TinyGo 
 files even though its native and WASI graphs agree with each other. Provider acceptance now
 requires those files. A native TinyGo comparison of all selected fields across 45 packages
 is recorded in `validation/0.43.0-package-graph.json`.
+`validation/0.43.0-package-graph-wasi.json` additionally records an actual Go 1.26.10
+WASI provider build and execution: all 45 package records match both native cmd/go and
+native TinyGo. Its source-only root does not qualify the complete browser compiler bundle.
 
 Failed workflow runs retain available compiler/link inputs and receipts for seven days in an
 explicitly unqualified diagnostic artifact. Only the separate verified product upload follows
