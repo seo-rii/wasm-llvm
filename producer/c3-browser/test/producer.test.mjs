@@ -129,7 +129,7 @@ test('package and verify reject stale acceptance before copying or loading asset
 			builderSha256: sha256(await readFile(path.join(producerRoot, 'scripts/producer.mjs')))
 		};
 		const stale = {
-			checks: { compileOnly: true, invalidSourceDiagnostic: true, builtinLink: true, arithmetic: true, hostByteInputOutput: true, browserGuest: true },
+			checks: { compileOnly: true, invalidSourceDiagnostic: true, builtinLink: true, arithmetic: true, hostByteInputOutput: true, hostSyscallWarningsAbsent: true, browserGuest: true },
 			inputs: { ...await acceptanceHashes(), 'fixtures/program.c3': '0'.repeat(64) }
 		};
 		await writeFile(path.join(directory, 'build-receipt.json'), JSON.stringify(build));
@@ -163,7 +163,7 @@ test('package and verify reject extra release directory entries', async () => {
 			'c3c.wasm': Buffer.from([0, 97, 115, 109, 1, 0, 0, 0])
 		};
 		const assetReceipts = Object.fromEntries(Object.entries(assets).map(([name, bytes]) => [name, { bytes: bytes.length, sha256: sha256(bytes) }]));
-		const checks = { compileOnly: true, invalidSourceDiagnostic: true, builtinLink: true, arithmetic: true, hostByteInputOutput: true };
+		const checks = { compileOnly: true, invalidSourceDiagnostic: true, builtinLink: true, arithmetic: true, hostByteInputOutput: true, hostSyscallWarningsAbsent: true };
 		const smoke = { checks, inputs: await acceptanceHashes(), assets: assetReceipts };
 		const browserSmoke = { ...smoke, checks: { ...checks, browserGuest: true } };
 		for (const [name, bytes] of Object.entries(assets)) await writeFile(path.join(buildDirectory, name), bytes);

@@ -4,7 +4,7 @@ This producer builds the upstream C3 compiler itself as an Emscripten module. Th
 C3 source in its virtual filesystem, emits relocatable WebAssembly objects, reports source
 diagnostics, and links bare WebAssembly programs using its embedded LLVM/LLD libraries.
 
-The source pin is C3 0.8.3 (`1d155ee04d3b607261b99aa15ed5eefd6d7db284`), built with the pinned
+The source pin is C3 0.8.5_1 (`d1b1e4451716a34e9c5eb46b78999ff92e71c3a1`), built with the pinned
 Emscripten 6.0.0 SDK. The producer imports a size- and SHA-256-verified LLVM-for-C3 Emscripten archive.
 Preparation rejects hidden Git index flags and all untracked or ignored C3 source inputs; the SDK
 installation directories and generated configuration are removed before every install, then the
@@ -13,6 +13,17 @@ Although that archive is published under `llvm_22.1.10`, its `LLVMConfig.cmake` 
 Both values are recorded in the manifest. The original SDK version used to build those LLVM
 libraries is unavailable; this recipe reproduces the C3 build from that binary input and does not
 claim to rebuild LLVM or produce byte-identical binaries across machines.
+
+The 0.8.5_1 source update includes the upstream Wasm regression fix and retains LLVM 22.1.8,
+which is within C3's supported LLVM 19–24 range. The browser patches reject external subprocesses
+and skip native page-protection/advice calls when committing already-backed Wasm arena memory.
+The latter applies only under `__EMSCRIPTEN__` and retains the upstream allocation accounting
+and bounds checks. Both Node and Chromium acceptance reject unsupported host-syscall warnings.
+
+The complete fresh-SDK build, Node/Chromium acceptance, packaging, and strict artifact verification
+passed on 2026-10-27. [Qualification evidence](validation/0.8.5_1.json) records the source and
+patch identities, prepared-input hashes, compiler asset hashes, acceptance inputs, and observed
+guest outputs for this 0.8.5_1 build.
 
 ## Build and verify
 
@@ -46,10 +57,14 @@ compiled real source, rejected invalid source, linked a guest, and executed arit
 input/output; a Wasm header or successful `--version` is insufficient. Verification checks those
 receipts and loads the compiler Wasm with `WebAssembly.compile`.
 
-On 2026-09-05 the complete acceptance passed in Node 24.1.0 and Chromium. The compiler module was
-39,058,650 bytes; both engines produced the same 280,763-byte guest from `fixtures/program.c3`.
-The exact browser version, checksums, and diagnostic are preserved in the generated receipts.
-Generated artifacts are ignored by Git and are not deployed by these commands.
+On 2026-10-27 the complete acceptance passed in Node 24.22.1 and Chromium 156.0.8078.4.
+The compiler module was 39,987,618 bytes; both engines produced the same 19 relocatable objects
+and 492,903-byte guest from `fixtures/program.c3`. Version output, valid compilation/linking,
+and invalid-source diagnostics contained no unsupported host-syscall warnings. The exact
+checksums and diagnostic are preserved in the qualification evidence and generated receipts.
+Local build outputs are ignored by Git. The qualified delivery copy is checked in under
+[`artifacts/c3-browser`](../../artifacts/c3-browser/README.md), with gzip compression for the
+compiler Wasm, so consumers can pin its immutable Git commit. These commands do not deploy it.
 
 ## Compiler invocation contract
 
@@ -90,6 +105,6 @@ Worker/FS adapter, terminal/std::io integration, deployment, and source debuggin
 consumer work. This producer does not advertise support in wasm-idle.
 
 Upstream licensing remains applicable to generated artifacts: see C3's pinned
-[`LICENSE`](https://github.com/c3lang/c3c/blob/1d155ee04d3b607261b99aa15ed5eefd6d7db284/LICENSE)
-and [`LICENSE_SRC`](https://github.com/c3lang/c3c/blob/1d155ee04d3b607261b99aa15ed5eefd6d7db284/LICENSE_SRC),
+[`LICENSE`](https://github.com/c3lang/c3c/blob/d1b1e4451716a34e9c5eb46b78999ff92e71c3a1/LICENSE)
+and [`LICENSE_SRC`](https://github.com/c3lang/c3c/blob/d1b1e4451716a34e9c5eb46b78999ff92e71c3a1/LICENSE_SRC),
 [LLVM license](https://llvm.org/LICENSE.txt), and the installed Emscripten `LICENSE`.
