@@ -971,11 +971,17 @@ export async function createBrowserCompilerBuildPlan(
 			]
 		};
 	});
+	const llvmMajor = /^(\d+)\./u.exec(contract.lock.llvm.version)?.[1];
+	assert(llvmMajor, 'locked LLVM version must identify its major build tag');
+	// byollvm selects external linkage; the LLVM major separately selects API
+	// semantics such as Clang's WASI spelling and switch-case accessors.
+	const compilerBuildTags = ['byollvm', `llvm${llvmMajor}`, 'osusergo', 'tinygo.browsercompiler'];
+	const compilerTagArgument = `-tags=${compilerBuildTags.join(' ')}`;
 	const targetConfig = {
 		inherits: ['wasip1'],
 		scheduler: 'asyncify',
 		'default-stack-size': COMPILER_HOST_STACK_SIZE,
-		'build-tags': ['byollvm', 'osusergo', 'tinygo.browsercompiler'],
+		'build-tags': compilerBuildTags,
 		cflags: [
 			`--sysroot=${wasiSysroot}`,
 			'-D_GNU_SOURCE',
@@ -1015,7 +1021,7 @@ export async function createBrowserCompilerBuildPlan(
 		options.nativeTinyGo,
 		'build',
 		`-target=${targetConfigPath}`,
-		'-tags=byollvm osusergo',
+		compilerTagArgument,
 		'-opt=z',
 		`-interp-timeout=${COMPILER_INTERP_TIMEOUT}`,
 		'-no-debug',
@@ -1023,6 +1029,37 @@ export async function createBrowserCompilerBuildPlan(
 		`-o=${compilerBitcodePath}`,
 		'./cmd/tinygo-browser-adapter'
 	];
+	const sourceSelection = {
+		status: 'planned',
+		llvmBuildTag: `llvm${llvmMajor}`,
+		checks: [
+			{
+				importPath: `${contract.lock.tinygo.module}/compileopts`,
+				directory: path.join(patchedSourceRoot, 'compileopts'),
+				requiredFiles: [`triple_llvm${llvmMajor}.go`, `features_llvm${llvmMajor}.go`],
+				forbiddenFiles: ['triple_pre22.go', 'features_default.go', 'features_pre20.go']
+			},
+			{
+				importPath: contract.lock.goLlvm.module,
+				directory: patchedGoLlvmRoot,
+				requiredFiles: [`switch_llvm${llvmMajor}.go`],
+				forbiddenFiles: ['switch_pre22.go']
+			},
+			{
+				importPath: `${contract.lock.tinygo.module}/cgo`,
+				directory: path.join(patchedSourceRoot, 'cgo'),
+				requiredFiles: ['libclang.go'],
+				forbiddenFiles: []
+			}
+		].map((check) => ({
+			...check,
+			command: [
+				options.nativeTinyGo, 'list', '-json', `-target=${targetConfigPath}`,
+				compilerTagArgument, check.importPath
+			]
+		})),
+		results: null
+	};
 	const acceptanceFixtureDirectory = path.join(
 		producerRoot,
 		path.dirname(contract.manifest.acceptance.fixture)
@@ -1273,6 +1310,7 @@ export async function createBrowserCompilerBuildPlan(
 		build: {
 			...compilerReceiptSeed.build,
 			command: buildCommand,
+			sourceSelection,
 			linkCommand,
 			compilerOptimization: {
 				status: 'planned',
@@ -1998,6 +2036,55 @@ export async function buildBrowserCompiler(
 				producerRoot
 			}, { run });
 
+			await writeFile(
+				receipt.paths.targetConfigPath,
+				`${JSON.stringify(receipt.build.targetConfig, null, 2)}\n`,
+				'utf8'
+			);
+			const buildEnvironment = {
+				...process.env,
+				...receipt.build.environment,
+				PATH: `${path.join(receipt.paths.goToolchainRoot, 'bin')}${path.delimiter}${process.env.PATH ?? ''}`
+			};
+			const selectedSources = [];
+			for (const check of receipt.build.sourceSelection.checks) {
+				const listed = await run(check.command[0], check.command.slice(1), {
+					cwd: receipt.paths.patchedSourceRoot,
+					env: buildEnvironment,
+					capture: true
+				});
+				assert(
+					listed.exitCode === 0,
+					`native TinyGo compiler source selection failed for ${check.importPath}: ${listed.stderr}`
+				);
+				const pkg = JSON.parse(listed.stdout);
+				assert(
+					pkg.ImportPath === check.importPath && pkg.Dir === check.directory &&
+						!pkg.Error && !pkg.DepsErrors?.length,
+					`native TinyGo compiler source selection must resolve ${check.importPath} in ${check.directory}`
+				);
+				const files = [...(pkg.GoFiles ?? []), ...(pkg.CgoFiles ?? [])];
+				for (const requiredFile of check.requiredFiles) {
+					assert(files.includes(requiredFile),
+						`native TinyGo compiler source selection is missing ${check.importPath}/${requiredFile}`);
+				}
+				assert(
+					files.every((file) => !check.forbiddenFiles.includes(file) &&
+						!/^(?:libclang|llvm)_config_llvm\d+\.go$/u.test(file)),
+					`native TinyGo compiler source selection retained an incompatible LLVM implementation in ${check.importPath}`
+				);
+				selectedSources.push({
+					importPath: check.importPath,
+					directory: pkg.Dir,
+					files,
+					identities: await Promise.all(check.requiredFiles.map(async (file) => ({
+						file, ...(await inspectFile(path.join(pkg.Dir, file)))
+					})))
+				});
+			}
+			receipt.build.sourceSelection.status = 'passed';
+			receipt.build.sourceSelection.results = selectedSources;
+
 			const hostSupportOutputs = [];
 			const hostSupportEnvironment = {
 				...process.env,
@@ -2170,17 +2257,6 @@ export async function buildBrowserCompiler(
 			receipt.hostSupport.status = 'passed';
 			receipt.hostSupport.outputs = hostSupportOutputs;
 
-			await writeFile(
-				receipt.paths.targetConfigPath,
-				`${JSON.stringify(receipt.build.targetConfig, null, 2)}\n`,
-				'utf8'
-			);
-
-			const buildEnvironment = {
-				...process.env,
-				...receipt.build.environment,
-				PATH: `${path.join(receipt.paths.goToolchainRoot, 'bin')}${path.delimiter}${process.env.PATH ?? ''}`
-			};
 			const built = await run(receipt.build.command[0], receipt.build.command.slice(1), {
 				cwd: receipt.paths.patchedSourceRoot,
 				env: buildEnvironment

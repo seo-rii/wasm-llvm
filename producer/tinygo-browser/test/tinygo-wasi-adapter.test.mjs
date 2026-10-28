@@ -122,6 +122,11 @@ test('target-native objects cross pinned LLVM validators before publication evid
 	assert.match(source, /compiler\.NewTargetMachine/);
 	assert.match(source, /context\.ParseBitcodeFile/);
 	assert.match(source, /llvm\.VerifyModule\(module, llvm\.ReturnStatusAction\)/);
+	assert.match(source, /if config\.Triple\(\) != wasmTargetTriple/);
+	assert.match(source, /InputTargetTriple\s+string\s+`json:"inputTargetTriple"`/);
+	assert.match(source, /validation\.InputTargetTriple = module\.Target\(\)/);
+	assert.match(source, /validateWasmPreview1LLVMTarget\(validation\.InputTargetTriple\)/);
+	assert.match(source, /case wasmTargetTriple, "wasm32-unknown-wasip1":/);
 	assert.match(source, /wasm32-unknown-wasi/);
 	assert.match(
 		source,

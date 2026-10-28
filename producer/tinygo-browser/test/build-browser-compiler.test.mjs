@@ -190,6 +190,9 @@ async function createFixture() {
 	);
 	await writeFixtureFile(sourceRoot, 'src/runtime/runtime.go', 'package runtime\n');
 	await writeFixtureFile(sourceRoot, 'src/internal/abi/escape.go', 'package abi\n');
+	for (const name of ['triple_llvm22.go', 'features_llvm22.go']) {
+		await writeFixtureFile(sourceRoot, `compileopts/${name}`, 'package compileopts\n');
+	}
 	await writeFixtureFile(
 		sourceRoot,
 		'src/internal/task/task_asyncify_wasm.S',
@@ -205,6 +208,7 @@ async function createFixture() {
 			(entry) => entry.path === relativePath
 		).sha256 = sha256(contents);
 	}
+	await writeFixtureFile(goLlvmSourceRoot, 'switch_llvm22.go', 'package llvm\n');
 
 	for (const relativePath of NATIVE_ROOT_FILES) {
 		await writeFixtureFile(nativeRoot, relativePath, tinyGoContents.get(relativePath));
@@ -477,6 +481,7 @@ function createCommandRunner(
 		failCompilerOptimizer = false,
 		missingWrapperSymbol = false,
 		failRootDiscovery = false,
+		invalidSourceSelection = '',
 		linkedImports = [],
 		preserveLinkedImports = false
 	} = {}
@@ -614,6 +619,29 @@ function createCommandRunner(
 				'native TinyGo invokes go from PATH; GOROOT and GOVERSION alone are insufficient'
 			);
 			assert.equal(runOptions.env.GOTOOLCHAIN, 'local');
+			if (args.at(-1) !== 'runtime') {
+				const targetPath = args.find((arg) => arg.startsWith('-target=')).slice(8);
+				const target = JSON.parse(await readFile(targetPath, 'utf8'));
+				assert.ok(args.includes(`-tags=${target['build-tags'].join(' ')}`));
+				assert.ok(target['build-tags'].includes('llvm22'));
+				assert.equal(runOptions.env.GOWORK, path.join(fixture.buildDir, 'go.work'));
+				const importPath = args.at(-1);
+				const packageFiles = importPath.endsWith('/compileopts')
+					? {
+						Dir: path.join(runOptions.env.TINYGOROOT, 'compileopts'),
+						GoFiles: [invalidSourceSelection === 'pre22-triple' ? 'triple_pre22.go' : 'triple_llvm22.go', 'features_llvm22.go']
+					}
+					: importPath === 'tinygo.org/x/go-llvm'
+						? {
+							Dir: path.join(fixture.buildDir, 'go-llvm-wasi'),
+							CgoFiles: [invalidSourceSelection === 'pre22-switch' ? 'switch_pre22.go' : 'switch_llvm22.go']
+						}
+						: {
+							Dir: path.join(runOptions.env.TINYGOROOT, 'cgo'),
+							CgoFiles: ['libclang.go', ...(invalidSourceSelection === 'system-llvm-linkage' ? ['libclang_config_llvm22.go'] : [])]
+						};
+				return result({ stdout: JSON.stringify({ ImportPath: importPath, ...packageFiles }) });
+			}
 			if (failRootDiscovery) return result({ exitCode: 1, stderr: 'wrong native Go version' });
 			const mergedRoot = path.join(fixture.root, 'merged-goroot');
 			await mkdir(path.join(mergedRoot, 'src'), { recursive: true });
@@ -863,6 +891,24 @@ test('validates passed LLVM, Clang, libclang, LLD, and host-support requirements
 	);
 });
 
+test('selects LLVM-version-specific sources for the compiler bootstrap and its preflight', async () => {
+	const fixture = await createFixture();
+	const receipt = await createBrowserCompilerBuildPlan(fixture.options, {
+		contract: fixture.contract,
+		verifySource: async () => fixture.sourceReceipt
+	});
+	const llvmTag = `llvm${fixture.contract.lock.llvm.version.split('.')[0]}`;
+	assert.ok(receipt.build.targetConfig['build-tags'].includes(llvmTag),
+		'byollvm does not enable TinyGo/Go-LLVM LLVM-version-specific implementations');
+	const tagArgument = `-tags=${receipt.build.targetConfig['build-tags'].join(' ')}`;
+	assert.ok(receipt.build.command.includes(tagArgument));
+	assert.ok(receipt.build.sourceSelection.checks.every((check) => check.command.includes(tagArgument)));
+	assert.deepEqual(receipt.build.sourceSelection.checks.slice(0, 2).map((check) => check.requiredFiles), [
+		['triple_llvm22.go', 'features_llvm22.go'],
+		['switch_llvm22.go']
+	]);
+});
+
 test('plans only the real upstream adapter with deterministic C++ host-support archives', async () => {
 	const fixture = await createFixture();
 	const receipt = await createBrowserCompilerBuildPlan(fixture.options, {
@@ -942,6 +988,7 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	assert.equal(receipt.build.targetConfig['default-stack-size'], 8 * 1024 * 1024);
 	assert.deepEqual(receipt.build.targetConfig['build-tags'], [
 		'byollvm',
+		'llvm22',
 		'osusergo',
 		'tinygo.browsercompiler'
 	]);
@@ -1146,6 +1193,10 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	);
 	assert.ok(targetConfig.ldflags.includes(receipt.hostSupport.outputs[0].path));
 	assert.equal(targetConfig.scheduler, 'asyncify');
+	assert.equal(receipt.build.sourceSelection.status, 'passed');
+	assert.equal(receipt.build.sourceSelection.results.length, 3);
+	assert.ok(receipt.build.sourceSelection.results.every((result) =>
+		result.identities.every((identity) => /^[a-f0-9]{64}$/u.test(identity.sha256))));
 	for (const call of calls.filter((call) =>
 		call.command === fixture.nativeTinyGo && (call.args[0] === 'build' || call.args[0] === 'list')
 	)) {
@@ -1226,6 +1277,25 @@ test('rejects merged root discovery before compiling or optimizing the browser c
 	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
 	assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
 	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
+test('rejects obsolete LLVM source choices before host support and compiler compilation', async () => {
+	for (const invalidSourceSelection of ['pre22-triple', 'pre22-switch', 'system-llvm-linkage']) {
+		const fixture = await createFixture();
+		fixture.options.execute = true;
+		const { calls, runner } = createCommandRunner(fixture, { execute: true, invalidSourceSelection });
+		await assert.rejects(buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		}), /native TinyGo compiler source selection (?:is missing|retained an incompatible)/u);
+		assert.ok(!calls.some((call) => call.command === fixture.tools.cxx));
+		assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+		assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+		assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+	}
 });
 
 test('rejects ABI escape regressions before host support and compiler compilation', async () => {

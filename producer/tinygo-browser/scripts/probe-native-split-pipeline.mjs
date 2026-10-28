@@ -204,8 +204,20 @@ export function validateNativeLinkPlan(linkPlan) {
         throw new Error(`link-plan.json target-native object ${index} has unexpected CXXFLAGS`);
       }
       if (kind === "target-c" || kind === "target-cxx") {
+        const evidence = object.llvmValidation;
+        const hasInputTargetTriple = Object.hasOwn(evidence ?? {}, "inputTargetTriple");
+        const expectedFields = Object.keys(LLVM_OBJECT_VALIDATION);
+        if (hasInputTargetTriple) expectedFields.push("inputTargetTriple");
         if (
-          JSON.stringify(object.llvmValidation) !== JSON.stringify(LLVM_OBJECT_VALIDATION) ||
+          !evidence ||
+          Array.isArray(evidence) ||
+          Object.keys(evidence).sort().join("\0") !== expectedFields.sort().join("\0") ||
+          Object.entries(LLVM_OBJECT_VALIDATION).some(
+            ([key, value]) => JSON.stringify(evidence[key]) !== JSON.stringify(value),
+          ) ||
+          (hasInputTargetTriple &&
+            evidence.inputTargetTriple !== "wasm32-unknown-wasi" &&
+            evidence.inputTargetTriple !== "wasm32-unknown-wasip1") ||
           object.wasmValidation !== undefined
         ) {
           throw new Error(`link-plan.json target-native object ${index} lacks exact LLVM validation`);

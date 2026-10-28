@@ -422,6 +422,54 @@ test("fails when final execution differs byte-for-byte from expected stdout", as
   );
 });
 
+test("accepts exact preview1 input triple provenance without changing the canonical ABI", () => {
+  assert.doesNotThrow(() => validateNativeLinkPlan(validLinkPlan()));
+  for (const inputTargetTriple of [
+    "wasm32-unknown-wasi",
+    "wasm32-unknown-wasip1",
+  ]) {
+    const plan = validLinkPlan();
+    for (const object of plan.objects.filter((item) => item.llvmValidation)) {
+      object.llvmValidation.inputTargetTriple = inputTargetTriple;
+    }
+    assert.doesNotThrow(() => validateNativeLinkPlan(plan));
+  }
+});
+
+test("rejects non-preview1 provenance, extra fields and changed canonical LLVM evidence", () => {
+  for (const objectIndex of [1, 2]) {
+    for (const invalidEvidence of [
+      { inputTargetTriple: null },
+      { inputTargetTriple: undefined },
+      { inputTargetTriple: "wasm32-unknown-wasip2" },
+      { inputTargetTriple: "wasm32-unknown-wasip3" },
+      { inputTargetTriple: "wasm64-unknown-wasip1" },
+      { inputTargetTriple: "wasm32-unknown-unknown" },
+      { inputTargetTriple: "wasm32-unknown-wasip1-threads" },
+      { inputTargetTriple: "wasm32-unknown-wasip1", extra: true },
+      { inputTargetTriple: "wasm32-unknown-wasip1", extra: undefined },
+      { inputTargetTriple: "wasm32-unknown-wasip1", targetTriple: "wasm32-unknown-wasip1" },
+      { targetTriple: "wasm32-unknown-wasip1" },
+      { inputTargetTriple: "wasm32-unknown-wasip1", dataLayout: "e-p:64:64" },
+      { inputTargetTriple: "wasm32-unknown-wasip1", threadLocalGlobals: 1 },
+    ]) {
+      const plan = validLinkPlan();
+      Object.assign(plan.objects[objectIndex].llvmValidation, invalidEvidence);
+      assert.throws(
+        () => validateNativeLinkPlan(plan),
+        /lacks exact LLVM validation/u,
+      );
+    }
+    for (const withInputTriple of [false, true]) {
+      const plan = validLinkPlan();
+      const evidence = Object.assign([], plan.objects[objectIndex].llvmValidation);
+      if (withInputTriple) evidence.inputTargetTriple = "wasm32-unknown-wasip1";
+      plan.objects[objectIndex].llvmValidation = evidence;
+      assert.throws(() => validateNativeLinkPlan(plan), /lacks exact LLVM validation/u);
+    }
+  }
+});
+
 test("rejects reordered C objects and malformed native dependency evidence", () => {
   const staleProtocol = validLinkPlan();
   staleProtocol.schemaVersion = 4;

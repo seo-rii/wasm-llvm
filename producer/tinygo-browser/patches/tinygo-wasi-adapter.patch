@@ -1713,10 +1713,10 @@ index 0000000..ea537d1
 +type _Cgo_unsigned = _Cgo_uint
 diff --git a/cmd/tinygo-browser-adapter/main.go b/cmd/tinygo-browser-adapter/main.go
 new file mode 100644
-index 0000000..77c2642
+index 0000000..fce11d0
 --- /dev/null
 +++ b/cmd/tinygo-browser-adapter/main.go
-@@ -0,0 +1,1377 @@
+@@ -0,0 +1,1392 @@
 +// Command tinygo-browser-adapter compiles one explicit Go package graph with
 +// upstream TinyGo. It intentionally stops at an object file: raw WASI LLD and
 +// Binaryen run outside this compiler process.
@@ -1848,9 +1848,12 @@ index 0000000..77c2642
 +}
 +
 +type llvmObjectValidation struct {
-+	Toolchain           string   `json:"toolchain"`
-+	ModuleVerified      bool     `json:"moduleVerified"`
++	Toolchain      string `json:"toolchain"`
++	ModuleVerified bool   `json:"moduleVerified"`
++	// TargetTriple is the validated preview1 ABI identity; InputTargetTriple
++	// records the actual bitcode spelling before that identity is normalized.
 +	TargetTriple        string   `json:"targetTriple"`
++	InputTargetTriple   string   `json:"inputTargetTriple"`
 +	DataLayout          string   `json:"dataLayout"`
 +	ThreadLocalGlobals  int      `json:"threadLocalGlobals"`
 +	GlobalConstructors  int      `json:"globalConstructors"`
@@ -2665,6 +2668,17 @@ index 0000000..77c2642
 +	return dataLayout, nil
 +}
 +
++// LLVM 22 Clang uses the explicit preview1 name, while TinyGo's Go target
++// machine retains the legacy name. Only these two exact ABI spellings agree.
++func validateWasmPreview1LLVMTarget(triple string) error {
++	switch triple {
++	case wasmTargetTriple, "wasm32-unknown-wasip1":
++		return nil
++	default:
++		return fmt.Errorf("LLVM module target must be %q or %q, got %q", wasmTargetTriple, "wasm32-unknown-wasip1", triple)
++	}
++}
++
 +func validateLLVMObject(path, expectedDataLayout string) (llvmObjectValidation, error) {
 +	validation := llvmObjectValidation{
 +		Toolchain:           llvmValidationToolchain,
@@ -2682,8 +2696,9 @@ index 0000000..77c2642
 +	if err := llvm.VerifyModule(module, llvm.ReturnStatusAction); err != nil {
 +		return validation, fmt.Errorf("LLVM verifier rejected the module: %w", err)
 +	}
-+	if module.Target() != wasmTargetTriple {
-+		return validation, fmt.Errorf("LLVM module target must be %q, got %q", wasmTargetTriple, module.Target())
++	validation.InputTargetTriple = module.Target()
++	if err := validateWasmPreview1LLVMTarget(validation.InputTargetTriple); err != nil {
++		return validation, err
 +	}
 +	if module.DataLayout() != expectedDataLayout {
 +		return validation, fmt.Errorf("LLVM module data layout must be %q, got %q", expectedDataLayout, module.DataLayout())
@@ -3094,6 +3109,7 @@ index 0000000..77c2642
 +	}
 +	return os.Rename(temporary, path)
 +}
+
 diff --git a/compileopts/config.go b/compileopts/config.go
 index a8b8d30..4cd2ea3 100644
 --- a/compileopts/config.go

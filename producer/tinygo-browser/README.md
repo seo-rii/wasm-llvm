@@ -50,6 +50,16 @@ runtime preparation, and acceptance commands must put the pinned Go bootstrap's 
 directory first and disable automatic toolchain selection. Merged-root discovery runs before
 compiler compilation and optimization, so an incompatible host Go fails early.
 
+The compiler bootstrap also selects the locked LLVM major's Go build tag (`llvm22`),
+matching upstream TinyGo's `byollvm llvm22 osusergo` build. External LLVM linkage alone
+does not select its version-specific APIs: the tag enables Clang's canonical WASI frontend
+target and LLVM 22 switch-case accessors. Before compiling host support, native TinyGo
+lists the compiler configuration, go-LLVM and CGo packages with the same target and tags
+as the real build. Their selected source files, source directories and hashes are checked
+and recorded; obsolete implementations and system LLVM linkage configurations fail early.
+`validation/0.43.0-llvm22-source-selection.json` records native selection, CGo execution,
+and the distinct Go/Clang module triples. It does not qualify a browser compiler build.
+
 The external linker captures TinyGo 0.43 embed objects using both their payload hash and
 their recorded source-path hash. Equal embedded contents at different paths can have different
 DWARF bytes, so both objects are retained, matching upstream linking. Conflicting objects with
@@ -352,11 +362,15 @@ Compile protocol v6 preserves the earlier embed, CGo/C, and target-native handof
 preprocessed target-native C, C++, and uppercase `.S` input uses `-Werror=date-time`. `CXXFiles`
 are compiled by packaged Clang as C++17 ThinLTO bitcode with the receipt-bound WASI libc++ headers
 and linked libc++/libc++abi archives. Exceptions, RTTI, threads, and target/toolchain overrides stay
-disabled. LLVM 20.1.1 fully parses and verifies
-every C/C++ module, checks the exact `wasm32-unknown-wasi` triple/data layout, and rejects TLS,
+disabled. LLVM 22.1.4 fully parses and verifies
+every C/C++ module, accepts only `wasm32-unknown-wasi` or `wasm32-unknown-wasip1` with the
+exact WASI Preview 1 data layout, and rejects TLS,
 pre-initializers/initializers/finalizers, C++ runtime ABI symbols, and target features outside the
 consumer's exact allowlist (`+bulk-memory`, `+bulk-memory-opt`, `+call-indirect-overlong`,
 `+mutable-globals`, `+nontrapping-fptoint`, `+sign-ext`, `-multivalue`, and `-reference-types`).
+Both accepted Preview 1 spellings retain the existing `wasm32-unknown-wasi` ABI identity
+in validation receipts, while `inputTargetTriple` records each module's actual spelling.
+No additional target or data-layout variant is accepted.
 C/C++ bitcode containing module/function inline assembly, global aliases, or indirect functions is
 also rejected; uppercase `.S` files are the only supported assembly boundary and are compiled in
 CGo packages as assembler-with-cpp relocatable WebAssembly objects. The

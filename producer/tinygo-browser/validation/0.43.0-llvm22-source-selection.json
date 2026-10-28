@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "Native compiler source-selection, Clang LLVM IR, and minimal CGo WASI execution only. Does not qualify the generated browser compiler or full producer acceptance.",
+  "producerBeforeFix": "1da17c1475a9d43879b40035ac1e3ac45558cd34",
+  "upstream": {
+    "tinygo": "0.43.0",
+    "tinygoCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+    "goLlvmCommit": "185673ef46a59528c40d0fdc220c6735606c0ebc",
+    "llvm": "22.1.4",
+    "go": "1.26.10"
+  },
+  "nativeTinyGoBinary": {
+    "bytes": 182693392,
+    "sha256": "678938bbd1815180a288d23764deeb04bf846b710dc7ed34ebbbf1e19e5a436a"
+  },
+  "goBinary": {
+    "bytes": 15456399,
+    "sha256": "9c2a37ae5b21ba1d5a004bb9ab4d0c64de6fc5778e9d30487adccea62678b8b5"
+  },
+  "verifiedSourceArchives": [
+    {
+      "name": "tinygo",
+      "commit": "108a95cb26df6d5011366312dde0639b08d753cf",
+      "archiveBytes": 1852635,
+      "archiveSha256": "0156ef284d0155a39a716441fe11d7b3841e3a89c4503036bdd334fe5573a8c5",
+      "verifiedGitBlobFiles": 2293,
+      "sourceBytes": 7310961
+    },
+    {
+      "name": "go-llvm",
+      "commit": "185673ef46a59528c40d0fdc220c6735606c0ebc",
+      "archiveBytes": 39930,
+      "archiveSha256": "a2aac1b3ce885a97047b6d368ed7c7ad4fdf695186741b4227444ec070f79bca",
+      "verifiedGitBlobFiles": 44,
+      "sourceBytes": 188104
+    }
+  ],
+  "sourceFiles": [
+    {
+      "repository": "tinygo",
+      "path": "make/build.mk",
+      "bytes": 1987,
+      "sha256": "42b686ff0fb35b8f4b0dc70d925b4ad4133f440c2c9aecd425299dd3f6f071d4",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "tinygo",
+      "path": "compileopts/config.go",
+      "bytes": 23687,
+      "sha256": "bdf30721d5c59cf1189753310ac9306c1ebe14df09eccaa33e01dbeae523da02",
+      "sourceContext": "pinned source plus producer HEAD1da adapter patch"
+    },
+    {
+      "repository": "tinygo",
+      "path": "compileopts/triple_llvm22.go",
+      "bytes": 398,
+      "sha256": "a7415d4c428bc1d9396c62482e21727a53880a41e19f678c1edc19ffbb00aaae",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "tinygo",
+      "path": "compileopts/triple_pre22.go",
+      "bytes": 220,
+      "sha256": "119d98facfbe2f4f18fd8b62a97d3f80158da3bb4888683be8f4c9308784b806",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "tinygo",
+      "path": "compileopts/features_llvm22.go",
+      "bytes": 825,
+      "sha256": "d2c4b159b7766d0edb4490f9c8a316cc6be411d7936b551ab6345825fa088802",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "tinygo",
+      "path": "compileopts/features_default.go",
+      "bytes": 315,
+      "sha256": "56d60f4685b0ea3446a8118230cf3700f11f004090d41d1de1eb306e8408aef5",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "tinygo",
+      "path": "cgo/libclang_config_llvm22.go",
+      "bytes": 617,
+      "sha256": "38119da7bea0a7c38b3bed371af0f10affefce808650b9a7ecf33d7bd58531af",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "tinygo",
+      "path": "cgo/libclang_config_llvm20.go",
+      "bytes": 684,
+      "sha256": "0dfd8d4edb0b14c44435f6fb9d7c590146a0ee369d7b3a6b5d3d87bcd0481260",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "go-llvm",
+      "path": "switch_llvm22.go",
+      "bytes": 649,
+      "sha256": "fe51409f60ceee1d318000e005e5060aba2332962129772837dd8a0cfd003ed3",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "go-llvm",
+      "path": "switch_pre22.go",
+      "bytes": 612,
+      "sha256": "dbeddb28c3b3d16e8595e373697cc4e04a8e436b350b6accd104637d5d92bd7d",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "go-llvm",
+      "path": "llvm_config_llvm22.go",
+      "bytes": 1252,
+      "sha256": "1c6343eb00fb41173fd6aead7b48c8f59002b3f2c255113cd691b3a675ca0c11",
+      "sourceContext": "unmodified pinned source"
+    },
+    {
+      "repository": "go-llvm",
+      "path": "llvm_config_llvm20.go",
+      "bytes": 1384,
+      "sha256": "905de10b3a8ea3c5dc3adab55df2d412ed4b7a64a4737e3aa116ddae86753c47",
+      "sourceContext": "unmodified pinned source"
+    }
+  ],
+  "upstreamBootstrap": {
+    "path": "make/build.mk",
+    "line": 41,
+    "tags": [
+      "byollvm",
+      "llvm22",
+      "osusergo"
+    ],
+    "sourceSha256": "42b686ff0fb35b8f4b0dc70d925b4ad4133f440c2c9aecd425299dd3f6f071d4"
+  },
+  "failure": {
+    "missingCompilerBuildTag": "llvm22",
+    "frontendDiagnostic": "warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead",
+    "reason": "compileopts.CFlags calls ClangTriple; without llvm22 the embedded pre22 implementation leaves the deprecated WASI spelling unchanged. libclang diagnostics, including warnings, are reported as CGo errors.",
+    "otherAffectedSemantics": "go-LLVM must select LLVM22 GetSwitchCaseValue C API instead of the pre22 switch operand layout; compileopts also selects LLVM22 target-feature mapping.",
+    "rootOnlyReuse": "Changing target JSON LLVM triple violates the adapter existing exact config.Triple contract. The missing source implementation is compiled into the compiler Wasm and requires rebuilding it."
+  },
+  "sourceSelection": {
+    "tool": "pinned native TinyGo list -json",
+    "tagsWithoutFix": [
+      "byollvm",
+      "osusergo",
+      "tinygo.browsercompiler"
+    ],
+    "tagsWithFix": [
+      "byollvm",
+      "llvm22",
+      "osusergo",
+      "tinygo.browsercompiler"
+    ],
+    "commands": 6,
+    "allExitCodes": 0,
+    "byollvmSystemLinkageConfigurationsExcluded": true,
+    "results": [
+      {
+        "variant": "missing",
+        "importPath": "github.com/tinygo-org/tinygo/compileopts",
+        "relevantFiles": [
+          {
+            "file": "features_default.go",
+            "sha256": "56d60f4685b0ea3446a8118230cf3700f11f004090d41d1de1eb306e8408aef5"
+          },
+          {
+            "file": "triple_pre22.go",
+            "sha256": "119d98facfbe2f4f18fd8b62a97d3f80158da3bb4888683be8f4c9308784b806"
+          }
+        ],
+        "goFiles": [
+          "cflags.go",
+          "config.go",
+          "features_default.go",
+          "options.go",
+          "target.go",
+          "triple_pre22.go"
+        ],
+        "cgoFiles": []
+      },
+      {
+        "variant": "missing",
+        "importPath": "tinygo.org/x/go-llvm",
+        "relevantFiles": [
+          {
+            "file": "switch_pre22.go",
+            "sha256": "dbeddb28c3b3d16e8595e373697cc4e04a8e436b350b6accd104637d5d92bd7d"
+          }
+        ],
+        "goFiles": [
+          "string.go",
+          "switch_pre22.go",
+          "tinygo_cgo_unsigned.go"
+        ],
+        "cgoFiles": [
+          "analysis.go",
+          "bitreader.go",
+          "bitwriter.go",
+          "dibuilder.go",
+          "executionengine.go",
+          "ir.go",
+          "irreader.go",
+          "linker.go",
+          "passes.go",
+          "support.go",
+          "target.go",
+          "version.go"
+        ]
+      },
+      {
+        "variant": "missing",
+        "importPath": "github.com/tinygo-org/tinygo/cgo",
+        "relevantFiles": [],
+        "goFiles": [
+          "cgo.go",
+          "const.go",
+          "security.go",
+          "unsigned_wasip1.go"
+        ],
+        "cgoFiles": [
+          "libclang.go",
+          "sync.go"
+        ]
+      },
+      {
+        "variant": "correct",
+        "importPath": "github.com/tinygo-org/tinygo/compileopts",
+        "relevantFiles": [
+          {
+            "file": "features_llvm22.go",
+            "sha256": "d2c4b159b7766d0edb4490f9c8a316cc6be411d7936b551ab6345825fa088802"
+          },
+          {
+            "file": "triple_llvm22.go",
+            "sha256": "a7415d4c428bc1d9396c62482e21727a53880a41e19f678c1edc19ffbb00aaae"
+          }
+        ],
+        "goFiles": [
+          "cflags.go",
+          "config.go",
+          "features_llvm22.go",
+          "options.go",
+          "target.go",
+          "triple_llvm22.go"
+        ],
+        "cgoFiles": []
+      },
+      {
+        "variant": "correct",
+        "importPath": "tinygo.org/x/go-llvm",
+        "relevantFiles": [
+          {
+            "file": "switch_llvm22.go",
+            "sha256": "fe51409f60ceee1d318000e005e5060aba2332962129772837dd8a0cfd003ed3"
+          }
+        ],
+        "goFiles": [
+          "string.go",
+          "tinygo_cgo_unsigned.go"
+        ],
+        "cgoFiles": [
+          "analysis.go",
+          "bitreader.go",
+          "bitwriter.go",
+          "dibuilder.go",
+          "executionengine.go",
+          "ir.go",
+          "irreader.go",
+          "linker.go",
+          "passes.go",
+          "support.go",
+          "switch_llvm22.go",
+          "target.go",
+          "version.go"
+        ]
+      },
+      {
+        "variant": "correct",
+        "importPath": "github.com/tinygo-org/tinygo/cgo",
+        "relevantFiles": [],
+        "goFiles": [
+          "cgo.go",
+          "const.go",
+          "security.go",
+          "unsigned_wasip1.go"
+        ],
+        "cgoFiles": [
+          "libclang.go",
+          "sync.go"
+        ]
+      }
+    ]
+  },
+  "nativeClang": {
+    "input": "int answer(void) { return 42; }\n",
+    "inputSha256": "d2ee72eea6fb9b6a2ce93777ac97e9f1d7183f9233923f434ff0d9f61a4aa9d5",
+    "flags": [
+      "-mcpu=generic",
+      "-mbulk-memory",
+      "-mnontrapping-fptoint",
+      "-mno-multivalue",
+      "-mno-reference-types",
+      "-msign-ext",
+      "-O1",
+      "-S",
+      "-emit-llvm",
+      "-x",
+      "c"
+    ],
+    "old": {
+      "tripleArg": "wasm32-unknown-wasi",
+      "diagnostic": "warning: argument '--target=wasm32-wasi' is deprecated, use --target=wasm32-wasip1 instead\n",
+      "irSha256": "dd4cc0b1d1514fa9d874caf7afb20e922b91d2b8b0552cc9180d561dae4b6534",
+      "irHeader": [
+        "target datalayout = \"e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20\"",
+        "target triple = \"wasm32-unknown-wasi\""
+      ]
+    },
+    "canonical": {
+      "tripleArg": "wasm32-unknown-wasip1",
+      "diagnostic": "",
+      "irSha256": "73623accf18b7b52472c4614665a451de02ee9df18155e5e6f56f723a8a3c206",
+      "irHeader": [
+        "target datalayout = \"e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20\"",
+        "target triple = \"wasm32-unknown-wasip1\""
+      ]
+    },
+    "irEqualAfterReplacingOnlyTargetSpelling": true,
+    "contractImplication": "Canonical frontend C/C++ IR uses wasm32-unknown-wasip1; primary Go IR retains wasm32-unknown-wasi. Exact Preview1 aliases share the unchanged DataLayout. Module verifier, DataLayout, target features, and object policies must remain strict; preserve actual input spelling in provenance."
+  },
+  "nativeCgo": {
+    "source": "package main\n/*\nstatic int answer(void) { return 42; }\n*/\nimport \"C\"\nfunc main() { println(C.answer()) }\n",
+    "sourceSha256": "1973a008095b1e4bae25c0445f500ecacdaf0fdcc65637f89d556b5835d77b70",
+    "flags": [
+      "-target=wasip1",
+      "-scheduler=asyncify",
+      "-gc=precise",
+      "-opt=1",
+      "-panic=print",
+      "-p=1"
+    ],
+    "ir": {
+      "sha256": "94f01a0deb7610b833fff321459b28a7d6d1248abd32c6492af70dcba1710e3b",
+      "irHeader": [
+        "target datalayout = \"e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20\"",
+        "target triple = \"wasm32-unknown-wasi\""
+      ]
+    },
+    "wasm": {
+      "sha256": "2dbb6c9eb99841907f0fdb8efac640c2175266b0fd4276f45eec11dc592ffe2f",
+      "bytes": 165948,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    "nodeWasiExitCode": 0
+  },
+  "productionPreflight": "Use one LLVM-major-derived tag set for host target JSON, native bootstrap command and package-selection commands. Before host C++/compiler compilation, reject wrong package directories, absent triple/features/switch LLVM22 implementations, obsolete source selections and system LLVM linkage configuration. Record required source hashes.",
+  "regressionBeforeFix": {
+    "command": "node --test --test-name-pattern=\"selects LLVM-version-specific sources\" producer/tinygo-browser/test/build-browser-compiler.test.mjs",
+    "exitCode": 1,
+    "assertion": "byollvm does not enable TinyGo/Go-LLVM LLVM-version-specific implementations"
+  },
+  "regressionCommands": [
+    "node --test producer/tinygo-browser/test/build-browser-compiler.test.mjs",
+    "node --test producer/tinygo-browser/test/*.test.mjs"
+  ],
+  "reproduction": {
+    "selection": "tinygo list -json -target=<wasip1-inherited-host-target.json> -tags=\"byollvm llvm22 osusergo tinygo.browsercompiler\" <compileopts|tinygo.org/x/go-llvm|cgo package>",
+    "clang": "tinygo clang --target=wasm32-unknown-wasip1 -mcpu=generic -mbulk-memory -mnontrapping-fptoint -mno-multivalue -mno-reference-types -msign-ext -O1 -S -emit-llvm -x c probe.c -o canonical.ll",
+    "cgo": "tinygo build -target=wasip1 -scheduler=asyncify -gc=precise -opt=1 -panic=print -p=1 -o probe.wasm ."
+  },
+  "limitations": [
+    "No browser compiler rebuild in this validation.",
+    "No blanket diagnostic suppression.",
+    "The small native CGo program does not replace full language/C/C++/assembly acceptance.",
+    "Upstream source selection uses exact locked source archives with every regular Git blob verified; source-selection-only local module roots are separate from production source."
+  ],
+  "regressionAfterFix": {
+    "focusedBuildTests": 19,
+    "allProducerTests": 74,
+    "failed": 0,
+    "exitCode": 0,
+    "sourceScope": "Combined frozen LLVM22 bootstrap and Preview1 native-input provenance changes; no remote compiler rebuild"
+  }
+}
