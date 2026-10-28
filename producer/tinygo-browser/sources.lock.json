@@ -287,13 +287,21 @@
         "requiredText": [
           "\"tinygo.org/x/go-llvm\""
         ]
+      },
+      {
+        "path": "src/internal/abi/escape.go",
+        "sha256": "62c028e217bfdfae376f75a32fecddd53a58aaf553941772161591d8d4957d80",
+        "package": "abi",
+        "requiredText": [
+          "func EscapeNonString[T any](v T) { panic(\"intrinsic\") }"
+        ]
       }
     ]
   },
   "patches": [
     {
       "path": "patches/tinygo-wasi-adapter.patch",
-      "sha256": "d995f145877ecc3b53bfc9b108ebffff6234730d900fff19ae3c65a134cf23a3"
+      "sha256": "10417927eec0a7bcb0ecf0fe1e56abcf2d95c50715da50876717b287b3c905ae"
     },
     {
       "path": "patches/go-llvm-wasi-cgo-alias.patch",

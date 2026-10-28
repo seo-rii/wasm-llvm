@@ -32,7 +32,8 @@ const REQUIRED_IDENTITY_PATHS = [
 	'interp/interp.go',
 	'loader/loader.go',
 	'main.go',
-	'transform/transform.go'
+	'transform/transform.go',
+	'src/internal/abi/escape.go'
 ];
 const REQUIRED_GO_LLVM_HOST_SUPPORT_PATHS = [
 	'IRBindings.cpp',

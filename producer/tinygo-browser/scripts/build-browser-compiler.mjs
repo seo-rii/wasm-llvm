@@ -26,6 +26,7 @@ import {
 } from './source-contract.mjs';
 import { verifyTinyGoArtifactPayloads } from './verify-artifacts.mjs';
 import { stripCompilerNames } from './strip-compiler-names.mjs';
+import { runWasiModule } from './probe-native-split-pipeline.mjs';
 
 const THIS_FILE = fileURLToPath(import.meta.url);
 const PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), '..');
@@ -1353,6 +1354,52 @@ export async function createBrowserCompilerBuildPlan(
 	};
 }
 
+export async function probeTinyGoAbiEscape(
+	{ nativeTinyGo, buildDir, environment, producerRoot = PRODUCER_ROOT },
+	{ run = runCommand, executeWasi = runWasiModule } = {}
+) {
+	const fixtureRoot = path.join(producerRoot, 'fixtures', 'escape-non-string');
+	const outputDir = path.join(buildDir, 'abi-escape-probe');
+	await mkdir(outputDir, { recursive: true });
+	const modulePath = path.join(outputDir, 'probe.wasm');
+	const sourcePath = path.join(fixtureRoot, 'main.go');
+	const [source, expectedStdout] = await Promise.all([
+		readFile(sourcePath),
+		readFile(path.join(fixtureRoot, 'stdout.txt'))
+	]);
+	const command = [
+		nativeTinyGo, 'build', '-target=wasip1', '-scheduler=asyncify',
+		'-gc=precise', '-opt=z', '-panic=print', '-p=1', '-o', modulePath, sourcePath
+	];
+	const compilation = await run(command[0], command.slice(1), {
+		cwd: fixtureRoot,
+		env: environment,
+		capture: true
+	});
+	assert(
+		compilation.exitCode === 0,
+		`TinyGo ABI escape probe compilation failed:\n${compilation.stdout}${compilation.stderr}`
+	);
+	const execution = await executeWasi({ modulePath, args: ['abi-escape-probe'], preopens: {} });
+	assert(
+		execution.exitCode === 0 && execution.stdout.equals(expectedStdout) && execution.stderr.length === 0,
+		`TinyGo ABI escape probe failed (exit ${execution.exitCode}):\n${execution.stdout}\n${execution.stderr}`
+	);
+	return {
+		status: 'passed',
+		scope: 'native TinyGo compiles the patched runtime ABI fixture for Node WASI; not browser compiler qualification',
+		command,
+		source: { path: sourcePath, bytes: source.length, sha256: sha256(source) },
+		output: await inspectBuildFile(modulePath),
+		execution: {
+			exitCode: execution.exitCode,
+			stdout: execution.stdout.toString('utf8'),
+			stdoutSha256: sha256(execution.stdout),
+			stderr: execution.stderr.toString('utf8')
+		}
+	};
+}
+
 export async function buildBrowserCompiler(
 	options,
 	{
@@ -1361,7 +1408,8 @@ export async function buildBrowserCompiler(
 		verifySource = verifyTinyGoSourceReceipt,
 		run = runCommand,
 		copySource = cp,
-		inspectFile = inspectBuildFile
+		inspectFile = inspectBuildFile,
+		probeAbiEscape = probeTinyGoAbiEscape
 	} = {}
 ) {
 	assertPathOutsideRoot(options.receiptPath, options.sourceRoot, '--receipt');
@@ -1908,6 +1956,11 @@ export async function buildBrowserCompiler(
 					expectedRoot: receipt.paths.patchedSourceRoot
 				},
 				{
+					id: 'tinygo-abi-escape',
+					path: path.join(mergedGoRoot, 'src', 'internal', 'abi', 'escape.go'),
+					expectedRoot: receipt.paths.patchedSourceRoot
+				},
+				{
 					id: 'go-standard-library',
 					path: path.join(mergedGoRoot, 'src', 'fmt', 'print.go'),
 					expectedRoot: receipt.paths.goToolchainRoot
@@ -1938,6 +1991,12 @@ export async function buildBrowserCompiler(
 				path: mergedGoRoot,
 				identity: mergedRootIdentity
 			};
+			receipt.nativeTinyGo.abiEscapeProbe = await probeAbiEscape({
+				nativeTinyGo: options.nativeTinyGo,
+				buildDir: options.buildDir,
+				environment: browserProfileEnvironment,
+				producerRoot
+			}, { run });
 
 			const hostSupportOutputs = [];
 			const hostSupportEnvironment = {

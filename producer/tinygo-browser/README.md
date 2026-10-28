@@ -76,6 +76,15 @@ is recorded in `validation/0.43.0-package-graph.json`.
 WASI provider build and execution: all 45 package records match both native cmd/go and
 native TinyGo. Its source-only root does not qualify the complete browser compiler bundle.
 
+TinyGo 0.43 leaves `internal/abi.EscapeNonString` as a panic stub. Go 1.26's
+`hash/maphash.Comparable`, also used by the compiler's x/tools dependency, reaches it.
+The runtime patch passes `&v` to TinyGo's existing pointer-only `Escape` intrinsic.
+This conservatively promotes the value and contained pointers to the heap, including
+extra allocations for scalar/string values. The producer compiles and executes a small
+pointer/aggregate hashing fixture with the patched runtime before building the compiler.
+`validation/0.43.0-escape-non-string-wasi.json` records the native failure, corrected
+execution and LLVM allocation evidence; full browser compiler acceptance is still required.
+
 Failed workflow runs retain available compiler/link inputs and receipts for seven days in an
 explicitly unqualified diagnostic artifact. Only the separate verified product upload follows
 successful producer acceptance and strict verification.

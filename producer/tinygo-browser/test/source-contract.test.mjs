@@ -26,6 +26,7 @@ import {
 
 const tempDirs = [];
 const fixtureSources = {
+	'src/internal/abi/escape.go': 'package abi\nfunc EscapeNonString[T any](v T) { panic("intrinsic") }\n',
 	'GNUmakefile': 'include make/llvm.mk\n',
 	'make/llvm.mk': 'LLVM_REVISION = $(shell cat llvm-version.txt)\ngit remote add origin https://github.com/tinygo-org/llvm-project\ngit checkout $(LLVM_REVISION)\n',
 	'llvm-version.txt': '2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2\n',
@@ -585,7 +586,7 @@ test('initializes missing submodules in an existing TinyGo checkout', async () =
 test('verifies source contents and creates a deterministic upstream compiler receipt', async () => {
 	const contract = await createFixtureContract();
 	assert.equal(contract.sourceReceipt.source.clean, true);
-	assert.equal(contract.sourceReceipt.compilerIdentity.sourceFiles.length, 19);
+	assert.equal(contract.sourceReceipt.compilerIdentity.sourceFiles.length, 20);
 	assert.ok(
 		contract.sourceReceipt.compilerIdentity.requiredPackages.includes(
 			'github.com/tinygo-org/tinygo/cgo'

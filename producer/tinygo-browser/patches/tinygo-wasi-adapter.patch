@@ -3556,3 +3556,22 @@ index 1877aa5..d51c72c 100644
 +func libc_internal_realloc(oldPtr unsafe.Pointer, size uintptr) unsafe.Pointer {
 +	return libc_realloc(oldPtr, size)
 +}
+diff --git a/src/internal/abi/escape.go b/src/internal/abi/escape.go
+--- a/src/internal/abi/escape.go
++++ b/src/internal/abi/escape.go
+@@ -28,8 +28,13 @@
+ //
+ //	if hasNonStringPointers(T) { Escape(v) }
+ //
+-// Implemented as a compiler intrinsic.
+-func EscapeNonString[T any](v T) { panic("intrinsic") }
++// TinyGo 0.43 does not implement EscapeNonString as a compiler intrinsic.
++// Its Escape intrinsic accepts pointers only. Escaping the address of v also
++// makes pointers stored in v escape, preserving stable addresses for hashing.
++// This conservative fallback additionally escapes scalar and string values.
++func EscapeNonString[T any](v T) {
++	_ = Escape(&v)
++}
+ 
+ // EscapeToResultNonString models a data flow edge from v to the result,
+ // if v contains a non-string pointer. If v contains only string pointers,

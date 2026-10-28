@@ -188,7 +188,7 @@ test('the request uses an explicit go-list graph and prebuilt runtime artifacts'
 	assert.match(source, /Clang WebAssembly \.S files/);
 });
 
-test('the upstream patch adapts only WASI host services and the wasm32 libclang ABI', async () => {
+test('the upstream patch adapts WASI services, runtime compatibility, and the wasm32 libclang ABI', async () => {
 	const patch = await readFile(patchPath, 'utf8');
 
 	assert.match(patch, /TINYGO_BROWSER_PACKAGE_JSON/);
