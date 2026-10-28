@@ -11,7 +11,7 @@ import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
 import { clangdResourceProfile } from './resource-profile.mjs';
-import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
+import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, emsdkShellCommand, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
@@ -934,11 +934,8 @@ await prepareClangdHeaders({
 });
 const clangdHeaderLinkFlags =
 	config.clangdSeparateHeaders === 'ON' ? '' : ` --embed-file=${clangdIncludeDir}@/usr/include`;
-const emsdkEnv = shellQuote(path.join(emsdkDir, 'emsdk_env.sh'));
+const emsdkEnv = path.join(emsdkDir, 'emsdk_env.sh');
 const clangdConfigure = [
-	'source',
-	emsdkEnv,
-	'&&',
 	'emcmake',
 	'cmake',
 	'-G',
@@ -978,10 +975,11 @@ const clangdConfigure = [
 	'-DCLANG_ENABLE_ARCMT=OFF',
 	'-DCLANG_ENABLE_STATIC_ANALYZER=OFF'
 ].join(' ');
-await run('bash', ['-lc', clangdConfigure]);
+await run('bash', ['-lc', emsdkShellCommand(emsdkEnv, emCache, clangdConfigure)]);
 await run('bash', [
 	'-lc',
-	`source ${emsdkEnv} && cmake --build ${shellQuote(clangdBuild)} --target clangd ${ninjaArgs.map(shellQuote).join(' ')}`
+	emsdkShellCommand(emsdkEnv, emCache,
+		`cmake --build ${shellQuote(clangdBuild)} --target clangd ${ninjaArgs.map(shellQuote).join(' ')}`)
 ]);
 
 for (const entry of await fs.readdir(path.join(stagingSysroot, 'include'), {

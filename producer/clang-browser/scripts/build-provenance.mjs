@@ -12,6 +12,13 @@ import { fileURLToPath } from 'node:url';
 const execFileAsync = promisify(execFile);
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+export function emsdkShellCommand(environmentScript, cacheDirectory, command) {
+	const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+	// emsdk_env.sh deliberately clears inherited EM_CACHE. Reapply the private
+	// cache after activation so generated libraries never modify recorded SDK inputs.
+	return `source ${quote(environmentScript)} && export EM_CACHE=${quote(cacheDirectory)} && ${command}`;
+}
+
 export async function fileIdentity(file) {
 	const hash = createHash('sha256');
 	let bytes = 0;

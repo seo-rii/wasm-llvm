@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { downloadPinned, extractPinnedArchive, pinnedCommitPatch, verifyPatchedCheckout } from '../producer/clang-browser/scripts/build-provenance.mjs';
+import { downloadPinned, emsdkShellCommand, extractPinnedArchive, pinnedCommitPatch, verifyPatchedCheckout } from '../producer/clang-browser/scripts/build-provenance.mjs';
 
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 async function temporary(t) {
@@ -13,6 +13,22 @@ async function temporary(t) {
 	t.after(() => fs.rm(root, { recursive: true, force: true }));
 	return root;
 }
+
+test('SDK activation cannot redirect generated libraries into the recorded SDK tree', async (t) => {
+	const root = await temporary(t);
+	const environment = path.join(root, "SDK's environment.sh");
+	const cache = path.join(root, "build's private cache");
+	const inherited = path.join(root, 'installed-cache');
+	await fs.mkdir(cache);
+	await fs.mkdir(inherited);
+	await fs.writeFile(environment, 'unset EM_CACHE\n');
+	const result = execFileSync('bash', ['-c', emsdkShellCommand(environment, cache,
+		'printf generated > "$EM_CACHE/library.a"; printf "%s" "$EM_CACHE"')],
+		{ env: { ...process.env, EM_CACHE: inherited }, encoding: 'utf8' });
+	assert.equal(result, cache);
+	assert.equal(await fs.readFile(path.join(cache, 'library.a'), 'utf8'), 'generated');
+	assert.deepEqual(await fs.readdir(inherited), []);
+});
 const git = (source, ...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 async function checkout(t) {
 	const source = await temporary(t);
