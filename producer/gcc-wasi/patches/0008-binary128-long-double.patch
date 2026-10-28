@@ -1,0 +1,712 @@
+diff --git a/gcc/config/wasm/constraints.md b/gcc/config/wasm/constraints.md
+--- a/gcc/config/wasm/constraints.md
++++ b/gcc/config/wasm/constraints.md
+@@ -61,7 +61,9 @@
+     machine_mode m = GET_MODE (x);
+     int sign = 0;
+     PROMOTE_MODE (m, sign, NULL_TREE);
+-    return m == DImode;
++    return m == DImode
++      || (SUBREG_P (op) && GET_MODE (op) == DImode
++          && (m == TFmode || m == TImode));
+   })
+ (define_predicate "wasm_register_operand"
+   (match_operand 0 "register_operand")
+diff --git a/gcc/config/wasm/tf.md b/gcc/config/wasm/tf.md
+new file mode 100644
+--- /dev/null
++++ b/gcc/config/wasm/tf.md
+@@ -0,0 +1,72 @@
++;; WebAssembly binary128 storage and sign operations.
++;; Copyright (C) 2026 Free Software Foundation, Inc.
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic, conversions and comparisons use GCC's standard TF soft-float
++;; optabs.  No Wasm floating opcode has binary128 precision.  Every TF copy
++;; is lowered here into low/high DI words, without an optimization-pass
++;; dependency or a SIMD requirement.
++(define_expand "movtf"
++  [(set (match_operand:TF 0 "nonimmediate_operand")
++        (match_operand:TF 1 "general_operand"))]
++  ""
++{
++  wasm_expand_pair_move (operands[0], operands[1]);
++  DONE;
++})
++
++;; Generic emit_group_store reconstructs a floating argument in an integer
++;; container before taking a same-size floating view.  Support that storage
++;; operation without enabling TImode in TARGET_SCALAR_MODE_SUPPORTED_P or
++;; advertising any 128-bit integer arithmetic instruction.
++(define_expand "movti"
++  [(set (match_operand:TI 0 "nonimmediate_operand")
++        (match_operand:TI 1 "general_operand"))]
++  ""
++{
++  wasm_expand_pair_move (operands[0], operands[1]);
++  DONE;
++})
++
++(define_expand "negtf2"
++  [(set (match_operand:TF 0 "register_operand")
++        (neg:TF (match_operand:TF 1 "general_operand")))]
++  ""
++{
++  wasm_expand_tf_sign (operands[0], operands[1], NULL_RTX, NEG);
++  DONE;
++})
++
++(define_expand "abstf2"
++  [(set (match_operand:TF 0 "register_operand")
++        (abs:TF (match_operand:TF 1 "general_operand")))]
++  ""
++{
++  wasm_expand_tf_sign (operands[0], operands[1], NULL_RTX, ABS);
++  DONE;
++})
++
++(define_expand "copysigntf3"
++  [(set (match_operand:TF 0 "register_operand")
++        (copysign:TF (match_operand:TF 1 "general_operand")
++                     (match_operand:TF 2 "general_operand")))]
++  ""
++{
++  wasm_expand_tf_sign (operands[0], operands[1], operands[2], COPYSIGN);
++  DONE;
++})
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -190,6 +190,9 @@
+     }
+ }
+ 
++void print_func_type (FILE *, const_tree, bool for_block = false,
++                      bool first = false);
++
+ /* Given a type, print what wasm thinks it should look like.  */
+ void
+ print_type (FILE *stream, const_tree type, bool first = false)
+@@ -225,7 +228,8 @@
+       break;
+     case REAL_TYPE:
+       fprintf (stream, "%s%s", delim,
+-	       TYPE_PRECISION (type) > 32 ? "f64" : "f32");
++	       TYPE_MODE (type) == TFmode ? "i64 i64"
++               : TYPE_PRECISION (type) > 32 ? "f64" : "f32");
+       break;
+     case VECTOR_TYPE:
+       gcc_assert (TARGET_SIMD128 && GET_MODE_SIZE (TYPE_MODE (type)) == 16);
+@@ -233,33 +237,30 @@
+       break;
+     case FUNCTION_TYPE:
+     case METHOD_TYPE:
+-      function_args_iterator it;
+-      tree *arg;
+-      fprintf (stream, "%s(param", delim);
+-      CUMULATIVE_ARGS args;
+-      INIT_CUMULATIVE_ARGS (args, type, nullptr, false, 0);
+-      FOREACH_FUNCTION_ARGS_PTR (type, arg, it)
+-      {
+-	function_arg_info info (*arg, stdarg_p (type));
+-	if (pass_by_reference (&args, info))
+-	  print_type (stream, intSI_type_node);
+-	else
+-	  print_type (stream, *arg);
+-      }
+-      fprintf (stream, ")");
+-      tree return_type = TREE_TYPE (type);
+-      fprintf (stream, " (result");
+-      if (!VOID_TYPE_P (return_type))
+-	{
+-	  print_type (stream, return_type);
+-	}
+-      fprintf (stream, ")");
++      /* Keep hidden result pointers, singleton lowering and variadic-buffer
++         parameters identical to ordinary function imports and definitions.  */
++      print_func_type (stream, type, false, first);
+       break;
+     }
+ }
+ void
+ print_local_decl (FILE *stream, rtx reg, bool param = false)
+ {
++  if (GET_MODE (reg) == TFmode || GET_MODE (reg) == TImode)
++    {
++      /* Named binary128 parameters have already been lowered to two DI
++         registers by the ABI hooks.  TF pseudos and internal TI copy
++         containers are represented as pairs of local words. */
++      gcc_assert (!param && REGNO (reg) >= FIRST_PSEUDO_REGISTER);
++      for (unsigned i = 0; i != 2; ++i)
++        {
++          output_indent (stream);
++          fprintf (stream, "(local ");
++          wasm_print_operand (stream, gen_rtx_SUBREG (DImode, reg, i * 8), 0);
++          fprintf (stream, " i64)\n");
++        }
++      return;
++    }
+   output_indent (stream);
+   fprintf (stream, "(%s ", param ? "param" : "local");
+   wasm_print_operand (stream, reg, 0);
+@@ -336,7 +337,7 @@
+ }
+ 
+ void
+-print_func_type (FILE *stream, const_tree type, bool for_block = false)
++print_func_type (FILE *stream, const_tree type, bool for_block, bool first)
+ {
+   tree result = TREE_TYPE (type);
+ 
+@@ -344,7 +345,7 @@
+   bool return_by_ref = aggregate_value_p (result, type);
+   if (!for_block)
+     {
+-      fprintf (stream, " (param");
++      fprintf (stream, "%s(param", first ? "" : " ");
+       if (return_by_ref)
+ 	print_func_frame_related (stream, build_pointer_type (result));
+       tree arg;
+@@ -538,8 +539,14 @@
+       assemble_import (saved_asm_out_file, IDENTIFIER_POINTER (name), decl);
+     }
+   for (auto sym: external_libcall_set)
+-    assemble_entity_import (saved_asm_out_file, XSTR (sym, 0), XSTR (sym, 0),
+-			    *external_libcalls.get (sym));
++    {
++      tree *type = external_libcalls.get (sym);
++      if (!type)
++        internal_error ("missing WebAssembly type for library call %qs",
++                        XSTR (sym, 0));
++      assemble_entity_import (saved_asm_out_file, XSTR (sym, 0), XSTR (sym, 0),
++                              *type);
++    }
+ 
+   fflush (asm_out_file);
+   fwrite (fake_out_file_data, 1, fake_out_file_length, saved_asm_out_file);
+@@ -808,8 +815,10 @@
+ 
+   if (mode == '#') /* Print the return insn.  */
+     {
+-      if (!VOID_TYPE_P (TREE_TYPE (TREE_TYPE (cfun->decl)))
+-          && !wasm_abi_empty_type_p (TREE_TYPE (TREE_TYPE (cfun->decl))))
++      tree type = TREE_TYPE (cfun->decl);
++      tree result = TREE_TYPE (type);
++      if (!VOID_TYPE_P (result) && !aggregate_value_p (result, type)
++          && !wasm_abi_empty_type_p (result))
+ 	fprintf (stream, " (local.get $return)");
+     }
+   else if (mode == 'M') /* Print local/global for a register.  */
+@@ -904,6 +913,24 @@
+ 	break;
+       }
+     case SUBREG:
++      if (REG_P (SUBREG_REG (value))
++          && (GET_MODE (SUBREG_REG (value)) == TFmode
++              || GET_MODE (SUBREG_REG (value)) == TImode)
++          && GET_MODE (value) == DImode)
++        {
++          unsigned int byte = SUBREG_BYTE (value).to_constant ();
++          gcc_assert (byte == 0 || byte == 8);
++          int regno = REGNO (SUBREG_REG (value));
++          gcc_assert (regno >= FIRST_PSEUDO_REGISTER);
++          if (mode == 'i' || mode == 'o')
++            fprintf (stream, "%slocal.%s ", mode == 'o' ? "" : "(",
++                     mode == 'i' ? "get" : "set");
++          fprintf (stream, "$local_%d_%s", regno - FIRST_PSEUDO_REGISTER,
++                   byte == 0 ? "lo" : "hi");
++          if (mode == 'i')
++            fprintf (stream, ")");
++          break;
++        }
+       gcc_assert (SUBREG_BYTE (value) == 0);
+       wasm_print_operand (stream, SUBREG_REG (value), mode);
+       break;
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -104,8 +104,13 @@
+   vec<rtx, va_gc> *args_rtx = cfun->machine->call->args;
+   int cnt = vec_safe_length (args_rtx);
+   args.safe_grow (cnt);
++  /* CALL_ARGS records push order.  Record the lowered Wasm signature in
++     parameter order, including any hidden result pointer already supplied by
++     the generic libcall expander.  RET is the actual Wasm result type, not
++     the source type whose return convention would add that pointer again.  */
+   for (int i = 0; i != cnt; ++i)
+-    args[i] = lang_hooks.types.type_for_mode (GET_MODE ((*args_rtx)[i]), false);
++    args[i] = lang_hooks.types.type_for_mode
++      (GET_MODE ((*args_rtx)[cnt - 1 - i]), false);
+   tree ty = build_function_type_array (ret, cnt, args.address ());
+   bool existed;
+   tree &slot = external_libcalls.get_or_insert (sym, &existed);
+@@ -120,7 +125,16 @@
+ wasm_real_register_mode (rtx reg)
+ {
+   if (SUBREG_P (reg))
+-    reg = SUBREG_REG (reg);
++    {
++      /* Binary128 pseudos and their internal integer copy containers have
++         two independent i64 local words.  Their DI subregs are ordinary
++         integer operands even before optional lower-subreg optimization. */
++      if (GET_MODE (reg) == DImode
++          && (GET_MODE (SUBREG_REG (reg)) == TFmode
++              || GET_MODE (SUBREG_REG (reg)) == TImode))
++        return DImode;
++      reg = SUBREG_REG (reg);
++    }
+   if (!REG_P (reg))
+     return VOIDmode;
+   machine_mode m = GET_MODE (reg);
+@@ -152,10 +166,56 @@
+   return true;
+ }
+ 
++/* Scalarized vectors can use the integer container's word lowparts too.
++   Narrow subregs of a TI pseudo cannot be printed as an i32 local: each
++   storage word is i64.  Materialize its DI word before using the existing
++   narrow integer conversion patterns.  validate_subreg requires the
++   lowpart of a REGMODE_NATURAL_SIZE block.  With little-endian 8-byte
++   words, only offsets 0 and 8 are valid; other bit positions are lowered
++   by GCC to shifts/bitfield operations.  */
++static bool
++narrow_pair_subreg_p (rtx value)
++{
++  return SUBREG_P (value) && REG_P (SUBREG_REG (value))
++    && GET_MODE (SUBREG_REG (value)) == TImode
++    && (GET_MODE (value) == QImode || GET_MODE (value) == HImode
++        || GET_MODE (value) == SImode);
++}
++
++static rtx
++pair_subreg_word (rtx value)
++{
++  gcc_assert (narrow_pair_subreg_p (value));
++  unsigned byte = SUBREG_BYTE (value).to_constant ();
++  gcc_assert (byte == 0 || byte == 8);
++  return operand_subword (SUBREG_REG (value), byte / 8, 1, TImode);
++}
++
++static rtx
++legalize_pair_source (rtx value)
++{
++  if (!narrow_pair_subreg_p (value))
++    return value;
++  rtx word = copy_to_mode_reg (DImode, pair_subreg_word (value));
++  return gen_lowpart (GET_MODE (value), word);
++}
++
+ bool
+ wasm_expand_mov (rtx dest, rtx src, machine_mode mode)
+ {
+   temporary_volatile_ok g {1};
++  src = legalize_pair_source (src);
++  if (narrow_pair_subreg_p (dest))
++    {
++      rtx temp = gen_reg_rtx (mode);
++      emit_move_insn (temp, src);
++      /* A normal narrow subreg write leaves the rest of its word
++         undefined, but must preserve the other DI word of the TI
++         container.  STRICT_LOW_PART is not a normal subreg write.  */
++      emit_move_insn (pair_subreg_word (dest),
++                      convert_to_mode (DImode, temp, 0));
++      return true;
++    }
+   dest = unify_mem (dest);
+   src = unify_mem (src);
+   if (register_operand (dest, mode) && immediate_operand (src, mode))
+@@ -172,9 +232,108 @@
+   return true;
+ }
+ 
++/* Legalize every TF/TI copy during RTL expansion, including at -O0.
++   Generic ABI group assembly uses TI temporaries and full-width TF views
++   of them.  This is storage legalization, not 128-bit integer arithmetic.
++   Constants are decoded by GCC in target byte order, rather than rounded
++   through the compiler host's floating types.  In memory both words retain
++   alias, volatile and alignment attributes through operand_subword.  */
++void
++wasm_expand_pair_move (rtx dest, rtx src)
++{
++  temporary_volatile_ok g {1};
++  machine_mode mode = GET_MODE (dest);
++  gcc_assert (mode == TFmode || mode == TImode);
++  /* emit_group_store can initialize a TI temporary with a paradoxical
++     TI view of its first DI argument.  Its upper word is undefined and
++     must not become an out-of-range subreg of that DI register.  Follow
++     the same rule as expr.cc's emit_move_multi_word for either operand. */
++  auto defined_word_p = [] (rtx op, unsigned i)
++    {
++      if (!SUBREG_P (op))
++        return true;
++      poly_int64 offset = i * UNITS_PER_WORD + subreg_memory_offset (op);
++      return !known_ge (offset, GET_MODE_SIZE (GET_MODE (SUBREG_REG (op))))
++        && !known_le (offset, -UNITS_PER_WORD);
++    };
++  rtx parts[2] = {NULL_RTX, NULL_RTX};
++  for (unsigned i = 0; i != 2; ++i)
++    {
++      if (!defined_word_p (dest, i) || !defined_word_p (src, i))
++        continue;
++      parts[i] = operand_subword (src, i, 1, mode);
++      gcc_assert (parts[i]);
++    }
++  if (REG_P (dest) && !rtx_equal_p (dest, src))
++    emit_clobber (dest);
++  for (unsigned i = 0; i != 2; ++i)
++    {
++      if (!parts[i])
++        continue;
++      rtx part = operand_subword (dest, i, 1, mode);
++      gcc_assert (part);
++      emit_move_insn (part, parts[i]);
++    }
++}
++
++/* No __negtf2 is supplied by the WASI compiler-rt archive.  Manipulating
++   bit 127 also preserves NaN payloads and signed zero for all three
++   operations.  Compute the high word before writing either destination
++   word, since copysign's sign operand can overlap its destination.  */
++void
++wasm_expand_tf_sign (rtx dest, rtx value, rtx sign, rtx_code code)
++{
++  value = force_reg (TFmode, value);
++  if (sign)
++    sign = force_reg (TFmode, sign);
++  rtx low = operand_subword (value, 0, 1, TFmode);
++  rtx high = operand_subword (value, 1, 1, TFmode);
++  rtx result = gen_reg_rtx (DImode);
++  rtx sign_mask = gen_int_mode (HOST_WIDE_INT_MIN, DImode);
++  rtx magnitude_mask = gen_int_mode (HOST_WIDE_INT_MAX, DImode);
++  if (code == NEG)
++    emit_insn (gen_xordi3 (result, high, sign_mask));
++  else
++    {
++      emit_insn (gen_anddi3 (result, high, magnitude_mask));
++      if (code == COPYSIGN)
++        {
++          rtx sign_word = gen_reg_rtx (DImode);
++          emit_insn (gen_anddi3 (sign_word,
++                                operand_subword (sign, 1, 1, TFmode),
++                                sign_mask));
++          emit_insn (gen_iordi3 (result, result, sign_word));
++        }
++      else
++        gcc_assert (code == ABS);
++    }
++  emit_move_insn (operand_subword (dest, 0, 1, TFmode), low);
++  emit_move_insn (operand_subword (dest, 1, 1, TFmode), result);
++}
++
+ void
+ wasm_expand_conv (rtx dest, rtx src, rtx_code code)
+ {
++  src = legalize_pair_source (src);
++  /* Unlike an ordinary DI subreg, a word of TF/TI has no single
++     underlying scalar register for real_reg below to unwrap.  Keep
++     both conversion operands in ordinary scalar pseudos.  */
++  auto pair_word_p = [] (rtx value)
++    {
++      return SUBREG_P (value) && REG_P (SUBREG_REG (value))
++        && GET_MODE (value) == DImode
++        && (GET_MODE (SUBREG_REG (value)) == TFmode
++            || GET_MODE (SUBREG_REG (value)) == TImode);
++    };
++  if (pair_word_p (src))
++    src = copy_to_mode_reg (DImode, src);
++  if (narrow_pair_subreg_p (dest) || pair_word_p (dest))
++    {
++      rtx temp = gen_reg_rtx (GET_MODE (dest));
++      wasm_expand_conv (temp, src, code);
++      emit_move_insn (dest, temp);
++      return;
++    }
+   if (code == TRUNCATE)
+     code = LOAD_EXTEND_OP (VOIDmode);
+ 
+@@ -291,6 +450,15 @@
+       emit_move_insn (chain_reg, regno_reg_rtx[STATIC_CHAIN_REGNUM]);
+       vec_safe_insert (args_rtx, 0, chain_reg);
+     }
++
++  /* A TFmode library result is returned in memory and does not reach
++     TARGET_LIBCALL_VALUE.  Register every libcall at the point where its
++     complete, lowered arguments and optional scalar result are available.  */
++  rtx callee = XEXP (fn, 0);
++  if (SYMBOL_REF_P (callee) && !cfun->machine->call->type)
++    record_libcall (callee, retval
++      ? lang_hooks.types.type_for_mode (GET_MODE (retval), false)
++      : void_type_node);
+ 
+   int argc = vec_safe_length (args_rtx);
+   rtx res = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (argc + 1));
+@@ -489,9 +657,18 @@
+       || regno == WASM_BASE_POINTER_REGNUM)
+     return mode == Pmode;
+   if (GET_MODE_CLASS (mode) == MODE_INT)
+-    return mode < TImode;
++    return mode < TImode
++      || (mode == TImode && regno > WASM_BASE_POINTER_REGNUM
++          && regno + 1 < FIRST_PSEUDO_REGISTER);
+   if (GET_MODE_CLASS (mode) == MODE_FLOAT)
+-    return mode == DFmode || mode == SFmode;
++    {
++      /* TF is never a hard return register: the ABI returns it through
++         memory.  Reserve a complete pair within the dummy general set.  */
++      if (mode == TFmode)
++        return regno > WASM_BASE_POINTER_REGNUM
++          && regno + 1 < FIRST_PSEUDO_REGISTER;
++      return mode == DFmode || mode == SFmode;
++    }
+   if (VECTOR_MODE_P (mode))
+     return TARGET_SIMD128 && GET_MODE_SIZE (mode) == 16;
+   return false;
+@@ -551,7 +728,9 @@
+   if (GET_CODE (arg) == PARALLEL)
+     {
+       rtvec elts = XVEC (arg, 0);
+-      for (int i = 0; i != GET_NUM_ELEM (elts); ++i)
++      /* The complete call operand list is reversed after collection.  Keep
++         the low/high words of each individual argument in parameter order.  */
++      for (int i = GET_NUM_ELEM (elts); i-- > 0; )
+ 	wasm_call_args (args, XEXP (RTVEC_ELT (elts, i), 0), type);
+       return;
+     }
+@@ -639,6 +818,7 @@
+       machine_mode mode = TYPE_MODE (type);
+       if (mode == QImode || mode == HImode || mode == SImode
+           || mode == DImode || mode == SFmode || mode == DFmode
++          || mode == TFmode
+           || (VECTOR_MODE_P (mode) && targetm.vector_mode_supported_p (mode)))
+         return type;
+       return NULL_TREE;
+@@ -709,20 +889,23 @@
+ 
+   if (wasm_abi_empty_type_p (arg.type))
+     return NULL_RTX;
+-  if (arg.aggregate_type_p ())
+-    if (const_tree scalar = wasm_abi_singleton_type (arg.type))
+-      return gen_rtx_PARALLEL (arg.mode, gen_rtvec (1,
+-        gen_rtx_EXPR_LIST (VOIDmode, gen_reg_rtx (TYPE_MODE (scalar)),
+-                           const0_rtx)));
+-
+-  if (arg.mode == TImode)
++  const_tree scalar = arg.aggregate_type_p ()
++    ? wasm_abi_singleton_type (arg.type) : NULL_TREE;
++  machine_mode mode = scalar ? TYPE_MODE (scalar) : arg.mode;
++
++  /* Binary128 arguments and their singleton wrappers use two i64
++     parameters in little-endian word order, independently of SIMD.  */
++  if (mode == TImode || mode == TFmode)
+     {
+       rtx const8_rtx = gen_rtx_CONST_INT (VOIDmode, 8);
+       rtvec para = gen_rtvec (2,
+ 	gen_rtx_EXPR_LIST (DImode, gen_reg_rtx (DImode), const0_rtx),
+ 	gen_rtx_EXPR_LIST (DImode, gen_reg_rtx (DImode), const8_rtx));
+-      return gen_rtx_PARALLEL (TImode, para);
+-    }
++      return gen_rtx_PARALLEL (arg.mode, para);
++    }
++  if (scalar)
++    return gen_rtx_PARALLEL (arg.mode, gen_rtvec (1,
++      gen_rtx_EXPR_LIST (VOIDmode, gen_reg_rtx (mode), const0_rtx)));
+   return gen_reg_rtx (arg.mode);
+ }
+ 
+@@ -746,43 +929,26 @@
+ 	cfun->machine->func_args = cum->args;
+       return gen_rtx_CONST_INT (SImode, 80);
+     }
+-  if (!arg.named)
++  rtx location = wasm_function_arg (cum_v, arg);
++  if (!location)
+     return NULL_RTX;
+-
+-  if (wasm_abi_empty_type_p (arg.type))
+-    return NULL_RTX;
+-  if (arg.aggregate_type_p ())
+-    if (const_tree scalar = wasm_abi_singleton_type (arg.type))
+-      {
+-        rtx reg = gen_reg_rtx (TYPE_MODE (scalar));
+-        maybe_push_arg (reg);
+-        return gen_rtx_PARALLEL (arg.mode, gen_rtvec (1,
+-          gen_rtx_EXPR_LIST (VOIDmode, reg, const0_rtx)));
+-      }
+-
+-  /* Int128 is passed as 2xint64_t, in LE order.  */
+-  if (arg.mode == TImode)
+-    {
+-      rtx const8_rtx = gen_rtx_CONST_INT (VOIDmode, 8);
+-
+-      rtx lsb = gen_rtx_EXPR_LIST (DImode, gen_reg_rtx (DImode), const0_rtx);
+-      rtx msb = gen_rtx_EXPR_LIST (DImode, gen_reg_rtx (DImode), const8_rtx);
+-      maybe_push_arg (lsb);
+-      maybe_push_arg (msb);
+-      rtvec para = gen_rtvec (2, lsb, msb);
+-      return gen_rtx_PARALLEL (TImode, para);
+-    }
+-  rtx reg = gen_reg_rtx (arg.mode);
+-  maybe_push_arg (reg);
+-  return reg;
++  if (GET_CODE (location) == PARALLEL)
++    {
++      /* FUNC_ARGS is a list of Wasm parameter registers, not EXPR_LIST
++         wrappers.  The PARALLEL still describes each word's byte offset to
++         generic parameter assignment and aggregate-copy expansion.  */
++      for (int i = 0; i != XVECLEN (location, 0); ++i)
++        maybe_push_arg (XEXP (XVECEXP (location, 0, i), 0));
++    }
++  else
++    maybe_push_arg (location);
++  return location;
+ }
+ 
+ /* Implementation of TARGET_LIBCALL_VALUE.  */
+-rtx wasm_libcall_value (machine_mode m, const_rtx sym)
++rtx wasm_libcall_value (machine_mode m, const_rtx ARG_UNUSED (sym))
+ {
+   tree rtype = lang_hooks.types.type_for_mode (m, false);
+-  if (cfun && cfun->machine->call)
+-    record_libcall (sym, rtype);
+   return wasm_function_value (rtype, NULL_TREE, false);
+ }
+ 
+@@ -811,8 +977,14 @@
+ bool
+ wasm_return_in_memory (const_tree type, const_tree ARG_UNUSED (fntype))
+ {
++  if (TYPE_MODE (type) == TFmode)
++    return true;
+   if (AGGREGATE_TYPE_P (type))
+-    return !wasm_abi_empty_type_p (type) && !wasm_abi_singleton_type (type);
++    {
++      const_tree scalar = wasm_abi_singleton_type (type);
++      return !wasm_abi_empty_type_p (type)
++        && (!scalar || TYPE_MODE (scalar) == TFmode);
++    }
+   if (TREE_CODE (type) == COMPLEX_TYPE)
+     return true;
+   if (TREE_CODE (type) == VECTOR_TYPE)
+diff --git a/gcc/config/wasm/wasm-modes.def b/gcc/config/wasm/wasm-modes.def
+--- a/gcc/config/wasm/wasm-modes.def
++++ b/gcc/config/wasm/wasm-modes.def
+@@ -1,3 +1,7 @@
++/* WASI uses IEEE binary128 for long double.  Operations are lowered through
++   the compiler-rt soft-float ABI; the two i64 words do not require SIMD.  */
++FLOAT_MODE (TF, 16, ieee_quad_format);
++
+ /* WebAssembly's fixed-width SIMD value is always 128 bits.  */
+ VECTOR_MODE (INT, QI, 16);
+ VECTOR_MODE (INT, HI, 8);
+diff --git a/gcc/config/wasm/wasm-protos.h b/gcc/config/wasm/wasm-protos.h
+--- a/gcc/config/wasm/wasm-protos.h
++++ b/gcc/config/wasm/wasm-protos.h
+@@ -26,6 +26,8 @@
+ extern void wasm_expand_call (rtx, rtx, rtx);
+ extern void wasm_emit_jump (rtx, rtx);
+ extern bool wasm_expand_mov (rtx, rtx, machine_mode);
++extern void wasm_expand_pair_move (rtx, rtx);
++extern void wasm_expand_tf_sign (rtx, rtx, rtx, rtx_code);
+ extern void wasm_expand_conv (rtx, rtx, rtx_code);
+ extern void wasm_expand_compare (machine_mode, rtx, rtx);
+ extern void wasm_expand_simd_compare (rtx, rtx_code, rtx, rtx);
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -124,6 +124,16 @@
+ #define TARGET_SCALAR_MODE_SUPPORTED_P [](scalar_mode m) \
+   { return default_scalar_mode_supported_p (m) && m != TImode; }
+ 
++/* The WASI C ABI uses binary128, independently of the compiler's host ABI.  */
++#define TARGET_C_MODE_FOR_FLOATING_TYPE \
++  [] (enum tree_index ti) \
++    { return ti == TI_LONG_DOUBLE_TYPE ? TFmode \
++                                      : default_mode_for_floating_type (ti); }
++
++/* compiler-rt's floating comparison helpers return an i32.  The default
++   word_mode is DI on this target, although its C int is only 32 bits.  */
++#define TARGET_LIBGCC_CMP_RETURN_MODE [] () { return SImode; }
++
+ #define TARGET_VECTOR_MODE_SUPPORTED_P wasm_vector_mode_supported_p
+ static bool
+ wasm_vector_mode_supported_p (machine_mode mode)
+@@ -178,6 +188,12 @@
+ static bool
+ wasm_modes_tieable_p (machine_mode from, machine_mode to)
+ {
++  /* ABI group copies use TI containers for TF bit patterns.  Both are
++     two-word storage modes, unlike a v128 local.  This does not enable
++     TImode as a C arithmetic type (see SCALAR_MODE_SUPPORTED_P above).  */
++  if (from == TFmode || to == TFmode)
++    return (from == TFmode || from == TImode)
++      && (to == TFmode || to == TImode);
+   if (TARGET_SIMD128 && (VECTOR_MODE_P (from) || VECTOR_MODE_P (to)))
+     return wasm_vector_mode_supported_p (from)
+       && wasm_vector_mode_supported_p (to);
+@@ -194,8 +210,9 @@
+   const_tree type = TREE_CODE (field) == FIELD_DECL ? TREE_TYPE (field) : field;
+   while (TREE_CODE (type) == ARRAY_TYPE)
+     type = TREE_TYPE (type);
+-  return TREE_CODE (type) == VECTOR_TYPE
+-    && wasm_vector_mode_supported_p (TYPE_MODE (type));
++  return (TREE_CODE (type) == REAL_TYPE && TYPE_MODE (type) == TFmode)
++    || (TREE_CODE (type) == VECTOR_TYPE
++        && wasm_vector_mode_supported_p (TYPE_MODE (type)));
+ }
+ 
+ #define TARGET_EXCEPT_UNWIND_INFO [] (auto ...) { return UI_NONE; }
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -101,7 +101,8 @@
+ #define REGNO_OK_FOR_BASE_P(X) true
+ #define REGNO_OK_FOR_INDEX_P(X) false
+ 
+-#define CLASS_MAX_NREGS(class, mode) 1
++#define CLASS_MAX_NREGS(class, mode) \
++  ((mode) == TFmode || (mode) == TImode ? 2 : 1)
+ 
+ #define PROMOTE_MODE(MODE, UNSIGNEDP, TYPE) \
+   if ((MODE) == QImode || (MODE) == HImode) \
+diff --git a/gcc/config/wasm/wasm.md b/gcc/config/wasm/wasm.md
+--- a/gcc/config/wasm/wasm.md
++++ b/gcc/config/wasm/wasm.md
+@@ -21,6 +21,7 @@
+ (include "attrs.md")
+ (include "constraints.md")
+ (include "simd.md")
++(include "tf.md")
+ 
+ (define_insn "nop"
+   [(const_int 0)]
+diff --git a/gcc/optabs.cc b/gcc/optabs.cc
+--- a/gcc/optabs.cc
++++ b/gcc/optabs.cc
+@@ -4411,7 +4411,11 @@
+ 
+       next = NEXT_INSN (insn);
+ 
+-      if (set != 0 && REG_P (SET_DEST (set))
++      /* A target without register allocation can return a call result in a
++         pseudo.  Its argument dependencies can reside in sibling USEs rather
++         than SET_SRC, so no_conflict_move_test cannot prove that moving the
++         call before earlier argument setup is safe.  */
++      if (!CALL_P (insn) && set != 0 && REG_P (SET_DEST (set))
+ 	  && REGNO (SET_DEST (set)) >= FIRST_PSEUDO_REGISTER)
+ 	{
+ 	  struct no_conflict_data data;

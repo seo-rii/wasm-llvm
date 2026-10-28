@@ -1,0 +1,268 @@
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -203,10 +203,13 @@
+       break;
+     case UNION_TYPE:
+     case RECORD_TYPE:
+-      if (TYPE_EMPTY_P (type))
++    case ARRAY_TYPE:
++      if (wasm_abi_empty_type_p (type))
+ 	break;
+-      if (TYPE_TRANSPARENT_AGGR (type))
++      if (RECORD_OR_UNION_TYPE_P (type) && TYPE_TRANSPARENT_AGGR (type))
+ 	print_type (stream, TREE_TYPE (first_field (type)), first);
++      else if (const_tree scalar = wasm_abi_singleton_type (type))
++        print_type (stream, scalar, first);
+       else
+ 	print_type (stream, ptr_type_node, first);
+       break;
+@@ -765,7 +768,8 @@
+ 
+   if (mode == '#') /* Print the return insn.  */
+     {
+-      if (!VOID_TYPE_P (TREE_TYPE (TREE_TYPE (cfun->decl))))
++      if (!VOID_TYPE_P (TREE_TYPE (TREE_TYPE (cfun->decl)))
++          && !wasm_abi_empty_type_p (TREE_TYPE (TREE_TYPE (cfun->decl))))
+ 	fprintf (stream, " (local.get $return)");
+     }
+   else if (mode == 'M') /* Print local/global for a register.  */
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -229,6 +229,10 @@
+ 
+   if (tree type = cfun->machine->call->type)
+     {
++      /* GCC still supplies a dummy RTL result for a zero-sized C record.
++	 The Basic C ABI has no Wasm result for an empty aggregate.  */
++      if (wasm_abi_empty_type_p (TREE_TYPE (type)))
++	retval = NULL_RTX;
+       vararg_p = stdarg_p (type);
+       has_proto = TYPE_ARG_TYPES (type) || vararg_p;
+     }
+@@ -252,6 +256,18 @@
+ 					      UNSPECV_CALL_ADDRESS_BARRIER);
+     }
+ 
++  /* A singleton union/nested aggregate may have an integer container mode
++     while its sole ABI value is floating point.  GCC retains a PARALLEL
++     to describe that layout; the Wasm call itself produces its scalar.  */
++  if (retval && GET_CODE (retval) == PARALLEL)
++    {
++      gcc_assert (XVECLEN (retval, 0) == 1);
++      rtx part = XVECEXP (retval, 0, 0);
++      gcc_assert (GET_CODE (part) == EXPR_LIST
++		  && XEXP (part, 1) == const0_rtx);
++      retval = XEXP (part, 0);
++      gcc_assert (REG_P (retval));
++    }
+   rtx call = gen_rtx_CALL (VOIDmode, fn, aux);
+   if (retval)
+     call = gen_rtx_SET (retval, call);
+@@ -491,28 +507,115 @@
+   return get_mode_alignment (mode);
+ }
+ 
++/* Basic C ABI single-element aggregates have the same Wasm value type as
++   their sole scalar.  Keep this classification shared with signature output:
++   an i32 pointer/value mismatch is not detectable by the Wasm linker.  */
++bool
++wasm_abi_empty_type_p (const_tree type)
++{
++  return type && AGGREGATE_TYPE_P (type)
++    && !TREE_ADDRESSABLE (type)
++    && (TYPE_EMPTY_P (type)
++        || (TYPE_SIZE (type) && integer_zerop (TYPE_SIZE (type))));
++}
++
++const_tree
++wasm_abi_singleton_type (const_tree type)
++{
++  if (!type || TREE_ADDRESSABLE (type))
++    return NULL_TREE;
++  const_tree scalar = NULL_TREE;
++  if (TREE_CODE (type) == ARRAY_TYPE)
++    {
++      const_tree element = TREE_TYPE (type);
++      if (!TYPE_SIZE (type) || !TYPE_SIZE (element)
++          || TREE_CODE (TYPE_SIZE (type)) != INTEGER_CST
++          || TREE_CODE (TYPE_SIZE (element)) != INTEGER_CST
++          || !tree_int_cst_equal (TYPE_SIZE (type), TYPE_SIZE (element)))
++        return NULL_TREE;
++      scalar = wasm_abi_singleton_type (element);
++    }
++  else if (RECORD_OR_UNION_TYPE_P (type))
++    {
++      for (tree field = TYPE_FIELDS (type); field; field = DECL_CHAIN (field))
++        {
++          if (TREE_CODE (field) != FIELD_DECL)
++            continue;
++          const_tree field_type = TREE_TYPE (field);
++          if ((DECL_SIZE (field) && integer_zerop (DECL_SIZE (field)))
++              || (wasm_abi_empty_type_p (field_type)
++                  && TYPE_SIZE (field_type)
++                  && integer_zerop (TYPE_SIZE (field_type))))
++            continue;
++          if (scalar || !DECL_FIELD_OFFSET (field)
++              || !integer_zerop (DECL_FIELD_OFFSET (field))
++              || !integer_zerop (DECL_FIELD_BIT_OFFSET (field)))
++            return NULL_TREE;
++          scalar = wasm_abi_singleton_type (field_type);
++          if (!scalar)
++            return NULL_TREE;
++        }
++    }
++  else
++    {
++      machine_mode mode = TYPE_MODE (type);
++      if (mode == QImode || mode == HImode || mode == SImode
++          || mode == DImode || mode == SFmode || mode == DFmode)
++        return type;
++      return NULL_TREE;
++    }
++
++  /* Padding and over-alignment disqualify a singleton.  In particular, do
++     not mistake a flexible array or an aligned wrapper for its first field. */
++  if (!scalar || !TYPE_SIZE (type) || !TYPE_SIZE (scalar)
++      || TREE_CODE (TYPE_SIZE (type)) != INTEGER_CST
++      || TREE_CODE (TYPE_SIZE (scalar)) != INTEGER_CST
++      || !tree_int_cst_equal (TYPE_SIZE (type), TYPE_SIZE (scalar))
++      || TYPE_ALIGN (type) > TYPE_ALIGN (scalar))
++    return NULL_TREE;
++  return scalar;
++}
++
+ /* Implementation of TARGET_FUNCTION_VALUE.  */
+ rtx
+ wasm_function_value (const_tree type, const_tree ARG_UNUSED (func),
+ 		     bool outgoing)
+ {
+-  machine_mode mode = TYPE_MODE (type);
++  const_tree scalar = AGGREGATE_TYPE_P (type)
++    ? wasm_abi_singleton_type (type) : NULL_TREE;
++  machine_mode mode = scalar ? TYPE_MODE (scalar) : TYPE_MODE (type);
++  /* An empty C record can have BLKmode.  Use a harmless dummy RTL register
++     while suppressing the corresponding Wasm call/return value.  */
++  if (wasm_abi_empty_type_p (type))
++    mode = SImode;
++  if (!scalar)
++    {
++      int unsignedp = TYPE_UNSIGNED (type);
++      mode = promote_function_mode (type, mode, &unsignedp, NULL_TREE, 1);
++    }
++  auto result = [type, scalar](rtx reg)
++    {
++      return scalar
++        ? gen_rtx_PARALLEL (TYPE_MODE (type), gen_rtvec (1,
++            gen_rtx_EXPR_LIST (VOIDmode, reg, const0_rtx)))
++        : reg;
++    };
+   if (!cfun)
+     /* Fake the return regnum since none is actually available.  */
+-    return gen_rtx_REG (mode, WASM_RETURN_REGNUM);
++    return result (gen_rtx_REG (mode, WASM_RETURN_REGNUM));
+   if (outgoing)
+     {
+       /* This is where we actually put the return value.  */
+       cfun->machine->return_mode = mode;
+-      return gen_rtx_REG (mode, WASM_RETURN_REGNUM);
++      return result (gen_rtx_REG (mode, WASM_RETURN_REGNUM));
+     }
+   if (!cfun->machine->call)
+     /* Fake the return regnum again, since we're not in a call.  */
+-    return gen_rtx_REG (mode, WASM_RETURN_REGNUM);
++    return result (gen_rtx_REG (mode, WASM_RETURN_REGNUM));
+ 
+   /* Put the retval in a fresh reg, since its class may be different from actual
+      retval, and we can't have that.  */
+-  return gen_reg_rtx (mode);
++  return result (gen_reg_rtx (mode));
+ }
+ 
+ /* Implementation of TARGET_FUNCTION_ARG.  */
+@@ -524,6 +627,14 @@
+ 
+   if (!arg.named)
+     return NULL_RTX;
++
++  if (wasm_abi_empty_type_p (arg.type))
++    return NULL_RTX;
++  if (arg.aggregate_type_p ())
++    if (const_tree scalar = wasm_abi_singleton_type (arg.type))
++      return gen_rtx_PARALLEL (arg.mode, gen_rtvec (1,
++        gen_rtx_EXPR_LIST (VOIDmode, gen_reg_rtx (TYPE_MODE (scalar)),
++                           const0_rtx)));
+ 
+   if (arg.mode == TImode)
+     {
+@@ -558,6 +669,17 @@
+     }
+   if (!arg.named)
+     return NULL_RTX;
++
++  if (wasm_abi_empty_type_p (arg.type))
++    return NULL_RTX;
++  if (arg.aggregate_type_p ())
++    if (const_tree scalar = wasm_abi_singleton_type (arg.type))
++      {
++        rtx reg = gen_reg_rtx (TYPE_MODE (scalar));
++        maybe_push_arg (reg);
++        return gen_rtx_PARALLEL (arg.mode, gen_rtvec (1,
++          gen_rtx_EXPR_LIST (VOIDmode, reg, const0_rtx)));
++      }
+ 
+   /* Int128 is passed as 2xint64_t, in LE order.  */
+   if (arg.mode == TImode)
+@@ -601,7 +723,8 @@
+   if (VECTOR_MODE_P (arg.mode))
+     return true;
+   if (arg.aggregate_type_p ())
+-    return true;
++    return !wasm_abi_empty_type_p (arg.type)
++      && !wasm_abi_singleton_type (arg.type);
+   return false;
+ }
+ 
+@@ -609,6 +732,8 @@
+ bool
+ wasm_return_in_memory (const_tree type, const_tree ARG_UNUSED (fntype))
+ {
++  if (AGGREGATE_TYPE_P (type))
++    return !wasm_abi_empty_type_p (type) && !wasm_abi_singleton_type (type);
+   if (TREE_CODE (type) == COMPLEX_TYPE)
+     return true;
+   if (TREE_CODE (type) == VECTOR_TYPE)
+--- a/gcc/config/wasm/wasm-protos.h
++++ b/gcc/config/wasm/wasm-protos.h
+@@ -19,6 +19,8 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #ifdef RTX_CODE
++extern const_tree wasm_abi_singleton_type (const_tree);
++extern bool wasm_abi_empty_type_p (const_tree);
+ extern void wasm_expand_prologue ();
+ extern void wasm_expand_epilogue ();
+ extern void wasm_expand_call (rtx, rtx, rtx);
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -56,6 +56,9 @@
+ static void
+ wasm_option_override (void)
+ {
++  /* The Basic C ABI selects direct singleton results and indirect results
++     for other aggregates.  The generic PCC default bypasses that hook. */
++  flag_pcc_struct_return = 0;
+   init_machine_status = wasm_init_machine_status;
+ }
+ 
+@@ -129,6 +132,11 @@
+ #define TARGET_FUNCTION_ARG_BOUNDARY wasm_vararg_align
+ void wasm_function_arg_advance (cumulative_args_t, const function_arg_info &);
+ #define TARGET_FUNCTION_ARG_ADVANCE wasm_function_arg_advance
++/* The Basic C ABI requires sign/zero extension of scalar i8/i16 arguments
++   and results.  PROMOTE_MODE alone only describes internal registers. */
++#define TARGET_PROMOTE_FUNCTION_MODE \
++  [] (const_tree type, machine_mode mode, int *unsignedp, const_tree, int) \
++    { return promote_mode (type, mode, unsignedp); }
+ rtx wasm_function_value (const_tree type, const_tree ARG_UNUSED (func), bool);
+ #define TARGET_FUNCTION_VALUE wasm_function_value
+ rtx wasm_function_arg (cumulative_args_t cum_v, const function_arg_info &arg);

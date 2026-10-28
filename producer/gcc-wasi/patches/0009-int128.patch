@@ -1,0 +1,256 @@
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -121,8 +121,7 @@
+ #define TARGET_RETURN_IN_MEMORY wasm_return_in_memory
+ #define TARGET_SPLIT_COMPLEX_ARG [] (auto ...) { return false; }
+ 
+-#define TARGET_SCALAR_MODE_SUPPORTED_P [](scalar_mode m) \
+-  { return default_scalar_mode_supported_p (m) && m != TImode; }
++#define TARGET_SCALAR_MODE_SUPPORTED_P default_scalar_mode_supported_p
+ 
+ /* The WASI C ABI uses binary128, independently of the compiler's host ABI.  */
+ #define TARGET_C_MODE_FOR_FLOATING_TYPE \
+@@ -133,6 +132,10 @@
+ /* compiler-rt's floating comparison helpers return an i32.  The default
+    word_mode is DI on this target, although its C int is only 32 bits.  */
+ #define TARGET_LIBGCC_CMP_RETURN_MODE [] () { return SImode; }
++
++/* compiler-rt wide integer shift helpers take C int counts, not the
++   target's i64 word_mode.  This applies to all three TI shift libcalls.  */
++#define TARGET_LIBGCC_SHIFT_COUNT_MODE [] () { return SImode; }
+ 
+ #define TARGET_VECTOR_MODE_SUPPORTED_P wasm_vector_mode_supported_p
+ static bool
+@@ -189,8 +192,8 @@
+ wasm_modes_tieable_p (machine_mode from, machine_mode to)
+ {
+   /* ABI group copies use TI containers for TF bit patterns.  Both are
+-     two-word storage modes, unlike a v128 local.  This does not enable
+-     TImode as a C arithmetic type (see SCALAR_MODE_SUPPORTED_P above).  */
++     two-word storage modes, unlike a v128 local.  Public TI integers use
++     the same word representation and generic double-word optab lowering.  */
+   if (from == TFmode || to == TFmode)
+     return (from == TFmode || from == TImode)
+       && (to == TFmode || to == TImode);
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -200,11 +200,63 @@
+   return gen_lowpart (GET_MODE (value), word);
+ }
+ 
++/* Once public TI storage is enabled, aligned floating aggregates can use
++   an integer pair as their container.  A float view is a bitcast of one
++   word, not a floating local named after the complete TI pseudo.  Normal
++   subregs select a word's lowpart; other field positions are lowered by
++   GCC's integer bitfield machinery before reaching these move patterns.  */
++static bool
++floating_pair_subreg_p (rtx value)
++{
++  return SUBREG_P (value) && REG_P (SUBREG_REG (value))
++    && (GET_MODE (SUBREG_REG (value)) == TImode
++        || GET_MODE (SUBREG_REG (value)) == TFmode)
++    && (GET_MODE (value) == SFmode || GET_MODE (value) == DFmode);
++}
++
++static rtx
++floating_pair_word (rtx value)
++{
++  gcc_assert (floating_pair_subreg_p (value));
++  unsigned byte = SUBREG_BYTE (value).to_constant ();
++  gcc_assert (byte == 0 || byte == 8);
++  rtx base = SUBREG_REG (value);
++  return operand_subword (base, byte / 8, 1, GET_MODE (base));
++}
++
++static rtx
++legalize_floating_pair_source (rtx value)
++{
++  if (!floating_pair_subreg_p (value))
++    return value;
++  machine_mode mode = GET_MODE (value);
++  rtx bits = copy_to_mode_reg (DImode, floating_pair_word (value));
++  if (mode == SFmode)
++    bits = convert_to_mode (SImode, bits, 1);
++  /* Only same-size views of ordinary scalar pseudos reach the existing
++     i64/f64 or i32/f32 reinterpret patterns.  Materialize the float too,
++     so a memory destination still receives a genuine floating register.  */
++  return copy_to_mode_reg (mode, gen_lowpart (mode, bits));
++}
++
+ bool
+ wasm_expand_mov (rtx dest, rtx src, machine_mode mode)
+ {
+   temporary_volatile_ok g {1};
+-  src = legalize_pair_source (src);
++  src = legalize_floating_pair_source (legalize_pair_source (src));
++  if (floating_pair_subreg_p (dest))
++    {
++      rtx value = force_reg (mode, src);
++      machine_mode bits_mode = mode == SFmode ? SImode : DImode;
++      rtx bits = copy_to_mode_reg (bits_mode,
++                                  gen_lowpart (bits_mode, value));
++      if (mode == SFmode)
++        /* A normal SF subreg write leaves its word's other bits
++           undefined.  Pick zero while preserving the other DI word.  */
++        bits = convert_to_mode (DImode, bits, 1);
++      emit_move_insn (floating_pair_word (dest), bits);
++      return true;
++    }
+   if (narrow_pair_subreg_p (dest))
+     {
+       rtx temp = gen_reg_rtx (mode);
+@@ -234,7 +286,8 @@
+ 
+ /* Legalize every TF/TI copy during RTL expansion, including at -O0.
+    Generic ABI group assembly uses TI temporaries and full-width TF views
+-   of them.  This is storage legalization, not 128-bit integer arithmetic.
++   of them.  Integer arithmetic is expanded separately through word optabs
++   or runtime calls; this routine only legalizes storage copies.
+    Constants are decoded by GCC in target byte order, rather than rounded
+    through the compiler host's floating types.  In memory both words retain
+    alias, volatile and alignment attributes through operand_subword.  */
+@@ -451,7 +504,7 @@
+       vec_safe_insert (args_rtx, 0, chain_reg);
+     }
+ 
+-  /* A TFmode library result is returned in memory and does not reach
++  /* TFmode and TImode library results return in memory and do not reach
+      TARGET_LIBCALL_VALUE.  Register every libcall at the point where its
+      complete, lowered arguments and optional scalar result are available.  */
+   rtx callee = XEXP (fn, 0);
+@@ -818,7 +871,7 @@
+       machine_mode mode = TYPE_MODE (type);
+       if (mode == QImode || mode == HImode || mode == SImode
+           || mode == DImode || mode == SFmode || mode == DFmode
+-          || mode == TFmode
++          || mode == TFmode || mode == TImode
+           || (VECTOR_MODE_P (mode) && targetm.vector_mode_supported_p (mode)))
+         return type;
+       return NULL_TREE;
+@@ -893,8 +946,8 @@
+     ? wasm_abi_singleton_type (arg.type) : NULL_TREE;
+   machine_mode mode = scalar ? TYPE_MODE (scalar) : arg.mode;
+ 
+-  /* Binary128 arguments and their singleton wrappers use two i64
+-     parameters in little-endian word order, independently of SIMD.  */
++  /* Binary128 and 128-bit integer arguments, including their eligible
++     singleton wrappers, use low/high i64 words independently of SIMD.  */
+   if (mode == TImode || mode == TFmode)
+     {
+       rtx const8_rtx = gen_rtx_CONST_INT (VOIDmode, 8);
+@@ -977,13 +1030,14 @@
+ bool
+ wasm_return_in_memory (const_tree type, const_tree ARG_UNUSED (fntype))
+ {
+-  if (TYPE_MODE (type) == TFmode)
++  if (TYPE_MODE (type) == TFmode || TYPE_MODE (type) == TImode)
+     return true;
+   if (AGGREGATE_TYPE_P (type))
+     {
+       const_tree scalar = wasm_abi_singleton_type (type);
+       return !wasm_abi_empty_type_p (type)
+-        && (!scalar || TYPE_MODE (scalar) == TFmode);
++        && (!scalar || TYPE_MODE (scalar) == TFmode
++            || TYPE_MODE (scalar) == TImode);
+     }
+   if (TREE_CODE (type) == COMPLEX_TYPE)
+     return true;
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -129,10 +129,31 @@
+ void
+ assemble_const_int (FILE *stream, HOST_WIDE_INT value, unsigned size)
+ {
++  /* CONST_INT is sign-extended to the requested object width.  In
++     particular, a TI initializer can fit in one HOST_WIDE_INT while its
++     data object still occupies 16 bytes.  Never read past a host-word
++     buffer or shift a host value by its complete bit width.  */
++  unsigned HOST_WIDE_INT bits = (unsigned HOST_WIDE_INT) value;
+   char val[sizeof (HOST_WIDE_INT)];
+-  for (int i = 0; i != sizeof (HOST_WIDE_INT); ++i)
+-    val[i] = value >> (i * 8);
+-  assemble_string (stream, val, size, true);
++  unsigned low_size = MIN (size, (unsigned) sizeof (val));
++  for (unsigned i = 0; i != low_size; ++i)
++    {
++      val[i] = bits & 0xff;
++      bits >>= 8;
++    }
++  assemble_string (stream, val, low_size, true);
++
++  if (size > low_size)
++    {
++      memset (val, value < 0 ? 0xff : 0, sizeof (val));
++      unsigned remaining = size - low_size;
++      while (remaining)
++        {
++          unsigned bytes = MIN (remaining, (unsigned) sizeof (val));
++          assemble_string (stream, val, bytes, true);
++          remaining -= bytes;
++        }
++    }
+ }
+ 
+ /* Can handle following shapes:
+@@ -224,7 +245,8 @@
+     case BOOLEAN_TYPE:
+     case ENUMERAL_TYPE:
+       fprintf (stream, "%s%s", delim,
+-	       TYPE_PRECISION (type) > 32 ? "i64" : "i32");
++	       TYPE_MODE (type) == TImode ? "i64 i64"
++               : TYPE_PRECISION (type) > 32 ? "i64" : "i32");
+       break;
+     case REAL_TYPE:
+       fprintf (stream, "%s%s", delim,
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -185,7 +185,7 @@
+ #define LONG_LONG_TYPE_SIZE 64
+ #define DEFAULT_SIGNED_CHAR 0
+ #define WCHAR_TYPE_SIZE 32
+-#define MAX_FIXED_MODE_SIZE 64
++#define MAX_FIXED_MODE_SIZE 128
+ 
+ #define SIZE_TYPE "long unsigned int"
+ #define WCHAR_TYPE "long int"
+diff --git a/gcc/config/wasm/tf.md b/gcc/config/wasm/tf.md
+--- a/gcc/config/wasm/tf.md
++++ b/gcc/config/wasm/tf.md
+@@ -32,8 +32,8 @@
+ 
+ ;; Generic emit_group_store reconstructs a floating argument in an integer
+ ;; container before taking a same-size floating view.  Support that storage
+-;; operation without enabling TImode in TARGET_SCALAR_MODE_SUPPORTED_P or
+-;; advertising any 128-bit integer arithmetic instruction.
++;; operation using the same two-word representation as public TImode
++;; integers.  Arithmetic is expanded by integer optabs or runtime calls.
+ (define_expand "movti"
+   [(set (match_operand:TI 0 "nonimmediate_operand")
+         (match_operand:TI 1 "general_operand"))]
+diff --git a/gcc/config/wasm/wasm.md b/gcc/config/wasm/wasm.md
+--- a/gcc/config/wasm/wasm.md
++++ b/gcc/config/wasm/wasm.md
+@@ -271,6 +271,19 @@
+ 		    (match_operand:REG 2 "wasm_register_operand")))]
+   ""
+   "(%M0.set %0 (<types>.<ibinop:opname> (%M1.get %1) (%M2.get %2)))")
++
++;; Advertising the existing word complement operation also lets GCC split
++;; a TI complement into low/high DI operations.  Otherwise expand_unop has
++;; no word NOT handler and chooses the unavailable __one_cmplti2 libcall.
++(define_expand "one_cmpl<mode>2"
++  [(set (match_operand:REG 0 "register_operand")
++        (not:REG (match_operand:REG 1 "general_operand")))]
++  ""
++  {
++    rtx value = force_reg (<MODE>mode, operands[1]);
++    emit_insn (gen_xor<mode>3 (operands[0], value, CONSTM1_RTX (<MODE>mode)));
++    DONE;
++  })
+ 
+ ;; Unary integer
+ (define_expand "<opname_rt><mode>2"

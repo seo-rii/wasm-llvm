@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "host": "wasm32-emscripten",
+  "target": "wasm32-wasi",
+  "gcc": {
+    "version": "17.0.0",
+    "repository": "https://forge.sourceware.org/feedable/gcc-TEST.git",
+    "branch": "gcc-wasm-2",
+    "commit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "upstreamBase": "33ac889aa27d9917e6e7d07c282015b7c48e0440",
+    "backendCommit": "8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1 for eligible runtime files; compiler GPL-3.0-or-later",
+    "status": "experimental, unmerged author port",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures."
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets."
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default."
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension."
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration."
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles."
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage."
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD."
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      }
+    ]
+  },
+  "wabt": {
+    "version": "1.0.37",
+    "repository": "https://github.com/feedab1e/wabt.git",
+    "commit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173",
+    "license": "Apache-2.0",
+    "purpose": "Assembler for GCC's annotated relocatable WAT; upstream WABT is insufficient"
+  },
+  "wasiSdk": {
+    "version": "33.0",
+    "repository": "https://github.com/WebAssembly/wasi-sdk",
+    "tag": "wasi-sdk-33",
+    "archive": "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz",
+    "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+    "llvmVersion": "22.1.0",
+    "llvmCommit": "4434dabb69916856b824f68a64b029c67175e532",
+    "purpose": "Native wasm-ld, WASI Preview 1 libc/CRT and compiler-rt builtins; never compiles user source"
+  },
+  "emsdk": {
+    "version": "6.0.0",
+    "repository": "https://github.com/emscripten-core/emsdk.git",
+    "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+    "emscriptenCommit": "afa15e0c56d1292e073c2c91bafc1d5e0cdf0dd3"
+  }
+}
