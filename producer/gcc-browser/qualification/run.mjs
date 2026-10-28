@@ -82,7 +82,8 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 			const sourcePath = path.join(here, 'fixtures', test.fixture);
 			const source = await fs.readFile(sourcePath, 'utf8');
 			const requestPath = path.join(testOutput, 'request.json');
-			await fs.writeFile(requestPath, JSON.stringify({ ...test.request, code: source }) + '\n', { flag: 'wx', mode: 0o600 });
+			await fs.writeFile(requestPath, JSON.stringify({ ...test.request, code: source,
+				...(test.precompiledHeader ? { precompiledHeader: true } : {}) }) + '\n', { flag: 'wx', mode: 0o600 });
 			const childStarted = performance.now();
 			const child = spawnSync(process.execPath, ['--expose-gc', path.join(here, 'compile.mjs'), bundle.root,
 				bundle.manifestSha256, requestPath, testOutput], { encoding: 'utf8', timeout: 20 * 60 * 1000, maxBuffer: 4 * 1024 * 1024 });
@@ -100,6 +101,12 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 				assert.equal(sha256(bytes), result.artifact.sha256, `${test.id}: artifact changed`);
 				assertCaseResult(test, { ...result, artifact: { ...result.artifact, bytes } });
 			} else assertCaseResult(test, result);
+			if (test.precompiledHeader) {
+				const reference = evidence.tests.find(({ id }) => id === test.sameAs);
+				assert(result.precompiledHeader?.used, `${test.id}: GCC did not load the precompiled header`);
+				assert.equal(result.artifact.sha256, reference?.artifact?.sha256, `${test.id}: PCH output differs from ${test.sameAs}`);
+				item.precompiledHeaderSpeedup = reference.stages[0].milliseconds / result.stages.at(-1).milliseconds;
+			}
 			if (test.check === 'pragma-object') {
 				const disassembly = spawnSync('objdump', ['-d', result.artifact.path], { encoding: 'utf8', timeout: 30_000, maxBuffer: 2 * 1024 * 1024 });
 				assert.ifError(disassembly.error);

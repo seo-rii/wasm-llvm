@@ -130,8 +130,9 @@ The browser API schedules real `cc1`/`cc1plus → as → ld` invocations because
 GCC driver relies on processes (`fork`/`exec`/`collect2`) absent from a browser.
 One translation unit and optional user headers are supported. The public
 allowlist covers language/standard, `-O0/1/2/3/s`, output kind and CPU profile.
-Arbitrary driver arguments, PCH, plugins, LTO, dynamic linking and shared-library
-outputs are excluded. No pragma is removed, translated, or emulated.
+Arbitrary driver arguments, user-supplied PCH files, plugins, LTO, dynamic linking
+and shared-library outputs are excluded. A consumer may let this exact `cc1plus`
+precompile a GNU header and reuse it with identical flags. No pragma is removed, translated, or emulated.
 
 `x86-64` selects `-march=x86-64 -mtune=generic`. `avx2-fma` additionally enables
 `-mavx2 -mfma`. The browser's CPU is not used to select the target, and
