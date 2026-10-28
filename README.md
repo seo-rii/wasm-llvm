@@ -33,9 +33,10 @@ hosting and loaded by URL from the consuming application.
 | TinyGo         | TinyGo 0.40.1, pinned go-llvm, TinyGo LLVM 20.1.1                                                | Upstream compiler, reduced root, strict receipt, Chromium consumer acceptance | [`producer/tinygo-browser`](producer/tinygo-browser/README.md)                 |
 | V              | V 0.5.2 (`vlang/vc` bootstrap `v.c`), WASI SDK 33 | WASI compiler, vlib root, C sysroot with WASI compatibility archive, compile/run acceptance receipt | [`producer/v-browser`](producer/v-browser/README.md) |
 | WAMR           | WAMR 2.4.5, emsdk 6.0.0, browser RSP transport patch                                            | Interpreter/debug-stub JS/Wasm/pthread worker and receipt           | [`producer/wamr-browser`](producer/wamr-browser/README.md)                     |
+| Zig | Zig 0.17.0 source/native bootstrap, pinned zigc-wasm WASI port | WASI compiler, complete library archive, compile/run qualification receipt | [`producer/zig-browser`](producer/zig-browser/README.md) |
 
 `artifacts/clang-browser`, `artifacts/cobol-browser`, `artifacts/lean-browser` and
-`artifacts/v-browser` hold verified producer outputs currently tracked for deployment.
+`artifacts/v-browser` and `artifacts/zig-browser` hold verified producer outputs currently tracked for deployment.
 The Emscripten LLD canonical import remains next to its producer at
 `producer/emscripten-lld-browser/artifacts`. None of these paths are npm package contents.
 
@@ -140,6 +141,11 @@ pnpm build:tinygo-browser -- --help
 pnpm accept:tinygo-browser -- --help
 pnpm probe:tinygo-native-split -- --help
 pnpm verify:tinygo-artifacts -- --help
+
+# Zig 0.17.0 WASI compiler and complete matching library
+python3 -B producer/zig-browser/scripts/build.py
+python3 -B producer/zig-browser/scripts/package.py
+python3 -B producer/zig-browser/scripts/package.py --verify
 
 # Legacy LLVM 16 worker synchronization (not a TinyGo compiler)
 pnpm sync:tinygo -- out/tinygo-browser/emception.worker.js

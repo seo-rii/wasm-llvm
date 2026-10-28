@@ -37,8 +37,8 @@ const receipt = {
   resourceHeaders: await directoryIdentity(path.join(options.compiler, 'resource-include')),
   licenses: await directoryIdentity(path.join(options.compiler, 'licenses')),
   build: {
-    nativeCompiler: execFileSync('g++-13', ['-dumpfullversion'], { encoding: 'utf8' }).trim(),
-    nativeGenerators: true, buildTriple: execFileSync('gcc-13', ['-dumpmachine'], { encoding: 'utf8' }).trim(),
+    nativeCompiler: execFileSync('g++-16', ['-dumpfullversion'], { encoding: 'utf8' }).trim(),
+    nativeGenerators: true, buildTriple: execFileSync('gcc-16', ['-dumpmachine'], { encoding: 'utf8' }).trim(),
     emsdkRevision: lock.emsdk.revision, emscriptenVersion: lock.emsdk.version,
     hostDependencies: ['gmp', 'mpfr', 'mpc'].map((name) => ({ name, ...lock.sources[name], role: 'compiler host only; WebAssembly' })),
     hostPorts: lock.emscriptenPorts,

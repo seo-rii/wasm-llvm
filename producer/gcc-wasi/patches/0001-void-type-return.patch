@@ -1,0 +1,20 @@
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -242,7 +242,7 @@
+       fprintf (stream, ")");
+       tree return_type = TREE_TYPE (type);
+       fprintf (stream, " (result");
+-      if (return_type != void_type_node)
++      if (!VOID_TYPE_P (return_type))
+ 	{
+ 	  print_type (stream, return_type);
+ 	}
+@@ -765,7 +765,7 @@
+ 
+   if (mode == '#') /* Print the return insn.  */
+     {
+-      if (TREE_TYPE (TREE_TYPE (cfun->decl)) != void_type_node)
++      if (!VOID_TYPE_P (TREE_TYPE (TREE_TYPE (cfun->decl))))
+ 	fprintf (stream, " (local.get $return)");
+     }
+   else if (mode == 'M') /* Print local/global for a register.  */

@@ -1,0 +1,57 @@
+diff --git a/src/dev.zig b/src/dev.zig
+--- a/src/dev.zig
++++ b/src/dev.zig
+@@ -49,7 +49,7 @@
+     wasm,
+ 
+     /// WASI-hosted compiler with the self-hosted WebAssembly backend.
+-    /// Excludes subprocesses, native linkers, LLVM, and compiler servers.
++    /// Includes pure LLVM IR emission, without LLVM libraries or native linkers.
+     wasm_wasi,
+ 
+     /// - sema
+@@ -232,6 +232,7 @@
+                 .ast_gen,
+                 .sema,
+                 .legalize,
++                .llvm_backend,
+                 .wasm_backend,
+                 .wasm_linker,
+                 => true,
+diff --git a/src/codegen/llvm.zig b/src/codegen/llvm.zig
+--- a/src/codegen/llvm.zig
++++ b/src/codegen/llvm.zig
+@@ -562,7 +562,17 @@
+             }
+ 
+             if (!build_options.have_llvm or !comp.config.use_lib_llvm) {
+-                return diags.fail("emitting without libllvm not implemented", .{});
++                // The pure-Zig builder already serialized unoptimized bitcode.
++                // IR-only consumers run optimization and codegen in their own
++                // LLVM process; neither operation needs libLLVM in this host.
++                if (options.asm_path != null or options.bin_path != null) {
++                    return diags.fail("producing machine code requires using the LLVM library", .{});
++                }
++                if (options.post_ir_path) |path| {
++                    o.builder.printToFilePath(io, Io.Dir.cwd(), path) catch |err|
++                        return diags.fail("failed to write to '{s}': {t}", .{ path, err });
++                }
++                return;
+             }
+ 
+             initializeLLVMTarget(io, comp.root_mod.resolved_target.result.cpu.arch);
+@@ -1424,6 +1434,14 @@
+             try o.builder.debugFile(
+                 try o.builder.metadataString(path.sub_path),
+                 try o.builder.metadataString(root),
++            )
++        else if (builtin.os.tag == .wasi)
++            // WASI has no process cwd. Preserve complete guest source paths
++            // and use the browser profile's canonical source root for relative
++            // inputs. Files are opened relative to fd 3, not /workspace.
++            try o.builder.debugFile(
++                try o.builder.metadataString(path.sub_path),
++                try o.builder.metadataString(if (std.fs.path.isAbsolute(path.sub_path)) "" else "/workspace"),
+             )
+         else blk: {
+             const relative = try std.fs.path.relative(gpa, dirs.cwd, null, dirs.cwd, path.sub_path);
