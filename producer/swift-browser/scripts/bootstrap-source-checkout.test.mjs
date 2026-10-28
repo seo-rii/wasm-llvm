@@ -17,11 +17,11 @@ test('parses Swift source bootstrap arguments', () => {
 		sourceRoot: path.resolve(import.meta.dirname, '..', 'source-checkout'),
 		planPath: null,
 		swiftRepository: 'https://github.com/swiftlang/swift.git',
-		swiftRef: 'swift-6.3.3-RELEASE',
+		swiftRef: 'swift-6.4.1-RELEASE',
 		swiftLocalBranch: null,
 		swiftCloneDepth: null,
 		swiftCloneFilter: null,
-		dependencyScheme: 'release/6.3',
+		dependencyScheme: 'release/6.4.1',
 		receiptPath: null,
 		requiredTools: ['git', 'python3'],
 		allowExisting: false,
@@ -146,7 +146,7 @@ test('writes a Swift source bootstrap plan without executing clone commands', as
 			path.join(sourceRoot, 'swift', 'utils', 'update-checkout'),
 			'--clone',
 			'--scheme',
-			'release/6.3'
+			'release/6.4.1'
 		]);
 		assert.ok(
 			result.plan.nextCommands.some((command) =>
@@ -157,6 +157,7 @@ test('writes a Swift source bootstrap plan without executing clone commands', as
 		);
 		assert.equal(result.plan.swiftCloneDepth, 1);
 		assert.equal(result.plan.swiftCloneFilter, 'blob:none');
+		assert.equal(result.plan.dependencyTag, null);
 		assert.deepEqual(JSON.parse(await readFile(planPath, 'utf8')), result.plan);
 	} finally {
 		await rm(dir, { recursive: true, force: true });
@@ -296,7 +297,7 @@ test('executes planned clone and dependency checkout only when requested', async
 				[
 					'clone',
 					'--branch',
-					'swift-6.3.3-RELEASE',
+					'swift-6.4.1-RELEASE',
 					'--depth',
 					'1',
 					'--filter',
@@ -308,12 +309,13 @@ test('executes planned clone and dependency checkout only when requested', async
 			['git', ['checkout', '-B', 'release/6.3', 'HEAD']],
 			[
 				path.join(sourceRoot, 'swift', 'utils', 'update-checkout'),
-				['--clone', '--scheme', 'release/6.3']
+				['--clone', '--scheme', 'release/6.4.1', '--tag', 'swift-6.4.1-RELEASE']
 			]
 		]);
 		assert.equal(result.receiptPath, receiptPath);
 		assert.equal(result.receipt.format, 'wasm-idle-swift-source-bootstrap-receipt-v1');
 		assert.equal(result.receipt.status, 'passed');
+		assert.equal(result.receipt.dependencyTag, 'swift-6.4.1-RELEASE');
 		assert.match(result.receipt.startedAt, /^\d{4}-\d{2}-\d{2}T/u);
 		assert.match(result.receipt.finishedAt, /^\d{4}-\d{2}-\d{2}T/u);
 		assert.equal(result.receipt.sourceRoot, sourceRoot);

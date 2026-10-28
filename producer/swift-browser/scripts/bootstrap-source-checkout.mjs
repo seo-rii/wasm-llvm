@@ -246,6 +246,15 @@ export async function createSwiftSourceBootstrapPlan({
 		'--scheme',
 		dependencyScheme
 	];
+	// Release schemes track branches that can move beyond the release tag.
+	// Preserve the manifest's release across Swift and its tagged dependencies.
+	const dependencyTag =
+		swiftRepository === DEFAULT_SWIFT_REPOSITORY &&
+		swiftRef === DEFAULT_SWIFT_REF &&
+		dependencyScheme === DEFAULT_DEPENDENCY_SCHEME
+			? PRODUCER_MANIFEST.sources.dependencyTag
+			: null;
+	if (dependencyTag) updateCheckoutCommand.push('--tag', dependencyTag);
 	const createSwiftLocalBranchCommand =
 		swiftLocalBranch === null ? null : ['git', 'checkout', '-B', swiftLocalBranch, 'HEAD'];
 	const plan = {
@@ -257,6 +266,7 @@ export async function createSwiftSourceBootstrapPlan({
 		swiftCloneDepth,
 		swiftCloneFilter,
 		dependencyScheme,
+		dependencyTag,
 		requiredTools: tools,
 		commands: {
 			cloneSwift: cloneCommand,
@@ -293,6 +303,7 @@ function createBootstrapReceipt({ result, status, startedAt, finishedAt, error =
 		swiftCloneDepth: result.plan.swiftCloneDepth,
 		swiftCloneFilter: result.plan.swiftCloneFilter,
 		dependencyScheme: result.plan.dependencyScheme,
+		dependencyTag: result.plan.dependencyTag,
 		disk: result.disk ?? null,
 		checkout: result.checkout ?? null,
 		commands: result.plan.commands,

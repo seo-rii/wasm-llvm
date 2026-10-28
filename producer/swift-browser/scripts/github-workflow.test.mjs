@@ -139,7 +139,7 @@ test('Swift runtime export workflow keeps dispatch inputs explicit', async () =>
 
 	assertWorkflowInput(workflow, 'swift_ref', {
 		required: 'false',
-		default: 'swift-6.3.3-RELEASE',
+		default: 'swift-6.4.1-RELEASE',
 	});
 	assertWorkflowInput(workflow, 'swift_clone_depth', {
 		required: 'false',
@@ -149,7 +149,7 @@ test('Swift runtime export workflow keeps dispatch inputs explicit', async () =>
 	});
 	assertWorkflowInput(workflow, 'dependency_scheme', {
 		required: 'false',
-		default: 'release/6.3',
+		default: 'release/6.4.1',
 	});
 	assertWorkflowInput(workflow, 'bootstrap_source', {
 		required: 'true',
@@ -188,11 +188,11 @@ test('Swift runtime export workflow keeps dispatch inputs explicit', async () =>
 	});
 	assertWorkflowInput(workflow, 'swift_version', {
 		required: 'true',
-		default: '6.3.3',
+		default: '6.4.1',
 	});
 	assertWorkflowInput(workflow, 'wasm_sdk_id', {
 		required: 'true',
-		default: 'swift-6.3.3-RELEASE_wasm',
+		default: 'swift-6.4.1-RELEASE_wasm',
 	});
 	assertWorkflowInput(workflow, 'published_url', {
 		required: 'false',

@@ -410,29 +410,25 @@ diff --git a/lib/AST/PluginRegistry.cpp b/lib/AST/PluginRegistry.cpp
  
  ssize_t LoadedExecutablePlugin::PluginProcess::read(void *buf,
 diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+index 3364493..668b908 100644
 --- a/lib/Driver/ToolChains.cpp
 +++ b/lib/Driver/ToolChains.cpp
-@@ -1544,8 +1544,10 @@ void ToolChain::addLinkRuntimeLib(const ArgList &Args, ArgStringList &Arguments,
+@@ -1565,6 +1565,7 @@ void ToolChain::addLinkRuntimeLib(const ArgList &Args, ArgStringList &Arguments,
    Arguments.push_back(Args.MakeArgString(P));
  }
- 
--static void appendInProcPluginServerPath(StringRef PluginPathRoot,
--                                         llvm::SmallVectorImpl<char> &InProcPluginServerPath) {
+
 +#if !defined(__wasi__)
-+static void appendInProcPluginServerPath(
-+    StringRef PluginPathRoot,
-+    llvm::SmallVectorImpl<char> &InProcPluginServerPath) {
-   InProcPluginServerPath.append(PluginPathRoot.begin(), PluginPathRoot.end());
- #if defined(_WIN32)
-   llvm::sys::path::append(InProcPluginServerPath, "bin", "SwiftInProcPluginServer.dll");
-@@ -1557,13 +1559,14 @@ static void appendInProcPluginServerPath(StringRef PluginPathRoot,
+ void swift::driver::appendInProcPluginServerPath(
+     StringRef PluginPathRoot,
+     llvm::SmallVectorImpl<char> &InProcPluginServerPath) {
+@@ -1579,13 +1580,14 @@ void swift::driver::appendInProcPluginServerPath(
  #error Unknown compiler host
  #endif
  }
 +#endif
- 
- static void appendPluginsPath(StringRef PluginPathRoot,
-                               llvm::SmallVectorImpl<char> &PluginsPath) {
+
+ void swift::driver::appendPluginsPath(
+     StringRef PluginPathRoot, llvm::SmallVectorImpl<char> &PluginsPath) {
    PluginsPath.append(PluginPathRoot.begin(), PluginPathRoot.end());
  #if defined(_WIN32)
    llvm::sys::path::append(PluginsPath, "bin");
@@ -441,10 +437,10 @@ diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
    llvm::sys::path::append(PluginsPath, "lib", "swift", "host", "plugins");
  #else
  #error Unknown compiler host
-@@ -1585,11 +1588,13 @@ void ToolChain::addPluginArguments(const ArgList &Args,
+@@ -1607,11 +1609,13 @@ void ToolChain::addPluginArguments(const ArgList &Args,
    llvm::sys::path::remove_filename(pluginPathRoot); // Remove `swift`
    llvm::sys::path::remove_filename(pluginPathRoot); // Remove `bin`
- 
+
 +#if !defined(__wasi__)
    // In-process plugin server path.
    SmallString<261> inProcPluginServerPath;
@@ -452,7 +448,7 @@ diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
    Arguments.push_back("-in-process-plugin-server-path");
    Arguments.push_back(Args.MakeArgString(inProcPluginServerPath));
 +#endif
- 
+
    // Default plugin path.
    SmallString<261> defaultPluginPath;
 diff --git a/include/swift/Basic/BridgedSwiftObject.h b/include/swift/Basic/BridgedSwiftObject.h
