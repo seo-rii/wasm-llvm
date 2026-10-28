@@ -27,6 +27,7 @@ import {
 import { verifyTinyGoArtifactPayloads } from './verify-artifacts.mjs';
 import { stripCompilerNames } from './strip-compiler-names.mjs';
 import { runWasiModule } from './probe-native-split-pipeline.mjs';
+import { probeCgoModuleLink } from './probe-cgo-module-link.mjs';
 
 const THIS_FILE = fileURLToPath(import.meta.url);
 const PRODUCER_ROOT = path.resolve(path.dirname(THIS_FILE), '..');
@@ -1447,7 +1448,8 @@ export async function buildBrowserCompiler(
 		run = runCommand,
 		copySource = cp,
 		inspectFile = inspectBuildFile,
-		probeAbiEscape = probeTinyGoAbiEscape
+		probeAbiEscape = probeTinyGoAbiEscape,
+		probeCgoLink = probeCgoModuleLink
 	} = {}
 ) {
 	assertPathOutsideRoot(options.receiptPath, options.sourceRoot, '--receipt');
@@ -2084,6 +2086,16 @@ export async function buildBrowserCompiler(
 			}
 			receipt.build.sourceSelection.status = 'passed';
 			receipt.build.sourceSelection.results = selectedSources;
+			receipt.nativeTinyGo.cgoModuleLinkProbe = await probeCgoLink({
+				nativeTinyGo: options.nativeTinyGo,
+				nativeLlvmLibrary: path.resolve(path.dirname(receipt.hostSupport.tools.cxx), '..', 'lib', 'libLLVM.so'),
+				sourceRoot: receipt.paths.patchedSourceRoot,
+				goRoot: receipt.paths.goToolchainRoot,
+				buildDir: options.buildDir,
+				expectedDataLayout: receipt._manifest.compileProtocol.targetNativeValidation.dataLayout,
+				environment: buildEnvironment,
+				producerRoot
+			});
 
 			const hostSupportOutputs = [];
 			const hostSupportEnvironment = {

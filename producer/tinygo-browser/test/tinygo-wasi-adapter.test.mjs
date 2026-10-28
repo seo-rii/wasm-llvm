@@ -40,6 +40,18 @@ function addedFile(patch, relativePath) {
 	return `${addedLines.join('\n')}\n`;
 }
 
+test('internal CGo module links execute the same checked helper as the native preflight', async () => {
+	const patch = await readFile(patchPath, 'utf8');
+	const helper = addedFile(patch, 'builder/cgo_target.go');
+	assert.match(helper, /func normalizeCGoHeaderTarget\(destination, header cgoHeaderModule\) error/u);
+	assert.match(patch,
+		/normalizeCGoHeaderTarget\(mod, headerMod\); err != nil \{\n\+\s+headerMod\.Dispose\(\)\n\+\s+return err\n\+\s+\}\n\s+err = llvm\.LinkModules\(mod, headerMod\)/u);
+	const preflight = await readFile(path.join(producerDir, 'scripts', 'probe-cgo-module-link.mjs'), 'utf8');
+	assert.match(preflight, /'builder', 'cgo_target\.go'/u);
+	assert.match(await readFile(path.join(producerDir, 'fixtures', 'cgo-module-link', 'main.go'), 'utf8'),
+		/normalizeCGoHeaderTarget\(destination, header\)/u);
+});
+
 test('the adapter delegates Go semantics to the upstream TinyGo builder', async () => {
 	const source = await readFile(adapterPath, 'utf8');
 

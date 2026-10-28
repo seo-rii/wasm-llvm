@@ -60,6 +60,22 @@ and recorded; obsolete implementations and system LLVM linkage configurations fa
 `validation/0.43.0-llvm22-source-selection.json` records native selection, CGo execution,
 and the distinct Go/Clang module triples. It does not qualify a browser compiler build.
 
+At the internal CGo header link, Clang's `wasm32-unknown-wasip1` module is normalized to
+the destination's exact Preview 1 spelling before `llvm.LinkModules`. The helper accepts
+only `wasm32-unknown-wasi` and `wasm32-unknown-wasip1`, with identical nonempty DataLayouts;
+other WASI ABIs and layout mismatches fail before linking. This leaves the compiler's
+output triple and the separate target-C/C++ validation and provenance contract unchanged.
+
+Before host support compilation, `scripts/probe-cgo-module-link.mjs` executes that exact
+patched helper against real native LLVM modules. It parses bitcode from pinned TinyGo's
+Clang, reproduces the original warning in a separate baseline, then verifies four accepted
+alias pairs and six rejected ABI/layout cases. Every qualifying compile and execution phase
+must have empty stderr, saved alongside its stdout and receipt under `cgo-module-link-probe`.
+The tiny native CGo bridge uses the runner's host C compiler and WASI SDK's LLVM shared
+library; it does not rebuild LLVM or rely on the unpatched native TinyGo builder to test
+the helper. `validation/0.43.0-cgo-module-link.json` records the LLVM 22.1.0 SDK proof and
+its limits. The full LLVM 22.1.4 browser compiler still requires strict producer acceptance.
+
 The external linker captures TinyGo 0.43 embed objects using both their payload hash and
 their recorded source-path hash. Equal embedded contents at different paths can have different
 DWARF bytes, so both objects are retained, matching upstream linking. Conflicting objects with

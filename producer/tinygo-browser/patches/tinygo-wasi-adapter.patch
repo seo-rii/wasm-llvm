@@ -1,5 +1,5 @@
 diff --git a/builder/build.go b/builder/build.go
-index d41062c..966b081 100644
+index d41062c..7e6b4a9 100644
 --- a/builder/build.go
 +++ b/builder/build.go
 @@ -29,7 +29,6 @@ import (
@@ -209,7 +209,18 @@ index d41062c..966b081 100644
  		}
  
  		// Action ID jobs need to know the action ID of all the jobs the package
-@@ -713,6 +766,98 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+@@ -497,6 +550,10 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+ 					if err != nil {
+ 						return fmt.Errorf("failed to load bitcode file: %w", err)
+ 					}
++					if err := normalizeCGoHeaderTarget(mod, headerMod); err != nil {
++						headerMod.Dispose()
++						return err
++					}
+ 					err = llvm.LinkModules(mod, headerMod)
+ 					if err != nil {
+ 						return fmt.Errorf("failed to link module: %w", err)
+@@ -713,6 +770,98 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
  		},
  	}
  
@@ -308,7 +319,7 @@ index d41062c..966b081 100644
  	// Create the output directory, if needed
  	if err := os.MkdirAll(filepath.Dir(outpath), 0777); err != nil {
  		return result, err
-@@ -720,13 +865,22 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+@@ -720,13 +869,22 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
  
  	// Check whether we only need to create an object file.
  	// If so, we don't need to link anything and will be finished quickly.
@@ -334,7 +345,7 @@ index d41062c..966b081 100644
  		// Generate output.
  		switch outext {
  		case ".o":
-@@ -834,30 +988,8 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+@@ -834,30 +992,8 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
  		linkerDependencies = append(linkerDependencies, job)
  	}
  
@@ -367,7 +378,7 @@ index d41062c..966b081 100644
  
  	// Linker flags from CGo lines:
  	//     #cgo LDFLAGS: foo
-@@ -1144,6 +1276,7 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+@@ -1144,6 +1280,7 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
  	if err != nil {
  		return result, err
  	}
@@ -375,7 +386,7 @@ index d41062c..966b081 100644
  
  	// Get an Intel .hex file or .bin file from the .elf file.
  	outputBinaryFormat := config.BinaryFormat(outext)
-@@ -1187,6 +1320,15 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
+@@ -1187,6 +1324,15 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
  	return result, nil
  }
  
@@ -391,7 +402,7 @@ index d41062c..966b081 100644
  func linkOrCopyFile(src, dst string) error {
  	if err := os.Link(src, dst); err == nil {
  		return nil
-@@ -1732,19 +1874,6 @@ func patchRP2040BootCRC(executable string) error {
+@@ -1732,19 +1878,6 @@ func patchRP2040BootCRC(executable string) error {
  	return replaceElfSection(executable, ".boot2", bytes)
  }
  
@@ -411,6 +422,47 @@ index d41062c..966b081 100644
  func b2u8(b bool) uint8 {
  	if b {
  		return 1
+diff --git a/builder/cgo_target.go b/builder/cgo_target.go
+new file mode 100644
+index 0000000..7f10d5f
+--- /dev/null
++++ b/builder/cgo_target.go
+@@ -0,0 +1,35 @@
++package builder
++
++import "fmt"
++
++// cgoHeaderModule is implemented by llvm.Module. Keeping the checked boundary
++// independent of the bindings lets the native preflight execute this same code
++// against real LLVM modules without rebuilding the entire TinyGo compiler.
++type cgoHeaderModule interface {
++	Target() string
++	DataLayout() string
++	SetTarget(string)
++}
++
++// normalizeCGoHeaderTarget reconciles LLVM 22 Clang's canonical Preview 1
++// spelling with TinyGo's existing module spelling before LLVM links them.
++// Only this exact ABI alias is normalized; target and layout mismatches fail
++// before the source module can be consumed or changed by the linker.
++func normalizeCGoHeaderTarget(destination, header cgoHeaderModule) error {
++	target := destination.Target()
++	if target != "wasm32-unknown-wasi" && target != "wasm32-unknown-wasip1" {
++		return nil
++	}
++	inputTarget := header.Target()
++	if inputTarget != "wasm32-unknown-wasi" && inputTarget != "wasm32-unknown-wasip1" {
++		return fmt.Errorf("CGo header LLVM target %q is incompatible with %q", inputTarget, target)
++	}
++	layout := destination.DataLayout()
++	if layout == "" || header.DataLayout() != layout {
++		return fmt.Errorf("CGo header LLVM data layout %q differs from destination %q", header.DataLayout(), layout)
++	}
++	if inputTarget != target {
++		header.SetTarget(target)
++	}
++	return nil
++}
 diff --git a/builder/buildid.go b/builder/buildid.go
 index e5edd05..75fb368 100644
 --- a/builder/buildid.go

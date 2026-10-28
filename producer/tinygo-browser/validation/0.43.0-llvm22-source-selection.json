@@ -353,7 +353,17 @@
       "stdout": "42\n",
       "stderr": ""
     },
-    "nodeWasiExitCode": 0
+    "nodeWasiExitCode": 0,
+    "compileDiagnostics": {
+      "warningPresent": true,
+      "diagnostic": "Linking two modules of different target triples: wasm32-unknown-wasip1 and wasm32-unknown-wasi",
+      "irCompileStderr": {
+        "bytes": 1045,
+        "sha256": "f0fd76037a9a34c85d2ee3f6347a02619f6faf4d9cecf7bed32e771bdf885353"
+      },
+      "scope": "The empty stderr above belongs to Node WASI guest execution. Native compilation emitted the target-triple warning; this probe did not qualify strict compiler diagnostics.",
+      "followUp": "0.43.0-cgo-module-link.json"
+    }
   },
   "productionPreflight": "Use one LLVM-major-derived tag set for host target JSON, native bootstrap command and package-selection commands. Before host C++/compiler compilation, reject wrong package directories, absent triple/features/switch LLVM22 implementations, obsolete source selections and system LLVM linkage configuration. Record required source hashes.",
   "regressionBeforeFix": {

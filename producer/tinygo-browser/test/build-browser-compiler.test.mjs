@@ -1078,6 +1078,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		contract: fixture.contract,
 		verifySource: async () => fixture.sourceReceipt,
 		probeAbiEscape: async () => ({ status: 'passed' }),
+		probeCgoLink: async () => ({ status: 'passed' }),
 		run: runner,
 		copySource: copyPatchedSource
 	});
@@ -1269,6 +1270,7 @@ test('rejects merged root discovery before compiling or optimizing the browser c
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}),
@@ -1288,6 +1290,7 @@ test('rejects obsolete LLVM source choices before host support and compiler comp
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}), /native TinyGo compiler source selection (?:is missing|retained an incompatible)/u);
@@ -1323,6 +1326,29 @@ test('rejects ABI escape regressions before host support and compiler compilatio
 	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
 });
 
+test('rejects native CGo module-link diagnostics before host support and compiler compilation', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, { execute: true });
+	await assert.rejects(buildBrowserCompiler(fixture.options, {
+		contract: fixture.contract,
+		verifySource: async () => fixture.sourceReceipt,
+		probeAbiEscape: async () => ({ status: 'passed' }),
+		probeCgoLink: async ({ nativeTinyGo, sourceRoot, environment, expectedDataLayout }) => {
+			assert.equal(nativeTinyGo, fixture.nativeTinyGo);
+			assert.equal(sourceRoot, environment.TINYGOROOT);
+			assert.equal(expectedDataLayout, fixture.contract.manifest.compileProtocol.targetNativeValidation.dataLayout);
+			throw new Error('CGo module-link normalize emitted stderr: Linking two modules of different target triples');
+		},
+		run: runner,
+		copySource: copyPatchedSource
+	}), /CGo module-link normalize emitted stderr/u);
+	assert.ok(!calls.some((call) => call.command === fixture.tools.cxx));
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
 test('rejects a missing go-llvm wrapper definition before building compiler bitcode', async () => {
 	const fixture = await createFixture();
 	fixture.options.execute = true;
@@ -1335,6 +1361,7 @@ test('rejects a missing go-llvm wrapper definition before building compiler bitc
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}),
@@ -1360,6 +1387,7 @@ for (const unresolvedImport of [
 				contract: fixture.contract,
 				verifySource: async () => fixture.sourceReceipt,
 				probeAbiEscape: async () => ({ status: 'passed' }),
+				probeCgoLink: async () => ({ status: 'passed' }),
 				run: runner,
 				copySource: copyPatchedSource
 			}),
@@ -1390,6 +1418,7 @@ test('allows upstream Asyncify intrinsics before optimization and requires their
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		});
@@ -1416,6 +1445,7 @@ test('rejects a failed compiler asyncify transformation before publishing assets
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}),
@@ -1439,6 +1469,7 @@ test('fails closed when TinyGo omits generated embed objects from the external l
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}),
@@ -1462,6 +1493,7 @@ test('rejects conflicting embed objects with the same content and source-path id
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
 			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}),
