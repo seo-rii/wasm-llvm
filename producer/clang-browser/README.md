@@ -28,16 +28,48 @@ sysroot produce a separate bundle with explicit qualification gates.
 
 ## Rebuild
 
+The existing LLDB producer workflow also provides an opt-in full Clang build:
+
+```sh
+gh workflow run lldb-browser.yml --ref <source-branch> \
+  -f build_clang=true -f build_product=false -f native_baseline=false
+```
+
+This manual job uses a fresh Ubuntu 24.04 runner, two parallel compilation jobs and a
+six-hour timeout. It requires at least 20 GiB available disk and 12 GiB available memory
+before starting, preserves the producer's release defaults, and reuses no build objects.
+The complete Clang/LLD, MemFS, sysroot and clangd output is uploaded for seven days only
+after current build-receipt verification and Wasm smoke checks pass. A separate evidence
+artifact preserves the source commit, process identifier, final exit status and private
+build log on failure. The job does not publish a release or qualify browser behavior;
+consumer qualification and independent reproducibility remain separate checks.
+
 The full build requires CMake, Ninja, Git, tar, a downloader, and enough disk for native and WASI
 LLVM builds. It downloads the pinned WASI SDK and Emscripten SDK, checks out the pinned LLVM tag,
 applies the pinned YoWASP WASI-host patch, the checksum-pinned LLVM patch that preserves successful
 WASI `close()` results instead of returning stale `errno`, and the checksum-pinned local patch that
 limits the standalone LLD module to its WebAssembly driver. A separate checksum-pinned clangd patch
 adds the Asyncify bridge that waits for browser-provided stdin before each JSON-RPC message. The
-producer then builds Clang/LLD/clangd, selects the target and runtime libraries, and packages the result. It also rebuilds
+checksum-pinned `wasm-function-end-location.patch` keeps the closing brace on real epilogue
+instructions in `-O0` Wasm builds with debug information. It preserves the function's debug scope
+until that location is recorded and prevents a simple return expression from replacing it.
+The producer then builds Clang/LLD/clangd, selects the target and runtime libraries, and packages the result. It also rebuilds
 MemFS from the small source files pinned by immutable revision, size and SHA-256 in the manifest.
 The node table holds 8192 entries instead of 1024, leaving room for Objective-C headers and workspace
 files after mounting the sysroot. A clean output directory is sufficient.
+
+The function-end change applies to Wasm C and C++ debug output, including early returns and
+implicit void returns. Native targets, optimized output and builds without debug information
+retain upstream behavior. It adds no synthetic UI pause or executable instruction. A function
+consisting only of a constant return may consequently have its sole source stop at the closing
+brace. A C++ local remains subject to its actual lifetime; the change does not resurrect an object
+after its destructor. The upstream-style IR regression is in the pinned patch, and
+`test/native-wasm-debug/function-end.cpp` exercises real stepping and live scalar locals.
+
+This source change requires rebuilding the compiler. Existing checked-in compiler/debugger
+artifacts and receipts are not rewritten by it; those bytes do not acquire the new behavior from
+a manifest edit. Compile the native function-end fixture with the rebuilt compiler and run the
+documented native acceptance gate before replacing product artifacts.
 
 The WASI SDK clang driver normally runs any `wasm-opt` found on `PATH` after linking, so a host
 Binaryen package would silently change the clang and wasm-ld bytes. The producer links them with

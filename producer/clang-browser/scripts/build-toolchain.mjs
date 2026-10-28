@@ -400,6 +400,14 @@ async function patchClangdForEmscriptenStdin() {
 	);
 }
 
+async function patchWasmFunctionEnd() {
+	await applyChecksumPinnedPatch(
+		producerManifest.sources.wasmFunctionEndPatch,
+		'Wasm unoptimized function-end debug location patch',
+		'.wasm-llvm-wasm-function-end.patch'
+	);
+}
+
 const buildTools = {};
 async function recordBuildTool(name, executable) {
 	buildTools[name] = { ...await fileIdentity(executable),
@@ -485,6 +493,7 @@ const yowaspPatch = await patchLlvmForWasiHost();
 await patchLlvmWasiClose();
 await patchLldForWasmOnly();
 await patchClangdForEmscriptenStdin();
+await patchWasmFunctionEnd();
 if (toolHostProfile) {
 	// Same pinned patch input as the isolated cached rebuild (build.py); the work dir is fresh.
 	await assertSha256(
@@ -500,6 +509,7 @@ if (toolHostProfile) {
 }
 const llvmPatchSpecs = [producerManifest.sources.llvmWasiClosePatch,
 	lldPatch, producerManifest.sources.clangdEmscriptenStdinPatch,
+	producerManifest.sources.wasmFunctionEndPatch,
 	...(toolHostProfile ? [{ ...toolHostProfile.patch, path: `tool-host/${toolHostProfile.patch.path}` }] : [])];
 const llvmVerification = {
 	source: llvmSource, commit: config.llvmCommit,
@@ -507,6 +517,7 @@ const llvmVerification = {
 	transforms: [{ file: 'llvm/lib/Support/Signals.cpp', transform: addWasiSignalStub }],
 	allowedUntracked: ['.wasm-llvm-yowasp-wasi-host.patch', '.wasm-llvm-wasi-close.patch',
 		crossProfile ? '.wasm-llvm-lld-elf-only.patch' : '.wasm-llvm-lld-wasm-only.patch', '.wasm-llvm-clangd-emscripten-stdin.patch',
+		'.wasm-llvm-wasm-function-end.patch',
 		...(toolHostProfile ? ['.wasm-llvm-tool-host.patch'] : [])]
 };
 const llvmSourceIdentity = await verifyPatchedCheckout(llvmVerification);

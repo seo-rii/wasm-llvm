@@ -1,0 +1,44 @@
+diff --git a/lldb/tools/lldb-dap/Breakpoint.cpp b/lldb/tools/lldb-dap/Breakpoint.cpp
+--- a/lldb/tools/lldb-dap/Breakpoint.cpp
++++ b/lldb/tools/lldb-dap/Breakpoint.cpp
+@@ -44,6 +44,12 @@
+ void Breakpoint::SetCondition() { m_bp.SetCondition(m_condition.c_str()); }
+ 
+ void Breakpoint::SetHitCondition() {
++  // An omitted or empty DAP hitCondition clears a previous ignore count.
++  // Merely failing to parse the empty string leaves that count installed.
++  if (m_hit_condition.empty()) {
++    m_bp.SetIgnoreCount(0);
++    return;
++  }
+   uint64_t hitCount = 0;
+   if (llvm::to_integer(m_hit_condition, hitCount))
+     m_bp.SetIgnoreCount(hitCount - 1);
+diff --git a/lldb/test/API/tools/lldb-dap/breakpoint/TestDAP_setBreakpoints.py b/lldb/test/API/tools/lldb-dap/breakpoint/TestDAP_setBreakpoints.py
+--- a/lldb/test/API/tools/lldb-dap/breakpoint/TestDAP_setBreakpoints.py
++++ b/lldb/test/API/tools/lldb-dap/breakpoint/TestDAP_setBreakpoints.py
+@@ -363,6 +363,24 @@
+         self.assertEqual(i, 7, "i != 7 showing post hitCondition hits every time")
+ 
+     @skipIfWindows
++    def test_clear_hit_condition(self):
++        """Clearing a pending hit condition preserves the breakpoint ID."""
++        loop_line = line_number("main.cpp", "// break loop")
++        self.build_and_launch(self.getBuildArtifact("a.out"))
++        for expected_i, cleared in enumerate([{}, {"hitCondition": ""}]):
++            breakpoint_ids = self.set_source_breakpoints(
++                self.main_path, [loop_line], [{"hitCondition": "4"}]
++            )
++            cleared_ids = self.set_source_breakpoints(
++                self.main_path, [loop_line], [cleared]
++            )
++            self.assertEqual(breakpoint_ids, cleared_ids)
++            self.continue_to_breakpoints(breakpoint_ids)
++            self.assertEqual(
++                int(self.dap_server.get_local_variable_value("i")), expected_i
++            )
++
++    @skipIfWindows
+     def test_column_breakpoints(self):
+         """Test setting multiple breakpoints in the same line at different columns."""
+         loop_line = line_number("main.cpp", "// break loop")

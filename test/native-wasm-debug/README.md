@@ -17,6 +17,63 @@ The release archive digest matches its GitHub SLSA provenance subject. The
 provenance resolves the `llvmorg-22.1.8` workflow input to the LLVM commit
 listed above.
 
+## C/C++ feature gates
+
+The scheduled/manual feature job builds a fresh pinned native Clang and LLDB,
+applying the checksum-verified function-end patch and LLDB patches 0007, 0010,
+0011 and 0012. It preserves the separate official-binary C, trap and interrupt
+baselines and their frozen fixture hashes. New feature fixtures use the rebuilt
+Clang with the pinned official WebAssembly linker and WASI SDK. C++ fixtures
+explicitly select the SDK's `wasm32-wasip1/noeh` libc++ headers and libraries
+with exceptions disabled; the unmodified upstream driver does not discover
+the SDK's partitioned C++ layout automatically.
+
+`hit-count.c` checks real DAP `setBreakpoints` requests. A positive decimal
+`hitCondition: "3"` must stop the third and fourth calls with live locals.
+Separate sessions set a pending condition, then remove the field or set it to
+an empty string, both before execution and during a stop. Both clearing forms
+must preserve the breakpoint ID and stop the immediate next call. An upstream
+adapter without patch 0012 fails this qualification; `--case setting` explicitly
+qualifies only the unchanged setting behavior.
+
+```sh
+node test/native-wasm-debug/run-native-hit-condition-baseline.mjs \
+  --iwasm /path/to/iwasm --lldb-dap /path/to/patched/bin/lldb-dap \
+  --program /path/to/hit-count.wasm --case all
+```
+
+`container-adaptors.cpp` qualifies the native libc++ providers with
+`run-native-cpp-baseline.mjs --kind container-adaptors`. Two real source stops
+check empty containers, deque/vector stacks, max and custom-comparator min
+heaps, deque heap storage, nested containers and push/pop updates. Heap checks
+require the comparator's top first and all expected elements; remaining heap
+storage is not assumed to be sorted pop order. CI retains source identities,
+binary and fixture hashes, and the qualification transcripts as artifacts.
+
+`skip-library.cpp` is an optional qualification case retained for future work,
+not a passing CI baseline. `--kind skip-library` enters `std::sort` with `^$`,
+then checks whether the broader fixed `^(.* )?std::` preset skips a library
+call while preserving an explicit comparator breakpoint. The pinned native
+Wasm pair currently stops inside the templated library function, so this
+qualification fails and `skipLibraryCode` remains false. The settings command
+route itself accepts both presets; that does not qualify their stepping
+behavior. Callback-aware stepping is also unqualified.
+
+Compile `function-end.cpp` with a compiler rebuilt with
+`producer/clang-browser/patches/wasm-function-end-location.patch`, `-O0 -g`
+and a WASI sysroot, then run the same runner with `--kind function-end`.
+It checks actual closing-brace PCs and live scalar locals for ordinary and
+early returns, recursive calls, a C++ destructor and an implicit void return.
+It also checks that Step Out reaches the caller directly. This gate must not
+be run against the unpatched official compiler as a passing product check.
+The patch includes IR regressions for wasm32/wasm64 and unchanged native,
+optimized and nodebug behavior. The libc++ adaptor API regression is included
+inside the LLDB producer patch and needs a rebuilt LLDB to execute.
+
+Source-level contract tests and native fixtures do not update the packaged
+browser artifacts. Both products require verified rebuilds and a real
+Chromium consumer run before the new behavior can be released.
+
 ## C baseline
 
 Compile `main.c` with a WASI sysroot and the pinned Clang:

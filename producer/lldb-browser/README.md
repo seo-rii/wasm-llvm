@@ -68,6 +68,50 @@ launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
 General Clang expression evaluation is not an advertised capability of this
 artifact.
 
+### C++ values and stepping policy
+
+The C++ language plugin supplies native libc++ synthetic children and summaries
+for vector, deque, map, set, unordered containers and queue. The locked
+`0011-libcxx-container-adaptors.patch` registers the same native queue adaptor
+for `std::stack` and `std::priority_queue`: each forwards to the synthetic view
+of its underlying `c` container. This requires no Python formatter. Stack
+children follow underlying storage order (bottom to top); priority-queue
+children follow heap storage order with the top element first, not sorted pop
+order. Custom comparators, deque storage, nested values, empty containers and
+updates after push/pop are covered by the patch's upstream LLDB API fixture.
+
+`hitConditionalBreakpoints` qualifies positive decimal DAP `hitCondition`
+values. LLVM implements these as an ignore count of N - 1: the Nth and every
+subsequent hit stop. This is not an expression condition or an equality-only
+hit filter. Consumers must validate a positive integer in the uint32 range.
+The locked `0012-lldb-dap-clear-hit-condition.patch` resets a pending ignore
+count when an existing breakpoint's hit condition becomes empty or omitted,
+preserving the breakpoint ID. Its upstream DAP regression covers both forms.
+
+`skipLibraryCode` remains false. Native qualification accepts fixed settings
+through attach `initCommands` and DAP `evaluate` with `context: "repl"` and
+the default backtick command prefix, but neither LLDB's upstream `^std::`
+default nor the broader `^(.* )?std::` preset prevented a stop inside the
+fixture's templated `std::sort`. Accepting a setting is not proof that source
+stepping honors it for Wasm. `skip-library.cpp` and the optional native runner
+mode retain this failing qualification case; it is excluded from passing CI
+gates until a real target fix is established. Callback-aware stepping also
+remains outside the qualified behavior.
+
+Conditional expressions, expression logpoints and post-return values remain
+unqualified (`conditionalBreakpoints`, `logPoints`, and `returnValues` are
+false). The Wasm target has no return-value ABI provider. The fixed settings
+commands above do not enable general expression execution.
+
+These are producer source contracts. Existing packaged LLDB bytes, manifests
+and receipts stay unchanged until a verified rebuild is published. Native CI
+rebuilds the pinned, patched Clang and LLDB pair from clean source. It checks
+function-end stepping and real LLDB-DAP hit conditions, including both omitted
+and empty clearing requests, through
+`run-native-hit-condition-baseline.mjs --case all`. The adaptor registration
+additionally needs a rebuilt browser LLDB and real consumer Chromium
+qualification before release.
+
 The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
 through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP
 `M` packet to guest linear memory. This is a raw-memory operation only: it does
@@ -200,12 +244,17 @@ The scripts are deliberately split so source mutation, compilation, and
 packaging remain auditable:
 
 CI follows the same two-phase contract.
-The source and patch contracts gate the product build.
-Checked-in runtime-source provenance runs independently. A source change may
-therefore leave the provenance job red while the explicitly requested
-replacement product is still built and uploaded. After that product is
-synchronized into `artifacts/runtime-source/debug`, both jobs must be green
-before the revision can be released or promoted.
+The source and patch contracts gate the product build through
+`producer-contracts`. Checked-in runtime-source provenance runs independently
+in `runtime-source-provenance`. Clang delivery validation also runs independently
+in the mandatory `clang-artifact-provenance` job, which executes
+`pnpm verify:clang-artifacts` and `pnpm smoke:clang-artifacts` on pull requests,
+`main` pushes, schedules, and manual dispatches. Neither delivery job is a
+dependency of `build-product`: a source change may leave checked-in artifact
+provenance red while the explicitly requested replacement product is built
+and uploaded. All three gates must be green before merge, release, or
+promotion. Synchronizing a replacement LLDB/WAMR product into
+`artifacts/runtime-source/debug` does not waive the Clang delivery gate.
 
 ```sh
 node producer/lldb-browser/scripts/prepare.mjs
@@ -242,11 +291,14 @@ node --test producer/lldb-browser/test/producer.test.mjs
 The plan modes never clone, patch, configure, or build LLVM.
 Pull requests and `main` pushes run this producer contract together with the
 paired WAMR producer contract in the `LLDB browser producer contracts`
-workflow. The gate verifies locked hashes, patch structure, transport
+workflow. The source gate verifies locked hashes, patch structure, transport
 overlays, pthread sidecars, and receipt/manifest behavior without downloading
-or rebuilding the full LLVM and WAMR binaries. It also verifies the published
-product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
+or rebuilding the full LLVM and WAMR binaries. The independent runtime-source
+provenance gate verifies the published product bundle under
+`artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
+The separate Clang artifact gate validates its existing delivery receipts and
+smoke checks without blocking regeneration of the LLDB/WAMR replacement.
 
 The weekly schedule also performs full clean LLDB and WAMR product builds. It
 builds LLDB sequentially from two distinct empty LLVM source and build roots,

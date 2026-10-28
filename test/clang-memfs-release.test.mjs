@@ -10,6 +10,7 @@ import test from "node:test";
 import { ZipWriter, Uint8ArrayReader, Uint8ArrayWriter } from "@zip.js/zip.js";
 
 import { makeBuildReceipt, wasm } from './fixtures/clang/artifacts.mjs';
+import { verifyClangProducerManifest } from '../producer/clang-browser/scripts/verify-artifacts.mjs';
 
 const exec = promisify(execFile);
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -248,16 +249,24 @@ test("release binds the copied receipt both to metadata and to the delivered Mem
 });
 
 
-test("historical producer identity requires the rebuilt MemFS receipt bound to delivered bytes", async (t) => {
+test("historical MemFS requalification cannot replace current compiler provenance", async (t) => {
   const f = await fixture(t);
   await f.package();
   const metadata = JSON.parse(await readFile(path.join(f.artifactDir, "toolchain.json")));
   metadata.producer.manifestSha256 = "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78";
+  const historical = JSON.parse(await readFile(path.join(repo,
+    "producer/clang-browser/compatibility/manifest-before-optional-headers.json")));
+  const optionalHeaderManifest = Buffer.from(JSON.stringify({
+    ...historical, optionalOutputs: ["clangd/clangd.headers.json.gz"],
+  }));
+  assert.equal(await verifyClangProducerManifest(metadata, optionalHeaderManifest),
+    "historical-components-requalified");
   await writeFile(path.join(f.artifactDir, "toolchain.json"), JSON.stringify(metadata));
-  await f.release();
-  const build = JSON.parse(await readFile(path.join(f.releaseDir, "runtime-build.json")));
-  assert.equal(build.manifestCompatibility, "historical-components-requalified");
+  // The current compiler has an additional source patch. A rebuilt MemFS
+  // receipt cannot relabel historical compiler bytes as that new compiler.
+  await assert.rejects(f.release(), /manifest mismatch/);
   delete metadata.memfs;
   await writeFile(path.join(f.artifactDir, "toolchain.json"), JSON.stringify(metadata));
+  await assert.rejects(verifyClangProducerManifest(metadata, optionalHeaderManifest), /manifest mismatch/);
   await assert.rejects(f.release(), /manifest mismatch/);
 });
