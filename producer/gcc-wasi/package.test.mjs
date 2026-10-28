@@ -9,19 +9,23 @@ import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
 import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
 
 test('browser package rejects failed preparation and unsupported gcov host profiles', () => {
+	const specs = identity(Buffer.from('*cc1plus:\n\n'));
 	const receipt = {
 		hostUtilityProfile: { name: 'browser-frontends', gcov: false, gcovDump: false, gcovTool: false },
-		bootstrap: { allGccBootstrapExitCode: 0, gcovHostTools: 'disabled', profile: 'browser-frontends' }
+		bootstrap: { allGccBootstrapExitCode: 0, gcovHostTools: 'disabled', profile: 'browser-frontends' },
+		nativeDriverSpecs: specs
 	};
-	verifyBrowserHostProfile(receipt);
+	verifyBrowserHostProfile(receipt, specs);
 	for (const modify of [
 		value => { delete value.hostUtilityProfile; },
 		value => { delete value.bootstrap; },
+		value => { delete value.nativeDriverSpecs; },
+		value => { value.nativeDriverSpecs.sha256 = '0'.repeat(64); },
 		value => { value.bootstrap.allGccBootstrapExitCode = 2; },
 		value => { value.hostUtilityProfile.gcovTool = true; }
 	]) {
 		const changed = structuredClone(receipt); modify(changed);
-		assert.throws(() => verifyBrowserHostProfile(changed));
+		assert.throws(() => verifyBrowserHostProfile(changed, specs));
 	}
 });
 

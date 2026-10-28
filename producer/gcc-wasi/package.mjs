@@ -188,13 +188,15 @@ export function verifyEmptyAbiQualification(report, expected, fixtures) {
 	return verifyWideScalarQualification(report, expected, fixtures, 'gcc-wasi-empty-record-abi-qualification', 'Empty ABI');
 }
 
-export function verifyBrowserHostProfile(receipt) {
+export function verifyBrowserHostProfile(receipt, nativeDriverSpecs) {
 	assert.deepEqual(receipt.hostUtilityProfile, {
 		name: 'browser-frontends', gcov: false, gcovDump: false, gcovTool: false
 	}, 'Browser compiler must exclude unsupported gcov host tools');
 	assert.deepEqual(receipt.bootstrap, {
 		allGccBootstrapExitCode: 0, gcovHostTools: 'disabled', profile: 'browser-frontends'
 	}, 'Browser compiler requires successful all-gcc preparation');
+	assert(nativeDriverSpecs, 'Browser host must bind the qualified native driver specs');
+	assert.deepEqual(receipt.nativeDriverSpecs, nativeDriverSpecs, 'Browser host used different native driver specs');
 }
 
 export function verifyBitfieldQualification(report, expected, fixtures) {
@@ -371,7 +373,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	assert.equal(compilerReceipt.gccCommit, lock.gcc.commit);
 	assert.equal(compilerReceipt.host, 'wasm32-emscripten');
 	assert.equal(compilerReceipt.target, 'wasm32-wasi');
-	verifyBrowserHostProfile(compilerReceipt);
+	const nativeDriverSpecs = identity(await fs.readFile(path.join(work, 'native-driver.specs')));
+	verifyBrowserHostProfile(compilerReceipt, nativeDriverSpecs);
 	assert.deepEqual(compilerReceipt.sourceLock, identity(lockBytes));
 	assert.deepEqual(compilerReceipt.gccSource?.patches, lock.gcc.patches || []);
 	assert.deepEqual(compilerReceipt.recipe, identity(await fs.readFile(path.join(here, 'build-browser.sh'))));
@@ -386,6 +389,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	assert.deepEqual(JSON.parse(nativeGate).gccSource, compilerReceipt.gccSource);
 	const nativeReceiptBytes = await fs.readFile(path.join(work, 'native-build.json'));
 	const nativeReceipt = JSON.parse(nativeReceiptBytes);
+	assert.equal(nativeDriverSpecs.sha256, nativeReceipt.driverSpecsSha256, 'Native driver specs differ from the qualified native build');
 	assert.equal(nativeReceipt.gccCommit, lock.gcc.commit);
 	assert.deepEqual(nativeReceipt.gccSource, compilerReceipt.gccSource);
 	assert.equal(JSON.parse(nativeGate).buildReceiptSha256, identity(nativeReceiptBytes).sha256);

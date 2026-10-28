@@ -19,6 +19,8 @@ if rev!=lock['gcc']['commit']: raise SystemExit('GCC source revision mismatch')
 source=json.loads((work/'gcc-browser-source.json').read_text())
 native=json.loads((work/'native-build.json').read_text())
 if native.get('gccSource')!=source: raise SystemExit('Native and browser GCC source/patches must match')
+if native.get('driverSpecsSha256')!=hashlib.sha256((work/'native-driver.specs').read_bytes()).hexdigest():
+    raise SystemExit('Native driver specs differ from the qualified build')
 qualification=json.loads((work/'native-qualification.json').read_text())
 if qualification.get('status')!='passed': raise SystemExit('Native compile/link/execute qualification must pass first')
 if qualification.get('gccCommit')!=rev: raise SystemExit('Native qualification covers another compiler')
@@ -55,6 +57,9 @@ case "${host_alias:-}" in
 esac
 EOF
 build_triple=$("$work/gcc/config.guess")
+# Use the native build's qualified driver specs at target self-test boundaries.
+# The draft driver's unsupported -stdlib=libc++ option must not reach cc1plus.
+native_driver="$work/gcc-native/gcc/xgcc -B$work/gcc-native/gcc/ -specs=$work/native-driver.specs"
 hostflags='-Os -g0 -DHAVE_PSIGNAL=1 -DELIDE_CODE'
 moduleflags='-Os -g0 -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createModule -sENVIRONMENT=worker,node -sINVOKE_RUN=0 -sEXIT_RUNTIME=1 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,callMain,HEAPU8 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=2GB -sSTACK_SIZE=16MB -sUSE_ZLIB=1'
 mkdir -p "$work/gcc-browser"
@@ -78,7 +83,7 @@ if [[ ! -f Makefile ]]; then
     --disable-libatomic --disable-libcc1 --disable-libitm --disable-lto --disable-plugin \
     --disable-werror --enable-checking=release --disable-fixincludes --disable-gcov --without-headers \
     CC_FOR_BUILD=gcc CXX_FOR_BUILD=g++ CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
-    GCC_FOR_TARGET="$work/gcc-native/gcc/xgcc -B$work/gcc-native/gcc/" MAKEINFO=true
+    GCC_FOR_TARGET="$native_driver" MAKEINFO=true
 fi
 # Re-run target option discovery when reusing a build predating new .opt files.
 # config.status preserves the original Canadian-cross configure arguments.
@@ -90,7 +95,8 @@ fi
 # filesystem traversal is not provided by this producer. No failed all-gcc
 # build is accepted as successful frontend preparation.
 set +e
-emmake make -j"$jobs" all-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" MAKEINFO=true
+emmake make -j"$jobs" all-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
+  GCC_FOR_TARGET="$native_driver" MAKEINFO=true
 bootstrap_status=$?
 set -e
 printf '{"allGccBootstrapExitCode":%s,"gcovHostTools":"disabled","profile":"browser-frontends"}\n' "$bootstrap_status" > "$work/browser-bootstrap.json"
@@ -136,5 +142,6 @@ receipt={'schemaVersion':1,'kind':'gcc-wasi-browser-build','host':'wasm32-emscri
  'sourceLock':identity(recipe/'sources.lock.json'),'recipe':identity(recipe/'build-browser.sh'),
  'hostDependencies':{name:identity(work/'host-libraries/lib'/('lib'+name+'.a')) for name in ['gmp','mpfr','mpc']},
  'nativeQualification':identity(work/'native-qualification.json'),'files':files}
+receipt['nativeDriverSpecs']=identity(work/'native-driver.specs')
 (out/'compiler-build.json').write_text(json.dumps(receipt,indent=2)+'\n')
 PY
