@@ -20,6 +20,10 @@ test('native feature gates use rebuilt patched Clang and LLDB for real DAP hit c
 	const native = workflow.match(/^    native-baseline:[\s\S]*$/mu)?.[0];
 	assert.ok(native);
 	assert.match(native, /timeout-minutes: 180/u);
+	const hostDependencies = native.match(/- name: Install native baseline host dependencies[\s\S]*?(?=            - uses:)/u)?.[0];
+	assert.ok(hostDependencies);
+	assert.match(hostDependencies, /(?:^|\s)python3(?:\s|$)/u,
+		'LLVM CMake requires the Python interpreter even with LLDB_ENABLE_PYTHON=OFF');
 	assert.match(native, /test ! -e "\$NATIVE_FEATURE_ROOT"/u);
 	assert.match(native, /test ! -e "\$NATIVE_FEATURE_BUILD"/u);
 	assert.match(native, /fetch --depth 1 origin ca7933e47d3a3451d81e72ac174dcb5aa28b59d1/u);
