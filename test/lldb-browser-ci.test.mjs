@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
 test('CI gates pinned LLDB and WAMR browser producer contracts', async () => {
@@ -214,6 +217,73 @@ test('contract pushes cannot cancel an in-flight manual LLDB product build', asy
 		workflow,
 		/producer-contracts:\s+concurrency:\s+group: lldb-browser-contracts-\$\{\{ github\.ref \}\}\s+cancel-in-progress: true/su
 	);
+});
+
+test('full Clang regeneration is manual, isolated, and bounded independently of stale delivery assets', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+	assert.match(workflow, /build_clang:[\s\S]*?type: boolean\s+default: false/u);
+	const job = workflow.match(/^    build-clang:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu)?.[0];
+	assert.ok(job);
+	assert.match(job, /^        needs: producer-contracts$/mu);
+	assert.match(job, /^        if: github\.event_name == 'workflow_dispatch' && inputs\.build_clang$/mu);
+	assert.match(job, /group: clang-browser-product-\$\{\{ github\.ref \}\}\s+cancel-in-progress: false/u);
+	assert.match(job, /timeout-minutes: 360/u);
+	assert.match(job, /NINJA_JOBS: '2'/u);
+	assert.match(job, /(?:^|\s)python3(?:\s|$)/u);
+	assert.match(job, /availableDisk >= 20 \* 1024 \*\* 3/u);
+	assert.match(job, /availableMemory >= 12 \* 1024 \*\* 3/u);
+	assert.match(job, /assert\.rejects\(fs\.stat\(directory\), \{ code: 'ENOENT' \}\)/u);
+	assert.match(job, /^                    node producer\/clang-browser\/scripts\/build-toolchain\.mjs$/mu);
+	assert.doesNotMatch(job, /--compiler-only|actions\/cache@|continue-on-error|contents: write|gh release/u);
+});
+
+test('Clang outputs upload only after current-receipt verification while failed builds retain private evidence', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+	const job = workflow.match(/^    build-clang:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu)?.[0];
+	assert.ok(job);
+	const output = job.match(/WASM_LLVM_TOOLCHAIN_OUT_DIR: (.+)/u)?.[1];
+	assert.ok(output);
+	assert.equal(job.match(/WASM_LLVM_CLANG_ARTIFACT_DIR: (.+)/u)?.[1], output);
+	assert.match(job, /umask 077/u);
+	assert.match(job, /\) > "\$clang_log" 2>&1 &/u);
+	assert.match(job, /build\.pid/u);
+	assert.match(job, /build\.status\.json/u);
+	assert(job.indexOf('wait "$clang_pid"') < job.indexOf('tail -n 80 "$clang_log"'));
+	assert.match(job, /loadVerifiedClangArtifacts\(process\.env\.WASM_LLVM_CLANG_ARTIFACT_DIR, \{ requireBuildReceipt: true \}\)/u);
+	assert.match(job, /pnpm smoke:clang-artifacts/u);
+	assert.match(job, /if: steps\.clang-verify\.conclusion == 'success'\s+with:\s+name: clang-browser-/u);
+	assert.match(job, /if: always\(\)\s+with:\s+name: clang-browser-evidence-/u);
+	assert.match(job, /source-commit\.txt/u);
+});
+
+test('the background Clang build preserves a producer failure and its final private log', async () => {
+	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
+	const block = workflow.match(/- name: Build all pinned Clang producer outputs[\s\S]*?run: \|\n([\s\S]*?)(?=            - name:)/u)?.[1];
+	assert.ok(block);
+	const directory = await fs.mkdtemp(path.join(tmpdir(), 'clang-ci-failure-'));
+	try {
+		const script = block.replace(/^ {18}/gmu, '')
+			.replaceAll('$HOME/logs', '${CLANG_TEST_LOG_DIR}')
+			.replace('node producer/clang-browser/scripts/build-toolchain.mjs',
+				`node -e 'console.log("compiler failure"); process.exit(7)'`);
+		const evidence = path.join(directory, 'evidence');
+		const logDirectory = path.join(directory, 'logs');
+		const result = spawnSync('bash', ['-e', '-o', 'pipefail', '-c', script], {
+			encoding: 'utf8', timeout: 10_000,
+			env: { ...process.env, CLANG_BUILD_EVIDENCE: evidence, CLANG_TEST_LOG_DIR: logDirectory,
+				GITHUB_OUTPUT: path.join(directory, 'outputs'), GITHUB_RUN_ID: 'fixture', GITHUB_RUN_ATTEMPT: '1' }
+		});
+		assert.equal(result.status, 7, result.stderr);
+		assert.deepEqual(JSON.parse(await fs.readFile(path.join(evidence, 'build.status.json'), 'utf8')), { exitCode: 7 });
+		assert.match(await fs.readFile(path.join(evidence, 'build.pid'), 'utf8'), /^\d+\n$/u);
+		const log = path.join(logDirectory, 'clang-browser-fixture-1.log');
+		assert.equal(await fs.readFile(log, 'utf8'), 'compiler failure\n');
+		assert.equal((await fs.stat(log)).mode & 0o777, 0o600);
+		assert.equal((await fs.stat(logDirectory)).mode & 0o777, 0o700);
+		assert.match(result.stdout, /compiler failure/u);
+	} finally {
+		await fs.rm(directory, { recursive: true, force: true });
+	}
 });
 
 test('scheduled and manual CI run the pinned native C and DAP baselines', async () => {

@@ -19,6 +19,11 @@ on:
                 required: true
                 type: boolean
                 default: false
+            build_clang:
+                description: Build and verify fresh WASI Clang, LLD, MemFS, sysroot and browser clangd artifacts
+                required: true
+                type: boolean
+                default: false
 
 permissions:
     contents: read
@@ -184,6 +189,103 @@ jobs:
                       artifacts/lldb-browser
                       artifacts/wamr-browser
                   if-no-files-found: error
+                  retention-days: 7
+
+    build-clang:
+        needs: producer-contracts
+        if: github.event_name == 'workflow_dispatch' && inputs.build_clang
+        concurrency:
+            group: clang-browser-product-${{ github.ref }}
+            cancel-in-progress: false
+        runs-on: ubuntu-24.04
+        timeout-minutes: 360
+        env:
+            NINJA_JOBS: '2'
+            WASM_LLVM_TOOLCHAIN_WORK_DIR: ${{ runner.temp }}/clang-browser-work
+            WASM_LLVM_TOOLCHAIN_OUT_DIR: ${{ runner.temp }}/clang-browser-artifacts
+            WASM_LLVM_CLANG_ARTIFACT_DIR: ${{ runner.temp }}/clang-browser-artifacts
+            TMPDIR: ${{ runner.temp }}/clang-browser-tmp
+            CLANG_BUILD_EVIDENCE: ${{ runner.temp }}/clang-browser-evidence
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  persist-credentials: false
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - name: Install full Clang producer host dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install --yes --no-install-recommends \
+                    build-essential ca-certificates cmake curl git ninja-build python3 tar xz-utils zstd
+            - name: Require capacity for a fresh full toolchain build
+              run: |
+                  node --input-type=module <<'NODE'
+                  import assert from 'node:assert/strict';
+                  import fs from 'node:fs/promises';
+                  const disk = await fs.statfs(process.env.RUNNER_TEMP);
+                  const memory = await fs.readFile('/proc/meminfo', 'utf8');
+                  const availableMemory = Number(memory.match(/^MemAvailable:\s+(\d+) kB$/m)?.[1]) * 1024;
+                  const availableDisk = disk.bavail * disk.bsize;
+                  console.log(JSON.stringify({ availableDisk, availableMemory }));
+                  assert(availableDisk >= 20 * 1024 ** 3, 'Clang build needs at least 20 GiB available disk');
+                  assert(availableMemory >= 12 * 1024 ** 3, 'Clang build needs at least 12 GiB available memory');
+                  for (const directory of [process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR, process.env.WASM_LLVM_TOOLCHAIN_OUT_DIR]) {
+                    await assert.rejects(fs.stat(directory), { code: 'ENOENT' });
+                  }
+                  NODE
+            - name: Build all pinned Clang producer outputs
+              id: clang-build
+              shell: bash
+              run: |
+                  umask 077
+                  mkdir -p "$HOME/logs" "$CLANG_BUILD_EVIDENCE"
+                  chmod 700 "$HOME/logs" "$CLANG_BUILD_EVIDENCE"
+                  clang_log="$HOME/logs/clang-browser-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.log"
+                  clang_status_file="$CLANG_BUILD_EVIDENCE/build.status.json"
+                  printf 'log=%s\n' "$clang_log" >> "$GITHUB_OUTPUT"
+                  git rev-parse HEAD > "$CLANG_BUILD_EVIDENCE/source-commit.txt"
+                  set +e
+                  (
+                    node producer/clang-browser/scripts/build-toolchain.mjs
+                    clang_status=$?
+                    printf '{"exitCode":%s}\n' "$clang_status" > "$clang_status_file"
+                    exit "$clang_status"
+                  ) > "$clang_log" 2>&1 &
+                  clang_pid=$!
+                  printf '%s\n' "$clang_pid" > "$CLANG_BUILD_EVIDENCE/build.pid"
+                  wait "$clang_pid"
+                  clang_status=$?
+                  set -e
+                  tail -n 80 "$clang_log"
+                  exit "$clang_status"
+            - name: Verify current build receipts and all packaged Wasm assets
+              id: clang-verify
+              run: |
+                  node --input-type=module <<'NODE'
+                  import { loadVerifiedClangArtifacts } from './producer/clang-browser/scripts/verify-artifacts.mjs';
+                  await loadVerifiedClangArtifacts(process.env.WASM_LLVM_CLANG_ARTIFACT_DIR, { requireBuildReceipt: true });
+                  NODE
+                  pnpm smoke:clang-artifacts
+            - uses: actions/upload-artifact@v4
+              if: steps.clang-verify.conclusion == 'success'
+              with:
+                  name: clang-browser-${{ github.sha }}
+                  path: ${{ env.WASM_LLVM_TOOLCHAIN_OUT_DIR }}/
+                  if-no-files-found: error
+                  compression-level: 0
+                  retention-days: 7
+            - uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: clang-browser-evidence-${{ github.sha }}
+                  path: |
+                      ${{ steps.clang-build.outputs.log }}
+                      ${{ env.CLANG_BUILD_EVIDENCE }}/
+                  if-no-files-found: warn
                   retention-days: 7
 
     native-baseline:

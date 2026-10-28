@@ -28,6 +28,22 @@ sysroot produce a separate bundle with explicit qualification gates.
 
 ## Rebuild
 
+The existing LLDB producer workflow also provides an opt-in full Clang build:
+
+```sh
+gh workflow run lldb-browser.yml --ref <source-branch> \
+  -f build_clang=true -f build_product=false -f native_baseline=false
+```
+
+This manual job uses a fresh Ubuntu 24.04 runner, two parallel compilation jobs and a
+six-hour timeout. It requires at least 20 GiB available disk and 12 GiB available memory
+before starting, preserves the producer's release defaults, and reuses no build objects.
+The complete Clang/LLD, MemFS, sysroot and clangd output is uploaded for seven days only
+after current build-receipt verification and Wasm smoke checks pass. A separate evidence
+artifact preserves the source commit, process identifier, final exit status and private
+build log on failure. The job does not publish a release or qualify browser behavior;
+consumer qualification and independent reproducibility remain separate checks.
+
 The full build requires CMake, Ninja, Git, tar, a downloader, and enough disk for native and WASI
 LLVM builds. It downloads the pinned WASI SDK and Emscripten SDK, checks out the pinned LLVM tag,
 applies the pinned YoWASP WASI-host patch, the checksum-pinned LLVM patch that preserves successful
