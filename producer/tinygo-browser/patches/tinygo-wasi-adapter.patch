@@ -985,10 +985,10 @@ index 01ca089..0db37ed 100644
  		if nextIsPath {
  			if !filepath.IsAbs(arg) {
  				args[i] = filepath.Join(p.packageDir, arg)
-@@ -549,6 +551,21 @@ func (p *cgoPackage) parseCGoPreprocessorLines(text string, pos token.Pos) strin
- 				p.addErrorAfter(pos, text[:lineStart+colon+1], err.Error())
- 				continue
+@@ -551,6 +553,21 @@ func (p *cgoPackage) parseCGoPreprocessorLines(text string, pos token.Pos) strin
  			}
+ 			p.makePathsAbsolute(flags)
+ 			p.cflags = append(p.cflags, flags...)
 +		case "CXXFLAGS":
 +			flags, err := shlex.Split(value)
 +			if err != nil {
@@ -1004,9 +1004,9 @@ index 01ca089..0db37ed 100644
 +			// independently and binds them to each externally compiled C++ object.
 +			// Accept and validate the directive here so upstream CGo parsing does not
 +			// reject the source before that receipt-bound handoff.
- 			p.makePathsAbsolute(flags)
- 			p.cflags = append(p.cflags, flags...)
  		case "LDFLAGS":
+ 			flags, err := shlex.Split(value)
+ 			if err != nil {
 diff --git a/cgo/libclang.go b/cgo/libclang.go
 index 5a434ce..641fd40 100644
 --- a/cgo/libclang.go

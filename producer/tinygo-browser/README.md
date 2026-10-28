@@ -66,6 +66,12 @@ only `wasm32-unknown-wasi` and `wasm32-unknown-wasip1`, with identical nonempty 
 other WASI ABIs and layout mismatches fail before linking. This leaves the compiler's
 output triple and the separate target-C/C++ validation and provenance contract unchanged.
 
+The CGo parser retains `CFLAGS` for C preambles and C source files while validating
+`CXXFLAGS` separately for the C++ handoff. Producer acceptance requires a `-D` macro and
+a relative `-I` header path in both C inputs, and rejects the C++ macro if it leaks into
+either C compilation. `fixtures/cgo-flags` also exercises CXX-only `-std=c++20` with no
+C++ source files, so it checks parser separation without changing the target C++ policy.
+
 Before host support compilation, `scripts/probe-cgo-module-link.mjs` executes that exact
 patched helper against real native LLVM modules. It parses bitcode from pinned TinyGo's
 Clang, reproduces the original warning in a separate baseline, then verifies four accepted
