@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "producerId": "@seo-rii/wasm-llvm/rust-browser",
-  "sourceDateEpoch": 1783912447,
+  "sourceDateEpoch": 1791856129,
   "environment": {
     "platform": "linux/amd64",
     "baseImage": "debian:bookworm-slim@sha256:1def178129dfb5f24db43afbf2fcac04530012e3264ba4ff81c71184e17a9ee4",
@@ -24,12 +24,12 @@
   "sources": {
     "rust": {
       "repository": "https://github.com/rust-lang/rust.git",
-      "commit": "48c2cee70232ecc3a6a8e285b2e15620b39f82a7",
-      "tree": "719276ca1fd84c6493b80aeb9de8dc8be7b369c6",
-      "patchedTree": "e3f2e1b2a38e4a34c2296c6d4c1f90575b6c5625",
-      "version": "1.99.0",
+      "commit": "58cf8f9c35b355199727627d07ae34a4e2846d67",
+      "tree": "b07b71aa0397b82d3e501541c6d1eb2b18efd16f",
+      "patchedTree": "332e1fd0108f79252d14224f58c7a2a73f5155ef",
+      "version": "1.99.1",
       "patch": "patches/rust.patch",
-      "patchSha256": "6d42704d70505fcf806fcbfc163d313b24851f1b094c5728cd4bc24470542937",
+      "patchSha256": "3c37813ea8af3285e0a20bbbdecb5368465282c09cff2b290b169226f993dfb6",
       "requiredNewFiles": [
         "compiler/rustc_llvm/llvm-wrapper/LLD.cpp",
         "libloading_shim/Cargo.toml",
@@ -58,12 +58,12 @@
     },
     "llvm": {
       "repository": "https://github.com/rust-lang/llvm-project.git",
-      "commit": "52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
-      "tree": "65bd4bfb3d72ef2b38735fb667fabe129aa1a422",
-      "patchedTree": "1e6e38a99d610309b558f2498f017b135b97f0f9",
-      "version": "22.1.8",
+      "commit": "1b9c0d5ff9bbe7634aead059efe6b11a7eeba145",
+      "tree": "9a6c21823a2dd558efa938c1074aa28e352bc92d",
+      "patchedTree": "b6e4ba9d53ac497a455d82edd0590647152a171c",
+      "version": "23.1.1",
       "patch": "patches/llvm.patch",
-      "patchSha256": "29f9a340415928eab8dd6647eb518f86fdf7706fdd3184ceef4d92d802b98ce8"
+      "patchSha256": "f5d8d5399f2ea13256d76ecf8e55e5a34d80ccab174749574eb6ca9000ff5a8c"
     },
     "gcc": {
       "repository": "https://github.com/gcc-mirror/gcc.git",
@@ -93,33 +93,21 @@
       "entrySize": 442508
     },
     "stage0Cargo": {
-      "url": "https://static.rust-lang.org/dist/2026-05-31/cargo-beta-x86_64-unknown-linux-gnu.tar.xz",
-      "sha256": "53a486f2e75ac6a05497181ef7a2c2c58ace6e5be401f1be0c1e8c9d3c9d306a",
-      "size": 11147312,
+      "url": "https://static.rust-lang.org/dist/2026-08-20/cargo-1.98.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "2f512d170d3dd23e16ababcda32ee2e6d5172d861a7af1f504e0b1e270cafab9",
+      "size": 11669560,
       "archiveOnly": true
     },
     "stage0RustStd": {
-      "url": "https://static.rust-lang.org/dist/2026-05-31/rust-std-beta-x86_64-unknown-linux-gnu.tar.xz",
-      "sha256": "ebe326c6bcdd77399cc451dcb999dc61c0175ede55ec1153c9693bdbdabfb7db",
-      "size": 30114636,
+      "url": "https://static.rust-lang.org/dist/2026-08-20/rust-std-1.98.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "f5022e6c95a5ad23cca2513dc8281200f585fa188de6370aa37b128a43f876a3",
+      "size": 30715556,
       "archiveOnly": true
     },
     "stage0Rustc": {
-      "url": "https://static.rust-lang.org/dist/2026-05-31/rustc-beta-x86_64-unknown-linux-gnu.tar.xz",
-      "sha256": "660b1974618b830ea396379b8adc3ce77fc8632510bbd60caddffb0b0173d130",
-      "size": 80740620,
-      "archiveOnly": true
-    },
-    "stage0RustfmtRustc": {
-      "url": "https://static.rust-lang.org/dist/2026-05-31/rustc-nightly-x86_64-unknown-linux-gnu.tar.xz",
-      "sha256": "9e6ac5e346606f4245930ff868e187d339a1ad5c2e60557bfacdd25a51689bf4",
-      "size": 81021664,
-      "archiveOnly": true
-    },
-    "stage0Rustfmt": {
-      "url": "https://static.rust-lang.org/dist/2026-05-31/rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz",
-      "sha256": "adf8b6f2dd54c37fa8567b2e51aaac4a2b05d0f707f6a49166326478a4fd3cc2",
-      "size": 2159472,
+      "url": "https://static.rust-lang.org/dist/2026-08-20/rustc-1.98.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "0e37cb339f447fc44d6d781073bacacebfdc5612f2600e4c7e84c266f5f3aced",
+      "size": 79745456,
       "archiveOnly": true
     }
   },
@@ -150,7 +138,7 @@
     },
     {
       "path": "scripts/build.sh",
-      "sha256": "90fdccbb8c32539dc93162cf93f27cb945a4070910fafaeffcf91d3846aaba6b"
+      "sha256": "30de5d93960a55aead6c3842b822b2213309d225c581a474c94987709508cc6f"
     },
     {
       "path": "scripts/container-rebuild.sh",

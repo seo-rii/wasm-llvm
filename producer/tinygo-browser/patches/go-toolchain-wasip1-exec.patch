@@ -1,7 +1,8 @@
 diff --git a/src/os/exec/exec.go b/src/os/exec/exec.go
+index aa7a6be..271f0b7 100644
 --- a/src/os/exec/exec.go
 +++ b/src/os/exec/exec.go
-@@ -633,6 +633,10 @@ func (c *Cmd) Run() error {
+@@ -639,6 +639,10 @@ func (c *Cmd) Run() error {
  // After a successful call to Start the [Cmd.Wait] method must be called in
  // order to release associated system resources.
  func (c *Cmd) Start() error {
@@ -11,4 +12,4 @@ diff --git a/src/os/exec/exec.go b/src/os/exec/exec.go
 +
  	// Check for doubled Start calls before we defer failure cleanup. If the prior
  	// call to Start succeeded, we don't want to spuriously close its pipes.
- 	if c.Process != nil {
+ 	// It is an error to call Start twice even if the first call did not create a process.

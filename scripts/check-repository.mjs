@@ -49,6 +49,7 @@ const REQUIRED_PRODUCERS = [
 	'd-browser',
 	'ecl-browser',
 	'emscripten-lld-browser',
+	'gcc-browser',
 	'kotlin-browser',
 	'lean-browser',
 	'lfortran-browser',
@@ -60,7 +61,8 @@ const REQUIRED_PRODUCERS = [
 	'swift-browser',
 	'tinygo-browser',
 	'v-browser',
-	'wamr-browser'
+	'wamr-browser',
+	'zig-browser'
 ];
 
 async function exists(filePath) {

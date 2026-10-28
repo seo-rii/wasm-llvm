@@ -124,11 +124,11 @@ test('parses dry-run, patch-check, and execute options without allowing mixed mo
 	);
 });
 
-test('creates a WebAssembly-only static Clang, LLD, and LLVM plan pinned to TinyGo LLVM 20.1.1', async () => {
+test('creates a WebAssembly-only static Clang, LLD, and LLVM plan pinned to TinyGo LLVM 22.1.4', async () => {
 	const { options } = await createOptions();
 	const plan = await createTinyGoLlvmWasiBuildPlan(options);
-	assert.equal(plan.source.commit, '670759811adc85df52f410d7306788fabfc6242d');
-	assert.equal(plan.source.version, '20.1.1');
+	assert.equal(plan.source.commit, '2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2');
+	assert.equal(plan.source.version, '22.1.4');
 	assert.equal(plan.host.compilerTarget, 'wasm32-wasip1');
 	assert.deepEqual(plan.host.targetsToBuild, ['WebAssembly']);
 	assert.deepEqual(plan.projects, ['clang', 'lld']);
@@ -139,6 +139,23 @@ test('creates a WebAssembly-only static Clang, LLD, and LLVM plan pinned to Tiny
 	assert.ok(plan.archiveTargets.includes('LLVMSupport'));
 	assert.ok(plan.archiveTargets.includes('LLVMWebAssemblyCodeGen'));
 	assert.ok(plan.archiveTargets.includes('LLVMExecutionEngine'));
+	// LLVM 22 split these dependencies into separate static archives.
+	for (const target of [
+		'clangAnalysisLifetimeSafety',
+		'clangOptions',
+		'clangDependencyScanning',
+		'LLVMDTLTO',
+		'LLVMPlugins',
+		'LLVMFrontendDirective',
+		'LLVMGlobalISel',
+		'LLVMDebugInfoDWARFLowLevel',
+		'LLVMDebugInfoGSYM',
+		'LLVMDebugInfoBTF',
+		'LLVMObjectYAML',
+		'LLVMTextAPIBinaryReader'
+	]) {
+		assert.ok(plan.archiveTargets.includes(target), `missing LLVM 22 archive ${target}`);
+	}
 	assert.equal(plan.expectedArchives.length, plan.archiveTargets.length);
 	assert.ok(plan.configureCommand.includes('-DLLVM_ENABLE_PROJECTS=clang;lld'));
 	assert.ok(plan.configureCommand.includes('-DLLVM_ENABLE_THREADS=OFF'));
@@ -287,7 +304,7 @@ test('checks exact source revision and patch applicability without modifying the
 				return {
 					exitCode: 0,
 					signal: null,
-					stdout: '670759811adc85df52f410d7306788fabfc6242d\n',
+					stdout: '2be7242b6a4d59fe89fb43f7d1e7333dc9b307a2\n',
 					stderr: ''
 				};
 			}
@@ -487,7 +504,7 @@ test('keeps the TinyGo port patch to WASI host compatibility without compiler su
 	assert.match(patch, /defined\(__wasi__\)/u);
 	assert.match(patch, /#include "llvm\/Config\/config\.h"/u);
 	assert.match(patch, /HAVE_SETJMP/u);
-	assert.match(patch, /void Process::PreventCoreFiles\(\)/u);
+	// The upstream WASI patch guards PreventCoreFiles; subprocess limits remain local.
 	assert.match(patch, /static void SetMemoryLimits\(unsigned size\)/u);
 	assert.match(patch, /WASI does not support waiting for subprocesses/u);
 	assert.match(patch, /static bool printMarkupContext\(raw_ostream &, const char \*\)/u);

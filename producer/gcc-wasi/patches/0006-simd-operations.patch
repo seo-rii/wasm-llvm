@@ -1,0 +1,270 @@
+diff --git a/gcc/config/wasm/simd.md b/gcc/config/wasm/simd.md
+--- a/gcc/config/wasm/simd.md
++++ b/gcc/config/wasm/simd.md
+@@ -132,3 +132,100 @@
+   "TARGET_SIMD128 && exact_log2 (UINTVAL (operands[3])) >= 0
+    && exact_log2 (UINTVAL (operands[3])) < (16 / GET_MODE_UNIT_SIZE (<MODE>mode))"
+   "(%o0 (<lanes>.replace_lane %L3 %i2 %i1))")
++
++;; Scalar-count shifts have the scalar count in i32, as required by Wasm.
++;; The source language only defines counts smaller than the lane width.
++(define_code_iterator vshift [ashift ashiftrt lshiftrt])
++(define_insn "<vshift:opname_rt><mode>3"
++  [(set (match_operand:VI128 0 "wasm_register_operand")
++        (vshift:VI128 (match_operand:VI128 1 "wasm_register_operand")
++                     (match_operand:SI 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.<vshift:opname> %i1 %i2))")
++
++(define_mode_attr VMASK [(V16QI "V16QI") (V8HI "V8HI") (V4SI "V4SI")
++  (V2DI "V2DI") (V4SF "V4SI") (V2DF "V2DI")])
++(define_mode_attr vmask [(V16QI "v16qi") (V8HI "v8hi") (V4SI "v4si")
++  (V2DI "v2di") (V4SF "v4si") (V2DF "v2di")])
++
++;; Vector comparisons produce an all-ones or all-zeros integer lane mask.
++(define_expand "vec_cmp<mode><vmask>"
++  [(set (match_operand:<VMASK> 0 "wasm_register_operand")
++        (match_operator 1 "comparison_operator"
++          [(match_operand:V128 2 "wasm_register_operand")
++           (match_operand:V128 3 "wasm_register_operand")]))]
++  "TARGET_SIMD128"
++{
++  wasm_expand_simd_compare (operands[0], GET_CODE (operands[1]),
++                            operands[2], operands[3]);
++  DONE;
++})
++
++(define_expand "vec_cmpu<mode><mode>"
++  [(set (match_operand:VI128 0 "wasm_register_operand")
++        (match_operator 1 "comparison_operator"
++          [(match_operand:VI128 2 "wasm_register_operand")
++           (match_operand:VI128 3 "wasm_register_operand")]))]
++  "TARGET_SIMD128"
++{
++  wasm_expand_simd_compare (operands[0], GET_CODE (operands[1]),
++                            operands[2], operands[3]);
++  DONE;
++})
++
++(define_mode_iterator VICMP128 [V16QI V8HI V4SI])
++(define_insn "*simd_compare_<irelop:opname_rt><mode>"
++  [(set (match_operand:VICMP128 0 "wasm_register_operand")
++        (irelop:VICMP128 (match_operand:VICMP128 1 "wasm_register_operand")
++                        (match_operand:VICMP128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.<irelop:opname> %i1 %i2))")
++
++;; Wasm has signed i64x2 relational comparisons, but no unsigned ones.
++(define_insn "*simd_compare_<frelop:opname_rt>v2di"
++  [(set (match_operand:V2DI 0 "wasm_register_operand")
++        (frelop:V2DI (match_operand:V2DI 1 "wasm_register_operand")
++                    (match_operand:V2DI 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (i64x2.<frelop:opname> %i1 %i2))")
++
++(define_insn "*simd_compare_<frelop:opname_rt><mode>"
++  [(set (match_operand:<VMASK> 0 "wasm_register_operand")
++        (frelop:<VMASK> (match_operand:VF128 1 "wasm_register_operand")
++                       (match_operand:VF128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.<frelop:opnamef> %i1 %i2))")
++
++(define_c_enum "unspec" [UNSPEC_SIMD_BITSELECT UNSPEC_SIMD_SHUFFLE])
++
++;; GCC's mask optab guarantees all-one/all-zero lanes.  Bitselect is also
++;; correct for arbitrary bit masks when used by internal RTL patterns.
++(define_expand "vcond_mask_<mode><vmask>"
++  [(match_operand:V128 0 "wasm_register_operand")
++   (match_operand:V128 1 "wasm_register_operand")
++   (match_operand:V128 2 "wasm_register_operand")
++   (match_operand:<VMASK> 3 "wasm_register_operand")]
++  "TARGET_SIMD128"
++{
++  emit_insn (gen_wasm_bitselect<mode> (operands[0], operands[1],
++                                     operands[2], operands[3]));
++  DONE;
++})
++
++(define_insn "wasm_bitselect<mode>"
++  [(set (match_operand:V128 0 "wasm_register_operand")
++        (unspec:V128 [(match_operand:V128 1 "wasm_register_operand")
++                      (match_operand:V128 2 "wasm_register_operand")
++                      (match_operand:<VMASK> 3 "wasm_register_operand")]
++                     UNSPEC_SIMD_BITSELECT))]
++  "TARGET_SIMD128"
++  "(%o0 (v128.bitselect %i1 %i2 %i3))")
++
++(define_insn "wasm_shuffle_v16qi"
++  [(set (match_operand:V16QI 0 "wasm_register_operand")
++        (unspec:V16QI [(match_operand:V16QI 1 "wasm_register_operand")
++                       (match_operand:V16QI 2 "wasm_register_operand")
++                       (match_operand:V16QI 3 "wasm_const_vector_operand")]
++                      UNSPEC_SIMD_SHUFFLE))]
++  "TARGET_SIMD128"
++  "(%o0 (i8x16.shuffle %S3 %i1 %i2))")
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -819,6 +819,17 @@
+       fprintf (stream, "local");
+   else if (mode == 'L') /* Convert a single-lane merge mask to its lane.  */
+     fprintf (stream, "%d", exact_log2 (UINTVAL (value)));
++  else if (mode == 'S') /* Print the sixteen immediate byte shuffle indices.  */
++    {
++      gcc_assert (GET_MODE (value) == V16QImode
++                  && GET_CODE (value) == CONST_VECTOR);
++      for (unsigned i = 0; i != 16; ++i)
++        {
++          unsigned lane = UINTVAL (CONST_VECTOR_ELT (value, i));
++          gcc_assert (lane < 32);
++          fprintf (stream, "%s%u", i ? " " : "", lane);
++        }
++    }
+   else if (mode == 'A') /* Print a call insn arglist.  */
+     {
+       gcc_assert (GET_CODE (value) == PARALLEL);
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -400,6 +400,80 @@
+     }
+ }
+ 
++/* Expand SIMD lane comparisons without losing IEEE unordered semantics.
++   The result has integer lanes, each either all ones or all zeros.  */
++void
++wasm_expand_simd_compare (rtx res, rtx_code code, rtx left, rtx right)
++{
++  machine_mode mode = GET_MODE (res);
++  machine_mode input_mode = GET_MODE (left);
++  left = force_reg (input_mode, left);
++  right = force_reg (input_mode, right);
++
++  if (input_mode == V2DImode
++      && (code == LTU || code == LEU || code == GTU || code == GEU))
++    {
++      /* Bias both unsigned lanes into signed order.  */
++      rtx bias = force_reg (mode, gen_const_vec_duplicate
++        (mode, gen_int_mode (HOST_WIDE_INT_MIN, DImode)));
++      rtx a = gen_reg_rtx (mode), b = gen_reg_rtx (mode);
++      emit_insn (gen_rtx_SET (a, gen_rtx_XOR (mode, left, bias)));
++      emit_insn (gen_rtx_SET (b, gen_rtx_XOR (mode, right, bias)));
++      left = a;
++      right = b;
++      code = signed_condition (code);
++    }
++
++  switch (code)
++    {
++    case ORDERED:
++    case LTGT:
++      {
++        rtx a = gen_reg_rtx (mode), b = gen_reg_rtx (mode);
++        if (code == ORDERED)
++          {
++            wasm_expand_simd_compare (a, EQ, left, left);
++            wasm_expand_simd_compare (b, EQ, right, right);
++            emit_insn (gen_rtx_SET (res, gen_rtx_AND (mode, a, b)));
++          }
++        else
++          {
++            wasm_expand_simd_compare (a, LT, left, right);
++            wasm_expand_simd_compare (b, GT, left, right);
++            emit_insn (gen_rtx_SET (res, gen_rtx_IOR (mode, a, b)));
++          }
++        return;
++      }
++    case UNLT:
++    case UNGT:
++    case UNLE:
++    case UNGE:
++    case UNEQ:
++    case UNORDERED:
++      {
++        rtx a = gen_reg_rtx (mode);
++        wasm_expand_simd_compare (a, reverse_condition_maybe_unordered (code),
++                                  left, right);
++        emit_insn (gen_rtx_SET (res, gen_rtx_NOT (mode, a)));
++        return;
++      }
++    case EQ:
++    case NE:
++    case LT:
++    case LE:
++    case GT:
++    case GE:
++    case LTU:
++    case LEU:
++    case GTU:
++    case GEU:
++      emit_insn (gen_rtx_SET (res, gen_rtx_fmt_ee (code, mode, left, right)));
++      return;
++    default:
++      gcc_unreachable ();
++    }
++}
++
+ /* Implementation of TARGET_HARD_REGNO_MODE_OK.  */
+ bool
+ wasm_regno_mode_ok (unsigned regno, machine_mode mode)
+diff --git a/gcc/config/wasm/wasm-protos.h b/gcc/config/wasm/wasm-protos.h
+--- a/gcc/config/wasm/wasm-protos.h
++++ b/gcc/config/wasm/wasm-protos.h
+@@ -28,6 +28,7 @@
+ extern bool wasm_expand_mov (rtx, rtx, machine_mode);
+ extern void wasm_expand_conv (rtx, rtx, rtx_code);
+ extern void wasm_expand_compare (machine_mode, rtx, rtx);
++extern void wasm_expand_simd_compare (rtx, rtx_code, rtx, rtx);
+ extern machine_mode wasm_real_register_mode (rtx);
+ rtl_opt_pass *make_pass_count_labels (gcc::context *);
+ #endif
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -40,6 +40,7 @@
+ #include "explow.h"
+ #include "expr.h"
+ #include "builtins.h"
++#include "vec-perm-indices.h"
+ 
+ #include "target.h"
+ #include "common/common-target.h"
+@@ -132,6 +133,38 @@
+         || mode == V2DImode || mode == V4SFmode || mode == V2DFmode);
+ }
+ 
++/* Implement fixed-width constant permutations using the byte shuffle.
++   GCC supplies element indices; Wasm's immediate indexes bytes from the
++   concatenated inputs.  No runtime index is accepted by this hook.  */
++#define TARGET_VECTORIZE_VEC_PERM_CONST wasm_vec_perm_const
++static bool
++wasm_vec_perm_const (machine_mode mode, machine_mode op_mode, rtx output,
++                     rtx in0, rtx in1, const vec_perm_indices &sel)
++{
++  if (mode != op_mode || !wasm_vector_mode_supported_p (mode)
++      || !known_eq (sel.length (), GET_MODE_NUNITS (mode)))
++    return false;
++  if (!output)
++    return true;
++
++  unsigned bytes = GET_MODE_UNIT_SIZE (mode);
++  rtvec indices = rtvec_alloc (16);
++  for (unsigned i = 0; i != 16 / bytes; ++i)
++    {
++      unsigned lane = sel[i].to_constant ();
++      gcc_assert (lane < 32 / bytes);
++      for (unsigned j = 0; j != bytes; ++j)
++        RTVEC_ELT (indices, i * bytes + j) = GEN_INT (lane * bytes + j);
++    }
++  rtx a = force_reg (V16QImode, gen_lowpart (V16QImode, in0));
++  rtx b = force_reg (V16QImode, gen_lowpart (V16QImode, in1));
++  rtx result = gen_reg_rtx (V16QImode);
++  emit_insn (gen_wasm_shuffle_v16qi
++    (result, a, b, gen_rtx_CONST_VECTOR (V16QImode, indices)));
++  emit_move_insn (output, gen_lowpart (mode, result));
++  return true;
++}
++
+ #define TARGET_EXCEPT_UNWIND_INFO [] (auto ...) { return UI_NONE; }
+ 
+ #define TARGET_HAVE_STRUB_SUPPORT_FOR hook_bool_tree_false

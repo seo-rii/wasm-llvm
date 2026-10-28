@@ -1,15 +1,67 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
 import {
+  loadRuntimeClosure,
   normalizePackageGraph,
   parseConcatenatedJSON,
 } from "../scripts/accept-browser-compiler.mjs";
 
 const temporaryDirectories = [];
+
+test("accepts the six-input precise runtime and rejects stale Boehm inputs or corrupted assets", async () => {
+  const rootPath = await mkdtemp(path.join(os.tmpdir(), "tinygo-runtime-closure-"));
+  temporaryDirectories.push(rootPath);
+  const prefix = "runtime/wasip1-asyncify-precise-o1";
+  await mkdir(path.join(rootPath, prefix), { recursive: true });
+  const manifest = {
+    format: "wasm-llvm-tinygo-runtime-closure-v2",
+    compilerSha256: "a".repeat(64),
+    profile: { id: "wasip1-asyncify-precise-o1" },
+    extraFiles: {},
+  };
+  for (const [key, name, format] of [
+    ["compilerRT", "compiler-rt.a", "static-archive"],
+    ["wasiLibc", "wasi-libc.a", "static-archive"],
+    ["libCxx", "libcxx.a", "static-archive"],
+    ["libCxxAbi", "libcxxabi.a", "static-archive"],
+    ["src/runtime/asm_tinygowasm.S", "extra-0.o", "wasm-object"],
+    ["src/internal/task/task_asyncify_wasm.S", "extra-1.o", "wasm-object"],
+  ]) {
+    const bytes = Buffer.from(`verified ${name}`);
+    const asset = {
+      path: `${prefix}/${name}`,
+      bytes: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+      format,
+    };
+    await writeFile(path.join(rootPath, asset.path), bytes);
+    if (key.startsWith("src/")) manifest.extraFiles[key] = asset;
+    else manifest[key] = asset;
+  }
+  const manifestPath = path.join(rootPath, prefix, "manifest.json");
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  const input = { rootPath, compilerEvidence: { sha256: manifest.compilerSha256 } };
+  const closure = await loadRuntimeClosure(input);
+  assert.equal(Object.keys(closure.extraFiles).length, 2);
+  assert.equal(
+    closure.extraFiles["src/internal/task/task_asyncify_wasm.S"],
+    path.join(rootPath, prefix, "extra-1.o"),
+  );
+
+  const stale = structuredClone(manifest);
+  stale.extraFiles["src/runtime/gc_boehm.c"] = manifest.extraFiles["src/runtime/asm_tinygowasm.S"];
+  await writeFile(manifestPath, JSON.stringify(stale));
+  await assert.rejects(loadRuntimeClosure(input), /only the stack and Asyncify task objects/u);
+
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  await writeFile(path.join(rootPath, prefix, "extra-1.o"), "corrupted");
+  await assert.rejects(loadRuntimeClosure(input), /runtime closure asset differs/u);
+});
 
 afterEach(async () => {
   await Promise.all(

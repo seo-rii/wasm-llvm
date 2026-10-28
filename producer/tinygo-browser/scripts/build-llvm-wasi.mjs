@@ -24,6 +24,8 @@ const PATCHED_PATHS = [
 const UPSTREAM_PATCHED_PATHS = [
 	'clang/include/clang/Support/Compiler.h',
 	'clang/lib/Driver/Driver.cpp',
+	'libcxx/src/filesystem/operations.cpp',
+	'lld/Common/Filesystem.cpp',
 	'llvm/cmake/config-ix.cmake',
 	'llvm/cmake/modules/HandleLLVMOptions.cmake',
 	'llvm/include/llvm/ADT/bit.h',
@@ -32,7 +34,9 @@ const UPSTREAM_PATCHED_PATHS = [
 	'llvm/lib/ExecutionEngine/Interpreter/ExternalFunctions.cpp',
 	'llvm/lib/Support/CrashRecoveryContext.cpp',
 	'llvm/lib/Support/InitLLVM.cpp',
+	'llvm/lib/Support/Jobserver.cpp',
 	'llvm/lib/Support/LockFileManager.cpp',
+	'llvm/lib/Support/ProgramStack.cpp',
 	'llvm/lib/Support/Signals.cpp',
 	'llvm/lib/Support/Unix/Memory.inc',
 	'llvm/lib/Support/Unix/Path.inc',

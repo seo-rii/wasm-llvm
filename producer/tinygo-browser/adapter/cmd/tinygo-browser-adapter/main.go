@@ -26,7 +26,7 @@ const (
 	packageJSONEnvironment     = "TINYGO_BROWSER_PACKAGE_JSON"
 	compilerBuildIDEnvironment = "TINYGO_BROWSER_COMPILER_BUILD_ID"
 	linkPlanFormat             = "wasm-llvm-tinygo-link-plan-v6"
-	llvmValidationToolchain    = "llvm-20.1.1"
+	llvmValidationToolchain    = "llvm-22.1.4"
 	wasmTargetTriple           = "wasm32-unknown-wasi"
 	wasmTargetDataLayout       = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
 )
@@ -129,9 +129,12 @@ type linkPlanObject struct {
 }
 
 type llvmObjectValidation struct {
-	Toolchain           string   `json:"toolchain"`
-	ModuleVerified      bool     `json:"moduleVerified"`
+	Toolchain      string `json:"toolchain"`
+	ModuleVerified bool   `json:"moduleVerified"`
+	// TargetTriple is the validated preview1 ABI identity; InputTargetTriple
+	// records the actual bitcode spelling before that identity is normalized.
 	TargetTriple        string   `json:"targetTriple"`
+	InputTargetTriple   string   `json:"inputTargetTriple"`
 	DataLayout          string   `json:"dataLayout"`
 	ThreadLocalGlobals  int      `json:"threadLocalGlobals"`
 	GlobalConstructors  int      `json:"globalConstructors"`
@@ -191,6 +194,7 @@ func run(args []string) error {
 	}
 
 	options := &compileopts.Options{
+		BuildVCS:      "false",
 		GOOS:          "wasip1",
 		GOARCH:        "wasm",
 		Directory:     request.WorkingDirectory,
@@ -945,6 +949,17 @@ func deriveExpectedDataLayout(config *compileopts.Config) (string, error) {
 	return dataLayout, nil
 }
 
+// LLVM 22 Clang uses the explicit preview1 name, while TinyGo's Go target
+// machine retains the legacy name. Only these two exact ABI spellings agree.
+func validateWasmPreview1LLVMTarget(triple string) error {
+	switch triple {
+	case wasmTargetTriple, "wasm32-unknown-wasip1":
+		return nil
+	default:
+		return fmt.Errorf("LLVM module target must be %q or %q, got %q", wasmTargetTriple, "wasm32-unknown-wasip1", triple)
+	}
+}
+
 func validateLLVMObject(path, expectedDataLayout string) (llvmObjectValidation, error) {
 	validation := llvmObjectValidation{
 		Toolchain:           llvmValidationToolchain,
@@ -956,14 +971,15 @@ func validateLLVMObject(path, expectedDataLayout string) (llvmObjectValidation, 
 	defer context.Dispose()
 	module, err := context.ParseBitcodeFile(path)
 	if err != nil {
-		return validation, errors.New("LLVM 20 bitreader rejected the module")
+		return validation, errors.New("LLVM 22 bitreader rejected the module")
 	}
 	defer module.Dispose()
 	if err := llvm.VerifyModule(module, llvm.ReturnStatusAction); err != nil {
 		return validation, fmt.Errorf("LLVM verifier rejected the module: %w", err)
 	}
-	if module.Target() != wasmTargetTriple {
-		return validation, fmt.Errorf("LLVM module target must be %q, got %q", wasmTargetTriple, module.Target())
+	validation.InputTargetTriple = module.Target()
+	if err := validateWasmPreview1LLVMTarget(validation.InputTargetTriple); err != nil {
+		return validation, err
 	}
 	if module.DataLayout() != expectedDataLayout {
 		return validation, fmt.Errorf("LLVM module data layout must be %q, got %q", expectedDataLayout, module.DataLayout())

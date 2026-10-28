@@ -1,7 +1,7 @@
 # Rust browser compiler producer
 
 This directory owns the source build for the full Rust compiler that runs as a
-`wasm32-wasip1-threads` program in the browser. The compiler contains its matching LLVM 22 code
+`wasm32-wasip1-threads` program in the browser. The compiler contains its matching LLVM 23 code
 generator and LLD linker. It does not depend on the historical LLVM 16 Emscripten `llc.js` and
 `lld.js` split backend, and it is not a handwritten parser, interpreter, or language subset.
 
@@ -9,7 +9,7 @@ generator and LLD linker. It does not depend on the historical LLVM 16 Emscripte
 
 `manifest.json` pins every source checkout by commit and Git tree, the complete post-patch tree,
 every patch by SHA-256, and both the bootstrap compiler-rt archive and its extracted payload by byte
-length and SHA-256. It also pins the five Rust stage0 host-tool archives by URL, byte length, and
+length and SHA-256. It also pins the three Rust stage0 host-tool archives by URL, byte length, and
 SHA-256; Rust bootstrap consumes those exact archives under the date and checksums in `src/stage0`.
 Stage0 is an explicit bootstrap input for building stage2 from source, not a browser compiler or
 runtime asset copied into the producer output.
@@ -25,8 +25,9 @@ source files. It then writes a sorted output receipt with a SHA-256 for every pr
 
 The current producer baseline is:
 
-- Rust `1.99.0` at `48c2cee70232ecc3a6a8e285b2e15620b39f82a7`
-- rust-lang LLVM `22.1.8` at `52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04`
+- Official Rust `1.99.1` source at `58cf8f9c35b355199727627d07ae34a4e2846d67`
+- Matching rust-lang LLVM `23.1.1` at `1b9c0d5ff9bbe7634aead059efe6b11a7eeba145`
+- Rust `1.98.0` stage0 compiler, standard library and Cargo from `2026-08-20`, as specified by the pinned source's `src/stage0`
 - wasi-libc at `08799da37ae52955427ebec1336b49d6a8eb5051`
 - GCC/libstdc++ at `ae91b5dd14920ff9671db8ff80c0d763d25f977f`
 - backtrace-rs at `d902726a1dcdc1e1c66f73d1162181b5423c645b`
@@ -38,12 +39,59 @@ The Rust and LLVM patches were ported from `olimpiadi-informatica/wasm-compilers
 notice are included here.
 
 The wasi-libc patch records the `__wasip1__` and `__wasip2__` predefined macros emitted by the
-pinned LLVM 22 Clang so wasi-libc's own metadata self-check remains enabled.
+pinned Clang so wasi-libc's own metadata self-check remains enabled.
 The LLVM patch also selects its unsupported-platform jobserver implementation for WASI, where Unix
 jobserver file-descriptor duplication is unavailable.
 The Rust manifest's `requiredNewFiles` list additionally verifies that the patch itself creates the
 in-process LLD bridge and both libloading compatibility trees. A cached worktree cannot substitute
 untracked files that are absent from the checked-in patch.
+
+The 1.99.1 refresh rebases the inline compiler-thread entry onto the single-argument
+`CurrentGcx` callback and moves WASI sysroot discovery to upstream's `dll_path` hook.
+The LLVM patch preserves the updated POSIX signal-handler signatures and guards the new
+signal-termination and mapping-advice paths on WASI. Rust now exports its WASI p3 OS module
+upstream, so the old patch for that export is no longer needed.
+
+The refresh has source-level validation: immutable upstream blobs, forward and reverse patch
+application, reconstructed complete Git tree identities, and the producer's focused tests.
+Stage0 checksums come from the pinned upstream `src/stage0`. All three complete compressed
+archives were downloaded on 2026-10-27 and matched the locked byte lengths and SHA-256 hashes;
+[the observed input receipt](validation/1.99.1-stage0.json) binds that check to this manifest.
+Preparation independently verifies the downloaded archive bytes before use.
+A full LLVM/Rust rebuild and browser acceptance remain required before publishing 1.99.1
+artifacts. Existing consumer receipts still identify the previously built 1.99.0 source snapshot.
+The producer retains its development build channel because the browser consumer uses `-Z`
+compiler options; the source release tag alone does not make the browser artifact a stable-channel
+Rust distribution.
+
+## Native release target baseline
+
+On 2026-10-28 the official Linux x86_64 Rust 1.99.1 compiler and its matching
+`wasm32-wasip1` standard library were downloaded into a private prefix. Their complete archive
+hashes matched the checksum-verified official release channel manifest. `rustc -vV` reported
+the pinned source commit and LLVM 23.1.1. [The observed target receipt](validation/1.99.1-native-target.json)
+records those inputs, fixture and probe hashes, the generated guest, and actual results.
+
+Native `rustc` compiled a standard-library program using buffered stdin, iterators, integer
+arithmetic, Unicode strings and stdout. Node WASI and Chromium both passed all three cases:
+Korean text with a trailing newline, an unterminated final line, and empty stdin followed by EOF.
+Chromium Workers delivered input in reads of at most three bytes. Each case returned exact
+stdout, empty stderr, and exit code zero. A separate invalid program failed with `E0308`.
+
+Reproduce with the exact official native compiler and target standard library in one prefix:
+
+```bash
+node producer/rust-browser/scripts/probe-native-target.mjs \
+  --rustc /path/to/private-toolchain/bin/rustc \
+  --work-root /path/to/private-probes \
+  --browser --chromium /path/to/chromium
+node --test producer/rust-browser/test/*.test.mjs
+```
+
+Omit `--browser` for Node WASI execution alone. This bounded check uses the official native
+stable compiler; it does not exercise the producer's patched compiler running as Wasm.
+The receipt keeps `browserHostedCompiler` and `ready` false. The full source rebuild and
+browser compiler acceptance above remain necessary before updating consumers.
 
 ## Commands
 

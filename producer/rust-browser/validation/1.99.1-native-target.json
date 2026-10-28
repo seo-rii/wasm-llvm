@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "producerId": "@seo-rii/wasm-llvm/rust-browser",
+  "validation": "official-native-release-wasi-target",
+  "observedAt": "2026-10-28T07:37:37.086Z",
+  "compilerHost": "native",
+  "status": "passed",
+  "manifestSha256": "7a51736a197d1a2501b25b0bc69c569a7dda9cf8078e346f33171b3b56fbaf9a",
+  "sourceFiles": {
+    "scripts/probe-native-target.mjs": "5acd4a7184f1fd0ba9b63baa3749483373bf1295efc4d8313309a05863c9b650",
+    "fixtures/wasi-stdin.rs": "f1ebfbb70b24863b591d28d191a02882a4781685d227051b263d343452864855",
+    "fixtures/type-error.rs": "b7ce73d0cb2adaf08401ca0585dfd8c74018690d6e6a58d87f90e333896414ef",
+    "test/native-target-worker.mjs": "7d9ce9fd51928a4bc86286265bbff5f1148de9647390f90466098349ae981c6c"
+  },
+  "executionReceiptSha256": "a4f33ef7472ac65de0fc32c0b75d60805e565399c93b437176ddbec22872296d",
+  "archives": [
+    {
+      "url": "https://static.rust-lang.org/dist/2026-10-15/rustc-1.99.1-x86_64-unknown-linux-gnu.tar.xz",
+      "bytes": 84098960,
+      "sha256": "2ff05ff9c08a90861e7f6e4065b40a8b87463b4576186fd613871c3e37f2091f"
+    },
+    {
+      "url": "https://static.rust-lang.org/dist/2026-10-15/rust-std-1.99.1-wasm32-wasip1.tar.xz",
+      "bytes": 24470880,
+      "sha256": "d498fbff3fd032f2f5fabc299e5cbf7bc9d64abac6e389fc1a315b69821b48c4"
+    }
+  ],
+  "releaseChannel": {
+    "url": "https://static.rust-lang.org/dist/channel-rust-1.99.1.toml",
+    "bytes": 943486,
+    "sha256": "fb152be80975c194aa5fc684b2aec3a6e14e2b855efe2faa4e5f8ae6e590f463",
+    "officialChecksumMatched": true
+  },
+  "compiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "target": "wasm32-wasip1",
+  "commands": {
+    "compile": [
+      "<private-toolchain>/toolchain/bin/rustc",
+      "--edition=2024",
+      "--target=wasm32-wasip1",
+      "-C",
+      "opt-level=2",
+      "-o",
+      "<private-toolchain>/probes/probe-uf4mN3/program.wasm",
+      "producer/rust-browser/fixtures/wasi-stdin.rs"
+    ],
+    "diagnostic": [
+      "<private-toolchain>/toolchain/bin/rustc",
+      "--edition=2024",
+      "--target=wasm32-wasip1",
+      "--emit=metadata",
+      "-o",
+      "<private-toolchain>/probes/probe-uf4mN3/invalid.rmeta",
+      "producer/rust-browser/fixtures/type-error.rs"
+    ]
+  },
+  "diagnostic": {
+    "exitCode": 1,
+    "code": "E0308",
+    "stderr": "error[E0308]: mismatched types\n --> producer/rust-browser/fixtures/type-error.rs:2:22\n  |\n2 |     let value: u32 = \"invalid\";\n  |                ---   ^^^^^^^^^ expected `u32`, found `&str`\n  |                |\n  |                expected due to this\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n"
+  },
+  "artifact": {
+    "bytes": 2197613,
+    "sha256": "13b0103d85f9a352596ae6f334bc14feeb2b64641b2de09a36580082d554e7eb",
+    "imports": [
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "environ_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "environ_sizes_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_read",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_write",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "proc_exit",
+        "kind": "function"
+      }
+    ]
+  },
+  "node": {
+    "version": "v24.22.1",
+    "results": [
+      {
+        "name": "sum-unicode-eof",
+        "exitCode": 0,
+        "stdout": "sum=60\ntext=안녕\neof=true\n",
+        "stderr": ""
+      },
+      {
+        "name": "unterminated-final-line",
+        "exitCode": 0,
+        "stdout": "sum=4\ntext=last\neof=true\n",
+        "stderr": ""
+      },
+      {
+        "name": "empty-eof",
+        "exitCode": 0,
+        "stdout": "sum=0\ntext=<eof>\neof=true\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "browser": {
+    "engine": "Chromium",
+    "version": "153.0.8010.12",
+    "wasiShimVersion": "0.4.2",
+    "maximumStdinReadBytes": 3,
+    "results": [
+      {
+        "name": "sum-unicode-eof",
+        "exitCode": 0,
+        "stdout": "sum=60\ntext=안녕\neof=true\n",
+        "stderr": ""
+      },
+      {
+        "name": "unterminated-final-line",
+        "exitCode": 0,
+        "stdout": "sum=4\ntext=last\neof=true\n",
+        "stderr": ""
+      },
+      {
+        "name": "empty-eof",
+        "exitCode": 0,
+        "stdout": "sum=0\ntext=<eof>\neof=true\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "gates": {
+    "nodeWasiStdinStdout": true,
+    "browserTargetStdinStdout": true,
+    "browserHostedCompiler": false,
+    "ready": false
+  },
+  "scope": "Official native Rust release and WASI guest execution only. This does not qualify the producer-patched browser-hosted rustc, its LLVM/LLD build, or consumer artifacts."
+}

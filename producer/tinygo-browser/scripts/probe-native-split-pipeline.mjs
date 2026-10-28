@@ -34,7 +34,7 @@ const LINK_PLAN_CAPABILITIES = [
   "target-cgo-linker-flags",
 ];
 const LLVM_OBJECT_VALIDATION = {
-  toolchain: "llvm-20.1.1",
+  toolchain: "llvm-22.1.4",
   moduleVerified: true,
   targetTriple: "wasm32-unknown-wasi",
   dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
@@ -204,8 +204,20 @@ export function validateNativeLinkPlan(linkPlan) {
         throw new Error(`link-plan.json target-native object ${index} has unexpected CXXFLAGS`);
       }
       if (kind === "target-c" || kind === "target-cxx") {
+        const evidence = object.llvmValidation;
+        const hasInputTargetTriple = Object.hasOwn(evidence ?? {}, "inputTargetTriple");
+        const expectedFields = Object.keys(LLVM_OBJECT_VALIDATION);
+        if (hasInputTargetTriple) expectedFields.push("inputTargetTriple");
         if (
-          JSON.stringify(object.llvmValidation) !== JSON.stringify(LLVM_OBJECT_VALIDATION) ||
+          !evidence ||
+          Array.isArray(evidence) ||
+          Object.keys(evidence).sort().join("\0") !== expectedFields.sort().join("\0") ||
+          Object.entries(LLVM_OBJECT_VALIDATION).some(
+            ([key, value]) => JSON.stringify(evidence[key]) !== JSON.stringify(value),
+          ) ||
+          (hasInputTargetTriple &&
+            evidence.inputTargetTriple !== "wasm32-unknown-wasi" &&
+            evidence.inputTargetTriple !== "wasm32-unknown-wasip1") ||
           object.wasmValidation !== undefined
         ) {
           throw new Error(`link-plan.json target-native object ${index} lacks exact LLVM validation`);
@@ -535,10 +547,13 @@ export async function runWasiModule({
   ]);
   await rm(captureDirectory, { recursive: true, force: true });
   if (executionError) {
-    const diagnostic = stderr
-      .subarray(0, MAX_DIAGNOSTIC_BYTES)
-      .toString("utf8")
-      .trim();
+    const diagnostic = [["stdout", stdout], ["stderr", stderr]]
+      .map(([name, bytes]) => {
+        const output = bytes.subarray(0, MAX_DIAGNOSTIC_BYTES).toString("utf8").trim();
+        return output ? `${name}:\n${output}` : "";
+      })
+      .filter(Boolean)
+      .join("\n");
     throw new Error(
       `WASI module ${modulePath} failed${diagnostic ? `: ${diagnostic}` : ""}`,
       { cause: executionError },

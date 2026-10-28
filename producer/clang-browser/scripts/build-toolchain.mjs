@@ -10,6 +10,7 @@ import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
 import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
+import { clangdResourceProfile } from './resource-profile.mjs';
 import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +21,14 @@ const producerManifestBytes = await fs.readFile(producerManifestPath);
 const producerManifestIdentity = { bytes: producerManifestBytes.length, sha256: createHash('sha256').update(producerManifestBytes).digest('hex') };
 const producerManifest = JSON.parse(producerManifestBytes);
 const llvmBuildType = process.env.LLVM_BUILD_TYPE || 'MinSizeRel';
+const targetProfile = process.env.CLANG_TARGET_PROFILE || 'wasm32-wasi';
+if (!['wasm32-wasi', 'x86_64-linux-gnu'].includes(targetProfile)) {
+	throw new Error('CLANG_TARGET_PROFILE must be wasm32-wasi or x86_64-linux-gnu');
+}
+const crossProfile = targetProfile === 'x86_64-linux-gnu'
+	? JSON.parse(await fs.readFile(path.join(producerRoot, 'cross/profile.json'), 'utf8'))
+	: null;
+const lldPatch = crossProfile?.lldPatch || producerManifest.sources.lldWasmOnlyPatch;
 // Libraries that dominate parsing, semantic analysis and code generation time when the WASI
 // compiler builds typical single-file programs. Relative to the LLVM checkout.
 const defaultHotPathDirs = ['clang/lib/Lex', 'clang/lib/Basic', 'llvm/lib/Support'];
@@ -34,7 +43,7 @@ const config = {
 	emsdkCommit:
 		process.env.EMSDK_COMMIT ||
 		(process.env.EMSDK_VERSION ? '' : producerManifest.toolchains.emsdk.commit),
-	targetTriple: process.env.TARGET_TRIPLE || 'wasm32-wasi',
+	targetTriple: process.env.TARGET_TRIPLE || crossProfile?.target || 'wasm32-wasi',
 	hostTriple: process.env.HOST_TRIPLE || 'wasm32-wasip1',
 	yowaspWasiPatchRepo:
 		process.env.YOWASP_WASI_PATCH_REPO || producerManifest.sources.wasiHostPatch.repository,
@@ -48,12 +57,13 @@ const config = {
 		.map((entry) => entry.trim())
 		.filter(Boolean),
 	clangWasmOpt: process.env.CLANG_WASM_OPT || 'default',
-	clangToolHost: process.env.CLANG_TOOL_HOST || 'OFF',
+	clangToolHost: process.env.CLANG_TOOL_HOST || (crossProfile ? 'ON' : 'OFF'),
 	clangdLto: process.env.CLANGD_LTO || 'ON',
 	clangdAssertions: process.env.CLANGD_ASSERTIONS || (llvmBuildType === 'Debug' ? 'ON' : 'OFF'),
 	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
 	clangdDecisionForest: process.env.CLANGD_DECISION_FOREST || 'OFF',
 	clangdSeparateHeaders: process.env.CLANGD_SEPARATE_HEADERS || 'OFF',
+	clangdResources: clangdResourceProfile(),
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -110,6 +120,7 @@ Environment:
   EMSDK_COMMIT=${config.emsdkCommit || '<required with EMSDK_VERSION>'}
   TARGET_TRIPLE=${config.targetTriple}
   HOST_TRIPLE=${config.hostTriple}
+  CLANG_TARGET_PROFILE=${targetProfile} (x86_64-linux-gnu requires --compiler-only; exports a separate native cross bundle)
   LLVM_BUILD_TYPE=${config.llvmBuildType}
   LLVM_MINSIZE_OPT=${config.llvmMinSizeOpt}
   LLVM_HOT_PATH_OPT=${config.llvmHotPathOpt}
@@ -121,6 +132,8 @@ Environment:
   CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
   CLANGD_DECISION_FOREST=${config.clangdDecisionForest}
   CLANGD_SEPARATE_HEADERS=${config.clangdSeparateHeaders}
+  CLANGD_INITIAL_MEMORY_MIB=${config.clangdResources.initialMemoryMiB} (experimental)
+  CLANGD_PTHREAD_POOL_SIZE=${config.clangdResources.pthreadPoolSize} (unset preserves hardware-based default)
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -136,6 +149,10 @@ WASM_LLVM_TOOLCHAIN_OUT_DIR/compiler for benchmark-compiler.mjs.`);
 }
 
 let toolHostProfile = null;
+if (crossProfile && (!compilerOnly || config.clangToolHost !== 'ON' ||
+	config.targetTriple !== crossProfile.target || config.hostTriple !== crossProfile.host)) {
+	throw new Error('The x86_64-linux-gnu profile requires --compiler-only, CLANG_TOOL_HOST=ON, its fixed target and wasm32-wasip1 host');
+}
 if (config.clangToolHost === 'ON') {
 	if (!compilerOnly) throw new Error('CLANG_TOOL_HOST requires --compiler-only; release packaging is not qualified');
 	if (!process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR || !process.env.WASM_LLVM_TOOLCHAIN_OUT_DIR) {
@@ -169,7 +186,7 @@ if (config.clangToolHost === 'ON') {
 		['WASI_SDK_VERSION', config.wasiSdkVersion, producerManifest.toolchains.wasiSdk.version],
 		['EMSDK_VERSION', config.emsdkVersion, producerManifest.toolchains.emsdk.version],
 		['EMSDK_COMMIT', config.emsdkCommit, producerManifest.toolchains.emsdk.commit],
-		['TARGET_TRIPLE', config.targetTriple, producerManifest.target]
+		['TARGET_TRIPLE', config.targetTriple, crossProfile?.target || producerManifest.target]
 	]
 		.filter(([, actual, expected]) => actual !== expected)
 		.map(([name]) => name);
@@ -369,9 +386,9 @@ async function patchLlvmWasiClose() {
 
 async function patchLldForWasmOnly() {
 	await applyChecksumPinnedPatch(
-		producerManifest.sources.lldWasmOnlyPatch,
-		'LLD WebAssembly-only patch',
-		'.wasm-llvm-lld-wasm-only.patch'
+		lldPatch,
+		crossProfile ? 'LLD ELF-only patch' : 'LLD WebAssembly-only patch',
+		crossProfile ? '.wasm-llvm-lld-elf-only.patch' : '.wasm-llvm-lld-wasm-only.patch'
 	);
 }
 
@@ -439,7 +456,8 @@ await fs.mkdir(sourceDir, { recursive: true });
 await fs.mkdir(buildDir, { recursive: true });
 await fs.mkdir(toolsDir, { recursive: true });
 const recipeFiles = ['build-toolchain.mjs', 'build-provenance.mjs', 'build-memfs.mjs',
-	'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh'];
+	'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh',
+	'resource-profile.mjs'];
 const recipe = [];
 for (const file of recipeFiles) recipe.push({ path: `scripts/${file}`, ...await fileIdentity(path.join(scriptDir, file)) });
 for (const command of ['cmake', 'ninja', 'tar']) await recordPathTool(command, command);
@@ -481,14 +499,14 @@ if (toolHostProfile) {
 	);
 }
 const llvmPatchSpecs = [producerManifest.sources.llvmWasiClosePatch,
-	producerManifest.sources.lldWasmOnlyPatch, producerManifest.sources.clangdEmscriptenStdinPatch,
+	lldPatch, producerManifest.sources.clangdEmscriptenStdinPatch,
 	...(toolHostProfile ? [{ ...toolHostProfile.patch, path: `tool-host/${toolHostProfile.patch.path}` }] : [])];
 const llvmVerification = {
 	source: llvmSource, commit: config.llvmCommit,
 	patches: [yowaspPatch.patch, ...await Promise.all(llvmPatchSpecs.map((spec) => fs.readFile(path.join(producerRoot, spec.path))))],
 	transforms: [{ file: 'llvm/lib/Support/Signals.cpp', transform: addWasiSignalStub }],
 	allowedUntracked: ['.wasm-llvm-yowasp-wasi-host.patch', '.wasm-llvm-wasi-close.patch',
-		'.wasm-llvm-lld-wasm-only.patch', '.wasm-llvm-clangd-emscripten-stdin.patch',
+		crossProfile ? '.wasm-llvm-lld-elf-only.patch' : '.wasm-llvm-lld-wasm-only.patch', '.wasm-llvm-clangd-emscripten-stdin.patch',
 		...(toolHostProfile ? ['.wasm-llvm-tool-host.patch'] : [])]
 };
 const llvmSourceIdentity = await verifyPatchedCheckout(llvmVerification);
@@ -533,26 +551,28 @@ if (toolHostProfile) {
 
 const sysrootArchive = `wasi-sysroot-${config.wasiSdkVersion}.0+m.tar.gz`;
 const clangRtArchive = `libclang_rt-${config.wasiSdkVersion}.0+m.tar.gz`;
-await download(
-	`https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${config.wasiSdkVersion}/wasi-sysroot-${config.wasiSdkVersion}.0%2Bm.tar.gz`,
-	path.join(downloadDir, sysrootArchive),
-	producerManifest.toolchains.wasiSdk.sysrootSha256
-);
-await download(
-	`https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${config.wasiSdkVersion}/libclang_rt-${config.wasiSdkVersion}.0%2Bm.tar.gz`,
-	path.join(downloadDir, clangRtArchive),
-	producerManifest.toolchains.wasiSdk.clangRtSha256
-);
-await assertSha256(
-	path.join(downloadDir, sysrootArchive),
-	producerManifest.toolchains.wasiSdk.sysrootSha256,
-	'WASI sysroot archive'
-);
-await assertSha256(
-	path.join(downloadDir, clangRtArchive),
-	producerManifest.toolchains.wasiSdk.clangRtSha256,
-	'WASI compiler-rt archive'
-);
+if (!crossProfile) {
+	await download(
+		`https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${config.wasiSdkVersion}/wasi-sysroot-${config.wasiSdkVersion}.0%2Bm.tar.gz`,
+		path.join(downloadDir, sysrootArchive),
+		producerManifest.toolchains.wasiSdk.sysrootSha256
+	);
+	await download(
+		`https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${config.wasiSdkVersion}/libclang_rt-${config.wasiSdkVersion}.0%2Bm.tar.gz`,
+		path.join(downloadDir, clangRtArchive),
+		producerManifest.toolchains.wasiSdk.clangRtSha256
+	);
+	await assertSha256(
+		path.join(downloadDir, sysrootArchive),
+		producerManifest.toolchains.wasiSdk.sysrootSha256,
+		'WASI sysroot archive'
+	);
+	await assertSha256(
+		path.join(downloadDir, clangRtArchive),
+		producerManifest.toolchains.wasiSdk.clangRtSha256,
+		'WASI compiler-rt archive'
+	);
+}
 const { wasmPath: memfsWasm, receiptPath: memfsReceipt } = await buildMemfs({
 	wasiSdkPath,
 	wasiSdkVersion: config.wasiSdkVersion,
@@ -570,7 +590,7 @@ await run('cmake', [
 	nativeBuild,
 	'-DCMAKE_BUILD_TYPE=Release',
 	'-DLLVM_ENABLE_PROJECTS=clang',
-	'-DLLVM_TARGETS_TO_BUILD=WebAssembly',
+	`-DLLVM_TARGETS_TO_BUILD=${crossProfile?.llvmTarget || 'WebAssembly'}`,
 	'-DLLVM_INCLUDE_TESTS=OFF',
 	'-DLLVM_INCLUDE_EXAMPLES=OFF'
 ]);
@@ -622,7 +642,7 @@ await run('cmake', [
 	...hotPathLauncherArgs,
 	`-DLLVM_HOST_TRIPLE=${config.hostTriple}`,
 	`-DLLVM_DEFAULT_TARGET_TRIPLE=${config.targetTriple}`,
-	'-DLLVM_TARGETS_TO_BUILD=WebAssembly',
+	`-DLLVM_TARGETS_TO_BUILD=${crossProfile?.llvmTarget || 'WebAssembly'}`,
 	'-DLLVM_ENABLE_PROJECTS=clang;lld',
 	`-DLLVM_TABLEGEN=${path.join(nativeBuild, 'bin', 'llvm-tblgen')}`,
 	`-DCLANG_TABLEGEN=${path.join(nativeBuild, 'bin', 'clang-tblgen')}`,
@@ -671,86 +691,84 @@ await run('cmake', [
 const resourceIncludeDir = await findResourceIncludeDir(wasiBuild);
 if (!resourceIncludeDir) throw new Error('Could not find clang resource headers');
 const resourceVersion = path.basename(path.dirname(resourceIncludeDir));
-
-await fs.rm(stagingSysroot, { recursive: true, force: true });
-await fs.mkdir(stagingSysroot, { recursive: true });
-await run('tar', [
-	'-xzf',
-	path.join(downloadDir, sysrootArchive),
-	'-C',
-	stagingSysroot,
-	'--strip-components=1'
-]);
-const libcxxShareDir = path.join(stagingSysroot, 'share', 'libc++', 'v1');
 const libcxxIncludeDir = path.join(stagingSysroot, 'include', 'c++', 'v1');
-let hasLibcxxInclude = false;
-try {
-	await fs.access(path.join(libcxxIncludeDir, 'vector'));
-	hasLibcxxInclude = true;
-} catch {
-	for (const candidate of [
-		libcxxShareDir,
-		path.join(stagingSysroot, 'include', config.targetTriple, 'noeh', 'c++', 'v1'),
-		path.join(stagingSysroot, 'include', config.targetTriple, 'eh', 'c++', 'v1')
-	]) {
-		try {
-			await fs.access(path.join(candidate, 'vector'));
-			await fs.mkdir(path.dirname(libcxxIncludeDir), { recursive: true });
-			await fs.cp(candidate, libcxxIncludeDir, { recursive: true, force: true });
-			hasLibcxxInclude = true;
-			break;
-		} catch {
-			// Try the next libc++ location.
+const stagedResourceIncludeDir = path.join(stagingSysroot, 'lib', 'clang', resourceVersion, 'include');
+
+// Native targets import a real GNU/Linux sysroot separately. WASI compatibility
+// headers and libraries must never be mounted into the native target bundle.
+if (!crossProfile) {
+	await fs.rm(stagingSysroot, { recursive: true, force: true });
+	await fs.mkdir(stagingSysroot, { recursive: true });
+	await run('tar', [
+		'-xzf',
+		path.join(downloadDir, sysrootArchive),
+		'-C',
+		stagingSysroot,
+		'--strip-components=1'
+	]);
+	const libcxxShareDir = path.join(stagingSysroot, 'share', 'libc++', 'v1');
+	let hasLibcxxInclude = false;
+	try {
+		await fs.access(path.join(libcxxIncludeDir, 'vector'));
+		hasLibcxxInclude = true;
+	} catch {
+		for (const candidate of [
+			libcxxShareDir,
+			path.join(stagingSysroot, 'include', config.targetTriple, 'noeh', 'c++', 'v1'),
+			path.join(stagingSysroot, 'include', config.targetTriple, 'eh', 'c++', 'v1')
+		]) {
+			try {
+				await fs.access(path.join(candidate, 'vector'));
+				await fs.mkdir(path.dirname(libcxxIncludeDir), { recursive: true });
+				await fs.cp(candidate, libcxxIncludeDir, { recursive: true, force: true });
+				hasLibcxxInclude = true;
+				break;
+			} catch {
+				// Try the next libc++ location.
+			}
 		}
 	}
-}
-if (!hasLibcxxInclude) {
-	throw new Error(`Could not find libc++ headers for ${config.targetTriple}`);
-}
-for (const header of GCC_COMPATIBILITY_HEADERS) {
-	const target = path.join(stagingSysroot, header.path);
-	await fs.mkdir(path.dirname(target), { recursive: true });
-	await fs.writeFile(target, header.contents);
-}
-const stagedResourceIncludeDir = path.join(
-	stagingSysroot,
-	'lib',
-	'clang',
-	resourceVersion,
-	'include'
-);
-await fs.rm(stagedResourceIncludeDir, { recursive: true, force: true });
-await fs.mkdir(path.dirname(stagedResourceIncludeDir), { recursive: true });
-await fs.cp(resourceIncludeDir, stagedResourceIncludeDir, { recursive: true, force: true });
+	if (!hasLibcxxInclude) {
+		throw new Error(`Could not find libc++ headers for ${config.targetTriple}`);
+	}
+	for (const header of GCC_COMPATIBILITY_HEADERS) {
+		const target = path.join(stagingSysroot, header.path);
+		await fs.mkdir(path.dirname(target), { recursive: true });
+		await fs.writeFile(target, header.contents);
+	}
+	await fs.rm(stagedResourceIncludeDir, { recursive: true, force: true });
+	await fs.mkdir(path.dirname(stagedResourceIncludeDir), { recursive: true });
+	await fs.cp(resourceIncludeDir, stagedResourceIncludeDir, { recursive: true, force: true });
 
-const clangRtTemp = path.join(config.workDir, 'clang-rt');
-await fs.rm(clangRtTemp, { recursive: true, force: true });
-await fs.mkdir(clangRtTemp, { recursive: true });
-await run('tar', [
-	'-xzf',
-	path.join(downloadDir, clangRtArchive),
-	'-C',
-	clangRtTemp,
-	'--strip-components=1'
-]);
-const clangRtSource = await findFile(
-	clangRtTemp,
-	(filePath) =>
-		filePath.endsWith('libclang_rt.builtins.a') &&
-		(filePath.includes('wasm32-unknown-wasi') || filePath.includes('wasm32-unknown-wasip1'))
-);
-if (!clangRtSource) throw new Error('Could not find libclang_rt.builtins.a');
-const clangRtTarget = path.join(
-	stagingSysroot,
-	'lib',
-	'clang',
-	resourceVersion,
-	'lib',
-	'wasi',
-	'libclang_rt.builtins-wasm32.a'
-);
-await fs.mkdir(path.dirname(clangRtTarget), { recursive: true });
-await fs.copyFile(clangRtSource, clangRtTarget);
+	const clangRtTemp = path.join(config.workDir, 'clang-rt');
+	await fs.rm(clangRtTemp, { recursive: true, force: true });
+	await fs.mkdir(clangRtTemp, { recursive: true });
+	await run('tar', [
+		'-xzf',
+		path.join(downloadDir, clangRtArchive),
+		'-C',
+		clangRtTemp,
+		'--strip-components=1'
+	]);
+	const clangRtSource = await findFile(
+		clangRtTemp,
+		(filePath) =>
+			filePath.endsWith('libclang_rt.builtins.a') &&
+			(filePath.includes('wasm32-unknown-wasi') || filePath.includes('wasm32-unknown-wasip1'))
+	);
+	if (!clangRtSource) throw new Error('Could not find libclang_rt.builtins.a');
+	const clangRtTarget = path.join(
+		stagingSysroot,
+		'lib',
+		'clang',
+		resourceVersion,
+		'lib',
+		'wasi',
+		'libclang_rt.builtins-wasm32.a'
+	);
+	await fs.mkdir(path.dirname(clangRtTarget), { recursive: true });
+	await fs.copyFile(clangRtSource, clangRtTarget);
+}
 
 const emsdkDir = path.join(config.workDir, 'emsdk');
 try {
@@ -826,6 +844,29 @@ if (compilerOnly) {
 		};
 	}
 	const toolHostArtifacts = {};
+	let crossArtifacts;
+	if (crossProfile) {
+		const resourceOutput = path.join(compilerOutDir, 'resource-include');
+		await fs.cp(resourceIncludeDir, resourceOutput, { recursive: true, dereference: true });
+		await fs.copyFile(path.join(producerRoot, 'cross/profile.json'), path.join(compilerOutDir, 'cross-profile.json'));
+		await fs.copyFile(path.join(producerRoot, lldPatch.path), path.join(compilerOutDir, 'lld-elf-only.patch'));
+		// Unlike the legacy compiler-only benchmark, this pack records source,
+		// SDK and recipe identities and verifies the inputs again before handoff.
+		await verifyPatchedCheckout(llvmVerification);
+		await assertDirectoryUnchanged(wasiSdkPath, wasiSdkIdentity, 'WASI SDK');
+		await assertDirectoryUnchanged(emsdkUpstream, emsdkUpstreamIdentity, 'Emscripten SDK');
+		crossArtifacts = {
+			profile: crossProfile,
+			profileIdentity: await fileIdentity(path.join(compilerOutDir, 'cross-profile.json')),
+			resourceVersion,
+			resourceHeaders: await directoryIdentity(resourceOutput),
+			source: { ...llvmSourceIdentity, patches: [yowaspPatch.identity, ...llvmPatchSpecs] },
+			toolchains: { wasiSdk: wasiSdkIdentity, emsdk: emsdkUpstreamIdentity },
+			tools: buildTools,
+			recipe,
+			qualification: 'unverified; run cross/qualify.mjs after packaging'
+		};
+	}
 	if (toolHostProfile) {
 		const profileOutput = path.join(compilerOutDir, 'tool-host');
 		await fs.mkdir(profileOutput);
@@ -835,7 +876,7 @@ if (compilerOnly) {
 		await fs.copyFile(path.join(llvmSource, 'llvm/LICENSE.TXT'), path.join(profileOutput, 'LICENSE.LLVM.txt'));
 		await fs.copyFile(path.join(llvmSource, 'llvm/lib/Support/Program.cpp'), path.join(profileOutput, 'Program.cpp'));
 		await fs.copyFile(fileURLToPath(import.meta.url), path.join(profileOutput, 'build-toolchain.mjs'));
-		await fs.writeFile(path.join(profileOutput, 'sources.json'), `${JSON.stringify(producerManifest.sources, null, 2)}\n`);
+		await fs.writeFile(path.join(profileOutput, 'sources.json'), `${JSON.stringify(crossProfile ? { ...producerManifest.sources, lldWasmOnlyPatch: undefined, lldElfOnlyPatch: lldPatch } : producerManifest.sources, null, 2)}\n`);
 		for (const name of ['clang', 'lld']) {
 			await run('node', [path.join(producerRoot, 'tool-host/verify.mjs'), path.join(compilerOutDir, name),
 				path.join(profileOutput, `${name}.module.json`), '--initial-cwd', `--kind=${name}`]);
@@ -860,6 +901,7 @@ if (compilerOnly) {
 				clangWasmOpt: config.clangWasmOpt,
 				wasmOptLevel: effectiveWasmOptLevel ?? 'none',
 				...(toolHostProfile ? { toolHostProfile, toolHostArtifacts } : {}),
+				...(crossArtifacts ? { cross: crossArtifacts } : {}),
 				modules
 			},
 			null,
@@ -896,7 +938,7 @@ const clangdConfigure = [
 	shellQuote(clangdBuild),
 	shellQuote('-DCMAKE_CXX_FLAGS=-pthread -Dwait4=__syscall_wait4'),
 	shellQuote(
-		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)'${clangdHeaderLinkFlags}`
+		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=${config.clangdResources.initialMemoryMiB}MB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='${config.clangdResources.poolExpression}'${clangdHeaderLinkFlags}`
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
 	shellQuote(`-DCMAKE_C_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),
