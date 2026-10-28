@@ -1,8 +1,8 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 96dc56ab189b0063bf6ddcbb36496f139960f3e1..388423854cb3aa1551c0dce8c73ed1b3dc169786 100644
+index c91d3792531904dc2303fffae91fb751fea058d1..b68e93bf490860a41be0d7d2ab3a987aef6bfa94 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -2365,8 +2365,6 @@ dependencies = [
+@@ -2322,8 +2322,6 @@ dependencies = [
  [[package]]
  name = "libloading"
  version = "0.8.9"
@@ -11,7 +11,7 @@ index 96dc56ab189b0063bf6ddcbb36496f139960f3e1..388423854cb3aa1551c0dce8c73ed1b3
  dependencies = [
   "cfg-if",
   "windows-link 0.2.1",
-@@ -2382,6 +2380,10 @@ dependencies = [
+@@ -2339,6 +2337,10 @@ dependencies = [
   "windows-link 0.2.1",
  ]
  
@@ -22,37 +22,37 @@ index 96dc56ab189b0063bf6ddcbb36496f139960f3e1..388423854cb3aa1551c0dce8c73ed1b3
  [[package]]
  name = "libm"
  version = "0.2.15"
-@@ -3840,6 +3842,7 @@ dependencies = [
-  "itertools 0.15.0",
+@@ -3811,6 +3813,7 @@ dependencies = [
+  "itertools",
   "libc",
   "libloading 0.9.0",
 + "libloading-wasi",
   "measureme",
-  "object 0.37.3",
+  "object 0.38.1",
   "rustc-demangle",
 diff --git a/Cargo.toml b/Cargo.toml
-index 67c7a9d67edc88c2ee19bb2bc2358e69e43c860a..e2bd29d445eec45ff0dd88ae060e994ef73d6897 100644
+index 0d36c3f242d82c4c777f4eae2d662853f543e218..e05968f8edca4c3a3fc16254f4fa9fe5e6058f83 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -93,3 +93,5 @@ codegen-units = 1
+@@ -94,3 +94,5 @@ codegen-units = 1
  # For git dependencies, also add your source to ALLOWED_SOURCES in src/tools/tidy/src/extdeps.rs.
  #[patch.crates-io]
  
 +[patch.crates-io]
 +libloading = { path = "libloading_shim" }
 diff --git a/compiler/rustc_codegen_llvm/Cargo.toml b/compiler/rustc_codegen_llvm/Cargo.toml
-index ec850cf7ab3d292fd7fb20676ccd96294290e520..b5f09f08b97a271d126cef1326ae5db29dc2ecc3 100644
+index 913835a080db82eb4e8ae453d6dbc5a3cd1faf3e..c747f709deb93e6eeaec0e00f427b93264b7b42b 100644
 --- a/compiler/rustc_codegen_llvm/Cargo.toml
 +++ b/compiler/rustc_codegen_llvm/Cargo.toml
 @@ -14,7 +14,6 @@ bitflags = "2.4.1"
- gimli = "0.31"
+ gimli = "0.33"
  itertools = "0.15"
  libc = "0.2"
 -libloading = { version = "0.9.0" }
  measureme = "12.0.1"
- object = { version = "0.37.0", default-features = false, features = ["std", "read"] }
- rustc-demangle = "0.1.21"
-@@ -40,10 +39,15 @@ smallvec = { version = "1.8.1", features = ["union", "may_dangle"] }
+ object = { version = "0.38.1", default-features = false, features = ["std", "read"] }
+ rustc-demangle = "0.1.28"
+@@ -41,6 +40,12 @@ smallvec = { version = "1.8.1", features = ["union", "may_dangle"] }
  tracing = "0.1"
  # tidy-alphabetical-end
  
@@ -65,10 +65,6 @@ index ec850cf7ab3d292fd7fb20676ccd96294290e520..b5f09f08b97a271d126cef1326ae5db2
  [features]
  # tidy-alphabetical-start
  check_only = ["rustc_llvm/check_only"]
- llvm_enzyme = []
- llvm_offload = []
- # tidy-alphabetical-end
--
 diff --git a/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs b/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs
 index 68ec7870811d28130bd1b880606b715cccfeb15e..dc62c8f7ba47cbf11b5fc74fffdaf7b9386c9d5c 100644
 --- a/compiler/rustc_codegen_llvm/src/llvm/enzyme_ffi.rs
@@ -84,10 +80,10 @@ index 68ec7870811d28130bd1b880606b715cccfeb15e..dc62c8f7ba47cbf11b5fc74fffdaf7b9
      use crate::llvm::{EnzymeTypeTree, LLVMRustVersionMajor};
  
 diff --git a/compiler/rustc_codegen_ssa/src/back/link.rs b/compiler/rustc_codegen_ssa/src/back/link.rs
-index 45c9495570ed21932687a408782c55385dffd4a6..51eb3d8fa927b020450e6fe206013973a346c795 100644
+index 014e3ee8bd3659bf66d1d5b43bf94add8769bcc0..d0656b1b497dd0b7c055926cf53f17be388c568b 100644
 --- a/compiler/rustc_codegen_ssa/src/back/link.rs
 +++ b/compiler/rustc_codegen_ssa/src/back/link.rs
-@@ -1100,6 +1100,28 @@ fn link_natively(
+@@ -1281,6 +1281,28 @@ fn link_natively(
  
      // Invoke the system linker
      info!("{cmd:?}");
@@ -117,7 +113,7 @@ index 45c9495570ed21932687a408782c55385dffd4a6..51eb3d8fa927b020450e6fe206013973
          Regex::new(r"(unknown|unrecognized) (command line )?(option|argument)").unwrap();
      let mut prog;
 diff --git a/compiler/rustc_codegen_ssa/src/back/linker.rs b/compiler/rustc_codegen_ssa/src/back/linker.rs
-index e24e7bad2b9455c10f8229218f473bbf44797fe4..aa5f7911facdac6f7954ac41e517b11edbd75daa 100644
+index 4c99da5049e8225541887be03e4d645e9843ba1a..7453728d0d0e1b1a7ab7feb7631e3e62b1aaf882 100644
 --- a/compiler/rustc_codegen_ssa/src/back/linker.rs
 +++ b/compiler/rustc_codegen_ssa/src/back/linker.rs
 @@ -131,7 +131,9 @@ pub(crate) fn get_linker<'a>(
@@ -145,10 +141,10 @@ index 51909719827638536129b3e31aa500b56f0ef648..a7cc7cbdfb3c92c19abbb12eef06eb93
  [dependencies]
  # tidy-alphabetical-start
 diff --git a/compiler/rustc_driver_impl/src/lib.rs b/compiler/rustc_driver_impl/src/lib.rs
-index b4a6cd33a60f45d24d062b18a825b4fbdf2249ba..326db954133369ac6e9392a98dc8361028806d02 100644
+index e2c9f3f909b8bfe332e847e36f05923f41ac3cd1..da85ef72f0aedcec02d07cc84f76863fac4ac42c 100644
 --- a/compiler/rustc_driver_impl/src/lib.rs
 +++ b/compiler/rustc_driver_impl/src/lib.rs
-@@ -30,6 +30,8 @@
+@@ -30,6 +30,8 @@ use std::{env, str};
  use rustc_ast as ast;
  use rustc_codegen_ssa::traits::CodegenBackend;
  use rustc_codegen_ssa::{CodegenError, CompiledModules};
@@ -157,7 +153,7 @@ index b4a6cd33a60f45d24d062b18a825b4fbdf2249ba..326db954133369ac6e9392a98dc83610
  use rustc_data_structures::profiling::{
      TimePassesFormat, get_resident_set_size, print_time_passes_entry,
  };
-@@ -1434,7 +1436,7 @@ fn ice_path_with_config(config: Option<&UnstableOptions>) -> &'static Option<Pat
+@@ -1423,7 +1425,7 @@ fn ice_path_with_config(config: Option<&UnstableOptions>) -> &'static Option<Pat
          };
          // Don't use a standard datetime format because Windows doesn't support `:` in paths
          let file_now = jiff::Zoned::now().strftime("%Y-%m-%dT%H_%M_%S");
@@ -167,28 +163,28 @@ index b4a6cd33a60f45d24d062b18a825b4fbdf2249ba..326db954133369ac6e9392a98dc83610
          Some(path)
      })
 diff --git a/compiler/rustc_interface/src/util.rs b/compiler/rustc_interface/src/util.rs
-index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56a167860e 100644
+index 23b152bd57240fb9f0eb995170476388d2b2d999..1a4f03023422149ecc735610990eca05bca6b676 100644
 --- a/compiler/rustc_interface/src/util.rs
 +++ b/compiler/rustc_interface/src/util.rs
-@@ -103,7 +103,7 @@ pub(crate) fn check_abi_required_features(sess: &Session) {
+@@ -121,7 +121,7 @@ pub(crate) fn check_abi_required_features(sess: &Session) {
  }
  
  pub static STACK_SIZE: OnceLock<usize> = OnceLock::new();
--pub const DEFAULT_STACK_SIZE: usize = 8 * 1024 * 1024;
+-pub const DEFAULT_STACK_SIZE: usize = 16 * 1024 * 1024;
 +pub const DEFAULT_STACK_SIZE: usize = 32 * 1024 * 1024;
  
  fn init_stack_size(early_dcx: &EarlyDiagCtxt) -> usize {
      // Obey the environment setting or default
-@@ -134,7 +134,7 @@ fn init_stack_size(early_dcx: &EarlyDiagCtxt) -> usize {
+@@ -152,7 +152,7 @@ fn init_stack_size(early_dcx: &EarlyDiagCtxt) -> usize {
  }
  
- fn run_in_thread_with_globals<F: FnOnce(CurrentGcx, Arc<Proxy>) -> R + Send, R: Send>(
+ fn run_in_thread_with_globals<F: FnOnce(CurrentGcx) -> R + Send, R: Send>(
 -    thread_stack_size: usize,
 +    #[cfg_attr(target_family = "wasm", allow(unused_variables))] thread_stack_size: usize,
      edition: Edition,
      sm_inputs: SourceMapInputs,
      extra_symbols: &[&'static str],
-@@ -146,30 +146,44 @@ fn run_in_thread_with_globals<F: FnOnce(CurrentGcx, Arc<Proxy>) -> R + Send, R:
+@@ -164,30 +164,43 @@ fn run_in_thread_with_globals<F: FnOnce(CurrentGcx) -> R + Send, R: Send>(
      // the parallel compiler, in particular to ensure there is no accidental
      // sharing of data between the main thread and the compilation thread
      // (which might cause problems for the parallel compiler).
@@ -205,7 +201,7 @@ index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56
 -                    edition,
 -                    extra_symbols,
 -                    Some(sm_inputs),
--                    || f(CurrentGcx::new(), Proxy::new()),
+-                    || f(CurrentGcx::new()),
 -                )
 -            })
 -            .unwrap()
@@ -216,7 +212,7 @@ index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56
 +            edition,
 +            extra_symbols,
 +            Some(sm_inputs),
-+            || f(CurrentGcx::new(), Proxy::new()),
++            || f(CurrentGcx::new()),
 +        );
 +    }
  
@@ -227,8 +223,7 @@ index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56
 -    })
 +    #[cfg(not(target_family = "wasm"))]
 +    {
-+        let builder =
-+            thread::Builder::new().name("rustc".to_string()).stack_size(thread_stack_size);
++        let builder = thread::Builder::new().name("rustc".to_string()).stack_size(thread_stack_size);
 +
 +        // We build the session globals and run `f` on the spawned thread, because
 +        // `SessionGlobals` does not impl `Send` in the non-parallel compiler.
@@ -241,7 +236,7 @@ index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56
 +                        edition,
 +                        extra_symbols,
 +                        Some(sm_inputs),
-+                        || f(CurrentGcx::new(), Proxy::new()),
++                        || f(CurrentGcx::new()),
 +                    )
 +                })
 +                .unwrap()
@@ -255,12 +250,12 @@ index c78e419033d78a3b4a516c96dddc7961da7c1f32..a1f50eb8cd97525b21793863f9960e56
 +    }
  }
  
- pub(crate) fn run_in_thread_pool_with_globals<
+ pub(crate) fn run_in_thread_pool_with_globals<F: FnOnce(CurrentGcx) -> R + Send, R: Send>(
 diff --git a/compiler/rustc_llvm/build.rs b/compiler/rustc_llvm/build.rs
-index 5be8bd466f8546c39d2cd066b467a82c981fe855..9068c579b311323a28b167001e3443684c12e021 100644
+index c6a4013db3913681ef9caf3b652e886bce5ef684..dd16dddca0966b97914d602df695f78f74c99a7f 100644
 --- a/compiler/rustc_llvm/build.rs
 +++ b/compiler/rustc_llvm/build.rs
-@@ -30,8 +30,17 @@
+@@ -30,8 +30,17 @@ const OPTIONAL_COMPONENTS: &[&str] = &[
      "bpf",
  ];
  
@@ -280,7 +275,7 @@ index 5be8bd466f8546c39d2cd066b467a82c981fe855..9068c579b311323a28b167001e344368
  
  fn detect_llvm_link() -> (&'static str, &'static str) {
      // Force the link mode we want, preferring static by default, but
-@@ -304,12 +313,17 @@ fn main() {
+@@ -321,12 +330,17 @@ fn main() {
          cfg.define("NDEBUG", None);
      }
  
@@ -298,7 +293,7 @@ index 5be8bd466f8546c39d2cd066b467a82c981fe855..9068c579b311323a28b167001e344368
          .cpp(true)
          .cpp_link_stdlib(None) // we handle this below
          .compile("llvm-wrapper");
-@@ -431,6 +445,11 @@ fn main() {
+@@ -448,6 +462,11 @@ fn main() {
          println!("cargo:rustc-link-lib={kind}={name}");
      }
  
@@ -329,32 +324,34 @@ index 0000000000000000000000000000000000000000..cb40da6b99fa0e6692a2af3b9687f789
 +  return r.retCode;
 +}
 diff --git a/compiler/rustc_session/src/filesearch.rs b/compiler/rustc_session/src/filesearch.rs
-index bf1e1f5f128113fdd6286be45bb07fab010b6c2e..d8f97e0fd498e17981c548e7707536f5217b9f0f 100644
+index 6ec1466500a86890d8e2480951a59a5ec7c1f027..1b8d309a5f1ff8d8753fb31b2499ce5343ff809e 100644
 --- a/compiler/rustc_session/src/filesearch.rs
 +++ b/compiler/rustc_session/src/filesearch.rs
-@@ -3,6 +3,7 @@
- use std::path::{Path, PathBuf};
- use std::{env, fs};
+@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
+ use std::sync::Arc;
+ use std::{env, fs, iter};
  
 +#[allow(unused)]
  use rustc_fs_util::try_canonicalize;
  use rustc_target::spec::Target;
  
-@@ -181,7 +182,8 @@ fn current_dll_path() -> Result<PathBuf, String> {
+@@ -258,8 +259,9 @@ pub unsafe fn dll_path(function: *mut std::ffi::c_void) -> Result<PathBuf, Strin
+ }
  
  #[cfg(target_os = "wasi")]
- fn current_dll_path() -> Result<PathBuf, String> {
--    Err("current_dll_path is not supported on WASI".to_string())
+-pub unsafe fn dll_path(function: *mut std::ffi::c_void) -> Result<PathBuf, String> {
+-    Err("dll_path is not supported on WASI".to_string())
++pub unsafe fn dll_path(_function: *mut std::ffi::c_void) -> Result<PathBuf, String> {
 +    // Matches the execution environment we will use.
 +    Ok(PathBuf::from("/sysroot/lib/x.wasm"))
  }
  
- /// This function checks if sysroot is found using env::args().next(), and if it
+ fn current_dll_path() -> Result<PathBuf, String> {
 diff --git a/compiler/rustc_session/src/output.rs b/compiler/rustc_session/src/output.rs
-index 9224368f90d6e4b7e71499cc20bdb032f5c25db1..0816a74e3dbb696fba4cb7b4dffb300c4ad58c1b 100644
+index e2eb46c4ca87897e73c0fd75843320ae5f4f3b42..fcb428c6029debf28d75b6760fb8c21cc6990170 100644
 --- a/compiler/rustc_session/src/output.rs
 +++ b/compiler/rustc_session/src/output.rs
-@@ -39,6 +39,11 @@ pub fn check_file_is_writeable(file: &Path, sess: &Session) {
+@@ -42,6 +42,11 @@ pub fn check_file_is_writeable(file: &Path, sess: &Session) {
  }
  
  fn is_writeable(p: &Path) -> bool {
@@ -2961,24 +2958,11 @@ index 0000000000000000000000000000000000000000..2f19d29ff61d503cbf5a09b5d3fcf080
 +        unreachable!("WASI cannot load dynamic symbols")
 +    }
 +}
-diff --git a/library/std/src/os/mod.rs b/library/std/src/os/mod.rs
-index a7ffd87d84d936b6a097562d061528cdf086ce79..8068f92bcc93cbcbc56d1e3758314f466006371b 100644
---- a/library/std/src/os/mod.rs
-+++ b/library/std/src/os/mod.rs
-@@ -54,7 +54,7 @@ pub mod windows {}
-         pub mod linux;
-     }
-     target_family = "wasm" => {
--        #[cfg(any(target_env = "p1", target_env = "p2"))]
-+        #[cfg(any(target_env = "p1", target_env = "p2", target_env = "p3"))]
-         pub mod wasi;
-         #[cfg(target_env = "p2")]
-         pub mod wasip2;
 diff --git a/library/std/src/os/wasi/mod.rs b/library/std/src/os/wasi/mod.rs
-index 2ee6aa4660094c23d1b0591ef4e787544f7c0841..2d383ce36449abce3304f35bb809fe569c87f8d6 100644
+index 1db9ec906726f89cadda683f35234dd4a5cf2a48..1902fda53e8229d93af06707654043815b94ca59 100644
 --- a/library/std/src/os/wasi/mod.rs
 +++ b/library/std/src/os/wasi/mod.rs
-@@ -28,8 +28,14 @@
+@@ -29,8 +29,14 @@
  //! [`OsStr`]: crate::ffi::OsStr
  //! [`OsString`]: crate::ffi::OsString
  
