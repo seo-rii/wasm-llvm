@@ -1,0 +1,294 @@
+{
+  "format": "tinygo043-escape-non-string-native-wasi-probe-v1",
+  "status": "passed",
+  "observedAt": "2026-10-28T01:45:52.983096+00:00",
+  "scope": "Native TinyGo 0.43.0 compiles a six-case Go 1.26 WASI fixture. The private fallback supplies LLVM escape evidence; an independent producer preflight exercises the exact production runtime patch. This does not qualify or promote the full TinyGo browser compiler.",
+  "toolchain": {
+    "tinygoVersion": "0.43.0",
+    "tinygoSourceCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+    "nativeLlvmVersion": "22.1.4",
+    "tinygoBinary": {
+      "bytes": 182693392,
+      "sha256": "678938bbd1815180a288d23764deeb04bf846b710dc7ed34ebbbf1e19e5a436a"
+    },
+    "goVersion": "1.26.10",
+    "goBinary": {
+      "bytes": 15456399,
+      "sha256": "9c2a37ae5b21ba1d5a004bb9ab4d0c64de6fc5778e9d30487adccea62678b8b5"
+    },
+    "wasmOptVersion": "133",
+    "wasmOptBinary": {
+      "bytes": 24088136,
+      "sha256": "91b12e03fb37bca7ede36d28b082a2898bc7ed676e9f738108493c0308a8d321"
+    },
+    "nodeVersion": "v24.22.1",
+    "nativePipeline": "Stock TinyGo WASI linker uses --lto-O2; bundled wasm-opt performs --asyncify -Oz -g. No external WASI SDK linker was used for these fixtures."
+  },
+  "fixture": {
+    "path": "fixtures/escape-non-string",
+    "files": [
+      {
+        "path": "main.go",
+        "bytes": 1830,
+        "sha256": "0c59a0491d85f97933995887fa908dec9969f94b9bc0843a37b9a3f9799f4b15"
+      },
+      {
+        "path": "go.mod",
+        "bytes": 49,
+        "sha256": "022fbdbeb391382fba83a038c10f7119b66feca671f454ccdf99e50ddeba7a33"
+      },
+      {
+        "path": "stdout.txt",
+        "bytes": 98,
+        "sha256": "245627d9fec98ae49f2192b5ff3f1944eb0cb73265d06eb82b2fc20ba0ecc94b"
+      }
+    ],
+    "cases": [
+      "pointer to local int",
+      "struct containing local pointer, string and int",
+      "interface containing local pointer",
+      "array of structs containing local pointer",
+      "scalar int",
+      "string"
+    ],
+    "assertion": "The same seed and value hash equally before and after 64 recursive calls, Gosched, and GC; pointee values remain valid. Scalar and string hashes also agree. Every failed invariant panics.",
+    "usesUnsafe": false,
+    "usesPointerToIntegerConversions": false
+  },
+  "experiment": {
+    "changedTinyGoSource": "src/internal/abi/escape.go",
+    "originalSource": {
+      "bytes": 1721,
+      "sha256": "62c028e217bfdfae376f75a32fecddd53a58aaf553941772161591d8d4957d80"
+    },
+    "candidateSource": {
+      "bytes": 1717,
+      "sha256": "fb7a44440db7732d8c74f9b12d2b688c279cac55671f373397a928d30d51824f"
+    },
+    "candidateBody": "func EscapeNonString[T any](v T) { _ = Escape(&v) }",
+    "candidatePatch": {
+      "bytes": 436,
+      "sha256": "4895b41b958c1c68c4b12966d7229b74bd9e0340397c23cdacb79562b0f40150"
+    },
+    "changedSourceFileCount": 1,
+    "nativeCompilerBinaryRebuilt": false,
+    "productionComparison": {
+      "patch": {
+        "path": "patches/tinygo-wasi-adapter.patch",
+        "bytes": 126759,
+        "sha256": "10417927eec0a7bcb0ecf0fe1e56abcf2d95c50715da50876717b287b3c905ae"
+      },
+      "patchedSource": {
+        "bytes": 1987,
+        "sha256": "c90a7f1ecebe462b7c2366680820ec05f4bd3320e937af15861d96e445fc2e69"
+      },
+      "differenceFromCandidate": "Comments and formatting only; the EscapeNonString function body is identical."
+    }
+  },
+  "build": {
+    "workingDirectory": "fixtures/escape-non-string",
+    "environment": {
+      "PATH": "<Go 1.26.10 root>/bin:<existing PATH>",
+      "GOROOT": "<Go 1.26.10 root>",
+      "GOVERSION": "go1.26.10",
+      "GOTOOLCHAIN": "local",
+      "TINYGOROOT": "<stock or patched TinyGo root>",
+      "WASMOPT": "<TinyGo 0.43.0 root>/bin/wasm-opt",
+      "GO111MODULE": "on",
+      "GOWORK": "off",
+      "GOENV": "off",
+      "GOFLAGS": "",
+      "GOMAXPROCS": "1",
+      "GOCACHE": "<private cache>",
+      "XDG_CACHE_HOME": "<private cache>",
+      "TMPDIR": "<private directory>"
+    },
+    "wasmCommand": [
+      "tinygo",
+      "build",
+      "-target=wasip1",
+      "-scheduler=asyncify",
+      "-gc=precise",
+      "-opt=z",
+      "-panic=print",
+      "-p=1",
+      "-no-debug",
+      "-work",
+      "-x",
+      "-o",
+      "<probe.wasm>",
+      "."
+    ],
+    "llvmCommand": [
+      "tinygo",
+      "build",
+      "-target=wasip1",
+      "-scheduler=asyncify",
+      "-gc=precise",
+      "-opt=z",
+      "-panic=print",
+      "-p=1",
+      "-print-allocs=main\\.",
+      "-o",
+      "<probe.ll>",
+      "."
+    ],
+    "runCommand": [
+      "node",
+      "--no-warnings",
+      "<run-wasi.mjs>",
+      "<probe.wasm>"
+    ],
+    "runWasiScript": "import { readFileSync } from 'node:fs';\nimport { WASI } from 'node:wasi';\nconst wasi = new WASI({ version: 'preview1', returnOnExit: true, args: ['probe.wasm'], env: {}, preopens: {} });\nconst module = await WebAssembly.compile(readFileSync(process.argv[2]));\nconst instance = await WebAssembly.instantiate(module, wasi.getImportObject());\nprocess.exitCode = wasi.start(instance);\n",
+    "privateToolchainCaches": true,
+    "childUmask": "022",
+    "compileTimeoutSeconds": 120,
+    "executionTimeoutSeconds": 10,
+    "minimumMemAvailableBytes": 4294967296
+  },
+  "baseline": {
+    "wasm": {
+      "bytes": 66046,
+      "sha256": "163ee261111f7b87dffe1a47419047a0d26821deffdfb39e8b0507d27b5c3cee"
+    },
+    "execution": {
+      "trap": "RuntimeError: unreachable",
+      "frame": "hash/maphash.Comparable[pointer:basic:int]",
+      "stdout": "before comparable\npanic: intrinsic\n",
+      "stderr": ""
+    }
+  },
+  "candidate": {
+    "wasm": {
+      "bytes": 66777,
+      "sha256": "0421e25c7418a7617559fa5e421c0a502b490e560064522d77b9c660ae879e0c"
+    },
+    "execution": {
+      "exitCode": 0,
+      "stdout": "before comparable\npointer true\nnested true\ninterface true\narray true\nscalar true\nstring true\ndone\n",
+      "stderr": ""
+    },
+    "llvmIR": {
+      "bytes": 2917278,
+      "sha256": "442908df19e764fa27ec34c6cda0a1b8b3ebc94159805519f9145e86fd7b455a"
+    }
+  },
+  "escapeEvidence": {
+    "pointeeHeapAllocations": [
+      {
+        "function": "main.pointerCase",
+        "localPointeeHeapBytes": 4,
+        "llvmLine": 12564,
+        "llvmInstruction": "%value = tail call fastcc align 4 dereferenceable(4) ptr @runtime.alloc(i32 4, ptr nonnull inttoptr (i32 3 to ptr)), !dbg !19137",
+        "pointerToIntegerConversionInFunction": false
+      },
+      {
+        "function": "main.nestedCase",
+        "localPointeeHeapBytes": 4,
+        "llvmLine": 12666,
+        "llvmInstruction": "%value = tail call fastcc align 4 dereferenceable(4) ptr @runtime.alloc(i32 4, ptr nonnull inttoptr (i32 3 to ptr)), !dbg !19224",
+        "pointerToIntegerConversionInFunction": false
+      },
+      {
+        "function": "main.interfaceCase",
+        "localPointeeHeapBytes": 4,
+        "llvmLine": 12793,
+        "llvmInstruction": "%value = tail call fastcc align 4 dereferenceable(4) ptr @runtime.alloc(i32 4, ptr nonnull inttoptr (i32 3 to ptr)), !dbg !19308",
+        "pointerToIntegerConversionInFunction": false
+      },
+      {
+        "function": "main.arrayCase",
+        "localPointeeHeapBytes": 4,
+        "llvmLine": 12907,
+        "llvmInstruction": "%value = tail call fastcc align 4 dereferenceable(4) ptr @runtime.alloc(i32 4, ptr nonnull inttoptr (i32 3 to ptr)), !dbg !19391",
+        "pointerToIntegerConversionInFunction": false
+      }
+    ],
+    "copyHeapAllocations": [
+      {
+        "specialization": "pointer:basic:int",
+        "copyHeapBytes": 4,
+        "llvmAllocationLine": 12611,
+        "llvmEscapeAsmLine": 12616
+      },
+      {
+        "specialization": "named:main.key",
+        "copyHeapBytes": 16,
+        "llvmAllocationLine": 12719,
+        "llvmEscapeAsmLine": 12734
+      },
+      {
+        "specialization": "interface:{}",
+        "copyHeapBytes": 8,
+        "llvmAllocationLine": 12847,
+        "llvmEscapeAsmLine": 12854
+      },
+      {
+        "specialization": "array:2:named:main.key",
+        "copyHeapBytes": 32,
+        "llvmAllocationLine": 12964,
+        "llvmEscapeAsmLine": 12995
+      },
+      {
+        "specialization": "basic:int",
+        "copyHeapBytes": 4,
+        "llvmAllocationLine": 13082,
+        "llvmEscapeAsmLine": 13087
+      },
+      {
+        "specialization": "basic:string",
+        "copyHeapBytes": 8,
+        "llvmAllocationLine": 13159,
+        "llvmEscapeAsmLine": 13166
+      }
+    ],
+    "mechanism": "The existing pointer-only Escape intrinsic receives &v. LLVM retains a heap-allocated copy of v and passes its pointer to side-effecting inline assembly with =r,0 constraints. In all four pointer-bearing cases the local pointee also has runtime.alloc(4); the fixture and those function bodies contain no pointer-to-integer conversion.",
+    "cost": "The conservative fallback allocates a copy even for pointer-free or string-only values. This wasm32 IR requests 4 extra payload bytes for int and 8 for string per Comparable call, before allocator rounding and other maphash allocations. String backing storage may also escape; this is not a performance benchmark."
+  },
+  "productionPreflight": {
+    "status": "passed",
+    "scope": "native TinyGo compiles the patched runtime ABI fixture for Node WASI; not browser compiler qualification",
+    "sourceSha256": "0c59a0491d85f97933995887fa908dec9969f94b9bc0843a37b9a3f9799f4b15",
+    "patchedEscapeSha256": "c90a7f1ecebe462b7c2366680820ec05f4bd3320e937af15861d96e445fc2e69",
+    "stockRejected": true,
+    "stockFailureStdout": "before comparable\npanic: intrinsic\n",
+    "command": [
+      "tinygo",
+      "build",
+      "-target=wasip1",
+      "-scheduler=asyncify",
+      "-gc=precise",
+      "-opt=z",
+      "-panic=print",
+      "-p=1",
+      "-o",
+      "<probe.wasm>",
+      "fixtures/escape-non-string/main.go"
+    ],
+    "wasm": {
+      "bytes": 501024,
+      "sha256": "09c6fc4b7e7df3dbf04091567bba9d6b4cd5152115bb520f51c1139265912635"
+    },
+    "execution": {
+      "exitCode": 0,
+      "stdout": "before comparable\npointer true\nnested true\ninterface true\narray true\nscalar true\nstring true\ndone\n",
+      "stdoutSha256": "245627d9fec98ae49f2192b5ff3f1944eb0cb73265d06eb82b2fc20ba0ecc94b",
+      "stderr": ""
+    },
+    "receipt": {
+      "bytes": 1897,
+      "sha256": "cf76824fdf3fb4530ef161455b32d368fd50f8c10fb31c6275b7af11d9861c8c"
+    }
+  },
+  "limitations": [
+    "TinyGo asyncify uses a fixed-size task stack. Recursion, scheduling and GC are exercised, but Go moving-stack growth is not reproduced. Heap allocation is established independently from LLVM IR.",
+    "The private experiment changes one ABI helper. Production preflight separately applies the runtime subset of the producer patch; the two Wasm artifacts are recorded separately.",
+    "Six selected type shapes and native WASI execution are evidence for this fallback, not a formal proof for every generic T or a full browser compiler acceptance run."
+  ],
+  "evidence": {
+    "file": "tinygo-intrinsic-20261028-evidence.tar.gz",
+    "bytes": 536663,
+    "sha256": "7700783a09177bb57db2bb95936685cbe89d16457ebf025670ec5a8a1bdca612",
+    "contents": "Exact fixture, baseline/fallback Wasm and captured output; complete fallback LLVM IR and allocation diagnostics; original/candidate/production helper sources and candidate patch; pinned compiler intrinsic source; independent production preflight receipt and Wasm."
+  }
+}

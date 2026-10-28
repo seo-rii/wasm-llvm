@@ -1,0 +1,335 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "Native execution of the exact patched TinyGo CGo target-normalization helper against real LLVM modules. This does not qualify a rebuilt TinyGo compiler or browser producer acceptance.",
+  "producerBeforeFix": "94ea78f21c8dcc9ed064b838552112881c469907",
+  "upstream": {
+    "tinygo": "0.43.0",
+    "tinygoCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+    "goLlvmCommit": "185673ef46a59528c40d0fdc220c6735606c0ebc",
+    "llvm": "22.1.4",
+    "go": "1.26.10"
+  },
+  "failure": {
+    "producerRunId": 40629290157,
+    "compilerExitCode": 0,
+    "acceptance": "failed: nonempty compiler stderr",
+    "warningCount": 2,
+    "diagnostic": "Linking two modules of different target triples",
+    "inputTargetTriple": "wasm32-unknown-wasip1",
+    "destinationTargetTriple": "wasm32-unknown-wasi",
+    "boundary": "builder/build.go parses each CGo header bitcode module and calls llvm.LinkModules(mod, headerMod). Canonical Clang frontend selection alone leaves this internal target spelling mismatch.",
+    "priorNativeProbe": "The previous minimal native CGo guest printed 42 with empty guest stderr, but native compilation emitted the same target-triple warning. The earlier receipt now distinguishes these scopes."
+  },
+  "patch": {
+    "path": "patches/tinygo-wasi-adapter.patch",
+    "sha256": "3310a45ec8cbb91c456dacb1d5742c8f49f7d39e831f1ac3fe3eb41c6bc82b90",
+    "helperPath": "builder/cgo_target.go",
+    "helper": {
+      "bytes": 1343,
+      "sha256": "8b236f87dcb7c797dcb7440e8d8ac39223f434916ca33389375758873e762273"
+    },
+    "executedHelper": {
+      "bytes": 1340,
+      "sha256": "3b1c3f4ab373d325bee98ad0b119b2d33150f5b0b93afa563e6d0cd3bdc3398f"
+    },
+    "helperTransformation": "Only package builder is renamed to package main; function and interface bytes are unchanged",
+    "callSite": "Immediately before llvm.LinkModules(mod, headerMod); dispose the source module and return on validation error.",
+    "policy": "For a Preview 1 destination, allow only the two exact wasm32-unknown-wasi / wasm32-unknown-wasip1 spellings and identical nonempty DataLayouts. Then change only the source module target spelling to match the destination. Preserve existing behavior for other destination architectures.",
+    "unchangedContracts": [
+      "Strict browser compiler stderr acceptance",
+      "Primary output target triple",
+      "Auxiliary C/C++ exact ABI and feature validation",
+      "Auxiliary inputTargetTriple provenance"
+    ],
+    "application": {
+      "status": "passed",
+      "sourceCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+      "verifiedCleanGitBlobs": 2293,
+      "adapterMirrorEqual": true,
+      "builderSha256": "d810875f81b7edd1a0522d4a1220c92fcb49587ae465878654b9c7a3c8b5f12a"
+    }
+  },
+  "nativeTools": {
+    "clang": "Pinned TinyGo 0.43.0 bundled Clang from the TinyGo LLVM 22.1.4 fork",
+    "nativeTinyGoBinary": {
+      "bytes": 182693392,
+      "sha256": "678938bbd1815180a288d23764deeb04bf846b710dc7ed34ebbbf1e19e5a436a"
+    },
+    "goBinary": {
+      "bytes": 15456399,
+      "sha256": "9c2a37ae5b21ba1d5a004bb9ab4d0c64de6fc5778e9d30487adccea62678b8b5"
+    },
+    "llvmLibrary": {
+      "distribution": "WASI SDK 33.0 x86_64 Linux",
+      "reportedVersion": "22.1.0",
+      "bytes": 61334888,
+      "sha256": "3baf077cc63ee5c6a30dfd185330fdd84a8a8c6f2748ec7aa4a767f723288cce"
+    },
+    "cc": {
+      "version": "x86_64-linux-gnu-gcc-12 (Debian 12.2.0-14+deb12u1) 12.2.0",
+      "bytes": 1301496,
+      "sha256": "75e997ec62297a6484f491bae28ab0ccb489daba23e398fd10fe68e9e6f0def8"
+    },
+    "scope": "The host C compiler builds only the small CGo bridge. The SDK shared library supplies the real LLVM parser/linker/verifier. The stock native TinyGo builder is not claimed to contain the new helper."
+  },
+  "inputs": {
+    "fixture": {
+      "path": "fixtures/cgo-module-link/main.go",
+      "bytes": 7580,
+      "sha256": "4b0aa1543b78233013799eb1fcf687083aa645bfe6cd341107fb84b34e7b4686"
+    },
+    "header": {
+      "path": "fixtures/cgo-module-link/header.c",
+      "bytes": 96,
+      "sha256": "a7b249a4b3036b913681f28beddc8834dd1a6cdcc85e7393a7f3a68eeb3794e4"
+    },
+    "preflight": {
+      "path": "scripts/probe-cgo-module-link.mjs",
+      "bytes": 7446,
+      "sha256": "bad4783cf41775c8d1890ace6b3e5ec0cd862f9b67ad001a038ad92498955ab8"
+    },
+    "bitcode": {
+      "bytes": 2932,
+      "sha256": "35a1cfca19c2aba40b39f95aa13549b7683eb06b1129290e6d98c05d13a49b5a"
+    },
+    "executable": {
+      "bytes": 2866376,
+      "sha256": "a4ce4ac7fe5a1adc9fa3f04fee711135fcfc984564e8c0d51c51bd8c17464848"
+    },
+    "dataLayout": "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
+  },
+  "realLlvmBoundary": {
+    "calls": [
+      "LLVMParseBitcodeInContext2",
+      "LLVMGetTarget",
+      "LLVMGetDataLayoutStr",
+      "LLVMSetTarget",
+      "LLVMLinkModules2",
+      "LLVMVerifyModule",
+      "LLVMGetNamedGlobal",
+      "LLVMGetInitializer",
+      "LLVMConstIntGetZExtValue",
+      "LLVMGetNamedFunction"
+    ],
+    "proof": "The production helper function and interface execute unchanged. The fixture implements the interface with real native LLVM C API calls. Accepted modules are linked and verified, and must retain the C global initializer 42 and named C function. Rejected modules are checked for unchanged target/layout and never reach LLVM linking.",
+    "notMocked": true
+  },
+  "commands": [
+    {
+      "name": "cc-version",
+      "exitCode": 0,
+      "signal": null,
+      "command": [
+        "<host-cc>",
+        "--version"
+      ],
+      "stdout": {
+        "bytes": 260,
+        "sha256": "ba4aa3688542d944b584afa84a6332469bed71c19d3c72e5bbdb069972d6db1d"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "clang",
+      "exitCode": 0,
+      "signal": null,
+      "command": [
+        "<native-tinygo-root>/bin/tinygo",
+        "clang",
+        "--target=wasm32-unknown-wasip1",
+        "-mcpu=generic",
+        "-mbulk-memory",
+        "-mnontrapping-fptoint",
+        "-mno-multivalue",
+        "-mno-reference-types",
+        "-msign-ext",
+        "-O1",
+        "-c",
+        "-emit-llvm",
+        "<producer-root>/fixtures/cgo-module-link/header.c",
+        "-o",
+        "<build-dir>/cgo-module-link-probe/header.bc"
+      ],
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "compile",
+      "exitCode": 0,
+      "signal": null,
+      "command": [
+        "<pinned-go-root>/bin/go",
+        "build",
+        "-o",
+        "<build-dir>/cgo-module-link-probe/module-link-probe",
+        "<build-dir>/cgo-module-link-probe/main.go",
+        "<build-dir>/cgo-module-link-probe/normalization.go"
+      ],
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "baseline",
+      "exitCode": 0,
+      "signal": null,
+      "command": [
+        "<build-dir>/cgo-module-link-probe/module-link-probe",
+        "baseline",
+        "<build-dir>/cgo-module-link-probe/header.bc",
+        "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
+      ],
+      "stdout": {
+        "bytes": 208,
+        "sha256": "37ad5fc1af00eda0980b3eec55d0be243d6dd8957296a26364e05fde01b8641b"
+      },
+      "stderr": {
+        "bytes": 207,
+        "sha256": "444173615fd49920838d6cdd615e4f15b3ed98ac37c2f45629d4140c68378945"
+      }
+    },
+    {
+      "name": "normalize",
+      "exitCode": 0,
+      "signal": null,
+      "command": [
+        "<build-dir>/cgo-module-link-probe/module-link-probe",
+        "normalize",
+        "<build-dir>/cgo-module-link-probe/header.bc",
+        "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20"
+      ],
+      "stdout": {
+        "bytes": 2008,
+        "sha256": "085c50d90cc4b0cb63702dbfae8db2a892c8427ab2b4a62c5b8fa8a28154a89f"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "baseline": {
+    "mode": "baseline",
+    "llvmVersion": "22.1.0",
+    "warningReproduced": true,
+    "stderrBytes": 207,
+    "purpose": "Intentional failing diagnostic control without normalization; not a qualifying compiler phase."
+  },
+  "normalized": {
+    "cases": [
+      {
+        "case": "legacy-destination",
+        "globalValue": 42,
+        "inputTarget": "wasm32-unknown-wasip1",
+        "linkedTarget": "wasm32-unknown-wasi",
+        "result": "linked-and-verified"
+      },
+      {
+        "case": "canonical-destination",
+        "globalValue": 42,
+        "inputTarget": "wasm32-unknown-wasi",
+        "linkedTarget": "wasm32-unknown-wasip1",
+        "result": "linked-and-verified"
+      },
+      {
+        "case": "same-legacy",
+        "globalValue": 42,
+        "inputTarget": "wasm32-unknown-wasi",
+        "linkedTarget": "wasm32-unknown-wasi",
+        "result": "linked-and-verified"
+      },
+      {
+        "case": "same-canonical",
+        "globalValue": 42,
+        "inputTarget": "wasm32-unknown-wasip1",
+        "linkedTarget": "wasm32-unknown-wasip1",
+        "result": "linked-and-verified"
+      },
+      {
+        "case": "preview2",
+        "inputTarget": "wasm32-unknown-wasip2",
+        "reason": "CGo header LLVM target \"wasm32-unknown-wasip2\" is incompatible with \"wasm32-unknown-wasi\"",
+        "result": "rejected-before-link"
+      },
+      {
+        "case": "wasm64",
+        "inputTarget": "wasm64-unknown-wasip1",
+        "reason": "CGo header LLVM target \"wasm64-unknown-wasip1\" is incompatible with \"wasm32-unknown-wasi\"",
+        "result": "rejected-before-link"
+      },
+      {
+        "case": "unknown-vendor",
+        "inputTarget": "wasm32-vendor-wasip1",
+        "reason": "CGo header LLVM target \"wasm32-vendor-wasip1\" is incompatible with \"wasm32-unknown-wasi\"",
+        "result": "rejected-before-link"
+      },
+      {
+        "case": "different-layout",
+        "inputTarget": "wasm32-unknown-wasip1",
+        "reason": "CGo header LLVM data layout \"e-m:e-p:64:64-i64:64-n32:64-S128\" differs from destination \"e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20\"",
+        "result": "rejected-before-link"
+      },
+      {
+        "case": "empty-header-layout",
+        "inputTarget": "wasm32-unknown-wasip1",
+        "reason": "CGo header LLVM data layout \"\" differs from destination \"e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20\"",
+        "result": "rejected-before-link"
+      },
+      {
+        "case": "empty-destination-layout",
+        "inputTarget": "wasm32-unknown-wasip1",
+        "reason": "CGo header LLVM data layout \"e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20\" differs from destination \"\"",
+        "result": "rejected-before-link"
+      }
+    ],
+    "llvmVersion": "22.1.0",
+    "mode": "normalize"
+  },
+  "productionPreflight": {
+    "entryPoint": "scripts/probe-cgo-module-link.mjs: probeCgoModuleLink",
+    "invocation": "await probeCgoModuleLink({ nativeTinyGo, nativeLlvmLibrary, sourceRoot: patchedTinyGoRoot, goRoot: pinnedGoRoot, buildDir, expectedDataLayout, environment, producerRoot })",
+    "placement": "After patched-root ABI and selected-source preflights, before host support and browser compiler compilation.",
+    "diagnostics": "Save phase stdout and stderr separately from process start. Require empty stderr for host compiler identity, Clang bitcode compilation, native bridge compilation, and normalized execution even when exitCode is zero. Preserve the intentional baseline warning separately.",
+    "timeoutsMilliseconds": {
+      "compile": 120000,
+      "execute": 10000
+    },
+    "cache": "Task-private GOCACHE with GOMAXPROCS=1; no full LLVM or native TinyGo rebuild.",
+    "receipts": "<build-dir>/cgo-module-link-probe/receipt.json and *.stdout / *.stderr; successful result also included in compiler build receipt."
+  },
+  "regressionCommands": [
+    "node --test producer/tinygo-browser/test/probe-cgo-module-link.test.mjs producer/tinygo-browser/test/tinygo-wasi-adapter.test.mjs producer/tinygo-browser/test/build-browser-compiler.test.mjs",
+    "node --test producer/tinygo-browser/test/*.test.mjs"
+  ],
+  "regressionResults": {
+    "focusedTests": 30,
+    "focusedFailed": 0,
+    "focusedExitCode": 0,
+    "allProducerTests": 79,
+    "allProducerFailed": 0,
+    "allProducerExitCode": 0,
+    "gitDiffCheckExitCode": 0,
+    "gofmtOutput": ""
+  },
+  "limitations": [
+    "The native LLVM shared library reports 22.1.0; the browser compiler uses the separately pinned TinyGo LLVM 22.1.4 fork. This is a real helper/link-boundary preflight, not proof that the patched browser artifact has passed.",
+    "The CGo fixture preserves a C initializer and function through real module linking and verification; it does not execute a newly built browser compiler.",
+    "The existing full producer acceptance must still rebuild the compiler and require exact expected fixture outputs and empty compiler stderr.",
+    "No warning suppression or relaxation of target ABI validation is applied."
+  ]
+}

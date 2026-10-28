@@ -40,6 +40,18 @@ function addedFile(patch, relativePath) {
 	return `${addedLines.join('\n')}\n`;
 }
 
+test('internal CGo module links execute the same checked helper as the native preflight', async () => {
+	const patch = await readFile(patchPath, 'utf8');
+	const helper = addedFile(patch, 'builder/cgo_target.go');
+	assert.match(helper, /func normalizeCGoHeaderTarget\(destination, header cgoHeaderModule\) error/u);
+	assert.match(patch,
+		/normalizeCGoHeaderTarget\(mod, headerMod\); err != nil \{\n\+\s+headerMod\.Dispose\(\)\n\+\s+return err\n\+\s+\}\n\s+err = llvm\.LinkModules\(mod, headerMod\)/u);
+	const preflight = await readFile(path.join(producerDir, 'scripts', 'probe-cgo-module-link.mjs'), 'utf8');
+	assert.match(preflight, /'builder', 'cgo_target\.go'/u);
+	assert.match(await readFile(path.join(producerDir, 'fixtures', 'cgo-module-link', 'main.go'), 'utf8'),
+		/normalizeCGoHeaderTarget\(destination, header\)/u);
+});
+
 test('the adapter delegates Go semantics to the upstream TinyGo builder', async () => {
 	const source = await readFile(adapterPath, 'utf8');
 
@@ -48,6 +60,7 @@ test('the adapter delegates Go semantics to the upstream TinyGo builder', async 
 	assert.match(source, /"github\.com\/tinygo-org\/tinygo\/cgo"/);
 	assert.match(source, /libclang/);
 	assert.match(source, /builder\.NewConfig\(/);
+	assert.match(source, /BuildVCS:\s+"false"/);
 	assert.match(source, /builder\.Build\([^;]*temporaryObject/s);
 	assert.doesNotMatch(source, /"go\/(?:ast|parser|scanner|token)"/);
 	assert.doesNotMatch(source, /\b(?:parseGo|lower|emitWasm|emitLLVM)\b/i);
@@ -121,6 +134,11 @@ test('target-native objects cross pinned LLVM validators before publication evid
 	assert.match(source, /compiler\.NewTargetMachine/);
 	assert.match(source, /context\.ParseBitcodeFile/);
 	assert.match(source, /llvm\.VerifyModule\(module, llvm\.ReturnStatusAction\)/);
+	assert.match(source, /if config\.Triple\(\) != wasmTargetTriple/);
+	assert.match(source, /InputTargetTriple\s+string\s+`json:"inputTargetTriple"`/);
+	assert.match(source, /validation\.InputTargetTriple = module\.Target\(\)/);
+	assert.match(source, /validateWasmPreview1LLVMTarget\(validation\.InputTargetTriple\)/);
+	assert.match(source, /case wasmTargetTriple, "wasm32-unknown-wasip1":/);
 	assert.match(source, /wasm32-unknown-wasi/);
 	assert.match(
 		source,
@@ -187,7 +205,7 @@ test('the request uses an explicit go-list graph and prebuilt runtime artifacts'
 	assert.match(source, /Clang WebAssembly \.S files/);
 });
 
-test('the upstream patch adapts only WASI host services and the wasm32 libclang ABI', async () => {
+test('the upstream patch adapts WASI services, runtime compatibility, and the wasm32 libclang ABI', async () => {
 	const patch = await readFile(patchPath, 'utf8');
 
 	assert.match(patch, /TINYGO_BROWSER_PACKAGE_JSON/);
@@ -203,6 +221,7 @@ test('the upstream patch adapts only WASI host services and the wasm32 libclang 
 	assert.match(patch, /diff --git a\/cgo\/libclang\.go/);
 	assert.match(patch, /diff --git a\/cgo\/libclang_stubs\.c/);
 	assert.match(patch, /tinygo_wasm_clang_getArgType/);
+	assert.match(patch, /tinygo_wasm_clang_getCanonicalType/);
 	assert.match(patch, /tinygo_clang_globals_visitor_bridge_ptr/);
 	assert.match(patch, /diff --git a\/builder\/jobs\.go/);
 	assert.match(patch, /type BuildAuxiliaryObject struct/);
@@ -213,7 +232,7 @@ test('the upstream patch adapts only WASI host services and the wasm32 libclang 
 	assert.match(patch, /runtime\.GOOS == "wasip1"/);
 	assert.match(patch, /RunTool\("clang"/);
 	assert.match(patch, /ValidateWasmObject/);
-	assert.match(patch, /sort\.Strings\(embedFileNames\)/);
+	assert.match(patch, /slices\.Sort\(embedNames\)/);
 	assert.match(patch, /SourceSHA256/);
 	assert.match(patch, /EmbeddedFileHash/);
 	assert.match(patch, /A WASI-hosted browser compiler has no process or thread service/);

@@ -1,0 +1,100 @@
+{
+  "format": "tinygo043-runtime-closure-exact-profile-probe-v1",
+  "status": "passed",
+  "scope": "Exact small producer runtime closure fixture, not full compiler qualification",
+  "tinygoCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+  "fixture": {
+    "path": "fixtures/runtime-closure-probe/main.go",
+    "bytes": 29,
+    "sha256": "55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566",
+    "text": "package main\n\nfunc main() {}\n"
+  },
+  "runtimePatch": {
+    "sha256": "d995f145877ecc3b53bfc9b108ebffff6234730d900fff19ae3c65a134cf23a3",
+    "appliedPaths": "src/runtime/*"
+  },
+  "command": [
+    "tinygo",
+    "build",
+    "-target=wasip1",
+    "-scheduler=asyncify",
+    "-gc=precise",
+    "-opt=1",
+    "-panic=print",
+    "-no-debug",
+    "-p=1",
+    "-x",
+    "-work",
+    "-o=runtime-closure-probe.wasm",
+    "."
+  ],
+  "profile": {
+    "id": "wasip1-asyncify-precise-o1",
+    "target": "wasip1",
+    "opt": "1",
+    "gc": "precise",
+    "panicStrategy": "print",
+    "scheduler": "asyncify",
+    "debug": false,
+    "parallelism": 1
+  },
+  "buildExitCode": 0,
+  "parsers": {
+    "beforeSha256": "ddac685024435d9137ac4ddd201714af093d019500deb6b5fe4c572afd9071f2",
+    "afterSha256": "4eebf25095f88b169d8e4e56c8567803dc8beb921ddb3b70b0b50ec9b451f0eb",
+    "results": {
+      "before": {
+        "passed": false,
+        "message": "runtime probe must emit 3 extra bitcode files"
+      },
+      "after": {
+        "passed": true
+      }
+    }
+  },
+  "extraFiles": [
+    {
+      "source": "src/runtime/asm_tinygowasm.S",
+      "path": "extra-0.o",
+      "format": "wasm-object",
+      "bytes": 790,
+      "sha256": "d89a826c25c66a5b4297e58ecfdebf8b3ea35f72681470338732b2215534100c"
+    },
+    {
+      "source": "src/internal/task/task_asyncify_wasm.S",
+      "path": "extra-1.o",
+      "format": "wasm-object",
+      "bytes": 2009,
+      "sha256": "9a64a59a554ed95abea210542bece29c7762b5dc849bf1e539723c66e78e75a7"
+    }
+  ],
+  "output": {
+    "path": "runtime-closure-probe.wasm",
+    "bytes": 30729,
+    "sha256": "a9ee495ab56ebf6f9f5fad4d639c7d7fb172d68833f4edbe71092d3f919e207e"
+  },
+  "run": {
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "(node:947685) ExperimentalWarning: WASI is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nmemoryBytes=262144\n"
+  },
+  "toolchain": "tinygo version 0.43.0 linux/amd64 (using go version go1.26.10 and LLVM version 22.1.4)",
+  "cacheIsolation": [
+    "XDG_CACHE_HOME",
+    "GOCACHE",
+    "TMPDIR"
+  ],
+  "bootstrap": {
+    "schemaVersion": 1,
+    "producerId": "wasm-llvm/tinygo-browser",
+    "manifestSha256": "7e413765ff84b573bbf3de3701d4fff7f964ee9cea971f9204d5e7b1b47f3621",
+    "inputs": {
+      "tinygo": {
+        "url": "https://github.com/tinygo-org/tinygo/releases/download/v0.43.0/tinygo0.43.0.linux-amd64.tar.gz",
+        "sha256": "ca9fc6d055e3889462dea4450a2e42a92242d88b5c362a7ec39bdb563413d78a",
+        "bytes": 186793787
+      }
+    },
+    "tools": {}
+  }
+}

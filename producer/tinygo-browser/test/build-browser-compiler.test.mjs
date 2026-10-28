@@ -47,7 +47,9 @@ const GO_LLVM_HOST_FILES = [
 	'SupportBindings.cpp',
 	'SupportBindings.h',
 	'backports.cpp',
-	'backports.h'
+	'backports.h',
+	'deprecated.c',
+	'deprecated.h'
 ];
 const HOST_ARCHIVES = [
 	{
@@ -94,15 +96,33 @@ function encodeUleb(value) {
 	return Buffer.from(bytes);
 }
 
-function wasmWithIdentity(strings) {
+function wasmWithIdentity(strings, imports = []) {
 	const name = Buffer.from('tinygo.provenance');
 	const payload = Buffer.from(strings.join('\0'));
 	const section = Buffer.concat([encodeUleb(name.length), name, payload]);
-	return Buffer.concat([
+	const identityModule = Buffer.concat([
 		WASM_HEADER,
 		Buffer.from([0x00]),
 		encodeUleb(section.length),
 		section
+	]);
+	if (imports.length === 0) return identityModule;
+	const importSection = Buffer.concat([
+		encodeUleb(imports.length),
+		...imports.flatMap(({ module, name }) => {
+			const moduleBytes = Buffer.from(module);
+			const nameBytes = Buffer.from(name);
+			return [
+				encodeUleb(moduleBytes.length), moduleBytes,
+				encodeUleb(nameBytes.length), nameBytes,
+				Buffer.from([0x00, 0x00])
+			];
+		})
+	]);
+	return Buffer.concat([
+		identityModule,
+		Buffer.from([0x01, 0x04, 0x01, 0x60, 0x00, 0x00]),
+		Buffer.from([0x02]), encodeUleb(importSection.length), importSection
 	]);
 }
 
@@ -169,6 +189,15 @@ async function createFixture() {
 		'.global tinygo_getCurrentStackPointer\n'
 	);
 	await writeFixtureFile(sourceRoot, 'src/runtime/runtime.go', 'package runtime\n');
+	await writeFixtureFile(sourceRoot, 'src/internal/abi/escape.go', 'package abi\n');
+	for (const name of ['triple_llvm22.go', 'features_llvm22.go']) {
+		await writeFixtureFile(sourceRoot, `compileopts/${name}`, 'package compileopts\n');
+	}
+	await writeFixtureFile(
+		sourceRoot,
+		'src/internal/task/task_asyncify_wasm.S',
+		'.global tinygo_task_start\n'
+	);
 
 	const goLlvmContents = new Map();
 	for (const relativePath of GO_LLVM_HOST_FILES) {
@@ -179,6 +208,7 @@ async function createFixture() {
 			(entry) => entry.path === relativePath
 		).sha256 = sha256(contents);
 	}
+	await writeFixtureFile(goLlvmSourceRoot, 'switch_llvm22.go', 'package llvm\n');
 
 	for (const relativePath of NATIVE_ROOT_FILES) {
 		await writeFixtureFile(nativeRoot, relativePath, tinyGoContents.get(relativePath));
@@ -443,7 +473,18 @@ function result({ exitCode = 0, stdout = '', stderr = '', signal = null } = {}) 
 
 function createCommandRunner(
 	fixture,
-	{ execute = false, badVersion = false, omitEmbedObject = false } = {}
+	{
+		execute = false,
+		badVersion = false,
+		omitEmbedObject = false,
+		conflictingEmbedObject = false,
+		failCompilerOptimizer = false,
+		missingWrapperSymbol = false,
+		failRootDiscovery = false,
+		invalidSourceSelection = '',
+		linkedImports = [],
+		preserveLinkedImports = false
+	} = {}
 ) {
 	const calls = [];
 	const runner = async (command, args, runOptions = {}) => {
@@ -461,7 +502,7 @@ function createCommandRunner(
 						'tinygo_cgo_unsigned.go',
 						'package llvm\n'
 					);
-				} else if (path.basename(runOptions.cwd) === 'tinygo-v0.40.1-wasi') {
+				} else if (path.basename(runOptions.cwd) === 'tinygo-v0.43.0-wasi') {
 					await writeFixtureFile(
 						runOptions.cwd,
 						'cmd/tinygo-browser-adapter/main.go',
@@ -482,8 +523,8 @@ function createCommandRunner(
 		if (command === fixture.nativeTinyGo && args[0] === 'version') {
 			return result({
 				stdout: badVersion
-					? 'go version go1.24.0 linux/amd64\n'
-					: 'tinygo version 0.40.1 linux/amd64 (using go version go1.24.0 and LLVM version 20.1.1)\n'
+					? 'go version go1.26.10 linux/amd64\n'
+					: 'tinygo version 0.43.0 linux/amd64 (using go version go1.26.10 and LLVM version 22.1.4)\n'
 			});
 		}
 		if (
@@ -504,6 +545,20 @@ function createCommandRunner(
 			return result({ stdout: 'wasm-opt version 123\n' });
 		}
 		if (!execute) throw new Error(`unexpected dry-run command: ${command} ${args.join(' ')}`);
+		if (command === fixture.wasmOpt) {
+			if (failCompilerOptimizer) return result({ exitCode: 1, stderr: 'optimizer failed' });
+			const outputIndex = args.indexOf('--output');
+			assert.ok(outputIndex > 0);
+			if (linkedImports.length && !preserveLinkedImports) {
+				await writeFile(args[outputIndex + 1], wasmWithIdentity(
+					fixture.contract.manifest.upstreamCompiler.requiredArtifactIdentityStrings,
+					linkedImports.filter((entry) => entry.module !== 'asyncify')
+				));
+			} else {
+				await cp(args[outputIndex - 1], args[outputIndex + 1]);
+			}
+			return result();
+		}
 		if (command === 'unzip') {
 			const extractRoot = path.join(
 				args[args.indexOf('-d') + 1],
@@ -547,6 +602,9 @@ function createCommandRunner(
 		}
 		if (command === fixture.tools.ranlib) return result();
 		if (command === fixture.tools.nm) {
+			if (path.basename(args[1]) === 'go-llvm-deprecated-c-api.o') {
+				return result({ stdout: missingWrapperSymbol ? '' : '00000000 T LLVMGetGlobalContext_wrap\n' });
+			}
 			return result({
 				stdout: Object.values(HOST_ARCHIVES)
 					.flatMap((archive) => archive.requiredSymbols)
@@ -555,8 +613,43 @@ function createCommandRunner(
 			});
 		}
 		if (command === fixture.nativeTinyGo && args[0] === 'list') {
+			assert.equal(
+				runOptions.env.PATH.split(path.delimiter)[0],
+				path.join(runOptions.env.GOROOT, 'bin'),
+				'native TinyGo invokes go from PATH; GOROOT and GOVERSION alone are insufficient'
+			);
+			assert.equal(runOptions.env.GOTOOLCHAIN, 'local');
+			if (args.at(-1) !== 'runtime') {
+				const targetPath = args.find((arg) => arg.startsWith('-target=')).slice(8);
+				const target = JSON.parse(await readFile(targetPath, 'utf8'));
+				assert.ok(args.includes(`-tags=${target['build-tags'].join(' ')}`));
+				assert.ok(target['build-tags'].includes('llvm22'));
+				assert.equal(runOptions.env.GOWORK, path.join(fixture.buildDir, 'go.work'));
+				const importPath = args.at(-1);
+				const packageFiles = importPath.endsWith('/compileopts')
+					? {
+						Dir: path.join(runOptions.env.TINYGOROOT, 'compileopts'),
+						GoFiles: [invalidSourceSelection === 'pre22-triple' ? 'triple_pre22.go' : 'triple_llvm22.go', 'features_llvm22.go']
+					}
+					: importPath === 'tinygo.org/x/go-llvm'
+						? {
+							Dir: path.join(fixture.buildDir, 'go-llvm-wasi'),
+							CgoFiles: [invalidSourceSelection === 'pre22-switch' ? 'switch_pre22.go' : 'switch_llvm22.go']
+						}
+						: {
+							Dir: path.join(runOptions.env.TINYGOROOT, 'cgo'),
+							CgoFiles: ['libclang.go', ...(invalidSourceSelection === 'system-llvm-linkage' ? ['libclang_config_llvm22.go'] : [])]
+						};
+				return result({ stdout: JSON.stringify({ ImportPath: importPath, ...packageFiles }) });
+			}
+			if (failRootDiscovery) return result({ exitCode: 1, stderr: 'wrong native Go version' });
 			const mergedRoot = path.join(fixture.root, 'merged-goroot');
 			await mkdir(path.join(mergedRoot, 'src'), { recursive: true });
+			await symlink(
+				path.join(runOptions.env.TINYGOROOT, 'src', 'internal'),
+				path.join(mergedRoot, 'src', 'internal'),
+				'dir'
+			);
 			await symlink(
 				path.join(runOptions.env.TINYGOROOT, 'src', 'runtime'),
 				path.join(mergedRoot, 'src', 'runtime'),
@@ -581,6 +674,8 @@ function createCommandRunner(
 			args[0] === 'build' &&
 			args.includes('-x')
 		) {
+			assert.equal(runOptions.env.PATH.split(path.delimiter)[0], path.join(runOptions.env.GOROOT, 'bin'));
+			assert.equal(runOptions.env.GOTOOLCHAIN, 'local');
 			const output = args.find((argument) => argument.startsWith('-o=')).slice(3);
 			await writeFixtureFile(path.dirname(output), path.basename(output), WASM_HEADER);
 			const runtimeCache = path.join(fixture.root, 'runtime-cache');
@@ -592,7 +687,6 @@ function createCommandRunner(
 			const extraFiles = await Promise.all(
 				[
 					['asm-tinygowasm.bc', WASM_HEADER],
-					['gc-boehm.bc', LLVM_BITCODE_HEADER],
 					['task-asyncify-wasm.bc', WASM_HEADER]
 				].map(
 					([name, header]) =>
@@ -627,9 +721,23 @@ function createCommandRunner(
 			if (!omitEmbedObject) {
 				await writeFixtureFile(
 					path.join(runOptions.env.TMPDIR, 'tinygo-fixture'),
-					'embed-7ce70651d3f6149edd504627b500a7e5-123.o',
-					Buffer.concat([WASM_HEADER, Buffer.from('fixture embed object')])
+					'embed-7ce70651d3f6149edd504627b500a7e5-a123456789abcdef.o',
+					Buffer.concat([WASM_HEADER, Buffer.from('fixture embed object, source a')])
 				);
+				// Equal payloads at different source paths have different DWARF and
+				// source-path hashes; upstream includes both objects in the link.
+				await writeFixtureFile(
+					path.join(runOptions.env.TMPDIR, 'tinygo-fixture'),
+					'embed-7ce70651d3f6149edd504627b500a7e5-b123456789abcdef.o',
+					Buffer.concat([WASM_HEADER, Buffer.from('fixture embed object, source b')])
+				);
+				if (conflictingEmbedObject) {
+					await writeFixtureFile(
+						path.join(runOptions.env.TMPDIR, 'tinygo-other'),
+						'embed-7ce70651d3f6149edd504627b500a7e5-a123456789abcdef.o',
+						Buffer.concat([WASM_HEADER, Buffer.from('conflicting embed object')])
+					);
+				}
 			}
 			return result();
 		}
@@ -639,7 +747,8 @@ function createCommandRunner(
 				path.dirname(output),
 				path.basename(output),
 				wasmWithIdentity(
-					fixture.contract.manifest.upstreamCompiler.requiredArtifactIdentityStrings
+					fixture.contract.manifest.upstreamCompiler.requiredArtifactIdentityStrings,
+					linkedImports
 				)
 			);
 			return result();
@@ -710,15 +819,14 @@ test('parses a dry-run plan and rejects a standard Go compiler path', async () =
 
 test('extracts the exact TinyGo runtime closure from one linker trace', () => {
 	const closure = parseTinyGoRuntimeLinkTrace(
-		'/opt/wasm-ld /tmp/main.o /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/gc.bc /cache/task.bc /cache/wasi-libc-profile/lib.a -o out.wasm\n'
+		'/opt/wasm-ld /tmp/main.o /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/task.bc /cache/wasi-libc-profile/lib.a -o out.wasm\n'
 	);
 	assert.equal(closure.compilerRT, '/cache/compiler-rt-profile/lib.a');
 	assert.equal(closure.wasiLibc, '/cache/wasi-libc-profile/lib.a');
-	assert.deepEqual(Object.values(closure.extraFiles), [
-		'/cache/asm.bc',
-		'/cache/gc.bc',
-		'/cache/task.bc'
-	]);
+	assert.deepEqual(closure.extraFiles, {
+		'src/runtime/asm_tinygowasm.S': '/cache/asm.bc',
+		'src/internal/task/task_asyncify_wasm.S': '/cache/task.bc'
+	});
 	assert.throws(
 		() => parseTinyGoRuntimeLinkTrace(''),
 		/exactly one wasm-ld command/u
@@ -728,7 +836,14 @@ test('extracts the exact TinyGo runtime closure from one linker trace', () => {
 			parseTinyGoRuntimeLinkTrace(
 				'/opt/wasm-ld /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/wasi-libc-profile/lib.a\n'
 			),
-		/3 extra bitcode files/u
+		/2 extra bitcode files/u
+	);
+	assert.throws(
+		() => parseTinyGoRuntimeLinkTrace(
+			'/opt/wasm-ld /cache/compiler-rt-profile/lib.a /cache/asm.bc /cache/gc.bc /cache/task.bc /cache/wasi-libc-profile/lib.a\n'
+		),
+		/2 extra bitcode files/u,
+		'the precise profile must reject the old Boehm runtime input'
 	);
 });
 
@@ -774,6 +889,24 @@ test('validates passed LLVM, Clang, libclang, LLD, and host-support requirements
 		() => validateLlvmWasiReceipt(stubsAllowed, { contract: fixture.contract }),
 		/six upstream C\+\+ translation units/u
 	);
+});
+
+test('selects LLVM-version-specific sources for the compiler bootstrap and its preflight', async () => {
+	const fixture = await createFixture();
+	const receipt = await createBrowserCompilerBuildPlan(fixture.options, {
+		contract: fixture.contract,
+		verifySource: async () => fixture.sourceReceipt
+	});
+	const llvmTag = `llvm${fixture.contract.lock.llvm.version.split('.')[0]}`;
+	assert.ok(receipt.build.targetConfig['build-tags'].includes(llvmTag),
+		'byollvm does not enable TinyGo/Go-LLVM LLVM-version-specific implementations');
+	const tagArgument = `-tags=${receipt.build.targetConfig['build-tags'].join(' ')}`;
+	assert.ok(receipt.build.command.includes(tagArgument));
+	assert.ok(receipt.build.sourceSelection.checks.every((check) => check.command.includes(tagArgument)));
+	assert.deepEqual(receipt.build.sourceSelection.checks.slice(0, 2).map((check) => check.requiredFiles), [
+		['triple_llvm22.go', 'features_llvm22.go'],
+		['switch_llvm22.go']
+	]);
 });
 
 test('plans only the real upstream adapter with deterministic C++ host-support archives', async () => {
@@ -851,10 +984,11 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	assert.ok(
 		receipt.build.command.includes('./cmd/tinygo-browser-adapter')
 	);
-	assert.equal(receipt.build.targetConfig.scheduler, 'none');
+	assert.equal(receipt.build.targetConfig.scheduler, 'asyncify');
 	assert.equal(receipt.build.targetConfig['default-stack-size'], 8 * 1024 * 1024);
 	assert.deepEqual(receipt.build.targetConfig['build-tags'], [
 		'byollvm',
+		'llvm22',
 		'osusergo',
 		'tinygo.browsercompiler'
 	]);
@@ -866,8 +1000,13 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 	assert.ok(receipt.build.linkCommand.includes('--max-memory=1342177280'));
 	assert.deepEqual(
 		receipt.hostSupport.compilerObjects.inputs.map((object) => object.id),
-		['tinygo-runtime-stack', 'tinygo-libclang-abi']
+		['tinygo-runtime-stack', 'tinygo-asyncify-tasks', 'tinygo-libclang-abi', 'go-llvm-deprecated-c-api']
 	);
+	const wrapper = receipt.hostSupport.compilerObjects.inputs.at(-1);
+	assert.equal(wrapper.source, path.join(receipt.paths.patchedGoLlvmRoot, 'deprecated.c'));
+	assert.equal(wrapper.compileCommand[wrapper.compileCommand.indexOf('-x') + 1], 'c');
+	assert.ok(wrapper.compileCommand.includes('-std=c11'));
+	assert.deepEqual(wrapper.requiredSymbols, ['LLVMGetGlobalContext_wrap']);
 	assert.ok(
 		receipt.hostSupport.compilerObjects.inputs.every((object) =>
 			receipt.build.linkCommand.includes(object.path)
@@ -879,7 +1018,7 @@ test('plans only the real upstream adapter with deterministic C++ host-support a
 		)
 	);
 	assert.ok(!receipt.build.command.includes('go'));
-	assert.equal(receipt.goLlvmSource.files.length, 6);
+	assert.equal(receipt.goLlvmSource.files.length, 8);
 	assert.match(receipt.llvm.compilerRtBuiltins.source.sha256, /^[0-9a-f]{64}$/u);
 });
 
@@ -897,7 +1036,7 @@ test('dry-run verifies the native TinyGo binary/root and writes no build artifac
 	assert.equal(receipt.goLlvmSource.patch.status, 'applicable');
 	assert.equal(receipt.goToolchain.archive.path, fixture.goToolchainArchive);
 	assert.match(receipt.nativeLinker.version, /^LLD 21\.0\.0/u);
-	assert.match(receipt.nativeTinyGo.version, /^tinygo version 0\.40\.1/u);
+	assert.match(receipt.nativeTinyGo.version, /^tinygo version 0\.43\.0/u);
 	assert.match(receipt.nativeTinyGo.binary.sha256, /^[0-9a-f]{64}$/u);
 	assert.deepEqual(
 		receipt.nativeTinyGo.rootIdentity.map((entry) => entry.path),
@@ -938,6 +1077,8 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	const receipt = await buildBrowserCompiler(fixture.options, {
 		contract: fixture.contract,
 		verifySource: async () => fixture.sourceReceipt,
+		probeAbiEscape: async () => ({ status: 'passed' }),
+		probeCgoLink: async () => ({ status: 'passed' }),
 		run: runner,
 		copySource: copyPatchedSource
 	});
@@ -948,7 +1089,8 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(receipt.hostSupport.status, 'passed');
 	assert.equal(receipt.hostSupport.outputs.length, 2);
 	assert.equal(receipt.hostSupport.compilerObjects.status, 'passed');
-	assert.equal(receipt.hostSupport.compilerObjects.outputs.length, 2);
+	assert.equal(receipt.hostSupport.compilerObjects.outputs.length, 4);
+	assert.deepEqual(receipt.hostSupport.compilerObjects.outputs.at(-1).requiredSymbols, ['LLVMGetGlobalContext_wrap']);
 	await access(
 		path.join(
 			receipt.nativeTinyGo.clangResource.archivePath,
@@ -977,10 +1119,10 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 			(output) => output.bytes === 15 && /^[0-9a-f]{64}$/u.test(output.sha256)
 		)
 	);
-	assert.equal(calls.filter((call) => call.command === fixture.tools.cxx).length, 8);
+	assert.equal(calls.filter((call) => call.command === fixture.tools.cxx).length, 10);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.ar).length, 5);
 	assert.equal(calls.filter((call) => call.command === fixture.tools.ranlib).length, 3);
-	assert.equal(calls.filter((call) => call.command === fixture.tools.nm).length, 2);
+	assert.equal(calls.filter((call) => call.command === fixture.tools.nm).length, 3);
 	const buildCall = calls.find(
 		(call) =>
 			call.command === fixture.nativeTinyGo &&
@@ -990,12 +1132,30 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.equal(buildCall.runOptions.env.WASMOPT, fixture.wasmOpt);
 	assert.equal(buildCall.runOptions.env.TINYGOROOT, receipt.paths.patchedSourceRoot);
 	assert.equal(buildCall.runOptions.env.GOROOT, receipt.paths.goToolchainRoot);
-	assert.equal(buildCall.runOptions.env.GOVERSION, 'go1.24.6');
+	assert.equal(buildCall.runOptions.env.GOVERSION, 'go1.26.10');
 	assert.equal(buildCall.runOptions.env.GOWORK, receipt.paths.goWorkPath);
+	assert.equal(buildCall.runOptions.env.XDG_CACHE_HOME, path.join(fixture.buildDir, 'xdg-cache'));
+	assert.equal(
+		(await readFile(receipt.paths.goWorkPath, 'utf8')).split('\n')[0],
+		'go 1.26.10',
+		'the build workspace must accept the pinned TinyGo module Go requirement'
+	);
 	const linkCall = calls.find(
 		(call) => call.command === fixture.nativeWasmLd && call.args[0] !== '--version'
 	);
 	assert.ok(linkCall.args.includes(receipt.paths.compilerBitcodePath));
+	assert.equal(linkCall.args[linkCall.args.indexOf('-o') + 1], receipt.paths.unoptimizedCompilerPath);
+	const optimizerCall = calls.find(
+		(call) => call.command === fixture.wasmOpt && call.args[0] === '--asyncify'
+	);
+	assert.deepEqual(optimizerCall.args, [
+		'--asyncify', '-Oz', '-g', receipt.paths.unoptimizedCompilerPath,
+		'--output', receipt.paths.compilerPath
+	]);
+	assert.ok(calls.indexOf(optimizerCall) > calls.indexOf(linkCall));
+	assert.equal(receipt.build.compilerOptimization.status, 'passed');
+	assert.equal(receipt.build.compilerOptimization.input.path, receipt.paths.unoptimizedCompilerPath);
+	assert.equal(receipt.build.compilerOptimization.output.path, receipt.paths.compilerPath);
 	assert.ok(
 		receipt.hostSupport.compilerObjects.outputs.every((object) =>
 			linkCall.args.includes(object.path)
@@ -1006,12 +1166,20 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		[
 			path.join(
 				receipt.paths.hostLinkInputDir,
-				'embed-7ce70651d3f6149edd504627b500a7e5.o'
+				'embed-7ce70651d3f6149edd504627b500a7e5-a123456789abcdef.o'
+			),
+			path.join(
+				receipt.paths.hostLinkInputDir,
+				'embed-7ce70651d3f6149edd504627b500a7e5-b123456789abcdef.o'
 			)
 		]
 	);
 	assert.ok(
-		linkCall.args.includes(receipt.build.generatedEmbedObjects.outputs[0].path)
+		receipt.build.generatedEmbedObjects.outputs.every((output) => linkCall.args.includes(output.path))
+	);
+	assert.deepEqual(
+		receipt.build.generatedEmbedObjects.outputs.map((output) => output.sourcePathHash),
+		['a123456789abcdef', 'b123456789abcdef']
 	);
 	assert.ok(linkCall.args.includes('stack-size=8388608'));
 	assert.ok(linkCall.args.includes('--max-memory=1342177280'));
@@ -1025,12 +1193,21 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		await readFile(receipt.paths.targetConfigPath, 'utf8')
 	);
 	assert.ok(targetConfig.ldflags.includes(receipt.hostSupport.outputs[0].path));
-	assert.equal(targetConfig.scheduler, 'none');
+	assert.equal(targetConfig.scheduler, 'asyncify');
+	assert.equal(receipt.build.sourceSelection.status, 'passed');
+	assert.equal(receipt.build.sourceSelection.results.length, 3);
+	assert.ok(receipt.build.sourceSelection.results.every((result) =>
+		result.identities.every((identity) => /^[a-f0-9]{64}$/u.test(identity.sha256))));
+	for (const call of calls.filter((call) =>
+		call.command === fixture.nativeTinyGo && (call.args[0] === 'build' || call.args[0] === 'list')
+	)) {
+		assert.equal(call.runOptions.env.XDG_CACHE_HOME, path.join(fixture.buildDir, 'xdg-cache'));
+	}
 	assert.match(receipt.hostSupport.filteredWasiLibc.sha256, /^[0-9a-f]{64}$/u);
 	assert.equal(receipt.rootArchive.mergedGoRoot.status, 'passed');
 	assert.deepEqual(
 		receipt.rootArchive.mergedGoRoot.identity.map((entry) => entry.id),
-		['tinygo-runtime', 'go-standard-library', 'go-environment']
+		['tinygo-runtime', 'tinygo-abi-escape', 'go-standard-library', 'go-environment']
 	);
 	assert.equal(receipt.rootArchive.runtimeClosure.status, 'passed');
 	assert.equal(receipt.rootArchive.cgoHeaderClosure.status, 'passed');
@@ -1058,7 +1235,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 				receipt.rootArchive.runtimeClosure.manifest.value.extraFiles
 			)
 		].map((asset) => asset.id),
-		['compiler-rt', 'wasi-libc', 'libcxx', 'libcxxabi', 'extra-0', 'extra-1', 'extra-2']
+		['compiler-rt', 'wasi-libc', 'libcxx', 'libcxxabi', 'extra-0', 'extra-1']
 	);
 	assert.deepEqual(
 		Object.values(
@@ -1066,8 +1243,7 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 		).map((asset) => [asset.path, asset.format]),
 		[
 			['runtime/wasip1-asyncify-precise-o1/extra-0.o', 'wasm-object'],
-			['runtime/wasip1-asyncify-precise-o1/extra-1.bc', 'llvm-bitcode'],
-			['runtime/wasip1-asyncify-precise-o1/extra-2.o', 'wasm-object']
+			['runtime/wasip1-asyncify-precise-o1/extra-1.o', 'wasm-object']
 		]
 	);
 	const tarCall = calls.find((call) => call.command === 'tar');
@@ -1082,6 +1258,205 @@ test('simulates upstream C++, runtime, libclang ABI objects, and the TinyGo buil
 	assert.deepEqual(JSON.parse(await readFile(fixture.receiptPath, 'utf8')), receipt);
 });
 
+test('rejects merged root discovery before compiling or optimizing the browser compiler', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, {
+		execute: true,
+		failRootDiscovery: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/native TinyGo merged GOROOT discovery failed: wrong native Go version/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
+test('rejects obsolete LLVM source choices before host support and compiler compilation', async () => {
+	for (const invalidSourceSelection of ['pre22-triple', 'pre22-switch', 'system-llvm-linkage']) {
+		const fixture = await createFixture();
+		fixture.options.execute = true;
+		const { calls, runner } = createCommandRunner(fixture, { execute: true, invalidSourceSelection });
+		await assert.rejects(buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		}), /native TinyGo compiler source selection (?:is missing|retained an incompatible)/u);
+		assert.ok(!calls.some((call) => call.command === fixture.tools.cxx));
+		assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+		assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+		assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+	}
+});
+
+test('rejects ABI escape regressions before host support and compiler compilation', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, { execute: true });
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			run: runner,
+			copySource: copyPatchedSource,
+			probeAbiEscape: async ({ environment }) => {
+				assert.equal(environment.PATH.split(path.delimiter)[0], path.join(environment.GOROOT, 'bin'));
+				assert.equal(environment.GOTOOLCHAIN, 'local');
+				assert.equal(environment.TINYGOROOT, path.join(fixture.buildDir, 'tinygo-v0.43.0-wasi'));
+				throw new Error('TinyGo ABI escape probe failed: panic: intrinsic');
+			}
+		}),
+		/TinyGo ABI escape probe failed: panic: intrinsic/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.tools.cxx));
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
+test('rejects native CGo module-link diagnostics before host support and compiler compilation', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, { execute: true });
+	await assert.rejects(buildBrowserCompiler(fixture.options, {
+		contract: fixture.contract,
+		verifySource: async () => fixture.sourceReceipt,
+		probeAbiEscape: async () => ({ status: 'passed' }),
+		probeCgoLink: async ({ nativeTinyGo, sourceRoot, environment, expectedDataLayout }) => {
+			assert.equal(nativeTinyGo, fixture.nativeTinyGo);
+			assert.equal(sourceRoot, environment.TINYGOROOT);
+			assert.equal(expectedDataLayout, fixture.contract.manifest.compileProtocol.targetNativeValidation.dataLayout);
+			throw new Error('CGo module-link normalize emitted stderr: Linking two modules of different target triples');
+		},
+		run: runner,
+		copySource: copyPatchedSource
+	}), /CGo module-link normalize emitted stderr/u);
+	assert.ok(!calls.some((call) => call.command === fixture.tools.cxx));
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
+test('rejects a missing go-llvm wrapper definition before building compiler bitcode', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, {
+		execute: true,
+		missingWrapperSymbol: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/go-llvm-deprecated-c-api is missing required upstream symbol LLVMGetGlobalContext_wrap/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.nativeTinyGo && call.args[0] === 'build'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
+for (const unresolvedImport of [
+	{ module: 'env', name: 'LLVMGetGlobalContext_wrap' },
+	{ module: 'asyncify', name: 'unexpected' }
+]) {
+	test(`rejects ${unresolvedImport.module}.${unresolvedImport.name} before optimizing compiler`, async () => {
+		const fixture = await createFixture();
+		fixture.options.execute = true;
+		const { calls, runner } = createCommandRunner(fixture, {
+			execute: true,
+			linkedImports: [unresolvedImport]
+		});
+		await assert.rejects(
+			buildBrowserCompiler(fixture.options, {
+				contract: fixture.contract,
+				verifySource: async () => fixture.sourceReceipt,
+				probeAbiEscape: async () => ({ status: 'passed' }),
+				probeCgoLink: async () => ({ status: 'passed' }),
+				run: runner,
+				copySource: copyPatchedSource
+			}),
+			/unresolved imports before optimization/u
+		);
+		assert.ok(!calls.some((call) => call.command === fixture.wasmOpt && call.args[0] !== '--version'));
+		const failed = JSON.parse(await readFile(fixture.receiptPath, 'utf8'));
+		assert.equal(failed.status, 'failed');
+		assert.deepEqual(failed.build.compilerOptimization.inputImports, [{ ...unresolvedImport, kind: 'function' }]);
+		await assert.rejects(access(failed.paths.compilerPath), /ENOENT/u);
+	});
+}
+
+test('allows upstream Asyncify intrinsics before optimization and requires their removal afterward', async () => {
+	const linkedImports = [
+		{ module: 'wasi_snapshot_preview1', name: 'fd_write' },
+		...['start_unwind', 'stop_unwind', 'start_rewind', 'stop_rewind'].map((name) => ({ module: 'asyncify', name }))
+	];
+	for (const preserveLinkedImports of [false, true]) {
+		const fixture = await createFixture();
+		fixture.options.execute = true;
+		const { runner } = createCommandRunner(fixture, {
+			execute: true,
+			linkedImports,
+			preserveLinkedImports
+		});
+		const build = buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		});
+		if (preserveLinkedImports) {
+			await assert.rejects(build, /browser compiler retains non-WASI imports: asyncify.start_unwind/u);
+		} else {
+			const receipt = await build;
+			assert.equal(receipt.status, 'passed');
+			assert.equal(receipt.build.compilerOptimization.inputImports.length, 5);
+			assert.deepEqual(receipt.build.imports, [{ ...linkedImports[0], kind: 'function' }]);
+		}
+	}
+});
+
+test('rejects a failed compiler asyncify transformation before publishing assets', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { runner } = createCommandRunner(fixture, {
+		execute: true,
+		failCompilerOptimizer: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/compiler asyncify transformation failed with 1/u
+	);
+	const failed = JSON.parse(await readFile(fixture.receiptPath, 'utf8'));
+	assert.equal(failed.status, 'failed');
+	assert.equal(failed.build.compilerOptimization.status, 'planned');
+	await assert.rejects(access(failed.paths.compilerPath), /ENOENT/u);
+});
+
 test('fails closed when TinyGo omits generated embed objects from the external link handoff', async () => {
 	const fixture = await createFixture();
 	fixture.options.execute = true;
@@ -1093,6 +1468,8 @@ test('fails closed when TinyGo omits generated embed objects from the external l
 		buildBrowserCompiler(fixture.options, {
 			contract: fixture.contract,
 			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
 			run: runner,
 			copySource: copyPatchedSource
 		}),
@@ -1104,6 +1481,28 @@ test('fails closed when TinyGo omits generated embed objects from the external l
 	);
 });
 
+test('rejects conflicting embed objects with the same content and source-path identity', async () => {
+	const fixture = await createFixture();
+	fixture.options.execute = true;
+	const { calls, runner } = createCommandRunner(fixture, {
+		execute: true,
+		conflictingEmbedObject: true
+	});
+	await assert.rejects(
+		buildBrowserCompiler(fixture.options, {
+			contract: fixture.contract,
+			verifySource: async () => fixture.sourceReceipt,
+			probeAbiEscape: async () => ({ status: 'passed' }),
+			probeCgoLink: async () => ({ status: 'passed' }),
+			run: runner,
+			copySource: copyPatchedSource
+		}),
+		/conflicting embed objects for 7ce70651d3f6149edd504627b500a7e5-a123456789abcdef/u
+	);
+	assert.ok(!calls.some((call) => call.command === fixture.nativeWasmLd && call.args[0] !== '--version'));
+	assert.equal(JSON.parse(await readFile(fixture.receiptPath, 'utf8')).status, 'failed');
+});
+
 test('fails closed on bootstrap impersonation, go-llvm drift, and unsafe receipts', async () => {
 	const badBootstrap = await createFixture();
 	const badRunner = createCommandRunner(badBootstrap, { badVersion: true });
@@ -1113,7 +1512,7 @@ test('fails closed on bootstrap impersonation, go-llvm drift, and unsafe receipt
 			verifySource: async () => badBootstrap.sourceReceipt,
 			run: badRunner.runner
 		}),
-		/native compiler must be TinyGo 0\.40\.1 with LLVM 20/u
+		/native compiler must be TinyGo 0\.43\.0 with LLVM 22/u
 	);
 	assert.equal(
 		JSON.parse(await readFile(badBootstrap.receiptPath, 'utf8')).status,

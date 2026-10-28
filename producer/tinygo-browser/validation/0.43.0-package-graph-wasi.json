@@ -1,0 +1,173 @@
+{
+  "format": "tinygo043-package-graph-wasi-probe-v1",
+  "status": "passed",
+  "observedAt": "2026-10-28T01:08:44.331404+00:00",
+  "scope": "Actual pinned Go WASI cmd/go build, Node WASI execution, and package-source selection parity. This source-only root lacks the complete LLVM/header/runtime-object closure; this is not full TinyGo browser compiler qualification or artifact promotion.",
+  "producer": {
+    "sourceCommit": "9cc0d9c5e3d5fa5d03dee9d5b80fd042370a2ac0",
+    "path": "scripts/build-package-graph-provider.mjs",
+    "unmodified": true,
+    "bytes": 18358,
+    "sha256": "2a71fd51192273de0e319eee2c7a847e783a9912c10e94007d0c550e02890cf6"
+  },
+  "toolchain": {
+    "sourceLock": "package-graph.lock.json",
+    "module": "golang.org/toolchain",
+    "version": "go1.26.10",
+    "archiveFilename": "v0.0.1-go1.26.10.linux-amd64.zip",
+    "archiveBytes": 71735438,
+    "archiveSha256": "f64ecb0807852be2c98899561c45288a9ad57f4e88f3cd002ffabeccbd03bfe1",
+    "entrypoint": "cmd/go",
+    "identityPackages": [
+      "go/build",
+      "go/build/constraint",
+      "cmd/go/internal/list",
+      "cmd/go/internal/load",
+      "cmd/go/internal/modload"
+    ],
+    "identitySources": [
+      {
+        "path": "src/go/build/build.go",
+        "bytes": 63650,
+        "sha256": "64a2053da6f34c5ccf2c2a1bdefd737fcbcba0ce3b38a654b15855cc85408ce6"
+      },
+      {
+        "path": "src/go/build/constraint/expr.go",
+        "bytes": 15254,
+        "sha256": "96f51c3c0e5e9c6844d7ffb7ba36eee0076239710c3520e527f06f35d8734058"
+      },
+      {
+        "path": "src/cmd/go/internal/list/list.go",
+        "bytes": 34408,
+        "sha256": "a3c8ef6c48c8d2bab6af1f82f0e5b89274bed94f4ace5c78ca8cf879865bb47c"
+      },
+      {
+        "path": "src/cmd/go/internal/load/pkg.go",
+        "bytes": 126442,
+        "sha256": "8ab6cf53b1674ef93d500b1ab07df3dc650fe003374ce14c31d992f899f4d339"
+      },
+      {
+        "path": "src/cmd/go/internal/modload/load.go",
+        "bytes": 88999,
+        "sha256": "ca59b7f03dc34c81b90dc7d4921b893571e2e1c76a6a39580c1975e6b6b01d00"
+      },
+      {
+        "path": "src/cmd/go/internal/lockedfile/lockedfile_filelock.go",
+        "bytes": 1767,
+        "sha256": "c7946ebe8ced54cc3caeb461ccbee7eac37b6a8ea41052d3777e908055158529"
+      }
+    ],
+    "patch": {
+      "path": "patches/go-toolchain-wasip1-lockedfile.patch",
+      "bytes": 1172,
+      "sha256": "4497603167ec8fdf40e1c7dbfad312b4f2ae72d0292df6413f0cf5247e1063d0",
+      "status": "applied"
+    }
+  },
+  "build": {
+    "target": "wasip1/wasm",
+    "arguments": [
+      "build",
+      "-trimpath",
+      "-buildvcs=false",
+      "-ldflags=-buildid=",
+      "-o",
+      "<provider.wasm>",
+      "cmd/go"
+    ],
+    "environment": {
+      "GO111MODULE": "off",
+      "GOROOT": "<verified extracted Go 1.26.10 archive>",
+      "GOOS": "wasip1",
+      "GOARCH": "wasm",
+      "CGO_ENABLED": "0",
+      "GOTOOLCHAIN": "local",
+      "GOENV": "off",
+      "GOWORK": "off",
+      "GOMAXPROCS": "2"
+    },
+    "privateCache": true,
+    "childUmask": "022",
+    "nodeVersion": "v24.22.1",
+    "importsOnlyWasiPreview1": true
+  },
+  "provider": {
+    "path": "tinygo-package-graph.wasm",
+    "bytes": 27997948,
+    "sha256": "b7a526594fd5ea5531caecf11bd3a8e97af05c40dff63d8a57370419c47b56ed"
+  },
+  "acceptance": {
+    "fixture": "fixtures/package-graph-module",
+    "nodeWasiExitCode": 0,
+    "nodeWasiStderrBytes": 0,
+    "nativeCmdGoComparison": "same-pinned-native-cmd-go-exact-json",
+    "nativeCmdGoExactMatch": true,
+    "nativeTinyGoComparison": {
+      "status": "passed",
+      "wasiPackages": 45,
+      "nativeTinyGoPackages": 45,
+      "exactNativeTinyGoMatch": true,
+      "nativeSelectedSha256": "c2b5836062b83951200220f94044a85e0e2fe08a8d927a73b80aa66122889124",
+      "wasiSelectedSha256": "c2b5836062b83951200220f94044a85e0e2fe08a8d927a73b80aa66122889124",
+      "canonicalBytes": 13670,
+      "previousNativeProofSha256": "c2b5836062b83951200220f94044a85e0e2fe08a8d927a73b80aa66122889124",
+      "matchesPreviousNativeProof": true
+    },
+    "runtimeUnwindSources": [
+      "panic_unwind_asyncify.go",
+      "panic_unwind_return.go",
+      "panic_unwind_signal_unicore.go"
+    ],
+    "requiredFeatures": [
+      "local-module-package",
+      "tinygo.wasm-build-tag",
+      "go:embed"
+    ]
+  },
+  "inputModeContrast": {
+    "sourceModes": {
+      "Go archive extracted src/fmt/doc.go": "0644",
+      "TinyGo release src/runtime/runtime.go": "0644"
+    },
+    "previousProbeFailure": "The prior probe took source files from a local module cache with mode 0400. Native cmd/go could read them, while Node WASI reported Permission denied. The production provider uses extracted archive/Git source files.",
+    "sameWasmDiagnostic": {
+      "sha256": "b7a526594fd5ea5531caecf11bd3a8e97af05c40dff63d8a57370419c47b56ed",
+      "readonlyGoModuleCache": {
+        "sourceMode": "0400",
+        "wasiPackages": 5,
+        "nativePackages": 63,
+        "exactMatch": false,
+        "errorExample": "open /tinygo-root/src/fmt/doc.go: Permission denied"
+      },
+      "directGoArchiveExtraction": {
+        "sourceMode": "0644",
+        "wasiPackages": 63,
+        "nativePackages": 63,
+        "exactMatch": true
+      }
+    },
+    "productionSourceChanged": false
+  },
+  "rootInputScope": {
+    "contents": [
+      "go.env",
+      "src"
+    ],
+    "nativeTinyGo": "0.43.0 / LLVM 22.1.4",
+    "nativeGo": "1.26.10",
+    "omitted": "Native release generated device sources not selected by the WASI fixture",
+    "retainedGitDeviceFiles": 45,
+    "retainedGitDeviceBytes": 207980,
+    "deviceSourcesVerifiedAgainstCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+    "sourceArchive": {
+      "bytes": 24860853,
+      "sha256": "41b5df4254c1ac4021a8d4f929901c679dcc80e9467f03ba3bc62c75e549621c"
+    }
+  },
+  "evidence": {
+    "file": "tinygo-provider-20261028-evidence.tar.gz",
+    "bytes": 6609683,
+    "sha256": "903b4121beaa37de1b2713e2ee94577abd22e9e10bcb60b0e341663521f6761c",
+    "contents": "Original provider Wasm, unchanged builder/lock/patch/fixture, native and WASI package JSON, exact canonical graphs, execution receipt and permission contrast"
+  }
+}

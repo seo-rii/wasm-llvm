@@ -13,10 +13,10 @@ import {
 const contract = {
 	goToolchain: {
 		module: 'golang.org/toolchain',
-		version: 'go1.24.6',
-		archiveFilename: 'v0.0.1-go1.24.6.linux-amd64.zip',
+		version: 'go1.26.10',
+		archiveFilename: 'v0.0.1-go1.26.10.linux-amd64.zip',
 		archiveBytes: 82_904_480,
-		archiveSha256: 'e7f0fd16d1b06c716162a0938744bb7ebf7edbc3248d42432271a1b5c1fde1ce'
+		archiveSha256: 'f64ecb0807852be2c98899561c45288a9ad57f4e88f3cd002ffabeccbd03bfe1'
 	}
 };
 
@@ -57,7 +57,11 @@ test('pins list-only cmd/go fields and the complete TinyGo wasip1 tag profile', 
 		'.'
 	]);
 	assert.deepEqual(plan.protocol.moduleModes, ['readonly', 'vendor']);
-	assert.equal(TINYGO_PACKAGE_GRAPH_TAGS.at(-1), 'go1.24');
+	assert.equal(TINYGO_PACKAGE_GRAPH_TAGS.at(-1), 'go1.26');
+	assert.ok(
+		TINYGO_PACKAGE_GRAPH_TAGS.includes('tinygo.unwind.asyncify'),
+		'TinyGo 0.43 requires its unwind tag to select all three runtime panic source files'
+	);
 	assert.ok(plan.upstream.identityPackages.includes('cmd/go/internal/list'));
 	assert.equal(plan.protocol.environment.GOPROXY, 'off');
 	assert.equal(plan.protocol.environment.GOTOOLCHAIN, 'local');
