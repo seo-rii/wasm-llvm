@@ -53,6 +53,10 @@ export async function assertCompilerSmoke(compile) {
 	assert.match(`${diagnostic.stdout}\n${diagnostic.stderr}`, /main\.c3/u);
 	const linked = await compile(source, compilerArgs('compile'));
 	assert.equal(linked.exitCode, 0, `Builtin link failed:\n${linked.stdout}\n${linked.stderr}`);
+	for (const result of [compiled, diagnostic, linked]) {
+		assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /warning: unsupported syscall: __syscall_/u,
+			'Browser compiler invoked an unsupported host syscall');
+	}
 	const program = linked.files.find((file) => file.path === '/work/program.wasm');
 	assert.ok(program, 'Compiler produced no linked program');
 	const input = new TextEncoder().encode('C3 stdin: 안녕\n');
@@ -74,6 +78,7 @@ export async function assertCompilerSmoke(compile) {
 		builtinLink: true,
 		arithmetic: true,
 		hostByteInputOutput: true,
+		hostSyscallWarningsAbsent: true,
 		objects: objects.map((file) => ({ path: file.path, bytes: file.bytes.length, sha256: sha256(file.bytes) })),
 		program: { bytes: program.bytes.length, sha256: sha256(program.bytes) },
 		diagnostic: `${diagnostic.stdout}\n${diagnostic.stderr}`.trim()
@@ -86,6 +91,8 @@ export async function smoke(directory = paths().build) {
 	const version = await runCompiler(directory, '', ['--version']);
 	assert.equal(version.exitCode, 0);
 	assert.match(`${version.stdout}\n${version.stderr}`, new RegExp(manifest.sources.c3.version.replaceAll('.', '\\.')));
+	assert.doesNotMatch(`${version.stdout}\n${version.stderr}`, /warning: unsupported syscall: __syscall_/u,
+		'Browser compiler version probe invoked an unsupported host syscall');
 	const report = {
 		engine: `Node ${process.versions.node} WebAssembly in worker_threads`,
 		inputs,
