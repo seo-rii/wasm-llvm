@@ -45,6 +45,15 @@ target mismatch. User source, GNU runtime headers and the baseline CPU profile
 are unchanged. The two GCC 13 backports are removed from this recipe; the original
 regression cases remain in the Node and Chromium qualification suites.
 
+One downstream patch, `patches/0001-emscripten-pch-relocation.patch`, lets the
+Wasm `cc1plus` load a precompiled header. Emscripten's `mmap` rejects every address
+hint with `EINVAL`, so GCC's default `mmap_gt_pch_use_address` failed every PCH with
+`PCH allocation failure`. On Emscripten hosts the hook now maps without a hint and
+reports the new base; `gt_pch_restore` relocates the image (supported since GCC 12,
+as `linux_gt_pch_use_address` already relies on). Other hosts are unchanged. The
+manifest declares this as `capabilities.precompiledHeaders`. A PCH remains valid
+only for the exact `cc1plus` and flags that created it; GCC rejects any other.
+
 The compiler receipt binds the exact source lock, which also invalidates the CI
 compiler cache when the GCC release changes. Use a fresh isolated work directory
 when upgrading an older recipe. The GCC archive's SHA-256 was computed from the
