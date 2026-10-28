@@ -29,10 +29,14 @@ Swift 6.4.1 uses its own LLVM 21.1 fork, so the native Clang resource directory 
 the WASI patch excludes the daemon while retaining inline dependency scanning. The patch
 also preserves the upstream retry handling for interrupted file-lock operations.
 
-Patch application and producer tests do not qualify a rebuilt compiler. Native baseline,
-WASI frontend, Chromium target and complete browser compiler validation must be repeated
-for 6.4.1 before publishing artifacts. The [recorded 6.3.3 acceptance](browser-target-audit.md)
-remains historical evidence for that earlier toolchain.
+Patch application and producer tests do not qualify a rebuilt compiler. The bounded native
+target acceptance below passed with the signed official Swift 6.4.1 Linux toolchain and full
+SDK on 2026-10-28. [Its observed receipt](validation/6.4.1-native-target.json) records archive
+hashes, the Swift 6.x release signing fingerprint, source hashes, a real compiler diagnostic,
+and Chromium target results. The upstream source baseline, WASI frontend and complete browser
+compiler validation remain required before publishing artifacts.
+The [recorded 6.3.3 acceptance](browser-target-audit.md) remains historical evidence for that
+earlier toolchain.
 
 ## Artifact contract
 
@@ -73,6 +77,9 @@ After installing the pinned native Swift toolchain and full Wasm SDK, run:
 pnpm probe:swift-browser-target
 # Use an existing Chromium installation when needed:
 pnpm probe:swift-browser-target -- --chromium /path/to/chromium
+# Use a private SDK directory without changing the user's installed SDKs:
+pnpm probe:swift-browser-target -- --chromium /path/to/chromium \
+  --swift-sdks-path /path/to/private-sdk-directory
 ```
 
 This compiles `fixtures/browser-stdin.swift` with native SwiftPM and executes the resulting
@@ -80,13 +87,19 @@ WASI Preview 1 program in fresh Chromium Workers. The fixture uses standard `rea
 collections, integer arithmetic, and `print`; acceptance covers UTF-8, input delivered in short
 reads, a final line without a newline, and empty input followed by EOF. Each case must return
 the exact expected stdout, empty stderr, and exit code zero within 15 seconds.
+The probe also compiles `fixtures/type-error.swift` with the same full SDK and requires a
+nonzero exit with the expected String-to-Int type diagnostic. It restores the valid generated
+package source after this check. The native compiler and exact SDK version must match 6.4.1;
+an Embedded Swift SDK cannot substitute for the full SDK.
 
 The local server and Worker under `test/` are acceptance tools. Product runtime integration
 belongs to `wasm-idle`. The receipt in `out/swift-browser-target/probe-*/receipt.json` records
-the native toolchain version, SDK identifier, source and target hashes, Chromium version, and
-each result. It sets `compilerHost: native` and leaves browser compiler, browser SwiftPM, and
-release readiness gates false. This command verifies target execution; packaging still requires
-the existing browser compiler contracts below. See [the recorded validation](browser-target-audit.md).
+the native toolchain version, SDK identifier, probe and fixture hashes, target hash, compiler
+diagnostic, Chromium version, and each result. It sets `compilerHost: native` and leaves browser
+compiler, browser SwiftPM, and release readiness gates false. This command verifies target
+execution; packaging still requires the existing browser compiler contracts below.
+See [the 6.4.1 target receipt](validation/6.4.1-native-target.json) and the
+[historical 6.3.3 audit](browser-target-audit.md).
 
 ## Bootstrap source
 
