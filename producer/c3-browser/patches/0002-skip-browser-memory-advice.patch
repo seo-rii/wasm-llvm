@@ -1,0 +1,24 @@
+diff --git a/src/utils/vmem.c b/src/utils/vmem.c
+index d7cc2e8..0a818e5 100644
+--- a/src/utils/vmem.c
++++ b/src/utils/vmem.c
+@@ -91,6 +91,11 @@ static inline void* mmap_allocate(Vmem *vmem, size_t to_allocate)
+ 	if (blocks_to_allocate > 0)
+ 	{
+ 		size_t to_commit = blocks_to_allocate * COMMIT_PAGE_SIZE;
++#if defined(__EMSCRIPTEN__)
++		// mmap already backs this arena with writable Wasm linear memory. Emscripten's
++		// mprotect and advice syscalls are no-op stubs that emit diagnostic warnings.
++		bool success = true;
++#else
+ 		char *start_ptr = ((char*)vmem->ptr) + vmem->committed;
+ #if PLATFORM_POSIX
+ 		bool success = mprotect(start_ptr, to_commit, PROT_READ | PROT_WRITE) == 0;
+@@ -107,6 +112,7 @@ static inline void* mmap_allocate(Vmem *vmem, size_t to_allocate)
+ #else
+ 		bool success = false;
+ 		FATAL_ERROR("Unsupported platform.");
++#endif
+ #endif
+ 		if (!success)
+ 		{

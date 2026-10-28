@@ -1,0 +1,37 @@
+Subject: [PATCH] ggc: relocate PCH images mapped elsewhere on Emscripten
+
+Emscripten's mmap rejects every non-null address hint with EINVAL; a
+MAP_PRIVATE file mapping is always a fresh heap copy.  The default
+mmap_gt_pch_use_address hook therefore rejects every PCH with "PCH
+allocation failure".  Since GCC 12, gt_pch_restore can relocate an image
+loaded at a different address (as linux_gt_pch_use_address already does),
+so map without a hint on Emscripten hosts and accept that address.
+
+This downstream patch only affects compilers whose host is Emscripten.
+
+---
+--- a/gcc/ggc-common.cc
++++ b/gcc/ggc-common.cc
+@@ -1022,10 +1022,22 @@
+   if (size == 0)
+     return -1;
+ 
++#ifdef __EMSCRIPTEN__
++  /* Emscripten's mmap rejects every address hint with EINVAL, and a
++     MAP_PRIVATE file mapping is a fresh heap copy anyway.  Map the file
++     wherever it is placed; gt_pch_restore then relocates the image, as it
++     does for hosts whose kernel places the mapping elsewhere.  */
++  addr = mmap (NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, offset);
++  if (addr == (void *) MAP_FAILED)
++    return -1;
++  base = addr;
++  return 1;
++#else
+   addr = mmap ((caddr_t) base, size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
+ 	       fd, offset);
+ 
+   return addr == base ? 1 : -1;
++#endif
+ }
+ #endif /* HAVE_MMAP_FILE */
+ 

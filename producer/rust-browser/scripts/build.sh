@@ -9,8 +9,8 @@ OUT_DIR="${WASM_LLVM_RUST_BROWSER_OUT_DIR:-$WORK_DIR/output}"
 JOBS="${NINJA_JOBS:-${WASM_LLVM_RUST_BROWSER_JOBS:-8}}"
 BUILD_TRIPLE="x86_64-unknown-linux-gnu"
 COMPILER_HOST="wasm32-wasip1-threads"
-SOURCE_DATE_EPOCH=1783912447
-RUST_BOOTSTRAP_DATE=2026-05-31
+SOURCE_DATE_EPOCH=1791856129
+RUST_BOOTSTRAP_DATE=2026-08-20
 
 if [[ "$(uname -s)" != "Linux" || "$(uname -m)" != "x86_64" ]]; then
   printf 'rust-browser producer currently requires x86_64 Linux\n' >&2
@@ -45,7 +45,7 @@ SYSROOT="$BUILD_ROOT/sysroot"
 TOOLCHAIN_FILE="$PRODUCER_ROOT/config/toolchain.cmake"
 BUILTINS_ARCHIVE_ROOT="$WORK_DIR/downloads/bootstrapBuiltins/libclang_rt.builtins-wasm32-wasi-25.0"
 BUILTINS_LIB="$BUILTINS_ARCHIVE_ROOT/libclang_rt.builtins-wasm32.a"
-LLVM_VERSION_MAJOR=22
+LLVM_VERSION_MAJOR=23
 RT_DIR=wasm32-unknown-wasip1-threads
 INITIAL_MEMORY=419430400
 MAXIMUM_MEMORY=4294967296
@@ -243,11 +243,9 @@ build_rust() {
   local cache="$RUST_BUILD/cache/$RUST_BOOTSTRAP_DATE"
   mkdir -p "$cache"
   for archive in \
-    cargo-beta-x86_64-unknown-linux-gnu.tar.xz \
-    rust-std-beta-x86_64-unknown-linux-gnu.tar.xz \
-    rustc-beta-x86_64-unknown-linux-gnu.tar.xz \
-    rustc-nightly-x86_64-unknown-linux-gnu.tar.xz \
-    rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz; do
+    cargo-1.98.0-x86_64-unknown-linux-gnu.tar.xz \
+    rust-std-1.98.0-x86_64-unknown-linux-gnu.tar.xz \
+    rustc-1.98.0-x86_64-unknown-linux-gnu.tar.xz; do
     cp "$WORK_DIR/downloads/$archive" "$cache/$archive"
   done
   (

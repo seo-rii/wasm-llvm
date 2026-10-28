@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
@@ -30,6 +31,13 @@ export function targetGates(results) {
     try { validateResult(fixture, results[index]); return true; } catch { return false; }
   });
   return { browserTargetStdinStdout: passed, browserHostedCompiler: false, browserHostedSwiftPM: false, ready: false };
+}
+
+export function validateDiagnostic(result) {
+  if (!result || result.error || result.signal || !Number.isInteger(result.status) || result.status <= 0 ||
+    !/error: cannot convert value of type 'String' to specified type 'Int'/u.test(result.stderr)) {
+    throw new Error('Expected Swift String-to-Int compiler diagnostic');
+  }
 }
 
 async function serve(wasmBytes) {
@@ -63,7 +71,7 @@ async function serve(wasmBytes) {
   return { server, url: 'http://127.0.0.1:' + server.address().port };
 }
 
-export async function probeBrowserTarget({ workRoot, executablePath } = {}) {
+export async function probeBrowserTarget({ workRoot, executablePath, sdkDirectory } = {}) {
   workRoot ??= path.join(REPO_ROOT, 'out', 'swift-browser-target');
   await mkdir(workRoot, { recursive: true });
   const directory = await mkdtemp(path.join(workRoot, 'probe-'));
@@ -77,18 +85,34 @@ export async function probeBrowserTarget({ workRoot, executablePath } = {}) {
       throw new Error('Expected native Swift ' + OFFICIAL_SWIFT_VERSION + ', got ' + version.stdout);
     }
     receipt.compilerVersion = version.stdout.trim();
+    receipt.sourceFiles = {};
+    for (const name of ['manifest.json', 'scripts/probe-browser-target.mjs', 'scripts/probe-toolchain.mjs',
+      'fixtures/browser-stdin.swift', 'fixtures/type-error.swift', 'test/browser-target-worker.mjs']) {
+      receipt.sourceFiles[name] = createHash('sha256').update(await readFile(path.join(PRODUCER_ROOT, name))).digest('hex');
+    }
     const source = await readFile(path.join(PRODUCER_ROOT, 'fixtures', 'browser-stdin.swift'));
     receipt.fixtureSha256 = createHash('sha256').update(source).digest('hex');
     await mkdir(path.join(directory, 'Sources', 'BrowserStdin'), { recursive: true });
     await writeFile(path.join(directory, 'Sources', 'BrowserStdin', 'main.swift'), source);
     await writeFile(path.join(directory, 'Package.swift'), '// swift-tools-version: 6.3\nimport PackageDescription\nlet package = Package(name: "BrowserStdin", targets: [.executableTarget(name: "BrowserStdin")])\n');
     receipt.command = ['swift', 'build', '--swift-sdk', OFFICIAL_WASM_SDK_ID, '--jobs', '2'];
+    if (sdkDirectory) receipt.command.push('--swift-sdks-path', sdkDirectory);
+    receipt.command.push('--cache-path', path.join(directory, '.cache'), '--manifest-cache', 'local');
     await run(receipt.command[0], receipt.command.slice(1), { cwd: directory });
     const output = await findBuiltWasm(path.join(directory, '.build'));
     if (!output) throw new Error('Native Swift build did not produce a Wasm target');
     await assertWasm(output);
     const wasmBytes = await readFile(output);
     receipt.artifact = { path: output, bytes: wasmBytes.length, sha256: createHash('sha256').update(wasmBytes).digest('hex') };
+    // Compile an invalid program with the same full SDK after preserving the valid guest bytes.
+    const mainSource = path.join(directory, 'Sources', 'BrowserStdin', 'main.swift');
+    try {
+      await writeFile(mainSource, await readFile(path.join(PRODUCER_ROOT, 'fixtures', 'type-error.swift')));
+      const diagnostic = spawnSync(receipt.command[0], receipt.command.slice(1),
+        { cwd: directory, encoding: 'utf8', timeout: 120000, maxBuffer: 4 * 1024 * 1024 });
+      validateDiagnostic(diagnostic);
+      receipt.diagnostic = { exitCode: diagnostic.status, stdout: diagnostic.stdout, stderr: diagnostic.stderr };
+    } finally { await writeFile(mainSource, source); }
     const host = await serve(wasmBytes);
     server = host.server;
     const { chromium } = await import('playwright-core');
@@ -129,14 +153,14 @@ export async function probeBrowserTarget({ workRoot, executablePath } = {}) {
 if (process.argv[1] && path.resolve(process.argv[1]) === THIS_FILE) {
   const args = process.argv.slice(2).filter((item) => item !== '--');
   if (args.includes('--help')) {
-    console.log('Usage: node producer/swift-browser/scripts/probe-browser-target.mjs [--work-root DIR] [--chromium FILE]');
+    console.log('Usage: node producer/swift-browser/scripts/probe-browser-target.mjs [--work-root DIR] [--chromium FILE] [--swift-sdks-path DIR]');
   } else {
     try {
       const options = {};
       while (args.length) {
         const option = args.shift();
-        if (!['--work-root', '--chromium'].includes(option) || !args[0] || args[0].startsWith('--')) throw new Error('Invalid option: ' + option);
-        options[option === '--work-root' ? 'workRoot' : 'executablePath'] = path.resolve(args.shift());
+        if (!['--work-root', '--chromium', '--swift-sdks-path'].includes(option) || !args[0] || args[0].startsWith('--')) throw new Error('Invalid option: ' + option);
+        options[{ '--work-root': 'workRoot', '--chromium': 'executablePath', '--swift-sdks-path': 'sdkDirectory' }[option]] = path.resolve(args.shift());
       }
       if ((await probeBrowserTarget(options)).status !== 'passed') process.exitCode = 1;
     } catch (error) { console.error(error.message); process.exitCode = 1; }

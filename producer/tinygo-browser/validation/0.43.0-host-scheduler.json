@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "scope": "Minimal browser compiler host scheduler compatibility; not full compiler qualification",
+  "capturedAt": "2026-10-27T09:24:24.047630+00:00",
+  "tinygoCommit": "108a95cb26df6d5011366312dde0639b08d753cf",
+  "source": {
+    "path": "main.go",
+    "bytes": 309,
+    "sha256": "24a95531a4811a6e524605dd40d54a35e17068892b152c35d7e175396936c8bb",
+    "text": "package main\nimport (\"fmt\"; \"runtime\"; \"time\")\nfunc main() {\n c := make(chan string)\n go func() { c <- \"goroutine-ok\" }()\n fmt.Println(<-c)\n done := make(chan bool)\n time.AfterFunc(time.Millisecond, func() { done <- true })\n <-done\n fmt.Println(\"timer-ok\")\n fmt.Println(\"gomaxprocs\", runtime.GOMAXPROCS(0))\n}\n"
+  },
+  "target": {
+    "path": "host-target.json",
+    "bytes": 156,
+    "sha256": "4e245861678bd3f0f12c8dc4584d2cf190ea78d6fd1e011d89775ad3d1accc8c",
+    "configuration": {
+      "inherits": [
+        "wasip1"
+      ],
+      "default-stack-size": 8388608,
+      "ldflags": [
+        "-z",
+        "stack-size=8388608",
+        "--max-memory=1342177280"
+      ]
+    }
+  },
+  "tools": {
+    "tinygo": {
+      "version": "tinygo version 0.43.0 linux/amd64 (using go version go1.26.10 and LLVM version 22.1.4)",
+      "bytes": 182693392,
+      "sha256": "678938bbd1815180a288d23764deeb04bf846b710dc7ed34ebbbf1e19e5a436a"
+    },
+    "wasmOpt": {
+      "version": "wasm-opt version 133",
+      "bytes": 24088136,
+      "sha256": "91b12e03fb37bca7ede36d28b082a2898bc7ed676e9f738108493c0308a8d321"
+    },
+    "go": {
+      "version": "go version go1.26.10 linux/amd64",
+      "bytes": 15456399,
+      "sha256": "9c2a37ae5b21ba1d5a004bb9ab4d0c64de6fc5778e9d30487adccea62678b8b5"
+    }
+  },
+  "bootstrap": {
+    "schemaVersion": 1,
+    "producerId": "wasm-llvm/tinygo-browser",
+    "manifestSha256": "7e413765ff84b573bbf3de3701d4fff7f964ee9cea971f9204d5e7b1b47f3621",
+    "inputs": {
+      "tinygo": {
+        "url": "https://github.com/tinygo-org/tinygo/releases/download/v0.43.0/tinygo0.43.0.linux-amd64.tar.gz",
+        "sha256": "ca9fc6d055e3889462dea4450a2e42a92242d88b5c362a7ec39bdb563413d78a",
+        "bytes": 186793787
+      }
+    },
+    "tools": {}
+  },
+  "optimizerArguments": [
+    "--asyncify",
+    "-Oz",
+    "-g",
+    "fresh-unoptimized.wasm",
+    "--output",
+    "fresh-asyncify.wasm"
+  ],
+  "unoptimized": {
+    "path": "fresh-unoptimized.wasm",
+    "bytes": 119127,
+    "sha256": "cd66f41438c70783d769e54faa8776f5acb385774866f32f9b065c931c6b937e",
+    "imports": [
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_write",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "proc_exit",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "poll_oneoff",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "clock_time_get",
+        "kind": "function"
+      },
+      {
+        "module": "asyncify",
+        "name": "stop_unwind",
+        "kind": "function"
+      },
+      {
+        "module": "asyncify",
+        "name": "start_rewind",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "args_sizes_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "args_get",
+        "kind": "function"
+      },
+      {
+        "module": "asyncify",
+        "name": "stop_rewind",
+        "kind": "function"
+      },
+      {
+        "module": "asyncify",
+        "name": "start_unwind",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "random_get",
+        "kind": "function"
+      }
+    ]
+  },
+  "optimized": {
+    "path": "fresh-asyncify.wasm",
+    "bytes": 194665,
+    "sha256": "20729fd866e591ae9d60d71817878a8531c28a61a8949a6193001857f1bf18a8",
+    "imports": [
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_write",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "proc_exit",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "poll_oneoff",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "clock_time_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "args_sizes_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "args_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "random_get",
+        "kind": "function"
+      }
+    ]
+  },
+  "expectedOutput": {
+    "path": "expected.stdout",
+    "bytes": 35,
+    "sha256": "604526946b1a90dd10e67931139cdbddf959dedae417143d87a0b796570cb029",
+    "stdout": "goroutine-ok\ntimer-ok\ngomaxprocs 1\n"
+  },
+  "validation": {
+    "nativeWasi": {
+      "exitCode": 0,
+      "stdout": "goroutine-ok\ntimer-ok\ngomaxprocs 1\n",
+      "memoryBytes": 67633152,
+      "stderrNote": "Node emitted its experimental WASI warning and the harness reported memory usage; the program emitted no errors."
+    },
+    "consumerNode": {
+      "format": "wasm-idle-tinygo-host-scheduler-node-shim-probe-v1",
+      "status": "passed",
+      "engine": "v24.22.1",
+      "inputBytes": 194665,
+      "inputSha256": "20729fd866e591ae9d60d71817878a8531c28a61a8949a6193001857f1bf18a8",
+      "exitCode": 0,
+      "elapsedMs": 61.21868599999999,
+      "stdout": "goroutine-ok\ntimer-ok\ngomaxprocs 1\n",
+      "stderr": ""
+    },
+    "consumerChromium": {
+      "format": "wasm-idle-tinygo-host-scheduler-browser-probe-v1",
+      "status": "passed",
+      "browser": "153.0.8010.12",
+      "inputBytes": 194665,
+      "inputSha256": "20729fd866e591ae9d60d71817878a8531c28a61a8949a6193001857f1bf18a8",
+      "stdoutSha256": "604526946b1a90dd10e67931139cdbddf959dedae417143d87a0b796570cb029",
+      "exitCode": 0,
+      "stdout": "goroutine-ok\ntimer-ok\ngomaxprocs 1\n",
+      "stderr": "",
+      "elapsedMs": 62.19999999925494,
+      "inputHash": "20729fd866e591ae9d60d71817878a8531c28a61a8949a6193001857f1bf18a8",
+      "pageErrors": [],
+      "consumerSource": "runtimes/wasm-tinygo/src/upstream-runtime.ts",
+      "consumerSourceSha256": "a6e97a92e0d7e40960647a8644cf2ccc5d33d4c305957c992035c608e08d0e5b"
+    }
+  },
+  "nativeMemoryBytes": 67633152,
+  "cacheIsolation": {
+    "variables": [
+      "GOCACHE",
+      "XDG_CACHE_HOME",
+      "TMPDIR"
+    ],
+    "freshOutputProducers": [
+      "clang22.1.4",
+      "TinyGo0.43.0"
+    ],
+    "supersededCachedOutput": {
+      "path": "cached-asyncify.wasm",
+      "bytes": 194686,
+      "sha256": "1a84ac7a430e3217448f6e864d64b70b170b63567d77ae57c7ac5036783d8e11",
+      "producers": [
+        "clang20.1.1",
+        "TinyGo0.43.0"
+      ],
+      "reason": "TinyGo resolved its own C runtime cache from os.UserCacheDir, not GOCACHE."
+    }
+  },
+  "limitations": [
+    "The full LLVM-bearing compiler still requires its complete producer and browser acceptance run.",
+    "This single-clock timer probe does not qualify arbitrary WASI FD polling or multiple subscriptions."
+  ],
+  "build": {
+    "command": [
+      "tinygo",
+      "build",
+      "-target=host-target.json",
+      "-scheduler=asyncify",
+      "-p=1",
+      "-gc=precise",
+      "-opt=z",
+      "-no-debug",
+      "-x",
+      "-work",
+      "-o=probe.wasm",
+      "main.go"
+    ],
+    "cachePolicy": "Use a fresh GOCACHE, XDG_CACHE_HOME and TMPDIR for this isolated source/toolchain."
+  },
+  "implementation": {
+    "scheduler": "asyncify",
+    "taskSource": "src/internal/task/task_asyncify_wasm.S",
+    "taskStackBytes": 8388608,
+    "systemStackBytes": 8388608,
+    "maximumMemoryBytes": 1342177280,
+    "guestRuntimeProfileChanged": false
+  }
+}

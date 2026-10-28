@@ -22,6 +22,10 @@ versioned import for the Clang driver's linker job. It requires an explicitly re
 consumer host and has separate build receipts. `CLANG_TOOL_HOST=OFF` is the default;
 the existing compiler artifacts and release packager do not opt into this profile.
 
+The separate [x86-64 GNU/Linux cross compiler](cross/README.md) keeps the compiler host in
+WASI and emits native ELF for download. Its opt-in X86 backend, ELF linker and imported GNU
+sysroot produce a separate bundle with explicit qualification gates.
+
 ## Rebuild
 
 The full build requires CMake, Ninja, Git, tar, a downloader, and enough disk for native and WASI

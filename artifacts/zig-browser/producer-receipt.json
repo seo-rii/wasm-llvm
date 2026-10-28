@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/zig-browser",
+  "profileId": "zigc-wasm-0.17.0-ir",
+  "version": "0.17.0",
+  "target": "wasm32-wasi",
+  "wasi": "preview1",
+  "source": {
+    "url": "https://ziglang.org/download/0.17.0/zig-0.17.0.tar.xz",
+    "sha256": "b6c7f1728f043700d6529bac980800792f824256a9d2f1839b3d62beed0b8abd"
+  },
+  "port": {
+    "repository": "https://github.com/seo-rii/zigc-wasm",
+    "revision": "158889336da7fd3ff1070fc68da29a42235ee3a9",
+    "patchSha256": "02c80e05f3cb9f8d97e7e534b47204db94cf5d2a73b847bdbdf051ab2b41d539"
+  },
+  "debug": {
+    "format": "llvm-bitcode",
+    "api": "-femit-llvm-bc",
+    "sourceRoot": "/workspace",
+    "usesLlvmLibraries": false,
+    "patchSha256": "0ea0bd7c389b575ae3827d5a22c69791ab474caea74318f2579522612cc7679c"
+  },
+  "sourceLockSha256": "af89ffa665385747edb3620cab4721195e5fe244e07522567c66c8cff97579a0",
+  "manifestSha256": "117d4c306110ee19e290ddf412c96b3a09810b1b6db54fc84facc82a10302539",
+  "assets": {
+    "zig.wasm": {
+      "bytes": 4934128,
+      "sha256": "82a101fd16c4cee7925ffc8fa51ccd713b23f32b13591531de383444e1060fd9"
+    },
+    "lib.tar.gz": {
+      "bytes": 30362437,
+      "sha256": "a4f8b9403dfb0e0a826444f2a4a7eeb6b86403c79c650b93e34be95104bcb88c",
+      "uncompressedBytes": 217466880,
+      "uncompressedSha256": "63a671ed94b5b3f41cca3f7cde7ab237c9b2e72aae682bbfadf09799fa803397"
+    },
+    "LICENSE": {
+      "bytes": 1080,
+      "sha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177"
+    }
+  },
+  "validation": {
+    "passed": true,
+    "suite": "producer/zig-browser/test/smoke.mjs",
+    "suiteSha256": "7dcb1206d6db629a315a7361f3d679460628ab732da2c5e0b025b482b59d93d2",
+    "libraryFiles": 19620,
+    "checks": [
+      "version",
+      "stdio",
+      "filesystem",
+      "diagnostics",
+      "compiler-rt",
+      "object-linking",
+      "stripped-mvp-object",
+      "llvm-bitcode",
+      "debug-source-paths"
+    ]
+  }
+}

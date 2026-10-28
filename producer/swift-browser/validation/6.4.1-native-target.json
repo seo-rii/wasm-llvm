@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "producerId": "wasm-llvm/swift-browser",
+  "validation": "official-native-release-wasi-target",
+  "observedAt": "2026-10-28T07:39:16.910Z",
+  "compilerHost": "native",
+  "status": "passed",
+  "manifestSha256": "0ea56d824031078f85d99955f8b5dec632ce3c539c7a6312f22459bd2969c84f",
+  "sourceFiles": {
+    "manifest.json": "0ea56d824031078f85d99955f8b5dec632ce3c539c7a6312f22459bd2969c84f",
+    "scripts/probe-browser-target.mjs": "736edf0d4647f7bb5a2301c7cdb07eebb81a076966a8a57f9dfc326a883f783b",
+    "scripts/probe-toolchain.mjs": "b5cabfaccdd3358b8f10d189567b7ae5484edd8ed3ecac5b8fcb3526e10cf2d0",
+    "fixtures/browser-stdin.swift": "dc7c514d173b16626411a24dd36cb299d3b1617c44bc3bf7c47d6d0fee7c6423",
+    "fixtures/type-error.swift": "3c054613a5c60568ab4e123547803217db38023aa5766ce2b2e998d3e3b311fb",
+    "test/browser-target-worker.mjs": "6df6d6a66847897c8a97881b5182e45919c666196fb0440eb01976622c4140df"
+  },
+  "executionReceiptSha256": "8a634f03effd33308a2c3761fafdbb4dff83110d1d5e4b5c8d7379e9e32817ed",
+  "archives": [
+    {
+      "url": "https://download.swift.org/swift-6.4.1-release/debian12/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-debian12.tar.gz",
+      "bytes": 1124105894,
+      "sha256": "12a01b5658a679bc5970017a5173bfc28af3d45274e0878f586f2bcdc90acb60",
+      "signature": {
+        "url": "https://download.swift.org/swift-6.4.1-release/debian12/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-debian12.tar.gz.sig",
+        "bytes": 819,
+        "sha256": "f7336803ab99c1eda19beca94e43491dd7838c88ecaa71b9a2a721f9da3163a9",
+        "signingFingerprint": "52BB7E3DE28A71BE22EC05FFEF80A866B47A981F",
+        "verified": true
+      }
+    },
+    {
+      "url": "https://download.swift.org/swift-6.4.1-release/wasm-sdk/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz",
+      "bytes": 92759931,
+      "sha256": "783e6128d174d9f975b4eda68be02a5960681b723ef372e6876a7c2543a365d8",
+      "signature": {
+        "url": "https://download.swift.org/swift-6.4.1-release/wasm-sdk/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz.sig",
+        "bytes": 819,
+        "sha256": "a5fdff6cf0577948c1ff96a388ac6522d0b1ee922c79d3622dbaa6a1239e34c0",
+        "signingFingerprint": "52BB7E3DE28A71BE22EC05FFEF80A866B47A981F",
+        "verified": true
+      }
+    }
+  ],
+  "keys": {
+    "url": "https://www.swift.org/keys/all-keys.asc",
+    "transferSha256": "8867700b12110fb168f0c7f53f68dd71e741b917c0659db25fc50527a4cd9f97",
+    "contentEncoding": "gzip",
+    "decodedSha256": "67abcc2cff49a9dd4536b12bc4a7c2b82c434ddaa42b90516c9734f4dd5481af",
+    "officialFingerprintSource": "https://www.swift.org/install/linux/tarball/"
+  },
+  "compiler": "Swift version 6.4.1 (swift-6.4.1-RELEASE)\nTarget: x86_64-unknown-linux-gnu",
+  "sdk": "swift-6.4.1-RELEASE_wasm",
+  "command": [
+    "swift",
+    "build",
+    "--swift-sdk",
+    "swift-6.4.1-RELEASE_wasm",
+    "--jobs",
+    "2",
+    "--swift-sdks-path",
+    "<private-toolchain>/sdk",
+    "--cache-path",
+    "<private-toolchain>/probes/probe-kFYP6C/.cache",
+    "--manifest-cache",
+    "local"
+  ],
+  "diagnostic": {
+    "exitCode": 1,
+    "message": "<private-toolchain>/probes/probe-kFYP6C/Sources/BrowserStdin/main.swift:1:18: error: cannot convert value of type 'String' to specified type 'Int'",
+    "fullStderrSha256": "193fc1ffefd01150a03bea5ae38211f54377d65eae3d0168d52c027d39a3b171"
+  },
+  "artifact": {
+    "bytes": 8058993,
+    "sha256": "be9bb6870b61202a44a1c174969cbfacba346879893dbe7fd4a4697103fc895f",
+    "imports": [
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "args_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "args_sizes_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "environ_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "environ_sizes_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "clock_res_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "clock_time_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_close",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_fdstat_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_prestat_get",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_prestat_dir_name",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_read",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_seek",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "fd_write",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "path_open",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "poll_oneoff",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "proc_exit",
+        "kind": "function"
+      },
+      {
+        "module": "wasi_snapshot_preview1",
+        "name": "random_get",
+        "kind": "function"
+      }
+    ]
+  },
+  "browser": {
+    "engine": "Chromium",
+    "version": "153.0.8010.12",
+    "wasiShimVersion": "0.4.2",
+    "maximumStdinReadBytes": 3,
+    "results": [
+      {
+        "name": "sum-unicode-eof",
+        "exitCode": 0,
+        "stdout": "sum=60\ntext=안녕\neof=true\n",
+        "stderr": ""
+      },
+      {
+        "name": "unterminated-final-line",
+        "exitCode": 0,
+        "stdout": "sum=4\ntext=last\neof=true\n",
+        "stderr": ""
+      },
+      {
+        "name": "empty-eof",
+        "exitCode": 0,
+        "stdout": "sum=0\ntext=<eof>\neof=true\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "gates": {
+    "browserTargetStdinStdout": true,
+    "browserHostedCompiler": false,
+    "browserHostedSwiftPM": false,
+    "ready": false
+  },
+  "scope": "Official native Swift 6.4.1 and full SDK compile a real WASI guest and reject an invalid program. This does not build or qualify browser-hosted swiftc.wasm, swiftpm.wasm, the producer patches, or consumer artifacts."
+}

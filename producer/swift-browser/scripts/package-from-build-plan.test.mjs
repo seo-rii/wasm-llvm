@@ -111,9 +111,9 @@ test('parses Swift package-from-build-plan arguments', () => {
 			'--dist-dir',
 			'dist',
 			'--swift-version',
-			'6.3.3',
+			'6.4.1',
 			'--wasm-sdk-id',
-			'swift-6.3.3-RELEASE_wasm',
+			'swift-6.4.1-RELEASE_wasm',
 			'--source',
 			'local build',
 			'--workflow-preflight-receipt',
@@ -122,11 +122,11 @@ test('parses Swift package-from-build-plan arguments', () => {
 			'note',
 			'--allow-official-sdk-placeholder',
 			'--sdk-url',
-			'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			'--sdk-checksum',
 			'a'.repeat(64),
 			'--wasm-sdk-url',
-			'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			'--wasm-sdk-checksum',
 			'b'.repeat(64),
 			'--official-wasm-sdk-provenance',
@@ -143,15 +143,15 @@ test('parses Swift package-from-build-plan arguments', () => {
 		{
 			planPath: path.resolve('plan.json'),
 			distDir: path.resolve('dist'),
-			swiftVersion: '6.3.3',
-			wasmSdkId: 'swift-6.3.3-RELEASE_wasm',
+			swiftVersion: '6.4.1',
+			wasmSdkId: 'swift-6.4.1-RELEASE_wasm',
 			source: 'local build',
 			workflowPreflightReceipt: path.resolve('preflight.json'),
 			notes: 'note',
 			allowOfficialSdkPlaceholder: true,
-			sdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			sdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			sdkChecksum: 'a'.repeat(64),
-			wasmSdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			wasmSdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			wasmSdkChecksum: 'b'.repeat(64),
 			officialWasmSdkProvenance: true,
 			requireUpstreamBaselineReceipt: true,
@@ -182,7 +182,7 @@ test('verifies outputs, prepares raw runtime, and packages Swift dist from a bui
 			status: 'passed',
 			sourceRoot: path.join(dir, 'checkout'),
 			swiftRepository: 'https://github.com/swiftlang/swift.git',
-			swiftRef: 'swift-6.3.3-RELEASE',
+			swiftRef: 'swift-6.4.1-RELEASE',
 			swiftCloneDepth: 1,
 			swiftCloneFilter: 'blob:none',
 			dependencyScheme: 'main',
@@ -317,9 +317,9 @@ test('verifies outputs, prepares raw runtime, and packages Swift dist from a bui
 			requireBrowserBuildCommand: true,
 			requireSourceBootstrapProvenance: true,
 			allowOfficialSdkPlaceholder: true,
-			sdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			sdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			sdkChecksum: sha256(sdkBytes),
-			wasmSdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			wasmSdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			wasmSdkChecksum: sha256(sdkBytes),
 			fetchImpl: async () => ({
 				ok: true,
@@ -376,7 +376,7 @@ test('verifies outputs, prepares raw runtime, and packages Swift dist from a bui
 			format: 'wasm-swift-runtime-build-v1',
 			swiftVersion: OFFICIAL_SWIFT_VERSION,
 			wasmSdkId: OFFICIAL_WASM_SDK_ID,
-			wasmSdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+			wasmSdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 			wasmSdkChecksum: sha256(sdkBytes),
 			runtimeContract: EXPECTED_RUNTIME_CONTRACT,
 			runnerWorker: 'runner-worker.js',
@@ -416,8 +416,8 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 			() =>
 				packageSwiftRuntimeFromBuildPlan({
 					planPath,
-					swiftVersion: '6.3.3',
-					wasmSdkId: 'swift-6.3.3-RELEASE_wasm',
+					swiftVersion: '6.4.1',
+					wasmSdkId: 'swift-6.4.1-RELEASE_wasm',
 					source: 'unit test'
 				}),
 			/Swift browser build outputs are not ready/u
@@ -454,8 +454,8 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 			() =>
 				packageSwiftRuntimeFromBuildPlan({
 					planPath,
-					swiftVersion: '6.3.3',
-					wasmSdkId: 'swift-6.3.3-RELEASE_wasm',
+					swiftVersion: '6.4.1',
+					wasmSdkId: 'swift-6.4.1-RELEASE_wasm',
 					source: 'unit test'
 				}),
 			/receipts must have status passed/u
@@ -493,8 +493,8 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 			() =>
 				packageSwiftRuntimeFromBuildPlan({
 					planPath,
-					swiftVersion: '6.3.3',
-					wasmSdkId: 'swift-6.3.3-RELEASE_wasm',
+					swiftVersion: '6.4.1',
+					wasmSdkId: 'swift-6.4.1-RELEASE_wasm',
 					source: 'unit test'
 				}),
 			/receipt sha256 mismatch/u
@@ -521,8 +521,8 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 			() =>
 				packageSwiftRuntimeFromBuildPlan({
 					planPath,
-					swiftVersion: '6.3.3',
-					wasmSdkId: 'swift-6.3.3-RELEASE_wasm',
+					swiftVersion: '6.4.1',
+					wasmSdkId: 'swift-6.4.1-RELEASE_wasm',
 					source: 'unit test',
 					requireUpstreamBaselineReceipt: true
 				}),
@@ -537,7 +537,7 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 					wasmSdkId: OFFICIAL_WASM_SDK_ID,
 					source: 'unit test',
 					allowOfficialSdkPlaceholder: true,
-					sdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+					sdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 					sdkChecksum: 'c'.repeat(64)
 				}),
 			/matching --wasm-sdk-url and --wasm-sdk-checksum provenance/u
@@ -551,7 +551,7 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 					wasmSdkId: OFFICIAL_WASM_SDK_ID,
 					source: 'unit test',
 					allowOfficialSdkPlaceholder: true,
-					sdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+					sdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 					sdkChecksum: 'c'.repeat(64),
 					wasmSdkUrl: 'https://download.swift.org/test/other-swift-sdk.artifactbundle.tar.gz',
 					wasmSdkChecksum: 'c'.repeat(64)
@@ -567,9 +567,9 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 					wasmSdkId: OFFICIAL_WASM_SDK_ID,
 					source: 'unit test',
 					allowOfficialSdkPlaceholder: true,
-					sdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+					sdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 					sdkChecksum: 'c'.repeat(64),
-					wasmSdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+					wasmSdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 					wasmSdkChecksum: 'd'.repeat(64)
 				}),
 			/--wasm-sdk-checksum to match the fetched --sdk-checksum/u
@@ -583,7 +583,7 @@ test('rejects packaging from a build plan when required metadata or outputs are 
 					wasmSdkId: OFFICIAL_WASM_SDK_ID,
 					source: 'unit test',
 					allowOfficialSdkPlaceholder: true,
-					sdkUrl: 'https://download.swift.org/test/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz',
+					sdkUrl: 'https://download.swift.org/test/swift-6.4.1-RELEASE_wasm.artifactbundle.tar.gz',
 					sdkChecksum: 'c'.repeat(64),
 					officialWasmSdkProvenance: true
 				}),

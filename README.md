@@ -14,7 +14,7 @@ hosting and loaded by URL from the consuming application.
 
 | Producer       | Pinned inputs                                                                                    | Produced or verified artifacts                                      | Documentation                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| C3 | C3 0.8.3, imported LLVM 22.1.8 libraries, Emscripten 6.0.0 | Compiler module, builtin Wasm linker, source/diagnostic smoke evidence | [`producer/c3-browser`](producer/c3-browser/README.md) |
+| C3 | C3 0.8.5_1, imported LLVM 22.1.8 libraries, Emscripten 6.0.0 | Compiler rebuild, Node/Chromium compilation/linking and host byte I/O acceptance passed | [`producer/c3-browser`](producer/c3-browser/README.md) |
 | Clang          | LLVM 22.1.8, WASI SDK 33, emsdk 6.0.0, YoWASP WASI-host and local close/LLD/clangd-stdin patches | Clang, LLD, sysroot, MemFS, clangd, receipt                         | [`producer/clang-browser`](producer/clang-browser/README.md)                   |
 | COBOL          | GnuCOBOL 3.2, GMP 6.3.0, WASI SDK 33                                                             | `cobc`, rootfs, C sysroot, receipt                                  | [`producer/cobol-browser`](producer/cobol-browser/README.md)                   |
 | Crystal        | Crystal 1.21.0, verified native bootstrap, markd 0.5.0                                          | WASI object and compiler-host portability receipts; browser host blocked | [`producer/crystal-browser`](producer/crystal-browser/README.md)             |
@@ -28,14 +28,15 @@ hosting and loaded by URL from the consuming application.
 | Nim | Nim 2.2.4 and LLVM 8.0.1 content-locked prebuilts | Compiler assets, patched module bridge, legal files and producer receipt | [`producer/nim-browser`](producer/nim-browser/README.md) |
 | Objective-C    | libobjc2 2.3, robin-map 1.4.0, GNUstep Base 1.31.1, libffi 3.6.0                                 | `libobjc.a`, headers, optional Foundation/libffi archives, receipts | [`producer/objective-c-browser`](producer/objective-c-browser/README.md)       |
 | Odin           | dev-2026-09 source commit and official native bootstrap, emsdk 6.0.0                           | Native WASI object/link/stdio baseline and browser-host portability probe; browser compiler not ready | [`producer/odin-browser`](producer/odin-browser/README.md) |
-| Rust           | Rust 1.99.0, rust-lang LLVM 22.1.8, wasi-libc and libstdc++ commits                              | Full `rustc.wasm`, target libraries, receipt                        | [`producer/rust-browser`](producer/rust-browser/README.md)                     |
-| Swift          | Swift 6.3.3, official Wasm SDK, pinned LLVM/Swift/SwiftSyntax patches                            | Swift compiler modules, SDK bundle, manifests and receipts          | [`producer/swift-browser`](producer/swift-browser/README.md)                   |
-| TinyGo         | TinyGo 0.40.1, pinned go-llvm, TinyGo LLVM 20.1.1                                                | Upstream compiler, reduced root, strict receipt, Chromium consumer acceptance | [`producer/tinygo-browser`](producer/tinygo-browser/README.md)                 |
+| Rust           | Rust 1.99.1, matching rust-lang LLVM 23.1.1; Rust 1.98.0 bootstrap                              | Source updated; full rebuild and browser acceptance pending         | [`producer/rust-browser`](producer/rust-browser/README.md)                     |
+| Swift          | Swift 6.4.1 source and official Wasm SDK, pinned Swift LLVM 21.1/SwiftSyntax patches              | Compiler and SDK rebuild pending; source patch checks and producer tests only | [`producer/swift-browser`](producer/swift-browser/README.md)                   |
+| TinyGo         | TinyGo 0.43.0, pinned go-llvm, TinyGo LLVM 22.1.4, Go 1.26.10 source inputs                       | Compiler rebuilt; strict producer and Node/Chromium acceptance passed | [`producer/tinygo-browser`](producer/tinygo-browser/README.md)                 |
 | V              | V 0.5.2 (`vlang/vc` bootstrap `v.c`), WASI SDK 33 | WASI compiler, vlib root, C sysroot with WASI compatibility archive, compile/run acceptance receipt | [`producer/v-browser`](producer/v-browser/README.md) |
 | WAMR           | WAMR 2.4.5, emsdk 6.0.0, browser RSP transport patch                                            | Interpreter/debug-stub JS/Wasm/pthread worker and receipt           | [`producer/wamr-browser`](producer/wamr-browser/README.md)                     |
+| Zig | Zig 0.17.0 source/native bootstrap, pinned zigc-wasm WASI port | WASI compiler, complete library archive, compile/run qualification receipt | [`producer/zig-browser`](producer/zig-browser/README.md) |
 
 `artifacts/clang-browser`, `artifacts/cobol-browser`, `artifacts/lean-browser` and
-`artifacts/v-browser` hold verified producer outputs currently tracked for deployment.
+`artifacts/v-browser` and `artifacts/zig-browser` hold verified producer outputs currently tracked for deployment.
 The Emscripten LLD canonical import remains next to its producer at
 `producer/emscripten-lld-browser/artifacts`. None of these paths are npm package contents.
 
@@ -140,6 +141,11 @@ pnpm build:tinygo-browser -- --help
 pnpm accept:tinygo-browser -- --help
 pnpm probe:tinygo-native-split -- --help
 pnpm verify:tinygo-artifacts -- --help
+
+# Zig 0.17.0 WASI compiler and complete matching library
+python3 -B producer/zig-browser/scripts/build.py
+python3 -B producer/zig-browser/scripts/package.py
+python3 -B producer/zig-browser/scripts/package.py --verify
 
 # Legacy LLVM 16 worker synchronization (not a TinyGo compiler)
 pnpm sync:tinygo -- out/tinygo-browser/emception.worker.js

@@ -42,7 +42,7 @@ test('bootstrap receipt records executable bytes and actual version output', asy
 test('workflow verifies every downloaded executable/archive before first use and keys cache by tool identity', async () => {
 	const workflow = await fs.readFile('.github/workflows/tinygo-browser-producer.yml', 'utf8');
 	for (const [pin, usage] of [
-		['llvmInstaller', 'sudo "$RUNNER_TEMP/llvm.sh" 20'],
+		['llvmInstaller', 'sudo "$RUNNER_TEMP/llvm.sh" 22'],
 		['wasiSdk', 'tar -xzf "$TINYGO_WORK/wasi-sdk.tar.gz"'],
 		['tinygo', 'tar -xzf "$TINYGO_WORK/tinygo.tar.gz"'],
 		['go', 'unzip -q "$TINYGO_GO_ARCHIVE"']
@@ -53,4 +53,24 @@ test('workflow verifies every downloaded executable/archive before first use and
 	}
 	assert.match(workflow, /key: tinygo-llvm-wasi-v3-.*TINYGO_BOOTSTRAP_SHA256/);
 	assert.match(workflow, /bootstrap-receipt\.json/);
+});
+
+test('bootstrap inputs and recorded native tools match the producer source lock', async () => {
+	const sources = JSON.parse(await fs.readFile(new URL('../sources.lock.json', import.meta.url), 'utf8'));
+	const workflow = await fs.readFile('.github/workflows/tinygo-browser-producer.yml', 'utf8');
+	assert.equal(pins.go.url, `https://proxy.golang.org/${sources.goToolchain.module}/@v/${sources.goToolchain.archiveFilename}`);
+	assert.equal(pins.go.sha256, sources.goToolchain.archiveSha256);
+	assert.equal(pins.tinygo.url, `https://github.com/tinygo-org/tinygo/releases/download/${sources.tinygo.ref}/tinygo${sources.tinygo.version}.linux-amd64.tar.gz`);
+	for (const [name, binary] of [['llvmTablegen', 'llvm-tblgen'], ['clangTablegen', 'clang-tblgen']]) {
+		assert.ok(workflow.includes(`"${name}=$TINYGO_NATIVE_TABLEGEN/bin/${binary}"`));
+	}
+	assert.ok(workflow.includes('--native-tool-dir "$TINYGO_NATIVE_TABLEGEN/bin"'));
+	const sourceCheckout = workflow.indexOf(`git -C "$TINYGO_LLVM_SOURCE" checkout --detach`);
+	const nativeBuild = workflow.indexOf('cmake --build "$TINYGO_NATIVE_TABLEGEN" --target llvm-tblgen clang-tblgen');
+	const forkProbe = workflow.indexOf('-gen-riscv-espv-builtin-codegen');
+	const toolReceipt = workflow.indexOf('--record-tools');
+	const crossBuild = workflow.indexOf('name: Build source-locked LLVM host for WASI');
+	assert.ok(sourceCheckout > 0 && sourceCheckout < nativeBuild);
+	assert.ok(nativeBuild < forkProbe && forkProbe < toolReceipt && toolReceipt < crossBuild);
+	assert.ok(workflow.includes('-S "$TINYGO_LLVM_SOURCE/llvm" -B "$TINYGO_NATIVE_TABLEGEN"'));
 });

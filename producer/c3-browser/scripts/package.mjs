@@ -19,7 +19,7 @@ async function assertReleaseEntries(directory, { complete = true } = {}) {
 }
 
 export function requireSmokeChecks(smoke) {
-	for (const check of ['compileOnly', 'invalidSourceDiagnostic', 'builtinLink', 'arithmetic', 'hostByteInputOutput']) {
+	for (const check of ['compileOnly', 'invalidSourceDiagnostic', 'builtinLink', 'arithmetic', 'hostByteInputOutput', 'hostSyscallWarningsAbsent']) {
 		if (smoke?.checks?.[check] !== true) throw new Error(`Missing successful compiler smoke check: ${check}`);
 	}
 }

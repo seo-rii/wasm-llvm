@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "target": "x86_64-linux-gnu",
+  "host": "wasm32-emscripten",
+  "sources": {
+    "gcc": {
+      "version": "16.2.0",
+      "url": "https://ftp.gnu.org/gnu/gcc/gcc-16.2.0/gcc-16.2.0.tar.xz",
+      "sha256": "e6738e29597f733270731aa90600f37ffdc045079dfc27ec7e8192cc81085c3e",
+      "directory": "gcc-16.2.0",
+      "patches": [
+        {
+          "path": "patches/0001-emscripten-pch-relocation.patch",
+          "sha256": "1ee4f749dbc661e645d8267d8726edc1eeb036165ebe5b1443819731e408e5e7",
+          "upstreamCommits": [],
+          "files": {
+            "gcc/ggc-common.cc": {
+              "beforeSha256": "a5a41143b78a22376c6d830215ee856616db68bbf4432987479f4e4b8ded4627",
+              "afterSha256": "d1df43658fa7827674d03cc49629e31ba1f4150807342b7aa9b0c4dec34434a8"
+            }
+          }
+        }
+      ]
+    },
+    "binutils": { "version": "2.42", "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.xz", "sha256": "f6e4d41fd5fc778b06b7891457b3620da5ecea1006c6a4a41ae998109f85a800", "directory": "binutils-2.42" },
+    "gmp": { "version": "6.3.0", "url": "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz", "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898", "directory": "gmp-6.3.0" },
+    "mpfr": { "version": "4.2.1", "url": "https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.1.tar.xz", "sha256": "277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2", "directory": "mpfr-4.2.1" },
+    "mpc": { "version": "1.3.1", "url": "https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz", "sha256": "ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8", "directory": "mpc-1.3.1" }
+  },
+  "emsdk": {
+    "url": "https://github.com/emscripten-core/emsdk.git",
+    "version": "4.0.23",
+    "revision": "c0bb220cb6e6f4e0fabb6f6db9efd53390ef5e56",
+    "releasesRevision": "aaa43392544d695232b70eda706d751f18980c2a"
+  },
+  "emscriptenPorts": {
+    "zlib": {
+      "version": "1.3.1",
+      "url": "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz",
+      "sha512": "8c9642495bafd6fad4ab9fb67f09b268c69ff9af0f4f20cf15dfc18852ff1f312bd8ca41de761b3f8d8e90e77d79f2ccacd3d4c5b19e475ecf09d021fdfe9088",
+      "verifiedBy": "emscripten/tools/ports/zlib.py at the locked SDK release"
+    }
+  },
+  "precedents": [
+    { "repository": "https://github.com/begeistert/wasm-toolchains", "revision": "66af4dcbaa49c2f16699ac88b4b16fc697683ca5", "files": ["src/avr-gcc/build.sh", "src/arm-gcc/build.sh", "src/arm-gcc/Dockerfile"], "gccVersions": ["15.2.0", "14.3.0"], "target": "AVR/ARM only; not x86-64 validation", "reusedApproach": "Native build-time generators, Wasm GMP/MPFR/MPC, direct cc1/cc1plus and binutils modules, explicit FS/callMain orchestration" },
+    { "repository": "https://github.com/horang-corp/avr-gcc-wasm", "revision": "e3a563f765b041623734991125d5640c7e56053e", "files": ["README.md", "firmware-builder.js", "THIRD_PARTY_NOTICES.md"], "target": "AVR only; not x86-64 validation", "reusedApproach": "One dedicated Worker per compilation with actual GCC, assembler and linker stages" }
+  ]
+}

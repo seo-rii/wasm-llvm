@@ -1,0 +1,28 @@
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -118,6 +118,10 @@
+ #define BIGGEST_ALIGNMENT 128
+ #define STRICT_ALIGNMENT 0
+ 
++/* Basic C ABI: named bitfields retain their declared type alignment.
++   Unnamed bitfields keep the default TARGET_ALIGN_ANON_BITFIELD false.  */
++#define PCC_BITFIELD_TYPE_MATTERS 1
++
+ /* Copied from elf.h and other places.  We'd otherwise use
+    BIGGEST_ALIGNMENT and fail a number of testcases.  */
+ #define MAX_OFILE_ALIGNMENT (32768 * 8)
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -852,7 +852,11 @@
+         {
+           if (TREE_CODE (field) != FIELD_DECL)
+             continue;
+-          const_tree field_type = TREE_TYPE (field);
++          /* Layout narrows TREE_TYPE to the bitfield width.  ABI
++             singleton classification uses its declared storage type,
++             including the record size and alignment checks below.  */
++          const_tree field_type = DECL_BIT_FIELD_TYPE (field)
++            ? DECL_BIT_FIELD_TYPE (field) : TREE_TYPE (field);
+           if ((DECL_SIZE (field) && integer_zerop (DECL_SIZE (field)))
+               || (wasm_abi_empty_type_p (field_type)
+                   && TYPE_SIZE (field_type)

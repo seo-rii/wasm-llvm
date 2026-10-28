@@ -8,6 +8,7 @@ import {
   materializeNativeLinkArguments,
   parseNativeSplitPipelineArgs,
   runNativeSplitPipeline,
+  runWasiModule,
   validateNativeLinkPlan,
 } from "../scripts/probe-native-split-pipeline.mjs";
 
@@ -54,7 +55,7 @@ function validLinkPlan() {
         sourceSha256: "b".repeat(64),
         dependencies: [],
         llvmValidation: {
-          toolchain: "llvm-20.1.1",
+          toolchain: "llvm-22.1.4",
           moduleVerified: true,
           targetTriple: "wasm32-unknown-wasi",
           dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
@@ -77,7 +78,7 @@ function validLinkPlan() {
         dependencies: [],
         compilerFlags: ["-DTINYGO_CXX_SCALE=2"],
         llvmValidation: {
-          toolchain: "llvm-20.1.1",
+          toolchain: "llvm-22.1.4",
           moduleVerified: true,
           targetTriple: "wasm32-unknown-wasi",
           dataLayout: "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20",
@@ -213,6 +214,24 @@ async function createFixture() {
   ]);
   return { linkPlan, paths };
 }
+
+test("preserves both output streams when a real WASI module prints a panic and traps", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "tinygo-wasi-trap-"));
+  tempDirs.push(root);
+  const modulePath = path.join(root, "panic.wasm");
+  // fd_write(1, "panic: intrinsic\n"), fd_write(2, "details\n"), unreachable.
+  // The module exports its one-page memory and _start entrypoint.
+  await writeFile(modulePath, Buffer.from(
+    "AGFzbQEAAAABDAJgBH9/f38Bf2AAAAIjARZ3YXNpX3NuYXBzaG90X3ByZXZpZXcxCGZkX3dyaXRlAAADAgEBBQMBAAEHEwIGbWVtb3J5AgAGX3N0YXJ0AAEKHQEbAEEBQQBBAUHAABAAGkECQQhBAUHAABAAGgALCzkDAEEACxAQAAAAEQAAADAAAAAIAAAAAEEQCxFwYW5pYzogaW50cmluc2ljCgBBMAsIZGV0YWlscwo=",
+    "base64",
+  ));
+  await assert.rejects(runWasiModule({ modulePath, args: ["panic.wasm"], preopens: {} }), (error) => {
+    assert.match(error.message, /stdout:\npanic: intrinsic/u);
+    assert.match(error.message, /stderr:\ndetails/u);
+    assert.ok(error.cause instanceof WebAssembly.RuntimeError);
+    return true;
+  });
+});
 
 test("parses every pipeline path from an explicit named CLI option", () => {
   const cwd = path.join(path.sep, "work");
@@ -401,6 +420,54 @@ test("fails when final execution differs byte-for-byte from expected stdout", as
       }),
     /Final stdout mismatch.*hello Ada count=2 total=3 cgo=5\/20.*wrong output/su,
   );
+});
+
+test("accepts exact preview1 input triple provenance without changing the canonical ABI", () => {
+  assert.doesNotThrow(() => validateNativeLinkPlan(validLinkPlan()));
+  for (const inputTargetTriple of [
+    "wasm32-unknown-wasi",
+    "wasm32-unknown-wasip1",
+  ]) {
+    const plan = validLinkPlan();
+    for (const object of plan.objects.filter((item) => item.llvmValidation)) {
+      object.llvmValidation.inputTargetTriple = inputTargetTriple;
+    }
+    assert.doesNotThrow(() => validateNativeLinkPlan(plan));
+  }
+});
+
+test("rejects non-preview1 provenance, extra fields and changed canonical LLVM evidence", () => {
+  for (const objectIndex of [1, 2]) {
+    for (const invalidEvidence of [
+      { inputTargetTriple: null },
+      { inputTargetTriple: undefined },
+      { inputTargetTriple: "wasm32-unknown-wasip2" },
+      { inputTargetTriple: "wasm32-unknown-wasip3" },
+      { inputTargetTriple: "wasm64-unknown-wasip1" },
+      { inputTargetTriple: "wasm32-unknown-unknown" },
+      { inputTargetTriple: "wasm32-unknown-wasip1-threads" },
+      { inputTargetTriple: "wasm32-unknown-wasip1", extra: true },
+      { inputTargetTriple: "wasm32-unknown-wasip1", extra: undefined },
+      { inputTargetTriple: "wasm32-unknown-wasip1", targetTriple: "wasm32-unknown-wasip1" },
+      { targetTriple: "wasm32-unknown-wasip1" },
+      { inputTargetTriple: "wasm32-unknown-wasip1", dataLayout: "e-p:64:64" },
+      { inputTargetTriple: "wasm32-unknown-wasip1", threadLocalGlobals: 1 },
+    ]) {
+      const plan = validLinkPlan();
+      Object.assign(plan.objects[objectIndex].llvmValidation, invalidEvidence);
+      assert.throws(
+        () => validateNativeLinkPlan(plan),
+        /lacks exact LLVM validation/u,
+      );
+    }
+    for (const withInputTriple of [false, true]) {
+      const plan = validLinkPlan();
+      const evidence = Object.assign([], plan.objects[objectIndex].llvmValidation);
+      if (withInputTriple) evidence.inputTargetTriple = "wasm32-unknown-wasip1";
+      plan.objects[objectIndex].llvmValidation = evidence;
+      assert.throws(() => validateNativeLinkPlan(plan), /lacks exact LLVM validation/u);
+    }
+  }
 });
 
 test("rejects reordered C objects and malformed native dependency evidence", () => {
