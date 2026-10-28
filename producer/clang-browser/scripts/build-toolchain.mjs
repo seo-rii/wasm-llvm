@@ -10,6 +10,7 @@ import { GCC_COMPATIBILITY_HEADERS } from './gcc-compat.mjs';
 import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
+import { clangdResourceProfile } from './resource-profile.mjs';
 import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -62,6 +63,7 @@ const config = {
 	clangdTidyChecks: process.env.CLANGD_TIDY_CHECKS || 'OFF',
 	clangdDecisionForest: process.env.CLANGD_DECISION_FOREST || 'OFF',
 	clangdSeparateHeaders: process.env.CLANGD_SEPARATE_HEADERS || 'OFF',
+	clangdResources: clangdResourceProfile(),
 	workDir: path.resolve(
 		process.env.WASM_LLVM_TOOLCHAIN_WORK_DIR ||
 			process.env.WASM_CLANG_TOOLCHAIN_WORK_DIR ||
@@ -130,6 +132,8 @@ Environment:
   CLANGD_TIDY_CHECKS=${config.clangdTidyChecks}
   CLANGD_DECISION_FOREST=${config.clangdDecisionForest}
   CLANGD_SEPARATE_HEADERS=${config.clangdSeparateHeaders}
+  CLANGD_INITIAL_MEMORY_MIB=${config.clangdResources.initialMemoryMiB} (experimental)
+  CLANGD_PTHREAD_POOL_SIZE=${config.clangdResources.pthreadPoolSize} (unset preserves hardware-based default)
   YOWASP_WASI_PATCH_REPO=${config.yowaspWasiPatchRepo}
   YOWASP_WASI_PATCH_COMMIT=${config.yowaspWasiPatchCommit}
   WASM_LLVM_TOOLCHAIN_WORK_DIR=${config.workDir}
@@ -452,7 +456,8 @@ await fs.mkdir(sourceDir, { recursive: true });
 await fs.mkdir(buildDir, { recursive: true });
 await fs.mkdir(toolsDir, { recursive: true });
 const recipeFiles = ['build-toolchain.mjs', 'build-provenance.mjs', 'build-memfs.mjs',
-	'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh'];
+	'prepare-clangd-headers.mjs', 'sysroot-pruning.mjs', 'gcc-compat.mjs', 'hot-path-launcher.sh',
+	'resource-profile.mjs'];
 const recipe = [];
 for (const file of recipeFiles) recipe.push({ path: `scripts/${file}`, ...await fileIdentity(path.join(scriptDir, file)) });
 for (const command of ['cmake', 'ninja', 'tar']) await recordPathTool(command, command);
@@ -933,7 +938,7 @@ const clangdConfigure = [
 	shellQuote(clangdBuild),
 	shellQuote('-DCMAKE_CXX_FLAGS=-pthread -Dwait4=__syscall_wait4'),
 	shellQuote(
-		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=2GB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='Math.max(navigator.hardwareConcurrency, 8)'${clangdHeaderLinkFlags}`
+		`-DCMAKE_EXE_LINKER_FLAGS=-pthread -s ENVIRONMENT=worker -s NO_INVOKE_RUN -s EXIT_RUNTIME -s INITIAL_MEMORY=${config.clangdResources.initialMemoryMiB}MB -s ALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=4GB -s STACK_SIZE=256kB -s EXPORTED_RUNTIME_METHODS=FS,callMain -s MODULARIZE -s EXPORT_ES6 -s WASM_BIGINT -s ASSERTIONS=${config.clangdAssertions === 'ON' ? 1 : 0} -s ASYNCIFY -s PTHREAD_POOL_SIZE='${config.clangdResources.poolExpression}'${clangdHeaderLinkFlags}`
 	),
 	`-DCMAKE_BUILD_TYPE=${config.llvmBuildType}`,
 	shellQuote(`-DCMAKE_C_FLAGS_MINSIZEREL=-${config.llvmMinSizeOpt} -DNDEBUG`),
