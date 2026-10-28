@@ -1,0 +1,1249 @@
+{
+  "schemaVersion": 1,
+  "kind": "gcc-wasi-simd-vector-extension-qualification",
+  "date": "2026-10-27T01:20:27.109667+00:00",
+  "status": "passed",
+  "scope": "Actual GCC frontend and RTL Wasm backend, native and Wasm hosts; no Clang source fallback.",
+  "compilerHost": "wasm32-emscripten",
+  "outputTarget": "wasm32-wasi-preview1",
+  "sourceLock": {
+    "schemaVersion": 1,
+    "host": "wasm32-emscripten",
+    "target": "wasm32-wasi",
+    "gcc": {
+      "version": "17.0.0",
+      "repository": "https://forge.sourceware.org/feedable/gcc-TEST.git",
+      "branch": "gcc-wasm-2",
+      "commit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "upstreamBase": "33ac889aa27d9917e6e7d07c282015b7c48e0440",
+      "backendCommit": "8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd",
+      "license": "GPL-3.0-or-later WITH GCC-exception-3.1 for eligible runtime files; compiler GPL-3.0-or-later",
+      "status": "experimental, unmerged author port",
+      "patches": [
+        {
+          "path": "patches/0001-void-type-return.patch",
+          "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b",
+          "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures."
+        },
+        {
+          "path": "patches/0002-host-width-format.patch",
+          "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7",
+          "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets."
+        },
+        {
+          "path": "patches/0003-simd128.patch",
+          "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5",
+          "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default."
+        },
+        {
+          "path": "patches/0004-basic-c-abi.patch",
+          "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df",
+          "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension."
+        },
+        {
+          "path": "patches/0005-atomic-libcall-abi.patch",
+          "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5",
+          "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration."
+        },
+        {
+          "path": "patches/0006-simd-operations.patch",
+          "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8",
+          "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles."
+        },
+        {
+          "path": "patches/0007-vector-abi.patch",
+          "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15",
+          "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage."
+        }
+      ]
+    },
+    "wabt": {
+      "version": "1.0.37",
+      "repository": "https://github.com/feedab1e/wabt.git",
+      "commit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173",
+      "license": "Apache-2.0",
+      "purpose": "Assembler for GCC's annotated relocatable WAT; upstream WABT is insufficient"
+    },
+    "wasiSdk": {
+      "version": "33.0",
+      "repository": "https://github.com/WebAssembly/wasi-sdk",
+      "tag": "wasi-sdk-33",
+      "archive": "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz",
+      "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+      "llvmVersion": "22.1.0",
+      "llvmCommit": "4434dabb69916856b824f68a64b029c67175e532",
+      "purpose": "Native wasm-ld, WASI Preview 1 libc/CRT and compiler-rt builtins; never compiles user source"
+    },
+    "emsdk": {
+      "version": "6.0.0",
+      "repository": "https://github.com/emscripten-core/emsdk.git",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+      "emscriptenCommit": "afa15e0c56d1292e073c2c91bafc1d5e0cdf0dd3"
+    }
+  },
+  "sourceLockIdentity": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/producer/gcc-wasi/sources.lock.json",
+    "bytes": 3579,
+    "sha256": "f66cbd631aec3f5aec11d2b9c994b180f6268d173ffd83936414e264e1def588"
+  },
+  "runtimeLock": {
+    "schemaVersion": 1,
+    "wasiLibc": {
+      "repository": "https://github.com/WebAssembly/wasi-libc",
+      "commit": "161b3195fc2558d2b1ba3eb9ffae3b2b47407623",
+      "version": "wasi-sdk-33",
+      "sdkRepository": "https://github.com/WebAssembly/wasi-sdk",
+      "sdkCommit": "c10c0507deb3e5aad506f1f9f32084e49a21834b",
+      "sdkArchiveSha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+      "patches": [
+        {
+          "path": "patches/wasi-libc-errno.patch",
+          "sha256": "a2a5927c52b3c31e9f53c2f969676aa64b491d41830d65755ef379a16ee86cf7",
+          "purpose": "Match the real single-thread WASI libc errno storage without claiming a GCC TLS ABI."
+        }
+      ]
+    },
+    "browserLinker": {
+      "repository": "https://github.com/llvm/llvm-project",
+      "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+      "version": "22.1.8",
+      "host": "wasm32-wasi",
+      "archive": "artifacts/clang-browser/lld.zip",
+      "archiveSha256": "b6f7a37892d92805912b1d42ece57d2b70207c59514c8cb6c57aa2fceaeb1039",
+      "producerManifest": "producer/gcc-wasi/snapshots/llvm-producer-7974451.json",
+      "producerManifestRevision": "7974451468cb09e271f068fd4d6a1af285b22acd",
+      "producerManifestOriginalPath": "producer/clang-browser/manifest.json",
+      "producerManifestSha256": "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78",
+      "toolchainReceipt": "artifacts/clang-browser/toolchain.json",
+      "toolchainReceiptSha256": "237a4d29d5a0a7edbec9e78f5a61c303b5e3d90eeb2ff7d4b4bb7b8fe77e5ae8",
+      "note": "Only the real wasm-ld linker is reused; GCC emits all user-code instructions. Existing LLVM producer carries its WASI host and wasm-only linker patches."
+    }
+  },
+  "qualifiedInputs": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/qualification-inputs.json",
+    "bytes": 62203,
+    "sha256": "28da26efd69bd867a6fc735d295aaeaaa5bf1afb7ac2cdccace9412ea3aa1cba"
+  },
+  "qualifiedProducerCodeCommit": "788136e7cb54ec8729003b02ba9fd33712a1ce48",
+  "qualifiedSdkCommit": "fad81b477eff4ec7eef9a3b5b1cd0a14aa037598",
+  "inputFilesUnchanged": {
+    "producer": 53,
+    "sdk": 336
+  },
+  "manifest": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/bundle/gcc-toolchain.v2.json",
+    "bytes": 11575,
+    "sha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb"
+  },
+  "capabilities": {
+    "c": true,
+    "cpp": true,
+    "libc": true,
+    "libm": true,
+    "libstdcxx": true,
+    "staticInitialization": true,
+    "exceptions": false,
+    "rtti": false,
+    "threads": false,
+    "dynamicLinking": false,
+    "simd": true
+  },
+  "limitations": [
+    "Experimental, unmerged GCC 17 backend; not a released GCC target.",
+    "long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.",
+    "Arbitrary external objects are outside the SDK input contract.",
+    "C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.",
+    "GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.",
+    "SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization and wasm_simd128.h intrinsics are not qualified.",
+    "Direct v128 and qualified vector aggregate ABI require -msimd128 on both sides; the disabled profile retains indirect vector arguments/results.",
+    "x86 AVX2/FMA intrinsics and target pragmas do not provide Wasm SIMD."
+  ],
+  "builds": {
+    "native": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-work/native-build.json",
+        "bytes": 2859,
+        "sha256": "627101852b5a62cc1123673abab880b64888720fb392d792c428be2a0a51d167"
+      },
+      "schemaVersion": 1,
+      "host": "native",
+      "target": "wasm32-wasi",
+      "sourceLockSha256": "f66cbd631aec3f5aec11d2b9c994b180f6268d173ffd83936414e264e1def588",
+      "recipeSha256": "9e986668497fcf388bad789bc998b0ba7fe326915b6d6385191ff592c983c679",
+      "driverSpecsSha256": "15745887073b02a151caf3763fd0bb95aa3b50dc7d6d14170018777de4b95811",
+      "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "gccSource": {
+        "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+        "patches": [
+          {
+            "path": "patches/0001-void-type-return.patch",
+            "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+            "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+          },
+          {
+            "path": "patches/0002-host-width-format.patch",
+            "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+            "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+          },
+          {
+            "path": "patches/0003-simd128.patch",
+            "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+            "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+          },
+          {
+            "path": "patches/0004-basic-c-abi.patch",
+            "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+            "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+          },
+          {
+            "path": "patches/0005-atomic-libcall-abi.patch",
+            "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+            "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+          },
+          {
+            "path": "patches/0006-simd-operations.patch",
+            "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+            "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+          },
+          {
+            "path": "patches/0007-vector-abi.patch",
+            "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+            "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+          }
+        ],
+        "sourceDiffSha256": "d706fef42fc4cda84a955d1e3130b0171a965a7e4c7c0cfccdb5caf40b6d70c7"
+      },
+      "tools": {
+        "cc1": {
+          "sha256": "65b5664d6539fe3d4830f5ee9dfb9ee71bc81fefaf8bc61c120b6495231246c3"
+        },
+        "cc1plus": {
+          "sha256": "c3cdf2c2162522faa84104f1b5c5ca00246a45a299d4ff2377139c65ced93337"
+        },
+        "xgcc": {
+          "sha256": "5651624dbf1e2114e25804816bbae31a5275b649fa127b0ef4ecbf22c23a87e2"
+        }
+      }
+    },
+    "browser": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-work/browser-compiler/compiler-build.json",
+        "bytes": 7791,
+        "sha256": "483a402c551741a1161995c7e81b621368f5c1cbb066c4e049557ade6a3d63c1"
+      },
+      "schemaVersion": 1,
+      "kind": "gcc-wasi-browser-build",
+      "host": "wasm32-emscripten",
+      "target": "wasm32-wasi",
+      "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "gccSource": {
+        "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+        "patches": [
+          {
+            "path": "patches/0001-void-type-return.patch",
+            "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+            "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+          },
+          {
+            "path": "patches/0002-host-width-format.patch",
+            "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+            "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+          },
+          {
+            "path": "patches/0003-simd128.patch",
+            "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+            "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+          },
+          {
+            "path": "patches/0004-basic-c-abi.patch",
+            "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+            "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+          },
+          {
+            "path": "patches/0005-atomic-libcall-abi.patch",
+            "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+            "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+          },
+          {
+            "path": "patches/0006-simd-operations.patch",
+            "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+            "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+          },
+          {
+            "path": "patches/0007-vector-abi.patch",
+            "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+            "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+          }
+        ],
+        "sourceDiffSha256": "d706fef42fc4cda84a955d1e3130b0171a965a7e4c7c0cfccdb5caf40b6d70c7"
+      },
+      "sourceLock": {
+        "bytes": 3579,
+        "sha256": "f66cbd631aec3f5aec11d2b9c994b180f6268d173ffd83936414e264e1def588"
+      },
+      "recipe": {
+        "bytes": 6875,
+        "sha256": "5ebba8efc5b1fdddb62650bc0e7aa1dc9bd74d3573a875be1e0fccfe598bf825"
+      },
+      "hostDependencies": {
+        "gmp": {
+          "bytes": 715202,
+          "sha256": "3087b7487ebc74795a80b6fc99c20773e3c0e55c00ddf0fcb79dbeda6357e73c"
+        },
+        "mpfr": {
+          "bytes": 649232,
+          "sha256": "bb5e9a91051d84d5f813fed1ee8bebbc21bf7b67ee901c91d4b08de389566674"
+        },
+        "mpc": {
+          "bytes": 145886,
+          "sha256": "1b0a5f86658f72cccfd47f6cf3fb030de6b18a313743709a3c44b8c4c9e122b2"
+        }
+      },
+      "nativeQualification": {
+        "bytes": 71629,
+        "sha256": "164e38153cf66ed4125b523536b94f5699ae0434f2b42bfa07f3df7938240a3e"
+      },
+      "files": {
+        "cc1.mjs": {
+          "bytes": 133499,
+          "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+        },
+        "cc1.wasm": {
+          "bytes": 15575405,
+          "sha256": "8a6f91978b6634eaab576e4cbfb7938d66882b28a72387e0ed6ebb94ae0d9bfc"
+        },
+        "cc1plus.mjs": {
+          "bytes": 139030,
+          "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+        },
+        "cc1plus.wasm": {
+          "bytes": 17235066,
+          "sha256": "d42a46aa583d03907bad10468417e0c445f24420f6f1930242bc3dadb3b9b5b3"
+        },
+        "licenses/emscripten-LICENSE": {
+          "bytes": 5093,
+          "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86"
+        },
+        "licenses/gcc-COPYING": {
+          "bytes": 18002,
+          "sha256": "231f7edcc7352d7734a96eef0b8030f77982678c516876fcb81e25b32d68564c"
+        },
+        "licenses/gcc-COPYING.RUNTIME": {
+          "bytes": 3324,
+          "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+        },
+        "licenses/gcc-COPYING3": {
+          "bytes": 35147,
+          "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+        },
+        "licenses/gmp-6.3.0/COPYING": {
+          "bytes": 35147,
+          "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+        },
+        "licenses/gmp-6.3.0/COPYING.LESSERv3": {
+          "bytes": 7639,
+          "sha256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c"
+        },
+        "licenses/gmp-6.3.0/COPYINGv2": {
+          "bytes": 18092,
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+        },
+        "licenses/gmp-6.3.0/COPYINGv3": {
+          "bytes": 35150,
+          "sha256": "e6037104443f9a7829b2aa7c5370d0789a7bda3ca65a0b904cdc0c2e285d9195"
+        },
+        "licenses/mpc-1.3.1/COPYING.LESSER": {
+          "bytes": 7651,
+          "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+        },
+        "licenses/mpfr-4.2.1/COPYING": {
+          "bytes": 35149,
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+        },
+        "licenses/mpfr-4.2.1/COPYING.LESSER": {
+          "bytes": 7652,
+          "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+        },
+        "resource-include/float.h": {
+          "bytes": 21430,
+          "sha256": "28713290dd87e4468602f1e1e013988ca0b6f63b43052b5124f48530b7cdc2b4"
+        },
+        "resource-include/iso646.h": {
+          "bytes": 1272,
+          "sha256": "0584525ab7c2ffc635f7dccd3850c8619fadf78f170987034b5f7a961a85bbdf"
+        },
+        "resource-include/limits.h": {
+          "bytes": 4870,
+          "sha256": "c26d2c9badbfe2bffac0695dda2b72117b951d1bd56d981618011dc01a81cccd"
+        },
+        "resource-include/stdalign.h": {
+          "bytes": 1338,
+          "sha256": "0af28c6982fa1227427bc259117b5cba2b278189f9378fe0c0c1a4ee4b5d1819"
+        },
+        "resource-include/stdarg.h": {
+          "bytes": 4378,
+          "sha256": "173a81bfbe88a2da5ed5d238e14e0eaca61b090ee6d7b12b5f9614daeea21600"
+        },
+        "resource-include/stdatomic.h": {
+          "bytes": 9715,
+          "sha256": "7e359ce3ebff2f69dd863cf73637e3d70a20486509eba285d659574805c17885"
+        },
+        "resource-include/stdbool.h": {
+          "bytes": 1490,
+          "sha256": "f2a112e8b2128fb1d76e7c0b625cec8760955ebeae5cdf6b419ccf0c6d62768f"
+        },
+        "resource-include/stdckdint.h": {
+          "bytes": 1509,
+          "sha256": "085abc93851c650db04fce113081fe7ca74b5ef374b999097bd46c6f3baeb788"
+        },
+        "resource-include/stdcountof.h": {
+          "bytes": 1104,
+          "sha256": "734cd7e7024ced3010d55f704620084d657a50dd6cf610c9beaf020428cecc57"
+        },
+        "resource-include/stddef.h": {
+          "bytes": 14134,
+          "sha256": "868352506950054491b9c76a4e2814f4f3601d227d3dea62a3e75875f327f2c1"
+        },
+        "resource-include/stdfix.h": {
+          "bytes": 6000,
+          "sha256": "0d81b862fffaa67a7851809df7427ad6e3368ef588fa7990cccc44842dc07d14"
+        },
+        "resource-include/stdint-gcc.h": {
+          "bytes": 9648,
+          "sha256": "c955891e7a7fbadde60a187f66c5b09564d4a1ed751f1c5dd820fb1d71f246db"
+        },
+        "resource-include/stdint.h": {
+          "bytes": 443,
+          "sha256": "64ab730bb09eba38f01a62174fb8371ef281778ac33f141a6fa4217a9b39466a"
+        },
+        "resource-include/stdnoreturn.h": {
+          "bytes": 1136,
+          "sha256": "8e9a835f0009938c402214ab56463500b4732fcd49d1a66583b93d6d032cdeca"
+        },
+        "resource-include/syslimits.h": {
+          "bytes": 445,
+          "sha256": "9409a59233daef9339a757c58b3dd1cee980a65f1ef2590040fe5e106222a4bc"
+        },
+        "resource-include/tgmath.h": {
+          "bytes": 5461,
+          "sha256": "c4742f7a6cac8f610ea6c767b2ae26e66d0c8014288233f943c68d7b43204343"
+        },
+        "resource-include/varargs.h": {
+          "bytes": 139,
+          "sha256": "f9acb21973be5764aa2fd689c941ad963c1ecdd133f3a6529f279803135f8268"
+        }
+      }
+    },
+    "libstdcxx": {
+      "receipt": {
+        "path": "/dev/shm/gcc-wasi-extended-20261027/libstdcxx/libstdcxx-build.json",
+        "bytes": 157846,
+        "sha256": "cab98a39318c6b3dbd7e322737a55e9fbaefa081ccba8d85cd3035c0c1ff83c0"
+      }
+    },
+    "nativeBootstrap": {
+      "initialAllGccExitCode": 2
+    },
+    "browserBootstrap": {
+      "allGccBootstrapExitCode": 2
+    },
+    "bootstrapNote": "Draft native driver selftest -stdlib=libc++ and browser gcov ftw failures are recorded separately; required compiler builds and explicit native selftests completed successfully."
+  },
+  "native": {
+    "basic": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/native-basic/provenance.json",
+        "bytes": 71629,
+        "sha256": "164e38153cf66ed4125b523536b94f5699ae0434f2b42bfa07f3df7938240a3e"
+      },
+      "passed": 13,
+      "failed": 0
+    },
+    "scalar-abi": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/native-scalar-abi/report.json",
+        "bytes": 1334761,
+        "sha256": "cdc38f8bd851bd6614dc18814f43c5b030ad7a58eca690c8a3a21c3be8bcdc1f"
+      },
+      "passed": 200,
+      "failed": 0
+    },
+    "simd": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/native-simd/qualification.json",
+        "bytes": 535512,
+        "sha256": "0bc3f39735338fa2915c70b89a1bbe1d900a3c27e416eff492544bc354a1402f"
+      },
+      "passed": 25,
+      "failed": 0
+    },
+    "simd-extended": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/native-simd-extended/qualification.json",
+        "bytes": 2842063,
+        "sha256": "3b62ef1aad5e8854bae3d5396dd5a675c976b51476100a885b15283579e625b2"
+      },
+      "passed": 62,
+      "failed": 0
+    },
+    "vector-abi": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/native-vector-abi/report.json",
+        "bytes": 65215819,
+        "sha256": "8ca7b79c76cdb076c6bca27ffca5fca54ddba69235ea13d4595c6040754d36b3"
+      },
+      "passed": 684,
+      "failed": 0
+    },
+    "atomic": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/native-atomic/report.json",
+        "bytes": 58865,
+        "sha256": "943e4e91effe3423516e77f67eea958092af9c542adf395ee27dcd7a8492929c"
+      },
+      "passed": 8,
+      "failed": 0
+    },
+    "independentExtendedClangOracle": {
+      "passed": 62,
+      "failed": 0
+    },
+    "libstdcxx": {
+      "receipt": {
+        "path": "/dev/shm/gcc-wasi-extended-20261027/libstdcxx/qualification/qualification.json",
+        "bytes": 5693,
+        "sha256": "0797fa6857b997dc9e70e2fe59a4e39d84bd1e9d2df52682544b7960c33d4aa1"
+      },
+      "passed": 2,
+      "failed": 0,
+      "unsupported": [
+        {
+          "feature": "timezoneDatabase",
+          "status": "rejected",
+          "exitCode": 1
+        },
+        {
+          "feature": "debugger",
+          "status": "rejected",
+          "exitCode": 1
+        },
+        {
+          "feature": "stdModules",
+          "status": "rejected",
+          "exitCode": 1
+        }
+      ]
+    }
+  },
+  "worker": {
+    "basic": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-basic/qualification.json",
+        "bytes": 294825,
+        "sha256": "20cb65d340ac006422bc65bbc6613d546f721cb26c4f960cbada7985b5c5e47c"
+      },
+      "passed": 17,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": null,
+      "programInventory": {
+        "count": 17,
+        "sha256": "a0a9e60611102ba4e756400d27b0d563e7244abc8a443c8f6e5910959e2e31d8",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 0,
+        "unsharedMemoryPrograms": 17,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 5770565,
+        "initialMemoryPages": {
+          "2": 17
+        }
+      }
+    },
+    "simd": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-simd/qualification.json",
+        "bytes": 415255,
+        "sha256": "5f39bbfa7f2d3a08f55347653fa584e0013e3806e239f5c749cce2bafd432044"
+      },
+      "passed": 25,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/producer/gcc-wasi/simd-fixtures.mjs",
+        "bytes": 4448,
+        "sha256": "d1d84d2e6db7ee7d18a24bb9501894381898581c61b3877234ecba44d65b1ccd"
+      },
+      "opcodeVerification": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-simd-opcodes.json",
+        "bytes": 85196,
+        "sha256": "6d699b58b4f263c5c5014781c259afa78e61065d47953fb646fab4b757a80a8c"
+      },
+      "programInventory": {
+        "count": 25,
+        "sha256": "97ea7f39c28e328d04b5884b8886b0af142d4cf9370bec559784b7afd2d3c6a0",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 19,
+        "unsharedMemoryPrograms": 25,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 5246288,
+        "initialMemoryPages": {
+          "2": 25
+        }
+      }
+    },
+    "scalar-abi": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-scalar-abi/qualification.json",
+        "bytes": 371794,
+        "sha256": "709445837f5667d01e41a2e43b438dc1146a66772aac7d251090e6ed6feaa9cf"
+      },
+      "passed": 25,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/producer/gcc-wasi/abi-interop-cases.mjs",
+        "bytes": 7310,
+        "sha256": "3710414284fb0740e6af8dca307b0b7288d7d7790ad0f984a2dbb7fb77f5b3f3"
+      },
+      "programInventory": {
+        "count": 25,
+        "sha256": "0845baae6294d41bb150a3e8668b478b788deb94dd0652f4734744c6783f2bda",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 0,
+        "unsharedMemoryPrograms": 25,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 1397455,
+        "initialMemoryPages": {
+          "2": 25
+        }
+      }
+    },
+    "atomic": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-atomic/qualification.json",
+        "bytes": 220631,
+        "sha256": "2d84c91d28a4f3d4ece48f22c107113f198cd208232bc0af9225c9748016b422"
+      },
+      "passed": 8,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/producer/gcc-wasi/atomic-libcall-fixtures.mjs",
+        "bytes": 2432,
+        "sha256": "3da7fd505be29cbd93d26359a1095cee50fc35b68e0aaccaf911d5bc400ad842"
+      },
+      "programInventory": {
+        "count": 8,
+        "sha256": "d007b1e322d2232795e77315aa2b9689a282b3881b1e54c73612e7158ec9cccf",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 0,
+        "unsharedMemoryPrograms": 8,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 833461,
+        "initialMemoryPages": {
+          "2": 8
+        }
+      }
+    },
+    "simd-extended": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-simd-extended/qualification.json",
+        "bytes": 830179,
+        "sha256": "716b40e4b6bc1a2649392f4d4e256ceb7d1afecd534412205bd6de13310bed4a"
+      },
+      "passed": 62,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/producer/gcc-wasi/simd-extended-fixtures.mjs",
+        "bytes": 9736,
+        "sha256": "37705d82836d422f2f7119e0000bca6c07e8c2d0cc920b2dbc99db40f95f5fbf"
+      },
+      "opcodeVerification": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-simd-extended-opcodes.json",
+        "bytes": 289659,
+        "sha256": "79228419bfa47ec8cfb4b1d14ae8fb490b7899a80cf2fe862f82a4638eae1e24"
+      },
+      "programInventory": {
+        "count": 62,
+        "sha256": "a45e706c0824b31fd14b4bfdeb7342347eb8fd4025032a2fa9224c8da7ed6494",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 52,
+        "unsharedMemoryPrograms": 62,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 12008764,
+        "initialMemoryPages": {
+          "2": 62
+        }
+      }
+    },
+    "vector-abi": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-vector-abi/qualification.json",
+        "bytes": 984078,
+        "sha256": "2241864e273ca46c007cebd19642cabea0d6289cb98f25daba1b8eb09533fbe4"
+      },
+      "passed": 90,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/producer/gcc-wasi/vector-abi-cases.mjs",
+        "bytes": 7288,
+        "sha256": "34a1b1fa3934e30d72296a527d96c812103f10e8422ac1284fc63c9e19cf9953"
+      },
+      "programInventory": {
+        "count": 90,
+        "sha256": "603a046d2635a00e6587cd49464ee6f20e92163c08a7c24804474c433318b77e",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 84,
+        "unsharedMemoryPrograms": 90,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 15088034,
+        "initialMemoryPages": {
+          "2": 90
+        }
+      }
+    },
+    "vector-abi-o0-v2": {
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/worker-vector-abi-o0-v2/qualification.json",
+        "bytes": 987544,
+        "sha256": "2417686cfba00ad7d421a853fe7f90af87ea68d386d703354a3da47c223b342c"
+      },
+      "passed": 90,
+      "failed": 0,
+      "manifestSha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+      "browser": "156.0.8078.4",
+      "compilerHost": "wasm32-emscripten",
+      "execution": [
+        "node-wasi-preview1",
+        "chromium-worker-wasi-preview1"
+      ],
+      "suite": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/vector-abi-o0-worker-v2.mjs",
+        "bytes": 658,
+        "sha256": "785b8c5405001a61e3f8ac69d616e42f61e07de66106857eef4bbe7ef0ff86ba"
+      },
+      "programInventory": {
+        "count": 90,
+        "sha256": "6573adf38068e1b16c821db8d536d75b63ccf8f79c9ba663b91ef4ccc0da8723",
+        "encoding": "key-sorted compact JSON array of id, bytes, sha256, simd128 and memory from each full receipt case",
+        "simd128Programs": 84,
+        "unsharedMemoryPrograms": 90,
+        "wasmOnlyImports": "wasi_snapshot_preview1",
+        "requiredExports": [
+          "memory",
+          "_start"
+        ],
+        "artifactBytes": 15103626,
+        "initialMemoryPages": {
+          "2": 90
+        }
+      }
+    }
+  },
+  "totals": {
+    "nativeSuiteCases": 992,
+    "additionalClangOraclePrograms": 62,
+    "additionalGnuRuntimePrograms": 2,
+    "workerPrograms": 317,
+    "x86WorkerCases": 20
+  },
+  "initialLoading": {
+    "encoding": "gzip-level-9",
+    "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+    "manifest": {
+      "bytes": 11575,
+      "gzipBytes": 3844,
+      "sha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb"
+    },
+    "assets": [
+      {
+        "name": "cc1Js",
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "gzipBytes": 31635,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      {
+        "name": "cc1Wasm",
+        "path": "cc1.wasm",
+        "bytes": 15575405,
+        "gzipBytes": 5517529,
+        "sha256": "8a6f91978b6634eaab576e4cbfb7938d66882b28a72387e0ed6ebb94ae0d9bfc"
+      },
+      {
+        "name": "cc1plusJs",
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "gzipBytes": 32900,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      {
+        "name": "cc1plusWasm",
+        "path": "cc1plus.wasm",
+        "bytes": 17235066,
+        "gzipBytes": 6217672,
+        "sha256": "d42a46aa583d03907bad10468417e0c445f24420f6f1930242bc3dadb3b9b5b3"
+      },
+      {
+        "name": "asJs",
+        "path": "as.mjs",
+        "bytes": 61491,
+        "gzipBytes": 17414,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      {
+        "name": "asWasm",
+        "path": "as.wasm",
+        "bytes": 597157,
+        "gzipBytes": 203208,
+        "sha256": "339a199928446a5c15d540df3d328a68421fc8bbb64b0aad36bef5e221c5093d"
+      },
+      {
+        "name": "ldWasm",
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "gzipBytes": 6417339,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      {
+        "name": "sysroot",
+        "path": "sysroot.tar",
+        "bytes": 25273344,
+        "gzipBytes": 5510110,
+        "sha256": "3c4f458d848123ca227935c186f68887547f3d33e746c2d4708bc14049ab2742"
+      }
+    ],
+    "uncompressedBytes": 75197580,
+    "gzipBytes": 23951651,
+    "sdkUncompressedBytes": 5507010,
+    "totalUncompressedBytes": 80704590,
+    "actualInitialResponseBodyBytes": 29458661,
+    "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+  },
+  "network": {
+    "note": "Server counters include every SDK module and compressed compiler asset. Chromium sizes are retained separately because Worker entry scripts may report zero browser-side body size.",
+    "responseBodyBytes": 29458661,
+    "chromiumResponseBodyBytes": 23914208,
+    "responseHeaderBytes": 34725,
+    "missingManifestAssets": [],
+    "transfersCount": 147,
+    "serverTransfersCount": 150,
+    "fullRecords": "worker-basic/qualification.json, retained in localArchive; its receipt hash is recorded under worker.basic"
+  },
+  "bundleSizes": {
+    "scope": "All initial manifest and tool/sysroot payloads; SDK Worker modules measured separately by browser qualification",
+    "gzipLevel": 9,
+    "brotliQuality": 6,
+    "assets": [
+      {
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3",
+        "gzipBytes": 31635,
+        "brotliBytes": 29793
+      },
+      {
+        "path": "cc1.wasm",
+        "bytes": 15575405,
+        "sha256": "8a6f91978b6634eaab576e4cbfb7938d66882b28a72387e0ed6ebb94ae0d9bfc",
+        "gzipBytes": 5517529,
+        "brotliBytes": 4755311
+      },
+      {
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37",
+        "gzipBytes": 32900,
+        "brotliBytes": 30993
+      },
+      {
+        "path": "cc1plus.wasm",
+        "bytes": 17235066,
+        "sha256": "d42a46aa583d03907bad10468417e0c445f24420f6f1930242bc3dadb3b9b5b3",
+        "gzipBytes": 6217672,
+        "brotliBytes": 5370569
+      },
+      {
+        "path": "as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb",
+        "gzipBytes": 17414,
+        "brotliBytes": 16658
+      },
+      {
+        "path": "as.wasm",
+        "bytes": 597157,
+        "sha256": "339a199928446a5c15d540df3d328a68421fc8bbb64b0aad36bef5e221c5093d",
+        "gzipBytes": 203208,
+        "brotliBytes": 171026
+      },
+      {
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d",
+        "gzipBytes": 6417339,
+        "brotliBytes": 5594500
+      },
+      {
+        "path": "sysroot.tar",
+        "bytes": 25273344,
+        "sha256": "3c4f458d848123ca227935c186f68887547f3d33e746c2d4708bc14049ab2742",
+        "gzipBytes": 5510110,
+        "brotliBytes": 4233363
+      },
+      {
+        "path": "gcc-toolchain.v2.json",
+        "bytes": 11575,
+        "sha256": "9c00045d58e963185d8079d871b5d1741b47193922381083d1c4ec9bb1a73adb",
+        "gzipBytes": 3844,
+        "brotliBytes": 3659
+      }
+    ],
+    "totalBytes": 75197580,
+    "totalGzipBytes": 23951651,
+    "totalBrotliBytes": 20205872
+  },
+  "unsupportedOptions": [
+    {
+      "feature": "exceptions",
+      "rejected": true,
+      "diagnostic": "GCC wasm32-wasi does not support exceptions"
+    },
+    {
+      "feature": "rtti",
+      "rejected": true,
+      "diagnostic": "GCC wasm32-wasi does not support rtti"
+    },
+    {
+      "feature": "threads",
+      "rejected": true,
+      "diagnostic": "GCC wasm32-wasi does not support threads"
+    },
+    {
+      "feature": "dynamicLinking",
+      "rejected": true,
+      "diagnostic": "GCC wasm32-wasi does not support dynamicLinking"
+    },
+    {
+      "feature": "cpu",
+      "rejected": true,
+      "diagnostic": "GCC wasm32-wasi supports only cpu=wasm32; x86 AVX2/FMA is not Wasm SIMD"
+    },
+    {
+      "feature": "x86-target-pragma",
+      "rejected": true,
+      "diagnostic": "/workspace/main.c:1:9: error: '#pragma GCC target' is not supported for this machine [-Werror=pragmas]\n    1 | #pragma GCC target(\"avx2\")\n      |         ^~~\nthis.program: some warnings being treated as errors\n"
+    }
+  ],
+  "x86Regression": {
+    "receipt": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/x86-worker/qualification.json",
+      "bytes": 47518,
+      "sha256": "0d2af8401b2a327284f8c86b408267d8236d403da5219819e44c46a811df3a59"
+    },
+    "completion": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-artifacts-20261027/x86-worker/completion.json",
+      "bytes": 14704,
+      "sha256": "1900ddbf69f1fc00dab2bed1e1b40e74ef5515de3b0d0d7f90e3bf49aa6e0b13"
+    },
+    "passed": 20,
+    "nativeIoCases": 6,
+    "objdumpCases": 4,
+    "expectedDiagnosticCases": 2,
+    "byteIdenticalArtifacts": 18,
+    "cancellation": "worker-terminated",
+    "browser": "156.0.8078.4"
+  },
+  "processes": {
+    "native-build-v3": {
+      "pid": 2773437,
+      "log": "/home/seorii/logs/gcc-wasi-extended-native-build-v3-20261027-8iwobife.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-native-build-v3-20261027-8iwobife.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/native-build.sh",
+      "scriptSha256": "9494b9a57659f7f731fbc9a4a7b0df2b9f61dc36cd74dafbdf3752f8dd1eff0d",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-native-build-v3-20261027-8iwobife.log",
+        "bytes": 625676,
+        "sha256": "e6efaa957b7694fee38010dfe89bd36e7508a262353968b11af25cd0714cf845"
+      }
+    },
+    "native-tests": {
+      "pid": 2877614,
+      "log": "/home/seorii/logs/gcc-wasi-extended-native-tests-20261027-hw0o9j5f.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-native-tests-20261027-hw0o9j5f.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/native-tests.sh",
+      "scriptSha256": "165edb9f4ea947f0aa440e1dc6c1ef0955293ee064380274354a2835d0624fd9",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-native-tests-20261027-hw0o9j5f.log",
+        "bytes": 45299,
+        "sha256": "6c862b92a8587d098712958491bd1106133b9159fd0838a68acf910c11506222"
+      }
+    },
+    "libstdcxx-prepare": {
+      "pid": 2669956,
+      "log": "/home/seorii/logs/gcc-wasi-extended-libstdcxx-prepare-20261027-selqf44y.log",
+      "status": "/home/seorii/logs/gcc-wasi-extended-libstdcxx-prepare-20261027-selqf44y.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/libstdcxx-prepare.sh",
+      "scriptSha256": "be72dcdd0924be575704a3298b346a0fcba11c4fae32f7e0a27bc3d2bfd15afe",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-libstdcxx-prepare-20261027-selqf44y.log",
+        "bytes": 5373,
+        "sha256": "727682055efa90a165ff8998f254359c2fc1ce58af57ac86659d0fa543b5ced1"
+      }
+    },
+    "libstdcxx-build": {
+      "pid": 2877659,
+      "log": "/home/seorii/logs/gcc-wasi-extended-libstdcxx-build-20261027-2u8gh2p6.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-libstdcxx-build-20261027-2u8gh2p6.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/libstdcxx-build.sh",
+      "scriptSha256": "d63d47a9eda3a67cdde4ae5fb4e017fcc18b10d71738acf52715a93cb827e4b4",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-libstdcxx-build-20261027-2u8gh2p6.log",
+        "bytes": 510752,
+        "sha256": "aeabde300a9587b20aa6a18963500b7685d248fc9ffb49a0aeeb1989ae18ad90"
+      }
+    },
+    "browser-build-v2": {
+      "pid": 2914094,
+      "log": "/home/seorii/logs/gcc-wasi-extended-browser-build-v2-20261027-k0s245j_.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-browser-build-v2-20261027-k0s245j_.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/browser-build.sh",
+      "scriptSha256": "54af5d1a8ca4157deeedaa1f32c76db4047372239288a194ce0b0d07dae1a965",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-browser-build-v2-20261027-k0s245j_.log",
+        "bytes": 5142421,
+        "sha256": "b99c40f618855e004033dbcfe2d2307ad7f1c570a5753839f2dfb43da842b0aa"
+      }
+    },
+    "package": {
+      "pid": 2971062,
+      "log": "/home/seorii/logs/gcc-wasi-extended-package-20261027-r864b3__.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-package-20261027-r864b3__.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/package.sh",
+      "scriptSha256": "38a6f92217b1d6274f070d3fecd80bb73384692fb19323bc497e5c23637d15c1",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-package-20261027-r864b3__.log",
+        "bytes": 217,
+        "sha256": "4acfd122ba92e9b6b0641f19ed40f0d6880ea5fa234606b3e1671f7f4e78bda1"
+      }
+    },
+    "worker-tests": {
+      "pid": 2971728,
+      "log": "/home/seorii/logs/gcc-wasi-extended-worker-tests-20261027-ha1gdxnd.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-worker-tests-20261027-ha1gdxnd.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/worker-tests.sh",
+      "scriptSha256": "a379086f93bad64703a2905ed4c270972b876cac64be2b02942f63eb0762bda2",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-worker-tests-20261027-ha1gdxnd.log",
+        "bytes": 16490,
+        "sha256": "13d4a547d57754b237efeca644c4484952cddf1075e32f8d0e043f352702172d"
+      }
+    },
+    "worker-vector-o0-v2": {
+      "pid": 2979328,
+      "log": "/home/seorii/logs/gcc-wasi-extended-worker-vector-o0-v2-20261027-hayeln8z.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-worker-vector-o0-v2-20261027-hayeln8z.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/worker-vector-o0-v2.sh",
+      "scriptSha256": "1f7387774089373ce1d03b76f709ee70712f04ca0a98d6e991a36a0713300287",
+      "exitCode": 0,
+      "logIdentity": {
+        "path": "/home/seorii/logs/gcc-wasi-extended-worker-vector-o0-v2-20261027-hayeln8z.log",
+        "bytes": 7154,
+        "sha256": "1ba3f89fd2b30eac513cb6406f37809d91961b52ed34fb9ca1839e5636d1b3cd"
+      }
+    },
+    "archive": {
+      "pid": 2982735,
+      "log": "/home/seorii/logs/gcc-wasi-extended-archive-20261027-8ih_0rh7.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-archive-20261027-8ih_0rh7.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/archive.sh",
+      "scriptSha256": "ffc9de683ef82521d33cf6ab222f4439de25254a22428980fde8b98ee28c33c7",
+      "exitCode": 0
+    }
+  },
+  "failedAttempts": {
+    "nativePatchComposition": {
+      "pid": 2546739,
+      "log": "/home/seorii/logs/gcc-wasi-extended-native-build-20261027-0bs8cb1b.log",
+      "status": "/home/seorii/logs/gcc-wasi-extended-native-build-20261027-0bs8cb1b.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/native-build.sh",
+      "scriptSha256": "9494b9a57659f7f731fbc9a4a7b0df2b9f61dc36cd74dafbdf3752f8dd1eff0d"
+    },
+    "nativeDiskFull": {
+      "pid": 2609204,
+      "log": "/home/seorii/logs/gcc-wasi-extended-native-build-v2-20261027-v2oy5krl.log",
+      "status": "failed",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/native-build.sh",
+      "scriptSha256": "9494b9a57659f7f731fbc9a4a7b0df2b9f61dc36cd74dafbdf3752f8dd1eff0d",
+      "exitCode": null,
+      "reason": "ENOSPC during object/dependency output; exit-status file write also failed",
+      "finishedProcessAbsent": true
+    },
+    "browserStaleNativeGate": {
+      "pid": 2899815,
+      "log": "/home/seorii/logs/gcc-wasi-extended-browser-build-20261027-5odafbu6.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-browser-build-20261027-5odafbu6.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/browser-build.sh",
+      "scriptSha256": "54af5d1a8ca4157deeedaa1f32c76db4047372239288a194ce0b0d07dae1a965"
+    },
+    "o0HarnessInvalidNumericProfile": {
+      "pid": 2977520,
+      "log": "/home/seorii/logs/gcc-wasi-extended-worker-vector-o0-20261027-uw79ybjv.log",
+      "status": "/dev/shm/gcc-wasi-extended-20261027/gcc-wasi-extended-worker-vector-o0-20261027-uw79ybjv.log.status",
+      "script": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/worker-vector-o0.sh",
+      "scriptSha256": "fcc26bd17065e6426f387f241be7ceb405e47bac2bb24b567fb29dddbddc6297"
+    },
+    "resolution": "Rebased patch context, verified relocation of task-owned outputs, replaced stale gate with the matching new native receipt, and used the SDK string optimization profile; corrected runs all completed successfully."
+  },
+  "contractTests": {
+    "nodePassed": 11,
+    "pythonPassed": 8,
+    "repositoryContract": "Checked 20 producers and 376 Node modules"
+  },
+  "longDoubleInvestigation": {
+    "findings": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-long-double-20261027/findings.json",
+      "bytes": 21585,
+      "sha256": "994a0ecf88277bdecd45ed569c2b498ccdec00c58d59d9e3320addd065ed85eb"
+    },
+    "status": "unsupported; baseline five-patch native investigation, not new feature qualification"
+  },
+  "reproduction": {
+    "producer": "producer/gcc-wasi/README.md#reproduction",
+    "consumer": "wasm-idle/scripts/gcc-wasi-README.md",
+    "scripts": {
+      "native-build": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/native-build.sh",
+        "bytes": 656,
+        "sha256": "9494b9a57659f7f731fbc9a4a7b0df2b9f61dc36cd74dafbdf3752f8dd1eff0d"
+      },
+      "native-tests": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/native-tests.sh",
+        "bytes": 3884,
+        "sha256": "165edb9f4ea947f0aa440e1dc6c1ef0955293ee064380274354a2835d0624fd9"
+      },
+      "browser-build": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/browser-build.sh",
+        "bytes": 757,
+        "sha256": "54af5d1a8ca4157deeedaa1f32c76db4047372239288a194ce0b0d07dae1a965"
+      },
+      "libstdcxx-build": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/libstdcxx-build.sh",
+        "bytes": 883,
+        "sha256": "d63d47a9eda3a67cdde4ae5fb4e017fcc18b10d71738acf52715a93cb827e4b4"
+      },
+      "package": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/package.sh",
+        "bytes": 1126,
+        "sha256": "38a6f92217b1d6274f070d3fecd80bb73384692fb19323bc497e5c23637d15c1"
+      },
+      "worker-tests": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/worker-tests.sh",
+        "bytes": 4225,
+        "sha256": "a379086f93bad64703a2905ed4c270972b876cac64be2b02942f63eb0762bda2"
+      },
+      "worker-vector-o0-v2": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/worker-vector-o0-v2.sh",
+        "bytes": 769,
+        "sha256": "1f7387774089373ce1d03b76f709ee70712f04ca0a98d6e991a36a0713300287"
+      }
+    },
+    "vectorO0Suite": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/vector-abi-o0-worker-v2.mjs",
+      "bytes": 658,
+      "sha256": "785b8c5405001a61e3f8ac69d616e42f61e07de66106857eef4bbe7ef0ff86ba"
+    }
+  },
+  "worktrees": {
+    "producer": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026",
+    "sdk": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-gcc-wasi-20261026"
+  },
+  "localArchive": {
+    "status": "passed",
+    "archive": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/qualification-artifacts.tar.gz",
+      "bytes": 157885724,
+      "sha256": "f420fbfe0ad85c8b742e5c681a6387b9b76706e478efd3ff89e2be73f9ad0790"
+    },
+    "files": 8965,
+    "rawBytes": 592046352,
+    "contentsVerified": true,
+    "inputsUnchanged": true,
+    "inventory": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-extended-20261027/archive-inventory.json",
+      "bytes": 3380087,
+      "sha256": "eeaaa73cb6203f70a6862ebc2f973734071925f2afd79d89c226a05a80d00849"
+    },
+    "note": "Contains exact binaries, all full execution receipts, detailed module/network evidence and the original detailed summary. This repository report is a compact view and additionally identifies the archive itself."
+  },
+  "representation": "Compact qualification summary. Full per-program artifacts, imports/exports, function types, commands and network records are preserved in the hashed receipts and verified local archive."
+}

@@ -1,0 +1,45 @@
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -423,6 +423,42 @@
+ {
+   if (!FUNC_OR_METHOD_TYPE_P (TREE_TYPE (decl)))
+     return assemble_data_import (stream, decl, name);
++  /* GCC's builtin has a weak argument, but builtins.cc drops it when
++     falling back to libatomic.  The external ABI always has five arguments.
++     Do not change the builtin declaration: other callers still need its
++     six-argument source-level type.  */
++  if (fndecl_built_in_p (decl, BUILT_IN_NORMAL))
++    switch (DECL_FUNCTION_CODE (decl))
++      {
++      case BUILT_IN_ATOMIC_COMPARE_EXCHANGE_1:
++      case BUILT_IN_ATOMIC_COMPARE_EXCHANGE_2:
++      case BUILT_IN_ATOMIC_COMPARE_EXCHANGE_4:
++      case BUILT_IN_ATOMIC_COMPARE_EXCHANGE_8:
++      case BUILT_IN_ATOMIC_COMPARE_EXCHANGE_16:
++        {
++          tree type = TREE_TYPE (decl);
++          auto_vec<tree> args;
++          tree arg;
++          function_args_iterator it;
++          unsigned index = 0;
++          FOREACH_FUNCTION_ARGS (type, arg, it)
++            {
++              if (!VOID_TYPE_P (arg) && index != 3)
++                args.safe_push (arg);
++              ++index;
++            }
++          gcc_assert (args.length () == 5);
++          tree libtype = build_function_type_array (TREE_TYPE (type),
++                                                    args.length (),
++                                                    args.address ());
++          tree libdecl = copy_node (const_cast<tree> (decl));
++          TREE_TYPE (libdecl) = libtype;
++          assemble_entity_import (stream, name, name, libdecl);
++          return;
++        }
++      default:
++        break;
++      }
+   assemble_entity_import (stream, name, name, decl);
+ }
+ 
