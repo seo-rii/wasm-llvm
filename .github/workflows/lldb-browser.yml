@@ -299,7 +299,8 @@ jobs:
         runs-on: ubuntu-latest
         container:
             image: debian:12.11-slim@sha256:b1a741487078b369e78119849663d7f1a5341ef2768798f7b7406c4240f86aef
-        timeout-minutes: 180
+        # Fresh patched Clang/LLDB compilation already takes about 2.5 hours.
+        timeout-minutes: 360
         env:
             LLVM_ARCHIVE_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz
             LLVM_ARCHIVE_SHA256: df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384
@@ -475,7 +476,8 @@ jobs:
                   assert.equal(revision, clang.sources.llvm.commit);
                   assert.equal(git('status', '--porcelain'), '');
                   const wasmPatches = ['0007-wasm-recursive-frame-cfa.patch', '0010-wasm-caller-pc-cache.patch',
-                    '0011-libcxx-container-adaptors.patch', '0012-lldb-dap-clear-hit-condition.patch'];
+                    '0011-libcxx-container-adaptors.patch', '0012-lldb-dap-clear-hit-condition.patch',
+                    '0013-libcxx-native-deque.patch'];
                   const patches = [
                     { root: 'producer/clang-browser', ...clang.sources.wasmFunctionEndPatch },
                     ...wasmPatches.map(name => {

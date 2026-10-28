@@ -51,6 +51,17 @@ export function verifyNativeContainerAdaptors(stdout) {
 		assert.equal(scalar('nested_stack[0][1]'), 8);
 		assert.equal(scalar('nested_heap[0][0]'), 3);
 		assert.equal(scalar('nested_heap[0][1]'), 4);
+		size('block_deque', 1025);
+		size('large_deque', 17);
+		const dequeValues = index === 0
+			? { 'block_deque[0]': 5, 'block_deque[1018]': 1023, 'block_deque[1019]': 1024,
+				'block_deque[1024]': 1029, 'large_deque[0].value': 10, 'large_deque[14].value': 150,
+				'large_deque[15].value': 160, 'large_deque[16].value': 170 }
+			: { 'block_deque[0]': 6, 'block_deque[1018]': 1024, 'block_deque[1019]': 1025,
+				'block_deque[1024]': 1030, 'large_deque[0].value': 20, 'large_deque[14].value': 160,
+				'large_deque[15].value': 170, 'large_deque[16].value': 180 };
+		for (const [name, value] of Object.entries(dequeValues))
+			assert.equal(scalar(name), value, `${name} must follow block and front-offset changes`);
 	}
 }
 
@@ -74,6 +85,9 @@ export async function runNativeCppBaseline(options) {
 				commands.push(`frame variable ${Array.from({ length: count }, (_, index) => `${name}[${index}]`).join(' ')}`);
 			}
 			commands.push('frame variable nested_stack[0][0] nested_stack[0][1] nested_heap[0][0] nested_heap[0][1]');
+			commands.push('frame variable --depth 0 block_deque large_deque',
+				'frame variable block_deque[0] block_deque[1018] block_deque[1019] block_deque[1024]',
+				'frame variable large_deque[0].value large_deque[14].value large_deque[15].value large_deque[16].value');
 		}
 		commands.push('continue', 'quit');
 	} else if (skipLibrary) {

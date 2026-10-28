@@ -22,7 +22,7 @@ test('native feature gates use rebuilt patched Clang and LLDB for real DAP hit c
 	assert.match(workflow, /HIT_COUNT_PROGRAM_PATH: \/tmp\/wasm-native-debug\/hit-count\.wasm/u);
 	const native = workflow.match(/^    native-baseline:[\s\S]*$/mu)?.[0];
 	assert.ok(native);
-	assert.match(native, /timeout-minutes: 180/u);
+	assert.match(native, /timeout-minutes: 360/u);
 	const hostDependencies = native.match(/- name: Install native baseline host dependencies[\s\S]*?(?=            - uses:)/u)?.[0];
 	assert.ok(hostDependencies);
 	assert.match(hostDependencies, /(?:^|\s)python3(?:\s|$)/u,
@@ -34,7 +34,8 @@ test('native feature gates use rebuilt patched Clang and LLDB for real DAP hit c
 	assert.match(native, /digest\(await fs\.readFile\(file\)\), patch\.sha256/u);
 	assert.match(native, /clang\.sources\.wasmFunctionEndPatch/u);
 	for (const patch of ['0007-wasm-recursive-frame-cfa', '0010-wasm-caller-pc-cache',
-		'0011-libcxx-container-adaptors', '0012-lldb-dap-clear-hit-condition']) {
+		'0011-libcxx-container-adaptors', '0012-lldb-dap-clear-hit-condition',
+		'0013-libcxx-native-deque']) {
 		assert.ok(native.includes(`${patch}.patch`));
 	}
 	assert.match(native, /--target clang lldb lldb-dap --parallel 2/u);

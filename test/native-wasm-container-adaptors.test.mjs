@@ -20,7 +20,17 @@ function transcript() {
 		'(int) nested_stack[0][0] = 7',
 		'(int) nested_stack[0][1] = 8',
 		'(int) nested_heap[0][0] = 3',
-		'(int) nested_heap[0][1] = 4'
+		'(int) nested_heap[0][1] = 4',
+		'(std::deque<int>) block_deque = size=1025 { ... }',
+		'(std::deque<LargeElement>) large_deque = size=17 { ... }',
+		...Object.entries(index === 0
+			? { 'block_deque[0]': 5, 'block_deque[1018]': 1023, 'block_deque[1019]': 1024,
+				'block_deque[1024]': 1029, 'large_deque[0].value': 10, 'large_deque[14].value': 150,
+				'large_deque[15].value': 160, 'large_deque[16].value': 170 }
+			: { 'block_deque[0]': 6, 'block_deque[1018]': 1024, 'block_deque[1019]': 1025,
+				'block_deque[1024]': 1030, 'large_deque[0].value': 20, 'large_deque[14].value': 160,
+				'large_deque[15].value': 170, 'large_deque[16].value': 180 })
+			.map(([name, value]) => `(int) ${name} = ${value}`)
 	].join('\n')).join('\n');
 }
 
@@ -60,4 +70,19 @@ test('requires nested synthetic values at both stops', () => {
 test('requires the second real source breakpoint', () => {
 	assert.throws(() => verifyNativeContainerAdaptors(transcript().replace('stop reason = breakpoint 2.1', 'unrelated stop')),
 		/must reach both source breakpoints/);
+});
+
+test('rejects a deque child read from the previous memory block', () => {
+	assert.throws(() => verifyNativeContainerAdaptors(transcript().replace('block_deque[1019] = 1024', 'block_deque[1019] = 0')),
+		/block_deque\[1019\] must follow block and front-offset changes/);
+});
+
+test('rejects stale deque offsets after pop_front', () => {
+	assert.throws(() => verifyNativeContainerAdaptors(transcript().replace('block_deque[0] = 6', 'block_deque[0] = 5')),
+		/block_deque\[0\] must follow block and front-offset changes/);
+});
+
+test('requires the 16-element block layout for large deque values', () => {
+	assert.throws(() => verifyNativeContainerAdaptors(transcript().replace('large_deque[15].value = 160', 'large_deque[15].value = 0')),
+		/large_deque\[15\]\.value must follow block and front-offset changes/);
 });

@@ -80,6 +80,14 @@ children follow heap storage order with the top element first, not sorted pop
 order. Custom comparators, deque storage, nested values, empty containers and
 updates after push/pop are covered by the patch's upstream LLDB API fixture.
 
+LLVM 22 normally formats libc++ deque through Python. The locked
+`0013-libcxx-native-deque.patch` replaces that registration with a C++ provider,
+so deque-backed stack and priority queue also work with Python disabled. It
+reads the pinned libc++ block map, bounds-checks the occupied range and target
+addresses, and refreshes children after each stop. Native qualification covers
+both 4 KiB blocks and the 16-element blocks used for large values, including
+block crossings and front offsets changed by `pop_front`.
+
 `hitConditionalBreakpoints` qualifies positive decimal DAP `hitCondition`
 values. LLVM implements these as an ignore count of N - 1: the Nth and every
 subsequent hit stop. This is not an expression condition or an equality-only
