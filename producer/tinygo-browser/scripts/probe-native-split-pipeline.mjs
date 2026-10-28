@@ -535,10 +535,13 @@ export async function runWasiModule({
   ]);
   await rm(captureDirectory, { recursive: true, force: true });
   if (executionError) {
-    const diagnostic = stderr
-      .subarray(0, MAX_DIAGNOSTIC_BYTES)
-      .toString("utf8")
-      .trim();
+    const diagnostic = [["stdout", stdout], ["stderr", stderr]]
+      .map(([name, bytes]) => {
+        const output = bytes.subarray(0, MAX_DIAGNOSTIC_BYTES).toString("utf8").trim();
+        return output ? `${name}:\n${output}` : "";
+      })
+      .filter(Boolean)
+      .join("\n");
     throw new Error(
       `WASI module ${modulePath} failed${diagnostic ? `: ${diagnostic}` : ""}`,
       { cause: executionError },

@@ -8,6 +8,7 @@ import {
   materializeNativeLinkArguments,
   parseNativeSplitPipelineArgs,
   runNativeSplitPipeline,
+  runWasiModule,
   validateNativeLinkPlan,
 } from "../scripts/probe-native-split-pipeline.mjs";
 
@@ -213,6 +214,24 @@ async function createFixture() {
   ]);
   return { linkPlan, paths };
 }
+
+test("preserves both output streams when a real WASI module prints a panic and traps", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "tinygo-wasi-trap-"));
+  tempDirs.push(root);
+  const modulePath = path.join(root, "panic.wasm");
+  // fd_write(1, "panic: intrinsic\n"), fd_write(2, "details\n"), unreachable.
+  // The module exports its one-page memory and _start entrypoint.
+  await writeFile(modulePath, Buffer.from(
+    "AGFzbQEAAAABDAJgBH9/f38Bf2AAAAIjARZ3YXNpX3NuYXBzaG90X3ByZXZpZXcxCGZkX3dyaXRlAAADAgEBBQMBAAEHEwIGbWVtb3J5AgAGX3N0YXJ0AAEKHQEbAEEBQQBBAUHAABAAGkECQQhBAUHAABAAGgALCzkDAEEACxAQAAAAEQAAADAAAAAIAAAAAEEQCxFwYW5pYzogaW50cmluc2ljCgBBMAsIZGV0YWlscwo=",
+    "base64",
+  ));
+  await assert.rejects(runWasiModule({ modulePath, args: ["panic.wasm"], preopens: {} }), (error) => {
+    assert.match(error.message, /stdout:\npanic: intrinsic/u);
+    assert.match(error.message, /stderr:\ndetails/u);
+    assert.ok(error.cause instanceof WebAssembly.RuntimeError);
+    return true;
+  });
+});
 
 test("parses every pipeline path from an explicit named CLI option", () => {
   const cwd = path.join(path.sep, "work");
