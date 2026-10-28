@@ -64,6 +64,35 @@ The producer retains its development build channel because the browser consumer 
 compiler options; the source release tag alone does not make the browser artifact a stable-channel
 Rust distribution.
 
+## Native release target baseline
+
+On 2026-10-28 the official Linux x86_64 Rust 1.99.1 compiler and its matching
+`wasm32-wasip1` standard library were downloaded into a private prefix. Their complete archive
+hashes matched the checksum-verified official release channel manifest. `rustc -vV` reported
+the pinned source commit and LLVM 23.1.1. [The observed target receipt](validation/1.99.1-native-target.json)
+records those inputs, fixture and probe hashes, the generated guest, and actual results.
+
+Native `rustc` compiled a standard-library program using buffered stdin, iterators, integer
+arithmetic, Unicode strings and stdout. Node WASI and Chromium both passed all three cases:
+Korean text with a trailing newline, an unterminated final line, and empty stdin followed by EOF.
+Chromium Workers delivered input in reads of at most three bytes. Each case returned exact
+stdout, empty stderr, and exit code zero. A separate invalid program failed with `E0308`.
+
+Reproduce with the exact official native compiler and target standard library in one prefix:
+
+```bash
+node producer/rust-browser/scripts/probe-native-target.mjs \
+  --rustc /path/to/private-toolchain/bin/rustc \
+  --work-root /path/to/private-probes \
+  --browser --chromium /path/to/chromium
+node --test producer/rust-browser/test/*.test.mjs
+```
+
+Omit `--browser` for Node WASI execution alone. This bounded check uses the official native
+stable compiler; it does not exercise the producer's patched compiler running as Wasm.
+The receipt keeps `browserHostedCompiler` and `ready` false. The full source rebuild and
+browser compiler acceptance above remain necessary before updating consumers.
+
 ## Commands
 
 Verify the checked-in lock and patch files without downloading sources:
