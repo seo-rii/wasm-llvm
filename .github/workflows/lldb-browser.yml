@@ -201,11 +201,6 @@ jobs:
         timeout-minutes: 360
         env:
             NINJA_JOBS: '2'
-            WASM_LLVM_TOOLCHAIN_WORK_DIR: ${{ runner.temp }}/clang-browser-work
-            WASM_LLVM_TOOLCHAIN_OUT_DIR: ${{ runner.temp }}/clang-browser-artifacts
-            WASM_LLVM_CLANG_ARTIFACT_DIR: ${{ runner.temp }}/clang-browser-artifacts
-            TMPDIR: ${{ runner.temp }}/clang-browser-tmp
-            CLANG_BUILD_EVIDENCE: ${{ runner.temp }}/clang-browser-evidence
         steps:
             - uses: actions/checkout@v4
               with:
@@ -221,6 +216,14 @@ jobs:
                   sudo apt-get update
                   sudo apt-get install --yes --no-install-recommends \
                     build-essential ca-certificates cmake curl git ninja-build python3 tar xz-utils zstd
+            - name: Prepare isolated Clang build paths
+              run: |
+                  mkdir -p "$RUNNER_TEMP/clang-browser-tmp"
+                  printf 'WASM_LLVM_TOOLCHAIN_WORK_DIR=%s/clang-browser-work\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+                  printf 'WASM_LLVM_TOOLCHAIN_OUT_DIR=%s/clang-browser-artifacts\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+                  printf 'WASM_LLVM_CLANG_ARTIFACT_DIR=%s/clang-browser-artifacts\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+                  printf 'TMPDIR=%s/clang-browser-tmp\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+                  printf 'CLANG_BUILD_EVIDENCE=%s/clang-browser-evidence\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
             - name: Require capacity for a fresh full toolchain build
               run: |
                   node --input-type=module <<'NODE'

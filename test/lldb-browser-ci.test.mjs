@@ -229,6 +229,8 @@ test('full Clang regeneration is manual, isolated, and bounded independently of 
 	assert.match(job, /group: clang-browser-product-\$\{\{ github\.ref \}\}\s+cancel-in-progress: false/u);
 	assert.match(job, /timeout-minutes: 360/u);
 	assert.match(job, /NINJA_JOBS: '2'/u);
+	assert.doesNotMatch(job.split('        steps:')[0], /runner\./u,
+		'the runner context is unavailable in job-level env');
 	assert.match(job, /(?:^|\s)python3(?:\s|$)/u);
 	assert.match(job, /availableDisk >= 20 \* 1024 \*\* 3/u);
 	assert.match(job, /availableMemory >= 12 \* 1024 \*\* 3/u);
@@ -241,9 +243,9 @@ test('Clang outputs upload only after current-receipt verification while failed 
 	const workflow = await fs.readFile('.github/workflows/lldb-browser.yml', 'utf8');
 	const job = workflow.match(/^    build-clang:[\s\S]*?(?=^    [\w-]+:|(?![\s\S]))/mu)?.[0];
 	assert.ok(job);
-	const output = job.match(/WASM_LLVM_TOOLCHAIN_OUT_DIR: (.+)/u)?.[1];
+	const output = job.match(/printf 'WASM_LLVM_TOOLCHAIN_OUT_DIR=%s([^']+)'/u)?.[1];
 	assert.ok(output);
-	assert.equal(job.match(/WASM_LLVM_CLANG_ARTIFACT_DIR: (.+)/u)?.[1], output);
+	assert.equal(job.match(/printf 'WASM_LLVM_CLANG_ARTIFACT_DIR=%s([^']+)'/u)?.[1], output);
 	assert.match(job, /umask 077/u);
 	assert.match(job, /\) > "\$clang_log" 2>&1 &/u);
 	assert.match(job, /build\.pid/u);
