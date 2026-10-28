@@ -19,6 +19,10 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
 [public int128 implementation and reproduction](INT128.md),
 [int128 qualification results](../../docs/gcc-wasi-int128.md),
+[empty record ABI repair](EMPTY-ABI.md),
+[floating extension qualification](FP-EXTENSIONS.md),
+[wide builtin/bitfield qualification](WIDE-INTEGER.md),
+[current completion results](../../docs/gcc-wasi-completion-20261027.md),
 [source pins](sources.lock.json), and [runtime pins](runtime.lock.json).
 The June 2026 GCC announcement approved a development direction; this backend is
 an unmerged author port, not a released upstream GCC target. Keeping its GCC 17
@@ -31,7 +35,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0009`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128 and public int128 lowering; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0011`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records and declared bitfield layout/classification; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -77,6 +81,12 @@ optabs. It adds the scalar complement word optab and i32 runtime shift counts.
 Native execution also exposed a host-buffer overread while emitting 16-byte
 `CONST_INT` initializers; the serializer now emits explicit bounded zero/sign
 extension. The int128 document defines the full 42-program/116-run matrix.
+Patch `0010` repairs [empty C++ record ABI](EMPTY-ABI.md), including generic GCC
+O0 parameter setup. Patch `0011` preserves named bitfields' declared storage
+alignment and uses their original storage type for singleton call classification.
+The [bitfield matrix](WIDE-INTEGER.md) includes packed and ordinary mixed-compiler
+controls; [additional singleton regressions](singleton-bitfield-fixtures.mjs)
+cover narrow short/long-long and packed int/long-long fields.
 
 ## Reproduction
 
@@ -152,14 +162,24 @@ A fresh work directory needs no gate replacement.
 The native driver in the draft port injects unsupported `-stdlib=libc++`; the
 recipe clears that driver spec for the real frontend self-tests. The browser
 SDK invokes the real frontend directly with explicit includes and libraries.
-`all-gcc` also includes host utilities that are not needed in a Worker. The
-browser recipe records its bootstrap exit status, then requires both real
-`cc1` and `cc1plus` modules to link successfully. It never marks an incomplete
-compiler build successful merely because intermediate objects exist.
+The browser host is the explicit `browser-frontends` profile. GCC's supported
+`--disable-gcov` configure option excludes `gcov`, `gcov-dump` and `gcov-tool`;
+filesystem traversal for these host utilities is not provided. The normal
+`all-gcc` preparation must exit zero before either real `cc1`/`cc1plus` module
+is separately linked. Failure aborts packaging, and both the profile and actual
+bootstrap result are bound into the compiler receipt. Existing build directories
+configured with gcov enabled are rejected. This does not add target profiling.
+The recipe canonicalizes Emscripten cache/ports paths before configuration:
+Emscripten's cold-cache library builder can resolve generated relative source
+paths incorrectly when the cache directory is a symlink. Function/type detection
+must run successfully against real headers; its answers are not overridden.
 
-For actual GNU C++ runtime support, use the isolated runtime recipe. It copies
-the pinned runtime source, adds a WASI configure case with real feature probes,
-and replaces one unsupported alias definition with a forwarding function. The
+For actual GNU C++ runtime support, use the isolated runtime recipe. Its typed
+math/stdlib probes bind live function addresses to real declarations and strict
+Wasm linking, preventing reduced-precision fallback stubs from replacing
+available long-double libm functions; see [the math repair](FP-EXTENSIONS.md).
+It copies the pinned runtime source, adds a WASI configure case with real
+feature probes, and replaces one unsupported alias definition with a forwarding function. The
 compiler source remains untouched. This is GNU libstdc++, not libc++ or a shim.
 The WASI `errno` header also has an explicit GCC single-thread profile patch:
 `__GCC_WASI_SINGLE_THREAD__=1` selects the existing libc's ordinary linear-memory
@@ -169,8 +189,8 @@ a TLS ABI or alter user source. The imported archive bytes and patched header
 identities are both recorded in `runtime-build.json`.
 
 ```sh
-# Select a new directory for the current wide scalar compiler; preserve old runtimes.
-export GCC_LIBSTDCXX_WORK_DIR="$GCC_WASI_WORK_DIR/libstdcxx-int128"
+# Select a new directory for the current compiler; preserve old runtimes.
+export GCC_LIBSTDCXX_WORK_DIR="$GCC_WASI_WORK_DIR/libstdcxx-current"
 bash producer/gcc-wasi/build-libstdcxx.sh
 node producer/gcc-wasi/test-libstdcxx.mjs "$GCC_LIBSTDCXX_WORK_DIR/qualification"
 
@@ -189,6 +209,32 @@ node producer/gcc-wasi/test-int128.mjs \
   --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
   --output "$GCC_WASI_WORK_DIR/int128-qualification"
 
+node producer/gcc-wasi/test-empty-abi.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/empty-abi-qualification"
+for suite in builtins bitfields; do
+  node producer/gcc-wasi/wide-integer-test.mjs \
+    --suite "producer/gcc-wasi/wide-integer-$suite-fixtures.mjs" \
+    --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+    --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+    --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+    --output "$GCC_WASI_WORK_DIR/wide-$suite-qualification"
+done
+node producer/gcc-wasi/wide-integer-test.mjs \
+  --suite producer/gcc-wasi/singleton-bitfield-fixtures.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/singleton-bitfield-qualification"
+node producer/gcc-wasi/fp-extension-native.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/fp-extension-qualification"
+
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -196,12 +242,15 @@ node producer/gcc-wasi/package.mjs \
   --vector-abi-qualification "$GCC_WASI_WORK_DIR/vector-abi-qualification/report.json" \
   --long-double-qualification "$GCC_WASI_WORK_DIR/long-double-qualification/report.json" \
   --int128-qualification "$GCC_WASI_WORK_DIR/int128-qualification/report.json" \
+  --empty-abi-qualification "$GCC_WASI_WORK_DIR/empty-abi-qualification/report.json" \
+  --bitfield-qualification "$GCC_WASI_WORK_DIR/wide-bitfields-qualification/report.json" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current nine-patch compiler, `--long-double-qualification`,
-`--int128-qualification`, the native linker and a freshly rebuilt, qualified
+For the current eleven-patch compiler, `--long-double-qualification`,
+`--int128-qualification`, `--empty-abi-qualification`,
+`--bitfield-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. Both wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy either complete gate. Earlier
 compiler profiles can omit `--libstdcxx` and advertise `libstdcxx: false` with core C++ language support. Every supplied GNU
@@ -329,15 +378,15 @@ ABI limitations remain and must not be hidden by passing scalar tests:
   aggregates use direct `v128` arguments/results. Both sides must select this
   profile; disabled SIMD retains indirect vector calls. The vector convention
   is compared against pinned Clang 22.1.0, not every future compiler version.
-  Public int128 is separately covered by patch `0009`. `_Float128` and complex
-  long-double arithmetic have only small boundary probes and are outside the
-  formal qualification scope. Complete C
-  ABI compatibility remains unqualified.
-- The trivial C++ type `struct alignas(16) Empty {};` retains a pre-existing
-  GCC/Clang ABI mismatch at O0/O2: GCC passes/returns it indirectly, while the
-  pinned Clang omits it from signatures. GCC callers and callees agree with
-  each other. The preserved eight-patch compiler behaves identically; patch
-  `0009` does not introduce this limitation.
+  The separate [floating extension matrix](FP-EXTENSIONS.md) qualifies selected
+  C `_Float128` and GNU complex long-double operations and ABI cases.
+  Complete C/C++ ABI compatibility remains unqualified.
+- Patch `0010` repairs trivial C++ empty records, including `alignas(16)`, with
+  direct/indirect/callback and nontrivial/member/array/union controls. Patch
+  `0011` repairs named wide-bitfield layout and declared-type singleton
+  classification; mixed-object linking and execution are checked separately
+  from same-compiler runs. See [empty ABI](EMPTY-ABI.md) and
+  [wide integer scope](WIDE-INTEGER.md).
 
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user

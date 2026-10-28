@@ -170,9 +170,11 @@ sizes do not describe a new binary128 build.
 ## Boundaries and distribution
 
 Public int128 is covered separately by [patch `0009` and its matrix](INT128.md);
-its support does not follow from this binary128 proof. `_Float128` and complex
-long-double arithmetic have only small boundary probes and remain outside this
-formal qualification matrix. The matrix does not establish complete ISO C/C++
+its support does not follow from this binary128 proof. C `_Float128` and GNU
+complex long-double operations have a separate
+[50-program/124-run qualification profile](FP-EXTENSIONS.md); their selected
+scope does not follow from scalar long-double tests alone. The matrix does not
+establish complete ISO C/C++
 or C ABI conformance,
 all math-library accuracy guarantees or every floating-point environment mode.
 Exceptions, RTTI, threads/TLS/atomics, shared memory, dynamic linking and external
