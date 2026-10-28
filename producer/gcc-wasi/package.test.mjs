@@ -1,9 +1,29 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { identity } from '../clang-browser/cross/package.mjs';
-import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions } from './package.mjs';
+import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions, verifyEmptyAbiQualification, verifyBitfieldQualification, verifyAbiQualificationOptions, verifyTypedMathProbes } from './package.mjs';
 import { cases, disabledCases } from './simd-fixtures.mjs';
 import { cases as int128Cases } from './int128-fixtures.mjs';
+import { cases as emptyAbiCases } from './empty-abi-fixtures.mjs';
+import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
+import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
+
+test('browser package rejects failed preparation and unsupported gcov host profiles', () => {
+	const receipt = {
+		hostUtilityProfile: { name: 'browser-frontends', gcov: false, gcovDump: false, gcovTool: false },
+		bootstrap: { allGccBootstrapExitCode: 0, gcovHostTools: 'disabled', profile: 'browser-frontends' }
+	};
+	verifyBrowserHostProfile(receipt);
+	for (const modify of [
+		value => { delete value.hostUtilityProfile; },
+		value => { delete value.bootstrap; },
+		value => { value.bootstrap.allGccBootstrapExitCode = 2; },
+		value => { value.hostUtilityProfile.gcovTool = true; }
+	]) {
+		const changed = structuredClone(receipt); modify(changed);
+		assert.throws(() => verifyBrowserHostProfile(changed));
+	}
+});
 
 function binary128ProofFixture(simd = false) {
 	const fixture = {
@@ -45,7 +65,7 @@ function binary128ProofFixture(simd = false) {
 	return { fixture, expected, report };
 }
 
-function int128ProofFixture() {
+function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qualification') {
 	const { expected } = binary128ProofFixture();
 	expected.targetSource = { 'wasm-cg.cc': identity(Buffer.from('TI target')) };
 	expected.recipes = Object.fromEntries(['fixtures', 'harness', 'inspector'].map(name => [name, identity(Buffer.from(`int128 ${name}`))]));
@@ -53,19 +73,19 @@ function int128ProofFixture() {
 	expected.headers.gcc = { 'stddef.h': identity(Buffer.from('GCC stddef')) };
 	expected.headers.gnuCpp = { vector: identity(Buffer.from('GNU vector')) };
 	const report = {
-		...structuredClone(expected), kind: 'gcc-wasi-int128-qualification', status: 'passed', inputsUnchanged: true,
-		compilerHost: 'native', outputTarget: 'wasm32-wasi', selectedCases: int128Cases.map(fixture => fixture.id),
-		suiteSha256: identity(Buffer.from(JSON.stringify(int128Cases))).sha256,
+		...structuredClone(expected), kind, status: 'passed', inputsUnchanged: true,
+		compilerHost: 'native', outputTarget: 'wasm32-wasi', selectedCases: fixtures.map(fixture => fixture.id),
+		suiteSha256: identity(Buffer.from(JSON.stringify(fixtures))).sha256,
 		directions: ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang']
 	};
 	for (const [key, name] of Object.entries({ gcc: 'cc1', gccCpp: 'cc1plus', clang: 'clang', assembler: 'wat2wasm', inspector: 'wasm-objdump', linker: 'wasm-ld', node: 'node' }))
 		report.tools[key].path = `/verified/tools/${name}`;
-	report.cases = int128Cases.flatMap(fixture => report.directions
+	report.cases = fixtures.flatMap(fixture => report.directions
 		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
 		.map(direction => {
 			const families = direction.split('-');
 			const sources = [fixture.request.code, ...(fixture.request.sources || []).map(name => fixture.request.files.find(file => file.path === name).contents)];
-			const common = [`-O${fixture.request.optimization}`, `-std=${fixture.request.standard}`, fixture.request.simd ? '-msimd128' : '-mno-simd128', '-D__GCC_WASI_SINGLE_THREAD__=1', '-DONLINE_JUDGE=1'];
+			const common = [`-O${fixture.request.optimization}`, `-std=${fixture.request.standard}`, fixture.request.simd ? '-msimd128' : '-mno-simd128', '-D__GCC_WASI_SINGLE_THREAD__=1', ...(fixture.request.defines || []).map(value => `-D${value}`)];
 			const commands = [];
 			const units = sources.map((source, index) => {
 				const family = families[index === 0 ? 0 : 1];
@@ -89,8 +109,81 @@ function int128ProofFixture() {
 			};
 		}));
 	report.counts = { total: report.cases.length, passed: report.cases.length, failed: 0 };
-	return { fixtures: int128Cases, expected, report };
+	return { fixtures, expected, report };
 }
+
+test('ABI correction patches require complete current native proofs and a real linker', () => {
+	const empty = { path: 'patches/0010-empty-record-abi.patch' };
+	const bitfield = { path: 'patches/0011-bitfield-layout.patch' };
+	verifyAbiQualificationOptions([], {});
+	const complete = { emptyAbiQualification: 'empty.json', bitfieldQualification: 'bitfield.json', nativeLinker: 'wasm-ld' };
+	verifyAbiQualificationOptions([empty, bitfield], complete);
+	assert.throws(() => verifyAbiQualificationOptions([empty], {}), /requires --empty-abi-qualification/);
+	assert.throws(() => verifyAbiQualificationOptions([bitfield], {}), /requires --bitfield-qualification/);
+	for (const field of Object.keys(complete)) {
+		const changed = { ...complete }; delete changed[field];
+		assert.throws(() => verifyAbiQualificationOptions([empty, bitfield], changed));
+	}
+});
+
+for (const [label, fixtures, kind, verify] of [
+	['Empty ABI', emptyAbiCases, 'gcc-wasi-empty-record-abi-qualification', verifyEmptyAbiQualification],
+	['Bitfield', bitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyBitfieldQualification]
+]) test(`${label} rejects partial, stale and forged ABI/source/command proof (synthetic receipts)`, () => {
+	const { expected, report } = int128ProofFixture(fixtures, kind);
+	verify(report, expected, fixtures);
+	for (const mutate of [
+		proof => { proof.cases.pop(); },
+		proof => { proof.selectedCases.pop(); },
+		proof => { proof.suiteSha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].fixtureSha256 = '0'.repeat(64); },
+		proof => { proof.tools.gcc.sha256 = '0'.repeat(64); },
+		proof => { proof.targetSource['wasm-cg.cc'].sha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].units[0].source.sha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].commands[0].argv = proof.cases[0].commands[0].argv.filter(arg => !arg.startsWith('-D')); },
+		proof => { proof.cases[0].commands[0].command = '/unverified/cc1'; },
+		proof => { proof.cases[0].abi.memories[0].shared = true; },
+		proof => { proof.cases[0].abi.exports._start.params = ['i32']; },
+		proof => { proof.cases[0].stdout = 'unverified output'; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verify(changed, expected, fixtures));
+	}
+});
+
+test('typed GNU math detection rejects missing functions, stale tools and invalid link probes (synthetic receipts)', () => {
+	const expected = Object.fromEntries(['recipe', 'compiler', 'assembler', 'linker'].map(name => [name, identity(Buffer.from(name))]));
+	const functions = [...typedMathProbeContract.functions];
+	const headers = { gcc: { 'stddef.h': identity(Buffer.from('GCC header')) }, target: {}, sdk: {} };
+	const report = {
+		kind: 'gcc-wasi-typed-math-link-probes', status: 'passed', inputsUnchanged: true, target: 'wasm32-wasi', missingRequired: [],
+		functions, stdlibFunctions: ['at_quick_exit', 'quick_exit', 'strtof', 'strtold'], requiredToAvoidMathStubs: [...typedMathProbeContract.required],
+		headers,
+		inputs: Object.fromEntries(Object.entries(expected).map(([name, value]) => [name, { ...value, path: `/verified/${name}` }])),
+		cases: functions.map(name => ({ function: name, required: typedMathProbeContract.required.includes(name), available: true,
+			commands: ['compiler', 'assembler', 'linker'].map(tool => ({ argv: [`/verified/${tool}`, ...(tool === 'linker' ? ['--fatal-warnings'] : [])], exitCode: 0, stderr: '' })) })),
+		counts: { total: 67, available: 67, unavailable: 0 }
+	};
+	verifyTypedMathProbes(report, expected, headers);
+	for (const mutate of [
+		proof => { proof.functions.pop(); },
+		proof => { proof.functions[1] = 'unrelated_function'; proof.cases[1].function = 'unrelated_function'; },
+		proof => { proof.requiredToAvoidMathStubs = proof.requiredToAvoidMathStubs.filter(name => name !== 'acosl'); proof.cases.find(test => test.function === 'acosl').required = false; },
+		proof => { proof.headers.gcc['stddef.h'].sha256 = '0'.repeat(64); },
+		proof => { proof.cases.pop(); },
+		proof => { proof.missingRequired.push('sqrtl'); },
+		proof => { proof.cases[0].available = false; },
+		proof => { proof.inputs.compiler.sha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].commands[0].argv[0] = '/unverified/clang'; },
+		proof => { proof.cases[0].commands[2].argv.pop(); },
+		proof => { proof.cases[0].commands[2].exitCode = 1; },
+		proof => { proof.cases[0].commands[0].stderr = 'internal compiler error'; },
+		proof => { proof.inputsUnchanged = false; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyTypedMathProbes(changed, expected, headers));
+	}
+});
 
 test('locked binary128 and int128 backends require complete native proof and a qualified GNU runtime', () => {
 	const old = { path: 'patches/0008-binary128-long-double.patch' };

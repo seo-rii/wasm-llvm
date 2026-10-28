@@ -27,7 +27,12 @@ if qualification.get('buildReceiptSha256')!=hashlib.sha256((work/'native-build.j
     raise SystemExit('Native qualification covers another compiler build')
 PY
 source "$sdk/emsdk_env.sh"
-export EM_CACHE="$work/emscripten-cache" EM_PORTS="$work/emscripten-ports"
+mkdir -p "$work/emscripten-cache" "$work/emscripten-ports"
+# Emscripten makes system-library source paths relative to EM_CACHE before
+# entering that directory. A symlink cache must use its physical path so the
+# relative paths still resolve when subprocesses enter the cache's real cwd.
+export EM_CACHE="$(realpath "$work/emscripten-cache")"
+export EM_PORTS="$(realpath "$work/emscripten-ports")"
 emcc --version | head -1 | grep -F '6.0.0'
 python3 - "$sdk" "$recipe" <<'PY'
 import json,pathlib,subprocess,sys
@@ -54,6 +59,15 @@ hostflags='-Os -g0 -DHAVE_PSIGNAL=1 -DELIDE_CODE'
 moduleflags='-Os -g0 -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createModule -sENVIRONMENT=worker,node -sINVOKE_RUN=0 -sEXIT_RUNTIME=1 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,callMain,HEAPU8 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=2GB -sSTACK_SIZE=16MB -sUSE_ZLIB=1'
 mkdir -p "$work/gcc-browser"
 cd "$work/gcc-browser"
+if [[ -f Makefile ]]; then
+  python3 - "$PWD" <<'PY'
+import pathlib,shlex,subprocess,sys
+build=pathlib.Path(sys.argv[1])
+args=shlex.split(subprocess.check_output([str(build/'config.status'),'--config'],text=True))
+if '--disable-gcov' not in args:
+    raise SystemExit('Existing Wasm-host build enables unsupported gcov utilities; use a fresh GCC_WASI_WORK_DIR')
+PY
+fi
 if [[ ! -f Makefile ]]; then
   emconfigure "$work/gcc/configure" --build="$build_triple" --host=wasm32-unknown-emscripten \
     --target=wasm32-wasi --prefix=/opt/gcc-wasi --with-sysroot=/sysroot \
@@ -62,7 +76,7 @@ if [[ ! -f Makefile ]]; then
     --disable-multilib --disable-libssp --disable-libada --disable-libquadmath \
     --disable-libgomp --disable-libvtv --disable-libstdcxx --disable-libsanitizer \
     --disable-libatomic --disable-libcc1 --disable-libitm --disable-lto --disable-plugin \
-    --disable-werror --enable-checking=release --disable-fixincludes --without-headers \
+    --disable-werror --enable-checking=release --disable-fixincludes --disable-gcov --without-headers \
     CC_FOR_BUILD=gcc CXX_FOR_BUILD=g++ CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
     GCC_FOR_TARGET="$work/gcc-native/gcc/xgcc -B$work/gcc-native/gcc/" MAKEINFO=true
 fi
@@ -71,13 +85,19 @@ fi
 if [[ -f gcc/config.status ]]; then
   (cd gcc && emconfigure ./config.status --recheck && ./config.status)
 fi
-# The normal graph builds native generators and host support libraries. gcov's
-# ftw() is absent in Emscripten; cc1/cc1plus are verified independently below.
+# Build native generators and host support libraries through the normal graph.
+# This browser-frontend profile explicitly excludes gcov host utilities: their
+# filesystem traversal is not provided by this producer. No failed all-gcc
+# build is accepted as successful frontend preparation.
 set +e
 emmake make -j"$jobs" all-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" MAKEINFO=true
 bootstrap_status=$?
 set -e
-printf '{"allGccBootstrapExitCode":%s}\n' "$bootstrap_status" > "$work/browser-bootstrap.json"
+printf '{"allGccBootstrapExitCode":%s,"gcovHostTools":"disabled","profile":"browser-frontends"}\n' "$bootstrap_status" > "$work/browser-bootstrap.json"
+if [[ $bootstrap_status -ne 0 ]]; then
+  echo 'Wasm-host all-gcc preparation failed; frontend packaging is aborted' >&2
+  exit "$bootstrap_status"
+fi
 rm -f gcc/cc1 gcc/cc1plus
 emmake make -j"$jobs" -C gcc cc1 cc1plus CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
   LDFLAGS="$moduleflags" MAKEINFO=true
@@ -110,6 +130,8 @@ def identity(p):
 files={str(p.relative_to(out)):identity(p) for p in sorted(out.rglob('*')) if p.is_file()}
 receipt={'schemaVersion':1,'kind':'gcc-wasi-browser-build','host':'wasm32-emscripten',
  'target':'wasm32-wasi','gccCommit':json.loads((recipe/'sources.lock.json').read_text())['gcc']['commit'],
+ 'hostUtilityProfile':{'name':'browser-frontends','gcov':False,'gcovDump':False,'gcovTool':False},
+ 'bootstrap':json.loads((work/'browser-bootstrap.json').read_text()),
  'gccSource':json.loads((work/'gcc-browser-source.json').read_text()),
  'sourceLock':identity(recipe/'sources.lock.json'),'recipe':identity(recipe/'build-browser.sh'),
  'hostDependencies':{name:identity(work/'host-libraries/lib'/('lib'+name+'.a')) for name in ['gmp','mpfr','mpc']},
