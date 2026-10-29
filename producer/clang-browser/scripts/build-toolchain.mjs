@@ -11,7 +11,7 @@ import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
 import { clangdResourceProfile } from './resource-profile.mjs';
-import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, emsdkShellCommand, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
+import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, createEmsdkPythonWrapper, directoryIdentity, downloadPinned, emsdkShellCommand, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
@@ -806,6 +806,9 @@ await run(path.join(emsdkDir, 'emsdk'), ['install', config.emsdkVersion]);
 await run(path.join(emsdkDir, 'emsdk'), ['activate', config.emsdkVersion]);
 await recordBuildTool('emsdkClang', path.join(emsdkDir, 'upstream', 'bin', 'clang'));
 await recordBuildTool('wasmOpt', path.join(emsdkDir, 'upstream', 'bin', 'wasm-opt'));
+const emsdkPython = path.join(buildDir, 'emsdk-python');
+await recordBuildTool('emsdkPython', await createEmsdkPythonWrapper(emsdkPython));
+await recordBuildTool('emsdkPythonWrapper', emsdkPython);
 const emccIdentity = await fileIdentity(path.join(emsdkDir, 'upstream', 'emscripten', 'emcc.py'));
 // Emscripten lazily writes compiled system libraries. Keep those generated outputs
 // in this fresh build while hashing every installed helper, source and library input.
@@ -975,10 +978,10 @@ const clangdConfigure = [
 	'-DCLANG_ENABLE_ARCMT=OFF',
 	'-DCLANG_ENABLE_STATIC_ANALYZER=OFF'
 ].join(' ');
-await run('bash', ['-lc', emsdkShellCommand(emsdkEnv, emCache, clangdConfigure)]);
+await run('bash', ['-lc', emsdkShellCommand(emsdkEnv, emCache, emsdkPython, clangdConfigure)]);
 await run('bash', [
 	'-lc',
-	emsdkShellCommand(emsdkEnv, emCache,
+	emsdkShellCommand(emsdkEnv, emCache, emsdkPython,
 		`cmake --build ${shellQuote(clangdBuild)} --target clangd ${ninjaArgs.map(shellQuote).join(' ')}`)
 ]);
 
