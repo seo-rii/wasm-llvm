@@ -66,10 +66,11 @@ brace. A C++ local remains subject to its actual lifetime; the change does not r
 after its destructor. The upstream-style IR regression is in the pinned patch, and
 `test/native-wasm-debug/function-end.cpp` exercises real stepping and live scalar locals.
 
-This source change requires rebuilding the compiler. Existing checked-in compiler/debugger
-artifacts and receipts are not rewritten by it; those bytes do not acquire the new behavior from
-a manifest edit. Compile the native function-end fixture with the rebuilt compiler and run the
-documented native acceptance gate before replacing product artifacts.
+The checked-in compiler was rebuilt from the pinned source and patches, with a fresh
+`clang-build-receipt.json` and successful producer verification and Wasm smoke checks.
+[The paired debugger qualification](../lldb-browser/validation/source-build-20261029/qualification.json)
+records the source builds, patched native function-end baseline and real Chromium runs
+that compile and debug the C++ fixtures with these exact compiler bytes.
 
 The WASI SDK clang driver normally runs any `wasm-opt` found on `PATH` after linking, so a host
 Binaryen package would silently change the clang and wasm-ld bytes. The producer links them with
@@ -283,6 +284,12 @@ The emsdk checkout must have no tracked edits. The full installed WASI SDK and e
 trees (including ignored helpers, sysroots and preinstalled libraries) are hashed before and after
 compilation. Emscripten's mutable working cache is copied into the fresh build directory, so generated
 cache outputs do not overwrite or disappear from the recorded installed input tree.
+Each clangd configure/build shell exports that private `EM_CACHE` after sourcing
+`emsdk_env.sh`, because SDK initialization can clear a previously inherited value.
+The private Python launcher supplies `-B` explicitly and preserves its own
+executable identity for nested Emscripten processes. Emscripten uses `-E`,
+which ignores `PYTHONDONTWRITEBYTECODE`; the launcher prevents Python
+bytecode caches from modifying the recorded SDK tree.
 
 The producer claims an empty `build/` directory exclusively before patching sources or writing build
 outputs. Existing native, WASI, clangd or other cached outputs are rejected and preserved; use a new

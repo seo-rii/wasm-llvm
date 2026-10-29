@@ -1,0 +1,69 @@
+{
+  "revision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+  "qualificationCommit": "7bd1d38d61c6602fd05260f04af979abbfdc8e0f",
+  "qualificationInputs": {
+    "function-end.cpp": {
+      "bytes": 998,
+      "sha256": "ff85e863804f84efe0ce963472b9b80a65cf040d4f131b8e198af5dc1c3ffdab"
+    },
+    "hit-count.c": {
+      "bytes": 198,
+      "sha256": "ac9ed6ed5be5cbc554c188c9971b96b071191c1fb92780944105e048ed41bc91"
+    },
+    "container-adaptors.cpp": {
+      "bytes": 1560,
+      "sha256": "c287ca569f3ec90b23feb5be8f7718b351962cfc5068b38f300a43f40f90579f"
+    },
+    "run-native-cpp-baseline.mjs": {
+      "bytes": 10264,
+      "sha256": "45a79f4a85a91d23d8ac30260211be1622af5cdaebaa30d1f7acddac7c61db0a"
+    },
+    "run-native-hit-condition-baseline.mjs": {
+      "bytes": 7144,
+      "sha256": "20a00bb4154d14cf45f77d114610c5801b6bd00777b85fb405f145e899e1a33c"
+    },
+    "run-native-dap-baseline.mjs": {
+      "bytes": 37042,
+      "sha256": "2aab82124ae8fe8d270fd39494d0aa1929dedd276104bed564e9e23ed0cac97f"
+    },
+    "native-processes.mjs": {
+      "bytes": 5679,
+      "sha256": "9f76a068b64a162b994c38b1a6fb29f28d36f6c19e9da664238f1556f895263f"
+    }
+  },
+  "clangManifestSha256": "de99e0be692a813c854edf8f42606f35226c285b567b246c617a1cecc74c62d9",
+  "lldbSourcesLockSha256": "a27fcf91613a39b7a19faedf0345ad297d31b91252ebb65e6b03cf30aecbe9ad",
+  "patches": [
+    {
+      "root": "producer/clang-browser",
+      "path": "patches/wasm-function-end-location.patch",
+      "sha256": "328eec2ebde3eacb26f8fa998cddef6a57df6719c1f9cffb25e5da95aa10a5c5"
+    },
+    {
+      "root": "producer/lldb-browser",
+      "path": "patches/0007-wasm-recursive-frame-cfa.patch",
+      "sha256": "f838daf253d9bf821fc934567bac1f953cc05b0f8c93f95de47272c3e4e8a86a"
+    },
+    {
+      "root": "producer/lldb-browser",
+      "path": "patches/0010-wasm-caller-pc-cache.patch",
+      "sha256": "8e54c54875c8d002aef2d866d05af0f94a8384e1c9260705abc9351cf3ad6e77"
+    },
+    {
+      "root": "producer/lldb-browser",
+      "path": "patches/0011-libcxx-container-adaptors.patch",
+      "sha256": "41558f0b7a48ecd7d96cedc32d1a00fffffd1bcd20c45246028489e4fc37e2ce"
+    },
+    {
+      "root": "producer/lldb-browser",
+      "path": "patches/0012-lldb-dap-clear-hit-condition.patch",
+      "sha256": "337a9e9f657a4388d6557d66fc88b9ed767c5919a6282e1898f42c9392e1caee"
+    },
+    {
+      "root": "producer/lldb-browser",
+      "path": "patches/0013-libcxx-native-deque.patch",
+      "sha256": "e1a24fd97d986637f24e8d0ed98b7375b3caaceecafaa13c422ed14c8eddfa31"
+    }
+  ],
+  "trackedDiffSha256": "6093e1af5b189ac5025de5730132a2cbe06ace9f3b9eb7f08d4a4498a8813baa"
+}

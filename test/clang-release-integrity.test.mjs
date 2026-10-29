@@ -255,9 +255,24 @@ test('legacy artifacts matching the current manifest still require a fresh build
 		/requires a verified source-to-output build receipt/);
 });
 
-test('committed artifacts with an obsolete compiler manifest require a rebuild', async () => {
-	await assert.rejects(loadVerifiedClangArtifacts(path.join(repo, 'artifacts/clang-browser'), { requireBuildReceipt: true }),
+test('artifacts with an obsolete compiler manifest require a rebuild', async (t) => {
+	const f = await fixture(t);
+	await f.release();
+	const before = await snapshot(f.output);
+	f.metadata.producer.manifestSha256 = '0'.repeat(64);
+	await f.writeMetadata();
+	await assert.rejects(loadVerifiedClangArtifacts(f.artifacts, { requireBuildReceipt: true }),
 		/Clang producer manifest mismatch/);
+	await assert.rejects(f.release(), /Clang producer manifest mismatch/);
+	assert.deepEqual(await snapshot(f.output), before);
+});
+
+test('committed artifacts carry current source-to-output build evidence', async () => {
+	const verified = await loadVerifiedClangArtifacts(path.join(repo, 'artifacts/clang-browser'), { requireBuildReceipt: true });
+	assert.equal(verified.manifestCompatibility, 'current');
+	assert.equal(verified.metadata.buildProvenance.status, 'verified');
+	assert.equal(sha256(verified.sidecars.get('clang-build-receipt.json')),
+		'19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee');
 });
 
 test('release requires independent MemFS proof and binds it and the module to the complete Clang build', async (t) => {

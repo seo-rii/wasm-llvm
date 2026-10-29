@@ -1,0 +1,1575 @@
+{
+  "schemaVersion": 1,
+  "kind": "wasm-llvm-source-browser-qualification",
+  "passed": true,
+  "consumerRevision": "372415901d25b85d709f19e06c143963b4565c2e",
+  "producerRevision": "7bd1d38d61c6602fd05260f04af979abbfdc8e0f",
+  "clangProducerRevision": "ff18b37c934f7526885f5a49d77698712615f23a",
+  "cases": [
+    "c-data-breakpoint",
+    "cpp-data-breakpoint",
+    "c-trap",
+    "rust-basic"
+  ],
+  "runDirectory": "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b",
+  "stateFile": "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b/status.json",
+  "commands": [
+    {
+      "name": "pin-candidate-clang",
+      "argv": [
+        "python3",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/pin-clang.py",
+        "--clang-source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-pr52-promotion-20261029/out/qualification/release",
+        "--receipt-sha256",
+        "19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee",
+        "--work-dir",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b/clang"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/pin-candidate-clang.log",
+      "exitCode": 0
+    },
+    {
+      "name": "sync-debugger",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "scripts/sync-wasm-debug.mjs",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-pr52-promotion-20261029/out/qualification/release"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/sync-debugger.log",
+      "exitCode": 0
+    },
+    {
+      "name": "candidate-runtime-pins",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "scripts/generate-runtime-asset-lock.mjs",
+        "static"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/candidate-runtime-pins.log",
+      "exitCode": 0
+    },
+    {
+      "name": "build-preview",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "node_modules/vite/bin/vite.js",
+        "build"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/build-preview.log",
+      "exitCode": 0
+    },
+    {
+      "name": "compress-preview",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "scripts/compress-static-runtime-assets.mjs",
+        "build"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/compress-preview.log",
+      "exitCode": 0
+    },
+    {
+      "name": "verify-preview-debugger",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "scripts/verify-page-wasm-debug.mjs",
+        "build",
+        "scripts/wasm-debug-release.v2.json"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/verify-preview-debugger.log",
+      "exitCode": 0
+    },
+    {
+      "name": "cache-off-off-on-on",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "scripts/probe-lldb-first-pause.mjs",
+        "--cache-mode",
+        "both",
+        "--debug-assets",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/consumer/static/wasm-debug",
+        "--debug-manifest-sha256",
+        "84c4707cf71e2b583f50571387cd4499829ddf3b0044cf05e6137300a792adf9",
+        "--json",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b/cache.json"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/cache-off-off-on-on.log",
+      "exitCode": 0
+    },
+    {
+      "name": "official-product-ui",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/lib/playground/debug.playwright.test.ts",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=./scripts/required-browser-reporter.mjs",
+        "--outputFile=/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b/vitest.json"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/official-product-ui.log",
+      "exitCode": 0
+    },
+    {
+      "name": "cpp-adaptors-function-end",
+      "argv": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "scripts/qualification-cpp-browser.mjs",
+        "--debug-manifest-sha256",
+        "84c4707cf71e2b583f50571387cd4499829ddf3b0044cf05e6137300a792adf9",
+        "--json",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b/cpp.json"
+      ],
+      "log": "/home/seorii/logs/wasm-debug-qualification-20261029T120110Z-2b994f4b/cpp-adaptors-function-end.log",
+      "exitCode": 0
+    }
+  ],
+  "harness": {
+    "prepare.py": {
+      "bytes": 10578,
+      "sha256": "1447989f1ef312e6c7d4518a9245ea8a46df525bbd69ac7a6807c47f2fbb17b6"
+    },
+    "build-packages.py": {
+      "bytes": 1289,
+      "sha256": "66f771df0f81eca2f42084806c1413f1c909d239639e5801220642c7cedc5226"
+    },
+    "pin-clang.py": {
+      "bytes": 5466,
+      "sha256": "7d06494a561fe80925023ad43a7bfd56c82d7d716c27035b0cfdf2547fe51318"
+    },
+    "run.py": {
+      "bytes": 24859,
+      "sha256": "df4b882e44d285114f62a31191ffa2c2fd42ce5775b04e9ba5fe89af09d260d6"
+    },
+    "launch.py": {
+      "bytes": 1344,
+      "sha256": "da7b8cce4b6115fe1a643c1a68c5a145ddb0662d4f9e9c6dd22301405904f4a7"
+    },
+    "freeze-fixtures.py": {
+      "bytes": 1722,
+      "sha256": "01a3ab35d0b8414766c1651ff63fddf2b62df6020db13f1a59754b9e257e9af0"
+    },
+    "qualification-cpp-browser.mjs": {
+      "bytes": 17651,
+      "sha256": "c473428ebe2a21336b99deae5b8638907fcc8bc5cd282a8cd72b9e2b0e60b8cc"
+    }
+  },
+  "temporaryDirectory": "/tmp/wdq-20261029T120110Z-2b994f4b",
+  "fixtureProducerRevision": "7bd1d38d61c6602fd05260f04af979abbfdc8e0f",
+  "producerFiles": {
+    "producer/clang-browser/scripts/package-language-sysroots.mjs": {
+      "bytes": 8439,
+      "sha256": "68948c3d110eaf4987fc3b2e85d46aac964aef8731afd4a75626d41d6edddaee"
+    },
+    "test/native-wasm-debug/container-adaptors.cpp": {
+      "bytes": 1560,
+      "sha256": "c287ca569f3ec90b23feb5be8f7718b351962cfc5068b38f300a43f40f90579f"
+    },
+    "test/native-wasm-debug/function-end.cpp": {
+      "bytes": 998,
+      "sha256": "ff85e863804f84efe0ce963472b9b80a65cf040d4f131b8e198af5dc1c3ffdab"
+    }
+  },
+  "fixtureIdentitySha256": "715813f0b9667393ff024f0ca62dbf2b7b2aec66430bc8b44b2ffa067fc68fbb",
+  "consumerMain": "372415901d25b85d709f19e06c143963b4565c2e",
+  "consumerSourceKind": "published-main",
+  "debuggerEvidence": {
+    "manifest": {
+      "bytes": 3146,
+      "sha256": "84c4707cf71e2b583f50571387cd4499829ddf3b0044cf05e6137300a792adf9"
+    },
+    "assets": [
+      {
+        "path": "debug/lldb-web-dap.js",
+        "bytes": 162689,
+        "sha256": "42c21587cf466c662ebf3106a8316a110be826869e3ef25f946f66345aa48fef"
+      },
+      {
+        "path": "debug/lldb-web-dap.wasm",
+        "bytes": 42722376,
+        "sha256": "f8c9c3c790eb61addd6522a47542624477a0eb527706f8275912a06947191388"
+      },
+      {
+        "path": "debug/lldb-web-dap.pthread.mjs",
+        "bytes": 1364,
+        "sha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d"
+      },
+      {
+        "path": "debug/wamr-debug.js",
+        "bytes": 111701,
+        "sha256": "b0b55a0f63d0fc8ed620bd1a348531cabf35816b8dc465ee882da9fc5684a5a2"
+      },
+      {
+        "path": "debug/wamr-debug.wasm",
+        "bytes": 278960,
+        "sha256": "a1a128771b8fb352725e9b5120bc7448e6cc639b66275c2fa2ef49bd212185e1"
+      },
+      {
+        "path": "debug/wamr-debug.worker.mjs",
+        "bytes": 111694,
+        "sha256": "7a42988a701fca14caacfbca44611e3809297ea58f946c64d05254ea9908ec82"
+      }
+    ],
+    "lldbReceiptSha256": "999762261a8b616e3926bbe0993c49d1b3ca13fe62b2e8159120723ab726961b",
+    "wamrReceiptSha256": "425c18f3d16b9ad20aebea63b4d52f56eeb3d6ea9b2af3552254a32248f69ee8",
+    "producerRevision": "7bd1d38d61c6602fd05260f04af979abbfdc8e0f"
+  },
+  "clangEvidence": {
+    "sourceReceiptSha256": "19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee",
+    "producerManifestSha256": "de99e0be692a813c854edf8f42606f35226c285b567b246c617a1cecc74c62d9",
+    "splitterSha256": "68948c3d110eaf4987fc3b2e85d46aac964aef8731afd4a75626d41d6edddaee",
+    "derivedPins": {
+      "runtime-manifest.v1.json": {
+        "bytes": 876,
+        "sha256": "1420808d0391ff2d8a2fdf2a9f6bbce8f728e06b1ed1651029ed80b226101444",
+        "uncompressedBytes": 876,
+        "uncompressedSha256": "1420808d0391ff2d8a2fdf2a9f6bbce8f728e06b1ed1651029ed80b226101444"
+      },
+      "libc-printscan-long-double.a.gz": {
+        "bytes": 52723,
+        "sha256": "b3f11e17e40fb13371a97244fdde00d5bd951ad8e20dfdf88a069167d6be628b",
+        "uncompressedBytes": 111062,
+        "uncompressedSha256": "33e04007d3547095068391b42189d1ac5398dd04e9da3118dfa644ffea7f4148"
+      },
+      "bin/memfs.wasm.gz": {
+        "bytes": 16111,
+        "sha256": "a3e43451bc15ae69a7f113009e2ee82ab4db711625c1782cd45d0d3c4d38175a",
+        "uncompressedBytes": 38071,
+        "uncompressedSha256": "5b741e03dd3502bcfd80e4e5055232b5d633604e1461752efed0189f93407dc3"
+      },
+      "bin/clang.wasm.gz": {
+        "bytes": 13125036,
+        "sha256": "bc6377e6839c3584c13bb26d31bd5045aa384fe3382b162aa18de604aef5ed43",
+        "uncompressedBytes": 35597823,
+        "uncompressedSha256": "c956bb0cec8048701a1b7d706eeaa19cd9716568c803f55cf23ef4413c91b635"
+      },
+      "bin/lld.wasm.gz": {
+        "bytes": 6421571,
+        "sha256": "7e6b599bf33dc63a7c634b1cced68a38eb94a64c0f3223574cb23377530b61df",
+        "uncompressedBytes": 16136413,
+        "uncompressedSha256": "74d4aaadb5fbfd5d690e0404b272b89973afd330af7a668927663c4723e2c316"
+      },
+      "bin/sysroot.tar.gz": {
+        "bytes": 6780412,
+        "sha256": "6188b500fa7af2dceadcbd6dcf2619b6935fa94c224c1c2078426666ebea1d50",
+        "uncompressedBytes": 35594240,
+        "uncompressedSha256": "fb6d8a8786ec395009d44f62ff24a5bf09ff8672340b7dae9f48e28cf1569cba"
+      },
+      "bin/c-sysroot.tar.gz": {
+        "bytes": 2006388,
+        "sha256": "da7a29250b2fe2d928fa8818069ff67e1dcb26c529bbf01f40bbeb251535ecaa",
+        "uncompressedBytes": 12213760,
+        "uncompressedSha256": "517b32208f4e556b22eb5ac775411c39fb75239dfaf81f206e6052e168425b62"
+      },
+      "bin/cpp-addon.tar.gz": {
+        "bytes": 4776509,
+        "sha256": "6e243c219561b1f5aad64db4a9ff8bbeb85a97b5e3b5df3ed71d8340d35a8cd7",
+        "uncompressedBytes": 23382528,
+        "uncompressedSha256": "feaf2aa538623ec8c543ccb49e9a833d2a1aa6dee7a9ad502c277deba24ef642"
+      },
+      "language-sysroots.v1.json": {
+        "bytes": 426858,
+        "sha256": "42ff9bc320b673fd0a34cb9faa4ca19cb06a4780f6072da2f72a9b01aa62730c",
+        "uncompressedBytes": 426858,
+        "uncompressedSha256": "42ff9bc320b673fd0a34cb9faa4ca19cb06a4780f6072da2f72a9b01aa62730c"
+      }
+    },
+    "installed": {
+      "LICENSE.memfs-llvm.txt": {
+        "bytes": 3192,
+        "sha256": "24b67da19b1422a819395738cb83ea34eee3fdce52870b0d1758524ba1615069"
+      },
+      "LICENSE.memfs-stb_sprintf.txt": {
+        "bytes": 1133,
+        "sha256": "88420bf461670fb7b9d6c3d3dd4a50f9a653361ee1e0eafc079ba715b1944e72"
+      },
+      "bin/c-sysroot.tar.gz": {
+        "bytes": 2006388,
+        "sha256": "da7a29250b2fe2d928fa8818069ff67e1dcb26c529bbf01f40bbeb251535ecaa"
+      },
+      "bin/clang.wasm.gz": {
+        "bytes": 13125036,
+        "sha256": "bc6377e6839c3584c13bb26d31bd5045aa384fe3382b162aa18de604aef5ed43"
+      },
+      "bin/cpp-addon.tar.gz": {
+        "bytes": 4776509,
+        "sha256": "6e243c219561b1f5aad64db4a9ff8bbeb85a97b5e3b5df3ed71d8340d35a8cd7"
+      },
+      "bin/lld.wasm.gz": {
+        "bytes": 6421571,
+        "sha256": "7e6b599bf33dc63a7c634b1cced68a38eb94a64c0f3223574cb23377530b61df"
+      },
+      "bin/memfs.wasm.gz": {
+        "bytes": 16111,
+        "sha256": "a3e43451bc15ae69a7f113009e2ee82ab4db711625c1782cd45d0d3c4d38175a"
+      },
+      "bin/sysroot.tar.gz": {
+        "bytes": 6780412,
+        "sha256": "6188b500fa7af2dceadcbd6dcf2619b6935fa94c224c1c2078426666ebea1d50"
+      },
+      "clang-build-receipt.json": {
+        "bytes": 11047,
+        "sha256": "19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee"
+      },
+      "language-sysroots.v1.json": {
+        "bytes": 426858,
+        "sha256": "42ff9bc320b673fd0a34cb9faa4ca19cb06a4780f6072da2f72a9b01aa62730c"
+      },
+      "libc-printscan-long-double.a.gz": {
+        "bytes": 52723,
+        "sha256": "b3f11e17e40fb13371a97244fdde00d5bd951ad8e20dfdf88a069167d6be628b"
+      },
+      "memfs-build-receipt.json": {
+        "bytes": 8344,
+        "sha256": "c4ef4aa971195d15b4dec7abe617bce0292d2b889bfcc99ad67c2da1518c620b"
+      },
+      "runtime-build.json": {
+        "bytes": 17684,
+        "sha256": "a6ffc4e71a087c8ef5ba700ea7de69714e2dbd9beca5a9fdbfa8859db2ed51a1"
+      },
+      "runtime-manifest.v1.json": {
+        "bytes": 876,
+        "sha256": "1420808d0391ff2d8a2fdf2a9f6bbce8f728e06b1ed1651029ed80b226101444"
+      }
+    },
+    "producerRevision": "ff18b37c934f7526885f5a49d77698712615f23a"
+  },
+  "installedStatic": {
+    ".nojekyll": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "_headers": {
+      "bytes": 134,
+      "sha256": "a8a32187f44898f1e5bc9c689700cbadb6d777252fef341dad68782e64951428"
+    },
+    "clang/LICENSE.memfs-llvm.txt": {
+      "bytes": 3192,
+      "sha256": "24b67da19b1422a819395738cb83ea34eee3fdce52870b0d1758524ba1615069"
+    },
+    "clang/LICENSE.memfs-stb_sprintf.txt": {
+      "bytes": 1133,
+      "sha256": "88420bf461670fb7b9d6c3d3dd4a50f9a653361ee1e0eafc079ba715b1944e72"
+    },
+    "clang/bin/c-sysroot.tar.gz": {
+      "bytes": 2006388,
+      "sha256": "da7a29250b2fe2d928fa8818069ff67e1dcb26c529bbf01f40bbeb251535ecaa"
+    },
+    "clang/bin/clang.wasm.gz": {
+      "bytes": 13125036,
+      "sha256": "bc6377e6839c3584c13bb26d31bd5045aa384fe3382b162aa18de604aef5ed43"
+    },
+    "clang/bin/cpp-addon.tar.gz": {
+      "bytes": 4776509,
+      "sha256": "6e243c219561b1f5aad64db4a9ff8bbeb85a97b5e3b5df3ed71d8340d35a8cd7"
+    },
+    "clang/bin/lld.wasm.gz": {
+      "bytes": 6421571,
+      "sha256": "7e6b599bf33dc63a7c634b1cced68a38eb94a64c0f3223574cb23377530b61df"
+    },
+    "clang/bin/memfs.wasm.gz": {
+      "bytes": 16111,
+      "sha256": "a3e43451bc15ae69a7f113009e2ee82ab4db711625c1782cd45d0d3c4d38175a"
+    },
+    "clang/bin/sysroot.tar.gz": {
+      "bytes": 6780412,
+      "sha256": "6188b500fa7af2dceadcbd6dcf2619b6935fa94c224c1c2078426666ebea1d50"
+    },
+    "clang/clang-build-receipt.json": {
+      "bytes": 11047,
+      "sha256": "19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee"
+    },
+    "clang/language-sysroots.v1.json": {
+      "bytes": 426858,
+      "sha256": "42ff9bc320b673fd0a34cb9faa4ca19cb06a4780f6072da2f72a9b01aa62730c"
+    },
+    "clang/libc-printscan-long-double.a.gz": {
+      "bytes": 52723,
+      "sha256": "b3f11e17e40fb13371a97244fdde00d5bd951ad8e20dfdf88a069167d6be628b"
+    },
+    "clang/memfs-build-receipt.json": {
+      "bytes": 8344,
+      "sha256": "c4ef4aa971195d15b4dec7abe617bce0292d2b889bfcc99ad67c2da1518c620b"
+    },
+    "clang/runtime-build.json": {
+      "bytes": 17684,
+      "sha256": "a6ffc4e71a087c8ef5ba700ea7de69714e2dbd9beca5a9fdbfa8859db2ed51a1"
+    },
+    "clang/runtime-manifest.v1.json": {
+      "bytes": 876,
+      "sha256": "1420808d0391ff2d8a2fdf2a9f6bbce8f728e06b1ed1651029ed80b226101444"
+    },
+    "clangd/clangd.js": {
+      "bytes": 97002,
+      "sha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27"
+    },
+    "clangd/clangd.wasm.gz": {
+      "bytes": 16723115,
+      "sha256": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+    },
+    "compressed-runtime-assets.v1.json": {
+      "bytes": 1151,
+      "sha256": "7477743546e54cd1818e6cc13c75c0fb9f8230cbd3cc2f464bb9efc9d281b22c"
+    },
+    "container-app/distribution.json": {
+      "bytes": 14099,
+      "sha256": "cd73953077c3157aa1c69ece6ca4160efff63703ce99f4385f1b227bf83c2e2d"
+    },
+    "container-app/host/c9dd8f39b4fe219a9e0ce4635ae35e1a909ec4d9156004f46b61a403933af55b/clang-worker.mjs": {
+      "bytes": 671467,
+      "sha256": "d882af50912b5980c5bc8fda2ffdd9b6266193ceda23addb1e1aeeb8c38b44d5"
+    },
+    "container-app/host/c9dd8f39b4fe219a9e0ce4635ae35e1a909ec4d9156004f46b61a403933af55b/live-worker.mjs": {
+      "bytes": 37274,
+      "sha256": "091dee7a06c1825eb56e83cbfcffb9fac3f8aade0881419b3155b1c72183eabb"
+    },
+    "container-app/host/c9dd8f39b4fe219a9e0ce4635ae35e1a909ec4d9156004f46b61a403933af55b/sdk/index.mjs": {
+      "bytes": 104199,
+      "sha256": "4851df0f9e5f26e87eae6ea077e024e69360c28ff2bcb6afee767a737cdcde1d"
+    },
+    "container-app/host/c9dd8f39b4fe219a9e0ce4635ae35e1a909ec4d9156004f46b61a403933af55b/sdk/worker.mjs": {
+      "bytes": 2425,
+      "sha256": "ed02122aa9a5903a6bd3d1497fc12bc2e2e4cfa65b479f72e58b10df52ba19d6"
+    },
+    "container-app/objects/30ea0ce3a36013b343dddc0045c72f490c468268c1a1fd2050fdc8702f97bd40/busybox.wasm": {
+      "bytes": 634885,
+      "sha256": "30ea0ce3a36013b343dddc0045c72f490c468268c1a1fd2050fdc8702f97bd40"
+    },
+    "container-app/objects/522a8c74c286f6b69256b537a0d3d8a2c17130f4b855ace9605d7434e3414bce/sdk.wasm": {
+      "bytes": 9246938,
+      "sha256": "522a8c74c286f6b69256b537a0d3d8a2c17130f4b855ace9605d7434e3414bce"
+    },
+    "container-app/objects/7b96d6c3fba3c6978fa16c0bb523ce76a106ba006e6a9104384ad61336617604/bash.webc.bin": {
+      "bytes": 1814180,
+      "sha256": "7b96d6c3fba3c6978fa16c0bb523ce76a106ba006e6a9104384ad61336617604"
+    },
+    "container-app/objects/b5c51389ce2f2b404f8b354788aa4a19a65d7e4af746cf52d24e7276d2eabf7f/sysroot.tar.bin": {
+      "bytes": 35328000,
+      "sha256": "b5c51389ce2f2b404f8b354788aa4a19a65d7e4af746cf52d24e7276d2eabf7f"
+    },
+    "container-app/objects/dd9279345172fae1aef049ffcaf7531f945d85df08d97ea2ffce90581e9eee2d/lld.wasm.gz.bin": {
+      "bytes": 8178107,
+      "sha256": "dd9279345172fae1aef049ffcaf7531f945d85df08d97ea2ffce90581e9eee2d"
+    },
+    "container-app/objects/eeee4f23e80b03cdd7b98c6722801f6e21143e67d83301a667acc7b70aba31ba/clang.wasm.gz.bin": {
+      "bytes": 16270174,
+      "sha256": "eeee4f23e80b03cdd7b98c6722801f6e21143e67d83301a667acc7b70aba31ba"
+    },
+    "container-app/page-config.json": {
+      "bytes": 401,
+      "sha256": "40e9665cd7d575a53380bcee9641758368635d1ef213026a8119a80a0d5fc61b"
+    },
+    "favicon.png": {
+      "bytes": 1571,
+      "sha256": "5146ed79b486cb9e1cdcdd7814cd22ae78e70ceb30fa06b4cd9a16cf121bc9e6"
+    },
+    "image.jpeg": {
+      "bytes": 194732,
+      "sha256": "7e549a88c725f871852500ba9d287967ac88fb12899aa46c1262fa3582ad6435"
+    },
+    "layered-runtime-assets.v1.json": {
+      "bytes": 86,
+      "sha256": "a2097504a1769a3421376b6a9048b60aa7072105275ab3a3756fa502a0fccc28"
+    },
+    "wasm-debug/debug/lldb-web-dap.js": {
+      "bytes": 162689,
+      "sha256": "42c21587cf466c662ebf3106a8316a110be826869e3ef25f946f66345aa48fef"
+    },
+    "wasm-debug/debug/lldb-web-dap.pthread.mjs": {
+      "bytes": 1364,
+      "sha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d"
+    },
+    "wasm-debug/debug/lldb-web-dap.wasm": {
+      "bytes": 42722376,
+      "sha256": "f8c9c3c790eb61addd6522a47542624477a0eb527706f8275912a06947191388"
+    },
+    "wasm-debug/debug/wamr-debug.js": {
+      "bytes": 111701,
+      "sha256": "b0b55a0f63d0fc8ed620bd1a348531cabf35816b8dc465ee882da9fc5684a5a2"
+    },
+    "wasm-debug/debug/wamr-debug.wasm": {
+      "bytes": 278960,
+      "sha256": "a1a128771b8fb352725e9b5120bc7448e6cc639b66275c2fa2ef49bd212185e1"
+    },
+    "wasm-debug/debug/wamr-debug.worker.mjs": {
+      "bytes": 111694,
+      "sha256": "7a42988a701fca14caacfbca44611e3809297ea58f946c64d05254ea9908ec82"
+    },
+    "wasm-debug/runtime-manifest.v2.json": {
+      "bytes": 3146,
+      "sha256": "84c4707cf71e2b583f50571387cd4499829ddf3b0044cf05e6137300a792adf9"
+    },
+    "wasm-rust/asset-url.js.bin": {
+      "bytes": 300,
+      "sha256": "0cfc9638ca814251f9ddf117a5cef1832a1ee1c5035226f6538cdf739c55772a"
+    },
+    "wasm-rust/browser-component-tools.js.bin": {
+      "bytes": 12627,
+      "sha256": "7860e2c261bb3d40daacc3c4dfefa18fb8e558ce56f4f0527b50f3134ce15be3"
+    },
+    "wasm-rust/browser-execution.js.bin": {
+      "bytes": 10748,
+      "sha256": "b18798a82090629e5f86524476d757932de74af580431874c2eeebf6b704cb0f"
+    },
+    "wasm-rust/browser-linker.js.bin": {
+      "bytes": 13014,
+      "sha256": "e01a93da60e7901416a57dfdbd71b299f92aa42382ded5371bf1a9ff8a33d009"
+    },
+    "wasm-rust/browser-stdin.js.bin": {
+      "bytes": 1482,
+      "sha256": "52dba3d7edc435816adb4b795033000f3d5fee16bb265710b4361601f9a1eee5"
+    },
+    "wasm-rust/compiler-preload.js.bin": {
+      "bytes": 7403,
+      "sha256": "644aa8d25bd4adbb190d07a0bc23923149a912dee7b511e25809fb67312c89a9"
+    },
+    "wasm-rust/compiler-runtime.js.bin": {
+      "bytes": 3418,
+      "sha256": "86f2b34128ce97c050f8c9245781b211e229073cef6a3ed4c6cfef92652902c7"
+    },
+    "wasm-rust/compiler-support.js.bin": {
+      "bytes": 5819,
+      "sha256": "8933c8f043fb3dbee28d4f61d8a3ea16a372b2c833b1071a6531071388fed730"
+    },
+    "wasm-rust/compiler-worker.js.bin": {
+      "bytes": 24122,
+      "sha256": "fc799b595d8d4022cbf02328673b5bb08ad0f86be0da9ac0b3ac12e9f5d343fa"
+    },
+    "wasm-rust/compiler.js.bin": {
+      "bytes": 37956,
+      "sha256": "d948487286c5920a5bbdaab94188ebeeadd8e405be74f4839c1cf8ddaf083c52"
+    },
+    "wasm-rust/debug-instrumenter.js": {
+      "bytes": 122770,
+      "sha256": "2a8913fc4f6d998910de3453e7d25720df75cda57ae5d959d19c8c74acfda919"
+    },
+    "wasm-rust/index.js.bin": {
+      "bytes": 3969,
+      "sha256": "c3ee4682af8d8b9f338f1258fdff5701754f72753aa1b5385b7848bff1ff3e8d"
+    },
+    "wasm-rust/module-worker.js.bin": {
+      "bytes": 104,
+      "sha256": "317eee43c55be3923ffc9630342deeac9ff1030abb2cb2d222e1036ca796b3fc"
+    },
+    "wasm-rust/retryable-failure-kind.js.bin": {
+      "bytes": 1432,
+      "sha256": "32d49e791d1c35329e8aa8dc16cc372ee0c52ba8570c7488c7f7a5a99e1e003c"
+    },
+    "wasm-rust/runtime/packs/sysroot/wasm32-wasip1.index.json.gz": {
+      "bytes": 1126,
+      "sha256": "d3846ecae39b774300272f883e3d85a7e986214584a6ca23d15b9b55c6024cb4"
+    },
+    "wasm-rust/runtime/packs/sysroot/wasm32-wasip1.pack.gz": {
+      "bytes": 24626071,
+      "sha256": "c98393f3ab41a009fe6d36b9afacea7d47aa282b88c93c171b1d5a924ce18f96"
+    },
+    "wasm-rust/runtime/packs/sysroot/wasm32-wasip2.index.json.gz": {
+      "bytes": 1811,
+      "sha256": "5f3cc86d59e8f5388f072dc48a0951ddc616f18a4860c220afaff2a89199d4e0"
+    },
+    "wasm-rust/runtime/packs/sysroot/wasm32-wasip2.pack.gz": {
+      "bytes": 7747620,
+      "sha256": "417a9316a2a6a7db5fab6adfa0a7e7e5958ed4591754562a66f6cdd96a68df6e"
+    },
+    "wasm-rust/runtime/packs/sysroot/wasm32-wasip3.index.json.gz": {
+      "bytes": 1829,
+      "sha256": "14251cd39eb88dcfef74f0ed626994109a24f2b560910da453db8d24caf7bdb9"
+    },
+    "wasm-rust/runtime/packs/sysroot/wasm32-wasip3.pack.gz": {
+      "bytes": 7862375,
+      "sha256": "dbd22b4c728b0d8eb60ca8371bfd2a4de3cc309aec919ac21d4b2e9a5f687bf3"
+    },
+    "wasm-rust/runtime/runtime-manifest.v3.json": {
+      "bytes": 6185,
+      "sha256": "30b210003632395a1effd19f7a46565d5f8c52a9d3a28a310fa24219f97a5a9a"
+    },
+    "wasm-rust/runtime/rustc/rustc.wasm.gz": {
+      "bytes": 21103827,
+      "sha256": "3cbbf421f97460cd36c678509289976a8346fa4875009e064944024bc9c7e3da"
+    },
+    "wasm-rust/runtime-asset-cache-service.js.bin": {
+      "bytes": 7031,
+      "sha256": "10b01ffd98193be3e7506586fc8886f881b7a3459cbbbc4311b51e1485f4f917"
+    },
+    "wasm-rust/runtime-asset-cache.js.bin": {
+      "bytes": 997,
+      "sha256": "47d7369975b19ef51a0c85da30638b995c9c5ba40b6cabe2979ec2d2b7ba8fef"
+    },
+    "wasm-rust/runtime-asset-store.js.bin": {
+      "bytes": 16751,
+      "sha256": "95278dcb0e836d460c657bffcd8ae429e7e8e0508e60665d377a69aaa27e10b4"
+    },
+    "wasm-rust/runtime-asset.js.bin": {
+      "bytes": 25746,
+      "sha256": "5f09c428431e3f3226673b537fc1277ba71dc42bdaf2937e18275a8844e044f8"
+    },
+    "wasm-rust/runtime-delivery-budget.js.bin": {
+      "bytes": 9681,
+      "sha256": "9340496c81f33b0780ac760d89939dfe22442df0318989b8edf1dc97d57f36e5"
+    },
+    "wasm-rust/runtime-executable-graph.v1.json": {
+      "bytes": 43524,
+      "sha256": "b4822ba5b92c57b86e1f2c364c603aa8a7719f8df7f8a83dae77bf389b06b561"
+    },
+    "wasm-rust/runtime-manifest.js.bin": {
+      "bytes": 49498,
+      "sha256": "52939e1bb35c208ab7ad26000ea52e4a5ad9b724a35533f0b004f65212e22314"
+    },
+    "wasm-rust/rustc-module-service.js.bin": {
+      "bytes": 4926,
+      "sha256": "643e87810870eadb9489f4161f2132a158e37c1e343426c58e04e3482e1d7045"
+    },
+    "wasm-rust/rustc-module.js.bin": {
+      "bytes": 711,
+      "sha256": "81dee74032dd10187e9b576f2d2fe9291cee1ea6a829d0db37429dabd06c0d1e"
+    },
+    "wasm-rust/rustc-runtime.js.bin": {
+      "bytes": 22766,
+      "sha256": "f72739e496d8b9e012f323f30f5869f8fee2d444986494cfe08c378fc05e6913"
+    },
+    "wasm-rust/rustc-thread-worker.js.bin": {
+      "bytes": 12578,
+      "sha256": "0b41ccb2c0053b860ac4297545e5f3ffcbb4a11525dfca6f495bd43b7e2a7bb6"
+    },
+    "wasm-rust/shared-workspace.js.bin": {
+      "bytes": 16122,
+      "sha256": "a522f740cac9d237cedb54ad4aaeb68e595a08073259a1e603f5dec3d7274469"
+    },
+    "wasm-rust/thread-startup.js.bin": {
+      "bytes": 2096,
+      "sha256": "2c407a04ed387991ff4c770d3ba8af6f493217ba48c57df381ab13909799e258"
+    },
+    "wasm-rust/thread-worker-budget.js.bin": {
+      "bytes": 3634,
+      "sha256": "3e188eda32c36119716a85164da79451a3283574464db0bfbd8016363c5f5129"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/debug.js.bin": {
+      "bytes": 414,
+      "sha256": "a91848ee180529e2a60c05dfb9584cad19cd4e1c6f391fdb76a938bcae4c0328"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/fd.js.bin": {
+      "bytes": 1906,
+      "sha256": "9e82e1fc1bfd3e3573f64349dc42b4b624ed61d24e5c553f2bb4d041444f166c"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/fs_mem.js.bin": {
+      "bytes": 12206,
+      "sha256": "85dbc9e0ee784d9ff8b55452644e00bf7058e32355aab974f8b71d7d85772324"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/fs_opfs.js.bin": {
+      "bytes": 2280,
+      "sha256": "4b96aaeb5ac5986cf802cbf22b975c656682d22a38248160c96fc2ded5644869"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/index.js.bin": {
+      "bytes": 316,
+      "sha256": "7e2fd52ee3f728bb0b1d6e449724e0f13e3d586bb25bde6e02a66366175b5605"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/strace.js.bin": {
+      "bytes": 318,
+      "sha256": "ece435d3784d928d02bff4d015b7cb686f8c06de8536ff9f8ebc38a8f403a3be"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/wasi.js.bin": {
+      "bytes": 16429,
+      "sha256": "168eb977a826f75ab0c39f9322f78cc58dbd5b233019ad1d6a7e940af8a7c4aa"
+    },
+    "wasm-rust/vendor/browser_wasi_shim/wasi_defs.js.bin": {
+      "bytes": 9027,
+      "sha256": "0db0f42ba330749a7b05095ea1fd0ff63fd2b30e84cead30fe4c28359d15f194"
+    },
+    "wasm-rust/vendor/jco/lib/wasi_snapshot_preview1.command.wasm": {
+      "bytes": 57236,
+      "sha256": "b391794bf40029766403da7353eb2e1da17067844b78e19eaf9d934c25c4055d"
+    },
+    "wasm-rust/vendor/jco/obj/js-component-bindgen-component.core.wasm.gz": {
+      "bytes": 2508654,
+      "sha256": "004a5f62b0514f78b645c0acc403f599c8706cb27f21a0ac9f96b119ea20fe0c"
+    },
+    "wasm-rust/vendor/jco/obj/js-component-bindgen-component.core2.wasm": {
+      "bytes": 16426,
+      "sha256": "ae04633eab380bc18fbe3842a092eab4924688fcc93f04a2ac659add202ede5e"
+    },
+    "wasm-rust/vendor/jco/obj/js-component-bindgen-component.js.gz.bin": {
+      "bytes": 41401,
+      "sha256": "7b5f36771a9bbcb47576d45d00629c59e9046166e5c6b686a2e3b77f0058e612"
+    },
+    "wasm-rust/vendor/jco/obj/wasm-tools.core.wasm.gz": {
+      "bytes": 928763,
+      "sha256": "347ad6e84cb0904203f862bb1b8fa0cea49e9bc43e129918fd6d728aeab13730"
+    },
+    "wasm-rust/vendor/jco/obj/wasm-tools.core2.wasm": {
+      "bytes": 16426,
+      "sha256": "ae04633eab380bc18fbe3842a092eab4924688fcc93f04a2ac659add202ede5e"
+    },
+    "wasm-rust/vendor/jco/obj/wasm-tools.js.gz.bin": {
+      "bytes": 42464,
+      "sha256": "9bf222d2dfc2006ee0ffe2a79f5d0d15816f44938458e0e0f6eec4ba820b0ff0"
+    },
+    "wasm-rust/vendor/jco/src/browser.js.bin": {
+      "bytes": 404,
+      "sha256": "7d8d056dedc4327245520d7b3b2ce1930953f017fe0335902899e8aa5dbd3f8e"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/cli.js.bin": {
+      "bytes": 2826,
+      "sha256": "fc73e8c872db6e100522ae1b41c1b7ae5160ac97629610cae53eb2bc2d320266"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/clocks.js.bin": {
+      "bytes": 1170,
+      "sha256": "3a44508f62ce3cd3fb2adbabf8cc70be0c3fd962bb0e77cbc8125b6d5bba3f35"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/config.js.bin": {
+      "bytes": 110,
+      "sha256": "ef5271f78522c5ecb7fee3579f73f12a43e85874f6bfcb24d449d0d6e1c9e813"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/environment.js.bin": {
+      "bytes": 434,
+      "sha256": "6a755f21d705e98caede66bb86e5aa880deff71c1721c39a641a59d287123298"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/filesystem.js.bin": {
+      "bytes": 11570,
+      "sha256": "083e8c1be5c4b11264c3be7e15477fc37894723a649445daeaabfb973460acc5"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/http.js.bin": {
+      "bytes": 17055,
+      "sha256": "270e10d75628add4d96878b705dbf0ce3121648540c2c8df331796f809c7d84a"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/io.js.bin": {
+      "bytes": 6348,
+      "sha256": "c2429defe2de286efe7579c76e17a627d68846fb9c100260b1f5ea4ddb370096"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/random.js.bin": {
+      "bytes": 1531,
+      "sha256": "10ca591c575a43051f205ef953861e2bcba3a917e1ffbb40d74c0bc6985c4eb2"
+    },
+    "wasm-rust/vendor/preview2-shim/lib/browser/sockets.js.bin": {
+      "bytes": 1370,
+      "sha256": "a9a6ba4c7847c8109924447d36ec3087d410237e0728832f1de14625d03969e3"
+    },
+    "wasm-rust/worker-status.js.bin": {
+      "bytes": 3841,
+      "sha256": "8c345945f87eb1305fca69d4b99cca7a3df90a8f5b4ac334cd04e5d5b5be7041"
+    },
+    "worker.js": {
+      "bytes": 27316,
+      "sha256": "710bf76d96072f096e97cab19186666dcb58f8cf06133653f4ea30efce0ab29f"
+    }
+  },
+  "candidatePinFiles": {
+    "scripts/wasm-debug-release.v2.json": "06ebf7dc261e32aacd8bd0d04b988586d2d8a3287eb09df3bacbe959e6b7de13",
+    "src/lib/playground/wasmDebugVersion.ts": "4a7b32c8dfca2008e45637719c3c8ef3cb9f1e1e2bb09cd3eb61af72d9eaccba",
+    "src/lib/playground/clangAssetIntegrity.ts": "90b2bf05bb64a5b64573afbefa30b4586a9a2cc456e9c3a9683a576e21028d57",
+    "packages/core/src/runtime-asset-lock.generated.ts": "0ed9bc857074f0091d71cf8520e9b0d515517ef0115eed49763995e249eab790"
+  },
+  "preview": {
+    "url": "http://127.0.0.1:48855/wasm-idle/",
+    "indexSha256": "74c29b7cfda2d0564ab37a478221f60df4004de4cf3b6883516443d7002461ce",
+    "headers": {
+      "Vary": "Origin",
+      "Content-Type": "text/html",
+      "Cache-Control": "no-cache",
+      "Etag": "W/\"5c1e-egw1GjnBhdd/Q2XjXmMzW2ZceQ4\"",
+      "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' blob: 'wasm-unsafe-eval' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self' blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data:; manifest-src 'self'; media-src 'self' blob: data:; frame-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; form-action 'self'",
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Resource-Policy": "same-origin",
+      "Date": "Thu, 29 Oct 2026 12:01:51 GMT",
+      "Connection": "close",
+      "Content-Length": "23582"
+    }
+  },
+  "browserLock": {
+    "path": "/tmp/wasm-perf-browser-20261023.lock",
+    "ownerPid": 2679850
+  },
+  "cacheProbe": {
+    "chromium": "156.0.8078.4",
+    "crossOriginIsolated": true,
+    "violations": [],
+    "immutableModuleReuse": {
+      "lldb": true,
+      "target": true
+    },
+    "timingInterpretation": "Exploratory sequential samples in one Chromium context; engine warmup is not isolated.",
+    "freshWorkers": 8,
+    "freshQueues": 8,
+    "manifestReceipt": {
+      "sha256": "84c4707cf71e2b583f50571387cd4499829ddf3b0044cf05e6137300a792adf9",
+      "bytes": 3146
+    },
+    "runtimeAssets": {
+      "protocolVersion": 1,
+      "transport": "shared-ring-v1",
+      "lldb": {
+        "moduleInstantiation": "emscripten-instantiate-wasm-v1",
+        "js": "debug/lldb-web-dap.js",
+        "wasm": "debug/lldb-web-dap.wasm",
+        "worker": "debug/lldb-web-dap.pthread.mjs",
+        "jsSha256": "42c21587cf466c662ebf3106a8316a110be826869e3ef25f946f66345aa48fef",
+        "wasmSha256": "f8c9c3c790eb61addd6522a47542624477a0eb527706f8275912a06947191388",
+        "workerSha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d",
+        "llvmVersion": "22.1.8",
+        "llvmRevision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+        "patchesSha256": "a6ebdfa78b23538cb3c482753c25e0bd4e9aa00cb2fd1cba0e1050d7b401c617",
+        "sourcesLockSha256": "a27fcf91613a39b7a19faedf0345ad297d31b91252ebb65e6b03cf30aecbe9ad"
+      },
+      "targetRuntime": {
+        "moduleInstantiation": "emscripten-instantiate-wasm-v1",
+        "name": "wamr",
+        "js": "debug/wamr-debug.js",
+        "wasm": "debug/wamr-debug.wasm",
+        "worker": "debug/wamr-debug.worker.mjs",
+        "jsSha256": "b0b55a0f63d0fc8ed620bd1a348531cabf35816b8dc465ee882da9fc5684a5a2",
+        "wasmSha256": "a1a128771b8fb352725e9b5120bc7448e6cc639b66275c2fa2ef49bd212185e1",
+        "workerSha256": "7a42988a701fca14caacfbca44611e3809297ea58f946c64d05254ea9908ec82",
+        "revision": "25bd7eb63e828e4bd242cc9b38d260b4b31c6605",
+        "provenance": {
+          "sourcesLockSha256": "18f924fa418c7dccb0c557c1310ae877f5e5ab41ce34256230565879fe1f2727",
+          "producerManifestSha256": "fe2d18c7ebe6a4fbeb57f691044bcf74e3a185fa27ef6ebe778becfaf2a2aaf5",
+          "patchesSha256": "a419e4aa69141b476a897c750ad762c7b679d589077c578eba1ac5015e4250db",
+          "overlaysSha256": "59a504fb047a67577202b4ff9a79f056d080fa6a39ca3eb6bd27118d497b14d7"
+        }
+      },
+      "capabilities": {
+        "breakpoints": true,
+        "stepping": true,
+        "stackTrace": true,
+        "locals": true,
+        "globals": true,
+        "readMemory": true,
+        "writeMemory": true,
+        "evaluateExpressions": false,
+        "dataBreakpoints": true,
+        "conditionalBreakpoints": false,
+        "hitConditionalBreakpoints": true,
+        "logPoints": false,
+        "skipLibraryCode": false,
+        "returnValues": false,
+        "wasmThreads": false
+      }
+    },
+    "results": [
+      {
+        "iteration": 0,
+        "compiledModuleCache": false,
+        "cachedModules": {
+          "target": null,
+          "lldb": null
+        },
+        "instantiationCalls": {
+          "target": 0,
+          "lldb": 0
+        },
+        "firstPauseMs": 1798.8049999922514,
+        "fullStackMs": 1869.1649999916553,
+        "scopesMs": 1807.904999986291,
+        "pageLengths": [
+          21,
+          41,
+          61,
+          81,
+          100
+        ],
+        "topFrame": {
+          "id": 524288,
+          "functionName": "recurse",
+          "line": 4,
+          "column": 3,
+          "sourcePath": "/workspace/main.c"
+        },
+        "variables": [
+          {
+            "name": "n",
+            "value": "0",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF868"
+          }
+        ],
+        "callerVariables": [
+          {
+            "name": "n",
+            "value": "1",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF878"
+          }
+        ],
+        "output": "done\n"
+      },
+      {
+        "iteration": 1,
+        "compiledModuleCache": false,
+        "cachedModules": {
+          "target": null,
+          "lldb": null
+        },
+        "instantiationCalls": {
+          "target": 0,
+          "lldb": 0
+        },
+        "firstPauseMs": 1475.530000001192,
+        "fullStackMs": 1537.4100000113249,
+        "scopesMs": 1480.280000001192,
+        "pageLengths": [
+          21,
+          41,
+          61,
+          81,
+          100
+        ],
+        "topFrame": {
+          "id": 524288,
+          "functionName": "recurse",
+          "line": 4,
+          "column": 3,
+          "sourcePath": "/workspace/main.c"
+        },
+        "variables": [
+          {
+            "name": "n",
+            "value": "0",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF868"
+          }
+        ],
+        "callerVariables": [
+          {
+            "name": "n",
+            "value": "1",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF878"
+          }
+        ],
+        "output": "done\n"
+      },
+      {
+        "iteration": 2,
+        "compiledModuleCache": true,
+        "cachedModules": {
+          "target": 1,
+          "lldb": 2
+        },
+        "instantiationCalls": {
+          "target": 1,
+          "lldb": 1
+        },
+        "firstPauseMs": 1342.6200000047684,
+        "fullStackMs": 1412.940000012517,
+        "scopesMs": 1348.265000000596,
+        "pageLengths": [
+          21,
+          41,
+          61,
+          81,
+          100
+        ],
+        "topFrame": {
+          "id": 524288,
+          "functionName": "recurse",
+          "line": 4,
+          "column": 3,
+          "sourcePath": "/workspace/main.c"
+        },
+        "variables": [
+          {
+            "name": "n",
+            "value": "0",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF868"
+          }
+        ],
+        "callerVariables": [
+          {
+            "name": "n",
+            "value": "1",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF878"
+          }
+        ],
+        "output": "done\n"
+      },
+      {
+        "iteration": 3,
+        "compiledModuleCache": true,
+        "cachedModules": {
+          "target": 1,
+          "lldb": 2
+        },
+        "instantiationCalls": {
+          "target": 1,
+          "lldb": 1
+        },
+        "firstPauseMs": 1172.3349999934435,
+        "fullStackMs": 1231.1899999976158,
+        "scopesMs": 1177.969999998808,
+        "pageLengths": [
+          21,
+          41,
+          61,
+          81,
+          100
+        ],
+        "topFrame": {
+          "id": 524288,
+          "functionName": "recurse",
+          "line": 4,
+          "column": 3,
+          "sourcePath": "/workspace/main.c"
+        },
+        "variables": [
+          {
+            "name": "n",
+            "value": "0",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF868"
+          }
+        ],
+        "callerVariables": [
+          {
+            "name": "n",
+            "value": "1",
+            "type": "int",
+            "evaluateName": "n",
+            "variablesReference": 0,
+            "memoryReference": "0xFF878"
+          }
+        ],
+        "output": "done\n"
+      }
+    ]
+  },
+  "officialUi": {
+    "passed": true,
+    "cases": [
+      "C/c-data-breakpoint",
+      "CPP/cpp-data-breakpoint",
+      "C/c-trap",
+      "RUST/rust-basic"
+    ],
+    "vitestReport": "/home/seorii/dev/hancomac/.worktrees/wasm-debug-qualified-recipe-20261029/runs/20261029T120110Z-2b994f4b/vitest.json"
+  },
+  "cppProbe": {
+    "chromium": "156.0.8078.4",
+    "manifestReceipt": {
+      "bytes": 3146,
+      "sha256": "84c4707cf71e2b583f50571387cd4499829ddf3b0044cf05e6137300a792adf9"
+    },
+    "fixtureSha256": {
+      "container-adaptors.cpp": "c287ca569f3ec90b23feb5be8f7718b351962cfc5068b38f300a43f40f90579f",
+      "function-end.cpp": "ff85e863804f84efe0ce963472b9b80a65cf040d4f131b8e198af5dc1c3ffdab"
+    },
+    "crossOriginIsolated": true,
+    "violations": [],
+    "results": [
+      {
+        "filename": "container-adaptors.cpp",
+        "stops": [
+          {
+            "marker": "adaptors first stop",
+            "line": 39,
+            "frame": {
+              "id": 524288,
+              "functionName": "main",
+              "line": 39,
+              "column": 16,
+              "sourcePath": "/workspace/container-adaptors.cpp"
+            },
+            "values": {
+              "deque_stack": [
+                1,
+                2,
+                3
+              ],
+              "vector_stack": [
+                4,
+                5,
+                6
+              ],
+              "max_heap": [
+                4,
+                1,
+                2
+              ],
+              "min_heap": [
+                1,
+                4,
+                2
+              ],
+              "deque_heap": [
+                1,
+                4,
+                2
+              ],
+              "nested_stack": [
+                7,
+                8
+              ],
+              "nested_heap": [
+                3,
+                4
+              ],
+              "block_deque": {
+                "indices": [
+                  0,
+                  1018,
+                  1019,
+                  1024
+                ],
+                "values": [
+                  5,
+                  1023,
+                  1024,
+                  1029
+                ],
+                "size": 1025
+              },
+              "large_deque": {
+                "indices": [
+                  0,
+                  14,
+                  15,
+                  16
+                ],
+                "values": [
+                  10,
+                  150,
+                  160,
+                  170
+                ],
+                "size": 17
+              }
+            }
+          },
+          {
+            "marker": "adaptors second stop",
+            "line": 48,
+            "frame": {
+              "id": 524288,
+              "functionName": "main",
+              "line": 48,
+              "column": 14,
+              "sourcePath": "/workspace/container-adaptors.cpp"
+            },
+            "values": {
+              "deque_stack": [
+                1,
+                2
+              ],
+              "vector_stack": [
+                4,
+                5,
+                6,
+                9
+              ],
+              "max_heap": [
+                2,
+                1
+              ],
+              "min_heap": [
+                0,
+                1,
+                2,
+                4
+              ],
+              "deque_heap": [
+                1,
+                4,
+                2
+              ],
+              "nested_stack": [
+                7,
+                8
+              ],
+              "nested_heap": [
+                3,
+                4
+              ],
+              "block_deque": {
+                "indices": [
+                  0,
+                  1018,
+                  1019,
+                  1024
+                ],
+                "values": [
+                  6,
+                  1024,
+                  1025,
+                  1030
+                ],
+                "size": 1025
+              },
+              "large_deque": {
+                "indices": [
+                  0,
+                  14,
+                  15,
+                  16
+                ],
+                "values": [
+                  20,
+                  160,
+                  170,
+                  180
+                ],
+                "size": 17
+              }
+            }
+          }
+        ],
+        "output": "",
+        "completed": true,
+        "dequeBoundaryCoverage": true,
+        "compiler": {
+          "name": "clang",
+          "version": "22.1.8",
+          "revision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1"
+        }
+      },
+      {
+        "filename": "function-end.cpp",
+        "stops": [
+          {
+            "marker": "simple return",
+            "line": 6,
+            "frame": {
+              "id": 524288,
+              "functionName": "simple(int)",
+              "line": 6,
+              "column": 10,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "simple end",
+            "line": 7,
+            "frame": {
+              "id": 524288,
+              "functionName": "simple(int)",
+              "line": 7,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            },
+            "variables": [
+              {
+                "name": "n",
+                "value": "2",
+                "type": "int",
+                "evaluateName": "n",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFEC"
+              },
+              {
+                "name": "answer",
+                "value": "12",
+                "type": "int",
+                "evaluateName": "answer",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFE8"
+              }
+            ]
+          },
+          {
+            "marker": "simple caller",
+            "line": 40,
+            "frame": {
+              "id": 524288,
+              "functionName": "main",
+              "line": 40,
+              "column": 11,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "early return",
+            "line": 12,
+            "frame": {
+              "id": 524288,
+              "functionName": "early(int)",
+              "line": 12,
+              "column": 12,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "early end",
+            "line": 14,
+            "frame": {
+              "id": 524288,
+              "functionName": "early(int)",
+              "line": 14,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            },
+            "variables": [
+              {
+                "name": "n",
+                "value": "2",
+                "type": "int",
+                "evaluateName": "n",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFE8"
+              },
+              {
+                "name": "answer",
+                "value": "22",
+                "type": "int",
+                "evaluateName": "answer",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFE4"
+              }
+            ]
+          },
+          {
+            "marker": "early caller",
+            "line": 41,
+            "frame": {
+              "id": 524288,
+              "functionName": "main",
+              "line": 41,
+              "column": 9,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "recursive return",
+            "line": 20,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 20,
+              "column": 10,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "recursive end",
+            "line": 21,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 21,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            },
+            "variables": [
+              {
+                "name": "n",
+                "value": "0",
+                "type": "int",
+                "evaluateName": "n",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFCC"
+              },
+              {
+                "name": "answer",
+                "value": "30",
+                "type": "int",
+                "evaluateName": "answer",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFC8"
+              }
+            ]
+          },
+          {
+            "marker": "recursive call",
+            "line": 19,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 19,
+              "column": 12,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "recursive return",
+            "line": 20,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 20,
+              "column": 10,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "recursive end",
+            "line": 21,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 21,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            },
+            "variables": [
+              {
+                "name": "n",
+                "value": "1",
+                "type": "int",
+                "evaluateName": "n",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFDC"
+              },
+              {
+                "name": "answer",
+                "value": "61",
+                "type": "int",
+                "evaluateName": "answer",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFD8"
+              }
+            ]
+          },
+          {
+            "marker": "recursive call",
+            "line": 19,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 19,
+              "column": 12,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "recursive return",
+            "line": 20,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 20,
+              "column": 10,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "recursive end",
+            "line": 21,
+            "frame": {
+              "id": 524288,
+              "functionName": "recursive(int)",
+              "line": 21,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            },
+            "variables": [
+              {
+                "name": "n",
+                "value": "2",
+                "type": "int",
+                "evaluateName": "n",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFEC"
+              },
+              {
+                "name": "answer",
+                "value": "93",
+                "type": "int",
+                "evaluateName": "answer",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFE8"
+              }
+            ]
+          },
+          {
+            "marker": "recursive caller",
+            "line": 42,
+            "frame": {
+              "id": 524288,
+              "functionName": "main",
+              "line": 42,
+              "column": 9,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "cleanup return",
+            "line": 31,
+            "frame": {
+              "id": 524288,
+              "functionName": "cleanup(int)",
+              "line": 31,
+              "column": 10,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "cleanup end",
+            "line": 32,
+            "frame": {
+              "id": 524288,
+              "functionName": "cleanup(int)",
+              "line": 32,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "implicit last",
+            "line": 36,
+            "frame": {
+              "id": 524288,
+              "functionName": "implicit(int)",
+              "line": 36,
+              "column": 11,
+              "sourcePath": "/workspace/function-end.cpp"
+            }
+          },
+          {
+            "marker": "implicit end",
+            "line": 37,
+            "frame": {
+              "id": 524288,
+              "functionName": "implicit(int)",
+              "line": 37,
+              "column": 1,
+              "sourcePath": "/workspace/function-end.cpp"
+            },
+            "variables": [
+              {
+                "name": "n",
+                "value": "2",
+                "type": "int",
+                "evaluateName": "n",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFEC"
+              },
+              {
+                "name": "answer",
+                "value": "52",
+                "type": "int",
+                "evaluateName": "answer",
+                "variablesReference": 0,
+                "memoryReference": "0xFFFE8"
+              }
+            ]
+          }
+        ],
+        "output": "",
+        "completed": true,
+        "dequeBoundaryCoverage": false,
+        "compiler": {
+          "name": "clang",
+          "version": "22.1.8",
+          "revision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1"
+        }
+      }
+    ]
+  },
+  "harnessUnchanged": true,
+  "exitCode": 0
+}

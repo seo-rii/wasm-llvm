@@ -3,8 +3,10 @@
 LLDB and WAMR opt into `instantiateWasm` in Emscripten 6.0.0's
 `INCOMING_MODULE_JS_API`. The source-build recipes otherwise retain their existing
 pthreads, filesystem, memory, exports and runtime-exit options. LLDB's default
-artifact version advances to `llvmorg-22.1.8-lldb-web-8`; no released artifact or
-consumer pin is replaced by this change.
+artifact version advances to `llvmorg-22.1.8-lldb-web-8`. This document preserves
+the October 23 local experiment. The current checked-in artifacts instead have
+[full source-build qualification](../../validation/source-build-20261029/qualification.json);
+the historical post-link outputs below are not used for that bundle.
 
 The optional `moduleInstantiation: "emscripten-instantiate-wasm-v1"` contract is
 written into the LLDB debug manifest and build receipt, and the WAMR receipt.
@@ -99,6 +101,7 @@ assets, verify the Container SDK URL and pinned manifest, and use the production
 preview with COOP/COEP and strict CSP. A missing asset or worker setup failure is
 not a passed debugger callback.
 
-Deployment still needs a normal source-built LLDB release, matching new producer
-receipts, separate release/pin selection, and validation of that exact release.
-Neither this experiment nor the consumer's opt-in API authorizes deployment.
+These historical post-link outputs remain excluded from normal release assembly.
+The source-built artifacts and their exact consumer qualification are recorded
+in the current evidence linked above. Release publication and consumer pin
+selection are separate from this experiment.

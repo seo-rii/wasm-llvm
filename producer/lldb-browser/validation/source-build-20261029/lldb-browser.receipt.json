@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "producer": {
+    "id": "wasm-llvm/lldb-browser",
+    "manifestSha256": "8d5ed9dc40eda625725ea39ec3751a79f9ca14cebf01d0f15f60c6f7bf85db28",
+    "sourcesLockSha256": "a27fcf91613a39b7a19faedf0345ad297d31b91252ebb65e6b03cf30aecbe9ad"
+  },
+  "source": {
+    "llvmVersion": "22.1.8",
+    "llvmTag": "llvmorg-22.1.8",
+    "llvmRevision": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+    "patchesSha256": "a6ebdfa78b23538cb3c482753c25e0bd4e9aa00cb2fd1cba0e1050d7b401c617"
+  },
+  "toolchain": {
+    "emscriptenVersion": "6.0.0",
+    "emscriptenRevision": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de"
+  },
+  "build": {
+    "moduleInstantiation": "emscripten-instantiate-wasm-v1",
+    "target": "wasm32-unknown-emscripten",
+    "pthreads": true,
+    "proxyToPthread": true,
+    "pthreadWorker": "lldb-web-dap.pthread.mjs",
+    "registeredPlugins": [
+      "lldbPluginProcessWasm",
+      "lldbPluginProcessGDBRemote",
+      "lldbPluginDynamicLoaderWasmDYLD",
+      "lldbPluginObjectFileWasm",
+      "lldbPluginSymbolVendorWasm",
+      "lldbPluginSymbolFileDWARF",
+      "lldbPluginTypeSystemClang",
+      "lldbPluginCPlusPlusLanguage",
+      "lldbPluginScriptInterpreterNone"
+    ],
+    "excludedFeatures": [
+      "python",
+      "lua",
+      "libedit",
+      "curses",
+      "interactive-lldb-cli",
+      "dynamic-plugin-loader",
+      "native-platform-launchers",
+      "protocol-servers",
+      "tests",
+      "examples",
+      "arbitrary-expression-evaluation"
+    ],
+    "flags": [
+      "-pthread",
+      "-sPTHREAD_POOL_SIZE=8",
+      "-sPROXY_TO_PTHREAD=1",
+      "-sMODULARIZE=1",
+      "-sEXPORT_ES6=1",
+      "-sEXPORT_NAME=createLldbWebDapModule",
+      "-sENVIRONMENT=worker",
+      "-sINVOKE_RUN=0",
+      "-sINCOMING_MODULE_JS_API=['instantiateWasm','locateFile','mainScriptUrlOrBlob','noInitialRun','onAbort','onExit','stdout','stderr','print','printErr']",
+      "-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
+      "-sFILESYSTEM=1",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sINITIAL_MEMORY=268435456",
+      "-sMAXIMUM_MEMORY=4294967296",
+      "-sSTACK_SIZE=8388608",
+      "-sWASM_BIGINT=1",
+      "-sASSERTIONS=1",
+      "-sEXIT_RUNTIME=1",
+      "-sERROR_ON_UNDEFINED_SYMBOLS=1",
+      "-Wl,--gc-sections"
+    ]
+  },
+  "version": "llvmorg-22.1.8-lldb-web-8",
+  "assets": {
+    "lldb-web-dap.js": {
+      "size": 162689,
+      "sha256": "42c21587cf466c662ebf3106a8316a110be826869e3ef25f946f66345aa48fef"
+    },
+    "lldb-web-dap.wasm": {
+      "size": 42722376,
+      "sha256": "f8c9c3c790eb61addd6522a47542624477a0eb527706f8275912a06947191388",
+      "compressed": {
+        "format": "gzip",
+        "level": 9,
+        "size": 14931652,
+        "sha256": "b9ee7e484972323383e4c0fac4f1c9e094abcf32271cc0419f2038a852f24238"
+      }
+    },
+    "lldb-web-dap.pthread.mjs": {
+      "size": 1364,
+      "sha256": "d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d"
+    }
+  }
+}

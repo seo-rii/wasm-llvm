@@ -111,14 +111,15 @@ unqualified (`conditionalBreakpoints`, `logPoints`, and `returnValues` are
 false). The Wasm target has no return-value ABI provider. The fixed settings
 commands above do not enable general expression execution.
 
-These are producer source contracts. Existing packaged LLDB bytes, manifests
-and receipts stay unchanged until a verified rebuild is published. Native CI
-rebuilds the pinned, patched Clang and LLDB pair from clean source. It checks
-function-end stepping and real LLDB-DAP hit conditions, including both omitted
-and empty clearing requests, through
-`run-native-hit-condition-baseline.mjs --case all`. The adaptor registration
-additionally needs a rebuilt browser LLDB and real consumer Chromium
-qualification before release.
+The checked-in artifacts include these patches.
+[Source-build qualification](validation/source-build-20261029/qualification.json)
+records the exact producer and consumer revisions, authenticated workflow
+artifacts, and browser results. Clean patched native Clang and LLDB binaries
+pass function-end stepping, live-local and container-adaptor checks. Real
+LLDB-DAP tests cover hit conditions and both omitted and empty clearing
+requests through `run-native-hit-condition-baseline.mjs --case all`. The
+source-built browser pair also passes C++ function-end and adaptor sessions,
+including multi-block and large-element deques across mutations.
 
 The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
 through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP
@@ -283,9 +284,9 @@ It also measures a deterministic gzip representation (`level: 9`, `mtime: 0`)
 without changing the runtime-facing uncompressed asset. Receipt verification
 recomputes that representation and enforces both a 48 MiB uncompressed budget
 and an 18 MiB gzip budget for `lldb-web-dap.wasm`; the current product is
-42,718,338 bytes raw and 14,930,235 bytes compressed. Its JS, Wasm, and pthread
-worker hashes match between a clean GitHub Actions build and a local build
-prepared through a different clone root. A larger binary requires an explicit
+42,722,376 bytes raw and 14,931,652 bytes compressed. Its JS, Wasm, and pthread
+worker hashes match between two clean builds from distinct source and build
+roots in the recorded GitHub Actions run. A larger binary requires an explicit
 reviewed budget change.
 
 For a network- and disk-free review of the producer:
@@ -429,7 +430,22 @@ open on one thread and read or interrupt on another.
 
 ## Verified immutable Module input
 
-The new producer incoming API and its separately verified local candidate are documented in
-[the module-instantiation experiment](experiments/module-api/README.md). The experiment
-is explicitly derived from a pinned Wasm, cannot be assembled as a release, and does not
-replace any deployed asset.
+The source-built LLDB and WAMR artifacts expose
+`moduleInstantiation: "emscripten-instantiate-wasm-v1"`. A consumer may supply
+an `instantiateWasm` callback to create a fresh instance from a verified
+immutable `WebAssembly.Module`. Each session still needs fresh workers,
+imports, memory and queues. Consumers must opt into their compiled-module
+cache; the capability does not change the default execution path.
+
+[The browser qualification](validation/source-build-20261029/browser-qualification.json)
+runs the exact source-built bundle with cache off/off/on/on under Chromium,
+cross-origin isolation and strict CSP. It observes actual callback invocation,
+unchanged Module identities across enabled sessions, eight fresh workers and
+queues, 100 paged recursive frames, caller locals and successful completion.
+The official UI also passes C and C++ data breakpoints, a C trap and Rust
+debugging. These sequential samples establish behavior; they do not measure
+a controlled latency improvement.
+
+[The earlier module-instantiation experiment](experiments/module-api/README.md)
+remains historical evidence. Its post-link derivation is still rejected by
+normal release assembly; the current qualified bundle was rebuilt from source.

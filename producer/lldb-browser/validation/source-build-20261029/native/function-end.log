@@ -1,0 +1,126 @@
+(lldb) target create "/tmp/wasm-native-debug/function-end.wasm"
+Current executable set to '/tmp/wasm-native-debug/function-end.wasm' (wasm32).
+(lldb) command source -s 0 '/tmp/wasm-native-debug-9PZGJe/lldb.commands'
+Executing commands in '/tmp/wasm-native-debug-9PZGJe/lldb.commands'.
+(lldb) process connect -p wasm connect://127.0.0.1:36721
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = trace
+    frame #0: 0x400000000000008e function-end.wasm`_start at crt1-command.c:42:7
+(lldb) breakpoint set --file function-end.cpp --line 6
+Breakpoint 1: where = function-end.wasm`simple(int) + 44 at function-end.cpp:6:10, address = 0x400000000000010d
+(lldb) breakpoint set --file function-end.cpp --line 12
+Breakpoint 2: where = function-end.wasm`early(int) + 46 at function-end.cpp:12:12, address = 0x4000000000000143
+(lldb) breakpoint set --file function-end.cpp --line 20
+Breakpoint 3: where = function-end.wasm`recursive(int) + 78 at function-end.cpp:20:10, address = 0x40000000000001ae
+(lldb) breakpoint set --file function-end.cpp --line 31
+Breakpoint 4: where = function-end.wasm`cleanup(int) + 52 at function-end.cpp:31:10, address = 0x40000000000001f9
+(lldb) breakpoint set --file function-end.cpp --line 36
+Breakpoint 5: where = function-end.wasm`implicit(int) + 34 at function-end.cpp:36:11, address = 0x4000000000000273
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 1.1
+    frame #0: 0x400000000000010d function-end.wasm`simple(n=2) at function-end.cpp:6:10
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x4000000000000112 function-end.wasm`simple(n=2) at function-end.cpp:7:1
+(lldb) frame variable answer
+(int) answer = 12
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x40000000000002ae function-end.wasm`main at function-end.cpp:40:11
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 2.1
+    frame #0: 0x4000000000000143 function-end.wasm`early(n=2) at function-end.cpp:12:12
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x4000000000000158 function-end.wasm`early(n=2) at function-end.cpp:14:1
+(lldb) frame variable answer
+(int) answer = 22
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x40000000000002c3 function-end.wasm`main at function-end.cpp:41:9
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 3.1
+    frame #0: 0x40000000000001ae function-end.wasm`recursive(n=0) at function-end.cpp:20:10
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x40000000000001b5 function-end.wasm`recursive(n=0) at function-end.cpp:21:1
+(lldb) frame variable n answer
+(int) n = 0
+(int) answer = 30
+(lldb) thread step-out
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step out
+    frame #0: 0x40000000000001a4 function-end.wasm`recursive(n=1) at function-end.cpp:19:12
+(lldb) frame info
+frame #0: 0x40000000000001a4 function-end.wasm`recursive(n=1) at function-end.cpp:19:12
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 3.1
+    frame #0: 0x40000000000001ae function-end.wasm`recursive(n=1) at function-end.cpp:20:10
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x40000000000001b5 function-end.wasm`recursive(n=1) at function-end.cpp:21:1
+(lldb) frame variable answer
+(int) answer = 61
+(lldb) thread step-out
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step out
+    frame #0: 0x40000000000001a4 function-end.wasm`recursive(n=2) at function-end.cpp:19:12
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 3.1
+    frame #0: 0x40000000000001ae function-end.wasm`recursive(n=2) at function-end.cpp:20:10
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x40000000000001b5 function-end.wasm`recursive(n=2) at function-end.cpp:21:1
+(lldb) frame variable answer
+(int) answer = 93
+(lldb) thread step-out
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step out
+    frame #0: 0x40000000000002e2 function-end.wasm`main at function-end.cpp:42:9
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 4.1
+    frame #0: 0x40000000000001f9 function-end.wasm`cleanup(n=2) at function-end.cpp:31:10
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x4000000000000200 function-end.wasm`cleanup(n=2) at function-end.cpp:32:1
+(lldb) frame variable answer
+(int) answer = 42
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x4000000000000301 function-end.wasm`main at function-end.cpp:43:9
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 5.1
+    frame #0: 0x4000000000000273 function-end.wasm`implicit(n=2) at function-end.cpp:36:11
+(lldb) thread step-over
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = step over
+    frame #0: 0x4000000000000285 function-end.wasm`implicit(n=2) at function-end.cpp:37:1
+(lldb) frame variable answer
+(int) answer = 52
+(lldb) continue
+Process 1 resuming
+Process 1 exited with status = 0 (0x00000000)
+(lldb) quit

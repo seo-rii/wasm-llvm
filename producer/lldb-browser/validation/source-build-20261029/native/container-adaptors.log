@@ -1,0 +1,190 @@
+(lldb) target create "/tmp/wasm-native-debug/container-adaptors.wasm"
+Current executable set to '/tmp/wasm-native-debug/container-adaptors.wasm' (wasm32).
+(lldb) command source -s 0 '/tmp/wasm-native-debug-jo1znJ/lldb.commands'
+Executing commands in '/tmp/wasm-native-debug-jo1znJ/lldb.commands'.
+(lldb) process connect -p wasm connect://127.0.0.1:34969
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = trace
+    frame #0: 0x4000000000000468 container-adaptors.wasm`_start at crt1-command.c:42:7
+(lldb) breakpoint set --file container-adaptors.cpp --line 39
+Breakpoint 1: where = container-adaptors.wasm`main + 1233 at container-adaptors.cpp:39:16, address = 0x400000000000098d
+(lldb) breakpoint set --file container-adaptors.cpp --line 48
+Breakpoint 2: where = container-adaptors.wasm`main + 1416 at container-adaptors.cpp:48:14, address = 0x4000000000000a44
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 1.1
+    frame #0: 0x400000000000098d container-adaptors.wasm`main at container-adaptors.cpp:39:16
+(lldb) frame variable empty_stack empty_heap deque_stack vector_stack max_heap min_heap deque_heap nested_stack nested_heap
+(std::stack<int>) empty_stack = size=0 {}
+(std::priority_queue<int>) empty_heap = size=0 {}
+(std::stack<int>) deque_stack = size=3 {
+  [0] = 1
+  [1] = 2
+  [2] = 3
+}
+(std::stack<int, std::vector<int> >) vector_stack = size=3 {
+  [0] = 4
+  [1] = 5
+  [2] = 6
+}
+(std::priority_queue<int>) max_heap = size=3 {
+  [0] = 4
+  [1] = 1
+  [2] = 2
+}
+(std::priority_queue<int, std::vector<int>, Greater>) min_heap = size=3 {
+  [0] = 1
+  [1] = 4
+  [2] = 2
+}
+(std::priority_queue<int, std::deque<int>, std::greater<int> >) deque_heap = size=3 {
+  [0] = 1
+  [1] = 4
+  [2] = 2
+}
+(std::stack<std::vector<int> >) nested_stack = size=1 {
+  [0] = size=2 {
+    [0] = 7
+    [1] = 8
+  }
+}
+(std::priority_queue<std::vector<int> >) nested_heap = size=2 {
+  [0] = size=2 {
+    [0] = 3
+    [1] = 4
+  }
+  [1] = size=2 {
+    [0] = 1
+    [1] = 2
+  }
+}
+(lldb) frame variable deque_stack[0] deque_stack[1] deque_stack[2]
+(int) deque_stack[0] = 1
+(int) deque_stack[1] = 2
+(int) deque_stack[2] = 3
+(lldb) frame variable vector_stack[0] vector_stack[1] vector_stack[2]
+(int) vector_stack[0] = 4
+(int) vector_stack[1] = 5
+(int) vector_stack[2] = 6
+(lldb) frame variable max_heap[0] max_heap[1] max_heap[2]
+(int) max_heap[0] = 4
+(int) max_heap[1] = 1
+(int) max_heap[2] = 2
+(lldb) frame variable min_heap[0] min_heap[1] min_heap[2]
+(int) min_heap[0] = 1
+(int) min_heap[1] = 4
+(int) min_heap[2] = 2
+(lldb) frame variable deque_heap[0] deque_heap[1] deque_heap[2]
+(int) deque_heap[0] = 1
+(int) deque_heap[1] = 4
+(int) deque_heap[2] = 2
+(lldb) frame variable nested_stack[0][0] nested_stack[0][1] nested_heap[0][0] nested_heap[0][1]
+(int) nested_stack[0][0] = 7
+(int) nested_stack[0][1] = 8
+(int) nested_heap[0][0] = 3
+(int) nested_heap[0][1] = 4
+(lldb) frame variable --depth 0 block_deque large_deque
+(std::deque<int>) block_deque = size=1025 {...}
+(std::deque<LargeElement>) large_deque = size=17 {...}
+(lldb) frame variable block_deque[0] block_deque[1018] block_deque[1019] block_deque[1024]
+(int) block_deque[0] = 5
+(int) block_deque[1018] = 1023
+(int) block_deque[1019] = 1024
+(int) block_deque[1024] = 1029
+(lldb) frame variable large_deque[0].value large_deque[14].value large_deque[15].value large_deque[16].value
+(int) large_deque[0].value = 10
+(int) large_deque[14].value = 150
+(int) large_deque[15].value = 160
+(int) large_deque[16].value = 170
+(lldb) continue
+Process 1 resuming
+Process 1 stopped
+* thread #1, name = 'nobody', stop reason = breakpoint 2.1
+    frame #0: 0x4000000000000a44 container-adaptors.wasm`main at container-adaptors.cpp:48:14
+(lldb) frame variable empty_stack empty_heap deque_stack vector_stack max_heap min_heap deque_heap nested_stack nested_heap
+(std::stack<int>) empty_stack = size=0 {}
+(std::priority_queue<int>) empty_heap = size=0 {}
+(std::stack<int>) deque_stack = size=2 {
+  [0] = 1
+  [1] = 2
+}
+(std::stack<int, std::vector<int> >) vector_stack = size=4 {
+  [0] = 4
+  [1] = 5
+  [2] = 6
+  [3] = 9
+}
+(std::priority_queue<int>) max_heap = size=2 {
+  [0] = 2
+  [1] = 1
+}
+(std::priority_queue<int, std::vector<int>, Greater>) min_heap = size=4 {
+  [0] = 0
+  [1] = 1
+  [2] = 2
+  [3] = 4
+}
+(std::priority_queue<int, std::deque<int>, std::greater<int> >) deque_heap = size=3 {
+  [0] = 1
+  [1] = 4
+  [2] = 2
+}
+(std::stack<std::vector<int> >) nested_stack = size=1 {
+  [0] = size=2 {
+    [0] = 7
+    [1] = 8
+  }
+}
+(std::priority_queue<std::vector<int> >) nested_heap = size=2 {
+  [0] = size=2 {
+    [0] = 3
+    [1] = 4
+  }
+  [1] = size=2 {
+    [0] = 1
+    [1] = 2
+  }
+}
+(lldb) frame variable deque_stack[0] deque_stack[1]
+(int) deque_stack[0] = 1
+(int) deque_stack[1] = 2
+(lldb) frame variable vector_stack[0] vector_stack[1] vector_stack[2] vector_stack[3]
+(int) vector_stack[0] = 4
+(int) vector_stack[1] = 5
+(int) vector_stack[2] = 6
+(int) vector_stack[3] = 9
+(lldb) frame variable max_heap[0] max_heap[1]
+(int) max_heap[0] = 2
+(int) max_heap[1] = 1
+(lldb) frame variable min_heap[0] min_heap[1] min_heap[2] min_heap[3]
+(int) min_heap[0] = 0
+(int) min_heap[1] = 1
+(int) min_heap[2] = 2
+(int) min_heap[3] = 4
+(lldb) frame variable deque_heap[0] deque_heap[1] deque_heap[2]
+(int) deque_heap[0] = 1
+(int) deque_heap[1] = 4
+(int) deque_heap[2] = 2
+(lldb) frame variable nested_stack[0][0] nested_stack[0][1] nested_heap[0][0] nested_heap[0][1]
+(int) nested_stack[0][0] = 7
+(int) nested_stack[0][1] = 8
+(int) nested_heap[0][0] = 3
+(int) nested_heap[0][1] = 4
+(lldb) frame variable --depth 0 block_deque large_deque
+(std::deque<int>) block_deque = size=1025 {...}
+(std::deque<LargeElement>) large_deque = size=17 {...}
+(lldb) frame variable block_deque[0] block_deque[1018] block_deque[1019] block_deque[1024]
+(int) block_deque[0] = 6
+(int) block_deque[1018] = 1024
+(int) block_deque[1019] = 1025
+(int) block_deque[1024] = 1030
+(lldb) frame variable large_deque[0].value large_deque[14].value large_deque[15].value large_deque[16].value
+(int) large_deque[0].value = 20
+(int) large_deque[14].value = 160
+(int) large_deque[15].value = 170
+(int) large_deque[16].value = 180
+(lldb) continue
+Process 1 resuming
+Process 1 exited with status = 0 (0x00000000)
+(lldb) quit
