@@ -14,8 +14,10 @@ extraction, scalar splats, addition and subtraction, integer multiplication for
 16/32/64-bit lanes, floating point multiplication and division, negation, and
 integer bitwise operations. Unsupported vector operations can use GCC's scalar
 lowering; accepting `-msimd128` does not promise that every expression vectorizes.
-There is no `i8x16.mul` instruction or pattern. Integer vector division and SIMD
-conversions do not have dedicated patterns. Patch `0013` adds the eight Wasm
+There is no `i8x16.mul` instruction or pattern. Integer vector division has no
+dedicated pattern. Patch `0015` adds selected integer/float and widening/narrowing
+[SIMD conversions](SIMD-CONVERSIONS.md), including documented composed and scalar
+paths. Patch `0013` adds the eight Wasm
 signed/unsigned saturating add/subtract operations for 8-bit and 16-bit lanes;
 see the [builtin contract and qualification](SIMD-SATURATING.md).
 The additional `0006` patch supplies comparisons, scalar-count shifts, condition
