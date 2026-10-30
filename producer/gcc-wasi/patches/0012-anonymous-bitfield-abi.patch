@@ -1,0 +1,76 @@
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -851,6 +851,11 @@
+         {
+           if (TREE_CODE (field) != FIELD_DECL)
+             continue;
++          /* Unnamed bitfields occupy storage but carry no ABI value.  Layout
++             can clear DECL_BIT_FIELD for mode-sized fields, so use the
++             preserved declared type to identify them.  */
++          if (DECL_BIT_FIELD_TYPE (field) && !DECL_NAME (field))
++            continue;
+           /* Layout narrows TREE_TYPE to the bitfield width.  ABI
+              singleton classification uses its declared storage type,
+              including the record size and alignment checks below.  */
+@@ -862,8 +867,31 @@
+                   && integer_zerop (TYPE_SIZE (field_type))))
+             continue;
+           if (scalar || !DECL_FIELD_OFFSET (field)
+-              || !integer_zerop (DECL_FIELD_OFFSET (field))
+-              || !integer_zerop (DECL_FIELD_BIT_OFFSET (field)))
++              || !DECL_FIELD_BIT_OFFSET (field))
++            return NULL_TREE;
++          if (DECL_BIT_FIELD_TYPE (field))
++            {
++              /* The scalar carries the record's raw storage, not the named
++                 bitfield shifted to bit zero.  Its bits may start after an
++                 unnamed field, but must still fit in that storage unit.  */
++              if (!TYPE_SIZE (field_type) || !DECL_SIZE (field)
++                  || !tree_fits_uhwi_p (TYPE_SIZE (field_type))
++                  || !tree_fits_uhwi_p (DECL_SIZE (field))
++                  || !tree_fits_uhwi_p (DECL_FIELD_OFFSET (field))
++                  || !tree_fits_uhwi_p (DECL_FIELD_BIT_OFFSET (field)))
++                return NULL_TREE;
++              unsigned HOST_WIDE_INT bits = tree_to_uhwi (TYPE_SIZE (field_type));
++              unsigned HOST_WIDE_INT bytes = tree_to_uhwi (DECL_FIELD_OFFSET (field));
++              unsigned HOST_WIDE_INT offset = tree_to_uhwi (DECL_FIELD_BIT_OFFSET (field));
++              unsigned HOST_WIDE_INT width = tree_to_uhwi (DECL_SIZE (field));
++              if (bytes > bits / BITS_PER_UNIT)
++                return NULL_TREE;
++              bits -= bytes * BITS_PER_UNIT;
++              if (offset > bits || width > bits - offset)
++                return NULL_TREE;
++            }
++          else if (!integer_zerop (DECL_FIELD_OFFSET (field))
++                   || !integer_zerop (DECL_FIELD_BIT_OFFSET (field)))
+             return NULL_TREE;
+           scalar = wasm_abi_singleton_type (field_type);
+           if (!scalar)
+@@ -901,8 +929,9 @@
+     ? wasm_abi_singleton_type (type) : NULL_TREE;
+   machine_mode mode = scalar ? TYPE_MODE (scalar) : TYPE_MODE (type);
+   /* An empty C record can have BLKmode.  Use a harmless dummy RTL register
+-     while suppressing the corresponding Wasm call/return value.  */
+-  if (wasm_abi_empty_type_p (type))
++     only then: unnamed bitfields can leave nonzero QI/HI/DI storage whose
++     mode must match generic return expansion, even though the ABI is empty. */
++  if (wasm_abi_empty_type_p (type) && mode == BLKmode)
+     mode = SImode;
+   if (!scalar)
+     {
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -639,7 +639,10 @@
+ 
+   output_indent (stream);
+   fprintf (stream, ";; hard\n");
+-  if (cfun->machine->return_mode != VOIDmode)
++  /* ABI-empty records retain their storage mode for generic expansion, but
++     never use a hard Wasm return local (including TI-sized padding).  */
++  if (cfun->machine->return_mode != VOIDmode
++      && !wasm_abi_empty_type_p (TREE_TYPE (type)))
+     print_local_decl (stream, gen_rtx_REG (cfun->machine->return_mode,
+ 					   WASM_RETURN_REGNUM));
+ 

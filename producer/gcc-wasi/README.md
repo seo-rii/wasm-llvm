@@ -22,6 +22,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [empty record ABI repair](EMPTY-ABI.md),
 [floating extension qualification](FP-EXTENSIONS.md),
 [wide builtin/bitfield qualification](WIDE-INTEGER.md),
+[anonymous bitfield ABI qualification](ANONYMOUS-BITFIELD-ABI.md),
 [current completion results](../../docs/gcc-wasi-completion-20261027.md),
 [source pins](sources.lock.json), and [runtime pins](runtime.lock.json).
 The June 2026 GCC announcement approved a development direction; this backend is
@@ -35,7 +36,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0011`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records and declared bitfield layout/classification; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0012`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared bitfield layout and anonymous bitfield ABI classification; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -93,6 +94,9 @@ alignment and uses their original storage type for singleton call classification
 The [bitfield matrix](WIDE-INTEGER.md) includes packed and ordinary mixed-compiler
 controls; [additional singleton regressions](singleton-bitfield-fixtures.mjs)
 cover narrow short/long-long and packed int/long-long fields.
+Patch `0012` fixes [anonymous bitfield singleton classification](ANONYMOUS-BITFIELD-ABI.md)
+without changing storage layout and preserves nonzero storage modes of ABI-empty
+records while omitting their unused hard return locals.
 
 ## Reproduction
 
@@ -234,6 +238,12 @@ node producer/gcc-wasi/wide-integer-test.mjs \
   --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
   --output "$GCC_WASI_WORK_DIR/singleton-bitfield-qualification"
+node producer/gcc-wasi/wide-integer-test.mjs \
+  --suite producer/gcc-wasi/anonymous-bitfield-fixtures.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/anonymous-bitfield-qualification"
 node producer/gcc-wasi/fp-extension-native.mjs \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
   --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
@@ -250,13 +260,14 @@ node producer/gcc-wasi/package.mjs \
   --int128-qualification "$GCC_WASI_WORK_DIR/int128-qualification/report.json" \
   --empty-abi-qualification "$GCC_WASI_WORK_DIR/empty-abi-qualification/report.json" \
   --bitfield-qualification "$GCC_WASI_WORK_DIR/wide-bitfields-qualification/report.json" \
+  --anonymous-bitfield-qualification "$GCC_WASI_WORK_DIR/anonymous-bitfield-qualification/report.json" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current eleven-patch compiler, `--long-double-qualification`,
+For the current twelve-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--empty-abi-qualification`,
-`--bitfield-qualification`, the native linker and a freshly rebuilt, qualified
+`--bitfield-qualification`, `--anonymous-bitfield-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. Both wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy either complete gate. Earlier
 compiler profiles can omit `--libstdcxx` and advertise `libstdcxx: false` with core C++ language support. Every supplied GNU

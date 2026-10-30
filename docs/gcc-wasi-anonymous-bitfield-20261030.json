@@ -1,0 +1,3979 @@
+{
+  "schemaVersion": 1,
+  "issue": 93,
+  "status": "native-passed-browser-pending",
+  "compilerHost": "native",
+  "target": "wasm32-wasi",
+  "gccSource": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      },
+      {
+        "path": "patches/0012-anonymous-bitfield-abi.patch",
+        "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+        "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+      }
+    ],
+    "sourceDiffSha256": "51b2279d6d277d6cb311097c2202a84532f841dc1f191a907ea99fb8e901f66b"
+  },
+  "sourceLockSha256": "37f90d8528238aff174b29e7a32b9f06d5bff392972bd91ce788aec264f6e524",
+  "nativeBuild": {
+    "bytes": 4501,
+    "sha256": "b0ca0be97e441ed12fef4565bb688ca757387520890c34982cc764c0ecd837b6"
+  },
+  "nativeTools": {
+    "gcc": {
+      "bytes": 24395224,
+      "sha256": "afb773cd7339df76bd04cf17577c034c047cb3bdda3f26db42b3c609f24e918f"
+    },
+    "gccCpp": {
+      "bytes": 26947904,
+      "sha256": "16b023b697fa42b5a4d27cb448cf8e746256890b524951f4f66ae5d8efb7c54e"
+    },
+    "clang": {
+      "bytes": 118656,
+      "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+    },
+    "assembler": {
+      "bytes": 1635504,
+      "sha256": "8203fbf4dc22d46fc2cb334c4666dc9712c7b53d3726cf47719d6b6d91eff8a6"
+    },
+    "inspector": {
+      "bytes": 990704,
+      "sha256": "fe4ec3fb6b6177627cf00851057c9870f3f4d971dcbdda7ba9597bb5f85fb3ad"
+    },
+    "linker": {
+      "bytes": 4165088,
+      "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+    },
+    "node": {
+      "bytes": 126879696,
+      "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+    }
+  },
+  "qualification": {
+    "anonymousBitfields": {
+      "report": {
+        "bytes": 17104069,
+        "sha256": "c4c825d8019de492dd0376ac7631338eedf1b10dca7d2979afa7092c0f278f7a"
+      },
+      "status": "passed",
+      "counts": {
+        "total": 160,
+        "passed": 160,
+        "failed": 0
+      },
+      "directions": [
+        "gcc-gcc",
+        "gcc-clang",
+        "clang-gcc",
+        "clang-clang"
+      ],
+      "inputsUnchanged": true
+    },
+    "smoke": {
+      "report": {
+        "bytes": 72427,
+        "sha256": "3103e80d1ed0baf64730a98a6abb2751918e3bc0e0b047153f007110f06fec3c"
+      },
+      "status": "passed",
+      "cases": 13
+    }
+  },
+  "fixtures": [
+    {
+      "id": "anonymous-bitfield-named-control-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "063b183b5646d5f958d0dc144fbaac32d43056d41ca6629c6ea98268e703bc7c",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "dafa6cb127f4fb5fb3ba39e0cc68746a0b09804f70e55918faa48f97ed7e00ef",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "332415d30e22174cade2660f8f9a2c546d065f30c58571772bd25c0644494b14"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f08f933df06b36ef71caeb9b0fc677c3c6e91cd3f20320c9fc9fa2c6aae3a676"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "063b183b5646d5f958d0dc144fbaac32d43056d41ca6629c6ea98268e703bc7c",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "995dff55c0cf9219c0e7459b3e4c73f946d5e468081ab141ec586543b651ce4f",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "e879c7a1018b395802459486317d9c345d0a10241d249b38e51ec9cd425a22b4"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "91f065b0b7af00ff3cf3bc46826a607ace87f8c148de4f2d8f496694e96fe311"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "063b183b5646d5f958d0dc144fbaac32d43056d41ca6629c6ea98268e703bc7c",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "9c349620c453a0887b08db992c7ccfccf3a25c563a182302377e10e30aa023f8",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ce066b827399b4cd5718ca92f17d7635ee1fd90471143b1ec89cfc85db9264f4"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f08f933df06b36ef71caeb9b0fc677c3c6e91cd3f20320c9fc9fa2c6aae3a676"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "063b183b5646d5f958d0dc144fbaac32d43056d41ca6629c6ea98268e703bc7c",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "e1ec208c32ca8c5ef6286ae6d73c68c99ae46845b01ab9e133ca3fb27f669449",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ce066b827399b4cd5718ca92f17d7635ee1fd90471143b1ec89cfc85db9264f4"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "91f065b0b7af00ff3cf3bc46826a607ace87f8c148de4f2d8f496694e96fe311"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "f4ea992d1b56a13b2f1d3ce24a85bce4e9b66142e800655f1c4a059d1095b64d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "2d78e45ffbaef5890136789d06be48d682126078a37a4e90a081272f822a017c",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "7e5ecd1cb69f40ddc33f9f6d6570b4c0dd525e6c1dff31e06f8549ff4efc4e7d"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "650e9ef97c4bb7ab8d4a1d61f3fce65ee688f4a8914399751ada02ac8040aece"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "f4ea992d1b56a13b2f1d3ce24a85bce4e9b66142e800655f1c4a059d1095b64d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "237a57dc15878dc3e5976bcb4a38b3a019ac703919f3fd25e24d8b2efdafb427",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "7700982a6383d2df0e1152568f6bf99c49d2ea50a2a952bc5115967a545c456d"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "83a2bc66d3ffcc68778031415524efe13263d87c43f7f980fd38d7f669aa0be8"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "f4ea992d1b56a13b2f1d3ce24a85bce4e9b66142e800655f1c4a059d1095b64d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "4c4907b91ea02093d0ed4422135e121881f0dd0cc6b7b56aa35bd80c5fb6e13c",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "513964f06d0e7ce2100b416b3debafe2df30cbfcd005cb0302f47125bff2fea6"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "650e9ef97c4bb7ab8d4a1d61f3fce65ee688f4a8914399751ada02ac8040aece"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-named-control-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "f4ea992d1b56a13b2f1d3ce24a85bce4e9b66142e800655f1c4a059d1095b64d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "58418eadbc78ced380c63b896d38299fea4ad6b43a8fe0152c584ef4714ef2f1",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "513964f06d0e7ce2100b416b3debafe2df30cbfcd005cb0302f47125bff2fea6"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "83a2bc66d3ffcc68778031415524efe13263d87c43f7f980fd38d7f669aa0be8"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "ade69bcdc9a42ea6cdfab1773ad8bdecf88fbd136d077da16d95169821bc6f5e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "5a2f56839cd81a8a284dbe983e4c043e8c56cd340ab55f7df3683a46e20a5b77",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "476bb263af2e4157383ff6d4d48dae3abf63bc49781c2a84b42cde44dcab7084"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0f753cf79bb0783c3ed9a27fe9799b54b39a0be652f4c55d3f6e171a2182d75d"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "ade69bcdc9a42ea6cdfab1773ad8bdecf88fbd136d077da16d95169821bc6f5e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ce43da4300d92aa3b3e3e7d7a04b851028f79578ccde14f37d698b594fba6561",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "534ada29efc9f0553173a77c69b2ca0e767f839ecca26c4f7e8fe74e1e9fe384"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f908c6b5b2b4812a6d3b96d9e9aff8601a91cad78c3c71caf465777047b8e1aa"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "ade69bcdc9a42ea6cdfab1773ad8bdecf88fbd136d077da16d95169821bc6f5e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "646bceba78324130140e112130ee44ad28928eff3463992c569841af24df3191",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ae569b2fde42f5865cfaecbaa8ed96daf34cc56a790141999687d4b9cb32e656"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0f753cf79bb0783c3ed9a27fe9799b54b39a0be652f4c55d3f6e171a2182d75d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "ade69bcdc9a42ea6cdfab1773ad8bdecf88fbd136d077da16d95169821bc6f5e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "cac556b7a0fa65fa8ba5ec35331da7700dcc55fb9828ca2b372dbb2e2a0513aa",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ae569b2fde42f5865cfaecbaa8ed96daf34cc56a790141999687d4b9cb32e656"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f908c6b5b2b4812a6d3b96d9e9aff8601a91cad78c3c71caf465777047b8e1aa"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "47d1f9f5e43f04bc428a7ad76960998e56d1b7540e5fcd87108739795b667e21",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "9e811d0270cfde7de2504bdb2782f7f60a34ddd4309a40cb81b2fbdf1a73bc00",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d9451625b7894c7c7673834c60ddd49b80d01d4ca810c9b37cadb90ac2ab7475"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f85bc35f4c0a24e97afdb4ff37b15d5e3cb25c3f1045e4e829189ad9168cbf40"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "47d1f9f5e43f04bc428a7ad76960998e56d1b7540e5fcd87108739795b667e21",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "d6b5301c0e47ffd170193d83e2098a9e7e59e4179aa568cd1e964859f42881f2",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "fd48b8adf30f3c7a702e6032b7c48e9ab880f290f4a3920cca1e6986ac543fa7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "47d1f9f5e43f04bc428a7ad76960998e56d1b7540e5fcd87108739795b667e21",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "eee19c9c4890c06db14050405689a12c61784676effd7ccf94668d385724f049",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ceeb70d4bb794d0485294b46a68d5d5c95d1dff70ec479445671885e339f1909"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f85bc35f4c0a24e97afdb4ff37b15d5e3cb25c3f1045e4e829189ad9168cbf40"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "47d1f9f5e43f04bc428a7ad76960998e56d1b7540e5fcd87108739795b667e21",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "fb4cce1047b4cd4c00797362fe5c3363bf7e6c7a40b6ee913a57dec978136881",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ceeb70d4bb794d0485294b46a68d5d5c95d1dff70ec479445671885e339f1909"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "6a1b7cf07401f1917c7d4c55e98befb263c9ac0ccb48b271fbe3c90d261156df",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "acbce54182d260aa9a249bd3cbac6fb67350e53abcc0bcea350e22bdfdc9a4d3",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "f01084222720af38d1580474491e72539d28798c68e6689f404f94c0fb301915"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f08f933df06b36ef71caeb9b0fc677c3c6e91cd3f20320c9fc9fa2c6aae3a676"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "6a1b7cf07401f1917c7d4c55e98befb263c9ac0ccb48b271fbe3c90d261156df",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "0c5bb83501381ef8f6f2c6759aa46777b8571c8c9596cb49444c59827838e152",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "1e70370b53d7012ae1c99ffc2f46409c10202960cc1104c7c8d9aec95aac0bf8"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "e9b1c785ded02f021c7c4bbc759582089927820473519c066350f778585ccacc"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "6a1b7cf07401f1917c7d4c55e98befb263c9ac0ccb48b271fbe3c90d261156df",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6ef7adec5fa98bbcb6afa747bb52f7ec84523d480d84583b5c06b149326c3d2a",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "45343bceb64a34f4ac0e99f91c31b3bcc24ef35c222e9495d061cff6c57b5d3b"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f08f933df06b36ef71caeb9b0fc677c3c6e91cd3f20320c9fc9fa2c6aae3a676"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "6a1b7cf07401f1917c7d4c55e98befb263c9ac0ccb48b271fbe3c90d261156df",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6b9f1326e934a81bf7f885a4d0b5aa285d6237cb897713043c7da885e502d1f4",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "45343bceb64a34f4ac0e99f91c31b3bcc24ef35c222e9495d061cff6c57b5d3b"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "e9b1c785ded02f021c7c4bbc759582089927820473519c066350f778585ccacc"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "2833f9236373c41703c46794439f7ef1327d300a4d1899d775759343c859ae85",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "072bfb2a02107d3d43d86d4d3836d2559e2ffd94cab3a48019103c4a4d51779d",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "264cf18a74a09398e6edc1939b1ec97e25c219f1d9c4b9e4b65a4d88c6d96410"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "650e9ef97c4bb7ab8d4a1d61f3fce65ee688f4a8914399751ada02ac8040aece"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "2833f9236373c41703c46794439f7ef1327d300a4d1899d775759343c859ae85",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "5203c1535360c1b4f2f0ec3a02a7d19ce723bbedd1aa1532dad98195b286458c",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "ec269ea90f36eabe5ce0e34724ceef0f8f3493bfd5e35e2c5fc26c62ce07cb65"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "83a2bc66d3ffcc68778031415524efe13263d87c43f7f980fd38d7f669aa0be8"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "2833f9236373c41703c46794439f7ef1327d300a4d1899d775759343c859ae85",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "4c4907b91ea02093d0ed4422135e121881f0dd0cc6b7b56aa35bd80c5fb6e13c",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "513964f06d0e7ce2100b416b3debafe2df30cbfcd005cb0302f47125bff2fea6"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "650e9ef97c4bb7ab8d4a1d61f3fce65ee688f4a8914399751ada02ac8040aece"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-after-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "2833f9236373c41703c46794439f7ef1327d300a4d1899d775759343c859ae85",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "58418eadbc78ced380c63b896d38299fea4ad6b43a8fe0152c584ef4714ef2f1",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "513964f06d0e7ce2100b416b3debafe2df30cbfcd005cb0302f47125bff2fea6"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "83a2bc66d3ffcc68778031415524efe13263d87c43f7f980fd38d7f669aa0be8"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "4e9d6efc5382bbd53f966a49c9ee103ddb6218fd24e7fa5fb5ea1ed4f0fed3f6",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "7204b017fce6834e34b1194dd9ac618c491a0cbbd1a68cc27a8ca7ad64875bdb",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "1389ea102042b0f47b1f724b4738d0b273ecc181237df9f3551d83fc4352237e"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f094bfb7392a38e6692df6bb2cb30828713d677f3a62ebee9bbe4e62eaf23a2f"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "4e9d6efc5382bbd53f966a49c9ee103ddb6218fd24e7fa5fb5ea1ed4f0fed3f6",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "015b6b4422f464200fca688a46e4e53609d5f78dd712690e9bf79ea365d2fd52",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "b5ab0bab688220e12ab37e853efd205ac440e4ced132f4fd67ce26b5f7b62f32"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "ebcb31ade14b24cdbe39365ab02155a0053f1ac8cbd495704b275e54aa01dd7e"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "4e9d6efc5382bbd53f966a49c9ee103ddb6218fd24e7fa5fb5ea1ed4f0fed3f6",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "bd906e3198b86f089d1f7c072327c8313e0cdf52e2d5b34469873d38bcf9fa3a",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "80625aeb8dbc2e3589881373038a2a1b25b095e7f4b94690f8697a230de396f6"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f094bfb7392a38e6692df6bb2cb30828713d677f3a62ebee9bbe4e62eaf23a2f"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "4e9d6efc5382bbd53f966a49c9ee103ddb6218fd24e7fa5fb5ea1ed4f0fed3f6",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "a58aedeb986518a348ca97f8f721438124eab73cd91fff5653bf9bfca4f61ec2",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "80625aeb8dbc2e3589881373038a2a1b25b095e7f4b94690f8697a230de396f6"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "ebcb31ade14b24cdbe39365ab02155a0053f1ac8cbd495704b275e54aa01dd7e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "6215120fb7116c5b82ba9497e66c5bcdc3dbc1ddfe2ffb232d1e271226537d58",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "2bc8406762bdc0c4a7d9754696094630d9d546b8021933ea211f95088f717799",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "fa6b94acbb78904e2827ad8a208092f626e225fda481d2a7d57f7b89c3f87aba"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "7b0ab1b2901a3360f5a9c7b22d0d2cfdbbd1b3a9ed2216bc6d835783956e10b0"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "6215120fb7116c5b82ba9497e66c5bcdc3dbc1ddfe2ffb232d1e271226537d58",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6525f78a74f1d6b0fcda8f7d83a983686ce0cdadf72ffe8bc173036fa19e7e30",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "521b5ac75322092af05782b8b3d95b1c8ff8785c39d385fbb62c6fb35e8b105a"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "acb5fce62f393012cc2c46980999b10458f949f60be3b4b413bc45995347f9fc"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "6215120fb7116c5b82ba9497e66c5bcdc3dbc1ddfe2ffb232d1e271226537d58",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "81307836497e7f5469f5fae8bed7d168c9717879a2085d04f75110f74607f2d9",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "c7250b9d97cbed81d6df08d9181544948e2a6d4eac7fddc21b8ea16a120224a3"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "7b0ab1b2901a3360f5a9c7b22d0d2cfdbbd1b3a9ed2216bc6d835783956e10b0"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "6215120fb7116c5b82ba9497e66c5bcdc3dbc1ddfe2ffb232d1e271226537d58",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ca9787df85ca7a2d43e2472850fde53d4db30aef9d0437fe94863c348f74718c",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "c7250b9d97cbed81d6df08d9181544948e2a6d4eac7fddc21b8ea16a120224a3"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "acb5fce62f393012cc2c46980999b10458f949f60be3b4b413bc45995347f9fc"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "8dcc776148139079d9d3da4cd4fd5a5cc8d2763da6c16b0391bfb512291f4858",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "176b3fa0301cd4409786bbf1f97d3e26872a4b70da882aff382b222679ba2c03",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "951ccc9cdcd65e188ba54541558d3e9b9c6b5ded2e414ccf626dc7e13ce713c3"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "78d1a3419cbaef0166df5b2d3a4d8ecbe30d62e1d996e82b0024dc020ffddd84"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "8dcc776148139079d9d3da4cd4fd5a5cc8d2763da6c16b0391bfb512291f4858",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8d3918cc7a501b254b4dda19ff6e6132444a568207956bd0bc18d0f3db6facce",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d24d17aa8ae0b595383f8f159a7555d2dd16ddc078264a8d77bc6f20b845005f"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "693118bf600ae8cbd2ad41a5170349eec54fb5ab12dcf596ac8011e52ea1638c"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "8dcc776148139079d9d3da4cd4fd5a5cc8d2763da6c16b0391bfb512291f4858",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "2681663c0bc5283577c57cf68de5e83abcc9d76b37f80e6fc151a4ecbd605dbe",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "6d8990cb1e26ac4b452fc8716e4ee64aacb5bb4141c46e37b3549e33fff834cd"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "78d1a3419cbaef0166df5b2d3a4d8ecbe30d62e1d996e82b0024dc020ffddd84"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "8dcc776148139079d9d3da4cd4fd5a5cc8d2763da6c16b0391bfb512291f4858",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8fbc4989772d2ca0b77eddb0fed23fe41990adcb5b520a504cb7a8ed25c36064",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "6d8990cb1e26ac4b452fc8716e4ee64aacb5bb4141c46e37b3549e33fff834cd"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "693118bf600ae8cbd2ad41a5170349eec54fb5ab12dcf596ac8011e52ea1638c"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "7c0b64464c9015f3c7c8c3b6e5cd9c05ca6a4a0465ea3f03d6821b15a4b70e13",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "4e07d7e3c4cd3bacaa8e0f552a367486185a40a95c61456d7d7f24b778398873",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "b13b71f8d2c5a869688f6a8ba68c0547cf21d8199a3178d8e542ae1a467edcee"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b93192e49ce5ac6ed32fac57e078f0e5f49c89b45a0a9e528da5d2f4f62d0635"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "7c0b64464c9015f3c7c8c3b6e5cd9c05ca6a4a0465ea3f03d6821b15a4b70e13",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c21fcd458c9a81f20417200c6787473ee08f57043e7281f1cfe99c0576e8926b",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "c9c286cb4d2bd1316232f5471e6d8bd7ba838671881f8f64f51e730aa72141c7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "8d6f0e485fb8d5f0a3cf16600ae76a500d534fb4d4872487c82403e7edcdc6e5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "7c0b64464c9015f3c7c8c3b6e5cd9c05ca6a4a0465ea3f03d6821b15a4b70e13",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "053f69fde33c73dbd8abf9d11821109532618f89959fd7e5c63c27b0e88d3132",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "6f69ac1d833dd72fc691ca7f2f5178b99f53f8567bd63e7254fda4553dcb57de"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b93192e49ce5ac6ed32fac57e078f0e5f49c89b45a0a9e528da5d2f4f62d0635"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed-after-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "7c0b64464c9015f3c7c8c3b6e5cd9c05ca6a4a0465ea3f03d6821b15a4b70e13",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1b65229c81be81493303e1f27e8360ec66e8295e476009d0b64d9c3dac7d7374",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "6f69ac1d833dd72fc691ca7f2f5178b99f53f8567bd63e7254fda4553dcb57de"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "8d6f0e485fb8d5f0a3cf16600ae76a500d534fb4d4872487c82403e7edcdc6e5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "e704f7d9f76acef1a0504e78f8c47b13191201581cb8a7884632597be41dfdf2",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1fc347b5bf4c9eed7409eb9575e84eb4182a6350c12e893902ac458961e8bfc8",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "4f488590d6cb203758d1235d715c1c56505392ae7b663e872ec463996b6c7f99"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "56e75613f290cbfc85cfa8266fb85fe5f74d4e0be6edf2cf17b8978a38cea0c9"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "e704f7d9f76acef1a0504e78f8c47b13191201581cb8a7884632597be41dfdf2",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "204cba7811354c89d10fea9cca3b18fefd4a4d2e56c1ac4498806d47ee796f5c",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "4ea7c6525fe147caeb6f74f7a8a29f301b200e31a58d9961cf5a4430e6e060a4"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f022559ce66e98801a6545240ac0f7383f91a1e4403ab07c88e198d5c1f82e40"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "e704f7d9f76acef1a0504e78f8c47b13191201581cb8a7884632597be41dfdf2",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "e124429beeee99152be1615fd917ce9d1469ecbeda412d7bba7db28c6e01a8eb",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "074daca0f9a9a3c239e100a3624f2013067128bbb1b6f9f65c2aad8d5cb7c4d3"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "56e75613f290cbfc85cfa8266fb85fe5f74d4e0be6edf2cf17b8978a38cea0c9"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "e704f7d9f76acef1a0504e78f8c47b13191201581cb8a7884632597be41dfdf2",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "9fef2604230295728e4248eeac473a2dfe86390abcfa95e9404767e045271076",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "074daca0f9a9a3c239e100a3624f2013067128bbb1b6f9f65c2aad8d5cb7c4d3"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f022559ce66e98801a6545240ac0f7383f91a1e4403ab07c88e198d5c1f82e40"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "dc337bc772d5579a481a42763cd85ebad66f5587dd17990239b86e4159a153cb",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "5a9081cc8cd07f85565ac8169248439a8d63651fdfa7a0409ff3b076b9d8fedd",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d460a64e40c6ead19fe003c57c3a25e9c809e70853ecbc5a7174b09345909b2c"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "5ac180e6741ea60a917141b65a2e9f90e79ed39a18e3ff5663ca3340944c3e19"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "dc337bc772d5579a481a42763cd85ebad66f5587dd17990239b86e4159a153cb",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "cee5bf1bd4d2371f79fa5e38ea6c141ec99852232aa1a51cb047709bb4ef759c",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d460a64e40c6ead19fe003c57c3a25e9c809e70853ecbc5a7174b09345909b2c"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "d61ccba3e4326912479dcd3da7e0605657dbe4993da746c431cdbcfbf4904bcd"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "dc337bc772d5579a481a42763cd85ebad66f5587dd17990239b86e4159a153cb",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6c7f38359332c0992b4d784e547de5f6708332cbc7924250ff4584c696e278f6",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "e9d5c6c47dbef8aa24438950b8fc552d540e5e660a5babeb4af6dd643c1a91a0"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "5ac180e6741ea60a917141b65a2e9f90e79ed39a18e3ff5663ca3340944c3e19"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "dc337bc772d5579a481a42763cd85ebad66f5587dd17990239b86e4159a153cb",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ef8e1bf6c49b93e6ba879b67fb84bfa0272228644633e0031698b6ac9c0c062e",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "e9d5c6c47dbef8aa24438950b8fc552d540e5e660a5babeb4af6dd643c1a91a0"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "d61ccba3e4326912479dcd3da7e0605657dbe4993da746c431cdbcfbf4904bcd"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "dfc324b7402e250b49be1dbd5c20c8f4cce6d2e9c7f82b47794bcf4bed636877",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "a9933f967a28fac6d67b697d2593171bd40bb2fde3c173a48c446841d570abbd",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "f483fd50c9cb720b487f7e4555abf1a5855ccee78364a90f060fb637bd324f02"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "433afdcedb986845455d992e998e4db02a48d7803df1f0eb8f535bf3af2256fe"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "dfc324b7402e250b49be1dbd5c20c8f4cce6d2e9c7f82b47794bcf4bed636877",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "db9b2ca2d119b33521cb067497c0e843e648a8293a347ac272b4ef2d2934f2ec",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "5ab72a5d57476fe8535b69131e87961fefc77b04ae7ee48081e7ced62fd0f7df"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "bba3da9dc126af0f611af12dc631a4cba42c56f8dbfef1d6f9edaf05f0c24a41"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "dfc324b7402e250b49be1dbd5c20c8f4cce6d2e9c7f82b47794bcf4bed636877",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "2354bdabe2204479d7b410fd213d6108a6f793719567800c258a17b45e4b6743",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "45e74980341747ce245bfdfda5b4ebc4178112773cfe95bda8761df17fb3265a"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "433afdcedb986845455d992e998e4db02a48d7803df1f0eb8f535bf3af2256fe"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "dfc324b7402e250b49be1dbd5c20c8f4cce6d2e9c7f82b47794bcf4bed636877",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "11b4b2c6b36b3a970fe2f4f77021338f4da40a81e5086981f8d8ee25b9939281",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "45e74980341747ce245bfdfda5b4ebc4178112773cfe95bda8761df17fb3265a"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "bba3da9dc126af0f611af12dc631a4cba42c56f8dbfef1d6f9edaf05f0c24a41"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "e8ab55f0271331eff7298a211db59b5bb41f3df0f842962620b759712415a9cc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ea1c6593ab3237f23c0291855d552c38461891e0d1092787c4d0962a353b5639",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "8683e25ae585b0f0193c4d2fede8329c1a927f5e632724fb59377816f17a6ef5"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "c81d052b9fbe114ad11a57096a1d549cccfc849e97a4b68593f9cf787a8a7b85"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "e8ab55f0271331eff7298a211db59b5bb41f3df0f842962620b759712415a9cc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "cea8e84ebeeb87497c2680ea79603ff5529c6686c8fc9fe5e6119a52f937e2cc",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "bbfa5c7d05c6f4d51c3d93206461768741a0dcb71c4c56b7ed384e129f961e0c"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "c4b0c2aa4b20929680c3d44ae3241f6f44b109eaae83b94190bfab3dacff523a"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "e8ab55f0271331eff7298a211db59b5bb41f3df0f842962620b759712415a9cc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "81722faa6a5abbb431dfe0a84bdc243e0f867e24f006748f10a277633b4387c9",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "32301afd19afb515d8f637338a8650f2d1754a0da57f0ff0ac067a2456a3212b"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "c81d052b9fbe114ad11a57096a1d549cccfc849e97a4b68593f9cf787a8a7b85"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-aligned-after-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "e8ab55f0271331eff7298a211db59b5bb41f3df0f842962620b759712415a9cc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "d926a1d1286bf7e17911255de82913940dd43820113b460c6cd8cb1e88d73037",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "32301afd19afb515d8f637338a8650f2d1754a0da57f0ff0ac067a2456a3212b"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "c4b0c2aa4b20929680c3d44ae3241f6f44b109eaae83b94190bfab3dacff523a"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "9c7c76bb60a7ccece61f621bacdac0b1862384e542ff072f86df1b1c5094cb36",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "a7d0555072579f41459c59c2225ed936a57a3fe17daf66816612083acc0a9f30",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "1af8b609c864365610ed8cc0c46a9e3e2a902ef467787fabb9e12d87332bcfe8"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "8948edb0f972943ecdbb013207f3973e336abba34dc4adea3b8f71235fd22c8e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "9c7c76bb60a7ccece61f621bacdac0b1862384e542ff072f86df1b1c5094cb36",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "189cb4cdee040fdc68507152082159af7fccfef98f7d35759a7f5ed0537ff473",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "41ccdc2758fd07f39330e27f15c16cfa1dc968a93a3665afcfab19c18a88546c"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "fe93061ceb6edf1e1b3a44f1825e0cf840addf7f38ac5258a33eddd9e248b0f6"
+        }
+      ],
+      "signatures": {
+        "ab_read": " -> i32",
+        "ab_invoke": "i32 -> ",
+        "ab_make": "i32 -> ",
+        "ab_change": " -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "9c7c76bb60a7ccece61f621bacdac0b1862384e542ff072f86df1b1c5094cb36",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "9c9d673f4bff36cfd33cab48293378dc2889c48382a10827fccd7e311767adf9",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "f14e4619c9e5996ac93b480d8ceef097c3e0817ee55e303a305f6b4221cb253b"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "8948edb0f972943ecdbb013207f3973e336abba34dc4adea3b8f71235fd22c8e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "9c7c76bb60a7ccece61f621bacdac0b1862384e542ff072f86df1b1c5094cb36",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "40532ce1b422f750613135775a1ac53e4b5c3a52f638fb155b3ac5c168d1b4ae",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "f14e4619c9e5996ac93b480d8ceef097c3e0817ee55e303a305f6b4221cb253b"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "fe93061ceb6edf1e1b3a44f1825e0cf840addf7f38ac5258a33eddd9e248b0f6"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "97df98339bedea75edb0ec1091d29bb8e1bb37c27dccf09e2ebfbe7ff07d35ac",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "202aee5e5140369dec843f780aa679f1fb040f6f0c739defb9f8a78acbb95f70",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "858ae3028f21fdeaa3bca38b8486c47009602852fc2133931054557cef28abda"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> ",
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "97df98339bedea75edb0ec1091d29bb8e1bb37c27dccf09e2ebfbe7ff07d35ac",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "d74d62c6e57c37e20f52cc551027f6356301821006647aca4420d10835bd028e",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "27b89d8db6eba03690df718e37a89e3ba612976ce4d0264defcba53ba8cd39b7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_change": " -> ",
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "97df98339bedea75edb0ec1091d29bb8e1bb37c27dccf09e2ebfbe7ff07d35ac",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "f96cd8cbabc4d582b2c9bc17663a81fa37be2c6c73bebe47d6b21f8d272dde4d",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "97df98339bedea75edb0ec1091d29bb8e1bb37c27dccf09e2ebfbe7ff07d35ac",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "b78a30f876800011591a564269aecae828691f944f6696bce2dfb60fd4591356",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "584e624609c85b4be0e2633cf16ea67ddd3fccbd93ebadf6ba1870022e40811d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ebac73b37413a00bc3bcefe2ee9b5283df8665a4b06aff65bba91fa721c7f01e",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "add6b6a2d81502ccd0aa3a5e4b6e4b376c84956097c007bdd5e70ab1e363f8a9"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "8948edb0f972943ecdbb013207f3973e336abba34dc4adea3b8f71235fd22c8e"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_make": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "584e624609c85b4be0e2633cf16ea67ddd3fccbd93ebadf6ba1870022e40811d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "3c7d11ed2d7bba21e76d94831a6ff6c0a642ba3f707031ed370dca7b04ab0efa",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "41ccdc2758fd07f39330e27f15c16cfa1dc968a93a3665afcfab19c18a88546c"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "6071db8806a492be151f5f07cf824afceb9b2de9fe48270f381dd48fd3a0aafb"
+        }
+      ],
+      "signatures": {
+        "ab_read": " -> i32",
+        "ab_invoke": "i32 -> ",
+        "ab_make": "i32 -> ",
+        "ab_change": " -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "584e624609c85b4be0e2633cf16ea67ddd3fccbd93ebadf6ba1870022e40811d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "9a1c3b93d404a3d717502a50e5c09d66e058a5f22383f99c99fa3eaec6f45313",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "09dedfa71ae1debb6100c3e6434f5b747b153844eae9488028cba88c9b910f98"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "8948edb0f972943ecdbb013207f3973e336abba34dc4adea3b8f71235fd22c8e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "584e624609c85b4be0e2633cf16ea67ddd3fccbd93ebadf6ba1870022e40811d",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "f466a75274fad4f45a6b585af6af05c124ef3abf9b6a5f8fe4bdfb4c755eebd2",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "09dedfa71ae1debb6100c3e6434f5b747b153844eae9488028cba88c9b910f98"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "6071db8806a492be151f5f07cf824afceb9b2de9fe48270f381dd48fd3a0aafb"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "53ab5ccb916279e39b84f94b72b4345479b9666bce7e533dcc6812faef8d5a7a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1e7770d38a20af4f8fdbab513ea8c783445fdd03709a4e70e0289bdb978c3bba",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d16ad34c133897a064112c3ae3a2721451d134818631fdd4add46755cb0d01b9"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "53ab5ccb916279e39b84f94b72b4345479b9666bce7e533dcc6812faef8d5a7a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8267753379bf405850dbfa4782c29ea75f1262d7887276d580b5fe586727e778",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "af0cc4f0721558930be8be4dcec7fcd4930064cef452e8246d25b282965cd0d7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_change": " -> ",
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "53ab5ccb916279e39b84f94b72b4345479b9666bce7e533dcc6812faef8d5a7a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "f96cd8cbabc4d582b2c9bc17663a81fa37be2c6c73bebe47d6b21f8d272dde4d",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-hi-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "53ab5ccb916279e39b84f94b72b4345479b9666bce7e533dcc6812faef8d5a7a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "b78a30f876800011591a564269aecae828691f944f6696bce2dfb60fd4591356",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "172b513ce11d73dd28e177358d25f7f5f507831370e95c543fed8a0406b77dc8",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ebac73b37413a00bc3bcefe2ee9b5283df8665a4b06aff65bba91fa721c7f01e",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "8e06d9e450d97e8bd1a355c41a43bdd78d38c208bf1387ac357cfdff18802003"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "8948edb0f972943ecdbb013207f3973e336abba34dc4adea3b8f71235fd22c8e"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_make": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "172b513ce11d73dd28e177358d25f7f5f507831370e95c543fed8a0406b77dc8",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "05a5af7fa892eeaf99109cffa4000596aec45d79e37c666f1b35b63d0eeac8ea",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "fcbe98bc3003d1d3d3a6e516b4664212c66170b0f232f79ee86bb73444514309"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "c5af75dabf35309bd7fa7b3ea0fb148d816b06d5d172dd9e249f4f5afbfb8226"
+        }
+      ],
+      "signatures": {
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> ",
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "172b513ce11d73dd28e177358d25f7f5f507831370e95c543fed8a0406b77dc8",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "389e9c7f06cd4901a9b643bcd8b2ad53a7c64faf8b234e1ccc085ed4fdb88bd2",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "805464dca43173031f03e02cd69db5db231e2ff703b2c200c22b737a6a2deb29"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "8948edb0f972943ecdbb013207f3973e336abba34dc4adea3b8f71235fd22c8e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "172b513ce11d73dd28e177358d25f7f5f507831370e95c543fed8a0406b77dc8",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "7b56a7bbfb1ef8537789af9f846b5680ab0777487f8c26cce973ab424b1faa52",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "805464dca43173031f03e02cd69db5db231e2ff703b2c200c22b737a6a2deb29"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "c5af75dabf35309bd7fa7b3ea0fb148d816b06d5d172dd9e249f4f5afbfb8226"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "110d2544ee1f2372755798aef3e9d007111cd9a3b3dc804b12e609177a757af7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c1570a17674330bb6aad4c12836ee242d46e39f7904d3df181ea345c4f84518c",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "e343d943dcc9ebd511530640f26e1d3e8e29b66793717a53db2b45998453e400"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> ",
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "110d2544ee1f2372755798aef3e9d007111cd9a3b3dc804b12e609177a757af7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "523cda38db10211cc9c048274ecce5c75fb43c9b803596ccb4fa6e856d1c518d",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "59d6daa1011b05be6f6537451bec23040363dccdd0f1ea496064834daf11d703"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_make": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "110d2544ee1f2372755798aef3e9d007111cd9a3b3dc804b12e609177a757af7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "f96cd8cbabc4d582b2c9bc17663a81fa37be2c6c73bebe47d6b21f8d272dde4d",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-di-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "110d2544ee1f2372755798aef3e9d007111cd9a3b3dc804b12e609177a757af7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "b78a30f876800011591a564269aecae828691f944f6696bce2dfb60fd4591356",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "faaf0c1dcb28546db895531dd91a6b412e15fb26a7f5e75f84c27858e798b997",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "3cf3d8061fcf07951eb4b86dd550b9b03b397b5872318967501f65c7eea39c9d",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "525fed61c0786dc3ffd84ef7362c080287b801f850565ed9c3a296417b42fad9"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b8f7827c70e94fb334403a69e2669e35e477aa5e4e16d03768695095ba2815f8"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> ",
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "faaf0c1dcb28546db895531dd91a6b412e15fb26a7f5e75f84c27858e798b997",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "68f58f9e2aa23d18ffe8910744fd90688f10d5dcc56f6cc6d07bf8a5750cb88a",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "525fed61c0786dc3ffd84ef7362c080287b801f850565ed9c3a296417b42fad9"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "d0ffa8c8021eead1f17d3a4b0de1cd00b3ad85f9f76c56f06eb68c36509ff411"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> ",
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "faaf0c1dcb28546db895531dd91a6b412e15fb26a7f5e75f84c27858e798b997",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "004658721d4e64a9dc0b841dfde9c7380244801bbfab7958d8efe2c9ee429303",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "4afc4a4376818275386163021db2b6a4f95e6722041a51d7bb72558606c5d4ea"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b8f7827c70e94fb334403a69e2669e35e477aa5e4e16d03768695095ba2815f8"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "faaf0c1dcb28546db895531dd91a6b412e15fb26a7f5e75f84c27858e798b997",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "e48b06bb480c94ec85f84c038b51aa38b125c3447889072960f7fa21f50ab740",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "4afc4a4376818275386163021db2b6a4f95e6722041a51d7bb72558606c5d4ea"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "d0ffa8c8021eead1f17d3a4b0de1cd00b3ad85f9f76c56f06eb68c36509ff411"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "e444d3136a9d455e3530579ad8c69011b8f41a218f7873d9635cd70dfdd4c542",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "44c6f4fb02b63ef38b35af8e5214fd4916a1629344fcc080140a38e6e9774cf0",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d586f5fb742c686f4df9ec7ad900cfb4fed80dfd792ec80c41df917b8c3c79c9"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32 -> ",
+        "ab_change": " -> ",
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "e444d3136a9d455e3530579ad8c69011b8f41a218f7873d9635cd70dfdd4c542",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "d74d62c6e57c37e20f52cc551027f6356301821006647aca4420d10835bd028e",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "abd58bea0ff4eba306567612418d24241d76384a3c8d3a9d4715acf0315deda8"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_change": " -> ",
+        "ab_read": " -> i32",
+        "ab_make": "i32 -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "e444d3136a9d455e3530579ad8c69011b8f41a218f7873d9635cd70dfdd4c542",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "f96cd8cbabc4d582b2c9bc17663a81fa37be2c6c73bebe47d6b21f8d272dde4d",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "b4ffd09c01ee70997233bb3d37720457dea4486c5cca890b1d851d9258d33239"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-anonymous-only-ti-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "e444d3136a9d455e3530579ad8c69011b8f41a218f7873d9635cd70dfdd4c542",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "b78a30f876800011591a564269aecae828691f944f6696bce2dfb60fd4591356",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "da0e81562a8949980a9c4db2aed759a57d0d9c608da664728f2a010d67680082"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "31f9d097ff9ab3816aaca7e4f594f36d448ae808dac4d89d335e4907c37b6797"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> ",
+        "ab_read": " -> i32",
+        "ab_change": " -> ",
+        "ab_invoke": "i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "ed8ae40638ece8ba04ed2c73567405395d6293268220a86d5215d018e4254b77",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "0d2d8d860deba78c4620dccd184217eb08523eebfcb7ccbf2fcf3489fd2003d8",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "0cd4d32f30207d0e1d36b11fecb2f267475d1fa5141c36934a37160b5eb9a708"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "9de923f831c1d5a82cc030127f3c0c6535bbef0cd2e7d2480db2935bb15099d0"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "ed8ae40638ece8ba04ed2c73567405395d6293268220a86d5215d018e4254b77",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "3f32f4c7974dae31af162868f04b8dbaa7304d66e3a1e7b5860f1a59f46a372f",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "d77e6fd68c5101e8c4728e37a88548896ba4c2076592603697482598d2a0ea33"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "679d2e53a7cf6e28a470ec2d35cd9780577e78289a42b16c37f8679fe5ec836a"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "ed8ae40638ece8ba04ed2c73567405395d6293268220a86d5215d018e4254b77",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "e6349a1918ecc02376975baac43b7af6907464eb3de8ea8478f3b2f90461722b",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ec8998218fc015aed06c0a7cf985b46d938d9c418cb5c5d854abb0d361d50a2f"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "9de923f831c1d5a82cc030127f3c0c6535bbef0cd2e7d2480db2935bb15099d0"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "ed8ae40638ece8ba04ed2c73567405395d6293268220a86d5215d018e4254b77",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8d0c2ca2f63f3746ce8a5fc65b1cd5b67c67333f656c15894d1dd7659a958300",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ec8998218fc015aed06c0a7cf985b46d938d9c418cb5c5d854abb0d361d50a2f"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "679d2e53a7cf6e28a470ec2d35cd9780577e78289a42b16c37f8679fe5ec836a"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "f7ed8cfb128cf4bbbeba60b7065764ab6a7a5ced625f9c100bafb6c0082e6aaa",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6d820f0e9a77a4460694b9475d45b30fd8f347fc8de57424659b07d46b3cd889",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "62c43650e1481e634f37bdcadb6ab919f9353ab01d4923a6cc97b30540d93f77"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "3647b98b1c7a46449c4c29610c57ca7d414787fc538e2d8da7ae859d338f87a1"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "f7ed8cfb128cf4bbbeba60b7065764ab6a7a5ced625f9c100bafb6c0082e6aaa",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "fccdb6f9f8f6b2bfa6f39868df03701ed34beb5aac4dce0b85f027eecafb8447",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "28d70d20ea058da792f44d621bc2f5f16c339e6f7b7f4c468afba0a5fa7be617"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "c72e0918001fa77dcba8669067a4e45c26eb14ac95817b4f690b8a49f530a754"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "f7ed8cfb128cf4bbbeba60b7065764ab6a7a5ced625f9c100bafb6c0082e6aaa",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "dd9fdad9eee007f2b744525fd93fd9341d83141cef33e387fd1db9450da3687e",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "5a14d367a90de1f54053a082889566d55446ce50fe2fe39316152962ef085d09"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "3647b98b1c7a46449c4c29610c57ca7d414787fc538e2d8da7ae859d338f87a1"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-two-named-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "f7ed8cfb128cf4bbbeba60b7065764ab6a7a5ced625f9c100bafb6c0082e6aaa",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "35126007c92ae4988daaf0b769ec93d36a609bbe07fe1989c4fc334f6c159830",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "5a14d367a90de1f54053a082889566d55446ce50fe2fe39316152962ef085d09"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "c72e0918001fa77dcba8669067a4e45c26eb14ac95817b4f690b8a49f530a754"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "3ab88ad7206f62646ce0c42af5f200cca0b7968303b012f039a3ed88b7643778",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "821edac0d6b42a81d17bc5ccd6f07c9fcb4deb38a0e025a2112b64805f0c7301",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "388937aab256986a30d2823e2969cbd3f1f9b5be5dbd1c37bd7fec1238705c7e"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "c1d321247fc1b29a107712c98704b461d864802db8758f95c92d3fe2a41dd30d"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "3ab88ad7206f62646ce0c42af5f200cca0b7968303b012f039a3ed88b7643778",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "66ed6230c15a17baffcd511011025285bd13669e95ce258a3b68c9eba6eac030",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "505b5f699982566a8175fbc1a46c2a57782dae862a545924c74c94da8c2f1009"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f49e7eccef5aaa60ffcd98d022db3c8185acd42553073094ac88ea3826c40fb0"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "3ab88ad7206f62646ce0c42af5f200cca0b7968303b012f039a3ed88b7643778",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8ebc02ee459ca742c1aae18cdc7f27f15b0fa97895d568e26361fe5ec9a94211",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "7726558069eca8c28df8186e51625fc693159d2a57ff6b61fc6d4bffc4a38080"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "c1d321247fc1b29a107712c98704b461d864802db8758f95c92d3fe2a41dd30d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "3ab88ad7206f62646ce0c42af5f200cca0b7968303b012f039a3ed88b7643778",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "7a93652fcadf7bac804a7af9f47f70557e4833a130e290d42d3a3924f3d27868",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "7726558069eca8c28df8186e51625fc693159d2a57ff6b61fc6d4bffc4a38080"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f49e7eccef5aaa60ffcd98d022db3c8185acd42553073094ac88ea3826c40fb0"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "9204cf3652cd6f8a240dfdda8db97c209162a477e8502c1c7a72683fea203887",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6f74bfef86c31ef4f045a6c541c8f71b7cf82301b1dc6d6b2c54027fb6fdfbe0",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "14ee505219c08fb216caed758849ee0ef0fa1ec0f378e97d10a0431ee9e4566e"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "9371075c330d0f090a4abbe4251a1d06e6beede356f2f449fd9078faa8519093"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "9204cf3652cd6f8a240dfdda8db97c209162a477e8502c1c7a72683fea203887",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "4d262e8281e03a0bfd7c8231beda2b4e8d355cb0500703b27c3baeb908345fda",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "f485624ce7ff418271a2fd780b859278bde6dacb03227030b814c189fdae086c"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "e4d7dd01af18d0bc0b078bec7abadde554e7991c1d9c3588a70857740dc65969"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_make": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "9204cf3652cd6f8a240dfdda8db97c209162a477e8502c1c7a72683fea203887",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c5a6cd523bb050f63c68400c7d674f51b86fd3dec6aaeb815376dd42ae12b661",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "36deb409ce6a94059e26b0456683845349fcf4c2c21f4b955b2859633639fe25"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "9371075c330d0f090a4abbe4251a1d06e6beede356f2f449fd9078faa8519093"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-zero-boundary-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "9204cf3652cd6f8a240dfdda8db97c209162a477e8502c1c7a72683fea203887",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c63b03be0dd3278370e6029312a9f3deb0941acd82ef41e98a8cd184eb9faa30",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "36deb409ce6a94059e26b0456683845349fcf4c2c21f4b955b2859633639fe25"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "e4d7dd01af18d0bc0b078bec7abadde554e7991c1d9c3588a70857740dc65969"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "dcf1bc63139e9dc60ba1c2da0ca43ecfc2120c3b1735c3483e9af1ec929540dc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c839541e4093ba0d8f0dd45459a8616cb53b87427b909354baa68305a883b8e3",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "c9fcf92ac88061713ab4888eee39028006b44084dfaabc13fb3d5702b5638fe9"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "bbb1785509f1fb09a1f36752c1453eacd83c92057e6fe3c5fd5cc47112818a0d"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "dcf1bc63139e9dc60ba1c2da0ca43ecfc2120c3b1735c3483e9af1ec929540dc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "bf72b92e1aba071e4067976b36202d23dc4af30f82050d770c9be21edd5838e1",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "6e9c9024482861eda0377ddf1b40253ed7e6210d5fad582f6357b543a2cffac5"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "9f7a9e609182738c908feb028316cd6897667e354d80720a8234f3a0cb4a6a8e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "dcf1bc63139e9dc60ba1c2da0ca43ecfc2120c3b1735c3483e9af1ec929540dc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6209b9d336bd4a46a404724ca21c6dbd63bb109133ce5c0316b594a8ddf1b93a",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "2e33acf9cab6b752ebf7b2ee787a3b4f8ed68cb65cd2e2c5e0df974dad80fd5b"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "bbb1785509f1fb09a1f36752c1453eacd83c92057e6fe3c5fd5cc47112818a0d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "dcf1bc63139e9dc60ba1c2da0ca43ecfc2120c3b1735c3483e9af1ec929540dc",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "6ed1d48d6942be93a53841894fdc1198556c7dfdd542e878e5f7a37ddfcb3ba2",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "2e33acf9cab6b752ebf7b2ee787a3b4f8ed68cb65cd2e2c5e0df974dad80fd5b"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "9f7a9e609182738c908feb028316cd6897667e354d80720a8234f3a0cb4a6a8e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "c36721bdcb4b6e702c4ec28547f2c00a3593b7666f012121d616719f024b2553",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "95725da4a4230ea767661f8b7515f6d0546c8de91a049627fb4d5d3aba88d4c5",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "b8059dad0dfd038815af47d65b5502c560492941228c461d17eb730da095ba20"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "428e464b66ab4f5d7579fe7464b2b2b9fa30f19c29c347ee26efe982e2913a02"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "c36721bdcb4b6e702c4ec28547f2c00a3593b7666f012121d616719f024b2553",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "84a707b117488dd255a87037af97a7d38bf2703450be81985b57085d120ad604",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "130389d2be4a7b230ce6a7dd997beb25dc6a27339f0e5b4880e2eba5ba636c17"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "489972031379a067ac6a5361f18e8b7dceff7f7d240b32f55b9c1e78016448ef"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "c36721bdcb4b6e702c4ec28547f2c00a3593b7666f012121d616719f024b2553",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "742f519455f25e6490be4931ddc09172d601ad8377b75da939e42623bc5f7a03",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "559da78c3e1eb9a000160e471609abbb22391d8b39801ba6fbb8472dc110d69b"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "428e464b66ab4f5d7579fe7464b2b2b9fa30f19c29c347ee26efe982e2913a02"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode8-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "c36721bdcb4b6e702c4ec28547f2c00a3593b7666f012121d616719f024b2553",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "641932a14f4d19e8599c4dfd25e539ac3b564abf778df817788f759872c0a60f",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "559da78c3e1eb9a000160e471609abbb22391d8b39801ba6fbb8472dc110d69b"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "489972031379a067ac6a5361f18e8b7dceff7f7d240b32f55b9c1e78016448ef"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "7439ff68347bbb88a99f44d06f63314e57630621b0fd5fa6415ee4e3691a6ed5",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "edef4e5df40abeea852bf7d93a3cb6c9db8b2228eccff6e5c9c73530b8d0288b",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "ac7352f3a131d1a29e33dd2f58e1e7d4e770b41148ab73f5d74fc99d5e0f8827"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "c1d321247fc1b29a107712c98704b461d864802db8758f95c92d3fe2a41dd30d"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> ",
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "7439ff68347bbb88a99f44d06f63314e57630621b0fd5fa6415ee4e3691a6ed5",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ad66846b3bcda1da828d9ccba4d266aa1aca35e183848bfa7c848cebdb3ea743",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "388937aab256986a30d2823e2969cbd3f1f9b5be5dbd1c37bd7fec1238705c7e"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f49e7eccef5aaa60ffcd98d022db3c8185acd42553073094ac88ea3826c40fb0"
+        }
+      ],
+      "signatures": {
+        "ab_change": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "7439ff68347bbb88a99f44d06f63314e57630621b0fd5fa6415ee4e3691a6ed5",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8ebc02ee459ca742c1aae18cdc7f27f15b0fa97895d568e26361fe5ec9a94211",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "7726558069eca8c28df8186e51625fc693159d2a57ff6b61fc6d4bffc4a38080"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "c1d321247fc1b29a107712c98704b461d864802db8758f95c92d3fe2a41dd30d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "7439ff68347bbb88a99f44d06f63314e57630621b0fd5fa6415ee4e3691a6ed5",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "7a93652fcadf7bac804a7af9f47f70557e4833a130e290d42d3a3924f3d27868",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "7726558069eca8c28df8186e51625fc693159d2a57ff6b61fc6d4bffc4a38080"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f49e7eccef5aaa60ffcd98d022db3c8185acd42553073094ac88ea3826c40fb0"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "6ee84ef4a6cff390f8db3b21a7c8224088f61c8907f2ef123be91c05aeda59c7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ac9a67fcfd235df3a5404ae256f5f105347be44ffd4f339f915227f2ff4e0fe2",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "e606579ad175af1d7778ea295e4401ab029c2126493e94386c9ec79fbe3bdb76"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "9371075c330d0f090a4abbe4251a1d06e6beede356f2f449fd9078faa8519093"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "6ee84ef4a6cff390f8db3b21a7c8224088f61c8907f2ef123be91c05aeda59c7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "e361b5faa302306590ea5aae2cfec91591e70158a52965bd2d5079c4c412a7a3",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "5a809bb4bc41f1677046dd6d2f3afea866fa230a1bf673c0ea88a3c542f3c605"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "e4d7dd01af18d0bc0b078bec7abadde554e7991c1d9c3588a70857740dc65969"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> ",
+        "ab_change": "i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "6ee84ef4a6cff390f8db3b21a7c8224088f61c8907f2ef123be91c05aeda59c7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c5a6cd523bb050f63c68400c7d674f51b86fd3dec6aaeb815376dd42ae12b661",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "36deb409ce6a94059e26b0456683845349fcf4c2c21f4b955b2859633639fe25"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "9371075c330d0f090a4abbe4251a1d06e6beede356f2f449fd9078faa8519093"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-mode32-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "6ee84ef4a6cff390f8db3b21a7c8224088f61c8907f2ef123be91c05aeda59c7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "c63b03be0dd3278370e6029312a9f3deb0941acd82ef41e98a8cd184eb9faa30",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "36deb409ce6a94059e26b0456683845349fcf4c2c21f4b955b2859633639fe25"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "e4d7dd01af18d0bc0b078bec7abadde554e7991c1d9c3588a70857740dc65969"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32,i32 -> ",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32,i32 -> ",
+        "ab_invoke": "i32,i32,i32 -> "
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "2f350df4a50408e1631b004398a60445bf7621069ea2924106f7b639ca0c3d4e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "74a9bb4f7ea3c77ff756e822b7d80c99301cd2797d2b4f261a461cc4a95a17d5",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "41aef0e4a9ad2d7d6c2e180002a4657671fa7d89d42fa16ce3ee2ec4bf64b011"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "609b7fa53a23b39cf8cc5113e9baa9885a512fe1d126cd4bc283f4fb8ac0091a"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "2f350df4a50408e1631b004398a60445bf7621069ea2924106f7b639ca0c3d4e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "2f349df2006fc2eb84dbb097f2a6e45bd64e48436b80dc32ad98d3c2d8b627bf",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "41aef0e4a9ad2d7d6c2e180002a4657671fa7d89d42fa16ce3ee2ec4bf64b011"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "023aa070c5777bb880fb47a80d35855c3a190921431901cb213be540a795e311"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "2f350df4a50408e1631b004398a60445bf7621069ea2924106f7b639ca0c3d4e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "26141eba620ac8190746a7c976268ba4690dcc00d3faa6517d5a7f42cb92b25f",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "a7e8513d71a3724e4eebb96d02d377dc6227d805d8c7bc0213fc40cf652d8b71"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "609b7fa53a23b39cf8cc5113e9baa9885a512fe1d126cd4bc283f4fb8ac0091a"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "2f350df4a50408e1631b004398a60445bf7621069ea2924106f7b639ca0c3d4e",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "a2fbf9a7190cde201c907d0608cba2ed960137c45ad3029aefbd911cc2ddd70a",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "a7e8513d71a3724e4eebb96d02d377dc6227d805d8c7bc0213fc40cf652d8b71"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "023aa070c5777bb880fb47a80d35855c3a190921431901cb213be540a795e311"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "17f79fea47dbb547ee5209ff0cc445c0d63f84d956374f159a8d2e083e86b18a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "90eeec38ca530302bd58393649aeb38dbf284dcb7fc183756a28ae7aeb8997a1",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "0c04a308b32e9c566ff6da4dbb2635957b3622aaf83100e172f347b3933f2854"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "e3a15f8e4e17a79811be6ba714d42207151809dbbaa8041d3b3701d352777406"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "17f79fea47dbb547ee5209ff0cc445c0d63f84d956374f159a8d2e083e86b18a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ac8df484b710aec7d071e641f8ee2de3a5eb72cac76035c40ad9591b7ad1c4e7",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "0c04a308b32e9c566ff6da4dbb2635957b3622aaf83100e172f347b3933f2854"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "ec209ff1cc0f40c1d58985aa8c49b4d57f645693e0ce6cf0bb367de733f04482"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "17f79fea47dbb547ee5209ff0cc445c0d63f84d956374f159a8d2e083e86b18a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "8b352767c1895dbdab0785e814f4b999a5ce0d4cbc2897953a8b99db14f0baa4",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "35e009cae50a9f2c047c1cf2fa43a8b17661d946797c45cf8591387d580286c7"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "e3a15f8e4e17a79811be6ba714d42207151809dbbaa8041d3b3701d352777406"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-packed31-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "17f79fea47dbb547ee5209ff0cc445c0d63f84d956374f159a8d2e083e86b18a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1475f796b81893a355b4a23f31ad6ac80ba7aa5130a0a7ba079a710d9a470534",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "35e009cae50a9f2c047c1cf2fa43a8b17661d946797c45cf8591387d580286c7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "ec209ff1cc0f40c1d58985aa8c49b4d57f645693e0ce6cf0bb367de733f04482"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "04266f22b761f1ab57f744eff807369197599a0c4b6d5fa34fdb46d4f215b119",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "cc80fc528b9a4629caabe801d5b493c207d6ec8e052f3d639063f47bdc2af12e",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "c44abbcfe3a08efa4df742c7dc6dddd0733911b7d33bca5583b80c8fa9176e2e"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "14e6213efef59bc315cf4aca08bc5ce416c4acb1a02a9c3387e5e85eaacdbb1e"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "04266f22b761f1ab57f744eff807369197599a0c4b6d5fa34fdb46d4f215b119",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "988288e66b58d6ef5f497b52f1c4aa8855319764bf77d1b5abe78649403e4c5c",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "60b41899daadbb2199a949f84a649d3ce324100c935596aa41b677d2d413f10a"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "9275e764fa5dc7e1bb839a3e7c696be46ec7964580ada06c0065f7ec7bedc3b5"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "04266f22b761f1ab57f744eff807369197599a0c4b6d5fa34fdb46d4f215b119",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "995430d420bdcf369306fdbdd216ec086df54b84f8bf16286b492c61c755a785",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "eb9873a9e7a2ef3c843bf64f0e3027b31f7c817ac1aee685040fa6e7fd2852d7"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "14e6213efef59bc315cf4aca08bc5ce416c4acb1a02a9c3387e5e85eaacdbb1e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "04266f22b761f1ab57f744eff807369197599a0c4b6d5fa34fdb46d4f215b119",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "15fcd7b9c6ea44ed3ef039b3ea2a9091166ea2fc2fe6538d4dace6355daf5a3b",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "eb9873a9e7a2ef3c843bf64f0e3027b31f7c817ac1aee685040fa6e7fd2852d7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "9275e764fa5dc7e1bb839a3e7c696be46ec7964580ada06c0065f7ec7bedc3b5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "b6edfe4e1e61467c19d3f23ce689cc27c4ac869dd1c79e5a5a5c2f4eeb8911a7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "65713a56bcf6f8b8a34539b799e3ace489fa9f71ae1ef21770397236bfcbb72f",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "e90bbd152ebcff9a2ed94f308e10c25cb6326a76ebdc6c81e87bfef94e665504"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f4066ee0d9d53468eac181772560ac34148aeab7559d06f9141255a3ce0a62a7"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "b6edfe4e1e61467c19d3f23ce689cc27c4ac869dd1c79e5a5a5c2f4eeb8911a7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "529e04a8ec383d484994fad00daf8ea910817f835ccb9cb6d50b7a60a7b9c018",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "7c15abaa6eb4eca97ea82f2b5a66e52fbeb20ac884b49e50c773c8edfaa2078c"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "b6edfe4e1e61467c19d3f23ce689cc27c4ac869dd1c79e5a5a5c2f4eeb8911a7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "3586ceab2792751f4a9bf35d540c8616fcbeaa6d8dd4e2ebdbcbb6c89db3839d",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "38cf100f66f304e080236e9589a02552f8db249fc97632702f90398c432f9eb8"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f4066ee0d9d53468eac181772560ac34148aeab7559d06f9141255a3ce0a62a7"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-short-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "b6edfe4e1e61467c19d3f23ce689cc27c4ac869dd1c79e5a5a5c2f4eeb8911a7",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "874c6e04afbd31dcc2af2d1b856b4accec88945683c46941e253ee91ea9f8039",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "38cf100f66f304e080236e9589a02552f8db249fc97632702f90398c432f9eb8"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "0f1cab571a30d83ced10b8e1507a390ce06e2b94ce2888fc102f8d29c42a866a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "a9850a11f10727bc7a885e2f47975a7f29b1ea39cba8e09571f1bd792c7f8c49",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "aa9fdc9bbcfe1bd50a5b0ce81f45e71f88f9ea6c9513b2e8f10ff8f90fed7981"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0ec57ced158add220feda02a747c78db09e6ed26e3830f315432670e60f6699b"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i64 -> i32",
+        "ab_invoke": "i64,i32 -> i64",
+        "ab_make": "i32 -> i64",
+        "ab_change": "i64 -> i64"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "0f1cab571a30d83ced10b8e1507a390ce06e2b94ce2888fc102f8d29c42a866a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "b100c791dcee5dea8dcdd7da94211c4c71ed4ea3718811609e3f01e6032d2f60",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "9b6af7cdd253408dfcfd56e2dd658f2e11fbff9deba86c1d19b85ba91d3d3a03"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "1698e1e457adfcd2627c856a50761f8b538ef3a9c7cbe706855a22be63a2014e"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i64,i32 -> i64",
+        "ab_change": "i64 -> i64",
+        "ab_make": "i32 -> i64",
+        "ab_read": "i64 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "0f1cab571a30d83ced10b8e1507a390ce06e2b94ce2888fc102f8d29c42a866a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "193025f792c0c2597573123c370eb1baa3b058f571788019e83a773e1a5e2715",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "a2abad1e5fa79dcbeaf1a78d50d732770159227c6a60781ca43a31fd2fd53baa"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0ec57ced158add220feda02a747c78db09e6ed26e3830f315432670e60f6699b"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i64",
+        "ab_read": "i64 -> i32",
+        "ab_change": "i64 -> i64",
+        "ab_invoke": "i64,i32 -> i64"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "0f1cab571a30d83ced10b8e1507a390ce06e2b94ce2888fc102f8d29c42a866a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "705193706168f21acd7783d74925cc5f2df36b6fe32f702dad69a01ed39c90b9",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "a2abad1e5fa79dcbeaf1a78d50d732770159227c6a60781ca43a31fd2fd53baa"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "1698e1e457adfcd2627c856a50761f8b538ef3a9c7cbe706855a22be63a2014e"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i64",
+        "ab_read": "i64 -> i32",
+        "ab_change": "i64 -> i64",
+        "ab_invoke": "i64,i32 -> i64"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "0da34898432ab406f79a1c47ae8de5feef434ecde555ef13ee3ced5e18f9bedf",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "b0faab18711b96a10021f26b9fea5b7900021c660149354f733e5b4ad2f60aa9",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "b6060deaa560111a81900f6a3e9f5b71eb3f30a0b2078fc81b11cd92f90465d8"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "7cec3cdebec33a7ebfa0aab7913523f48a26c8e069882fc33b53a6632831c7d5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i64",
+        "ab_invoke": "i64,i32 -> i64",
+        "ab_change": "i64 -> i64",
+        "ab_read": "i64 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "0da34898432ab406f79a1c47ae8de5feef434ecde555ef13ee3ced5e18f9bedf",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1f9172ff8153e3e668df99a096eba683b6a7f3136f808091f7cb4cf8b1ce9d0f",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "09f44ad8681a380eac09cb3584a3c75cf0b0b796d25a30200918ec11c9b55a28"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "1a8684d124b6379a70979c5b1e8c9e52b3cc2a99f3da54142c802517c076cb9d"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i64,i32 -> i64",
+        "ab_make": "i32 -> i64",
+        "ab_change": "i64 -> i64",
+        "ab_read": "i64 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "0da34898432ab406f79a1c47ae8de5feef434ecde555ef13ee3ced5e18f9bedf",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ecaaf606acceaf0af253221e6a9277fd7816c8a8f7c7992174c575cb4412edd8",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "5a5244e3a2b57dc3cae78556a1dce54e6c79e8cd926581aeea0d27e09d8c690f"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "7cec3cdebec33a7ebfa0aab7913523f48a26c8e069882fc33b53a6632831c7d5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i64",
+        "ab_read": "i64 -> i32",
+        "ab_change": "i64 -> i64",
+        "ab_invoke": "i64,i32 -> i64"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-longlong-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "0da34898432ab406f79a1c47ae8de5feef434ecde555ef13ee3ced5e18f9bedf",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "df011f2b6521c501cb564a95eb38176bab8e7df0daf8bea78b8139eedaf31214",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "5a5244e3a2b57dc3cae78556a1dce54e6c79e8cd926581aeea0d27e09d8c690f"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "1a8684d124b6379a70979c5b1e8c9e52b3cc2a99f3da54142c802517c076cb9d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i64",
+        "ab_read": "i64 -> i32",
+        "ab_change": "i64 -> i64",
+        "ab_invoke": "i64,i32 -> i64"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "3fc8e5a7443e726ba7d857884a92c6638f3f3b8410702e1760222e8c4df230dd",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1d8395a1ffcb9bed849ebf3e9a063cc69b3c56c4bad51fbae91d27c2198729ab",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "64aef3756a75fcbf0076e0d52f09a18e5ba31b634d058b9fd30b9bd42a9e770c"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0f753cf79bb0783c3ed9a27fe9799b54b39a0be652f4c55d3f6e171a2182d75d"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "3fc8e5a7443e726ba7d857884a92c6638f3f3b8410702e1760222e8c4df230dd",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "7edda69b940e91a8226175b6413d72487a3e2a04d1c78a543507b490b990e8f6",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "8a3352e4515cda4cd150555eb98b0c68b6ae44138f5067913c6c1f0e4d1497aa"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f908c6b5b2b4812a6d3b96d9e9aff8601a91cad78c3c71caf465777047b8e1aa"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "3fc8e5a7443e726ba7d857884a92c6638f3f3b8410702e1760222e8c4df230dd",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "646bceba78324130140e112130ee44ad28928eff3463992c569841af24df3191",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ae569b2fde42f5865cfaecbaa8ed96daf34cc56a790141999687d4b9cb32e656"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0f753cf79bb0783c3ed9a27fe9799b54b39a0be652f4c55d3f6e171a2182d75d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "3fc8e5a7443e726ba7d857884a92c6638f3f3b8410702e1760222e8c4df230dd",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "cac556b7a0fa65fa8ba5ec35331da7700dcc55fb9828ca2b372dbb2e2a0513aa",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ae569b2fde42f5865cfaecbaa8ed96daf34cc56a790141999687d4b9cb32e656"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f908c6b5b2b4812a6d3b96d9e9aff8601a91cad78c3c71caf465777047b8e1aa"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "56c1a3a05405334bd3b21a037e0b52997f605be8ef446e7be0817af90f7d1ef3",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1e8f8d1139ed6dc3720ff7a842ddd5d7236f984d19ee4bf08e3d0b2e891c648e",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "177b036f9c3b8f1c6e611350c5f685aea8401b5fdc0a63ce2fc73603675d8e44"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f85bc35f4c0a24e97afdb4ff37b15d5e3cb25c3f1045e4e829189ad9168cbf40"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "56c1a3a05405334bd3b21a037e0b52997f605be8ef446e7be0817af90f7d1ef3",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "d6b5301c0e47ffd170193d83e2098a9e7e59e4179aa568cd1e964859f42881f2",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "24603e2973d9ebb7764085be0ee4b2a88b625653d4d2b6c3f4dcf16442c2d1a7"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "56c1a3a05405334bd3b21a037e0b52997f605be8ef446e7be0817af90f7d1ef3",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "eee19c9c4890c06db14050405689a12c61784676effd7ccf94668d385724f049",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ceeb70d4bb794d0485294b46a68d5d5c95d1dff70ec479445671885e339f1909"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f85bc35f4c0a24e97afdb4ff37b15d5e3cb25c3f1045e4e829189ad9168cbf40"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-array-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "56c1a3a05405334bd3b21a037e0b52997f605be8ef446e7be0817af90f7d1ef3",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "fb4cce1047b4cd4c00797362fe5c3363bf7e6c7a40b6ee913a57dec978136881",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ceeb70d4bb794d0485294b46a68d5d5c95d1dff70ec479445671885e339f1909"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o0-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "fcca4a5ffed20d8f08e6dd24b128d66fa039bf18e18c162787c373f75c406f98",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "1d8395a1ffcb9bed849ebf3e9a063cc69b3c56c4bad51fbae91d27c2198729ab",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "b7d43ff9fd49bc1b9f92862c3b792ca284dd81246d306ceb6d720e57516ea1cb"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0f753cf79bb0783c3ed9a27fe9799b54b39a0be652f4c55d3f6e171a2182d75d"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o0-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "fcca4a5ffed20d8f08e6dd24b128d66fa039bf18e18c162787c373f75c406f98",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "5b6e96b47d106679a15954e62a832e74034f51d0756f6975c1c9ee41bbc2f065",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "b7d43ff9fd49bc1b9f92862c3b792ca284dd81246d306ceb6d720e57516ea1cb"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f908c6b5b2b4812a6d3b96d9e9aff8601a91cad78c3c71caf465777047b8e1aa"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o0-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "fcca4a5ffed20d8f08e6dd24b128d66fa039bf18e18c162787c373f75c406f98",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "646bceba78324130140e112130ee44ad28928eff3463992c569841af24df3191",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ae569b2fde42f5865cfaecbaa8ed96daf34cc56a790141999687d4b9cb32e656"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "0f753cf79bb0783c3ed9a27fe9799b54b39a0be652f4c55d3f6e171a2182d75d"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o0-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "fcca4a5ffed20d8f08e6dd24b128d66fa039bf18e18c162787c373f75c406f98",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "cac556b7a0fa65fa8ba5ec35331da7700dcc55fb9828ca2b372dbb2e2a0513aa",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ae569b2fde42f5865cfaecbaa8ed96daf34cc56a790141999687d4b9cb32e656"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "f908c6b5b2b4812a6d3b96d9e9aff8601a91cad78c3c71caf465777047b8e1aa"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o2-gcc-gcc",
+      "status": "passed",
+      "fixtureSha256": "84344eaa0bf6dffb559e72d198d0a637bfa323bb13930d2c467ff1c025336c6a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "0b646e8a7cced5a85481442ba57c9da4da2924300badebc304a0009e96eb3a7f",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "63b2abc8a350a8f565f4637f1026bcaff22dfa9f87a5e47c46cef89daaae5e09"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f85bc35f4c0a24e97afdb4ff37b15d5e3cb25c3f1045e4e829189ad9168cbf40"
+        }
+      ],
+      "signatures": {
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o2-gcc-clang",
+      "status": "passed",
+      "fixtureSha256": "84344eaa0bf6dffb559e72d198d0a637bfa323bb13930d2c467ff1c025336c6a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "ada38bd3f01620b29c9d81ba814dc0c71249db6c1a5c8d807010bf34d7371e85",
+      "objects": [
+        {
+          "compiler": "gcc",
+          "sha256": "177b036f9c3b8f1c6e611350c5f685aea8401b5fdc0a63ce2fc73603675d8e44"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_read": "i32 -> i32",
+        "ab_make": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32",
+        "ab_change": "i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o2-clang-gcc",
+      "status": "passed",
+      "fixtureSha256": "84344eaa0bf6dffb559e72d198d0a637bfa323bb13930d2c467ff1c025336c6a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "eee19c9c4890c06db14050405689a12c61784676effd7ccf94668d385724f049",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ceeb70d4bb794d0485294b46a68d5d5c95d1dff70ec479445671885e339f1909"
+        },
+        {
+          "compiler": "gcc",
+          "sha256": "f85bc35f4c0a24e97afdb4ff37b15d5e3cb25c3f1045e4e829189ad9168cbf40"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    },
+    {
+      "id": "anonymous-bitfield-record-before-o2-clang-clang",
+      "status": "passed",
+      "fixtureSha256": "84344eaa0bf6dffb559e72d198d0a637bfa323bb13930d2c467ff1c025336c6a",
+      "stdin": "-31\n",
+      "stdout": "anonymous bitfield ABI ok\n",
+      "programSha256": "fb4cce1047b4cd4c00797362fe5c3363bf7e6c7a40b6ee913a57dec978136881",
+      "objects": [
+        {
+          "compiler": "clang",
+          "sha256": "ceeb70d4bb794d0485294b46a68d5d5c95d1dff70ec479445671885e339f1909"
+        },
+        {
+          "compiler": "clang",
+          "sha256": "cf35334b27964df0e31088b36c0856fc27937a2b1bfa3d08c2ce745c483378f5"
+        }
+      ],
+      "signatures": {
+        "ab_make": "i32 -> i32",
+        "ab_read": "i32 -> i32",
+        "ab_change": "i32 -> i32",
+        "ab_invoke": "i32,i32 -> i32"
+      }
+    }
+  ]
+}
