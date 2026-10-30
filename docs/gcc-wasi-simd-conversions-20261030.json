@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/76",
+  "pullRequest": "https://github.com/seo-rii/wasm-llvm/pull/98",
+  "basePr": "https://github.com/seo-rii/wasm-llvm/pull/97",
+  "status": "native-feature-passed-bundle-qualification-pending",
+  "implementationCommit": "e8ea49cabb375c82e221575931415fd082678324",
+  "outputTarget": "wasm32-wasi",
+  "scope": {
+    "baselineConversionInstructions": 26,
+    "canonicalTypedBuiltins": 8,
+    "publicVectorModes": [
+      "V16QI",
+      "V8HI",
+      "V4SI",
+      "V2DI",
+      "V4SF",
+      "V2DF"
+    ],
+    "internalHalfModes": [
+      "V8QI",
+      "V4HI",
+      "V2SI",
+      "V2SF"
+    ],
+    "frontend": "Unmodified fixture C/C++ compiled by actual GCC frontend and RTL backend. No compiler substitution or source rewriting."
+  },
+  "source": {
+    "lock": {
+      "path": "producer/gcc-wasi/sources.lock.json",
+      "bytes": 6225,
+      "sha256": "3650773673c8d41434520470ac54bcd2f7b50a35c2692744e1704ef53a9a7c04"
+    },
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patchCount": 15,
+    "sourceDiffSha256": "2d772b649edca72be84c954422d88d21690252d743e25bb1c2e81e7e39282816",
+    "addedPatch": {
+      "path": "producer/gcc-wasi/patches/0015-simd-conversions.patch",
+      "bytes": 25605,
+      "sha256": "6ed61fc595bc513fc64582e6983fe27f2c0a7aa7e291e4e50af02f4f60c4133a"
+    },
+    "recipe": {
+      "path": "producer/gcc-wasi/prepare-source.py",
+      "bytes": 4405,
+      "sha256": "f558bc3a11acab8f7b249f95ae7a1ea5c54a6412e2548550c2f4f8cc3926840d"
+    },
+    "sourceReceipt": {
+      "path": "out/issue76-build/work/gcc-source.json",
+      "bytes": 4168,
+      "sha256": "6f13d8db6dc73882c1c60afd9094c67b75a3660aca6889d6df632a5449c0dd82"
+    }
+  },
+  "nativeBuild": {
+    "receipt": {
+      "path": "out/issue76-build/work/native-build.json",
+      "bytes": 5505,
+      "sha256": "75ae46b670fc55b4f781995c164a0040a70f412b8a62660d4033bd9b0af96b26"
+    },
+    "recipe": {
+      "path": "producer/gcc-wasi/build-native.sh",
+      "bytes": 4041,
+      "sha256": "9e986668497fcf388bad789bc998b0ba7fe326915b6d6385191ff592c983c679"
+    },
+    "tools": {
+      "cc1": {
+        "sha256": "f13ddb49d5efc5c4f97ed7977271130f50ecb6a92a289eeae4029493551478c6"
+      },
+      "cc1plus": {
+        "sha256": "1097b7a08e21684c26ea4d3c4e7583c7d973563aed6bfbff22f5b1c34cb7a262"
+      },
+      "xgcc": {
+        "sha256": "8f5fbb7dd41c1e2ec02232fe8989e9db0d581fdd3a97540e1f86eca85c66ca7d"
+      }
+    }
+  },
+  "nativeConversions": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue76-build/work/simd-conversions-qualification/qualification.json",
+      "bytes": 9385448,
+      "sha256": "65fd0538c254ec4ce59617618e33127223a8523ec69f7a10e3cdf8c990111a1d"
+    },
+    "fixture": {
+      "path": "producer/gcc-wasi/simd-conversions-fixtures.mjs",
+      "bytes": 20975,
+      "sha256": "cc5a296d58b9e59a9b74f86bf44a787d77d1c35c6da90413a1177ebcafdcf2da"
+    },
+    "recipe": {
+      "path": "producer/gcc-wasi/test-simd-conversions.mjs",
+      "bytes": 12672,
+      "sha256": "7700f04dd2654820018390839a1a8f91f9f9a9e19cce1d5d148adb716537a11a"
+    },
+    "inspectionRecipe": {
+      "path": "producer/gcc-wasi/simd-conversions-inspect.mjs",
+      "bytes": 1910,
+      "sha256": "c028f0644c3016b7c83ae05f96c233be5f867720062a8d834eb192595313801e"
+    },
+    "canonicalPrograms": 176,
+    "simdEnabledPrograms": 164,
+    "explicitDisabledPrograms": 12,
+    "additionalDefaultPrograms": 12,
+    "totalExecutions": 188,
+    "diagnosticCompilations": 192,
+    "builtinFeatureRejections": 64,
+    "invalidBuiltinRejections": 128,
+    "inputsUnchanged": true,
+    "instructions": "Required instructions are decoded from the actual noinline convert function. Raw 0xfd bytes and instructions in other functions cannot satisfy the gate. Enabled modules fail disabled-SIMD validation; disabled/default modules pass it.",
+    "oracle": "Independent BigInt lane/IEEE oracle, live stdin and volatile function-pointer calls; C/C++ at O0/O2.",
+    "tools": {
+      "assembler": {
+        "bytes": 1635504,
+        "sha256": "8203fbf4dc22d46fc2cb334c4666dc9712c7b53d3726cf47719d6b6d91eff8a6"
+      },
+      "objdump": {
+        "bytes": 990704,
+        "sha256": "fe4ec3fb6b6177627cf00851057c9870f3f4d971dcbdda7ba9597bb5f85fb3ad"
+      },
+      "linker": {
+        "bytes": 4165088,
+        "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+      },
+      "node": {
+        "bytes": 126879696,
+        "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+      },
+      "validator": {
+        "bytes": 1297256,
+        "sha256": "102061d82e2cda05dd2f3c5b890d887f70dd53e143c4f28b457fe8d4a89ce91d"
+      }
+    }
+  },
+  "packageNativeGate": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue76-build/conversions-native-gate.json",
+      "bytes": 387,
+      "sha256": "7746052c466d3bf87196a108c09f01a00294d8c5d4969560732d25e37535d70d"
+    },
+    "reopenedArtifacts": 944,
+    "claim": "The new mandatory native gate accepted the actual compiler receipt and reopened source/WAT/object/program bytes. A complete newly built Wasm-host bundle has not yet been packaged or qualified."
+  },
+  "halfVectorPublicAbi": {
+    "status": "passed",
+    "recipe": {
+      "path": "producer/gcc-wasi/test-half-vector-abi.mjs",
+      "bytes": 6450,
+      "sha256": "7b8e8b1cde32c440895dabedd1651bd9004807934a7b84bf2d1f697f973dec2f"
+    },
+    "comparison": {
+      "path": "out/issue76-build/half-abi-repro-summary.json",
+      "bytes": 382,
+      "sha256": "b9a2860afad8d39a5c7b27dde1d70be3f7ae7c0a27f4757831f09c6c6efbdf1e"
+    },
+    "baselineReceipt": {
+      "path": "out/issue76-build/half-abi-baseline14-repro/report.json",
+      "bytes": 218630,
+      "sha256": "c69016e9d7c0ee6d9022339d300bdcb12fa570105a9d613fc32e2467d4f27024"
+    },
+    "currentReceipt": {
+      "path": "out/issue76-build/half-abi-current15-repro/report.json",
+      "bytes": 218955,
+      "sha256": "959d295e939647e2cd2647f13b6ab90e568377922b0ec0c54f18bf53b2d2dc2d"
+    },
+    "baselinePrograms": 48,
+    "currentPrograms": 48,
+    "profiles": "i8x8/i16x4/i32x2/f32x2; C/C++; O0/O2; default, disabled and enabled SIMD.",
+    "sourceBytesMatchOriginalProof": true,
+    "signature": {
+      "params": [
+        "i32",
+        "i32",
+        "i32"
+      ],
+      "results": []
+    },
+    "claim": "The same actual external function uses an indirect result, indirect 8-byte vector argument and scalar argument before/after patch0015; all stdout and signatures match. Repro harness preserves the exact test source in each output directory."
+  },
+  "clangReference": {
+    "status": "passed-after-message-matcher-reinspection",
+    "originalReceipt": {
+      "path": "out/issue76-clang-reference/result-1/qualification.json",
+      "bytes": 3294885,
+      "sha256": "8b5c37bd4adb01da8bba3b7a3dc8070aa64a1a6a326f021d9e3a78a7a0df2f9d"
+    },
+    "originalReceiptStatus": "failed",
+    "reinspection": {
+      "path": "out/issue76-clang-reference/result-1/reinspection.json",
+      "bytes": 787,
+      "sha256": "953ee43284f5a565c61423f3cd18d7e2bdc0e1c04634d100fcc73ac68024578d"
+    },
+    "programs": 176,
+    "rejectedCommands": 128,
+    "allSourceBytesUnchanged": true,
+    "reopenedObjects": 176,
+    "reopenedPrograms": 176,
+    "note": "All 176 executions passed initially. 32 C++ rejection results initially failed only the expected-message matcher. Current matcher includes the actual Clang cannot-initialize-a-parameter message; all 128 original commands exited1 and every current fixture source is byte-identical. No compilation result was substituted.",
+    "additionalDefaultPrograms": 0
+  },
+  "focusedUnitTests": {
+    "status": "passed",
+    "passed": 36,
+    "fixtureOracleTests": 5,
+    "instructionInspectorTests": 3,
+    "packageGateTests": 28,
+    "receipt": {
+      "path": "out/issue76-build/control/focused-unit-tests.json",
+      "bytes": 474,
+      "sha256": "5d422366da8b078f538420547652c73388faf5f72fb7b870e79c1b116db7fe4c"
+    },
+    "output": {
+      "path": "out/issue76-build/control/focused-unit-tests.log",
+      "bytes": 3920,
+      "sha256": "0916c1efec109354d5036feb9d70b784532be885231b39094f63c1b9da644c56"
+    },
+    "note": "Package unit tests use explicitly labelled synthetic receipts; actual native gate evidence is separate."
+  },
+  "nativePrerequisites": {
+    "smoke": {
+      "status": "passed",
+      "programs": 13,
+      "receipt": {
+        "path": "out/issue76-build/work/native-qualification.json",
+        "bytes": 75277,
+        "sha256": "0e764440255aa29949de37a73df29a594a8dbfffd88dbaec4e014185ac949a70"
+      }
+    },
+    "freshGnuRuntime": {
+      "status": "passed",
+      "programs": 2,
+      "build": {
+        "path": "out/issue76-build/work/libstdcxx-current/libstdcxx-build.json",
+        "bytes": 157850,
+        "sha256": "0a131a0f13079ecd08948dda964f3d2543a2a1546e57612429a754d89c901a9f"
+      },
+      "receipt": {
+        "path": "out/issue76-build/work/libstdcxx-current/qualification/qualification.json",
+        "bytes": 6406,
+        "sha256": "16618fd1e4c63a8b8b9000d92f9ffcd7c41a60b766a82c13ca103fa762d4d6e9"
+      }
+    },
+    "gnuFloat128": {
+      "status": "passed",
+      "programs": 78,
+      "receipt": {
+        "path": "out/issue76-build/work/gnu-float128-qualification/report.json",
+        "bytes": 9526835,
+        "sha256": "bff8f3b80de646f738912a15e033290b78ef339e508940837904f0345871415f"
+      },
+      "note": "Included in the full native regression matrix, not an additional disjoint count."
+    }
+  },
+  "fullNativeRegressions": {
+    "status": "running",
+    "process": {
+      "path": "out/issue76-build/native-regression-process.json",
+      "bytes": 328,
+      "sha256": "ba3f5070e8596646a55d33fea1d23d8ec6ee5a8cd6890c4f00864d2cb039f002"
+    },
+    "commands": {
+      "path": "out/issue76-build/native-regression-commands.json",
+      "bytes": 16632,
+      "sha256": "3a8c7a88e400d5184a3a4a1206ccc186cfd6be4e2fe6d42007d87af8931cfa4a"
+    },
+    "expectedSuites": 15,
+    "expectedExecutions": 1883
+  },
+  "wasmHost": {
+    "status": "pending",
+    "expectedWorkerAndNodePrograms": 827,
+    "expectedRawWorkerDiagnostics": 272,
+    "expectedAdditionalDefaultPrograms": 12,
+    "note": "Same-source compiler build, full packaging and actual Chromium Worker qualification remain required. Expected counts are plans, not completed claims."
+  },
+  "completedJobs": [
+    {
+      "process": {
+        "path": "out/issue76-build/native-process.json",
+        "bytes": 444,
+        "sha256": "481692c63f2a492b58876af1c64600f11de31157adfccbc9f1d155e260844c28"
+      },
+      "pid": 2176149,
+      "exitCode": 0,
+      "log": "/home/seorii/logs/wasm-llvm-76-native-9951u_3h.log",
+      "statusFile": "/home/seorii/logs/wasm-llvm-76-native-9951u_3h.log.status"
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/focused-native-process.json",
+        "bytes": 305,
+        "sha256": "c13f55fcd2a940ac7cdcdc1876eaca640437d19993b0816a7bf36c2bc3cdd2ac"
+      },
+      "pid": 2277567,
+      "exitCode": 0,
+      "log": "/home/seorii/logs/wasm-llvm-76-focused-native-9esf9_ku.log",
+      "statusFile": "/home/seorii/logs/wasm-llvm-76-focused-native-9esf9_ku.log.status"
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/gnu-process.json",
+        "bytes": 374,
+        "sha256": "89e5b1b470ded8c0fb20b38f25056d4c87874012b03b22472b00f83b6c6b61bc"
+      },
+      "pid": 2298203,
+      "exitCode": 0,
+      "log": "/home/seorii/logs/wasm-llvm-76-gnu-t8v85ubd.log",
+      "statusFile": "/home/seorii/logs/wasm-llvm-76-gnu-t8v85ubd.log.status"
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/half-abi-repro-process.json",
+        "bytes": 1750,
+        "sha256": "d0cee127f1ed4bd4bcdf98dcdcd67777f8a34b9ef110d58807418ad679fbd347"
+      },
+      "pid": 2324430,
+      "exitCode": 0,
+      "log": "/home/seorii/logs/wasm-llvm-76-half-abi-repro-aixli1m5.log",
+      "statusFile": "/home/seorii/logs/wasm-llvm-76-half-abi-repro-aixli1m5.log.status"
+    }
+  ],
+  "reproduction": {
+    "conversions": "node producer/gcc-wasi/test-simd-conversions.mjs --compiler \"$GCC_WASI_WORK_DIR/gcc-native/gcc\" --source \"$GCC_WASI_WORK_DIR/gcc\" --work \"$GCC_WASI_WORK_DIR\" --sdk \"$WASI_SDK_PATH\" --sysroot \"$GCC_WASI_WORK_DIR/runtime-current/sysroot\" --output \"$GCC_WASI_WORK_DIR/simd-conversions-qualification\"",
+    "halfVectorAbi": "node producer/gcc-wasi/test-half-vector-abi.mjs --compiler \"$GCC_WASI_WORK_DIR/gcc-native/gcc\" --work \"$GCC_WASI_WORK_DIR\" --sdk \"$WASI_SDK_PATH\" --sysroot \"$GCC_WASI_WORK_DIR/runtime-current/sysroot\" --output \"$GCC_WASI_WORK_DIR/half-abi-qualification\"",
+    "units": [
+      "node",
+      "--test",
+      "producer/gcc-wasi/simd-conversions-fixtures.test.mjs",
+      "producer/gcc-wasi/simd-conversions-inspect.test.mjs",
+      "producer/gcc-wasi/simd-conversions-qualification.test.mjs",
+      "producer/gcc-wasi/package.test.mjs"
+    ]
+  }
+}
