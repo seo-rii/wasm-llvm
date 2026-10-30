@@ -93,6 +93,21 @@ through `--gnu-float128-qualification`, reopens every object and program, and
 checks the same source, tool, header and runtime identities as the existing
 binary128/int128 gates.
 
+The [completed qualification record](../../docs/gcc-wasi-gnu-float128-20261030.json)
+binds the final fourteen-patch compiler, fresh GNU runtime, bundle and actual
+execution artifacts. All 1,898 native executions passed: the 78 GNU binary128
+directions, 1,769 existing regression executions, 36 saturating SIMD executions,
+13 smoke programs and two fresh GNU runtime programs. All 80 native saturation
+diagnostics also passed.
+
+The Wasm-host compiler compiled 651 programs in an actual Chromium Worker,
+including all 36 GNU binary128 sources. Each program then passed both Worker
+execution and independent Node WASI execution. Reopened assembly, objects and
+programs passed ABI/signature checks, 123 SIMD opcode checks and 80 raw compiler
+saturation diagnostics. The qualification records the exact immutable bundle
+manifest and payload hashes; its initial producer `unverified` marker remains
+unchanged, with the completed qualification recorded separately.
+
 Use the pinned source/tool setup in [README.md](README.md#reproduction). Build
 the native compiler and a fresh GNU runtime before the native matrix:
 
