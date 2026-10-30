@@ -98,3 +98,20 @@ native/Wasm-host assembler output, reject invalid alias declarations and perform
 duplicate/undefined links using the packaged linker. Each successful program
 executes in both Chromium Worker and Node WASI. Completed execution counts and
 artifact hashes are recorded separately from this reproduction contract.
+
+The [2026-10-30 qualification](../../docs/gcc-wasi-symbol-aliases-20261030.json)
+passed all 22 native stages and the same-source Wasm-host compiler/assembler
+builds. The resulting bundle compiled and executed 1,559 canonical programs in
+Chromium Workers and independently executed each artifact in Node WASI. Four
+compiler-default controls and six target-feature controls also passed in both
+engines, alongside 592 GCC diagnostics, 382 object-signature checks and 979
+instruction checks.
+
+The browser alias controls inspected 50 provider/link-control objects, accepted
+eight single-provider links, rejected 16 duplicate/undefined links, and matched
+110 native assembler objects byte-for-byte. All 18 invalid annotated-WAT cases
+were rejected with the same diagnostic text after removing terminal color
+codes. The original interrupted color-sensitive comparison is retained
+separately from the successful supplemental run; production inputs and the
+completed canonical suites were unchanged. The final manifest SHA-256 is
+`d8fa39679b4c9f9f8fd5376ed84b33942f0ac81f76b0e10ce8767efe4b7e547d`.
