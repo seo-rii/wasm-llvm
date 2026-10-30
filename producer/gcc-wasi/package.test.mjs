@@ -8,6 +8,86 @@ import { cases as emptyAbiCases } from './empty-abi-fixtures.mjs';
 import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
 import { cases as anonymousBitfieldCases } from './anonymous-bitfield-fixtures.mjs';
 import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
+import { verifySaturatingSimdQualification, verifySaturatingSimdQualificationOptions } from './package.mjs';
+import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
+
+test('saturating patch requires current saturation and existing SIMD/vector qualification', () => {
+	const patches = [{ path: 'patches/0013-simd-saturating-arithmetic.patch' }];
+	const options = Object.fromEntries(['simdQualification', 'simdExtendedQualification', 'vectorAbiQualification', 'simdSaturatingQualification', 'nativeLinker'].map(name => [name, `/qualified/${name}`]));
+	verifySaturatingSimdQualificationOptions(patches, options);
+	verifySaturatingSimdQualificationOptions([], {});
+	for (const key of Object.keys(options)) assert.throws(() => verifySaturatingSimdQualificationOptions(patches, { ...options, [key]: undefined }), /Saturating SIMD requires/);
+});
+
+test('saturating proof binds every builtin/profile, exact opcodes and disabled/type diagnostics (synthetic receipts)', () => {
+	const toolPaths = Object.fromEntries(Object.entries({ gcc: 'cc1', gccCpp: 'cc1plus', assembler: 'wat2wasm', objdump: 'wasm-objdump', linker: 'wasm-ld', node: 'node', validator: 'wasm-validate' }).map(([key, name]) => [key, `/qualified/${name}`]));
+	const tools = Object.fromEntries(Object.keys(toolPaths).map(name => [name, identity(Buffer.from(`measured ${name}`))]));
+	const expected = {
+		gccCommit: 'a'.repeat(40), compilerSha256: tools.gcc.sha256, compilerCppSha256: tools.gccCpp.sha256,
+		fixture: identity(Buffer.from('current fixture')), testRecipe: identity(Buffer.from('current recipe')),
+		assembler: tools.assembler, objdump: tools.objdump, linker: tools.linker, validator: tools.validator, node: tools.node,
+		runtime: { 'libc.a': identity(Buffer.from('current libc')) }, targetSource: { 'simd.md': identity(Buffer.from('current patterns')) },
+		sourceLock: identity(Buffer.from('current source lock')), gccSource: { patches: [{ path: 'patches/0013-simd-saturating-arithmetic.patch' }] },
+		headers: { gcc: { 'stddef.h': identity(Buffer.from('gcc header')) }, target: { 'stdio.h': identity(Buffer.from('target header')) } }
+	};
+	const argv = (fixture, profile) => [`-O${fixture.request.optimization}`, `-std=${fixture.request.standard}`, ...(profile === 'default' ? [] : [profile === 'disabled' ? '-mno-simd128' : '-msimd128'])];
+	const report = {
+		...structuredClone(expected), kind: 'gcc-wasi-native-simd-saturating-qualification', status: 'passed', inputsUnchanged: true,
+		compiler: tools.gcc, compilerCpp: tools.gccCpp, toolPaths,
+		inputs: Object.fromEntries(Object.entries(toolPaths).map(([name, file]) => [file, tools[name]])),
+		cases: [...saturatingCases, ...saturatingDisabledCases].map(fixture => {
+			const instructions = fixture.request.simd ? fixture.requiredInstructions : ['i32.add'];
+			const dump = instructions.map(opcode => `001000: fd 6f | ${opcode}`).join('\n');
+			return {
+				id: fixture.id, status: 'passed', source: identity(Buffer.from(fixture.request.code)), stdin: fixture.stdin, stdout: fixture.stdout,
+				wasm: identity(Buffer.from('fake program identity')), object: identity(Buffer.from('fake object identity')), assembly: identity(Buffer.from('fake assembly identity')), instructions,
+				commands: [fixture.request.language === 'cpp' ? toolPaths.gccCpp : toolPaths.gcc, toolPaths.assembler, toolPaths.objdump, toolPaths.linker, toolPaths.node].map((command, index) => ({
+					command, argv: index === 0 ? argv(fixture, fixture.request.simd ? 'enabled' : 'disabled') : index === 3 ? ['--fatal-warnings'] : [],
+					status: 0, signal: null, stdout: index === 2 ? dump : index === 4 ? fixture.stdout : '', stderr: ''
+				})), imports: [], exports: [{ name: 'memory', kind: 'memory' }, { name: '_start', kind: 'function' }],
+				simdDisabledValidation: { command: toolPaths.validator, argv: ['--disable-simd', `/qualified/${fixture.id}/main.wasm`], status: fixture.request.simd ? 1 : 0, signal: null, stdout: '', stderr: '' }
+			};
+		}),
+		diagnostics: [...saturatingCases.flatMap(fixture => ['disabled', 'default'].map(profile => ({ fixture, profile }))), ...saturatingDiagnosticCases.map(fixture => ({ fixture, profile: 'enabled-invalid' }))].map(({ fixture, profile }) => ({
+			id: `${fixture.id}-${profile}`, fixture: fixture.id, profile, source: identity(Buffer.from(fixture.request.code)), emittedSimd: false,
+			command: { command: fixture.request.language === 'cpp' ? toolPaths.gccCpp : toolPaths.gcc, argv: argv(fixture, profile), status: 1, signal: null, stdout: '',
+				stderr: profile === 'enabled-invalid' ? fixture.diagnosticPattern.split('|')[0] : 'error: SIMD128 is disabled' }
+		})),
+		disabledDiagnostic: { status: 1, stderr: 'SIMD128 is disabled' }, defaultDiagnostic: { status: 1, stderr: 'SIMD128 is disabled' }
+	};
+	verifySaturatingSimdQualification(report, expected);
+	for (const mutate of [
+		proof => { proof.kind = 'gcc-wasi-native-simd-qualification'; },
+		proof => { proof.cases.pop(); },
+		proof => { proof.diagnostics.pop(); },
+		proof => { proof.diagnostics[0] = structuredClone(proof.diagnostics[1]); },
+		proof => { proof.inputsUnchanged = false; },
+		proof => { proof.compiler.sha256 = '0'.repeat(64); },
+		proof => { proof.compilerCpp.sha256 = '0'.repeat(64); },
+		proof => { proof.targetSource = {}; },
+		proof => { proof.gccSource.patches = []; },
+		proof => { proof.fixture.sha256 = '0'.repeat(64); },
+		proof => { proof.testRecipe.sha256 = '0'.repeat(64); },
+		proof => { proof.headers.gcc = {}; },
+		proof => { proof.objdump.sha256 = '0'.repeat(64); },
+		proof => { proof.toolPaths.gcc = '/unmeasured/cc1'; },
+		proof => { delete proof.cases[0].object; },
+		proof => { proof.cases[0].stdin = '0\n'; },
+		proof => { proof.cases[0].instructions = []; proof.cases[0].commands[2].stdout = ''; },
+		proof => { proof.cases[0].instructions = ['i8x16.sub_sat_s']; proof.cases[0].commands[2].stdout = '001000: fd 6f | i8x16.sub_sat_s'; },
+		proof => { proof.cases[0].simdDisabledValidation.status = 0; },
+		proof => { proof.cases[0].commands[0].argv.push('-mno-simd128'); },
+		proof => { proof.diagnostics[0].command.argv.push('-msimd128'); },
+		proof => { proof.diagnostics[1].command.argv.push('-mno-simd128'); },
+		proof => { proof.diagnostics[0].command.stderr = 'unrelated error'; },
+		proof => { proof.diagnostics[0].command.status = 0; },
+		proof => { proof.diagnostics[0].emittedSimd = true; },
+		proof => { proof.diagnostics.at(-1).source.sha256 = '0'.repeat(64); }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifySaturatingSimdQualification(changed, expected));
+	}
+});
 
 test('browser package rejects failed preparation and unsupported gcov host profiles', () => {
 	const specs = identity(Buffer.from('*cc1plus:\n\n'));
