@@ -79,3 +79,56 @@ bytes. Older SIMD-only receipts cannot qualify the new backend patterns.
 Native qualification is one stage. A distribution also needs the same-source
 Wasm-host compiler, a freshly qualified GNU runtime and actual Chromium Worker
 execution before it can be called browser-qualified.
+
+
+## Completed qualification
+
+The 2026-10-30 qualification passed **1,820 native executions**: the 36
+saturation/scalar programs, 1,769 existing regression programs across 13
+suites, 13 smoke programs and two freshly rebuilt GNU C++ runtime programs.
+All 80 native diagnostic compilations and 28 fixture/package unit tests passed.
+
+The same-source Wasm-host compiler passed **615 actual Chromium Worker
+programs and 615 independent Node WASI executions** across 14 suites. This
+preserves every original fixture in the previous 579-program corpus and adds
+the 36 saturation/scalar fixtures. Chromium 156.0.8078.4 and
+Node 24.22.1 used the frozen wasm-idle SDK commit
+`9b0b50f23a116fd99bdb7b423bb6e75327ae2959`.
+
+| Worker suite | Chromium / Node WASI |
+| --- | ---: |
+| saturating | 36 / 36 |
+| anonymous-bitfield | 40 / 40 |
+| empty-abi | 28 / 28 |
+| singleton-bitfield | 8 / 8 |
+| basic | 17 / 17 |
+| scalar-abi | 25 / 25 |
+| atomic | 8 / 8 |
+| simd | 25 / 25 |
+| extended | 62 / 62 |
+| vector-abi | 180 / 180 |
+| long-double | 42 / 42 |
+| int128 | 42 / 42 |
+| wide-integer | 52 / 52 |
+| fp-extension | 50 / 50 |
+| **Total** | **615 / 615** |
+
+All 80 rejection cases also passed with real Wasm-host GCC running in a
+dedicated Chromium Worker. The default profile omits both SIMD flags, and the
+explicit disabled profile passes `-mno-simd128`. The probe preserves the native
+compiler arguments except input/output/include paths and reads any partial
+WAT after compilation fails. Every failure produced the expected diagnostic
+without SIMD instructions in its partial output.
+
+Final inspection reopened all programs, 385 saved WAT files and
+385 relocatable objects, and passed 360 ABI signature checks and
+123 SIMD artifact checks. Independent disabled-SIMD validation rejected all
+32 new vector programs and accepted all four scalar controls. All
+532 frozen input files remained unchanged.
+
+The [completed validation record](../../docs/gcc-wasi-simd-saturating-20261030.json)
+binds the compiler, fresh GNU runtime, imported SDK, package and per-suite
+Worker identities to the actual outputs and completed private logs. Packaging
+passed every existing gate plus the saturation gate. Its manifest keeps the
+packager's `unverified` marker; separate Worker receipts attest to browser
+qualification. No qualification job is pending.
