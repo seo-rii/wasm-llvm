@@ -9,6 +9,8 @@ import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
 import { cases as anonymousBitfieldCases } from './anonymous-bitfield-fixtures.mjs';
 import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
 import { verifySaturatingSimdQualification, verifySaturatingSimdQualificationOptions } from './package.mjs';
+import { verifyGnuFloat128Qualification } from './package.mjs';
+import { cases as gnuFloat128Cases } from './gnu-float128-fixtures.mjs';
 import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
 
 test('saturating patch requires current saturation and existing SIMD/vector qualification', () => {
@@ -155,6 +157,8 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 	expected.targetSource = { 'wasm-cg.cc': identity(Buffer.from('TI target')) };
 	expected.recipes = Object.fromEntries(['fixtures', 'harness', 'inspector'].map(name => [name, identity(Buffer.from(`int128 ${name}`))]));
 	expected.runtime = Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'builtins', 'gnuCpp', 'gnuAbi', 'clangCpp', 'clangAbi'].map(name => [name, identity(Buffer.from(name))]));
+	if (fixtures.some(fixture => fixture.printscan))
+		expected.runtime.printscan = identity(Buffer.from('printscan'));
 	expected.headers.gcc = { 'stddef.h': identity(Buffer.from('GCC stddef')) };
 	expected.headers.gnuCpp = { vector: identity(Buffer.from('GNU vector')) };
 	const report = {
@@ -165,8 +169,15 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 	};
 	for (const [key, name] of Object.entries({ gcc: 'cc1', gccCpp: 'cc1plus', clang: 'clang', assembler: 'wat2wasm', inspector: 'wasm-objdump', linker: 'wasm-ld', node: 'node' }))
 		report.tools[key].path = `/verified/tools/${name}`;
+	if (report.runtime.printscan)
+		report.runtime.printscan.path = '/sysroot/lib/wasm32-wasi/libc-printscan-long-double.a';
+	report.skippedReferences = fixtures.flatMap(fixture => report.directions
+		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.filter(direction => fixture.clang === false && direction.includes('clang'))
+		.map(direction => ({ fixture: fixture.id, direction, reason: fixture.clangReason })));
 	report.cases = fixtures.flatMap(fixture => report.directions
 		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.filter(direction => fixture.clang !== false || !direction.includes('clang'))
 		.map(direction => {
 			const families = direction.split('-');
 			const sources = [fixture.request.code, ...(fixture.request.sources || []).map(name => fixture.request.files.find(file => file.path === name).contents)];
@@ -182,9 +193,9 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 					status: 0, signal: null, stdout: '', stderr: ''
 				});
 				return { compiler: family, source: identity(Buffer.from(source)),
-					...(fixture.id.startsWith('anonymous-bitfield-') ? { signatures: structuredClone(fixture.signatures) } : {}) };
+					...(fixture.id.startsWith('anonymous-bitfield-') || fixture.objectSignatures ? { signatures: structuredClone(fixture.signatures) } : {}) };
 			});
-			commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', '-lc'], status: 0, signal: null },
+			commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', ...(fixture.printscan ? [report.runtime.printscan.path] : []), '-lc'], status: 0, signal: null },
 				{ command: report.tools.node.path, argv: [], status: 0, signal: null, stdout: fixture.stdout, stderr: '' });
 			return {
 				id: `${fixture.id}-${direction}`, fixture: fixture.id, fixtureSha256: identity(Buffer.from(JSON.stringify(fixture))).sha256,
@@ -277,6 +288,43 @@ test('anonymous bitfield proof binds every optimization, compiler direction and 
 	]) {
 		const changed = structuredClone(report); mutate(changed);
 		assert.throws(() => verifyAnonymousBitfieldQualification(changed, expected, anonymousBitfieldCases));
+	}
+});
+
+test('GNU float128 requires separate proof, a linker and the freshly qualified GNU runtime', () => {
+	const patch = { path: 'patches/0014-gnu-float128.patch' };
+	const options = { gnuFloat128Qualification: 'GNU-TF.json', nativeLinker: 'wasm-ld', libstdcxx: 'GNU' };
+	verifyWideScalarQualificationOptions([patch], options);
+	for (const key of Object.keys(options)) {
+		const changed = { ...options }; delete changed[key];
+		assert.throws(() => verifyWideScalarQualificationOptions([patch], changed));
+	}
+	assert.throws(() => verifyWideScalarQualificationOptions([patch], {
+		longDoubleQualification: 'TF.json', int128Qualification: 'TI.json', nativeLinker: 'wasm-ld', libstdcxx: 'GNU'
+	}), /requires --gnu-float128-qualification/);
+});
+
+test('GNU float128 proof binds all language, ABI, GNU header and declared Clang-reference boundaries (synthetic receipts)', () => {
+	const { expected, report } = int128ProofFixture(gnuFloat128Cases, 'gcc-wasi-wide-integer-qualification');
+	assert.equal(report.counts.total, 78);
+	assert.equal(report.skippedReferences.length, 6);
+	verifyGnuFloat128Qualification(report, expected, gnuFloat128Cases);
+	for (const mutate of [
+		proof => { proof.cases.pop(); },
+		proof => { proof.cases[1] = structuredClone(proof.cases[0]); },
+		proof => { proof.skippedReferences.pop(); },
+		proof => { proof.skippedReferences.push({ fixture: gnuFloat128Cases[0].id, direction: 'clang-clang', reason: 'not tested' }); },
+		proof => { proof.directions = ['gcc-gcc']; },
+		proof => { proof.suiteSha256 = '0'.repeat(64); },
+		proof => { proof.headers.gnuCpp.vector = identity(Buffer.from('stale GNU headers')); },
+		proof => { proof.cases.find(entry => entry.fixture.includes('cpp-overloads')).units[1].signatures._Z11gf_overloadg.params = ['f64']; },
+		proof => { proof.cases.find(entry => entry.fixture.includes('direct-callback')).units[0].signatures.gq_add.params.pop(); },
+		proof => { proof.cases.find(entry => entry.fixture.includes('library-bridge')).commands.at(-2).argv = ['--fatal-warnings', '-lc']; },
+		proof => { proof.cases.find(entry => entry.fixture.includes('gnu-cpp-library')).commands[0].command = '/unqualified/cc1plus'; },
+		proof => { proof.cases.find(entry => entry.fixture.includes('c-type-relations')).stdout = '1 0 1\n'; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyGnuFloat128Qualification(changed, expected, gnuFloat128Cases));
 	}
 });
 

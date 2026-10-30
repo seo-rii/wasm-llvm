@@ -1,0 +1,110 @@
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -26,6 +26,7 @@
+ #include "rtl.h"
+ #include "tree.h"
+ #include "langhooks.h"
++#include "stor-layout.h"
+ #include "tm_p.h"
+ #include "stringpool.h"
+ #include "attribs.h"
+@@ -87,6 +88,21 @@
+ static void
+ wasm_init_builtins (void)
+ {
++  /* C uses the existing _Float128 type.  C++ requires a distinct GNU type
++     for overload resolution and the Itanium ABI's g mangling.  Both reuse
++     the already qualified TFmode representation and runtime helpers.  */
++  gcc_assert (float128_type_node
++              && TYPE_MODE (float128_type_node) == TFmode);
++  if (float128t_type_node == NULL_TREE)
++    {
++      float128t_type_node = make_node (REAL_TYPE);
++      TYPE_PRECISION (float128t_type_node)
++        = TYPE_PRECISION (float128_type_node);
++      SET_TYPE_MODE (float128t_type_node, TFmode);
++      layout_type (float128t_type_node);
++    }
++  lang_hooks.types.register_builtin_type (float128t_type_node, "__float128");
++
+   for (unsigned i = 0; i < WASM_BUILTIN_MAX; ++i)
+     {
+       const wasm_builtin_description &d = wasm_builtins[i];
+@@ -103,6 +119,25 @@
+     }
+ }
+ #define TARGET_INIT_BUILTINS wasm_init_builtins
++
++/* GNU Q/q literals retain binary128 precision without enabling SIMD.  */
++static machine_mode
++wasm_c_mode_for_suffix (char suffix)
++{
++  return suffix == 'q' ? TFmode : VOIDmode;
++}
++#define TARGET_C_MODE_FOR_SUFFIX wasm_c_mode_for_suffix
++
++static const char *
++wasm_mangle_type (const_tree type)
++{
++  if (float128t_type_node
++      && TYPE_MAIN_VARIANT (type) == float128t_type_node)
++    return "g";
++  /* In particular, long double remains e and _Float128 remains DF128_.  */
++  return NULL;
++}
++#define TARGET_MANGLE_TYPE wasm_mangle_type
+ 
+ static tree
+ wasm_builtin_decl (unsigned code, bool ARG_UNUSED (initialize_p))
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -46,6 +46,7 @@
+       builtin_assert ("cpu=wasm32");	  \
+       cpp_define (parse_in, "__wasm32__");\
+       cpp_define (parse_in, "__wasi__");  \
++      cpp_define (parse_in, "__SIZEOF_FLOAT128__=16"); \
+       if (TARGET_SIMD128)                  \
+         cpp_define (parse_in, "__wasm_simd128__"); \
+     }					  \
+diff --git a/gcc/c-family/c-lex.cc b/gcc/c-family/c-lex.cc
+--- a/gcc/c-family/c-lex.cc
++++ b/gcc/c-family/c-lex.cc
+@@ -1268,9 +1268,12 @@
+ 	  pedwarn (input_location, OPT_Wpedantic, "non-standard suffix on floating constant");
+ 
+ 	type = c_common_type_for_mode (mode, 0);
+-	/* For Q suffix, prefer float128t_type_node (__float128) type
+-	   over float128_type_node (_Float128) type if they are distinct.  */
+-	if (type == float128_type_node && float128t_type_node)
++	/* For Q suffix, prefer the target's GNU __float128 type.  Its
++	   mode may also be used by long double, which type_for_mode
++	   returns before _Float128.  Preserve the literal's type even
++	   when all three types have the same representation.  */
++	if (suffix == 'q' && float128t_type_node
++	    && mode == TYPE_MODE (float128t_type_node))
+ 	  type = float128t_type_node;
+ 	gcc_assert (type);
+       }
+diff --git a/gcc/cp/typeck.cc b/gcc/cp/typeck.cc
+--- a/gcc/cp/typeck.cc
++++ b/gcc/cp/typeck.cc
+@@ -353,6 +353,17 @@
+     return 3;
+   if (!extended1 && !extended2)
+     {
++      /* GNU __float128 and long double can be distinct C++ types with
++         the same binary128 format.  Both then have equal rank relative
++         to _Float128; keep their pairwise rank equal as well.  Otherwise
++         compare_ics sees non-transitive ranks while considering all
++         three overloads.  This does not change type identity, mangling,
++         or the legacy usual arithmetic conversions.  */
++      if (fmt1 == fmt2 && float128t_type_node
++          && ((mv1 == float128t_type_node && mv2 == long_double_type_node)
++              || (mv2 == float128t_type_node
++                  && mv1 == long_double_type_node)))
++        return 0;
+       /* The rank of long double is greater than the rank of double, which
+ 	 is greater than the rank of float.  */
+       if (t1 == long_double_type_node)
