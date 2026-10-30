@@ -35,11 +35,18 @@ disabled profile keeps its indirect convention. Do not mix those two profiles
 across vector interfaces or infer compatibility from a shared GCC version string.
 Existing scalar WASI libc calls keep their ordinary ABI.
 
-The pinned WABT assembler emits the relocatable `linking` section but does not
-emit a `target_features` section for SIMD instructions. A loader must determine
-SIMD use by decoding instructions or validating the module on the execution
-engine; searching bytes for `0xfd` is insufficient because immediates and data
-can contain the same byte.
+The pinned WABT assembler with `wabt-0001-simd-target-features.patch` records
+actual SIMD instructions and `v128` types in one `target_features` section,
+including relocatable objects. Merely enabling SIMD does not mark scalar code
+as SIMD. The patch also records `relaxed-simd` when assembling those WAT
+instructions; this does not add relaxed SIMD support to the GCC backend.
+Existing feature declarations are preserved and conflicting declarations fail
+assembly. See [target feature qualification](TARGET-FEATURES.md).
+
+Loaders must still decode instructions and validate on the execution engine.
+Feature metadata can be missing or untrusted, and searching bytes for `0xfd`
+is insufficient because immediates and data can contain the same byte. The SDK's
+decoder and its data/integer/floating-point immediate regressions remain intact.
 
 To qualify an isolated native build containing this patch:
 

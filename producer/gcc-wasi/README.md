@@ -18,6 +18,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [SIMD saturating arithmetic](SIMD-SATURATING.md),
 [SIMD conversions](SIMD-CONVERSIONS.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
+[strong function and data aliases](SYMBOL-ALIASES.md),
 [binary128 implementation and reproduction](LONG-DOUBLE.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
 [public int128 implementation and reproduction](INT128.md),
@@ -40,8 +41,8 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0016`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions and the 169-name intrinsic header; SHA-256 pinned in `sources.lock.json` |
-| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
+| Local GCC patches | `0001`–`0017`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header and strong aliases; SHA-256 pinned in `sources.lock.json` |
+| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md) and [symbol alias](SYMBOL-ALIASES.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
 | Browser linker | Existing wasm-llvm WASI-host LLD `22.1.8`, `ca7933e47d3a3451d81e72ac174dcb5aa28b59d1`; archive and original producer receipt pinned |
@@ -207,8 +208,9 @@ For actual GNU C++ runtime support, use the isolated runtime recipe. Its typed
 math/stdlib probes bind live function addresses to real declarations and strict
 Wasm linking, preventing reduced-precision fallback stubs from replacing
 available long-double libm functions; see [the math repair](FP-EXTENSIONS.md).
-It copies the pinned runtime source, adds a WASI configure case with real
-feature probes, and replaces one unsupported alias definition with a forwarding function. The
+It copies the pinned runtime source and adds a WASI configure case with real
+feature probes. Patch `0017` supports the original `std::type_info::__equal`
+alias, so the former forwarding-function substitution has been removed. The
 compiler source remains untouched. This is GNU libstdc++, not libc++ or a shim.
 The WASI `errno` header also has an explicit GCC single-thread profile patch:
 `__GCC_WASI_SINGLE_THREAD__=1` selects the existing libc's ordinary linear-memory
@@ -277,6 +279,13 @@ node producer/gcc-wasi/fp-extension-native.mjs \
   --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
   --output "$GCC_WASI_WORK_DIR/fp-extension-qualification"
 
+node producer/gcc-wasi/test-symbol-alias.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/symbol-alias-qualification"
+
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -291,13 +300,14 @@ node producer/gcc-wasi/package.mjs \
   --empty-abi-qualification "$GCC_WASI_WORK_DIR/empty-abi-qualification/report.json" \
   --bitfield-qualification "$GCC_WASI_WORK_DIR/wide-bitfields-qualification/report.json" \
   --anonymous-bitfield-qualification "$GCC_WASI_WORK_DIR/anonymous-bitfield-qualification/report.json" \
+  --symbol-alias-qualification "$GCC_WASI_WORK_DIR/symbol-alias-qualification/qualification.json" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current sixteen-patch compiler, `--long-double-qualification`,
+For the current seventeen-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
-`--bitfield-qualification`, `--anonymous-bitfield-qualification`, all five SIMD
+`--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`, all five SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -342,6 +352,11 @@ live `convert` function's instructions and requires exact header equality
 across source, native installation, browser resources and packaged sysroot.
 The complete GCC GPL and Runtime Library Exception notices are retained and
 checked by identity; see [SIMD-HEADER.md](SIMD-HEADER.md).
+Patch `0017` requires `--symbol-alias-qualification`: 106 native executions,
+40 frontend rejections and 32 strict-link rejections with successful controls.
+The gate reopens the real linking symbols and relocations and extracts `tinfo.o`
+from the packaged GNU archive to verify shared function identity. See
+[SYMBOL-ALIASES.md](SYMBOL-ALIASES.md) for source, binding and visibility coverage.
 The binary128 gate requires all 42 O0/O2 fixtures and 124 applicable native
 GCC/Clang runs, the pinned print/scan extension and the rebuilt GNU archives.
 It checks both actual Clang invocations, executed tool paths, header inventories,
@@ -464,7 +479,8 @@ ABI limitations remain and must not be hidden by passing scalar tests:
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user
 source units, not arbitrary external binary objects or libraries. The backend
-also lacks several upstream features such as alias definitions, weakrefs,
+supports the qualified strong aliases described in [SYMBOL-ALIASES.md](SYMBOL-ALIASES.md),
+but still lacks several upstream features such as weakref target emission,
 profiling and general debug output; this is an experimental qualified profile,
 not a claim that all GCC tests or all ISO C/C++ programs pass.
 
