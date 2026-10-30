@@ -67,6 +67,49 @@ matrices remain separate regression suites. A changed compiler requires a
 fresh matching GNU runtime and a native compile/link/execute qualification
 before building the Wasm-host compiler from the same source identity.
 
+## Completed qualification
+
+The 2026-10-30 qualification passed **1,769 native matrix executions**: all
+160 anonymous-bitfield executions and 1,609 existing regressions. The 13 native
+smoke programs and two freshly rebuilt GNU C++ runtime programs also passed,
+for 1,784 executions including those prerequisites.
+
+The same-source Wasm-host compiler passed **579 actual Chromium Worker
+programs and 579 independent Node WASI executions** across 13 suites. This
+preserves the previous 539-program regression corpus and adds the 40 original
+anonymous-bitfield source fixtures. Chromium 156.0.8078.4 and Node 24.22.1 used
+the frozen wasm-idle SDK commit `9b0b50f23a116fd99bdb7b423bb6e75327ae2959`.
+
+| Worker suite | Chromium / Node WASI |
+| --- | ---: |
+| Anonymous bitfields | 40 / 40 |
+| Empty records | 28 / 28 |
+| Singleton bitfields | 8 / 8 |
+| Core C/C++ and I/O | 17 / 17 |
+| Scalar ABI | 25 / 25 |
+| Atomic external-call ABI | 8 / 8 |
+| Basic SIMD | 25 / 25 |
+| Extended SIMD | 62 / 62 |
+| Vector ABI, including disabled controls | 180 / 180 |
+| Binary128 long double | 42 / 42 |
+| Int128 | 42 / 42 |
+| Wide builtins and bitfields | 52 / 52 |
+| Floating extensions | 50 / 50 |
+| **Total** | **579 / 579** |
+
+Final inspection reopened all programs, 349 saved WAT files and 349 relocatable
+objects, and passed 360 function-signature checks and 87 SIMD artifact checks.
+All 506 frozen input files remained unchanged. The runtime was imported again
+from the pinned SDK archive using the current runtime lock; all 211 sysroot
+files and the linker/provenance bytes matched the completed native proofs.
+
+The [completed validation record](../../docs/gcc-wasi-anonymous-bitfield-20261030.json)
+binds compiler, runtime, package and Worker identities, individual suite receipts,
+loading measurements, and completed private logs. It also preserves the
+resolved runtime-receipt and Chromium temporary-path setup attempts. The
+manifest retains packaging's `unverified` marker; the separate Worker receipts
+attest to the completed browser qualification. No qualification job is pending.
+
 ## Reproduction
 
 Follow [the producer setup](README.md#reproduction), using a new isolated work

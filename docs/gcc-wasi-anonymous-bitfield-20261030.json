@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
   "issue": 93,
-  "status": "native-passed-browser-pending",
-  "compilerHost": "native",
+  "status": "passed",
+  "compilerHosts": [
+    "native",
+    "wasm32-emscripten"
+  ],
   "target": "wasm32-wasi",
   "gccSource": {
     "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
@@ -132,8 +135,1010 @@
       },
       "status": "passed",
       "cases": 13
+    },
+    "nativeRegressions": {
+      "status": "passed",
+      "summary": {
+        "path": "out/issue93-build/native-validation-summary.json",
+        "bytes": 7471,
+        "sha256": "1bfd09b4151db152f486796dba086cfafcf6e9bd9d2839fc3b8998516f940dbf"
+      },
+      "suites": [
+        {
+          "id": "abi-qualification",
+          "counts": {
+            "total": 200,
+            "passed": 200,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/abi-qualification/report.json",
+            "bytes": 1309795,
+            "sha256": "e83d97b836e1d2b382d1741e27bfecbca167608d220229791fa9899a62caa35c"
+          }
+        },
+        {
+          "id": "atomic-abi-qualification",
+          "counts": {
+            "total": 8,
+            "passed": 8
+          },
+          "report": {
+            "path": "out/issue93-build/work/atomic-abi-qualification/report.json",
+            "bytes": 58995,
+            "sha256": "236b382a95d2b108b313540aee7c62c2d31022c8fb53ef36d091fb7eeb66cba3"
+          }
+        },
+        {
+          "id": "simd-qualification",
+          "counts": {
+            "total": 25,
+            "passed": 25,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/simd-qualification/qualification.json",
+            "bytes": 547388,
+            "sha256": "4327f3cc74af0199f08ddce0e18a5e0dbedc6bb8e0359e4594eef98644a40db5"
+          }
+        },
+        {
+          "id": "simd-extended-qualification",
+          "counts": {
+            "total": 62,
+            "passed": 62,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/simd-extended-qualification/qualification.json",
+            "bytes": 3238821,
+            "sha256": "8c715e30383ea264d73e6c9c5f474d3a3ff71a96ca054cacc62305c26a2dce83"
+          }
+        },
+        {
+          "id": "vector-abi-qualification",
+          "counts": {
+            "total": 684,
+            "passed": 684,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/vector-abi-qualification/report.json",
+            "bytes": 65257692,
+            "sha256": "c4df4a8bec82aa3cd5cf2945c21d6c4f921b467f5af4cac35a5b4944407dc78d"
+          }
+        },
+        {
+          "id": "long-double-qualification",
+          "counts": {
+            "total": 124,
+            "passed": 124,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/long-double-qualification/report.json",
+            "bytes": 14279850,
+            "sha256": "6f41073cf730c50b3dfda8e1c7670599685e9e3a62d640733c63f946df416493"
+          }
+        },
+        {
+          "id": "int128-qualification",
+          "counts": {
+            "total": 116,
+            "passed": 116,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/int128-qualification/report.json",
+            "bytes": 13903314,
+            "sha256": "ea042d9fc927b86165f16e972336c2d026e7e6f1fed63880940a7b1ed4ac1684"
+          }
+        },
+        {
+          "id": "empty-abi-qualification",
+          "counts": {
+            "total": 112,
+            "passed": 112,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/empty-abi-qualification/report.json",
+            "bytes": 6594095,
+            "sha256": "e21f1e123f4ffb261b77df605a73faf4952eefe4f58e96010604b9633a517c5e"
+          }
+        },
+        {
+          "id": "wide-builtins-qualification",
+          "counts": {
+            "total": 50,
+            "passed": 50,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/wide-builtins-qualification/report.json",
+            "bytes": 8445396,
+            "sha256": "0313ae1a5abf4d43ff79814a0c2bb2f6d1214a01708dafec5bf5b7a199527663"
+          }
+        },
+        {
+          "id": "wide-bitfields-qualification",
+          "counts": {
+            "total": 72,
+            "passed": 72,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/wide-bitfields-qualification/report.json",
+            "bytes": 11012312,
+            "sha256": "7abb15547de5edf8b361efa489956dc760f753b6324c2d499d3b325368fbfed3"
+          }
+        },
+        {
+          "id": "singleton-bitfield-qualification",
+          "counts": {
+            "total": 32,
+            "passed": 32,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/singleton-bitfield-qualification/report.json",
+            "bytes": 7700107,
+            "sha256": "80132091cd0cfb9d1d912cce33a26cb5f8e10610d0bde18a29d26541559220ae"
+          }
+        },
+        {
+          "id": "fp-extension-qualification",
+          "counts": {
+            "total": 124,
+            "passed": 124,
+            "failed": 0
+          },
+          "report": {
+            "path": "out/issue93-build/work/fp-extension-qualification/report.json",
+            "bytes": 12315111,
+            "sha256": "3facb7c2a5c5df133390ebee83e8152d7388fb91e4a9f55de55b2e1ea992855e"
+          }
+        }
+      ]
+    },
+    "gnuRuntime": {
+      "status": "passed",
+      "programs": 2,
+      "unsupportedApiDiagnostics": 3,
+      "build": {
+        "path": "out/issue93-build/work/libstdcxx-current/build.json",
+        "bytes": 6535152,
+        "sha256": "7c8576f42479bc5a417c3e730f63c7925a5badf79b218838af7b171b4d8c3dd1"
+      },
+      "qualification": {
+        "path": "out/issue93-build/work/libstdcxx-current/qualification/qualification.json",
+        "bytes": 6326,
+        "sha256": "c4dc3c1c28aa2b7f4bb0960cf9584e1e82a7c335fd09c347c63514c1ffc5b7a8"
+      },
+      "runtimeReceipt": {
+        "path": "out/issue93-build/work/libstdcxx-current/libstdcxx-build.json",
+        "bytes": 157850,
+        "sha256": "359fa7aedea07543818b5bbdf13841c0b86ecda7ad12c0786df911bede7de3b4"
+      },
+      "nativeCompiler": {
+        "cc1": "afb773cd7339df76bd04cf17577c034c047cb3bdda3f26db42b3c609f24e918f",
+        "cc1plus": "16b023b697fa42b5a4d27cb448cf8e746256890b524951f4f66ae5d8efb7c54e",
+        "xgcc": "807fa046f6a55d9ff6209639505dbdc64fa8ab357f4c205303bfc0bde06d314b"
+      },
+      "typedMathProbes": {
+        "path": "out/issue93-build/work/libstdcxx-current/math-probes/report.json",
+        "bytes": 6143630,
+        "sha256": "75f3e0770e1e28dc044be608b7e1b4709e693a015b29a86fb295f7c943b483d7"
+      }
     }
   },
+  "completedAt": "2026-10-30T07:28:17.931Z",
+  "counts": {
+    "nativeMatrixExecutions": 1769,
+    "anonymousNativeExecutions": 160,
+    "existingNativeRegressionExecutions": 1609,
+    "nativeSmokePrograms": 13,
+    "nativeWithSmoke": 1782,
+    "gnuRuntimePrograms": 2,
+    "nativeIncludingGnuRuntime": 1784,
+    "chromiumWorkerPrograms": 579,
+    "independentNodeWasiPrograms": 579,
+    "workerSuites": 13
+  },
+  "browserBuild": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue93-build/work/browser-compiler/compiler-build.json",
+      "bytes": 9813,
+      "sha256": "cc85a4031cdf9199b5f9fe8e57a277d4ae853a31804e8d2d282a79ada3cae61a"
+    },
+    "host": "wasm32-emscripten",
+    "target": "wasm32-wasi",
+    "hostUtilityProfile": {
+      "name": "browser-frontends",
+      "gcov": false,
+      "gcovDump": false,
+      "gcovTool": false
+    },
+    "bootstrap": {
+      "allGccBootstrapExitCode": 0,
+      "gcovHostTools": "disabled",
+      "profile": "browser-frontends"
+    },
+    "sourceLock": {
+      "bytes": 5221,
+      "sha256": "37f90d8528238aff174b29e7a32b9f06d5bff392972bd91ce788aec264f6e524"
+    },
+    "sourceDiffSha256": "51b2279d6d277d6cb311097c2202a84532f841dc1f191a907ea99fb8e901f66b",
+    "compilerFiles": {
+      "cc1.mjs": {
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1.wasm": {
+        "bytes": 15585183,
+        "sha256": "dda4ffb657b94ac3346f1f132648fbf35eb1264437b25469eaef4b71219a4b1a"
+      },
+      "cc1plus.mjs": {
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plus.wasm": {
+        "bytes": 17245562,
+        "sha256": "977492c19af22b45b7d4ead5c04724ba4cb1e06cd2f55169e9533fa538cef655"
+      },
+      "licenses/emscripten-LICENSE": {
+        "bytes": 5093,
+        "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86"
+      },
+      "licenses/gcc-COPYING": {
+        "bytes": 18002,
+        "sha256": "231f7edcc7352d7734a96eef0b8030f77982678c516876fcb81e25b32d68564c"
+      },
+      "licenses/gcc-COPYING.RUNTIME": {
+        "bytes": 3324,
+        "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+      },
+      "licenses/gcc-COPYING3": {
+        "bytes": 35147,
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+      },
+      "licenses/gmp-6.3.0/COPYING": {
+        "bytes": 35147,
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+      },
+      "licenses/gmp-6.3.0/COPYING.LESSERv3": {
+        "bytes": 7639,
+        "sha256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c"
+      },
+      "licenses/gmp-6.3.0/COPYINGv2": {
+        "bytes": 18092,
+        "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+      },
+      "licenses/gmp-6.3.0/COPYINGv3": {
+        "bytes": 35150,
+        "sha256": "e6037104443f9a7829b2aa7c5370d0789a7bda3ca65a0b904cdc0c2e285d9195"
+      },
+      "licenses/mpc-1.3.1/COPYING.LESSER": {
+        "bytes": 7651,
+        "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+      },
+      "licenses/mpfr-4.2.1/COPYING": {
+        "bytes": 35149,
+        "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+      },
+      "licenses/mpfr-4.2.1/COPYING.LESSER": {
+        "bytes": 7652,
+        "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+      },
+      "resource-include/float.h": {
+        "bytes": 21430,
+        "sha256": "28713290dd87e4468602f1e1e013988ca0b6f63b43052b5124f48530b7cdc2b4"
+      },
+      "resource-include/iso646.h": {
+        "bytes": 1272,
+        "sha256": "0584525ab7c2ffc635f7dccd3850c8619fadf78f170987034b5f7a961a85bbdf"
+      },
+      "resource-include/limits.h": {
+        "bytes": 4870,
+        "sha256": "c26d2c9badbfe2bffac0695dda2b72117b951d1bd56d981618011dc01a81cccd"
+      },
+      "resource-include/stdalign.h": {
+        "bytes": 1338,
+        "sha256": "0af28c6982fa1227427bc259117b5cba2b278189f9378fe0c0c1a4ee4b5d1819"
+      },
+      "resource-include/stdarg.h": {
+        "bytes": 4378,
+        "sha256": "173a81bfbe88a2da5ed5d238e14e0eaca61b090ee6d7b12b5f9614daeea21600"
+      },
+      "resource-include/stdatomic.h": {
+        "bytes": 9715,
+        "sha256": "7e359ce3ebff2f69dd863cf73637e3d70a20486509eba285d659574805c17885"
+      },
+      "resource-include/stdbool.h": {
+        "bytes": 1490,
+        "sha256": "f2a112e8b2128fb1d76e7c0b625cec8760955ebeae5cdf6b419ccf0c6d62768f"
+      },
+      "resource-include/stdckdint.h": {
+        "bytes": 1509,
+        "sha256": "085abc93851c650db04fce113081fe7ca74b5ef374b999097bd46c6f3baeb788"
+      },
+      "resource-include/stdcountof.h": {
+        "bytes": 1104,
+        "sha256": "734cd7e7024ced3010d55f704620084d657a50dd6cf610c9beaf020428cecc57"
+      },
+      "resource-include/stddef.h": {
+        "bytes": 14134,
+        "sha256": "868352506950054491b9c76a4e2814f4f3601d227d3dea62a3e75875f327f2c1"
+      },
+      "resource-include/stdfix.h": {
+        "bytes": 6000,
+        "sha256": "0d81b862fffaa67a7851809df7427ad6e3368ef588fa7990cccc44842dc07d14"
+      },
+      "resource-include/stdint-gcc.h": {
+        "bytes": 9648,
+        "sha256": "c955891e7a7fbadde60a187f66c5b09564d4a1ed751f1c5dd820fb1d71f246db"
+      },
+      "resource-include/stdint.h": {
+        "bytes": 443,
+        "sha256": "64ab730bb09eba38f01a62174fb8371ef281778ac33f141a6fa4217a9b39466a"
+      },
+      "resource-include/stdnoreturn.h": {
+        "bytes": 1136,
+        "sha256": "8e9a835f0009938c402214ab56463500b4732fcd49d1a66583b93d6d032cdeca"
+      },
+      "resource-include/syslimits.h": {
+        "bytes": 445,
+        "sha256": "9409a59233daef9339a757c58b3dd1cee980a65f1ef2590040fe5e106222a4bc"
+      },
+      "resource-include/tgmath.h": {
+        "bytes": 5461,
+        "sha256": "c4742f7a6cac8f610ea6c767b2ae26e66d0c8014288233f943c68d7b43204343"
+      },
+      "resource-include/varargs.h": {
+        "bytes": 139,
+        "sha256": "f9acb21973be5764aa2fd689c941ad963c1ecdd133f3a6529f279803135f8268"
+      }
+    },
+    "nativeQualification": {
+      "bytes": 72427,
+      "sha256": "3103e80d1ed0baf64730a98a6abb2751918e3bc0e0b047153f007110f06fec3c"
+    }
+  },
+  "runtimeImport": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue93-build/work/runtime-current/runtime-build.json",
+      "bytes": 59741,
+      "sha256": "a2dee31961be5c2c7be03abfee9bbabe2a1b96d4212471693b32b9b9c34752e8"
+    },
+    "runtimeLock": {
+      "path": "producer/gcc-wasi/runtime.lock.json",
+      "bytes": 1911,
+      "sha256": "169312117c848eb4505d5217b101269a7c223d96bf9959b693f9bfa7bd370e02"
+    },
+    "archive": {
+      "name": "wasi-sdk-33.0-x86_64-linux.tar.gz",
+      "bytes": 193563606,
+      "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce"
+    },
+    "sysrootFiles": 211,
+    "nativeInputsByteIdentical": true,
+    "equivalence": {
+      "path": "out/issue93-build/control/runtime-reimport-equivalence.json",
+      "bytes": 37303,
+      "sha256": "2fe7fa4b71fb9d5e4f7c74d64bbd41a509fb267c3c6a1beaad6dc21bfc4007da"
+    },
+    "linkerAndProvenance": {
+      "ld.wasm": {
+        "path": "out/issue93-build/work/runtime-current/ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "llvm-producer.json": {
+        "path": "out/issue93-build/work/runtime-current/llvm-producer.json",
+        "bytes": 2134,
+        "sha256": "cc92f3c057a177288e7e11c06092aed47a7484e9ca6551f5c5413bb11b820d78"
+      },
+      "llvm-toolchain.json": {
+        "path": "out/issue93-build/work/runtime-current/llvm-toolchain.json",
+        "bytes": 439865,
+        "sha256": "237a4d29d5a0a7edbec9e78f5a61c303b5e3d90eeb2ff7d4b4bb7b8fe77e5ae8"
+      }
+    },
+    "note": "Imported afresh from the pinned SDK archive using the current lock. Every sysroot file and linker/provenance byte matches the inputs of the completed native proofs; preserved older receipts were not edited."
+  },
+  "package": {
+    "status": "packaged-unverified",
+    "manifest": {
+      "path": "out/issue93-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 16079,
+      "sha256": "42cc27215d79498320884a4db635678b26bd6ac326adc4a80d7dbfe40f86ef27"
+    },
+    "manifestQualification": {
+      "status": "unverified"
+    },
+    "assets": {
+      "cc1Js": {
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "cc1.wasm",
+        "bytes": 15585183,
+        "sha256": "dda4ffb657b94ac3346f1f132648fbf35eb1264437b25469eaef4b71219a4b1a"
+      },
+      "cc1plusJs": {
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "cc1plus.wasm",
+        "bytes": 17245562,
+        "sha256": "977492c19af22b45b7d4ead5c04724ba4cb1e06cd2f55169e9533fa538cef655"
+      },
+      "asJs": {
+        "path": "as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "as.wasm",
+        "bytes": 597157,
+        "sha256": "339a199928446a5c15d540df3d328a68421fc8bbb64b0aad36bef5e221c5093d"
+      },
+      "ldWasm": {
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "sysroot.tar",
+        "bytes": 25443840,
+        "sha256": "1722869d62af1df6ab641a2eb8ba90d8e62be3cfa8f768dfcd088c8b1758796e"
+      }
+    },
+    "loadingSizes": {
+      "path": "out/issue93-build/bundle-final/loading-sizes.json",
+      "bytes": 2106,
+      "sha256": "06ec86da9bd75b62ce25e0aeae1ecc011a54f17afb139654720918ac297d3b7a"
+    },
+    "totalBytes": 75392854,
+    "totalGzipBytes": 24049614,
+    "totalBrotliBytes": 20270640,
+    "note": "Packaging retains the unverified manifest marker by design. Actual Chromium qualification is attested separately below."
+  },
+  "browserQualification": {
+    "status": "passed",
+    "summary": {
+      "path": "out/issue93-build/worker-summary.json",
+      "bytes": 43220,
+      "sha256": "ac6d321a9ff63b0c20ea99b6b45809ac0409d2f329315f4728743666eff43d8b"
+    },
+    "sdkCommit": "9b0b50f23a116fd99bdb7b423bb6e75327ae2959",
+    "browserType": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "nodeVersion": "24.22.1",
+    "sourceSnapshot": {
+      "path": "out/issue93-build/control/worker-inputs-final.json",
+      "bytes": 127594,
+      "sha256": "fa31a258627bc7032a664b5a956cc984d86692a41538970b02dc1432f04e4844"
+    },
+    "frozenInputFiles": 506,
+    "inputsUnchanged": true,
+    "counts": {
+      "chromium": 579,
+      "nodeWasi": 579,
+      "objects": 349,
+      "wat": 349,
+      "objectSignatureChecks": 360
+    },
+    "opcodeChecks": 87,
+    "suites": [
+      {
+        "name": "anonymous-bitfield",
+        "counts": {
+          "chromium": 40,
+          "nodeWasi": 40,
+          "objects": 40,
+          "wat": 40,
+          "objectSignatureChecks": 160
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-anonymous-bitfield/qualification.json",
+          "bytes": 663039,
+          "sha256": "db9c071c9f30b84d3e02c8b429cdd1217b39b5c5d02051693aff9f0d461c476c"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-anonymous-bitfield-inspection.json",
+          "bytes": 97211,
+          "sha256": "7446db218bd826208e10fed1a9a728181d3d0ff99dbfb172cb3ac7191b5962a0"
+        }
+      },
+      {
+        "name": "empty-abi",
+        "counts": {
+          "chromium": 28,
+          "nodeWasi": 28,
+          "objects": 28,
+          "wat": 28,
+          "objectSignatureChecks": 168
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-empty-abi/qualification.json",
+          "bytes": 549167,
+          "sha256": "2fb3946ec5436fff1572c72d425af2ee25c51a8b9a89aeef86df8ace60085dca"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-empty-abi-inspection.json",
+          "bytes": 78562,
+          "sha256": "b8ee26ceb57e7e0978c37c40d18c1ac44b02da31664de4a98a7a64b6c811715c"
+        }
+      },
+      {
+        "name": "singleton-bitfield",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 8,
+          "wat": 8,
+          "objectSignatureChecks": 32
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-singleton-bitfield/qualification.json",
+          "bytes": 262485,
+          "sha256": "768dd6aad9ab38ddb20bc20bbe730ef5a6b152fa04a18cefc0378a40150d5bb2"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-singleton-bitfield-inspection.json",
+          "bytes": 23202,
+          "sha256": "7d05a5a839ae04525240d898a2bd822ce3f935c00561bbc6d91e85e3bd2ba909"
+        }
+      },
+      {
+        "name": "basic",
+        "counts": {
+          "chromium": 17,
+          "nodeWasi": 17,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-basic/qualification.json",
+          "bytes": 305414,
+          "sha256": "80dd72a2c46cd3eb388afdff61f1ed8cd465070c8028660c635261cc403386cf"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-basic-inspection.json",
+          "bytes": 15091,
+          "sha256": "0d4ce5123233bcd6c4ab04d622a4c5ebb79f28635d09f52e2fc793c5fb5cf295"
+        }
+      },
+      {
+        "name": "scalar-abi",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-scalar-abi/qualification.json",
+          "bytes": 380571,
+          "sha256": "046c242212329c6aa2a612677082253f4306c64ad55a0d4ceadc5f696fe7508f"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-scalar-abi-inspection.json",
+          "bytes": 20513,
+          "sha256": "c9d45162af0a8c3e36b1c3ec09627be61223c137e9b8357c592824cb1331efb4"
+        }
+      },
+      {
+        "name": "atomic",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-atomic/qualification.json",
+          "bytes": 231373,
+          "sha256": "f9799f014b5b614a1a2f69c8cd2b1d2f49d99394a5427efd52ee828d0d83c7b8"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-atomic-inspection.json",
+          "bytes": 9641,
+          "sha256": "38612b6017de22431d1bf7ae47e971bc33d66073f00d18e607a3687f47c6fb35"
+        }
+      },
+      {
+        "name": "simd",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 25,
+          "wat": 25,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-simd/qualification.json",
+          "bytes": 425105,
+          "sha256": "13845c4a2828ea2ac05f023676e7761d7956a7b49c64fe0d96d85030a7501bb4"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-simd-inspection.json",
+          "bytes": 46687,
+          "sha256": "ba8881b97ed872803d5c386d0ac41abd1cbde5a5c897bb67f3c1a52e0ddb23be"
+        }
+      },
+      {
+        "name": "extended",
+        "counts": {
+          "chromium": 62,
+          "nodeWasi": 62,
+          "objects": 62,
+          "wat": 62,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-extended/qualification.json",
+          "bytes": 843041,
+          "sha256": "465658a2d21055cdc21cce2f71e97ce8322a9c9fcf6c64618c276967de2e3a90"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-extended-inspection.json",
+          "bytes": 116479,
+          "sha256": "4e746c924e4b4bd39abad6d0ddfcdc544667a2eba2754a3f75cd0180834b71c2"
+        }
+      },
+      {
+        "name": "vector-abi",
+        "counts": {
+          "chromium": 180,
+          "nodeWasi": 180,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-vector-abi/qualification.json",
+          "bytes": 1837136,
+          "sha256": "818f3e075310dcd88b11bded3560f4f1e6e68c9bb8ad0e2079d54c7c1b78b9ef"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-vector-abi-inspection.json",
+          "bytes": 123738,
+          "sha256": "9d64eed0f9836cd6923650862c231f241d8ebaa74e4895891adf9848dd47e2c4"
+        }
+      },
+      {
+        "name": "long-double",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-long-double/qualification.json",
+          "bytes": 656285,
+          "sha256": "c8cc5501815815b98dda0449fa7b33ed8bc35a810b180aa2bb5c923b540b764e"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-long-double-inspection.json",
+          "bytes": 131589,
+          "sha256": "cafc0f8fa16e89c4aaf542fae070e66fdb73fbd5a48263c563fb7940d23bd2c9"
+        }
+      },
+      {
+        "name": "int128",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-int128/qualification.json",
+          "bytes": 650285,
+          "sha256": "7351c154a932a60a09fadee16cb8e420663ad835858115c04cff5f1db5905b50"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-int128-inspection.json",
+          "bytes": 107554,
+          "sha256": "647e3e7889f5fc3a5135178cdeeb49b1074ed7a9c3a03137728ff290df423fbc"
+        }
+      },
+      {
+        "name": "wide-integer",
+        "counts": {
+          "chromium": 52,
+          "nodeWasi": 52,
+          "objects": 52,
+          "wat": 52,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-wide-integer/qualification.json",
+          "bytes": 741137,
+          "sha256": "11da8ed0f9bc3d381d71bba89d8a0923b56de873eea80159e585008326cff758"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-wide-integer-inspection.json",
+          "bytes": 100736,
+          "sha256": "7ab1f1f00bbb1b301a60cdca8963f628f6e4d51bac8062eee3e354a7e7c9c8fb"
+        }
+      },
+      {
+        "name": "fp-extension",
+        "counts": {
+          "chromium": 50,
+          "nodeWasi": 50,
+          "objects": 50,
+          "wat": 50,
+          "objectSignatureChecks": 0
+        },
+        "qualification": {
+          "path": "out/issue93-build/worker-qualification-final/worker-fp-extension/qualification.json",
+          "bytes": 721899,
+          "sha256": "208b62ebf182e80043a6caf53e890efd5fb3af0d96edf51a7f4dfc16d4af7294"
+        },
+        "inspection": {
+          "path": "out/issue93-build/worker-qualification-final/worker-fp-extension-inspection.json",
+          "bytes": 135072,
+          "sha256": "2a46ec88ad12f3df38f357f94b21e9332597b4534ace05321ad182c7b56bdad2"
+        }
+      }
+    ],
+    "opcodeReceipts": [
+      {
+        "path": "out/issue93-build/worker-qualification-final/worker-simd-opcodes.json",
+        "bytes": 97201,
+        "sha256": "f9379a8613a13c39ef9a141d738198029e144acf6f6c8945c2cbafb1136ff789"
+      },
+      {
+        "path": "out/issue93-build/worker-qualification-final/worker-extended-opcodes.json",
+        "bytes": 316834,
+        "sha256": "ad1de2b974652c6ca7dbb6c559085cb7c2e51ad3fb2e735a7ce243f87e32b60b"
+      }
+    ],
+    "actualLoading": {
+      "sdkUncompressedBytes": {
+        "minimum": 5630311,
+        "maximum": 5630315
+      },
+      "totalUncompressedBytes": {
+        "minimum": 81023165,
+        "maximum": 81023169
+      },
+      "actualInitialResponseBodyBytes": {
+        "minimum": 29679925,
+        "maximum": 29679929
+      }
+    },
+    "executionCommands": {
+      "path": "out/issue93-build/control/worker-commands.json",
+      "bytes": 24481,
+      "sha256": "41bef27eb0f01e334e47eb9cb1ee69f0ee07d8e66c340b7620d1313f42f7ab19"
+    },
+    "all43CommandsExitedZero": true,
+    "remainingOwnedBrowserProfileProcesses": 0
+  },
+  "completedJobs": [
+    {
+      "kind": "native-build",
+      "processId": 695416,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/native-final-process.json",
+        "bytes": 665,
+        "sha256": "c1089e3e04200de698bcfe7245c92146adcf5886b1244a38cd4d00cc9009fe3a"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-native-final-20261030T150227.log",
+        "bytes": 1606682,
+        "sha256": "a56d19e25694fdda87708ec987bfe06f6bcbe6465c6997c683466a2776c5cdae"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-native-final-20261030T150227.log.status",
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      }
+    },
+    {
+      "kind": "native-proofs-and-smoke",
+      "processId": 768720,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/native-proof-process.json",
+        "bytes": 456,
+        "sha256": "4e965ae0378b1f52934b53367af9f9c513708a7f66ed543a4496fb587cbec275"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-native-proof-20261030T060753Z.log",
+        "bytes": 8914,
+        "sha256": "590cb0a3a48d08213f5aa8d197cb79297495faef35faf9702f93b3ee8308e65b"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-native-proof-20261030T060753Z.log.status",
+        "bytes": 63,
+        "sha256": "b811031ad883aaafb174121beb5d4fcbfaadb84b33e68ad3cd98da560c448a0f"
+      },
+      "elapsedSeconds": 692.8713412284851
+    },
+    {
+      "kind": "gnu-runtime",
+      "processId": 907539,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/native-runtime-process.json",
+        "bytes": 322,
+        "sha256": "73b29c89774aaf08ab3ff40228fb9c6a232fe6a224cdde59d2ff6b26c7fea041"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-gnu-runtime-20261030T062043Z.log",
+        "bytes": 788770,
+        "sha256": "051af25e5aacdabe3983c07636d270ea24e7e61cabf18af7f643772dc65a1454"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-gnu-runtime-20261030T062043Z.log.status",
+        "bytes": 64,
+        "sha256": "3b8f169033122465c2b849a8f911cdcc5b314d51dba1b1b31ec6ad6749ae282b"
+      },
+      "elapsedSeconds": 159.03076577186584
+    },
+    {
+      "kind": "native-regressions",
+      "processId": 977923,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/native-regressions-process.json",
+        "bytes": 340,
+        "sha256": "9f8a7bca7f4457f27b4737b6baf01e1fcffdc7c0e145d2f5f67b25308227770f"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-native-regressions-20261030T062341Z.log",
+        "bytes": 75997,
+        "sha256": "7d6abeaf53beee0aac1c317d5708ae042736017e19e8618a9b92981266a6ae77"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-native-regressions-20261030T062341Z.log.status",
+        "bytes": 4491,
+        "sha256": "6440202925ca5ebae84d02a2209b169b320391fcbfbb62e65a59b3349fb42bdf"
+      },
+      "elapsedSeconds": 714.0790872573853
+    },
+    {
+      "kind": "wasm-host-build",
+      "processId": 1137311,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/browser-process.json",
+        "bytes": 318,
+        "sha256": "3cf58fb1479a49dd4931083c92ad56b2e6db9b8c83c684aa26f9d35ae565b5d9"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-browser-retry-20261030T153224.log",
+        "bytes": 7010828,
+        "sha256": "9aec23ddb60ec28d9afdade32c532181e43172dc0b59cd53236d39931a168c09"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-browser-retry-20261030T153224.log.status",
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      }
+    },
+    {
+      "kind": "package",
+      "processId": 1444999,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/package-process.json",
+        "bytes": 585,
+        "sha256": "374ef6ef9c3be65f6d5e46043a6ab1ec10edb2aa75f2f2f5da111b269fbdd43f"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-package-reimport-20261030T071634Z.log",
+        "bytes": 449,
+        "sha256": "5c087e9ac6151b4beace6dcdb7735f2245c3348362a50e348275c41f0a8c90f7"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-package-reimport-20261030T071634Z.log.status",
+        "bytes": 63,
+        "sha256": "9479c2e948b3098df41923d44421dd1c32e2ac207a562a9cf2b0d4e987dd0e75"
+      },
+      "elapsedSeconds": 65.07220005989075
+    },
+    {
+      "kind": "chromium-worker",
+      "processId": 1459816,
+      "exitCode": 0,
+      "metadata": {
+        "path": "out/issue93-build/control/worker-process.json",
+        "bytes": 480,
+        "sha256": "a2ddb93a839b73fc8febf372277985c6989300772c2f75f4c9477b6955b030bf"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-worker-short-tmp-20261030T072207Z.log",
+        "bytes": 48771,
+        "sha256": "dcf99231ff442615c270d4c46ce45bdbc131703a376ac1656e82dad00ea1639d"
+      },
+      "status": {
+        "path": "~/logs/wasm-llvm-93-worker-short-tmp-20261030T072207Z.log.status",
+        "bytes": 6650,
+        "sha256": "f179a13ea69f228f9e3292aa2c333f870a2efb8a8fce73414de89900059d75a9"
+      },
+      "elapsedSeconds": 370.78072571754456
+    }
+  ],
+  "setupAttemptHistory": [
+    {
+      "stage": "package-input-provenance",
+      "status": "rejected",
+      "exitCode": 1,
+      "compilerFailure": false,
+      "reason": "The reused runtime import receipt bound an older runtime.lock.json containing pre-snapshot linker paths. The gate rejected its identity mismatch before packaging.",
+      "recovery": "Reimport the exact pinned SDK archive into runtime-current with the current lock, then compare every sysroot and linker/provenance byte with native inputs.",
+      "metadata": {
+        "path": "out/issue93-build/control/package-first-process.json",
+        "bytes": 422,
+        "sha256": "2334970c18a0f33244c4c7bb0966b3c441b9cec96d149f755819a3078600707b"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-package-20261030T064616Z.log",
+        "bytes": 636,
+        "sha256": "1a895c86f711cc5fab8df5748556436d300c22b123b6a95be88e821fe45ea36b"
+      },
+      "statusFile": {
+        "path": "~/logs/wasm-llvm-93-package-20261030T064616Z.log.status",
+        "bytes": 65,
+        "sha256": "ba363962bfd17e17b8a21ef9f85406a1734fc9877b0efe7868a9bf3357b868bf"
+      }
+    },
+    {
+      "stage": "chromium-startup",
+      "status": "failed-before-compilation",
+      "exitCode": 1,
+      "compilerFailure": false,
+      "fixtureCompilationsStarted": 0,
+      "reason": "The long worktree TMPDIR exceeded the Unix SingletonSocket path limit.",
+      "recovery": "Use a fresh short private /tmp/w93-* directory; preserve the failed launch output and run the full matrix in a new output directory.",
+      "metadata": {
+        "path": "out/issue93-build/control/worker-attempt-1/worker-process.json",
+        "bytes": 461,
+        "sha256": "9e068ca7e4fd59e27edd0ab40c8efc37b69752f23c1caec5d5ff4c1910bb26ac"
+      },
+      "sourceSnapshot": {
+        "path": "out/issue93-build/control/worker-attempt-1/worker-inputs.json",
+        "bytes": 127594,
+        "sha256": "5bae0c5b9b283fef92ab17574ac937a7b195c168ae93d0495c01037ee58a08ad"
+      },
+      "qualification": {
+        "path": "out/issue93-build/worker-qualification/worker-anonymous-bitfield/qualification.json",
+        "bytes": 76573,
+        "sha256": "b2cd1350c2c4925cace35844b6486c1e0c9ac08e9685e65153028cdd17d1f692"
+      },
+      "log": {
+        "path": "~/logs/wasm-llvm-93-worker-retry-20261030T071634Z.log",
+        "bytes": 14301,
+        "sha256": "225e6fac82cbe6a97fb8521a2bc4fb92b7c41c1e54a836da71768d74b4667faf"
+      },
+      "statusFile": {
+        "path": "~/logs/wasm-llvm-93-worker-retry-20261030T071634Z.log.status",
+        "bytes": 107,
+        "sha256": "525243ebae3fae90979f70e1d7f8b7e1cf97e713db6cab594cf5e921287f3c12"
+      }
+    }
+  ],
+  "pendingQualificationJobs": [],
   "fixtures": [
     {
       "id": "anonymous-bitfield-named-control-o0-gcc-gcc",
