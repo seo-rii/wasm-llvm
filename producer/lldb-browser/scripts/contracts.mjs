@@ -1,3 +1,4 @@
+import { validateModuleInstantiation } from "../../debug-module-api.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -224,6 +225,7 @@ export function createArtifactManifest({
   workerSha256,
   patchesSha256,
   capabilities,
+  moduleInstantiation,
 }) {
   assertSha256(jsSha256, "lldb-web-dap.js hash");
   assertSha256(wasmSha256, "lldb-web-dap.wasm hash");
@@ -235,6 +237,7 @@ export function createArtifactManifest({
     debugger: {
       protocolVersion: 1,
       lldb: {
+        ...(moduleInstantiation ? { moduleInstantiation } : {}),
         js: "lldb-web-dap.js",
         wasm: "lldb-web-dap.wasm",
         worker: PTHREAD_WORKER_ASSET,
@@ -266,6 +269,7 @@ export function createBuildReceipt({
   workerBytes,
   patchesSha256,
   buildFlags,
+  moduleInstantiation,
 }) {
   assertSha256(manifestSha256, "producer manifest hash");
   assertSha256(sourcesLockSha256, "sources lock hash");
@@ -289,6 +293,7 @@ export function createBuildReceipt({
       emscriptenRevision: EMSCRIPTEN_REVISION,
     },
     build: {
+      ...(moduleInstantiation ? { moduleInstantiation } : {}),
       target: "wasm32-unknown-emscripten",
       pthreads: true,
       proxyToPthread: true,
@@ -326,6 +331,7 @@ export function validateArtifactManifest(artifactManifest) {
     throw new Error("debug-manifest.json must use manifestVersion 1");
   }
   const lldb = artifactManifest.debugger?.lldb;
+  validateModuleInstantiation(lldb?.moduleInstantiation, "LLDB manifest");
   if (
     lldb?.llvmVersion !== LLVM_VERSION ||
     lldb?.llvmRevision !== LLVM_REVISION ||
@@ -354,7 +360,9 @@ export function validateArtifactManifest(artifactManifest) {
     throw new Error("debug-manifest.json has an invalid transport contract");
   }
   if (artifactManifest.debugger?.capabilities?.writeMemory !== true) {
-    throw new Error("debug-manifest.json has an invalid writeMemory capability");
+    throw new Error(
+      "debug-manifest.json has an invalid writeMemory capability",
+    );
   }
   if (artifactManifest.debugger?.capabilities?.dataBreakpoints !== true) {
     throw new Error(
@@ -364,6 +372,19 @@ export function validateArtifactManifest(artifactManifest) {
 }
 
 export function validateBuildReceipt(receipt) {
+  validateModuleInstantiation(
+    receipt?.build?.moduleInstantiation,
+    "LLDB receipt",
+  );
+  if (receipt?.build?.derivation !== undefined) {
+    const derivation = receipt.build.derivation;
+    if (
+      derivation?.kind !== "post-link-experiment" ||
+      derivation.proof !== "post-link-experiment.json"
+    )
+      throw new Error("Unsupported LLDB experimental derivation");
+    assertSha256(derivation.sha256, "experimental provenance digest");
+  }
   if (!receipt || receipt.schemaVersion !== 1) {
     throw new Error("lldb-browser.receipt.json must use schemaVersion 1");
   }
@@ -409,10 +430,7 @@ export function validateBuildReceipt(receipt) {
     }
     assertSha256(metadata.sha256, `receipt ${asset} hash`);
   }
-  if (
-    receipt.assets["lldb-web-dap.wasm"].size >
-    LLDB_WASM_SIZE_BUDGET_BYTES
-  ) {
+  if (receipt.assets["lldb-web-dap.wasm"].size > LLDB_WASM_SIZE_BUDGET_BYTES) {
     throw new Error(
       "lldb-web-dap.wasm exceeds its 48 MiB uncompressed size budget",
     );
@@ -430,9 +448,7 @@ export function validateBuildReceipt(receipt) {
   }
   assertSha256(compressed.sha256, "receipt compressed Wasm hash");
   if (compressed.size > LLDB_WASM_GZIP_SIZE_BUDGET_BYTES) {
-    throw new Error(
-      "lldb-web-dap.wasm exceeds its 18 MiB gzip size budget",
-    );
+    throw new Error("lldb-web-dap.wasm exceeds its 18 MiB gzip size budget");
   }
 }
 

@@ -71,7 +71,8 @@ export async function makeBuildReceipt(inputs) {
 		sources: {
 			llvm: { ...source, repository: manifest.sources.llvm.repository, commit: manifest.sources.llvm.commit,
 				patches: [{ ...manifest.sources.wasiHostPatch, sha256: sha256('synthetic fixture patch') }, manifest.sources.llvmWasiClosePatch,
-					manifest.sources.lldWasmOnlyPatch, manifest.sources.clangdEmscriptenStdinPatch] },
+					manifest.sources.lldWasmOnlyPatch, manifest.sources.clangdEmscriptenStdinPatch,
+					manifest.sources.wasmFunctionEndPatch] },
 			emsdk: { ...source, repository: 'https://github.com/emscripten-core/emsdk', commit: manifest.toolchains.emsdk.commit }
 		},
 		buildMode: 'fresh-output-directory',

@@ -1,14 +1,50 @@
 import { createHash } from 'node:crypto';
-import { parseArguments } from './shared.mjs';
+import { isMain, parseArguments } from './shared.mjs';
 import { verifyWamrBrowser } from './verify.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { chromium } from 'playwright-core';
+
+// Keep the browser's bytes and the qualification metadata in one verified
+// snapshot, even if the build directory changes while Chromium is running.
+export async function loadVerifiedTransportSmokeInputs(artifacts) {
+ const root = path.resolve(artifacts);
+ const receiptBytes = await readFile(path.join(root, 'producer-receipt.json'));
+ const producerReceipt = await verifyWamrBrowser({ artifacts: root });
+ if (!isDeepStrictEqual(JSON.parse(receiptBytes), producerReceipt)) {
+  throw new Error('WAMR producer receipt changed while preparing transport smoke');
+ }
+ const files = new Map();
+ for (const name of ['wamr-debug.js', 'wamr-debug.worker.mjs', 'wamr-debug.wasm']) {
+  const bytes = await readFile(path.join(root, name));
+  const asset = producerReceipt.assets.find(entry => entry.path === name);
+  if (bytes.byteLength !== asset.bytes || createHash('sha256').update(bytes).digest('hex') !== asset.sha256) {
+   throw new Error(`${name} changed while preparing transport smoke`);
+  }
+  files.set('/' + name, bytes);
+ }
+ return {
+  files,
+  metadata: {
+   producerReceiptSha256: createHash('sha256').update(receiptBytes).digest('hex'),
+   assets: producerReceipt.assets,
+   build: {
+    wamrRevision: producerReceipt.wamrRevision,
+    emscriptenVersion: producerReceipt.emscriptenVersion,
+    emsdkRevision: producerReceipt.emsdkRevision,
+    provenance: producerReceipt.provenance,
+    ...(producerReceipt.moduleInstantiation ? { moduleInstantiation: producerReceipt.moduleInstantiation } : {})
+   }
+  }
+ };
+}
+
+async function main() {
 const options = parseArguments(process.argv.slice(2));
 if (!options.artifacts || !options.receipt) throw new Error('Usage: smoke-transport.mjs --artifacts DIR --receipt FILE');
-const root = path.resolve(options.artifacts);
-const producerReceipt = await verifyWamrBrowser({ artifacts: root });
+const { files, metadata } = await loadVerifiedTransportSmokeInputs(options.artifacts);
 const guest = [0,97,115,109,1,0,0,0,1,5,1,96,0,1,127,3,2,1,0,7,8,1,4,109,97,105,110,0,0,10,6,1,4,0,65,0,11];
 await WebAssembly.compile(new Uint8Array(guest));
 const workerSource = `import createModule from '/wamr-debug.js';
@@ -33,7 +69,7 @@ const server = createServer(async (request,response)=>{
   if(pathname==='/') {response.setHeader('Content-Type','text/html');response.end('<!doctype html><title>WAMR smoke</title>');}
   else if(pathname==='/worker.mjs') {response.setHeader('Content-Type','text/javascript');response.end(workerSource);}
   else if(['/wamr-debug.js','/wamr-debug.worker.mjs','/wamr-debug.wasm'].includes(pathname)) {
-   response.setHeader('Content-Type',pathname.endsWith('.wasm')?'application/wasm':'text/javascript');response.end(await readFile(path.join(root,pathname.slice(1))));
+   response.setHeader('Content-Type',pathname.endsWith('.wasm')?'application/wasm':'text/javascript');response.end(files.get(pathname));
   } else {response.statusCode=404;response.end();}
  }catch(error){response.statusCode=500;response.end(String(error));}
 });
@@ -72,14 +108,10 @@ try {
  });
  await writeFile(options.receipt, JSON.stringify({ schemaVersion: 1, kind: 'wamr-transport-smoke',
   browser: await browser.version(), node: process.version,
-  producerReceiptSha256: createHash('sha256').update(await readFile(path.join(root, 'producer-receipt.json'))).digest('hex'),
-  assets: producerReceipt.assets, cases: ['module-factory', 'pthread-bootstrap', 'shared-ring-qSupported'],
-  ...result,
-  build: {
-   wamrRevision: producerReceipt.wamrRevision,
-   emscriptenVersion: producerReceipt.emscriptenVersion,
-   emsdkRevision: producerReceipt.emsdkRevision,
-   provenance: producerReceipt.provenance
-  } }, null, 2) + '\n');
+  ...metadata, cases: ['module-factory', 'pthread-bootstrap', 'shared-ring-qSupported'],
+  ...result }, null, 2) + '\n');
  console.log(JSON.stringify(result));
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}
+}
+
+if (isMain(import.meta.url)) await main();

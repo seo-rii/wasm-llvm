@@ -11,6 +11,32 @@ import { fileURLToPath } from 'node:url';
 
 const execFileAsync = promisify(execFile);
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const shellQuote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+
+export async function createEmsdkPythonWrapper(wrapper, python = process.env.EMSDK_PYTHON || 'python3') {
+	const probe = 'import json, sys; print(json.dumps([sys.executable, sys.prefix, sys.base_prefix, sys.version, sys.dont_write_bytecode]))';
+	const { stdout } = await execFileAsync(python, ['-E', '-c', probe]);
+	const original = JSON.parse(stdout);
+	const [executable] = original;
+	if (typeof executable !== 'string' || !path.isAbsolute(executable))
+		throw new Error('Emscripten Python must resolve to an absolute executable path');
+	await fs.access(executable, fs.constants.X_OK);
+	// Emscripten entrypoints use Python -E, which ignores PYTHONDONTWRITEBYTECODE.
+	// Its config also resets EMSDK_PYTHON to sys.executable for child tools. Preserve
+	// this wrapper as argv[0] so nested emcc/emar processes retain explicit -B too.
+	await fs.writeFile(wrapper, `#!/bin/bash\nexec -a "$0" ${shellQuote(executable)} -B "$@"\n`, { mode: 0o700, flag: 'wx' });
+	const wrapped = JSON.parse((await execFileAsync(path.resolve(wrapper), ['-E', '-c', probe])).stdout);
+	if (wrapped[0] !== path.resolve(wrapper) || wrapped[4] !== true ||
+		JSON.stringify(wrapped.slice(1, 4)) !== JSON.stringify(original.slice(1, 4)))
+		throw new Error('Emscripten Python wrapper must preserve the interpreter environment and disable bytecode');
+	return executable;
+}
+
+export function emsdkShellCommand(environmentScript, cacheDirectory, pythonWrapper, command) {
+	// emsdk_env.sh clears inherited EM_CACHE and EMSDK_PYTHON. Restore both after
+	// activation so system libraries and Python bytecode cannot mutate SDK inputs.
+	return `source ${shellQuote(environmentScript)} && export EM_CACHE=${shellQuote(cacheDirectory)} EMSDK_PYTHON=${shellQuote(pythonWrapper)} && ${command}`;
+}
 
 export async function fileIdentity(file) {
 	const hash = createHash('sha256');
@@ -202,9 +228,9 @@ export async function verifyClangBuildReceipt(receipt, inputs, { producerRoot = 
 	if (receipt.sources?.llvm?.repository !== manifest.sources.llvm.repository ||
 		receipt.sources?.emsdk?.repository !== 'https://github.com/emscripten-core/emsdk') fail('unexpected source repository');
 	const expectedPatches = [manifest.sources.llvmWasiClosePatch, manifest.sources.lldWasmOnlyPatch,
-		manifest.sources.clangdEmscriptenStdinPatch];
+		manifest.sources.clangdEmscriptenStdinPatch, manifest.sources.wasmFunctionEndPatch];
 	const patches = receipt.sources?.llvm?.patches;
-	if (!Array.isArray(patches) || patches.length !== 4 || !digest(patches[0]?.sha256) ||
+	if (!Array.isArray(patches) || patches.length !== expectedPatches.length + 1 || !digest(patches[0]?.sha256) ||
 		patches[0]?.repository !== receipt.buildOptions?.yowaspWasiPatchRepo ||
 		patches[0]?.commit !== receipt.buildOptions?.yowaspWasiPatchCommit ||
 		!/^[a-f0-9]{40}$/.test(patches[0]?.commit)) fail('incomplete YoWASP patch identity');

@@ -1,0 +1,63 @@
+{
+  "format": "wasm-llvm-lldb-post-link-experiment-v1",
+  "fullSourceBuild": false,
+  "emsdkRevision": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+  "input": {
+    "manifest": "{\n  \"manifestVersion\": 2,\n  \"version\": \"llvmorg-22.1.8\",\n  \"defaultTarget\": \"wasm32-wasi\",\n  \"compiler\": {\n    \"memfs\": {\n      \"asset\": \"bin/memfs.zip\",\n      \"argv0\": \"memfs\"\n    },\n    \"clang\": {\n      \"asset\": \"bin/clang.zip\",\n      \"argv0\": \"clang\"\n    },\n    \"lld\": {\n      \"asset\": \"bin/lld.zip\",\n      \"argv0\": \"wasm-ld\"\n    },\n    \"sysroot\": {\n      \"asset\": \"bin/sysroot.tar.zip\"\n    },\n    \"provenance\": {\n      \"name\": \"clang\",\n      \"version\": \"22.1.8\",\n      \"revision\": \"ca7933e47d3a3451d81e72ac174dcb5aa28b59d1\"\n    },\n    \"resourceDir\": \"/lib/clang/22\",\n    \"compilerRuntimeLibDir\": \"lib/clang/22/lib/wasi\"\n  },\n  \"clangd\": {\n    \"js\": \"clangd/clangd.js\",\n    \"wasm\": \"clangd/clangd.wasm.gz\"\n  },\n  \"targets\": {\n    \"wasm32-wasi\": {\n      \"artifactFormat\": \"wasi-core-wasm\",\n      \"execution\": {\n        \"kind\": \"wasi-preview1\"\n      }\n    }\n  },\n  \"debugger\": {\n    \"protocolVersion\": 1,\n    \"transport\": \"shared-ring-v1\",\n    \"lldb\": {\n      \"js\": \"debug/lldb-web-dap.js\",\n      \"wasm\": \"debug/lldb-web-dap.wasm\",\n      \"worker\": \"debug/lldb-web-dap.pthread.mjs\",\n      \"jsSha256\": \"c6ecfaf08d60af11b003df60435c77a5ed24fc46887d2aa43e19436d5a5eb59d\",\n      \"wasmSha256\": \"e7146642a865ffb41cca6635c72f97bfe923be1ce7f0d930e2e59713a3ee5222\",\n      \"workerSha256\": \"d40975277aa0c98c6570f9a35d52ab9be475ded4e7a4796fc6d0f8f314c9652d\",\n      \"llvmVersion\": \"22.1.8\",\n      \"llvmRevision\": \"ca7933e47d3a3451d81e72ac174dcb5aa28b59d1\",\n      \"patchesSha256\": \"5812710a11b6d9a83b30981753123f9de0b0931a1c13eda07d20f4a4556c081f\",\n      \"sourcesLockSha256\": \"ef0352666fd3ec65164a67af8c380241a4d12dd432dfd4a73abd8080ddce855d\"\n    },\n    \"targetRuntime\": {\n      \"name\": \"wamr\",\n      \"js\": \"debug/wamr-debug.js\",\n      \"wasm\": \"debug/wamr-debug.wasm\",\n      \"worker\": \"debug/wamr-debug.worker.mjs\",\n      \"jsSha256\": \"5071ebb71f077a9ebed15d52897a2ab13b470a44a1e271f44113f3a27d388e0d\",\n      \"wasmSha256\": \"35e53c222ec5cde0935d48bdd5fd1897de91622619f78e9b939170e67792b95b\",\n      \"workerSha256\": \"b02f409a57667da4edf2562fddc1101527bd2ccd6885133c178188e09d2413b8\",\n      \"revision\": \"25bd7eb63e828e4bd242cc9b38d260b4b31c6605\",\n      \"provenance\": {\n        \"sourcesLockSha256\": \"18f924fa418c7dccb0c557c1310ae877f5e5ab41ce34256230565879fe1f2727\",\n        \"producerManifestSha256\": \"f7efb29794c7f64bc9d21088230ff2bfce52f504e80419b50b8bc8fc0c260d8a\",\n        \"patchesSha256\": \"6c6bcf6037fc33378ea290a6a263fb60eaaf5a82a12bd6687c6b78fb0cf25289\",\n        \"overlaysSha256\": \"59a504fb047a67577202b4ff9a79f056d080fa6a39ca3eb6bd27118d497b14d7\"\n      }\n    },\n    \"capabilities\": {\n      \"breakpoints\": true,\n      \"stepping\": true,\n      \"stackTrace\": true,\n      \"locals\": true,\n      \"globals\": true,\n      \"readMemory\": true,\n      \"writeMemory\": true,\n      \"evaluateExpressions\": false,\n      \"dataBreakpoints\": true,\n      \"wasmThreads\": false\n    }\n  }\n}\n",
+    "manifestSha256": "d4b08c91cd9bc810d0862ea2a5ef5a092e52f6b22a6f3121499ec5d3df2086b5",
+    "wasmSha256": "e7146642a865ffb41cca6635c72f97bfe923be1ce7f0d930e2e59713a3ee5222"
+  },
+  "recoveredInputSha256": "ceb60ed87ab389eb9147e2cee03773b55cf084872b33204461c4a5106777926c",
+  "commands": {
+    "featureRecovery": [
+      "/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/bin/wasm-opt",
+      "/home/seorii/dev/hancomac/.worktrees/wasm-idle-lldb-performance-20261023/static/wasm-debug/debug/lldb-web-dap.wasm",
+      "--all-features",
+      "--emit-target-features",
+      "-o",
+      "/home/seorii/.cache/wasm-lldb-module-api-20261023/lldb-postlink-input.wasm"
+    ],
+    "postLink": [
+      "/home/seorii/.cache/wasm-llvm-speed-20261005/hot-o2/work/emsdk/upstream/emscripten/emcc",
+      "--post-link",
+      "/home/seorii/.cache/wasm-lldb-module-api-20261023/lldb-postlink-input.wasm",
+      "-Oz",
+      "-pthread",
+      "-sPTHREAD_POOL_SIZE=8",
+      "-sPROXY_TO_PTHREAD=1",
+      "-sMODULARIZE=1",
+      "-sEXPORT_ES6=1",
+      "-sEXPORT_NAME=createLldbWebDapModule",
+      "-sENVIRONMENT=worker",
+      "-sINVOKE_RUN=0",
+      "-sINCOMING_MODULE_JS_API=['instantiateWasm','locateFile','mainScriptUrlOrBlob','noInitialRun','onAbort','onExit','stdout','stderr','print','printErr']",
+      "-sEXPORTED_RUNTIME_METHODS=['FS','callMain','HEAPU8']",
+      "-sFILESYSTEM=1",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sINITIAL_MEMORY=268435456",
+      "-sMAXIMUM_MEMORY=4294967296",
+      "-sSTACK_SIZE=8388608",
+      "-sWASM_BIGINT=1",
+      "-sASSERTIONS=1",
+      "-sEXIT_RUNTIME=1",
+      "-sERROR_ON_UNDEFINED_SYMBOLS=1",
+      "-Wl,--gc-sections",
+      "--js-library=/home/seorii/dev/hancomac/.worktrees/wasm-llvm-lldb-module-api-20261023/producer/lldb-browser/overlays/lldb/tools/lldb-web-dap/library_lldb_shared_ring.js",
+      "-o",
+      "/home/seorii/.cache/wasm-lldb-module-api-20261023/lldb-web-dap.js"
+    ]
+  },
+  "output": {
+    "js": {
+      "bytes": 163091,
+      "sha256": "a1500477e01c8071c5fbf2e1b720af8d5d5172c501eb1c9f59881505f53036d0"
+    },
+    "wasm": {
+      "bytes": 40986922,
+      "sha256": "7a8942ab101dfb1cba1acdd055828ec6049974627e00addf4583df1434f149ec"
+    }
+  },
+  "started": 1792730447.02844,
+  "ended": 1792730673.3688698,
+  "exitCode": 0
+}

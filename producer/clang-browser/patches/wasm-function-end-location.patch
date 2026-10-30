@@ -1,0 +1,98 @@
+diff --git a/clang/lib/CodeGen/CodeGenFunction.cpp b/clang/lib/CodeGen/CodeGenFunction.cpp
+--- a/clang/lib/CodeGen/CodeGenFunction.cpp
++++ b/clang/lib/CodeGen/CodeGenFunction.cpp
+@@ -434,11 +434,24 @@
+   }
+ 
+   // Emit debug descriptor for function end.
+-  if (CGDebugInfo *DI = getDebugInfo())
++  if (CGDebugInfo *DI = getDebugInfo()) {
++    if (Target.getTriple().isWasm() &&
++        CGM.getCodeGenOpts().OptimizationLevel == 0 && EndLoc.isValid()) {
++      // In an unoptimized Wasm debug build the epilogue is the final place
++      // where a debugger can stop with this frame and its locals still live.
++      // Keep the closing brace as a real line-table stop rather than merging
++      // the epilogue into a simple return expression. Do this before popping
++      // the function's debug scope, and prevent EmitFunctionEpilog from
++      // restoring the return-value store's location.
++      DI->EmitLocation(Builder, EndLoc);
++      Loc = Builder.getCurrentDebugLocation();
++      EmitRetDbgLoc = false;
++    }
+     DI->EmitFunctionEnd(Builder, CurFn);
+-
+-  // Reset the debug location to that of the simple 'return' expression, if any
+-  // rather than that of the end of the function's scope '}'.
++  }
++
++  // Use the simple return expression's location unless the target above keeps
++  // a distinct function-end location for the epilogue.
+   uint64_t RetKeyInstructionsAtomGroup = Loc ? Loc->getAtomGroup() : 0;
+   ApplyDebugLocation AL(*this, Loc);
+   EmitFunctionEpilog(*CurFnInfo, EmitRetDbgLoc, EndLoc,
+diff --git a/clang/test/DebugInfo/WebAssembly/function-end-location.c b/clang/test/DebugInfo/WebAssembly/function-end-location.c
+new file mode 100644
+--- /dev/null
++++ b/clang/test/DebugInfo/WebAssembly/function-end-location.c
+@@ -0,0 +1,61 @@
++// RUN: %clang_cc1 -triple wasm32-unknown-wasi -O0 -emit-llvm -debug-info-kind=limited -gno-column-info %s -o - | FileCheck %s --check-prefixes=COMMON,WASM
++// RUN: %clang_cc1 -triple wasm64-unknown-wasi -O0 -emit-llvm -debug-info-kind=limited -gno-column-info %s -o - | FileCheck %s --check-prefixes=COMMON,WASM
++// RUN: %clang_cc1 -triple x86_64-unknown-linux-gnu -O0 -emit-llvm -debug-info-kind=limited -gno-column-info %s -o - | FileCheck %s --check-prefixes=COMMON,NATIVE
++// RUN: %clang_cc1 -triple wasm32-unknown-wasi -O1 -emit-llvm -debug-info-kind=limited -gno-column-info %s -o - | FileCheck %s --check-prefix=OPT
++// RUN: %clang_cc1 -triple wasm32-unknown-wasi -O0 -emit-llvm %s -o - | FileCheck %s --check-prefix=NODEBUG
++
++// A function-end stop belongs to a real epilogue instruction in this function.
++// Only unoptimized Wasm debug code changes. Native and optimized return
++// locations remain at the return expression, and nodebug code gains no debug
++// locations or extra instructions.
++
++// COMMON-LABEL: define{{.*}} i32 @value(
++// WASM: ret i32 {{.*}}, !dbg ![[VALUE_END:[0-9]+]]
++// NATIVE: ret i32 {{.*}}, !dbg ![[VALUE_RET:[0-9]+]]
++// OPT-LABEL: define{{.*}} i32 @value(
++// OPT: ret i32 {{.*}}, !dbg ![[OPT_RET:[0-9]+]]
++#line 100
++int value(int n) {
++  int answer = n + 10;
++  return answer;
++}
++
++// COMMON-LABEL: define{{.*}} i32 @branches(
++// WASM: ret i32 {{.*}}, !dbg ![[BRANCH_END:[0-9]+]]
++#line 200
++int branches(int n) {
++  if (n)
++    return n;
++  return 0;
++}
++
++// COMMON-LABEL: define{{.*}} void @implicit(
++// WASM: ret void, !dbg ![[VOID_END:[0-9]+]]
++#line 300
++void implicit(int *out) {
++  *out = 7;
++}
++
++// COMMON-LABEL: define{{.*}} void @early_void(
++// WASM: ret void, !dbg ![[EARLY_END:[0-9]+]]
++#line 400
++void early_void(void) {
++  return;
++}
++
++// COMMON-LABEL: define{{.*}} i32 @constant(
++// WASM: ret i32 42, !dbg ![[CONST_END:[0-9]+]]
++#line 500
++int constant(void) {
++  return 42;
++}
++
++// WASM: ![[VALUE_END]] = !DILocation(line: 103,
++// NATIVE: ![[VALUE_RET]] = !DILocation(line: 102,
++// OPT: ![[OPT_RET]] = !DILocation(line: 102,
++// WASM: ![[BRANCH_END]] = !DILocation(line: 204,
++// WASM: ![[VOID_END]] = !DILocation(line: 302,
++// WASM: ![[EARLY_END]] = !DILocation(line: 402,
++// WASM: ![[CONST_END]] = !DILocation(line: 502,
++// NODEBUG-NOT: !dbg
++// NODEBUG-NOT: llvm.dbg

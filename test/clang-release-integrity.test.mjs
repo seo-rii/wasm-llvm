@@ -98,14 +98,21 @@ test('verifier rejects invalid ZIP structures, CRCs, Wasm and TAR even with matc
 
 test('manifest compatibility accepts only the recorded optional-header-only historical change', async (t) => {
 	const f = await fixture(t);
-	const bytes = await fs.readFile(path.join(repo, 'producer/clang-browser/manifest.json'));
+	const currentBytes = await fs.readFile(path.join(repo, 'producer/clang-browser/manifest.json'));
 	const historical = await fs.readFile(path.join(repo, 'producer/clang-browser/compatibility/manifest-before-optional-headers.json'));
+	// Exercise that historical transition against its actual inputs, independently
+	// of source patches subsequently added to the current compiler producer.
+	const bytes = Buffer.from(JSON.stringify({
+		...JSON.parse(historical), optionalOutputs: ['clangd/clangd.headers.json.gz']
+	}));
 	f.metadata.producer.manifestSha256 = sha256(historical);
 	assert.equal(await verifyClangProducerManifest(f.metadata, bytes), 'historical-compatible');
+	await assert.rejects(verifyClangProducerManifest(f.metadata, currentBytes), /manifest mismatch/);
 	for (const mutate of [
 		(value) => { value.sources.llvm.commit = '0'.repeat(40); },
 		(value) => { value.outputs.pop(); },
-		(value) => { value.optionalOutputs.push('unknown'); }
+		(value) => { value.optionalOutputs.push('unknown'); },
+		(value) => { value.sources.wasmFunctionEndPatch = JSON.parse(currentBytes).sources.wasmFunctionEndPatch; }
 	]) {
 		const manifest = JSON.parse(bytes);
 		mutate(manifest);
@@ -240,9 +247,32 @@ test('packager requires build evidence and explicit unverified packaging cannot 
 	assert.deepEqual(await snapshot(output), before);
 });
 
-test('committed legacy artifacts are inspectable but cannot enter the release path without a fresh build receipt', async () => {
-	await assert.rejects(loadVerifiedClangArtifacts(path.join(repo, 'artifacts/clang-browser'), { requireBuildReceipt: true }),
+test('legacy artifacts matching the current manifest still require a fresh build receipt', async (t) => {
+	const f = await fixture(t);
+	delete f.metadata.buildProvenance;
+	await f.writeMetadata();
+	await assert.rejects(loadVerifiedClangArtifacts(f.artifacts, { requireBuildReceipt: true }),
 		/requires a verified source-to-output build receipt/);
+});
+
+test('artifacts with an obsolete compiler manifest require a rebuild', async (t) => {
+	const f = await fixture(t);
+	await f.release();
+	const before = await snapshot(f.output);
+	f.metadata.producer.manifestSha256 = '0'.repeat(64);
+	await f.writeMetadata();
+	await assert.rejects(loadVerifiedClangArtifacts(f.artifacts, { requireBuildReceipt: true }),
+		/Clang producer manifest mismatch/);
+	await assert.rejects(f.release(), /Clang producer manifest mismatch/);
+	assert.deepEqual(await snapshot(f.output), before);
+});
+
+test('committed artifacts carry current source-to-output build evidence', async () => {
+	const verified = await loadVerifiedClangArtifacts(path.join(repo, 'artifacts/clang-browser'), { requireBuildReceipt: true });
+	assert.equal(verified.manifestCompatibility, 'current');
+	assert.equal(verified.metadata.buildProvenance.status, 'verified');
+	assert.equal(sha256(verified.sidecars.get('clang-build-receipt.json')),
+		'19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee');
 });
 
 test('release requires independent MemFS proof and binds it and the module to the complete Clang build', async (t) => {

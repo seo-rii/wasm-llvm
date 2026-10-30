@@ -45,7 +45,7 @@ export async function runNativeBaseline(options) {
 					);
 					if (lldbExit.code !== 0) {
 						throw new Error(
-							`native LLDB exited with status ${String(lldbExit.code)}\n${lldb.stderr()}`
+							`native LLDB exited with status ${String(lldbExit.code)}\n${lldb.stderr()}\n${lldb.stdout().slice(-12000)}`
 						);
 					}
 					return {

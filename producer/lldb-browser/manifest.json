@@ -10,6 +10,7 @@
     "transport": "shared-ring-v1"
   },
   "build": {
+    "moduleInstantiation": "emscripten-instantiate-wasm-v1",
     "executable": "lldb-web-dap",
     "llvmProjects": ["clang", "lldb"],
     "llvmTargets": ["WebAssembly"],
@@ -57,6 +58,11 @@
     "writeMemory": true,
     "evaluateExpressions": false,
     "dataBreakpoints": true,
+    "conditionalBreakpoints": false,
+    "hitConditionalBreakpoints": true,
+    "logPoints": false,
+    "skipLibraryCode": false,
+    "returnValues": false,
     "wasmThreads": false
   },
   "contracts": {

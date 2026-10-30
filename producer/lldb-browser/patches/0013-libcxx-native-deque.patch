@@ -1,0 +1,191 @@
+diff --git a/lldb/source/Plugins/Language/CPlusPlus/CMakeLists.txt b/lldb/source/Plugins/Language/CPlusPlus/CMakeLists.txt
+--- a/lldb/source/Plugins/Language/CPlusPlus/CMakeLists.txt
++++ b/lldb/source/Plugins/Language/CPlusPlus/CMakeLists.txt
+@@ -19,6 +19,7 @@
+   GenericOptional.cpp
+   LibCxx.cpp
+   LibCxxAtomic.cpp
++  LibCxxDeque.cpp
+   LibCxxMap.cpp
+   LibCxxQueue.cpp
+   LibCxxRangesRefView.cpp
+diff --git a/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp b/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp
+--- a/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp
++++ b/lldb/source/Plugins/Language/CPlusPlus/CPlusPlusLanguage.cpp
+@@ -936,11 +936,9 @@
+       "libc++ std::ranges::ref_view synthetic children",
+       "^std::__[[:alnum:]]+::ranges::ref_view<.+>$", stl_deref_flags, true);
+ 
+-  cpp_category_sp->AddTypeSynthetic(
+-      "^std::__[[:alnum:]]+::deque<.+>$", eFormatterMatchRegex,
+-      SyntheticChildrenSP(new ScriptedSyntheticChildren(
+-          stl_synth_flags,
+-          "lldb.formatters.cpp.libcxx.stddeque_SynthProvider")));
++  AddCXXSynthetic(cpp_category_sp, LibcxxDequeFrontEndCreator,
++                  "libc++ std::deque synthetic children",
++                  "^std::__[[:alnum:]]+::deque<.+>$", stl_synth_flags, true);
+ 
+   AddCXXSynthetic(
+       cpp_category_sp,
+diff --git a/lldb/source/Plugins/Language/CPlusPlus/LibCxx.h b/lldb/source/Plugins/Language/CPlusPlus/LibCxx.h
+--- a/lldb/source/Plugins/Language/CPlusPlus/LibCxx.h
++++ b/lldb/source/Plugins/Language/CPlusPlus/LibCxx.h
+@@ -193,6 +193,9 @@
+ LibCxxUnorderedMapIteratorSyntheticFrontEndCreator(CXXSyntheticChildren *,
+                                                    lldb::ValueObjectSP);
+ 
++SyntheticChildrenFrontEnd *LibcxxDequeFrontEndCreator(CXXSyntheticChildren *,
++                                                   lldb::ValueObjectSP);
++
+ SyntheticChildrenFrontEnd *LibcxxQueueFrontEndCreator(CXXSyntheticChildren *,
+                                                       lldb::ValueObjectSP);
+ 
+diff --git a/lldb/source/Plugins/Language/CPlusPlus/LibCxxDeque.cpp b/lldb/source/Plugins/Language/CPlusPlus/LibCxxDeque.cpp
+new file mode 100644
+--- /dev/null
++++ b/lldb/source/Plugins/Language/CPlusPlus/LibCxxDeque.cpp
+@@ -0,0 +1,144 @@
++//===-- LibCxxDeque.cpp ---------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#include "LibCxx.h"
++#include "lldb/DataFormatters/FormattersHelpers.h"
++#include "lldb/Utility/StreamString.h"
++#include <limits>
++
++using namespace lldb;
++using namespace lldb_private;
++
++namespace {
++class DequeFrontEnd : public SyntheticChildrenFrontEnd {
++public:
++  DequeFrontEnd(ValueObject &value) : SyntheticChildrenFrontEnd(value) {
++    Update();
++  }
++
++  llvm::Expected<uint32_t> CalculateNumChildren() override {
++    if (!m_valid)
++      return llvm::createStringError("invalid libc++ deque layout");
++    return m_count;
++  }
++
++  llvm::Expected<size_t> GetIndexOfChildWithName(ConstString name) override {
++    auto index = formatters::ExtractIndexFromString(name.GetCString());
++    if (!m_valid || !index || *index >= m_count)
++      return llvm::createStringError("Type has no child named '%s'",
++                                     name.AsCString());
++    return *index;
++  }
++
++  ValueObjectSP GetChildAtIndex(uint32_t index) override {
++    if (!m_valid || index >= m_count)
++      return nullptr;
++    // Update checked that the occupied range fits inside the active map.
++    const uint64_t position = m_start + index;
++    const addr_t slot =
++        m_map_begin + (position / m_block_size) * m_pointer_size;
++    auto block_value = CreateValueObjectFromAddress(
++        "", slot, m_backend.GetExecutionContextRef(), m_element_type.GetPointerType());
++    uint64_t block;
++    if (!ReadUnsigned(block_value, block) || !block || block > m_address_max)
++      return nullptr;
++    const uint64_t offset = (position % m_block_size) * m_element_size;
++    if (offset > m_address_max - block ||
++        m_element_size - 1 > m_address_max - block - offset)
++      return nullptr;
++    StreamString name;
++    name.Printf("[%u]", index);
++    return CreateValueObjectFromAddress(name.GetString(), block + offset,
++                                       m_backend.GetExecutionContextRef(),
++                                       m_element_type);
++  }
++
++  ChildCacheState Update() override {
++    m_valid = false;
++    m_count = 0;
++    auto map = m_backend.GetChildMemberWithName("__map_");
++    auto size = m_backend.GetChildMemberWithName("__size_");
++    auto start = m_backend.GetChildMemberWithName("__start_");
++    if (!map || !size || !start)
++      return ChildCacheState::eRefetch;
++
++    uint64_t count;
++    if (!ReadUnsigned(size, count)) {
++      // Older libc++ stores size and allocator in a compressed pair.
++      size = formatters::GetFirstValueOfLibCXXCompressedPair(*size);
++      if (!ReadUnsigned(size, count))
++        return ChildCacheState::eRefetch;
++    }
++    if (count > std::numeric_limits<uint32_t>::max() ||
++        !ReadUnsigned(start, m_start))
++      return ChildCacheState::eRefetch;
++
++    auto begin = map->GetChildMemberWithName("__begin_");
++    auto end = map->GetChildMemberWithName("__end_");
++    if (!begin || !end)
++      return ChildCacheState::eRefetch;
++    m_element_type = begin->GetCompilerType().GetPointeeType().GetPointeeType();
++    auto element_size = llvm::expectedToOptional(m_element_type.GetByteSize(nullptr));
++    auto pointer_size =
++        llvm::expectedToOptional(begin->GetCompilerType().GetByteSize(nullptr));
++    if (!element_size || !*element_size || !pointer_size ||
++        (*pointer_size != 4 && *pointer_size != 8))
++      return ChildCacheState::eRefetch;
++    m_element_size = *element_size;
++    m_pointer_size = *pointer_size;
++    m_address_max = m_pointer_size == 4 ? std::numeric_limits<uint32_t>::max()
++                                      : std::numeric_limits<uint64_t>::max();
++    m_block_size = m_element_size < 256 ? 4096 / m_element_size : 16;
++    if (m_element_size > m_address_max / m_block_size)
++      return ChildCacheState::eRefetch;
++
++    uint64_t map_end;
++    if (!ReadUnsigned(begin, m_map_begin) || !ReadUnsigned(end, map_end) ||
++        m_map_begin > map_end || map_end > m_address_max ||
++        (map_end - m_map_begin) % m_pointer_size)
++      return ChildCacheState::eRefetch;
++    const uint64_t rows = (map_end - m_map_begin) / m_pointer_size;
++    if (rows > m_address_max / m_block_size)
++      return ChildCacheState::eRefetch;
++    const uint64_t capacity = rows * m_block_size;
++    if (m_start > capacity || count > capacity - m_start ||
++        (count && !m_map_begin))
++      return ChildCacheState::eRefetch;
++    m_count = count;
++    m_valid = true;
++    return ChildCacheState::eRefetch;
++  }
++
++private:
++  static bool ReadUnsigned(const ValueObjectSP &value, uint64_t &result) {
++    if (!value)
++      return false;
++    bool success = false;
++    result = value->GetValueAsUnsigned(0, &success);
++    return success;
++  }
++
++  // ValueObject children belong to the backend's cluster. Keep no owning
++  // pointers to them; each stop reacquires the layout and discards cached data.
++  CompilerType m_element_type;
++  uint64_t m_map_begin = 0;
++  uint64_t m_start = 0;
++  uint64_t m_element_size = 0;
++  uint64_t m_block_size = 0;
++  uint64_t m_address_max = 0;
++  uint32_t m_count = 0;
++  uint32_t m_pointer_size = 0;
++  bool m_valid = false;
++};
++} // namespace
++
++SyntheticChildrenFrontEnd *
++formatters::LibcxxDequeFrontEndCreator(CXXSyntheticChildren *,
++                                      ValueObjectSP value) {
++  return value ? new DequeFrontEnd(*value) : nullptr;
++}

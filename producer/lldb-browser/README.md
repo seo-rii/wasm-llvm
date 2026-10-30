@@ -68,6 +68,59 @@ launching, the interactive LLDB CLI, and shared/dynamically loaded plugins.
 General Clang expression evaluation is not an advertised capability of this
 artifact.
 
+### C++ values and stepping policy
+
+The C++ language plugin supplies native libc++ synthetic children and summaries
+for vector, deque, map, set, unordered containers and queue. The locked
+`0011-libcxx-container-adaptors.patch` registers the same native queue adaptor
+for `std::stack` and `std::priority_queue`: each forwards to the synthetic view
+of its underlying `c` container. This requires no Python formatter. Stack
+children follow underlying storage order (bottom to top); priority-queue
+children follow heap storage order with the top element first, not sorted pop
+order. Custom comparators, deque storage, nested values, empty containers and
+updates after push/pop are covered by the patch's upstream LLDB API fixture.
+
+LLVM 22 normally formats libc++ deque through Python. The locked
+`0013-libcxx-native-deque.patch` replaces that registration with a C++ provider,
+so deque-backed stack and priority queue also work with Python disabled. It
+reads the pinned libc++ block map, bounds-checks the occupied range and target
+addresses, and refreshes children after each stop. Native qualification covers
+both 4 KiB blocks and the 16-element blocks used for large values, including
+block crossings and front offsets changed by `pop_front`.
+
+`hitConditionalBreakpoints` qualifies positive decimal DAP `hitCondition`
+values. LLVM implements these as an ignore count of N - 1: the Nth and every
+subsequent hit stop. This is not an expression condition or an equality-only
+hit filter. Consumers must validate a positive integer in the uint32 range.
+The locked `0012-lldb-dap-clear-hit-condition.patch` resets a pending ignore
+count when an existing breakpoint's hit condition becomes empty or omitted,
+preserving the breakpoint ID. Its upstream DAP regression covers both forms.
+
+`skipLibraryCode` remains false. Native qualification accepts fixed settings
+through attach `initCommands` and DAP `evaluate` with `context: "repl"` and
+the default backtick command prefix, but neither LLDB's upstream `^std::`
+default nor the broader `^(.* )?std::` preset prevented a stop inside the
+fixture's templated `std::sort`. Accepting a setting is not proof that source
+stepping honors it for Wasm. `skip-library.cpp` and the optional native runner
+mode retain this failing qualification case; it is excluded from passing CI
+gates until a real target fix is established. Callback-aware stepping also
+remains outside the qualified behavior.
+
+Conditional expressions, expression logpoints and post-return values remain
+unqualified (`conditionalBreakpoints`, `logPoints`, and `returnValues` are
+false). The Wasm target has no return-value ABI provider. The fixed settings
+commands above do not enable general expression execution.
+
+The checked-in artifacts include these patches.
+[Source-build qualification](validation/source-build-20261029/qualification.json)
+records the exact producer and consumer revisions, authenticated workflow
+artifacts, and browser results. Clean patched native Clang and LLDB binaries
+pass function-end stepping, live-local and container-adaptor checks. Real
+LLDB-DAP tests cover hit conditions and both omitted and empty clearing
+requests through `run-native-hit-condition-baseline.mjs --case all`. The
+source-built browser pair also passes C++ function-end and adaptor sessions,
+including multi-block and large-element deques across mutations.
+
 The artifact does advertise DAP `writeMemory`. LLVM 22.1.8 routes the request
 through `ProcessGDBRemote`, and the pinned WAMR stub applies the resulting RSP
 `M` packet to guest linear memory. This is a raw-memory operation only: it does
@@ -200,12 +253,17 @@ The scripts are deliberately split so source mutation, compilation, and
 packaging remain auditable:
 
 CI follows the same two-phase contract.
-The source and patch contracts gate the product build.
-Checked-in runtime-source provenance runs independently. A source change may
-therefore leave the provenance job red while the explicitly requested
-replacement product is still built and uploaded. After that product is
-synchronized into `artifacts/runtime-source/debug`, both jobs must be green
-before the revision can be released or promoted.
+The source and patch contracts gate the product build through
+`producer-contracts`. Checked-in runtime-source provenance runs independently
+in `runtime-source-provenance`. Clang delivery validation also runs independently
+in the mandatory `clang-artifact-provenance` job, which executes
+`pnpm verify:clang-artifacts` and `pnpm smoke:clang-artifacts` on pull requests,
+`main` pushes, schedules, and manual dispatches. Neither delivery job is a
+dependency of `build-product`: a source change may leave checked-in artifact
+provenance red while the explicitly requested replacement product is built
+and uploaded. All three gates must be green before merge, release, or
+promotion. Synchronizing a replacement LLDB/WAMR product into
+`artifacts/runtime-source/debug` does not waive the Clang delivery gate.
 
 ```sh
 node producer/lldb-browser/scripts/prepare.mjs
@@ -226,9 +284,9 @@ It also measures a deterministic gzip representation (`level: 9`, `mtime: 0`)
 without changing the runtime-facing uncompressed asset. Receipt verification
 recomputes that representation and enforces both a 48 MiB uncompressed budget
 and an 18 MiB gzip budget for `lldb-web-dap.wasm`; the current product is
-42,718,338 bytes raw and 14,930,235 bytes compressed. Its JS, Wasm, and pthread
-worker hashes match between a clean GitHub Actions build and a local build
-prepared through a different clone root. A larger binary requires an explicit
+42,722,376 bytes raw and 14,931,652 bytes compressed. Its JS, Wasm, and pthread
+worker hashes match between two clean builds from distinct source and build
+roots in the recorded GitHub Actions run. A larger binary requires an explicit
 reviewed budget change.
 
 For a network- and disk-free review of the producer:
@@ -242,11 +300,14 @@ node --test producer/lldb-browser/test/producer.test.mjs
 The plan modes never clone, patch, configure, or build LLVM.
 Pull requests and `main` pushes run this producer contract together with the
 paired WAMR producer contract in the `LLDB browser producer contracts`
-workflow. The gate verifies locked hashes, patch structure, transport
+workflow. The source gate verifies locked hashes, patch structure, transport
 overlays, pthread sidecars, and receipt/manifest behavior without downloading
-or rebuilding the full LLVM and WAMR binaries. It also verifies the published
-product bundle under `artifacts/runtime-source`: every LLDB and WAMR path in
+or rebuilding the full LLVM and WAMR binaries. The independent runtime-source
+provenance gate verifies the published product bundle under
+`artifacts/runtime-source`: every LLDB and WAMR path in
 `runtime-manifest.v2.json` must exist and match its recorded SHA-256 digest.
+The separate Clang artifact gate validates its existing delivery receipts and
+smoke checks without blocking regeneration of the LLDB/WAMR replacement.
 
 The weekly schedule also performs full clean LLDB and WAMR product builds. It
 builds LLDB sequentially from two distinct empty LLVM source and build roots,
@@ -366,3 +427,25 @@ target-process exit. The registry must be present in the initial factory
 argument, not assigned afterward. The producer propagates it to all Emscripten
 pthread realms, and connection ids remain realm-independent because LLDB can
 open on one thread and read or interrupt on another.
+
+## Verified immutable Module input
+
+The source-built LLDB and WAMR artifacts expose
+`moduleInstantiation: "emscripten-instantiate-wasm-v1"`. A consumer may supply
+an `instantiateWasm` callback to create a fresh instance from a verified
+immutable `WebAssembly.Module`. Each session still needs fresh workers,
+imports, memory and queues. Consumers must opt into their compiled-module
+cache; the capability does not change the default execution path.
+
+[The browser qualification](validation/source-build-20261029/browser-qualification.json)
+runs the exact source-built bundle with cache off/off/on/on under Chromium,
+cross-origin isolation and strict CSP. It observes actual callback invocation,
+unchanged Module identities across enabled sessions, eight fresh workers and
+queues, 100 paged recursive frames, caller locals and successful completion.
+The official UI also passes C and C++ data breakpoints, a C trap and Rust
+debugging. These sequential samples establish behavior; they do not measure
+a controlled latency improvement.
+
+[The earlier module-instantiation experiment](experiments/module-api/README.md)
+remains historical evidence. Its post-link derivation is still rejected by
+normal release assembly; the current qualified bundle was rebuilt from source.

@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { downloadPinned, extractPinnedArchive, pinnedCommitPatch, verifyPatchedCheckout } from '../producer/clang-browser/scripts/build-provenance.mjs';
+import { createEmsdkPythonWrapper, directoryIdentity, downloadPinned, emsdkShellCommand, extractPinnedArchive, pinnedCommitPatch, verifyPatchedCheckout } from '../producer/clang-browser/scripts/build-provenance.mjs';
 
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 async function temporary(t) {
@@ -13,6 +13,55 @@ async function temporary(t) {
 	t.after(() => fs.rm(root, { recursive: true, force: true }));
 	return root;
 }
+
+test('SDK activation cannot redirect generated libraries into the recorded SDK tree', async (t) => {
+	const root = await temporary(t);
+	const environment = path.join(root, "SDK's environment.sh");
+	const cache = path.join(root, "build's private cache");
+	const pythonWrapper = path.join(root, "build's Python wrapper");
+	const inherited = path.join(root, 'installed-cache');
+	await fs.mkdir(cache);
+	await fs.mkdir(inherited);
+	await fs.writeFile(environment, 'unset EM_CACHE\n');
+	const result = execFileSync('bash', ['-c', emsdkShellCommand(environment, cache, pythonWrapper,
+		'printf generated > "$EM_CACHE/library.a"; printf "%s" "$EM_CACHE"')],
+		{ env: { ...process.env, EM_CACHE: inherited }, encoding: 'utf8' });
+	assert.equal(result, cache);
+	assert.equal(await fs.readFile(path.join(cache, 'library.a'), 'utf8'), 'generated');
+	assert.deepEqual(await fs.readdir(inherited), []);
+});
+
+test('Emscripten Python -E cannot write bytecode into the recorded SDK after activation', async (t) => {
+	const root = await temporary(t);
+	const sdk = path.join(root, "SDK's Python modules");
+	await fs.mkdir(sdk);
+	await fs.writeFile(path.join(sdk, 'helper.py'), 'value = 42\n');
+	const probe = path.join(sdk, 'probe.py');
+	const child = path.join(sdk, 'child.py');
+	await fs.writeFile(child, 'import helper, json, sys\nprint(json.dumps(sys.dont_write_bytecode))\n');
+	await fs.writeFile(probe, 'import helper, json, os, subprocess, sys\n' +
+		'os.environ["EMSDK_PYTHON"] = sys.executable\n' +
+		'child = subprocess.check_output([os.environ["EMSDK_PYTHON"], "-E", sys.argv[1]], text=True)\n' +
+		'print(json.dumps([sys.dont_write_bytecode, json.loads(child)]))\n');
+	const python = JSON.parse(execFileSync('python3', ['-c', 'import json, sys; print(json.dumps(sys.executable))'], { encoding: 'utf8' }));
+	const env = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' };
+	// Reproduce the real entrypoint's -E behavior before checking the fix.
+	assert.deepEqual(JSON.parse(execFileSync(python, ['-E', probe, child], { env, encoding: 'utf8' })), [false, false]);
+	assert((await fs.readdir(path.join(sdk, '__pycache__'))).some((name) => name.endsWith('.pyc')));
+	await fs.rm(path.join(sdk, '__pycache__'), { recursive: true });
+	const before = await directoryIdentity(sdk);
+	const pythonAlias = path.join(root, "Python's executable");
+	await fs.symlink(python, pythonAlias);
+	const wrapper = path.join(root, "build's Python wrapper");
+	await createEmsdkPythonWrapper(wrapper, pythonAlias);
+	const environment = path.join(root, "SDK's environment.sh");
+	await fs.writeFile(environment, 'unset EM_CACHE EMSDK_PYTHON\n');
+	const command = emsdkShellCommand(environment, path.join(root, 'private cache'), wrapper,
+		'"$EMSDK_PYTHON" -E "$PROBE" "$CHILD"');
+	const result = execFileSync('bash', ['-c', command], { env: { ...env, PROBE: probe, CHILD: child }, encoding: 'utf8' });
+	assert.deepEqual(JSON.parse(result), [true, true]);
+	assert.deepEqual(await directoryIdentity(sdk), before);
+});
 const git = (source, ...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 async function checkout(t) {
 	const source = await temporary(t);

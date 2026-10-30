@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "independently-reconstructed-clang-inputs",
+  "qualificationCommit": "ff18b37c934f7526885f5a49d77698712615f23a",
+  "checkedAt": "2026-10-29T11:14:18.454688+00:00",
+  "manifestSha256": "de99e0be692a813c854edf8f42606f35226c285b567b246c617a1cecc74c62d9",
+  "repository": "https://github.com/llvm/llvm-project",
+  "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+  "tree": "18386f7effc475e5e41f103bfd0ca83bd07fa068",
+  "diffSha256": "3b567858e77542dc30f8aeffb51a83a7d7ea951cabf8e163105f15a7aa9c8b1b",
+  "patches": [
+    {
+      "repository": "https://github.com/YoWASP/llvm-project",
+      "commit": "97196c8eeb1d495fa43bb8af2fb26af5ef5b89fb",
+      "sha256": "d07d3e20e2e2d62f04753015a9b2b303dc3ed3d1f84724381e6e9d36213f7714"
+    },
+    {
+      "path": "patches/llvm-wasi-close.patch",
+      "sha256": "5a4260bc1a7715174626cc4ca64cc0a583f449ea98b7921f8867843358d9a1b0"
+    },
+    {
+      "path": "patches/lld-wasm-only.patch",
+      "sha256": "0b5005499d812c55699b6dd50f93800d5c425001315abab10a54248e7f97f178"
+    },
+    {
+      "path": "patches/clangd-emscripten-stdin.patch",
+      "sha256": "e60c4c1299d7e028451e9f46270318c5eb80f8d77ce3af773e2f1ad802b3a022"
+    },
+    {
+      "path": "patches/wasm-function-end-location.patch",
+      "sha256": "328eec2ebde3eacb26f8fa998cddef6a57df6719c1f9cffb25e5da95aa10a5c5"
+    }
+  ],
+  "signalStub": {
+    "path": "llvm/lib/Support/Signals.cpp",
+    "resultBlob": "404289c188019e62c49412617319c4c9c1bd2f38",
+    "resultSha256": "ea040a45187d947724ed7c1f74bd51d0fe8963cf1605fc7b85fb000fa5f47e6e"
+  },
+  "method": "New private bare repository/index; apply pinned YoWASP binary diff and four checksum-pinned local patches, then explicit WASI signal stub; hash reconstructed Git tree and full binary diff.",
+  "seedGit": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-pr52-promotion-20261029/out/qualification/clang-input-verification-ff18b37.git",
+  "reconstructedGit": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-pr52-promotion-20261029/out/qualification/clang-verification-recovery-20261029/reconstruction.git",
+  "limits": "Independent source-input reconstruction only; not an independent compiler rebuild or host SDK byte inspection."
+}

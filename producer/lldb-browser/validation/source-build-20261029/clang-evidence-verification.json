@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "kind": "clang-source-build-evidence-verification",
+  "passed": true,
+  "checkedAt": "2026-10-29T11:14:26.033Z",
+  "qualificationCommit": "ff18b37c934f7526885f5a49d77698712615f23a",
+  "combinedCommit": "ff18b37c934f7526885f5a49d77698712615f23a",
+  "debuggerCommit": "7bd1d38d61c6602fd05260f04af979abbfdc8e0f",
+  "producerTree": "415e4ebdb743db2028662bc29e296ac682fe29d8",
+  "workflowRun": 40811368673,
+  "jobId": 123242404833,
+  "archive": {
+    "id": 12878926055,
+    "bytes": 43274481,
+    "digest": "sha256:7946033ebff4d384c51750d7140ed7b63b9860783808d611d39e17e0900e8aa3"
+  },
+  "physicalProducts": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-pr52-promotion-20261029/out/qualification/clang-40811368673/products",
+  "manifestSha256": "de99e0be692a813c854edf8f42606f35226c285b567b246c617a1cecc74c62d9",
+  "receiptSha256": "19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee",
+  "independentlyReconstructedInputsSha256": "f6dad262f01c81f63dfc113475846e22c90d14c65a4ee27f729ab45f12dfff70",
+  "checks": [
+    "authenticated GitHub archive digest and source identity",
+    "LLVM patch manifest and patches, LLDB producer and WAMR producer unchanged from the independently qualified debugger source",
+    "current producer manifest and complete packaged asset hashes",
+    "verified source-to-output receipt with exact recipe hashes",
+    "pinned LLVM, YoWASP, Emsdk and WASI SDK identities",
+    "LLVM patched Git tree and binary diff independently reconstructed from pinned Git objects, five patches and the WASI signal stub",
+    "four local patch digests checked against actual source files",
+    "fresh output directory and recorded installed SDK trees",
+    "real Python interpreter and bytecode-disabled wrapper executable identities recorded",
+    "compiler, linker, clangd WebAssembly contracts, ZIP and sysroot TAR structure",
+    "MemFS receipt, source identity and license sidecars"
+  ],
+  "limits": [
+    "Independent input reconstruction does not claim an independent compiler-output rebuild.",
+    "Host SDK trees and tool executables were checked by the authenticated successful build; only their receipt identities are available locally."
+  ],
+  "sources": {
+    "llvm": {
+      "repository": "https://github.com/llvm/llvm-project",
+      "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+      "tree": "18386f7effc475e5e41f103bfd0ca83bd07fa068",
+      "diffSha256": "3b567858e77542dc30f8aeffb51a83a7d7ea951cabf8e163105f15a7aa9c8b1b",
+      "patches": [
+        {
+          "repository": "https://github.com/YoWASP/llvm-project",
+          "commit": "97196c8eeb1d495fa43bb8af2fb26af5ef5b89fb",
+          "sha256": "d07d3e20e2e2d62f04753015a9b2b303dc3ed3d1f84724381e6e9d36213f7714"
+        },
+        {
+          "path": "patches/llvm-wasi-close.patch",
+          "sha256": "5a4260bc1a7715174626cc4ca64cc0a583f449ea98b7921f8867843358d9a1b0"
+        },
+        {
+          "path": "patches/lld-wasm-only.patch",
+          "sha256": "0b5005499d812c55699b6dd50f93800d5c425001315abab10a54248e7f97f178"
+        },
+        {
+          "path": "patches/clangd-emscripten-stdin.patch",
+          "sha256": "e60c4c1299d7e028451e9f46270318c5eb80f8d77ce3af773e2f1ad802b3a022"
+        },
+        {
+          "path": "patches/wasm-function-end-location.patch",
+          "sha256": "328eec2ebde3eacb26f8fa998cddef6a57df6719c1f9cffb25e5da95aa10a5c5"
+        }
+      ]
+    },
+    "emsdk": {
+      "repository": "https://github.com/emscripten-core/emsdk",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+      "tree": "0fae1e0c48435c4fa629c1499724399b08abcc44",
+      "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "installedToolchains": {
+    "wasiSdk": {
+      "bytes": 629403422,
+      "entries": 19800,
+      "sha256": "9494da3476624ee1fe64a33acc8a6c9fdb694edb74d6457e3adaf71f65e94d05"
+    },
+    "emsdkUpstream": {
+      "bytes": 1371435059,
+      "entries": 12759,
+      "sha256": "34d1c69185e5c9e65e189d42f51a655d3410fe747d6d5909693ef541ad10d0b8"
+    }
+  },
+  "files": {
+    "clang.zip": {
+      "bytes": 13139949,
+      "sha256": "32a750f8966d0bd356e1b39bc91d3b2722166fcc1f31f7c842d6db34f99f609e"
+    },
+    "lld.zip": {
+      "bytes": 6428497,
+      "sha256": "f8729099758f12ac62f27d9df4af24d2fdd7887d78c0a92a241c9bd765445eb8"
+    },
+    "memfs.zip": {
+      "bytes": 16239,
+      "sha256": "57b8cb610d22a8229cfb71fa67c1ba1bd8a552b8c32375d105e2ef1ca4a78a05"
+    },
+    "sysroot.tar.zip": {
+      "bytes": 6833019,
+      "sha256": "475b96511affd89fcf1bf4aa07c3d21609920c3facd4110a1079465217733c43"
+    },
+    "clangd/clangd.js": {
+      "bytes": 97002,
+      "sha256": "92dce989f2623a6e8930369dd205301c2815d70cf81312c64de1c47a16302b27"
+    },
+    "clangd/clangd.wasm.gz": {
+      "bytes": 16723115,
+      "sha256": "284e7117da923ca99ea9d64e4d9a80a739cdce4cc1c81dd099b040ab0a8a926f"
+    },
+    "memfs-build-receipt.json": {
+      "bytes": 8344,
+      "sha256": "c4ef4aa971195d15b4dec7abe617bce0292d2b889bfcc99ad67c2da1518c620b"
+    },
+    "LICENSE.memfs-llvm.txt": {
+      "bytes": 3192,
+      "sha256": "24b67da19b1422a819395738cb83ea34eee3fdce52870b0d1758524ba1615069"
+    },
+    "LICENSE.memfs-stb_sprintf.txt": {
+      "bytes": 1133,
+      "sha256": "88420bf461670fb7b9d6c3d3dd4a50f9a653361ee1e0eafc079ba715b1944e72"
+    },
+    "clang-build-receipt.json": {
+      "bytes": 11047,
+      "sha256": "19c9acd044aaa6881cd2c2583d068a06d02299e38a7e3a9827fc2a09afe169ee"
+    },
+    "toolchain.json": {
+      "bytes": 11530,
+      "sha256": "7d409c16a5c921bcbfe776a8e33f095268c13de687f9242ef978d22ba89f9aa3"
+    }
+  }
+}

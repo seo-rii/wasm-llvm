@@ -11,7 +11,7 @@ import { buildMemfs } from './build-memfs.mjs';
 import { pruneSysrootHeaders, SYSROOT_C_PROBE, SYSROOT_CPP_PROBE } from './sysroot-pruning.mjs';
 import { createClangdHeaderAsset, prepareClangdHeaders } from './prepare-clangd-headers.mjs';
 import { clangdResourceProfile } from './resource-profile.mjs';
-import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, directoryIdentity, downloadPinned, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
+import { addWasiSignalStub, assertDirectoryUnchanged, assertFileUnchanged, claimFreshBuildDirectory, createEmsdkPythonWrapper, directoryIdentity, downloadPinned, emsdkShellCommand, extractPinnedArchive, fileIdentity, pinnedCommitPatch, verifyPatchedCheckout } from './build-provenance.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const producerRoot = path.resolve(scriptDir, '..');
@@ -400,6 +400,14 @@ async function patchClangdForEmscriptenStdin() {
 	);
 }
 
+async function patchWasmFunctionEnd() {
+	await applyChecksumPinnedPatch(
+		producerManifest.sources.wasmFunctionEndPatch,
+		'Wasm unoptimized function-end debug location patch',
+		'.wasm-llvm-wasm-function-end.patch'
+	);
+}
+
 const buildTools = {};
 async function recordBuildTool(name, executable) {
 	buildTools[name] = { ...await fileIdentity(executable),
@@ -485,6 +493,7 @@ const yowaspPatch = await patchLlvmForWasiHost();
 await patchLlvmWasiClose();
 await patchLldForWasmOnly();
 await patchClangdForEmscriptenStdin();
+await patchWasmFunctionEnd();
 if (toolHostProfile) {
 	// Same pinned patch input as the isolated cached rebuild (build.py); the work dir is fresh.
 	await assertSha256(
@@ -500,6 +509,7 @@ if (toolHostProfile) {
 }
 const llvmPatchSpecs = [producerManifest.sources.llvmWasiClosePatch,
 	lldPatch, producerManifest.sources.clangdEmscriptenStdinPatch,
+	producerManifest.sources.wasmFunctionEndPatch,
 	...(toolHostProfile ? [{ ...toolHostProfile.patch, path: `tool-host/${toolHostProfile.patch.path}` }] : [])];
 const llvmVerification = {
 	source: llvmSource, commit: config.llvmCommit,
@@ -507,6 +517,7 @@ const llvmVerification = {
 	transforms: [{ file: 'llvm/lib/Support/Signals.cpp', transform: addWasiSignalStub }],
 	allowedUntracked: ['.wasm-llvm-yowasp-wasi-host.patch', '.wasm-llvm-wasi-close.patch',
 		crossProfile ? '.wasm-llvm-lld-elf-only.patch' : '.wasm-llvm-lld-wasm-only.patch', '.wasm-llvm-clangd-emscripten-stdin.patch',
+		'.wasm-llvm-wasm-function-end.patch',
 		...(toolHostProfile ? ['.wasm-llvm-tool-host.patch'] : [])]
 };
 const llvmSourceIdentity = await verifyPatchedCheckout(llvmVerification);
@@ -795,6 +806,9 @@ await run(path.join(emsdkDir, 'emsdk'), ['install', config.emsdkVersion]);
 await run(path.join(emsdkDir, 'emsdk'), ['activate', config.emsdkVersion]);
 await recordBuildTool('emsdkClang', path.join(emsdkDir, 'upstream', 'bin', 'clang'));
 await recordBuildTool('wasmOpt', path.join(emsdkDir, 'upstream', 'bin', 'wasm-opt'));
+const emsdkPython = path.join(buildDir, 'emsdk-python');
+await recordBuildTool('emsdkPython', await createEmsdkPythonWrapper(emsdkPython));
+await recordBuildTool('emsdkPythonWrapper', emsdkPython);
 const emccIdentity = await fileIdentity(path.join(emsdkDir, 'upstream', 'emscripten', 'emcc.py'));
 // Emscripten lazily writes compiled system libraries. Keep those generated outputs
 // in this fresh build while hashing every installed helper, source and library input.
@@ -923,11 +937,8 @@ await prepareClangdHeaders({
 });
 const clangdHeaderLinkFlags =
 	config.clangdSeparateHeaders === 'ON' ? '' : ` --embed-file=${clangdIncludeDir}@/usr/include`;
-const emsdkEnv = shellQuote(path.join(emsdkDir, 'emsdk_env.sh'));
+const emsdkEnv = path.join(emsdkDir, 'emsdk_env.sh');
 const clangdConfigure = [
-	'source',
-	emsdkEnv,
-	'&&',
 	'emcmake',
 	'cmake',
 	'-G',
@@ -967,10 +978,11 @@ const clangdConfigure = [
 	'-DCLANG_ENABLE_ARCMT=OFF',
 	'-DCLANG_ENABLE_STATIC_ANALYZER=OFF'
 ].join(' ');
-await run('bash', ['-lc', clangdConfigure]);
+await run('bash', ['-lc', emsdkShellCommand(emsdkEnv, emCache, emsdkPython, clangdConfigure)]);
 await run('bash', [
 	'-lc',
-	`source ${emsdkEnv} && cmake --build ${shellQuote(clangdBuild)} --target clangd ${ninjaArgs.map(shellQuote).join(' ')}`
+	emsdkShellCommand(emsdkEnv, emCache, emsdkPython,
+		`cmake --build ${shellQuote(clangdBuild)} --target clangd ${ninjaArgs.map(shellQuote).join(' ')}`)
 ]);
 
 for (const entry of await fs.readdir(path.join(stagingSysroot, 'include'), {

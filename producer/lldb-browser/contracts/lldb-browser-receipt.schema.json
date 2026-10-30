@@ -37,6 +37,16 @@
         "excludedFeatures"
       ],
       "properties": {
+        "moduleInstantiation": { "const": "emscripten-instantiate-wasm-v1" },
+        "derivation": {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "proof", "sha256"],
+          "properties": {
+            "kind": { "const": "post-link-experiment" },
+            "proof": { "const": "post-link-experiment.json" },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
         "pthreads": { "const": true },
         "proxyToPthread": { "const": true },
         "pthreadWorker": { "const": "lldb-web-dap.pthread.mjs" }
