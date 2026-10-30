@@ -1,0 +1,182 @@
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -54,6 +54,7 @@
+ #include "reload.h"
+ #include "builtins.h"
+ #include "tree-pass.h"
++#include "cgraph.h"
+ 
+ void wasm_print_operand (FILE *stream, rtx value, int mode);
+ 
+@@ -81,7 +82,17 @@
+ size_t fake_out_file_length;
+ FILE *saved_asm_out_file;
+ 
+-hash_map<tree, std::pair<tree, const_tree>> import_map;
++/* Keep binding separate from the type declaration: a weakref has a local
++   alias declaration, and weak_finish can synthesize a target without
++   DECL_WEAK set.  A direct strong reference must dominate either one.  */
++struct wasm_import
++{
++  tree name;
++  const_tree decl;
++  bool weak;
++};
++
++hash_map<tree, wasm_import> import_map;
+ hash_set<const_rtx> external_libcall_set;
+ 
+ bool
+@@ -615,8 +626,13 @@
+ 
+   for (const auto &map_entry: import_map)
+     {
+-      tree name = map_entry.second.first;
+-      const_tree decl = map_entry.second.second;
++      const auto &entry = map_entry.second;
++      tree name = entry.name;
++      /* Only the emitted import needs public linkage and the merged binding.
++	 Do not change the frontend's alias or target declaration.  */
++      tree decl = copy_node (const_cast<tree> (entry.decl));
++      TREE_PUBLIC (decl) = 1;
++      DECL_WEAK (decl) = entry.weak;
+       assemble_import (saved_asm_out_file, IDENTIFIER_POINTER (name), decl);
+     }
+   for (auto sym: external_libcall_set)
+@@ -774,9 +790,34 @@
+ 	   IDENTIFIER_POINTER (targetm.asm_out.mangle_assembler_name (name)));
+ }
+ 
+-/* Implemetation of TARGET_ASM_ASSEMBLE_UNDEFINED_DECL.  */
+-void
+-wasm_handle_import (FILE *, const char *name, const_tree decl)
++namespace
++{
++
++/* Resolve the same transparent weakref chain as assemble_name, without
++   marking its target directly referenced: weak_finish uses that distinction
++   to preserve strong references to a target also named by a weakref.  */
++tree
++import_target_name (const char *name, const_tree decl)
++{
++  tree id = get_identifier (name);
++  if (decl)
++    {
++      tree decl_name = DECL_ASSEMBLER_NAME (const_cast<tree> (decl));
++      if (IDENTIFIER_TRANSPARENT_ALIAS (decl_name))
++	id = decl_name;
++    }
++  if (!IDENTIFIER_TRANSPARENT_ALIAS (id))
++    id = get_identifier (targetm.strip_name_encoding (name));
++  while (IDENTIFIER_TRANSPARENT_ALIAS (id))
++    {
++      gcc_assert (TREE_CHAIN (id));
++      id = TREE_CHAIN (id);
++    }
++  return id;
++}
++
++void
++record_import (const char *name, const_tree decl, bool weak)
+ {
+   auto has_proto = [] (const_tree ty)
+     {
+@@ -785,11 +826,78 @@
+       ty = TREE_TYPE (ty);
+       return TYPE_ARG_TYPES (ty) || TYPE_NO_NAMED_ARGS_STDARG_P (ty);
+     };
++  tree id = import_target_name (name, decl);
++  if (symtab_node *node = symtab_node::get_for_asmname (id))
++    {
++      /* A weakref to a definition in this unit needs no import.  An extern
++	 inline definition still needs its external symbol when referenced.  */
++      if (node->definition && !DECL_EXTERNAL (node->decl))
++	return;
++      if (TREE_CODE (node->decl) == TREE_CODE (decl)
++	  && has_proto (node->decl))
++	decl = node->decl;
++    }
++
+   bool existed = false;
+-  tree key = targetm.asm_out.mangle_assembler_name (name);
++  tree key = targetm.asm_out.mangle_assembler_name (IDENTIFIER_POINTER (id));
+   auto &slot = import_map.get_or_insert (key, &existed);
+-  if (!existed || (!has_proto (slot.second) && has_proto (decl)))
+-    slot = {get_identifier (name), decl};
++  if (!existed)
++    slot = {id, decl, weak};
++  else
++    {
++      slot.weak = slot.weak && weak;
++      if (!has_proto (slot.decl) && has_proto (decl))
++	slot.decl = decl;
++    }
++}
++
++}
++
++/* Keep explicit asm names on weakrefs on the same path as ordinary names.
++   Generic assemble_name resolves the stripped identifier, while the weakref
++   mapping can live on its original *name identifier.  Mark the alias, not
++   the ultimate target, so weak_finish still distinguishes weak-only uses
++   from direct strong references.  output_addr_const has already called
++   assemble_external before entering this hook.  */
++void
++wasm_assemble_symbol_ref (FILE *stream, rtx symbol)
++{
++  const char *name = XSTR (symbol, 0);
++  tree decl = SYMBOL_REF_DECL (symbol);
++  tree id = decl ? DECL_ASSEMBLER_NAME (decl) : maybe_get_identifier (name);
++  if (id && IDENTIFIER_TRANSPARENT_ALIAS (id))
++    {
++      mark_referenced (id);
++      tree target = import_target_name (name, decl);
++      assemble_name_raw (stream, IDENTIFIER_POINTER (target));
++    }
++  else
++    assemble_name (stream, name);
++}
++
++/* Implementation of TARGET_ASM_ASSEMBLE_UNDEFINED_DECL and
++   ASM_OUTPUT_EXTERNAL.  */
++void
++wasm_handle_import (FILE *, const char *name, const_tree decl)
++{
++  record_import (name, decl, DECL_WEAK (decl));
++}
++
++/* Generic weak_finish supplies typed, public external targets for weakrefs
++   that have no ordinary declaration.  It runs before our deferred imports
++   are emitted and already excludes targets referenced directly as strong.  */
++void
++wasm_weaken_decl (FILE *, tree decl, const char *name, const char *target)
++{
++  if (target)
++    {
++      error_at (DECL_SOURCE_LOCATION (decl),
++		"weak aliases are not yet supported on this target");
++      return;
++    }
++  /* Definitions already carry DECL_WEAK on their normal @sym annotation.  */
++  if (DECL_EXTERNAL (decl))
++    record_import (name, decl, true);
+ }
+ 
+ /* Implemetation of TARGET_ASM_ASSEMBLE_EXTERNAL_LIBCALL.  */
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -274,6 +274,14 @@
+ #define ASM_OUTPUT_EXTERNAL(stream, decl, name) \
+   wasm_handle_import (stream, name, decl)
+ 
++void wasm_assemble_symbol_ref (FILE *, rtx);
++#define ASM_OUTPUT_SYMBOL_REF(stream, symbol) \
++  wasm_assemble_symbol_ref (stream, symbol)
++
++void wasm_weaken_decl (FILE *, tree, const char *, const char *);
++#define ASM_WEAKEN_DECL(stream, decl, name, target) \
++  wasm_weaken_decl (stream, decl, name, target)
++
+ void wasm_assemble_alias (FILE *, tree, tree);
+ void wasm_assemble_alias_name (FILE *, const char *, const char *);
+ /* varasm's declaration-aware alias path is guarded by ASM_OUTPUT_DEF.  */
