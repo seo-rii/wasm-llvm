@@ -16,6 +16,8 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [backend review and SIMD qualification](../../docs/gcc-wasi-backend-review.md),
 [additional SIMD operations and vector ABI](../../docs/gcc-wasi-simd-extension.md),
 [SIMD saturating arithmetic](SIMD-SATURATING.md),
+[SIMD conversions](SIMD-CONVERSIONS.md),
+[SIMD intrinsic header](SIMD-HEADER.md),
 [binary128 implementation and reproduction](LONG-DOUBLE.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
 [public int128 implementation and reproduction](INT128.md),
@@ -38,7 +40,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0014`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic and GNU float128; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0016`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions and the 169-name intrinsic header; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature patch](TARGET-FEATURES.md); PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -154,6 +156,16 @@ node producer/gcc-wasi/test-simd-saturating.mjs \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
   --output "$GCC_WASI_WORK_DIR/simd-saturating-qualification"
+node producer/gcc-wasi/test-simd-conversions.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/simd-conversions-qualification"
+node producer/gcc-wasi/test-simd-header.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/simd-header-qualification"
 node producer/gcc-wasi/test-vector-abi.mjs \
   --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
@@ -270,6 +282,8 @@ node producer/gcc-wasi/package.mjs \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
   --simd-extended-qualification "$GCC_WASI_WORK_DIR/simd-extended-qualification/qualification.json" \
   --simd-saturating-qualification "$GCC_WASI_WORK_DIR/simd-saturating-qualification/qualification.json" \
+  --simd-conversions-qualification "$GCC_WASI_WORK_DIR/simd-conversions-qualification/qualification.json" \
+  --simd-header-qualification "$GCC_WASI_WORK_DIR/simd-header-qualification/qualification.json" \
   --vector-abi-qualification "$GCC_WASI_WORK_DIR/vector-abi-qualification/report.json" \
   --long-double-qualification "$GCC_WASI_WORK_DIR/long-double-qualification/report.json" \
   --int128-qualification "$GCC_WASI_WORK_DIR/int128-qualification/report.json" \
@@ -281,9 +295,9 @@ node producer/gcc-wasi/package.mjs \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current fourteen-patch compiler, `--long-double-qualification`,
+For the current sixteen-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
-`--bitfield-qualification`, `--anonymous-bitfield-qualification`, all three SIMD
+`--bitfield-qualification`, `--anonymous-bitfield-qualification`, all five SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -314,6 +328,20 @@ encoded saturation opcodes, scalar controls and default/disabled/type diagnostic
 It binds the current native compiler, locked sources, headers and tools, and
 reopens the assembly, objects and executable programs. See
 [SIMD-SATURATING.md](SIMD-SATURATING.md) for the supported builtin signatures.
+Patch `0015` further requires `--simd-conversions-qualification`: all 176 canonical
+C/C++ O0/O2 cases, 12 additional default-SIMD fallback controls and 192 rejected
+builtin compilations. Required direct/composed/scalar instructions must appear
+in the actual conversion function. The gate preserves every preceding SIMD,
+vector ABI and wide-scalar qualification requirement; see
+[SIMD-CONVERSIONS.md](SIMD-CONVERSIONS.md).
+Patch `0016` requires `--simd-header-qualification`: all 169 public API names in
+C/C++ at O0/O2, four disabled and four default scalar controls, 296 rejected
+compilations, and the same 680 canonical sources compiled with the original
+pinned Clang header. The gate reopens all objects and programs, checks the
+live `convert` function's instructions and requires exact header equality
+across source, native installation, browser resources and packaged sysroot.
+The complete GCC GPL and Runtime Library Exception notices are retained and
+checked by identity; see [SIMD-HEADER.md](SIMD-HEADER.md).
 The binary128 gate requires all 42 O0/O2 fixtures and 124 applicable native
 GCC/Clang runs, the pinned print/scan extension and the rebuilt GNU archives.
 It checks both actual Clang invocations, executed tool paths, header inventories,
