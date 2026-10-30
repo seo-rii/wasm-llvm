@@ -31,8 +31,9 @@ bits: 16×i8, 8×i16, 4×i32, 2×i64, 4×f32 and 2×f64.
   This is not an x86 intrinsic compatibility layer.
 - `__builtin_shufflevector` with compile-time selectors and equal 128-bit input
   and output modes uses `i8x16.shuffle`. The target converts lane selectors to
-  sixteen byte selectors inside GCC. Dynamic permutations and variable
-  per-lane SIMD shifts are outside this extension.
+  sixteen byte selectors inside GCC. Dynamic permutations are outside this
+  extension. Variable per-lane shifts use the separately qualified
+  [scalar fallback](SIMD-LANE-SHIFTS.md); no per-lane SIMD shift pattern is added.
 
 The implementation follows GCC's [vector comparison and conditional mask
 optabs](https://gcc.gnu.org/onlinedocs/gccint/Standard-Pattern-Names-for-Vectorization.html)
