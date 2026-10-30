@@ -7,8 +7,8 @@ repository=$(cd -- "$script_dir/../.." && pwd)
 work=${GCC_WASI_WORK_DIR:-"$repository/out/gcc-wasi-work"}
 jobs=${GCC_WASI_WABT_JOBS:-2}
 mode=${1:-all}
-revision=651c9ffbce3d0525d2d1324fab79160e5fcf8173
-repository_url=https://github.com/feedab1e/wabt.git
+revision=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["wabt"]["commit"])' "$script_dir/sources.lock.json")
+repository_url=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["wabt"]["repository"])' "$script_dir/sources.lock.json")
 [[ $jobs =~ ^[1-9][0-9]*$ ]] || { echo 'GCC_WASI_WABT_JOBS must be positive' >&2; exit 2; }
 case "$mode" in native|browser|all) ;; *) echo 'Usage: build-wabt.sh [native|browser|all]' >&2; exit 2;; esac
 for tool in git cmake python3; do command -v "$tool" >/dev/null; done
@@ -27,10 +27,53 @@ fi
 [[ $(git -C "$source_dir" rev-parse HEAD) == "$revision" ]] || {
   echo "Unexpected WABT revision in $source_dir" >&2; exit 2;
 }
-git -C "$source_dir" diff --quiet
-git -C "$source_dir" diff --cached --quiet
 # Pinned gitlink, needed by the browser build, without downloading the test suite.
 git -C "$source_dir" submodule update --init --depth=1 third_party/picosha2
+python3 "$script_dir/prepare-source.py" --component wabt --source "$source_dir" --apply > "$work/wabt-source.json"
+python3 - "$script_dir" "$work" <<'PYINPUT'
+import hashlib, json, pathlib, sys
+recipe, work = map(pathlib.Path, sys.argv[1:])
+def identity(path):
+    data = path.read_bytes()
+    return {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+inputs = {"source": json.loads((work / "wabt-source.json").read_text()),
+          "recipes": {name: identity(recipe / name) for name in
+                      ("build-wabt.sh", "prepare-source.py", "sources.lock.json")}}
+(work / "wabt-build-inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
+PYINPUT
+
+write_receipt() {
+  python3 - "$script_dir" "$source_dir" "$work" "$1" "$2" <<'PYRECEIPT'
+import hashlib, json, pathlib, subprocess, sys
+recipe, source, work, output = map(pathlib.Path, sys.argv[1:5])
+host = sys.argv[5]
+inputs = json.loads((work / "wabt-build-inputs.json").read_text())
+def identity(path):
+    data = path.read_bytes()
+    return {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+current = json.loads(subprocess.check_output([sys.executable, str(recipe / "prepare-source.py"),
+    "--component", "wabt", "--source", str(source)], text=True))
+if current != inputs["source"] or any(identity(recipe / name) != expected
+        for name, expected in inputs["recipes"].items()):
+    raise RuntimeError("WABT source or recipe changed during the build")
+lock = json.loads((recipe / "sources.lock.json").read_text())["wabt"]
+receipt = {
+    "component": "wabt", "role": "wasm-object-assembler", "host": host,
+    "repository": lock["repository"], "commit": lock["commit"], "version": lock["version"],
+    "license": lock["license"], "assemblerArguments": ["-r", "--enable-annotations"],
+    "source": current, "recipes": inputs["recipes"], "inputsUnchanged": True,
+    "submodules": subprocess.check_output(["git", "-C", str(source), "submodule", "status", "third_party/picosha2"], text=True).strip(),
+}
+if host == "native":
+    names = ("wat2wasm", "wasm-objdump", "wasm-validate")
+    receipt["version"] = subprocess.check_output([str(output / "wat2wasm"), "--version"], text=True).strip()
+else:
+    names = ("as.mjs", "as.wasm")
+    receipt["emscripten"] = subprocess.check_output(["emcc", "--version"], text=True).splitlines()[0]
+receipt["files"] = {name: identity(output / name) for name in names}
+(output / "provenance.json").write_text(json.dumps(receipt, indent=2) + "\n")
+PYRECEIPT
+}
 
 common_options=(
   -DBUILD_TESTS=OFF -DBUILD_LIBWASM=OFF -DWITH_WASI=OFF
@@ -42,18 +85,7 @@ if [[ $mode == native || $mode == all ]]; then
   cmake -S "$source_dir" -B "$native_dir" "${common_options[@]}" -DBUILD_TOOLS=ON
   cmake --build "$native_dir" --target wat2wasm wasm-objdump wasm-validate --parallel "$jobs"
   "$native_dir/wat2wasm" --version
-  python3 - "$source_dir" "$native_dir" "$revision" <<'PY'
-import json, pathlib, subprocess, sys
-source, output, revision = sys.argv[1:]
-receipt = {
-    "component": "wabt", "role": "wasm-object-assembler", "host": "native",
-    "repository": "https://github.com/feedab1e/wabt.git", "commit": revision,
-    "version": subprocess.check_output([str(pathlib.Path(output) / "wat2wasm"), "--version"], text=True).strip(),
-    "license": "Apache-2.0", "assemblerArguments": ["-r", "--enable-annotations"],
-    "submodules": subprocess.check_output(["git", "-C", source, "submodule", "status", "third_party/picosha2"], text=True).strip(),
-}
-pathlib.Path(output, "provenance.json").write_text(json.dumps(receipt, indent=2) + "\n")
-PY
+  write_receipt "$native_dir" native
 fi
 
 if [[ $mode == browser || $mode == all ]]; then
@@ -85,20 +117,5 @@ if [[ $mode == browser || $mode == all ]]; then
   for component in libcxx libcxxabi compiler-rt; do
     install -m644 "$emsdk/upstream/emscripten/system/lib/$component/LICENSE.TXT" "$browser_dir/LICENSE.$component"
   done
-  python3 - "$source_dir" "$browser_dir" "$revision" <<'PY'
-import hashlib, json, pathlib, subprocess, sys
-source, output, revision = sys.argv[1:]
-receipt = {
-    "component": "wabt", "role": "wasm-object-assembler", "host": "wasm32-emscripten",
-    "repository": "https://github.com/feedab1e/wabt.git", "commit": revision,
-    "license": "Apache-2.0", "assemblerArguments": ["-r", "--enable-annotations"],
-    "emscripten": subprocess.check_output(["emcc", "--version"], text=True).splitlines()[0],
-    "submodules": subprocess.check_output(["git", "-C", source, "submodule", "status", "third_party/picosha2"], text=True).strip(),
-    "files": {},
-}
-for name in ("as.mjs", "as.wasm"):
-    data = pathlib.Path(output, name).read_bytes()
-    receipt["files"][name] = {"size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
-pathlib.Path(output, "provenance.json").write_text(json.dumps(receipt, indent=2) + "\n")
-PY
+  write_receipt "$browser_dir" wasm32-emscripten
 fi

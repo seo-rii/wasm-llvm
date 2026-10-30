@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "kind": "gcc-wasi-target-features-qualification-summary",
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/79",
+  "date": "2026-10-30",
+  "status": "passed",
+  "scope": "Pinned WABT assembler patch; existing C8 GCC/runtime/LLD assets reused read-only. Candidate is for qualification and was not produced by rerunning packageWasi with old compiler receipts.",
+  "source": {
+    "gcc": {
+      "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "patches": [
+        {
+          "path": "patches/0001-void-type-return.patch",
+          "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+          "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+        },
+        {
+          "path": "patches/0002-host-width-format.patch",
+          "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+          "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+        },
+        {
+          "path": "patches/0003-simd128.patch",
+          "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+          "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+        },
+        {
+          "path": "patches/0004-basic-c-abi.patch",
+          "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+          "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+        },
+        {
+          "path": "patches/0005-atomic-libcall-abi.patch",
+          "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+          "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+        },
+        {
+          "path": "patches/0006-simd-operations.patch",
+          "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+          "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+        },
+        {
+          "path": "patches/0007-vector-abi.patch",
+          "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+          "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+        },
+        {
+          "path": "patches/0008-binary128-long-double.patch",
+          "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+          "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+        },
+        {
+          "path": "patches/0009-int128.patch",
+          "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+          "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+        },
+        {
+          "path": "patches/0010-empty-record-abi.patch",
+          "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+          "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+        },
+        {
+          "path": "patches/0011-bitfield-layout.patch",
+          "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+          "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+        }
+      ],
+      "sourceDiffSha256": "2534d4408b05cf3221755edf38026e6fc57c5519b5c7eb6d59009a76fa88c73c"
+    },
+    "wabt": {
+      "version": "1.0.37",
+      "repository": "https://github.com/feedab1e/wabt.git",
+      "commit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173",
+      "license": "Apache-2.0",
+      "purpose": "Assembler for GCC's annotated relocatable WAT; upstream WABT is insufficient",
+      "patches": [
+        {
+          "path": "patches/wabt-0001-simd-target-features.patch",
+          "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6",
+          "purpose": "Record actual SIMD instructions and v128 types, merge target_features and reject malformed or conflicting declarations."
+        }
+      ],
+      "sourceDiffSha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6",
+      "submodules": {
+        "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
+      }
+    },
+    "emsdk": {
+      "version": "6.0.0",
+      "repository": "https://github.com/emscripten-core/emsdk.git",
+      "commit": "d223ae73c6998296e3ab27cf81dc2c2c9fd383de",
+      "emscriptenCommit": "afa15e0c56d1292e073c2c91bafc1d5e0cdf0dd3"
+    },
+    "wasiSdk": {
+      "version": "33.0",
+      "repository": "https://github.com/WebAssembly/wasi-sdk",
+      "tag": "wasi-sdk-33",
+      "archive": "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz",
+      "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+      "llvmVersion": "22.1.0",
+      "llvmCommit": "4434dabb69916856b824f68a64b029c67175e532",
+      "purpose": "Native wasm-ld, WASI Preview 1 libc/CRT and compiler-rt builtins; never compiles user source"
+    }
+  },
+  "tools": {
+    "nativeAssembler": {
+      "wat2wasm": {
+        "bytes": 1640976,
+        "sha256": "76ce72f1caa34545696dd294da2a805e659b47fb6da1ec1f6bd0c641fda098a0"
+      },
+      "wasm-objdump": {
+        "bytes": 990704,
+        "sha256": "fe648fa97fcfd1b6c895b81664f38c547853fa8ebc9153d0280ecfe08c4eab48"
+      },
+      "wasm-validate": {
+        "bytes": 1297256,
+        "sha256": "551bda9d5080afb70358aefe686e07c00e317113398b90d20436feb7272fa5ce"
+      }
+    },
+    "wasmHostAssembler": {
+      "as.mjs": {
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "as.wasm": {
+        "bytes": 600951,
+        "sha256": "8367109eca5f4d156cccd39b25045261723e556073b844b6d558dc7a13513d54"
+      }
+    },
+    "browserCompilerLinkerSysroot": {
+      "cc1Js": {
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "cc1.wasm",
+        "bytes": 15590758,
+        "sha256": "b0725b11b8ac9d1e331062e68537ad9d3c75b3ef3a3751cc86171884473911fa"
+      },
+      "cc1plusJs": {
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "cc1plus.wasm",
+        "bytes": 17251474,
+        "sha256": "0fd4b2180d478bc8e5a340d168578b3a7f0ab732feb8ffa8fe4131a8e8410a11"
+      },
+      "asJs": {
+        "path": "as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "as.wasm",
+        "bytes": 600951,
+        "sha256": "8367109eca5f4d156cccd39b25045261723e556073b844b6d558dc7a13513d54"
+      },
+      "ldWasm": {
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "sysroot.tar",
+        "bytes": 25443840,
+        "sha256": "a098c6c9ccbae0271eb0ae8e7f40e190bab05c65deb77912f903aa39766f4217"
+      }
+    },
+    "nodeVersion": "24.22.1",
+    "chromium": "156.0.8078.4"
+  },
+  "reports": {
+    "native": {
+      "path": "out/target-features-native-4/qualification.json",
+      "bytes": 238414,
+      "sha256": "832cf393ae9326b95cf1836324b581864a03d10e6ef529fd47f9eb1d20c9c045"
+    },
+    "assemblerWorker": {
+      "path": "out/target-features-wabt-chromium.json",
+      "bytes": 45024,
+      "sha256": "9a166480f9e10e76d59825cee395e8af835282c6ca7020ebda8fafbd78d6c2a8"
+    },
+    "sdkWorker": {
+      "path": "out/target-features-sdk-worker/qualification.json",
+      "bytes": 114846,
+      "sha256": "1bab187cbb36c1c59a4666cc0c992df96896a73738fbaf8da5bfc8365fbe8de8"
+    },
+    "candidate": {
+      "path": "out/target-features-candidate.json",
+      "bytes": 2229,
+      "sha256": "a945329bfa6d9294fd7cd995ce35686c4c602c0b8a9dcf6f3f38db3530b40f52"
+    }
+  },
+  "counts": {
+    "watProfiles": 31,
+    "watPositiveProfiles": 18,
+    "watRejectedProfiles": 13,
+    "nativeWatAssemblies": 62,
+    "chromiumWatAssemblies": 62,
+    "nativeGccPrograms": 6,
+    "chromiumGccPrograms": 6,
+    "chromiumGccCaptures": 18,
+    "nodeWasiExecutionsOfNativePrograms": 6,
+    "nodeWasiExecutionsOfChromiumPrograms": 6
+  },
+  "checks": {
+    "nativeAndWasmHostSourcesIdentical": true,
+    "nativeAndChromiumObjectsIdentical": true,
+    "inputsUnchanged": true,
+    "lldRejectsDisallowedSimd": true,
+    "enabledScalarDoesNotAdvertiseSimd": true,
+    "tableRelocationNativeAndWasmHostRegression": "passed",
+    "sourcePackageAndInspectorUnitTests": 25,
+    "unchangedSdkWasiDecoderTests": 34
+  },
+  "gccCases": [
+    {
+      "id": "scalar-fd-O0",
+      "stdout": "253 253\n",
+      "objectFeatures": {},
+      "linkedFeatures": {
+        "bulk-memory-opt": "+",
+        "call-indirect-overlong": "+",
+        "extended-const": "+",
+        "multivalue": "+",
+        "mutable-globals": "+",
+        "nontrapping-fptoint": "+",
+        "sign-ext": "+"
+      }
+    },
+    {
+      "id": "scalar-fd-O2",
+      "stdout": "253 253\n",
+      "objectFeatures": {},
+      "linkedFeatures": {
+        "bulk-memory-opt": "+",
+        "call-indirect-overlong": "+",
+        "extended-const": "+",
+        "multivalue": "+",
+        "mutable-globals": "+",
+        "nontrapping-fptoint": "+",
+        "sign-ext": "+"
+      }
+    },
+    {
+      "id": "scalar-enabled-O0",
+      "stdout": "253 253\n",
+      "objectFeatures": {},
+      "linkedFeatures": {
+        "bulk-memory-opt": "+",
+        "call-indirect-overlong": "+",
+        "extended-const": "+",
+        "multivalue": "+",
+        "mutable-globals": "+",
+        "nontrapping-fptoint": "+",
+        "sign-ext": "+"
+      }
+    },
+    {
+      "id": "scalar-enabled-O2",
+      "stdout": "253 253\n",
+      "objectFeatures": {},
+      "linkedFeatures": {
+        "bulk-memory-opt": "+",
+        "call-indirect-overlong": "+",
+        "extended-const": "+",
+        "multivalue": "+",
+        "mutable-globals": "+",
+        "nontrapping-fptoint": "+",
+        "sign-ext": "+"
+      }
+    },
+    {
+      "id": "vector-add-O0",
+      "stdout": "42 42 42 42\n",
+      "objectFeatures": {
+        "simd128": "+"
+      },
+      "linkedFeatures": {
+        "bulk-memory-opt": "+",
+        "call-indirect-overlong": "+",
+        "extended-const": "+",
+        "multivalue": "+",
+        "mutable-globals": "+",
+        "nontrapping-fptoint": "+",
+        "sign-ext": "+",
+        "simd128": "+"
+      }
+    },
+    {
+      "id": "vector-add-O2",
+      "stdout": "42 42 42 42\n",
+      "objectFeatures": {
+        "simd128": "+"
+      },
+      "linkedFeatures": {
+        "bulk-memory-opt": "+",
+        "call-indirect-overlong": "+",
+        "extended-const": "+",
+        "multivalue": "+",
+        "mutable-globals": "+",
+        "nontrapping-fptoint": "+",
+        "sign-ext": "+",
+        "simd128": "+"
+      }
+    }
+  ],
+  "limitations": [
+    "Automatic feature inference is scoped to simd128 and relaxed-simd; other explicit input target_features declarations are preserved.",
+    "This assembler change does not add relaxed SIMD code generation to GCC.",
+    "WASI SDK 33 native LLD 22.1.0 rejects relocatable v128 global initializers with invalid opcode in init_expr: 253; both assembler hosts and execution engines accept the standalone module. The regression checks this exact linker diagnostic.",
+    "No complete packageWasi repack was claimed; its existing whole-source-lock GCC receipt gates remain enforced."
+  ],
+  "logs": [
+    {
+      "path": "~/logs/wasm-llvm-79-wabt-rebuild-mcq020mi.log",
+      "exitStatus": 0
+    },
+    {
+      "path": "~/logs/wasm-llvm-79-sdk-worker-8277ytub.log",
+      "exitStatus": 0
+    }
+  ]
+}

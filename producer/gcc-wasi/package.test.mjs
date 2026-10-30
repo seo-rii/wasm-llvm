@@ -7,6 +7,37 @@ import { cases as int128Cases } from './int128-fixtures.mjs';
 import { cases as emptyAbiCases } from './empty-abi-fixtures.mjs';
 import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
 import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
+import { verifyWabtAssemblerReceipt } from './package.mjs';
+
+test('assembler receipt requires the exact patched WABT source and build recipes', () => {
+	const lock = { repository: 'https://example.invalid/wabt', commit: '1'.repeat(40), version: '1.0.37',
+		patches: [{ path: 'patches/wabt.patch', sha256: '2'.repeat(64) }], sourceDiffSha256: '3'.repeat(64),
+		submodules: { 'third_party/picosha2': '4'.repeat(40) } };
+	const recipes = Object.fromEntries(['build-wabt.sh', 'prepare-source.py', 'sources.lock.json']
+		.map(name => [name, identity(Buffer.from(name))]));
+	const receipt = { component: 'wabt', role: 'wasm-object-assembler', host: 'wasm32-emscripten',
+		repository: lock.repository, commit: lock.commit, version: lock.version, inputsUnchanged: true,
+		assemblerArguments: ['-r', '--enable-annotations'], recipes,
+		source: { wabtCommit: lock.commit, patches: lock.patches, sourceDiffSha256: lock.sourceDiffSha256, submodules: lock.submodules } };
+	verifyWabtAssemblerReceipt(receipt, lock, recipes);
+	for (const mutate of [
+		proof => { delete proof.source; },
+		proof => { proof.source.patches = []; },
+		proof => { proof.source.sourceDiffSha256 = '0'.repeat(64); },
+		proof => { proof.source.wabtCommit = '0'.repeat(40); },
+		proof => { proof.source.submodules['third_party/picosha2'] = '0'.repeat(40); },
+		proof => { proof.commit = '0'.repeat(40); },
+		proof => { proof.repository = 'https://example.invalid/other'; },
+		proof => { proof.host = 'native'; },
+		proof => { proof.inputsUnchanged = false; },
+		proof => { proof.assemblerArguments = []; },
+		proof => { proof.recipes['prepare-source.py'].sha256 = '0'.repeat(64); },
+		proof => { delete proof.recipes['sources.lock.json']; }
+	]) {
+		const changed = structuredClone(receipt); mutate(changed);
+		assert.throws(() => verifyWabtAssemblerReceipt(changed, lock, recipes));
+	}
+});
 
 test('browser package rejects failed preparation and unsupported gcov host profiles', () => {
 	const specs = identity(Buffer.from('*cc1plus:\n\n'));
