@@ -28,6 +28,22 @@ export function verifyInventory(files, expected, label) {
 	assert.deepEqual(ordered(inventory(files)), ordered(canonical), `${label}: files differ from the build receipt`);
 }
 
+export function verifyWabtAssemblerReceipt(receipt, lock, recipes) {
+	assert.equal(receipt.component, 'wabt');
+	assert.equal(receipt.role, 'wasm-object-assembler');
+	assert.equal(receipt.host, 'wasm32-emscripten');
+	assert.equal(receipt.repository, lock.repository);
+	assert.equal(receipt.commit, lock.commit);
+	assert.equal(receipt.version, lock.version);
+	assert.equal(receipt.inputsUnchanged, true, 'WABT inputs changed during the build');
+	assert.deepEqual(receipt.assemblerArguments, ['-r', '--enable-annotations']);
+	assert.deepEqual(receipt.source, {
+		wabtCommit: lock.commit, patches: lock.patches || [],
+		sourceDiffSha256: lock.sourceDiffSha256, submodules: lock.submodules || {}
+	}, 'WABT assembler source differs from the locked patched source');
+	assert.deepEqual(receipt.recipes, recipes, 'WABT assembler build recipes changed');
+}
+
 export function verifyRuntimeLibraryIdentities(files, locked = {}) {
 	for (const [name, expected] of Object.entries(locked)) {
 		assert(/^[a-zA-Z0-9_+-][a-zA-Z0-9_.+-]*\.a$/.test(name), `Invalid locked runtime library: ${name}`);
@@ -531,9 +547,10 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 
 	const asRoot = path.join(work, 'wabt-browser');
 	const asReceipt = await readJson(path.join(asRoot, 'provenance.json'));
-	assert.equal(asReceipt.commit, lock.wabt.commit);
-	assert.equal(asReceipt.host, 'wasm32-emscripten');
-	assert.deepEqual(asReceipt.assemblerArguments, ['-r', '--enable-annotations']);
+	const wabtRecipes = await Promise.all(['build-wabt.sh', 'prepare-source.py', 'sources.lock.json']
+		.map(async name => [name, await fs.readFile(path.join(here, name))]));
+	verifyWabtAssemblerReceipt(asReceipt, lock.wabt,
+		Object.fromEntries(wabtRecipes.map(([name, bytes]) => [name, identity(bytes)])));
 	const asFiles = await Promise.all(['as.mjs', 'as.wasm'].map(async (name) => ({ path: name, bytes: await fs.readFile(path.join(asRoot, name)) })));
 	verifyInventory(asFiles, asReceipt.files, 'WABT assembler');
 	const runtimeReceipt = await readJson(path.join(runtime, 'runtime-build.json'));
@@ -864,9 +881,10 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (anonymousBitfieldProof) provenanceFiles.set('native-anonymous-bitfield-qualification.json', anonymousBitfieldProof);
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
-	for (const patch of lock.gcc.patches || []) {
+	for (const [name, bytes] of wabtRecipes) provenanceFiles.set(`wabt-${name}`, bytes);
+	for (const patch of [...(lock.gcc.patches || []), ...(lock.wabt.patches || [])]) {
 		const bytes = await fs.readFile(path.join(here, relativePath(patch.path)));
-		assert.equal(identity(bytes).sha256, patch.sha256, 'GCC patch differs from the source lock');
+		assert.equal(identity(bytes).sha256, patch.sha256, 'Compiler or assembler patch differs from the source lock');
 		provenanceFiles.set(path.basename(patch.path), bytes);
 	}
 	for (const patch of runtimeLock.wasiLibc.patches || []) {

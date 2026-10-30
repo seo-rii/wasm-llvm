@@ -80,3 +80,48 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.notEqual(run().status, 0, 'ignored in-tree dependencies must not bypass source verification');
 	} finally { await fs.rm(temp, { recursive: true, force: true }); }
 });
+
+test('WABT preparation pins its combined diff and clean submodule inputs', async () => {
+	const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'gcc-wasi-wabt-source-test-'));
+	try {
+		const source = path.join(temp, 'wabt'), dependency = path.join(temp, 'dependency');
+		const git = (directory, ...args) => execFileSync('git', ['-C', directory, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+		const commit = directory => git(directory, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'test: pinned fixture');
+		for (const directory of [source, dependency]) { await fs.mkdir(directory); git(directory, 'init', '-q'); }
+		await fs.writeFile(path.join(dependency, 'header.h'), 'pinned dependency\n');
+		await fs.writeFile(path.join(dependency, '.gitignore'), '*.generated\n');
+		git(dependency, 'add', '.'); commit(dependency);
+		git(source, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', dependency, 'third_party/picosha2');
+		await fs.writeFile(path.join(source, 'writer.cc'), 'unpatched\n');
+		git(source, 'add', '.'); commit(source);
+		const revision = git(source, 'rev-parse', 'HEAD').trim();
+		await fs.writeFile(path.join(source, 'writer.cc'), 'patched\n');
+		const patch = git(source, 'diff', '--binary', '--no-ext-diff', 'HEAD');
+		const hash = createHash('sha256').update(patch).digest('hex');
+		await fs.writeFile(path.join(temp, 'wabt.patch'), patch);
+		await fs.writeFile(path.join(source, 'writer.cc'), 'unpatched\n');
+		const lock = { wabt: { commit: revision, patches: [{ path: 'wabt.patch', sha256: hash }], sourceDiffSha256: hash,
+			submodules: { 'third_party/picosha2': git(dependency, 'rev-parse', 'HEAD').trim() } } };
+		const saveLock = () => fs.writeFile(path.join(temp, 'sources.lock.json'), JSON.stringify(lock));
+		await saveLock();
+		const script = path.join(temp, 'prepare-source.py');
+		await fs.copyFile(new URL('./prepare-source.py', import.meta.url), script);
+		const run = (apply = false) => spawnSync('python3', [script, '--component', 'wabt', '--source', source, ...(apply ? ['--apply'] : [])], { encoding: 'utf8' });
+		assert.notEqual(run().status, 0);
+		const applied = run(true); assert.equal(applied.status, 0, applied.stderr);
+		assert.deepEqual(JSON.parse(applied.stdout), { wabtCommit: revision, patches: lock.wabt.patches, sourceDiffSha256: hash, submodules: lock.wabt.submodules });
+		assert.equal(run().status, 0);
+		assert.equal(git(source, 'diff', '--cached'), '');
+		lock.wabt.sourceDiffSha256 = '0'.repeat(64); await saveLock();
+		assert.notEqual(run().status, 0, 'combined source identity must match the pin');
+		lock.wabt.sourceDiffSha256 = hash; await saveLock();
+		const child = path.join(source, 'third_party/picosha2');
+		await fs.writeFile(path.join(child, 'unexpected.generated'), 'ignored source input\n');
+		assert.notEqual(run().status, 0, 'ignored dependency files may change compilation');
+		await fs.unlink(path.join(child, 'unexpected.generated'));
+		await fs.writeFile(path.join(child, 'header.h'), 'changed dependency\n');
+		assert.notEqual(run().status, 0, 'dependency content must match its gitlink');
+		git(child, 'add', 'header.h'); commit(child);
+		assert.notEqual(run().status, 0, 'a clean dependency at another revision must also fail');
+	} finally { await fs.rm(temp, { recursive: true, force: true }); }
+});
