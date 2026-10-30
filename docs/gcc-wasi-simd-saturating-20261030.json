@@ -1,0 +1,4533 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/75",
+  "status": "native-feature-passed-full-regression-and-browser-pending",
+  "basePr": "https://github.com/seo-rii/wasm-llvm/pull/94",
+  "compilerHost": "native",
+  "outputTarget": "wasm32-wasi",
+  "sourceLock": {
+    "bytes": 5542,
+    "sha256": "946f09e6d511873aced0a023f8f12dd525edafa0fd0dcc797056130fd2cdc646"
+  },
+  "gccSource": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      },
+      {
+        "path": "patches/0012-anonymous-bitfield-abi.patch",
+        "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+        "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+      },
+      {
+        "path": "patches/0013-simd-saturating-arithmetic.patch",
+        "purpose": "Add signed/unsigned i8x16 and i16x8 saturating add/subtract optabs and typed GCC target builtins with explicit SIMD feature gating.",
+        "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+      }
+    ],
+    "sourceDiffSha256": "1abd172bb72050ed5a7ded4f6c60e5d95bb2929ff980cdd2cb6fbb35c6d1de8a"
+  },
+  "nativeBuild": {
+    "schemaVersion": 1,
+    "host": "native",
+    "target": "wasm32-wasi",
+    "sourceLockSha256": "946f09e6d511873aced0a023f8f12dd525edafa0fd0dcc797056130fd2cdc646",
+    "recipeSha256": "9e986668497fcf388bad789bc998b0ba7fe326915b6d6385191ff592c983c679",
+    "driverSpecsSha256": "15745887073b02a151caf3763fd0bb95aa3b50dc7d6d14170018777de4b95811",
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "gccSource": {
+      "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "patches": [
+        {
+          "path": "patches/0001-void-type-return.patch",
+          "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+          "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+        },
+        {
+          "path": "patches/0002-host-width-format.patch",
+          "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+          "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+        },
+        {
+          "path": "patches/0003-simd128.patch",
+          "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+          "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+        },
+        {
+          "path": "patches/0004-basic-c-abi.patch",
+          "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+          "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+        },
+        {
+          "path": "patches/0005-atomic-libcall-abi.patch",
+          "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+          "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+        },
+        {
+          "path": "patches/0006-simd-operations.patch",
+          "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+          "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+        },
+        {
+          "path": "patches/0007-vector-abi.patch",
+          "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+          "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+        },
+        {
+          "path": "patches/0008-binary128-long-double.patch",
+          "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+          "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+        },
+        {
+          "path": "patches/0009-int128.patch",
+          "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+          "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+        },
+        {
+          "path": "patches/0010-empty-record-abi.patch",
+          "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+          "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+        },
+        {
+          "path": "patches/0011-bitfield-layout.patch",
+          "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+          "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+        },
+        {
+          "path": "patches/0012-anonymous-bitfield-abi.patch",
+          "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+          "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+        },
+        {
+          "path": "patches/0013-simd-saturating-arithmetic.patch",
+          "purpose": "Add signed/unsigned i8x16 and i16x8 saturating add/subtract optabs and typed GCC target builtins with explicit SIMD feature gating.",
+          "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+        }
+      ],
+      "sourceDiffSha256": "1abd172bb72050ed5a7ded4f6c60e5d95bb2929ff980cdd2cb6fbb35c6d1de8a"
+    },
+    "tools": {
+      "cc1": {
+        "sha256": "239676bbbc91378f14815f26dd4628cdb52ed72374cd8edcd0d575d5e4d2b3b5"
+      },
+      "cc1plus": {
+        "sha256": "4d0e2503612640617c3bec7f2ee5923f563982cb7a74efb1d58a2ff1ed5f621b"
+      },
+      "xgcc": {
+        "sha256": "f891620a38b5a7360bcf34f7a7b392cdde1fea9bf9b80bf57674da55ec94cf50"
+      }
+    }
+  },
+  "qualificationReceipt": {
+    "path": "out/issue75-build/work/simd-saturating-qualification/qualification.json",
+    "bytes": 1475783,
+    "sha256": "016d3baeb87e2f008b8c22029a9b11d4ca73637e933bc90e0b4ba5917f7b8c07"
+  },
+  "counts": {
+    "nativePrograms": 36,
+    "saturatingPrograms": 32,
+    "scalarDisabledControls": 4,
+    "diagnosticCompilations": 80,
+    "packageAndFixtureUnitTests": 28
+  },
+  "tools": {
+    "compiler": {
+      "bytes": 24400832,
+      "sha256": "239676bbbc91378f14815f26dd4628cdb52ed72374cd8edcd0d575d5e4d2b3b5"
+    },
+    "compilerCpp": {
+      "bytes": 26957600,
+      "sha256": "4d0e2503612640617c3bec7f2ee5923f563982cb7a74efb1d58a2ff1ed5f621b"
+    },
+    "assembler": {
+      "bytes": 1635504,
+      "sha256": "8203fbf4dc22d46fc2cb334c4666dc9712c7b53d3726cf47719d6b6d91eff8a6"
+    },
+    "objdump": {
+      "bytes": 990704,
+      "sha256": "fe4ec3fb6b6177627cf00851057c9870f3f4d971dcbdda7ba9597bb5f85fb3ad"
+    },
+    "linker": {
+      "bytes": 4165088,
+      "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+    },
+    "node": {
+      "bytes": 126879696,
+      "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+    },
+    "validator": {
+      "bytes": 1297256,
+      "sha256": "102061d82e2cda05dd2f3c5b890d887f70dd53e143c4f28b457fe8d4a89ce91d"
+    }
+  },
+  "runtime": {
+    "crt1-command.o": {
+      "bytes": 1990,
+      "sha256": "27bf9846868f00d770b724fd0a27e22f799c6d550c335d5e8e770391d6ae3231"
+    },
+    "libc.a": {
+      "bytes": 3085600,
+      "sha256": "d7ebab1b8ee60d06c31fe809c52b8fe8c12591d4bf1e8989431e67787eff3cf4"
+    },
+    "libm.a": {
+      "bytes": 8,
+      "sha256": "f0a17a43c74d2fe5474fa2fd29c8f14799e777d7d75a2cc4d11c20a6e7b161c5"
+    },
+    "libclang_rt.builtins-wasm32.a": {
+      "bytes": 456060,
+      "sha256": "b1e23c0376609e09052ff225f290d971b0f8eabd3ffd0737e5d0ebb10f1880d1"
+    }
+  },
+  "fixture": {
+    "bytes": 6890,
+    "sha256": "420ab86e3dc6674a8106c5a818ef3ba2ca258a75d26bc930b2e04a7ba7949cce"
+  },
+  "harness": {
+    "bytes": 11727,
+    "sha256": "dc4dd6240614bf528f0892dfb7839df62445d37bfeafbacf7a5e2cb27046b109"
+  },
+  "cases": [
+    {
+      "id": "simd-saturating-add-s-i8x16-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 127 127 -128 -128 -3 -1 1 127 127 -1 -128 -128 -2\n0 126 127 -2 0 -128 -127 -1 125 127 -127 -1 125 -128 -126 124\n126 -128 -126 124 126 -127 -1 125 -128 -127 -1 125 127 -2 0 -128\n-128 -2 0 126 127 -1 -128 -128 -3 -1 1 127 127 -128 -128 -4\n",
+      "assembly": {
+        "bytes": 10444,
+        "sha256": "6b1d4c1dbe1af14d499576faaf7794deeea8cc5587701612ccf4748f1e9233c0"
+      },
+      "object": {
+        "bytes": 1376,
+        "sha256": "23996373a17b8fd6f1ad949534b367c99f728a524d0147478f9d4a3c4901205d"
+      },
+      "wasm": {
+        "bytes": 209881,
+        "sha256": "4f1883f2f8bf628a7f5bcfc324c553beefe791f8ada0dd6f1a8e10bb285b9f39"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 42,
+        "i32.extend8_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.add_sat_s": 1,
+        "local.get": 93,
+        "local.set": 94,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e6ae223d87c4364c99f6984c5e939c66655dab915b698e9830ee5c49bc577ed6"
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 127 127 -128 -128 -3 -1 1 127 127 -1 -128 -128 -2\n0 126 127 -2 0 -128 -127 -1 125 127 -127 -1 125 -128 -126 124\n126 -128 -126 124 126 -127 -1 125 -128 -127 -1 125 127 -2 0 -128\n-128 -2 0 126 127 -1 -128 -128 -3 -1 1 127 127 -128 -128 -4\n",
+      "assembly": {
+        "bytes": 8539,
+        "sha256": "56c444050856d168a4cea32c3cbef5896548f30bf24c4543101a3dcf8c292af7"
+      },
+      "object": {
+        "bytes": 1311,
+        "sha256": "8416f8c423a926910209ee294e3d3f9b46ff246aa969a7e3633419dfb520ab04"
+      },
+      "wasm": {
+        "bytes": 209918,
+        "sha256": "54f329d92eadb0e804413833855cf40b5fc3bb7c92d4abb5388173696876fb42"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 35,
+        "i32.eq": 1,
+        "i32.extend8_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.add_sat_s": 1,
+        "i8x16.extract_lane_s": 1,
+        "local.get": 74,
+        "local.set": 69,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "19686fefca58b45a1910246041a01ff0c85a3900a4e092bee0f48efbce63b86f"
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 127 127 -128 -128 -3 -1 1 127 127 -1 -128 -128 -2\n0 126 127 -2 0 -128 -127 -1 125 127 -127 -1 125 -128 -126 124\n126 -128 -126 124 126 -127 -1 125 -128 -127 -1 125 127 -2 0 -128\n-128 -2 0 126 127 -1 -128 -128 -3 -1 1 127 127 -128 -128 -4\n",
+      "assembly": {
+        "bytes": 11122,
+        "sha256": "839e631d5ecc9fc76d9331fec035eba05f858082caa7a6d7aa8a10155bfb4cf6"
+      },
+      "object": {
+        "bytes": 1448,
+        "sha256": "e9becea385c62a0dd8a8faf66b0c1f7093d722f6529592d6fb0df894782d9ddf"
+      },
+      "wasm": {
+        "bytes": 209970,
+        "sha256": "f44756a40b60c0d7654e44b6da9f8a2b8ddba735e1bd3c41ddf1c0ec16a691e4"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 47,
+        "i32.eq": 1,
+        "i32.extend8_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.add_sat_s": 1,
+        "local.get": 96,
+        "local.set": 100,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e20408e5c1d388299b687880c92aeb2e3b66013538652bf6f89460d8255e7061"
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 127 127 -128 -128 -3 -1 1 127 127 -1 -128 -128 -2\n0 126 127 -2 0 -128 -127 -1 125 127 -127 -1 125 -128 -126 124\n126 -128 -126 124 126 -127 -1 125 -128 -127 -1 125 127 -2 0 -128\n-128 -2 0 126 127 -1 -128 -128 -3 -1 1 127 127 -128 -128 -4\n",
+      "assembly": {
+        "bytes": 8651,
+        "sha256": "4958b23cf0146b047024165997b97005788d22955ce116914cf52a0f40a0ac1d"
+      },
+      "object": {
+        "bytes": 1342,
+        "sha256": "0af12b79daf5e69c4b1a26d1d83104c30413c67a74437d9af79f3a09cb810690"
+      },
+      "wasm": {
+        "bytes": 209966,
+        "sha256": "e8f44541be2ce489c0eb66d4cdda269440bb1249ec316e5fb88ce73884a9db98"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 35,
+        "i32.eq": 1,
+        "i32.extend8_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.add_sat_s": 1,
+        "i8x16.extract_lane_s": 1,
+        "local.get": 74,
+        "local.set": 69,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "19686fefca58b45a1910246041a01ff0c85a3900a4e092bee0f48efbce63b86f"
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 125 1 1 1 125 1 -128 126 126 2\n2 126 126 -128 -128 127 127 3 127 127 -128 -128 -128 127 127 127\n127 -128 -128 -128 -128 127 127 127 -127 -127 -3 -127 -127 127 127 -126\n-126 -2 -2 -126 -126 127 -1 -125 -1 -1 -1 -125 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 10444,
+        "sha256": "a3e963e719b9619eda3ccbd374859df5a7a5347ad6b859ab4553088e0d3578ae"
+      },
+      "object": {
+        "bytes": 1376,
+        "sha256": "21b603867695fa6b4ffab5e0952788ab6c7028c95fe7b351cb6277b5385915db"
+      },
+      "wasm": {
+        "bytes": 209881,
+        "sha256": "7f0c4af66bb379f392e9849a378cf3d6fbf546f3e668663e01dd63908fbf293b"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 42,
+        "i32.extend8_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.sub_sat_s": 1,
+        "local.get": 93,
+        "local.set": 94,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "229b9a5f9f34ed4d96aae5e2a6fbbe1a0a45a32adac402d0a5d693267886b59c"
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 125 1 1 1 125 1 -128 126 126 2\n2 126 126 -128 -128 127 127 3 127 127 -128 -128 -128 127 127 127\n127 -128 -128 -128 -128 127 127 127 -127 -127 -3 -127 -127 127 127 -126\n-126 -2 -2 -126 -126 127 -1 -125 -1 -1 -1 -125 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 8539,
+        "sha256": "79706caf5720d36d4d960b46347e7d2bb290c784291d6969af039eb5e7436677"
+      },
+      "object": {
+        "bytes": 1311,
+        "sha256": "55a8bf8c17e07f5d3255df5a80c152817df23982a5180bc9e2c9d8fac3bc1a5f"
+      },
+      "wasm": {
+        "bytes": 209918,
+        "sha256": "42e7b463c3d74cd266442f9221233441c6268b5092880ecb6e84b315e96292f5"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 35,
+        "i32.eq": 1,
+        "i32.extend8_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.extract_lane_s": 1,
+        "i8x16.sub_sat_s": 1,
+        "local.get": 74,
+        "local.set": 69,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "f69a5e4e9755bc0f003399260885d5e35389d1a71b38c8e2d946717aee577b15"
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 125 1 1 1 125 1 -128 126 126 2\n2 126 126 -128 -128 127 127 3 127 127 -128 -128 -128 127 127 127\n127 -128 -128 -128 -128 127 127 127 -127 -127 -3 -127 -127 127 127 -126\n-126 -2 -2 -126 -126 127 -1 -125 -1 -1 -1 -125 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 11122,
+        "sha256": "628ba6e547bb388e50e8b9dacdc261c80a2289e672b1f515f029bf079056fe78"
+      },
+      "object": {
+        "bytes": 1448,
+        "sha256": "2d8296dd37c1c623c0800d7b92549998d0b83e130b9bbd20b8e938f2984f9ddd"
+      },
+      "wasm": {
+        "bytes": 209970,
+        "sha256": "5d5c98f3e74c1fc05a6ba48d02363cc7e267e63a5f9b69c2453b67fb4db49af7"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 47,
+        "i32.eq": 1,
+        "i32.extend8_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.sub_sat_s": 1,
+        "local.get": 96,
+        "local.set": 100,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "078a46ce9f0b3b3e04ffe8ed4cf9009a6e0dcf2a3254d3151d80dba2217b4fd5"
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 125 1 1 1 125 1 -128 126 126 2\n2 126 126 -128 -128 127 127 3 127 127 -128 -128 -128 127 127 127\n127 -128 -128 -128 -128 127 127 127 -127 -127 -3 -127 -127 127 127 -126\n-126 -2 -2 -126 -126 127 -1 -125 -1 -1 -1 -125 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 8651,
+        "sha256": "085d4faaeb2575e281b04b43d5c7b7140cc363a824b5d1b60d2697e0928c0801"
+      },
+      "object": {
+        "bytes": 1342,
+        "sha256": "35f7ec58887c60ab081f27862b04e284d6d449d1c20a677a8de995f54430397f"
+      },
+      "wasm": {
+        "bytes": 209966,
+        "sha256": "2c69279b6edd9400f7e1d17454c6f6c7b8d2de68443b1534bb3d1601aceea723"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 35,
+        "i32.eq": 1,
+        "i32.extend8_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.extract_lane_s": 1,
+        "i8x16.sub_sat_s": 1,
+        "local.get": 74,
+        "local.set": 69,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "f69a5e4e9755bc0f003399260885d5e35389d1a71b38c8e2d946717aee577b15"
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "stdin": "3\n",
+      "stdout": "254 255 255 255 255 1 3 129 255 255 255 255 255 2 128 130\n255 255 255 254 255 127 129 131 255 255 129 255 255 128 130 255\n255 128 130 255 255 129 255 255 127 129 131 255 255 254 255 2\n128 130 255 255 255 255 1 3 129 255 255 255 255 0 2 4\n",
+      "assembly": {
+        "bytes": 11358,
+        "sha256": "28606aeddef45bd707a4ebf2941a52762d73082f9a1c831bd7d58b994fac20cf"
+      },
+      "object": {
+        "bytes": 1439,
+        "sha256": "2eeb69025a35c8a70528450f2f3f13dabe164351122680b844ad9df1c2073ea3"
+      },
+      "wasm": {
+        "bytes": 209944,
+        "sha256": "360d010e016d61f39c768a2f1a06f8baad525a64e1fec67421e7ed8d9fea18e6"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 48,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.add_sat_u": 1,
+        "local.get": 105,
+        "local.set": 106,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "ccf45247d0163bc5629221584d74063602bd11e788ec3dae8dfdf2588a221474"
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "stdin": "3\n",
+      "stdout": "254 255 255 255 255 1 3 129 255 255 255 255 255 2 128 130\n255 255 255 254 255 127 129 131 255 255 129 255 255 128 130 255\n255 128 130 255 255 129 255 255 127 129 131 255 255 254 255 2\n128 130 255 255 255 255 1 3 129 255 255 255 255 0 2 4\n",
+      "assembly": {
+        "bytes": 8835,
+        "sha256": "b2ca10482ac7878f2d2659b41c11451f4d54867a67cd376b97503f72578fb045"
+      },
+      "object": {
+        "bytes": 1333,
+        "sha256": "4a507702a8510fd7bca09ace1f64e89bb0de7ecaf08c32b861ca945341fdfff4"
+      },
+      "wasm": {
+        "bytes": 209940,
+        "sha256": "1b2f1a7b45f874f299b547abea018b97ece4e2efe061ff1fadf3ac5acbe299ad"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 36,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.add_sat_u": 1,
+        "i8x16.extract_lane_s": 1,
+        "local.get": 80,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e3af4a36536d1f6964081ed3196bd7c708b50d2d4f9ce066d4513e2a3dc67051"
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "stdin": "3\n",
+      "stdout": "254 255 255 255 255 1 3 129 255 255 255 255 255 2 128 130\n255 255 255 254 255 127 129 131 255 255 129 255 255 128 130 255\n255 128 130 255 255 129 255 255 127 129 131 255 255 254 255 2\n128 130 255 255 255 255 1 3 129 255 255 255 255 0 2 4\n",
+      "assembly": {
+        "bytes": 12036,
+        "sha256": "3e0bedb42ba1116e543163dbe4578b335650c2685b7fc4f55262bbcd8c2eb8c8"
+      },
+      "object": {
+        "bytes": 1511,
+        "sha256": "d41e1e19be6df5e709170f8573ca7d25570007834ce685aa4024cc9ce6a12a7a"
+      },
+      "wasm": {
+        "bytes": 210037,
+        "sha256": "f8c45f0379ff95b5cb6a1beb70e913b7b6cd168808ea5602bf1e2c26b9398990"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 53,
+        "i32.eq": 1,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.add_sat_u": 1,
+        "local.get": 108,
+        "local.set": 112,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "6633c944adf45b022ea3c383657011c898581904943aea9fab3a09dfc7877504"
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "stdin": "3\n",
+      "stdout": "254 255 255 255 255 1 3 129 255 255 255 255 255 2 128 130\n255 255 255 254 255 127 129 131 255 255 129 255 255 128 130 255\n255 128 130 255 255 129 255 255 127 129 131 255 255 254 255 2\n128 130 255 255 255 255 1 3 129 255 255 255 255 0 2 4\n",
+      "assembly": {
+        "bytes": 8949,
+        "sha256": "578f55b7dcfbe1889900e6413a672e6482c6c09dfef0400e5a21fc82a96c4563"
+      },
+      "object": {
+        "bytes": 1364,
+        "sha256": "9b76ff2363d8403a92e0c9d6ff122afc65311594c47faa34214d75cfa66b53ac"
+      },
+      "wasm": {
+        "bytes": 209992,
+        "sha256": "eb895a2c6ff54f3bc4d92f1b6673e0d748b984a08df4154f614a741e5c048605"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 36,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.add_sat_u": 1,
+        "i8x16.extract_lane_s": 1,
+        "local.get": 80,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e3af4a36536d1f6964081ed3196bd7c708b50d2d4f9ce066d4513e2a3dc67051"
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 125 1 1 125 1 0 2 126 126\n2 126 126 0 0 127 127 127 127 127 0 0 0 128 128 252\n128 0 0 0 0 129 253 253 0 0 0 0 0 254 254 0\n0 0 0 0 0 255 0 0 0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 11358,
+        "sha256": "ca1841be9f7cc982fd2d865746ac6bcfa86fd39c2cc354508c074aa30299bcd6"
+      },
+      "object": {
+        "bytes": 1439,
+        "sha256": "10f0ffd6fa5e693af8bd2195a3243c69bb093345160691a63bf08a841967bdc3"
+      },
+      "wasm": {
+        "bytes": 209944,
+        "sha256": "52c979386f66a1607a9dc753bc078dc6d0d5a116924ddf7d323686a2874adb4b"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 48,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.sub_sat_u": 1,
+        "local.get": 105,
+        "local.set": 106,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "b25ce51b33ffa7a52fa53851a411b07c8a26b364861ddf13bd9c49a979d0c54e"
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 125 1 1 125 1 0 2 126 126\n2 126 126 0 0 127 127 127 127 127 0 0 0 128 128 252\n128 0 0 0 0 129 253 253 0 0 0 0 0 254 254 0\n0 0 0 0 0 255 0 0 0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 8835,
+        "sha256": "6b8ddf539c052085b96a6065dc58395a5bb7d2982880df0fe72ed29a1991d2a7"
+      },
+      "object": {
+        "bytes": 1333,
+        "sha256": "91946e77256d8264e202b14d9b5f8841c67d6ecbf3dfbb14096ca155c603c6a5"
+      },
+      "wasm": {
+        "bytes": 209940,
+        "sha256": "d6d76633e81f110d713e36da24a8e33b19d259486409f26abfe1128d3fd66cfd"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 36,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.extract_lane_s": 1,
+        "i8x16.sub_sat_u": 1,
+        "local.get": 80,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "85cd4817eba30f0ca350a013fd524c46969832c259b40edb7aab5ea8a00f326d"
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 125 1 1 125 1 0 2 126 126\n2 126 126 0 0 127 127 127 127 127 0 0 0 128 128 252\n128 0 0 0 0 129 253 253 0 0 0 0 0 254 254 0\n0 0 0 0 0 255 0 0 0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 12036,
+        "sha256": "6b815354be4fbb87fb2fd2bf64456ea44b26ff8dfc6d8fbbff2a90fb7ee6e6e1"
+      },
+      "object": {
+        "bytes": 1511,
+        "sha256": "dda210c86f2f492c9675d48711493af6de926bb06a4cd2b3ffe6df478beff18a"
+      },
+      "wasm": {
+        "bytes": 210037,
+        "sha256": "a7472f5db90625d9a4768040fcdff1a4c6cd18adbc01b9847057342144b211db"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 53,
+        "i32.eq": 1,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store8": 2,
+        "i32.sub": 2,
+        "i8x16.sub_sat_u": 1,
+        "local.get": 108,
+        "local.set": 112,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e3c27bdea8a850c3f8e2a688dea2a33550c1f1efec6c59b3f09ef385cf6f2c52"
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 125 1 1 125 1 0 2 126 126\n2 126 126 0 0 127 127 127 127 127 0 0 0 128 128 252\n128 0 0 0 0 129 253 253 0 0 0 0 0 254 254 0\n0 0 0 0 0 255 0 0 0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 8949,
+        "sha256": "ee719aa30e42dcfe0ad19d01345d6210b1f2a71ec9c4f88586cb330abff86bba"
+      },
+      "object": {
+        "bytes": 1364,
+        "sha256": "cf0409ae26312a8847e250f34a04612d074f05e428e95ecef66013bbf25849bf"
+      },
+      "wasm": {
+        "bytes": 209992,
+        "sha256": "7057bd8664119d3009d1dae24ada9159da86c92a76d2c6815efa3ee3ba008ddb"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 10,
+        "i32.and": 1,
+        "i32.const": 36,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load8_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store8": 2,
+        "i32.sub": 3,
+        "i8x16.extract_lane_s": 1,
+        "i8x16.sub_sat_u": 1,
+        "local.get": 80,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "85cd4817eba30f0ca350a013fd524c46969832c259b40edb7aab5ea8a00f326d"
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 32767 32767 -32768 -32768 -3\n-1 1 32767 32767 -1 -32768 -32768 -2\n0 32766 32767 -2 0 -32768 -32767 -1\n32765 32767 -32767 -1 32765 -32768 -32766 32764\n32766 -32768 -32766 32764 32766 -32767 -1 32765\n-32768 -32767 -1 32765 32767 -2 0 -32768\n-32768 -2 0 32766 32767 -1 -32768 -32768\n-3 -1 1 32767 32767 -32768 -32768 -4\n",
+      "assembly": {
+        "bytes": 11792,
+        "sha256": "c177b1b5554707031a60abc29b384af725a9b4845bcde293017915c35401ad8a"
+      },
+      "object": {
+        "bytes": 1544,
+        "sha256": "4f8feee316cca8cc8e262bc43741526d3bcdadbcb103060cb883f83a3d5cee31"
+      },
+      "wasm": {
+        "bytes": 210045,
+        "sha256": "33031deb632a56b0a61c6be83dc1380aac71a1f8b8e76139b7f7be725606ed69"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.add_sat_s": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 42,
+        "i32.extend16_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 103,
+        "local.set": 99,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "0d475490d6a0fe594a0470177026c4d15cb669b88b99f6b8dfcfae8b6e05dbb2"
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 32767 32767 -32768 -32768 -3\n-1 1 32767 32767 -1 -32768 -32768 -2\n0 32766 32767 -2 0 -32768 -32767 -1\n32765 32767 -32767 -1 32765 -32768 -32766 32764\n32766 -32768 -32766 32764 32766 -32767 -1 32765\n-32768 -32767 -1 32765 32767 -2 0 -32768\n-32768 -2 0 32766 32767 -1 -32768 -32768\n-3 -1 1 32767 32767 -32768 -32768 -4\n",
+      "assembly": {
+        "bytes": 9534,
+        "sha256": "0bb533560371252568841efe5f70c9298bd7b519884fd854ae79600cecbb851b"
+      },
+      "object": {
+        "bytes": 1456,
+        "sha256": "14679d67d09b2d68be5de7867cc643b2b503f19de56fd6b4519beed42285ab28"
+      },
+      "wasm": {
+        "bytes": 210059,
+        "sha256": "6ac0ac7f104a09d591592afa36f7e730a1897ed40d3d771f96c5f5aca4779281"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.add_sat_s": 1,
+        "i16x8.extract_lane_s": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 38,
+        "i32.eq": 1,
+        "i32.extend16_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 74,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e5a2b04f7036aeacdb06b642c6ef2b2a21d62de203b42d2c1bb2951219ed51f7"
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 32767 32767 -32768 -32768 -3\n-1 1 32767 32767 -1 -32768 -32768 -2\n0 32766 32767 -2 0 -32768 -32767 -1\n32765 32767 -32767 -1 32765 -32768 -32766 32764\n32766 -32768 -32766 32764 32766 -32767 -1 32765\n-32768 -32767 -1 32765 32767 -2 0 -32768\n-32768 -2 0 32766 32767 -1 -32768 -32768\n-3 -1 1 32767 32767 -32768 -32768 -4\n",
+      "assembly": {
+        "bytes": 12466,
+        "sha256": "58f3ad8e493316d24e682fbee9801aa2363d64b26f44104c5bd8e06007846c4f"
+      },
+      "object": {
+        "bytes": 1615,
+        "sha256": "0276d3e2c8325b348fe87381960339ad341d6c6890c407ce79a39ff8ed0a30b3"
+      },
+      "wasm": {
+        "bytes": 210120,
+        "sha256": "c9d45f476daf87f07e31e4f4f5299e5943c7799f278b0cec94a0fd3d796ef09a"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.add_sat_s": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 47,
+        "i32.eq": 1,
+        "i32.extend16_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 106,
+        "local.set": 105,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "aea1a3731ba29cf3a491e1c7395eda54508959d22e9ce9ecfa4d24b176843f5e"
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "stdin": "3\n",
+      "stdout": "-2 0 2 32767 32767 -32768 -32768 -3\n-1 1 32767 32767 -1 -32768 -32768 -2\n0 32766 32767 -2 0 -32768 -32767 -1\n32765 32767 -32767 -1 32765 -32768 -32766 32764\n32766 -32768 -32766 32764 32766 -32767 -1 32765\n-32768 -32767 -1 32765 32767 -2 0 -32768\n-32768 -2 0 32766 32767 -1 -32768 -32768\n-3 -1 1 32767 32767 -32768 -32768 -4\n",
+      "assembly": {
+        "bytes": 9642,
+        "sha256": "e84d06c1e11e01ef5f42091197fc39a2e840520e282f19a3422842c8dbf017f8"
+      },
+      "object": {
+        "bytes": 1486,
+        "sha256": "dd6a7709ed35f016ce5b34725ff7f9d09392a16dd135675887067f393fc1b398"
+      },
+      "wasm": {
+        "bytes": 210093,
+        "sha256": "877817f0769fa908887f4b626b6ca9585b4cb7f51718196dd609c42edcc3edcd"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.add_sat_s": 1,
+        "i16x8.extract_lane_s": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 38,
+        "i32.eq": 1,
+        "i32.extend16_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 74,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "e5a2b04f7036aeacdb06b642c6ef2b2a21d62de203b42d2c1bb2951219ed51f7"
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 32765 1\n1 1 32765 1 -32768 32766 32766 2\n2 32766 32766 -32768 -32768 32767 32767 3\n32767 32767 -32768 -32768 -32768 32767 32767 32767\n32767 -32768 -32768 -32768 -32768 32767 32767 32767\n-32767 -32767 -3 -32767 -32767 32767 32767 -32766\n-32766 -2 -2 -32766 -32766 32767 -1 -32765\n-1 -1 -1 -32765 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 11792,
+        "sha256": "8345a70c4aa4a7cac944d80a76a53b149b04002b0dfe764e4448bccdfa53fbf6"
+      },
+      "object": {
+        "bytes": 1544,
+        "sha256": "f749006f3184673f8ce1675d981d33864807f6898be49d1a65c7543b6a0c471b"
+      },
+      "wasm": {
+        "bytes": 210045,
+        "sha256": "6584edf22acf317d0d037c09344022bf3d04f1616f136df927052e60c162f535"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.sub_sat_s": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 42,
+        "i32.extend16_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 103,
+        "local.set": 99,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "989ff30235c2020e238d55cc82dcba2ae8b44ccfc1519638d10e72fa0e870e9b"
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 32765 1\n1 1 32765 1 -32768 32766 32766 2\n2 32766 32766 -32768 -32768 32767 32767 3\n32767 32767 -32768 -32768 -32768 32767 32767 32767\n32767 -32768 -32768 -32768 -32768 32767 32767 32767\n-32767 -32767 -3 -32767 -32767 32767 32767 -32766\n-32766 -2 -2 -32766 -32766 32767 -1 -32765\n-1 -1 -1 -32765 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 9534,
+        "sha256": "a3bf43356732639947754b25c849d0605c22943423ab9955512c8b615a340f2b"
+      },
+      "object": {
+        "bytes": 1456,
+        "sha256": "334c8a3380f192baee032cebd4d21d80442ceb127da4c5a0effed3c33354c957"
+      },
+      "wasm": {
+        "bytes": 210059,
+        "sha256": "b6e03bab5b1db7594c3e4e5056ccec1dc50d1493a273edd84daf0a6ad81ba1c7"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.extract_lane_s": 1,
+        "i16x8.sub_sat_s": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 38,
+        "i32.eq": 1,
+        "i32.extend16_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 74,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "0cb1c15743b9bc014fd03e2eb12d32b1b3beca9a53466f046fb88d6251d38aaa"
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 32765 1\n1 1 32765 1 -32768 32766 32766 2\n2 32766 32766 -32768 -32768 32767 32767 3\n32767 32767 -32768 -32768 -32768 32767 32767 32767\n32767 -32768 -32768 -32768 -32768 32767 32767 32767\n-32767 -32767 -3 -32767 -32767 32767 32767 -32766\n-32766 -2 -2 -32766 -32766 32767 -1 -32765\n-1 -1 -1 -32765 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 12466,
+        "sha256": "8c86ad5c114fba63ec37be234e6d6256e586a7da3d09754563d0f91d2804f14d"
+      },
+      "object": {
+        "bytes": 1615,
+        "sha256": "59e04fdebb790760751602074894a368d5ae6f4512f599fc157b0621777d9e23"
+      },
+      "wasm": {
+        "bytes": 210120,
+        "sha256": "8e6efa6babafba35a578816fce385912485443aa82a1bc170be36d3b0c97d6ea"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.sub_sat_s": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 47,
+        "i32.eq": 1,
+        "i32.extend16_s": 3,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 1,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 106,
+        "local.set": 105,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "fdee55a1152f73a1943d3024f8d939406635d75183a9d76d3e98244f71ee12f8"
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 32765 1\n1 1 32765 1 -32768 32766 32766 2\n2 32766 32766 -32768 -32768 32767 32767 3\n32767 32767 -32768 -32768 -32768 32767 32767 32767\n32767 -32768 -32768 -32768 -32768 32767 32767 32767\n-32767 -32767 -3 -32767 -32767 32767 32767 -32766\n-32766 -2 -2 -32766 -32766 32767 -1 -32765\n-1 -1 -1 -32765 -1 0 0 0\n",
+      "assembly": {
+        "bytes": 9642,
+        "sha256": "394c2e4519777b6e022f831a510bdc242c97cb0bf1b2bf8b55ba1a9593d3cb45"
+      },
+      "object": {
+        "bytes": 1486,
+        "sha256": "27ee6c31d62da2514c8778f675398bf018ab4406e6876efa2bf0809ca33ac3d0"
+      },
+      "wasm": {
+        "bytes": 210093,
+        "sha256": "bd43dc8ab960021384409651d414ab48d633188360bcb6b5ddf3d78ef8157a51"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.extract_lane_s": 1,
+        "i16x8.sub_sat_s": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 38,
+        "i32.eq": 1,
+        "i32.extend16_s": 2,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 74,
+        "local.set": 72,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "0cb1c15743b9bc014fd03e2eb12d32b1b3beca9a53466f046fb88d6251d38aaa"
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "stdin": "3\n",
+      "stdout": "65534 65535 65535 65535 65535 1 3 32769\n65535 65535 65535 65535 65535 2 32768 32770\n65535 65535 65535 65534 65535 32767 32769 32771\n65535 65535 32769 65535 65535 32768 32770 65535\n65535 32768 32770 65535 65535 32769 65535 65535\n32767 32769 32771 65535 65535 65534 65535 2\n32768 32770 65535 65535 65535 65535 1 3\n32769 65535 65535 65535 65535 0 2 4\n",
+      "assembly": {
+        "bytes": 12671,
+        "sha256": "c5431a9f213e1efc2b552cd02a6c63fd3bb37179aaaeebd6bf6b6d7a39f25588"
+      },
+      "object": {
+        "bytes": 1607,
+        "sha256": "8d6b353b0eab0c8e833ca57576763725e2e53136b40f64dcf5c1888625b537a0"
+      },
+      "wasm": {
+        "bytes": 210108,
+        "sha256": "c5dab89b3eb014e7275af939972a06730a0d171586a347cf686d7a8af9d889a1"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.add_sat_u": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 48,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 115,
+        "local.set": 111,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "f7ae055efa2006f914e989ff0896a3d317f0e3e06acf11976b269c6c9771c64d"
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "stdin": "3\n",
+      "stdout": "65534 65535 65535 65535 65535 1 3 32769\n65535 65535 65535 65535 65535 2 32768 32770\n65535 65535 65535 65534 65535 32767 32769 32771\n65535 65535 32769 65535 65535 32768 32770 65535\n65535 32768 32770 65535 65535 32769 65535 65535\n32767 32769 32771 65535 65535 65534 65535 2\n32768 32770 65535 65535 65535 65535 1 3\n32769 65535 65535 65535 65535 0 2 4\n",
+      "assembly": {
+        "bytes": 9795,
+        "sha256": "0e8a517e3cce95a4db1d7197df2993daa7a6b23b1ffed2a22657014e02380e44"
+      },
+      "object": {
+        "bytes": 1478,
+        "sha256": "ab0e0b91a88ef1044c54d6108f3206c760853629c01510728c699682b56f5c83"
+      },
+      "wasm": {
+        "bytes": 210081,
+        "sha256": "30d705c887a8f31d2fd4bf600d295f42c36662c8f3c2b9e29ceb7e36a60d6c7b"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.add_sat_u": 1,
+        "i16x8.extract_lane_s": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 39,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 80,
+        "local.set": 75,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "49056588a75892487c664f5e8c4b76f7562e83768a9296410da0940e989ca32e"
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "stdin": "3\n",
+      "stdout": "65534 65535 65535 65535 65535 1 3 32769\n65535 65535 65535 65535 65535 2 32768 32770\n65535 65535 65535 65534 65535 32767 32769 32771\n65535 65535 32769 65535 65535 32768 32770 65535\n65535 32768 32770 65535 65535 32769 65535 65535\n32767 32769 32771 65535 65535 65534 65535 2\n32768 32770 65535 65535 65535 65535 1 3\n32769 65535 65535 65535 65535 0 2 4\n",
+      "assembly": {
+        "bytes": 13348,
+        "sha256": "35b17a64536268a929a52abe7f8b682240cc722608f63bd1178b48547a6c71e9"
+      },
+      "object": {
+        "bytes": 1678,
+        "sha256": "1a4b0f788b36b9a0e87b1fe471b2b221218ed80b2ac002b60ba991c632a2c89b"
+      },
+      "wasm": {
+        "bytes": 210201,
+        "sha256": "6b11a41e8cf26d10de9025da10216256676ce0186504dabe429086aa28548d0c"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.add_sat_u": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 53,
+        "i32.eq": 1,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 118,
+        "local.set": 117,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "8fec505f06ecabe618fc0a86de7fe58fd2d0b40b28b6f849a717766d6007b99e"
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "stdin": "3\n",
+      "stdout": "65534 65535 65535 65535 65535 1 3 32769\n65535 65535 65535 65535 65535 2 32768 32770\n65535 65535 65535 65534 65535 32767 32769 32771\n65535 65535 32769 65535 65535 32768 32770 65535\n65535 32768 32770 65535 65535 32769 65535 65535\n32767 32769 32771 65535 65535 65534 65535 2\n32768 32770 65535 65535 65535 65535 1 3\n32769 65535 65535 65535 65535 0 2 4\n",
+      "assembly": {
+        "bytes": 9905,
+        "sha256": "4adfe3695bb16a7be94e9268d6c0edf45b7f07218baf25daf1323f9919af7de2"
+      },
+      "object": {
+        "bytes": 1508,
+        "sha256": "6c0fc646b32563fbf320386e2ddc1c105bf9b238538ad0edb1f4406f4ea89262"
+      },
+      "wasm": {
+        "bytes": 210133,
+        "sha256": "eefca0193392a4b32b98aeaee1ac52a88251a157db5bdc4605962acbe8a2a4b2"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.add_sat_u": 1,
+        "i16x8.extract_lane_s": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 39,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 80,
+        "local.set": 75,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "49056588a75892487c664f5e8c4b76f7562e83768a9296410da0940e989ca32e"
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 32765\n1 1 32765 1 0 2 32766 32766\n2 32766 32766 0 0 32767 32767 32767\n32767 32767 0 0 0 32768 32768 65532\n32768 0 0 0 0 32769 65533 65533\n0 0 0 0 0 65534 65534 0\n0 0 0 0 0 65535 0 0\n0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 12671,
+        "sha256": "6c6640b35ff9914e6748ad043874c5905f88f3ea7a018f3969bd598d08a05b0d"
+      },
+      "object": {
+        "bytes": 1607,
+        "sha256": "1423a17de1abd74149405f4c2a631f26e1842347450c20a1aad51800ee6a7c32"
+      },
+      "wasm": {
+        "bytes": 210108,
+        "sha256": "56b9968431e176bd10da0f2ab5813d595568ee734eec530a9c8ac4a7696967fb"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 13,
+        "br": 5,
+        "br_if": 6,
+        "br_table": 2,
+        "call": 3,
+        "end": 17,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.sub_sat_u": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 48,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 115,
+        "local.set": 111,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "7b0de449f692ec7e61eb39b7fe3f20f337dad40523fc6ea781f6a0f5d7fb49c0"
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 32765\n1 1 32765 1 0 2 32766 32766\n2 32766 32766 0 0 32767 32767 32767\n32767 32767 0 0 0 32768 32768 65532\n32768 0 0 0 0 32769 65533 65533\n0 0 0 0 0 65534 65534 0\n0 0 0 0 0 65535 0 0\n0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 9795,
+        "sha256": "3bba613654bd5c2d66e653ebf304137e47ed4ae267d394b0ba9d544e6ac04d95"
+      },
+      "object": {
+        "bytes": 1478,
+        "sha256": "d7263afb46e566e4e4b311257b10ee72df153d969074661f21b8f5ac4675968e"
+      },
+      "wasm": {
+        "bytes": 210081,
+        "sha256": "9ee8932306633a6975fdddf01706da1346bb31c2b449f8d593d172e0f7553479"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.extract_lane_s": 1,
+        "i16x8.sub_sat_u": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 39,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 80,
+        "local.set": 75,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "9eb3de97c0cb11e93053787f6d7666ea0296a324c3b70037f1b64c2f8b0cc2a0"
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 32765\n1 1 32765 1 0 2 32766 32766\n2 32766 32766 0 0 32767 32767 32767\n32767 32767 0 0 0 32768 32768 65532\n32768 0 0 0 0 32769 65533 65533\n0 0 0 0 0 65534 65534 0\n0 0 0 0 0 65535 0 0\n0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 13348,
+        "sha256": "8de638e92b6158c6646bf5f96284f05205db46a3d98e045dc0e02cd02881ab88"
+      },
+      "object": {
+        "bytes": 1678,
+        "sha256": "5aba1ef24eba73d601719ca1bf6c017db6fb2bec4b0468db7f6b79b71da4af36"
+      },
+      "wasm": {
+        "bytes": 210201,
+        "sha256": "6db99fefe3a0c1c3a08dc19b555af9beb23d1e5d1dc3afeb014e634fe0f114f4"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 15,
+        "br": 6,
+        "br_if": 7,
+        "br_table": 2,
+        "call": 3,
+        "end": 19,
+        "global.get": 10,
+        "global.set": 4,
+        "i16x8.sub_sat_u": 1,
+        "i32.add": 16,
+        "i32.and": 1,
+        "i32.const": 53,
+        "i32.eq": 1,
+        "i32.le_u": 4,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 2,
+        "i32.shl": 4,
+        "i32.shr_u": 3,
+        "i32.store": 3,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 118,
+        "local.set": 117,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "b5272e10cfb17738ff2fb6faa695f6421a9999911cf88f25d65afbf466c336d1"
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "stdin": "3\n",
+      "stdout": "0 0 0 0 0 1 1 32765\n1 1 32765 1 0 2 32766 32766\n2 32766 32766 0 0 32767 32767 32767\n32767 32767 0 0 0 32768 32768 65532\n32768 0 0 0 0 32769 65533 65533\n0 0 0 0 0 65534 65534 0\n0 0 0 0 0 65535 0 0\n0 0 0 0 0 0 0 0\n",
+      "assembly": {
+        "bytes": 9905,
+        "sha256": "a42dccc60adee484f062866507095187420545856b73911ca8c8c6caf017d76f"
+      },
+      "object": {
+        "bytes": 1508,
+        "sha256": "d06308009e4c3ee33ec4f48379323e7b1df29c4821974cb9454dfa4e60e48ab1"
+      },
+      "wasm": {
+        "bytes": 210133,
+        "sha256": "f23a85a267ae802813a8fa9017f42868bf1392575a4b1046211277cf495bf82c"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 10,
+        "br": 7,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 4,
+        "end": 14,
+        "global.get": 13,
+        "global.set": 4,
+        "i16x8.extract_lane_s": 1,
+        "i16x8.sub_sat_u": 1,
+        "i32.add": 11,
+        "i32.and": 1,
+        "i32.const": 39,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.load": 2,
+        "i32.load16_s": 3,
+        "i32.ne": 3,
+        "i32.shl": 2,
+        "i32.shr_u": 2,
+        "i32.store": 5,
+        "i32.store16": 2,
+        "i32.sub": 2,
+        "local.get": 80,
+        "local.set": 75,
+        "loop": 2,
+        "return": 2,
+        "v128.load": 2,
+        "v128.store": 1
+      },
+      "instructionsSha256": "9eb3de97c0cb11e93053787f6d7666ea0296a324c3b70037f1b64c2f8b0cc2a0"
+    },
+    {
+      "id": "simd-saturating-scalar-disabled-c-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 338,
+        "sha256": "a69f3be3534d4f1c4d6f768a9566ae6866a35b0510be7ce1d8bc2f2779c84920"
+      },
+      "stdin": "3 17\n",
+      "stdout": "20 14 51 33\n",
+      "assembly": {
+        "bytes": 6836,
+        "sha256": "f02b2af41ac4108fc101343ba87abc1e0ee583e1badbd063de0b712f7605af61"
+      },
+      "object": {
+        "bytes": 910,
+        "sha256": "dc693e9955a0bd2192de92773ec24783534d7ca21014c0c30fb31a60bc82bee3"
+      },
+      "wasm": {
+        "bytes": 209414,
+        "sha256": "488140917b0bf8120b1f7bacf4ff7747ec44438072cc63802a1bb3b86a1f464b"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 7,
+        "br": 2,
+        "br_if": 4,
+        "br_table": 2,
+        "call": 3,
+        "end": 11,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 2,
+        "i32.const": 19,
+        "i32.gt_u": 1,
+        "i32.le_u": 2,
+        "i32.load": 14,
+        "i32.mul": 1,
+        "i32.ne": 1,
+        "i32.shl": 1,
+        "i32.store": 6,
+        "i32.sub": 4,
+        "i32.xor": 1,
+        "local.get": 70,
+        "local.set": 62,
+        "loop": 2,
+        "return": 2
+      },
+      "instructionsSha256": "4d834f3cbd19189c2483d342d94b819fdc1f96b62b6346e0128b5726e3f3350e"
+    },
+    {
+      "id": "simd-saturating-scalar-disabled-c-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 338,
+        "sha256": "a69f3be3534d4f1c4d6f768a9566ae6866a35b0510be7ce1d8bc2f2779c84920"
+      },
+      "stdin": "3 17\n",
+      "stdout": "20 14 51 33\n",
+      "assembly": {
+        "bytes": 4928,
+        "sha256": "5e4ecafafd8a2920f9d922e1c5caee809a28238a1d7d059d73921d935788105b"
+      },
+      "object": {
+        "bytes": 774,
+        "sha256": "f9717a5d83782c6d6e5a9f4f6c7a57149d540aad76dfe16540f1c51204cb7043"
+      },
+      "wasm": {
+        "bytes": 209280,
+        "sha256": "35b0d04193b9d87439d1049330ab370156cc6f113a83718ccb92e52413f2fd88"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 6,
+        "br": 2,
+        "br_if": 4,
+        "br_table": 2,
+        "call": 3,
+        "end": 10,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 2,
+        "i32.const": 17,
+        "i32.gt_u": 1,
+        "i32.le_u": 2,
+        "i32.load": 2,
+        "i32.mul": 1,
+        "i32.ne": 1,
+        "i32.shl": 1,
+        "i32.store": 6,
+        "i32.sub": 4,
+        "i32.xor": 1,
+        "local.get": 49,
+        "local.set": 39,
+        "loop": 2,
+        "return": 2
+      },
+      "instructionsSha256": "4311b80b21bb725abc8cb0bd9e9d6cb173440b1b1a826ffdba9c2631a152c626"
+    },
+    {
+      "id": "simd-saturating-scalar-disabled-cpp-o0",
+      "status": "passed",
+      "source": {
+        "bytes": 338,
+        "sha256": "a69f3be3534d4f1c4d6f768a9566ae6866a35b0510be7ce1d8bc2f2779c84920"
+      },
+      "stdin": "3 17\n",
+      "stdout": "20 14 51 33\n",
+      "assembly": {
+        "bytes": 7372,
+        "sha256": "571a65eae702b3cd59297a1bb9cbec468dc13e109827890fd90102b3dcec8b5c"
+      },
+      "object": {
+        "bytes": 958,
+        "sha256": "ded56bf78351f7fcdabc8fe7ee5fb641e44c82e1ca5aaabdfe4f5008ef053332"
+      },
+      "wasm": {
+        "bytes": 209483,
+        "sha256": "337ef58be1db4222afb5a08e56b8519b99fc7424f9e00919239b48e133a5a3a4"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 9,
+        "br": 3,
+        "br_if": 5,
+        "br_table": 2,
+        "call": 3,
+        "end": 13,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 2,
+        "i32.const": 24,
+        "i32.eq": 1,
+        "i32.gt_u": 1,
+        "i32.le_u": 2,
+        "i32.load": 14,
+        "i32.mul": 1,
+        "i32.ne": 1,
+        "i32.shl": 1,
+        "i32.store": 6,
+        "i32.sub": 4,
+        "i32.xor": 1,
+        "local.get": 73,
+        "local.set": 68,
+        "loop": 2,
+        "return": 2
+      },
+      "instructionsSha256": "20bf2c4dc6fbfd13bd10de940d4a4d1fd3ed24b189d82200d1fb5bd55db88866"
+    },
+    {
+      "id": "simd-saturating-scalar-disabled-cpp-o2",
+      "status": "passed",
+      "source": {
+        "bytes": 338,
+        "sha256": "a69f3be3534d4f1c4d6f768a9566ae6866a35b0510be7ce1d8bc2f2779c84920"
+      },
+      "stdin": "3 17\n",
+      "stdout": "20 14 51 33\n",
+      "assembly": {
+        "bytes": 4952,
+        "sha256": "e3ee6f1373dd1f0201c5010ae1ba8ad9284fae0239abb5de97a992f992faffde"
+      },
+      "object": {
+        "bytes": 780,
+        "sha256": "4e3e0d428ace9219f06bd8554ee34917b02fc8483325e66db5a295b94c4f141b"
+      },
+      "wasm": {
+        "bytes": 209308,
+        "sha256": "ef8dbc53b0c6d946f99aff8ed71c8d150a2d1f5e59065046dc0da56f6f181e6d"
+      },
+      "imports": [
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_close",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_fdstat_get",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_read",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_seek",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "fd_write",
+          "kind": "function"
+        },
+        {
+          "module": "wasi_snapshot_preview1",
+          "name": "proc_exit",
+          "kind": "function"
+        }
+      ],
+      "exports": [
+        {
+          "name": "memory",
+          "kind": "memory"
+        },
+        {
+          "name": "_start",
+          "kind": "function"
+        }
+      ],
+      "instructionCounts": {
+        "block": 6,
+        "br": 2,
+        "br_if": 4,
+        "br_table": 2,
+        "call": 3,
+        "end": 10,
+        "global.get": 13,
+        "global.set": 4,
+        "i32.add": 2,
+        "i32.const": 17,
+        "i32.gt_u": 1,
+        "i32.le_u": 2,
+        "i32.load": 2,
+        "i32.mul": 1,
+        "i32.ne": 1,
+        "i32.shl": 1,
+        "i32.store": 6,
+        "i32.sub": 4,
+        "i32.xor": 1,
+        "local.get": 49,
+        "local.set": 39,
+        "loop": 2,
+        "return": 2
+      },
+      "instructionsSha256": "4311b80b21bb725abc8cb0bd9e9d6cb173440b1b1a826ffdba9c2631a152c626"
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "simd-saturating-add-s-i8x16-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o0-default/main.c:10:10: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-c-o2-default/main.c:10:10: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i8x16-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "3368de1d6b58e25c8c3bec96edd0194bdb81af71d5d25b26a460484f6ad2387b"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i8x16-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o0-default/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-c-o2-default/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i8x16-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1397,
+        "sha256": "a5f3103ca51b0fc88018703d5fda9145288bae6eb3f61a70648ab21504083923"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i8x16-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o0-default/main.c:10:10: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-c-o2-default/main.c:10:10: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i8x16-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "64e71f1f14fde2b027feb373d16018e587d739a3afb5c8544e6236c3a550dab3"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i8x16-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o0-default/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-c-o2-default/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i8x16-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1367,
+        "sha256": "a8b285da842891fc09dc4046827edd7355c853bb804f30a9438ec5d71021c760"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i8x16-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i8x16' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i8x16(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o0-default/main.c:10:10: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-c-o2-default/main.c:10:10: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-s-i16x8-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "f16b59b364889bbb3f7309884fbc093591ba106162508e697557a48ffc166b97"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-s-i16x8-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_add_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o0-default/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-c-o2-default/main.c:10:10: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-s-i16x8-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1516,
+        "sha256": "0d859ebdc37802fdaadd435146bcca1e6ef5b0d2919140ebe90720bd03626725"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-s-i16x8-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_s_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_s_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o0-default/main.c:10:10: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-c-o2-default/main.c:10:10: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-add-u-i16x8-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "5b5f76d74760a5cff23a63b86bf6948029418f6cef5adbd51a9d70f6d680470c"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-add-u-i16x8-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_add_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_add_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-c-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o0-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o0-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-c-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o0-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o0-default/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-c-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o2-disabled/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o2-disabled/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-c-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o2-default/main.c: In function 'saturate':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-c-o2-default/main.c:10:10: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-cpp-o0-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o0-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o0-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-cpp-o0-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o0-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o0-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-cpp-o2-disabled",
+      "profile": "disabled",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o2-disabled/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o2-disabled/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-sub-u-i16x8-cpp-o2-default",
+      "profile": "default",
+      "source": {
+        "bytes": 1525,
+        "sha256": "38047b318b5ddd688279315b887cd8376b2107ed79d3333c4d433216329656e4"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o2-default/main.cc: In function 'V saturate(V, V)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-sub-u-i16x8-cpp-o2-default/main.cc:10:40: error: '__builtin_wasm_sub_sat_u_i16x8' requires '-msimd128'; SIMD128 is disabled\n   10 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i8x16-c-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 474,
+        "sha256": "971c918a2c2ecf5d1a790c4aa5a271aa2a96f9d074cc753a3ea926167b8200a0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o0-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o0-enabled-invalid/main.c:5:41: error: incompatible type for argument 1 of '__builtin_wasm_add_sat_s_i8x16'\n    5 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(8) signed char}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o0-enabled-invalid/main.c:5:41: note: expected '__vector(16) signed char' but argument is of type 'Input' {aka '__vector(8) signed char'}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o0-enabled-invalid/main.c:5:44: error: incompatible type for argument 2 of '__builtin_wasm_add_sat_s_i8x16'\n    5 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |                                            ^\n      |                                            |\n      |                                            Input {aka __vector(8) signed char}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o0-enabled-invalid/main.c:5:44: note: expected '__vector(16) signed char' but argument is of type 'Input' {aka '__vector(8) signed char'}\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i8x16-c-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 474,
+        "sha256": "971c918a2c2ecf5d1a790c4aa5a271aa2a96f9d074cc753a3ea926167b8200a0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o2-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o2-enabled-invalid/main.c:5:41: error: incompatible type for argument 1 of '__builtin_wasm_add_sat_s_i8x16'\n    5 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(8) signed char}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o2-enabled-invalid/main.c:5:41: note: expected '__vector(16) signed char' but argument is of type 'Input' {aka '__vector(8) signed char'}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o2-enabled-invalid/main.c:5:44: error: incompatible type for argument 2 of '__builtin_wasm_add_sat_s_i8x16'\n    5 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |                                            ^\n      |                                            |\n      |                                            Input {aka __vector(8) signed char}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-c-o2-enabled-invalid/main.c:5:44: note: expected '__vector(16) signed char' but argument is of type 'Input' {aka '__vector(8) signed char'}\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i8x16-cpp-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 474,
+        "sha256": "971c918a2c2ecf5d1a790c4aa5a271aa2a96f9d074cc753a3ea926167b8200a0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-cpp-o0-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-cpp-o0-enabled-invalid/main.cc:5:41: error: cannot convert 'Input' {aka '__vector(8) signed char'} to '__vector(16) signed char'\n    5 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(8) signed char}\n<built-in>: note: initializing argument 1 of '__vector(16) signed char __builtin_wasm_add_sat_s_i8x16(__vector(16) signed char, __vector(16) signed char)'\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i8x16-cpp-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 474,
+        "sha256": "971c918a2c2ecf5d1a790c4aa5a271aa2a96f9d074cc753a3ea926167b8200a0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-cpp-o2-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i8x16-cpp-o2-enabled-invalid/main.cc:5:41: error: cannot convert 'Input' {aka '__vector(8) signed char'} to '__vector(16) signed char'\n    5 |   return __builtin_wasm_add_sat_s_i8x16(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(8) signed char}\n<built-in>: note: initializing argument 1 of '__vector(16) signed char __builtin_wasm_add_sat_s_i8x16(__vector(16) signed char, __vector(16) signed char)'\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i16x8-c-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 480,
+        "sha256": "5a28a9151975dfb27b0479fc97f1a094f46ec5908d7078561b37aaac75772fc0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o0-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o0-enabled-invalid/main.c:5:41: error: incompatible type for argument 1 of '__builtin_wasm_sub_sat_u_i16x8'\n    5 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(4) short unsigned int}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o0-enabled-invalid/main.c:5:41: note: expected '__vector(8) short unsigned int' but argument is of type 'Input' {aka '__vector(4) short unsigned int'}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o0-enabled-invalid/main.c:5:44: error: incompatible type for argument 2 of '__builtin_wasm_sub_sat_u_i16x8'\n    5 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |                                            ^\n      |                                            |\n      |                                            Input {aka __vector(4) short unsigned int}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o0-enabled-invalid/main.c:5:44: note: expected '__vector(8) short unsigned int' but argument is of type 'Input' {aka '__vector(4) short unsigned int'}\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i16x8-c-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 480,
+        "sha256": "5a28a9151975dfb27b0479fc97f1a094f46ec5908d7078561b37aaac75772fc0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o2-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o2-enabled-invalid/main.c:5:41: error: incompatible type for argument 1 of '__builtin_wasm_sub_sat_u_i16x8'\n    5 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(4) short unsigned int}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o2-enabled-invalid/main.c:5:41: note: expected '__vector(8) short unsigned int' but argument is of type 'Input' {aka '__vector(4) short unsigned int'}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o2-enabled-invalid/main.c:5:44: error: incompatible type for argument 2 of '__builtin_wasm_sub_sat_u_i16x8'\n    5 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |                                            ^\n      |                                            |\n      |                                            Input {aka __vector(4) short unsigned int}\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-c-o2-enabled-invalid/main.c:5:44: note: expected '__vector(8) short unsigned int' but argument is of type 'Input' {aka '__vector(4) short unsigned int'}\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i16x8-cpp-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 480,
+        "sha256": "5a28a9151975dfb27b0479fc97f1a094f46ec5908d7078561b37aaac75772fc0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-cpp-o0-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-cpp-o0-enabled-invalid/main.cc:5:41: error: cannot convert 'Input' {aka '__vector(4) short unsigned int'} to '__vector(8) short unsigned int'\n    5 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(4) short unsigned int}\n<built-in>: note: initializing argument 1 of '__vector(8) short unsigned int __builtin_wasm_sub_sat_u_i16x8(__vector(8) short unsigned int, __vector(8) short unsigned int)'\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-wrong-width-i16x8-cpp-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 480,
+        "sha256": "5a28a9151975dfb27b0479fc97f1a094f46ec5908d7078561b37aaac75772fc0"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-cpp-o2-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-wrong-width-i16x8-cpp-o2-enabled-invalid/main.cc:5:41: error: cannot convert 'Input' {aka '__vector(4) short unsigned int'} to '__vector(8) short unsigned int'\n    5 |   return __builtin_wasm_sub_sat_u_i16x8(a, b);\n      |                                         ^\n      |                                         |\n      |                                         Input {aka __vector(4) short unsigned int}\n<built-in>: note: initializing argument 1 of '__vector(8) short unsigned int __builtin_wasm_sub_sat_u_i16x8(__vector(8) short unsigned int, __vector(8) short unsigned int)'\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i32x4-c-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 459,
+        "sha256": "1b39e621195a8a1a185c8650361de1795364b48a62fdd9d0a4ebf6fc22ac0813"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-c-o0-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-c-o0-enabled-invalid/main.c:5:10: error: implicit declaration of function '__builtin_wasm_add_sat_s_i32x4'; did you mean '__builtin_wasm_add_sat_s_i16x8'? [-Wimplicit-function-declaration]\n    5 |   return __builtin_wasm_add_sat_s_i32x4(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_add_sat_s_i16x8\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-c-o0-enabled-invalid/main.c:5:10: error: incompatible types when returning type 'int' but 'Output' {aka '__vector(4) int'} was expected\n    5 |   return __builtin_wasm_add_sat_s_i32x4(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i32x4-c-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 459,
+        "sha256": "1b39e621195a8a1a185c8650361de1795364b48a62fdd9d0a4ebf6fc22ac0813"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-c-o2-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-c-o2-enabled-invalid/main.c:5:10: error: implicit declaration of function '__builtin_wasm_add_sat_s_i32x4'; did you mean '__builtin_wasm_add_sat_s_i16x8'? [-Wimplicit-function-declaration]\n    5 |   return __builtin_wasm_add_sat_s_i32x4(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_add_sat_s_i16x8\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-c-o2-enabled-invalid/main.c:5:10: error: incompatible types when returning type 'int' but 'Output' {aka '__vector(4) int'} was expected\n    5 |   return __builtin_wasm_add_sat_s_i32x4(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i32x4-cpp-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 459,
+        "sha256": "1b39e621195a8a1a185c8650361de1795364b48a62fdd9d0a4ebf6fc22ac0813"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-cpp-o0-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-cpp-o0-enabled-invalid/main.cc:5:10: error: '__builtin_wasm_add_sat_s_i32x4' was not declared in this scope; did you mean '__builtin_wasm_add_sat_s_i16x8'?\n    5 |   return __builtin_wasm_add_sat_s_i32x4(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_add_sat_s_i16x8\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i32x4-cpp-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 459,
+        "sha256": "1b39e621195a8a1a185c8650361de1795364b48a62fdd9d0a4ebf6fc22ac0813"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-cpp-o2-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i32x4-cpp-o2-enabled-invalid/main.cc:5:10: error: '__builtin_wasm_add_sat_s_i32x4' was not declared in this scope; did you mean '__builtin_wasm_add_sat_s_i16x8'?\n    5 |   return __builtin_wasm_add_sat_s_i32x4(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_add_sat_s_i16x8\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i64x2-c-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 489,
+        "sha256": "e4eec175e642021c7067f9a8b531b52981f854457d1d33ab776231bef2bd02a6"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-c-o0-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-c-o0-enabled-invalid/main.c:5:10: error: implicit declaration of function '__builtin_wasm_sub_sat_u_i64x2'; did you mean '__builtin_wasm_sub_sat_u_i16x8'? [-Wimplicit-function-declaration]\n    5 |   return __builtin_wasm_sub_sat_u_i64x2(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_sub_sat_u_i16x8\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-c-o0-enabled-invalid/main.c:5:10: error: incompatible types when returning type 'int' but 'Output' {aka '__vector(2) long long unsigned int'} was expected\n    5 |   return __builtin_wasm_sub_sat_u_i64x2(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i64x2-c-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 489,
+        "sha256": "e4eec175e642021c7067f9a8b531b52981f854457d1d33ab776231bef2bd02a6"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-c-o2-enabled-invalid/main.c: In function 'invalid':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-c-o2-enabled-invalid/main.c:5:10: error: implicit declaration of function '__builtin_wasm_sub_sat_u_i64x2'; did you mean '__builtin_wasm_sub_sat_u_i16x8'? [-Wimplicit-function-declaration]\n    5 |   return __builtin_wasm_sub_sat_u_i64x2(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_sub_sat_u_i16x8\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-c-o2-enabled-invalid/main.c:5:10: error: incompatible types when returning type 'int' but 'Output' {aka '__vector(2) long long unsigned int'} was expected\n    5 |   return __builtin_wasm_sub_sat_u_i64x2(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i64x2-cpp-o0-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 489,
+        "sha256": "e4eec175e642021c7067f9a8b531b52981f854457d1d33ab776231bef2bd02a6"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-cpp-o0-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-cpp-o0-enabled-invalid/main.cc:5:10: error: '__builtin_wasm_sub_sat_u_i64x2' was not declared in this scope; did you mean '__builtin_wasm_sub_sat_u_i16x8'?\n    5 |   return __builtin_wasm_sub_sat_u_i64x2(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_sub_sat_u_i16x8\n",
+      "emittedSimd": false
+    },
+    {
+      "id": "simd-saturating-unsupported-i64x2-cpp-o2-enabled-invalid",
+      "profile": "enabled-invalid",
+      "source": {
+        "bytes": 489,
+        "sha256": "e4eec175e642021c7067f9a8b531b52981f854457d1d33ab776231bef2bd02a6"
+      },
+      "status": 1,
+      "stderr": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-cpp-o2-enabled-invalid/main.cc: In function 'Output invalid(Input, Input)':\n/home/seorii/dev/hancomac/.worktrees/wasm-llvm-saturating-simd-75-20261030/out/issue75-build/work/simd-saturating-qualification/simd-saturating-unsupported-i64x2-cpp-o2-enabled-invalid/main.cc:5:10: error: '__builtin_wasm_sub_sat_u_i64x2' was not declared in this scope; did you mean '__builtin_wasm_sub_sat_u_i16x8'?\n    5 |   return __builtin_wasm_sub_sat_u_i64x2(a, b);\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |          __builtin_wasm_sub_sat_u_i16x8\n",
+      "emittedSimd": false
+    }
+  ],
+  "limitations": [
+    "Baseline SIMD128 saturating add/subtract on 8/16-bit signed/unsigned lanes only.",
+    "No promise of auto-vectorizing arbitrary scalar clamp expressions.",
+    "wasm_simd128.h and SIMD conversion instructions are separate work.",
+    "Full native regressions, fresh GNU runtime and same-source actual Chromium compiler qualification remain required."
+  ]
+}

@@ -147,6 +147,11 @@ node producer/gcc-wasi/test-simd-extended.mjs \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" --oracle clang \
   --output "$GCC_WASI_WORK_DIR/simd-extended-qualification"
+node producer/gcc-wasi/test-simd-saturating.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/simd-saturating-qualification"
 node producer/gcc-wasi/test-vector-abi.mjs \
   --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
@@ -255,6 +260,7 @@ node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
   --simd-extended-qualification "$GCC_WASI_WORK_DIR/simd-extended-qualification/qualification.json" \
+  --simd-saturating-qualification "$GCC_WASI_WORK_DIR/simd-saturating-qualification/qualification.json" \
   --vector-abi-qualification "$GCC_WASI_WORK_DIR/vector-abi-qualification/report.json" \
   --long-double-qualification "$GCC_WASI_WORK_DIR/long-double-qualification/report.json" \
   --int128-qualification "$GCC_WASI_WORK_DIR/int128-qualification/report.json" \
@@ -265,9 +271,10 @@ node producer/gcc-wasi/package.mjs \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twelve-patch compiler, `--long-double-qualification`,
+For the current thirteen-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--empty-abi-qualification`,
-`--bitfield-qualification`, `--anonymous-bitfield-qualification`, the native linker and a freshly rebuilt, qualified
+`--bitfield-qualification`, `--anonymous-bitfield-qualification`, all three SIMD
+qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. Both wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy either complete gate. Earlier
 compiler profiles can omit `--libstdcxx` and advertise `libstdcxx: false` with core C++ language support. Every supplied GNU
@@ -276,16 +283,23 @@ Packaging verifies input inventories, source identities, the native gate and
 module formats. It writes a fresh output directory and the final v2 manifest
 last. It always emits `qualification.status:
 "unverified"`; artifact integrity is not compiler qualification.
-The optional `--simd-qualification` must contain all enabled and disabled native
+The `--simd-qualification` must contain all enabled and disabled native
 cases from the exact compiler binary and current test inputs. It enables the
 manifest's SIMD capability; that provisional bundle still needs real Chromium
-qualification. Omitting it keeps SIMD unavailable through the SDK.
+qualification. Earlier compiler profiles can omit it to keep SIMD unavailable
+through the SDK; patch `0013` requires the SIMD receipts during packaging.
 Compiler profiles containing patches `0006` and `0007` also require the complete
 extended SIMD and vector ABI receipts to advertise SIMD. These bind source
 files, C/C++ compiler hashes, exact frontend options, runtime bytes and all
 O0/O2 caller/callee combinations.
 The packager reopens the actual programs and checks their Wasm types and memory;
 receipt JSON alone cannot establish the vector ABI.
+Patch `0013` additionally requires `--simd-saturating-qualification`: every
+C/C++ and O0/O2 builtin profile, independent lane-result expectations, exact
+encoded saturation opcodes, scalar controls and default/disabled/type diagnostics.
+It binds the current native compiler, locked sources, headers and tools, and
+reopens the assembly, objects and executable programs. See
+[SIMD-SATURATING.md](SIMD-SATURATING.md) for the supported builtin signatures.
 The binary128 gate requires all 42 O0/O2 fixtures and 124 applicable native
 GCC/Clang runs, the pinned print/scan extension and the rebuilt GNU archives.
 It checks both actual Clang invocations, executed tool paths, header inventories,

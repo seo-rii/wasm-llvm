@@ -1,0 +1,141 @@
+diff --git a/gcc/config/wasm/simd.md b/gcc/config/wasm/simd.md
+index fcc2f6ece..49621dce6 100644
+--- a/gcc/config/wasm/simd.md
++++ b/gcc/config/wasm/simd.md
+@@ -62,6 +62,21 @@
+   "TARGET_SIMD128"
+   "(%o0 (<lanes>.<vaddsub:opname> %i1 %i2))")
+ 
++;; Wasm has signed and unsigned saturating add/subtract for byte and halfword
++;; lanes only.  Standard optab names also serve GCC's SAT_ADD/SAT_SUB IFNs.
++(define_mode_iterator VSAT128 [V16QI V8HI])
++(define_code_iterator vsat [ss_plus us_plus ss_minus us_minus])
++(define_code_attr sat_optab [(ss_plus "ssadd") (us_plus "usadd")
++                            (ss_minus "sssub") (us_minus "ussub")])
++(define_code_attr sat_opcode [(ss_plus "add_sat_s") (us_plus "add_sat_u")
++                             (ss_minus "sub_sat_s") (us_minus "sub_sat_u")])
++(define_insn "<sat_optab><mode>3"
++  [(set (match_operand:VSAT128 0 "wasm_register_operand")
++        (vsat:VSAT128 (match_operand:VSAT128 1 "wasm_register_operand")
++                     (match_operand:VSAT128 2 "wasm_register_operand")))]
++  "TARGET_SIMD128"
++  "(%o0 (<lanes>.<sat_opcode> %i1 %i2))")
++
+ (define_insn "mul<mode>3"
+   [(set (match_operand:VIMUL128 0 "wasm_register_operand")
+         (mult:VIMUL128 (match_operand:VIMUL128 1 "wasm_register_operand")
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index 96e044e82..ecc258b56 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -25,6 +25,8 @@
+ #include "target.h"
+ #include "rtl.h"
+ #include "tree.h"
++#include "langhooks.h"
++#include "tm_p.h"
+ #include "stringpool.h"
+ #include "attribs.h"
+ #include "df.h"
+@@ -45,6 +47,95 @@
+ #include "target.h"
+ #include "common/common-target.h"
+ 
++enum wasm_builtin_code
++{
++  WASM_BUILTIN_ADD_SAT_S_I8X16,
++  WASM_BUILTIN_ADD_SAT_U_I8X16,
++  WASM_BUILTIN_SUB_SAT_S_I8X16,
++  WASM_BUILTIN_SUB_SAT_U_I8X16,
++  WASM_BUILTIN_ADD_SAT_S_I16X8,
++  WASM_BUILTIN_ADD_SAT_U_I16X8,
++  WASM_BUILTIN_SUB_SAT_S_I16X8,
++  WASM_BUILTIN_SUB_SAT_U_I16X8,
++  WASM_BUILTIN_MAX
++};
++
++struct wasm_builtin_description
++{
++  const char *name;
++  machine_mode mode;
++  optab operation;
++  bool unsigned_p;
++};
++
++static const wasm_builtin_description wasm_builtins[WASM_BUILTIN_MAX] =
++{
++  { "__builtin_wasm_add_sat_s_i8x16", V16QImode, ssadd_optab, false },
++  { "__builtin_wasm_add_sat_u_i8x16", V16QImode, usadd_optab, true },
++  { "__builtin_wasm_sub_sat_s_i8x16", V16QImode, sssub_optab, false },
++  { "__builtin_wasm_sub_sat_u_i8x16", V16QImode, ussub_optab, true },
++  { "__builtin_wasm_add_sat_s_i16x8", V8HImode, ssadd_optab, false },
++  { "__builtin_wasm_add_sat_u_i16x8", V8HImode, usadd_optab, true },
++  { "__builtin_wasm_sub_sat_s_i16x8", V8HImode, sssub_optab, false },
++  { "__builtin_wasm_sub_sat_u_i16x8", V8HImode, ussub_optab, true }
++};
++
++static GTY(()) tree wasm_builtin_decls[WASM_BUILTIN_MAX];
++
++/* Keep the declarations available in the disabled profile so a live call gets
++   an explicit target-feature diagnostic rather than an unresolved libcall.  */
++static void
++wasm_init_builtins (void)
++{
++  for (unsigned i = 0; i < WASM_BUILTIN_MAX; ++i)
++    {
++      const wasm_builtin_description &d = wasm_builtins[i];
++      tree scalar = d.mode == V16QImode
++	? (d.unsigned_p ? unsigned_char_type_node : signed_char_type_node)
++	: (d.unsigned_p ? short_unsigned_type_node : short_integer_type_node);
++      tree vector = build_vector_type_for_mode (scalar, d.mode);
++      tree type = build_function_type_list (vector, vector, vector, NULL_TREE);
++      tree decl = add_builtin_function (d.name, type, i, BUILT_IN_MD,
++					NULL, NULL_TREE);
++      TREE_READONLY (decl) = 1;
++      TREE_NOTHROW (decl) = 1;
++      wasm_builtin_decls[i] = decl;
++    }
++}
++#define TARGET_INIT_BUILTINS wasm_init_builtins
++
++static tree
++wasm_builtin_decl (unsigned code, bool ARG_UNUSED (initialize_p))
++{
++  return code < WASM_BUILTIN_MAX ? wasm_builtin_decls[code] : error_mark_node;
++}
++#define TARGET_BUILTIN_DECL wasm_builtin_decl
++
++static rtx
++wasm_expand_builtin (tree exp, rtx target, rtx ARG_UNUSED (subtarget),
++		     machine_mode ARG_UNUSED (mode), int ARG_UNUSED (ignore))
++{
++  tree decl = get_callee_fndecl (exp);
++  unsigned code = DECL_MD_FUNCTION_CODE (decl);
++  gcc_assert (code < WASM_BUILTIN_MAX);
++  const wasm_builtin_description &d = wasm_builtins[code];
++  if (!TARGET_SIMD128)
++    {
++      error_at (EXPR_LOCATION (exp),
++		"%qs requires %<-msimd128%>; SIMD128 is disabled", d.name);
++      return CONST0_RTX (d.mode);
++    }
++  rtx left = force_reg (d.mode, expand_normal (CALL_EXPR_ARG (exp, 0)));
++  rtx right = force_reg (d.mode, expand_normal (CALL_EXPR_ARG (exp, 1)));
++  if (target && !register_operand (target, d.mode))
++    target = NULL_RTX;
++  rtx result = expand_binop (d.mode, d.operation, left, right, target,
++			    d.unsigned_p, OPTAB_DIRECT);
++  gcc_assert (result);
++  return result;
++}
++#define TARGET_EXPAND_BUILTIN wasm_expand_builtin
++
+ static machine_function *
+ wasm_init_machine_status (void)
+ {
+@@ -273,3 +364,5 @@ gcc_target targetm = TARGET_INITIALIZER;
+ 
+ #include "common/common-target-def.h"
+ struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
++
++#include "gt-wasm.h"

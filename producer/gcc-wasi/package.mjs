@@ -8,6 +8,7 @@ import { gzipSync, brotliCompressSync, constants } from 'node:zlib';
 import { identity, readNativeTree, relativePath } from '../clang-browser/cross/package.mjs';
 import { deterministicTar } from '../clang-browser/scripts/package-language-sysroots.mjs';
 import { cases as simdCases, disabledCases } from './simd-fixtures.mjs';
+import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
 import { inspectVectorAbi, inspectObjectFunctionSignatures } from './inspect-vector-abi.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -89,6 +90,68 @@ export function verifySimdQualification(report, expected) {
 	for (const field of ['disabledDiagnostic', 'defaultDiagnostic']) {
 		assert.equal(report[field]?.status, 1, 'SIMD disabled-profile diagnostic was not verified');
 		assert.match(report[field].stderr, /SIMD128 is disabled/);
+	}
+}
+
+export function verifySaturatingSimdQualificationOptions(patches, options) {
+	if (!patches.some(patch => patch.path === 'patches/0013-simd-saturating-arithmetic.patch')) return;
+	for (const field of ['simdQualification', 'simdExtendedQualification', 'vectorAbiQualification', 'simdSaturatingQualification', 'nativeLinker'])
+		assert(options[field], `Saturating SIMD requires ${field} with the current compiler`);
+}
+
+export function verifySaturatingSimdQualification(report, expected) {
+	const fixtures = [...saturatingCases, ...saturatingDisabledCases];
+	verifySimdQualification(report, { ...expected, kind: 'gcc-wasi-native-simd-saturating-qualification', fixtures });
+	assert.equal(report.inputsUnchanged, true, 'Saturating SIMD inputs changed');
+	for (const field of ['sourceLock', 'gccSource', 'headers', 'objdump', 'validator', 'node'])
+		assert.deepEqual(report[field], expected[field], `Saturating SIMD ${field} differs`);
+	const tools = { gcc: report.compiler, gccCpp: report.compilerCpp, assembler: report.assembler,
+		objdump: report.objdump, linker: report.linker, validator: report.validator, node: report.node };
+	assert.deepEqual(Object.keys(report.toolPaths).sort(), Object.keys(tools).sort());
+	for (const [name, receipt] of Object.entries(tools)) {
+		assert(path.isAbsolute(report.toolPaths[name]), `Missing absolute ${name} path`);
+		assert.deepEqual(report.inputs[report.toolPaths[name]], receipt, `Saturating SIMD ${name} command is not bound to its measured tool`);
+	}
+	const binaryIdentity = (receipt, label) => {
+		assert(Number.isSafeInteger(receipt?.bytes) && receipt.bytes > 8 && /^[a-f0-9]{64}$/.test(receipt.sha256), `Missing ${label} identity`);
+	};
+	const simd = /\b(?:v128|i8x16|i16x8|i32x4|i64x2|f32x4|f64x2)\./u;
+	for (const entry of report.cases) {
+		const fixture = fixtures.find(candidate => candidate.id === entry.id);
+		assert.equal(entry.stdin, fixture.stdin, 'Saturating SIMD stdin differs from the oracle');
+		binaryIdentity(entry.assembly, 'saturating assembly'); binaryIdentity(entry.object, 'saturating object');
+		assert.deepEqual(entry.commands.map(command => command.command),
+			[fixture.request.language === 'cpp' ? report.toolPaths.gccCpp : report.toolPaths.gcc,
+				report.toolPaths.assembler, report.toolPaths.objdump, report.toolPaths.linker, report.toolPaths.node]);
+		const decoded = entry.commands[2].stdout.split('\n').flatMap(line => {
+			const match = /^\s*[a-f0-9]+:\s+(?:[a-f0-9]{2}\s+)+\|\s*(\S+)/i.exec(line);
+			return match && !match[1].startsWith('local[') ? [match[1]] : [];
+		});
+		assert.deepEqual(entry.instructions, decoded, 'Saturating instructions differ from disassembly');
+		for (const opcode of fixture.requiredInstructions) assert(decoded.includes(opcode), `Missing saturating opcode: ${opcode}`);
+		for (const opcode of fixture.forbiddenInstructions) assert(!decoded.includes(opcode), `Unexpected saturating opcode: ${opcode}`);
+		if (!fixture.request.simd) assert(!decoded.some(opcode => simd.test(opcode)), 'Disabled profile encoded SIMD');
+		const validation = entry.simdDisabledValidation;
+		assert.equal(validation?.command, report.toolPaths.validator);
+		assert.equal(validation.status, fixture.request.simd ? 1 : 0, 'Independent disabled-SIMD validation disagrees');
+		assert.equal(validation.signal, null); assert(!validation.error);
+		assert.equal(validation.argv[0], '--disable-simd');
+		assert.equal(path.basename(validation.argv.at(-1)), 'main.wasm');
+	}
+	const diagnostics = [...saturatingCases.flatMap(fixture => ['disabled', 'default'].map(profile => ({ fixture, profile }))),
+		...saturatingDiagnosticCases.map(fixture => ({ fixture, profile: 'enabled-invalid' }))];
+	assert.deepEqual(report.diagnostics.map(entry => entry.id), diagnostics.map(({ fixture, profile }) => `${fixture.id}-${profile}`), 'Saturating SIMD diagnostic matrix is incomplete');
+	for (const [index, { fixture, profile }] of diagnostics.entries()) {
+		const entry = report.diagnostics[index], command = entry.command;
+		assert.equal(entry.fixture, fixture.id); assert.equal(entry.profile, profile);
+		assert.deepEqual(entry.source, identity(Buffer.from(fixture.request.code)));
+		assert.equal(entry.emittedSimd, false, 'Rejected builtin emitted SIMD');
+		assert.equal(command.command, fixture.request.language === 'cpp' ? report.toolPaths.gccCpp : report.toolPaths.gcc);
+		assert.equal(command.status, 1); assert.equal(command.signal, null); assert(!command.error);
+		assert.match(command.stderr, profile === 'enabled-invalid' ? new RegExp(fixture.diagnosticPattern) : /SIMD128 is disabled/);
+		assert.deepEqual(command.argv.filter(arg => /^-O/.test(arg)), [`-O${fixture.request.optimization}`]);
+		assert.deepEqual(command.argv.filter(arg => arg.startsWith('-std=')), [`-std=${fixture.request.standard}`]);
+		assert.deepEqual(command.argv.filter(arg => /^-m(?:no-)?simd128$/.test(arg)), profile === 'default' ? [] : [profile === 'disabled' ? '-mno-simd128' : '-msimd128']);
 	}
 }
 
@@ -371,7 +434,7 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -424,6 +487,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	}
 	if (simdProof && lock.gcc.patches.some(patch => patch.path === 'patches/0006-simd-operations.patch'))
 		assert(simdExtendedProof, 'This backend requires --simd-extended-qualification before advertising SIMD');
+	verifySaturatingSimdQualificationOptions(lock.gcc.patches, { simdQualification, simdExtendedQualification, simdSaturatingQualification, vectorAbiQualification, nativeLinker });
+	const simdSaturatingProof = simdSaturatingQualification && await fs.readFile(simdSaturatingQualification);
 	let vectorAbiProof;
 	if (vectorAbiQualification) {
 		assert(simdProof, '--vector-abi-qualification requires --simd-qualification');
@@ -459,12 +524,13 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const runtimeHeaders = sysroot.filter(file => file.path.startsWith('include/')).map(file => ({ ...file, path: file.path.slice('include/'.length) }));
 	for (const [proof, qualificationPath, fixtureName, recipeName, kind] of [
 		[simdProof, simdQualification, 'simd-fixtures.mjs', 'test-simd.mjs', 'gcc-wasi-native-simd-qualification'],
-		[simdExtendedProof, simdExtendedQualification, 'simd-extended-fixtures.mjs', 'test-simd-extended.mjs', 'gcc-wasi-native-simd-extended-qualification']
+		[simdExtendedProof, simdExtendedQualification, 'simd-extended-fixtures.mjs', 'test-simd-extended.mjs', 'gcc-wasi-native-simd-extended-qualification'],
+		[simdSaturatingProof, simdSaturatingQualification, 'simd-saturating-fixtures.mjs', 'test-simd-saturating.mjs', 'gcc-wasi-native-simd-saturating-qualification']
 	]) {
 		if (!proof) continue;
 		const report = JSON.parse(proof);
 		const suite = await import(new URL(fixtureName, import.meta.url));
-		verifySimdQualification(report, {
+		const expected = {
 			kind, fixtures: [...suite.cases, ...(suite.disabledCases || [])], targetSource,
 			gccCommit: lock.gcc.commit,
 			compilerSha256: nativeReceipt.tools.cc1.sha256,
@@ -474,7 +540,20 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			assembler: identity(await fs.readFile(path.join(work, 'wabt-native/wat2wasm'))),
 			linker: identity(await fs.readFile(nativeLinker)),
 			runtime: Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a'].map((name) => [name, identity(sysroot.find((f) => f.path === `lib/wasm32-wasi/${name}`).bytes)]))
-		});
+		};
+		if (proof === simdSaturatingProof) {
+			const indexed = files => Object.fromEntries(files.map(file => [file.path, identity(file.bytes)]));
+			Object.assign(expected, { sourceLock: identity(lockBytes), gccSource: nativeReceipt.gccSource,
+				headers: { gcc: indexed(await readNativeTree(path.join(work, 'gcc-native/gcc/include'))), target: indexed(runtimeHeaders) },
+				objdump: identity(await fs.readFile(path.join(work, 'wabt-native/wasm-objdump'))),
+				validator: identity(await fs.readFile(path.join(work, 'wabt-native/wasm-validate'))), node: identity(await fs.readFile(process.execPath)) });
+			verifySaturatingSimdQualification(report, expected);
+			for (const entry of report.cases) for (const [name, receipt] of [['main.wat', entry.assembly], ['main.o', entry.object]]) {
+				const bytes = await fs.readFile(path.join(path.dirname(qualificationPath), entry.id, name));
+				assert.deepEqual(identity(bytes), receipt, `Saturating SIMD ${name} changed after qualification`);
+				if (name === 'main.o') assert.equal(WebAssembly.Module.customSections(new WebAssembly.Module(bytes), 'linking').length, 1);
+			}
+		} else verifySimdQualification(report, expected);
 		for (const test of report.cases) {
 			const bytes = await fs.readFile(path.join(path.dirname(qualificationPath), test.id, 'main.wasm'));
 			assert.deepEqual(identity(bytes), test.wasm, 'SIMD program differs from its qualification');
@@ -748,6 +827,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (stdReceipt) provenanceFiles.set('libstdcxx-build.json', json(stdReceipt));
 	if (simdProof) provenanceFiles.set('native-simd-qualification.json', simdProof);
 	if (simdExtendedProof) provenanceFiles.set('native-simd-extended-qualification.json', simdExtendedProof);
+	if (simdSaturatingProof) provenanceFiles.set('native-simd-saturating-qualification.json', simdSaturatingProof);
 	if (vectorAbiProof) provenanceFiles.set('native-vector-abi-qualification.json', vectorAbiProof);
 	if (longDoubleProof) provenanceFiles.set('native-long-double-qualification.json', longDoubleProof);
 	if (int128Proof) provenanceFiles.set('native-int128-qualification.json', int128Proof);
@@ -798,8 +878,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}
