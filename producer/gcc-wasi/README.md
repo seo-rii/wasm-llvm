@@ -43,6 +43,12 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | Compiler host | Emscripten `6.0.0`, `afa15e0c56d1292e073c2c91bafc1d5e0cdf0dd3`; emsdk `d223ae73c6998296e3ab27cf81dc2c2c9fd383de` |
 | Host arithmetic libraries | GMP 6.3.0, MPFR 4.2.1, MPC 1.3.1; authenticated GNU source archives from `../gcc-browser/sources.lock.json` |
 
+The linker archive and its original toolchain receipt are preserved under
+`snapshots/`. `runtime.lock.json` pins those files so rebuilding the current
+Clang artifacts does not change this GCC profile's qualified linker inputs.
+After updating the runtime lock, rerun `prepare-runtime.py` into a new output
+directory before packaging so the import receipt records the current lock hash.
+
 The first local GCC patch fixes a real code-generation defect: pointer comparison
 with `void_type_node` misclassified `typedef void` and emitted an undeclared `$return`
 local. Both return emission and indirect function signatures use `VOID_TYPE_P`.
