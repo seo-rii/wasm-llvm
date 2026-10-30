@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": "https://github.com/seo-rii/wasm-llvm/issues/81",
-  "status": "native-qualified-browser-pending",
+  "status": "qualified",
   "profile": "Experimental GCC 17 with 18 locked local patches (source18), C/C++, wasm32-wasi-preview1, static single-threaded linking and freshly rebuilt GNU libstdc++.",
   "sourceLabelBoundary": "source17/source18 and diagnostic compiler labels gcc17/gcc18 mean 17/18 locked local patches, not GCC major versions.",
   "dependency": {
@@ -1803,7 +1803,16 @@
         "producer/gcc-wasi/weakref-qualification.test.mjs",
         "producer/gcc-wasi/package.test.mjs"
       ]
-    ]
+    ],
+    "allProducer": {
+      "tests": 115,
+      "exitCode": 0,
+      "log": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/unit-tests-final.log",
+        "bytes": 11104,
+        "sha256": "fa54067dba5befca85d25c390685c898e60ff7f32e824f9935777f60d18dc336"
+      }
+    }
   },
   "boundaries": [
     "Weak alias definitions remain rejected; ordinary weak definitions and external weak references are qualified.",
@@ -1855,16 +1864,168 @@
         "sha256": "05e1332ad66e27970c529c22f140b9c07a90648ded8b12654f36cf44144a0103"
       },
       "exitCode": 0
+    },
+    "browser": {
+      "log": "/home/seorii/logs/wasm-llvm-81-browser-1qf_m5r_.log",
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/browser-status.json",
+        "bytes": 665,
+        "sha256": "1db30513d4be688baa723504c39643c163aa7a68dd8e8b3a685915101ab93f90"
+      },
+      "exitCode": 0
+    },
+    "package": {
+      "log": "/home/seorii/logs/wasm-llvm-81-package-v2-ow7qbqaw.log",
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/package-status-v2.json",
+        "bytes": 201,
+        "sha256": "636cae31a2357098070fda5f6c2d6d02bf454d345bbb4844302790f58805042c"
+      },
+      "exitCode": 0
+    },
+    "worker": {
+      "log": "/home/seorii/logs/wasm-llvm-81-worker-v2-15hmoa4y.log",
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/worker-status-v2.json",
+        "bytes": 9582,
+        "sha256": "8e5393eeb9aa5addf6ab1e4582090d453c4d9f3ae385c05378a564270390fa3d"
+      },
+      "exitCode": 0
     }
   },
   "browser": {
-    "status": "pending",
-    "plannedWeakrefCanonicalPrograms": 148,
+    "status": "passed",
+    "summary": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-summary.json",
+      "bytes": 67839,
+      "sha256": "396b46d24465ad718efab5226879133ed03183993ec1eb60285600d58d5ff264"
+    },
+    "manifest": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/bundle-final-v2/gcc-toolchain.v2.json",
+      "bytes": 22325,
+      "sha256": "e302a1f7745e2f100bad27f0e0678cf2a0c9618c538e37382321aae6e533b29a"
+    },
+    "counts": {
+      "chromium": 1707,
+      "nodeWasi": 1707,
+      "objects": 1477,
+      "wat": 1477,
+      "objectSignatureChecks": 382
+    },
+    "weakrefCounts": {
+      "units": 232,
+      "cases": 528,
+      "runtimePasses": 480,
+      "linkRejections": 48,
+      "gccObjects": 118,
+      "clangObjects": 114,
+      "chromiumPrograms": 480,
+      "nodePrograms": 480
+    },
+    "weakrefControls": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/worker-weakref-controls.json",
+      "bytes": 3830035,
+      "sha256": "7b95ad404783d2268eab676f748e4e2e25e9c67f606a3ee2a15de9d31c38225c"
+    },
+    "publicSdkWeakrefPrograms": 148,
+    "preservedPreviousPublicSdkPrograms": 1559,
+    "inputSnapshot": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/worker-inputs-final.json",
+      "bytes": 975063,
+      "sha256": "44f06ce9ba97637f5ff1d0e87d8b76b5b31f37dd9c7182b4d98efa0c87bb71e3"
+    },
+    "frozenInputFiles": 3446,
+    "diagnosticCounts": {
+      "diagnostics": 592,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "symbolAliases": 24,
+      "defaultControls": 4
+    },
+    "diagnostics": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 958561,
+      "sha256": "0e32be136b3a45c85440f89774e738c40f05542f427617bccf3f43ced13b4e77"
+    },
+    "aliasCounts": {
+      "providers": 26,
+      "objects": 50,
+      "linkControls": 8,
+      "linkRejections": 16,
+      "assemblerObjects": 110,
+      "assemblerRejections": 18
+    },
+    "aliasControls": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/worker-alias-controls.json",
+      "bytes": 961810,
+      "sha256": "f3494f41d8964acbac13f5db2734406baf346ab8c073ab4afd7f12ac4a46119b"
+    },
+    "opcodeChecks": 979,
+    "targetFeatures": {
+      "assembler": {
+        "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/wabt-target-features.json",
+        "bytes": 46161,
+        "sha256": "253ef0825a1d381b24831968b2bd0cdc324f9005ed588214ae365dfd91b27129"
+      },
+      "sdk": {
+        "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/target-features/qualification.json",
+        "bytes": 117059,
+        "sha256": "967ee463eceff51da78009fb08aa0ccf2d977ad21cddce1282531b01f638d466"
+      },
+      "assemblerCases": 62,
+      "chromiumPrograms": 6,
+      "nodePrograms": 6
+    },
+    "rawDefaultControlExecutions": {
+      "chromium": 4,
+      "nodeWasi": 4
+    },
+    "engineProbe": {
+      "simd128": true,
+      "kind": "actual-SDK-v128-const-drop-WebAssembly.validate",
+      "host": "chromium-worker",
+      "mocked": false
+    },
+    "inputsUnchanged": true,
     "fixtureRecipe": {
       "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-worker-fixtures.mjs",
       "bytes": 1230,
       "sha256": "10822b9259a49ff49fdf7196122d1025297eaf0b2aa0878a8f83d5d2d55a1001"
     },
-    "boundary": "GCC-only public SDK executions, object metadata, raw mixed-object link controls and actual Chromium Worker/Node checks are separate from completed native qualification. Browser/Worker evidence will be added after those jobs finish."
+    "boundary": "The public SDK compiles all of its source units with GCC. The separate 528-case Worker matrix compiles 118 GCC objects in the actual Worker and reuses 114 hash-verified native Clang reference objects. Its 480 successful linked programs execute in both Chromium Worker and Node WASI; 48 cases require strict-link rejection."
+  },
+  "preservedPackagingAttempt": {
+    "reason": "The first packaging attempt exhausted the root filesystem and could not write its final status. Its partial bundle and logs are preserved. The dependent Worker exited 1 before executing any suite. The successful retry used fresh /data output directories and a private /data TMPDIR with the same frozen compiler/native/production inputs.",
+    "packageLog": {
+      "path": "/home/seorii/logs/wasm-llvm-81-package-kb51oswe.log",
+      "bytes": 738,
+      "sha256": "62c40afdca6632352077657c0c1cbaa2e2187f4a4148e9778c03013f4de4b11a"
+    },
+    "emptyPackageStatus": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/package-status.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "workerLog": {
+      "path": "/home/seorii/logs/wasm-llvm-81-worker-3qi1qwc_.log",
+      "bytes": 833,
+      "sha256": "c53e653c602eb0d6aa71c791c6397f180c55759d9bf8ad9a8b13d6134b438c41"
+    },
+    "workerStatus": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/worker-status.json",
+      "bytes": 94,
+      "sha256": "b5f1fb877d1c8bcf5addb28293c93d6ba9cb4bf5b1b6e4b5ba97f65747f45d8b"
+    },
+    "layout": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/disk-retry-layout.json",
+      "bytes": 565,
+      "sha256": "eaf842b10e2f514551a534728cb1c725db036ee8453269ac22da0c176b07f401"
+    },
+    "retryRecipes": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/retry-recipe-inputs.json",
+      "bytes": 1303,
+      "sha256": "6f61a9bddfd46f11dbde2216551502a5edbdafff62b2e7df282576a1bcf28e75"
+    }
   }
 }
