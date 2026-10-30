@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { identity } from '../clang-browser/cross/package.mjs';
-import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions, verifyEmptyAbiQualification, verifyBitfieldQualification, verifyAbiQualificationOptions, verifyTypedMathProbes } from './package.mjs';
+import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions, verifyEmptyAbiQualification, verifyBitfieldQualification, verifyAnonymousBitfieldQualification, verifyAbiQualificationOptions, verifyTypedMathProbes } from './package.mjs';
 import { cases, disabledCases } from './simd-fixtures.mjs';
 import { cases as int128Cases } from './int128-fixtures.mjs';
 import { cases as emptyAbiCases } from './empty-abi-fixtures.mjs';
 import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
+import { cases as anonymousBitfieldCases } from './anonymous-bitfield-fixtures.mjs';
 import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
 
 test('browser package rejects failed preparation and unsupported gcov host profiles', () => {
@@ -100,7 +101,8 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 					argv: family === 'clang' && step < 2 ? [...common, ...(step === 0 ? ['-S', '-emit-llvm'] : ['-c'])] : step === 0 ? [...common] : [],
 					status: 0, signal: null, stdout: '', stderr: ''
 				});
-				return { compiler: family, source: identity(Buffer.from(source)) };
+				return { compiler: family, source: identity(Buffer.from(source)),
+					...(fixture.id.startsWith('anonymous-bitfield-') ? { signatures: structuredClone(fixture.signatures) } : {}) };
 			});
 			commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', '-lc'], status: 0, signal: null },
 				{ command: report.tools.node.path, argv: [], status: 0, signal: null, stdout: fixture.stdout, stderr: '' });
@@ -130,9 +132,28 @@ test('ABI correction patches require complete current native proofs and a real l
 	}
 });
 
+test('anonymous bitfield patch requires its own native proof without replacing existing ABI proofs', () => {
+	const patches = ['0010-empty-record-abi', '0011-bitfield-layout', '0012-anonymous-bitfield-abi']
+		.map(name => ({ path: `patches/${name}.patch` }));
+	const complete = { emptyAbiQualification: 'empty.json', bitfieldQualification: 'bitfield.json',
+		anonymousBitfieldQualification: 'anonymous.json', nativeLinker: 'wasm-ld' };
+	verifyAbiQualificationOptions(patches, complete);
+	for (const field of Object.keys(complete)) {
+		const changed = { ...complete }; delete changed[field];
+		assert.throws(() => verifyAbiQualificationOptions(patches, changed));
+	}
+	assert.throws(() => verifyAbiQualificationOptions([patches[2]], {}), /requires --anonymous-bitfield-qualification/);
+	assert.throws(() => verifyAbiQualificationOptions([], { anonymousBitfieldQualification: 'anonymous.json' }),
+		/--anonymous-bitfield-qualification requires --native-linker/);
+	verifyAbiQualificationOptions(patches.slice(0, 2), {
+		emptyAbiQualification: 'empty.json', bitfieldQualification: 'bitfield.json', nativeLinker: 'wasm-ld'
+	});
+});
+
 for (const [label, fixtures, kind, verify] of [
 	['Empty ABI', emptyAbiCases, 'gcc-wasi-empty-record-abi-qualification', verifyEmptyAbiQualification],
-	['Bitfield', bitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyBitfieldQualification]
+	['Bitfield', bitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyBitfieldQualification],
+	['Anonymous bitfield', anonymousBitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyAnonymousBitfieldQualification]
 ]) test(`${label} rejects partial, stale and forged ABI/source/command proof (synthetic receipts)`, () => {
 	const { expected, report } = int128ProofFixture(fixtures, kind);
 	verify(report, expected, fixtures);
@@ -152,6 +173,30 @@ for (const [label, fixtures, kind, verify] of [
 	]) {
 		const changed = structuredClone(report); mutate(changed);
 		assert.throws(() => verify(changed, expected, fixtures));
+	}
+});
+
+test('anonymous bitfield proof binds every optimization, compiler direction and object/program signature (synthetic receipts)', () => {
+	const { expected, report } = int128ProofFixture(anonymousBitfieldCases, 'gcc-wasi-wide-integer-qualification');
+	assert.equal(report.counts.total, anonymousBitfieldCases.length * 4);
+	verifyAnonymousBitfieldQualification(report, expected, anonymousBitfieldCases);
+	assert.throws(() => verifyAnonymousBitfieldQualification(undefined, expected, anonymousBitfieldCases), /requires native qualification proof/);
+	for (const partialFixtures of [bitfieldCases, anonymousBitfieldCases.filter(fixture => fixture.request.optimization === '0')]) {
+		const partial = int128ProofFixture(partialFixtures, 'gcc-wasi-wide-integer-qualification').report;
+		assert.throws(() => verifyAnonymousBitfieldQualification(partial, expected, anonymousBitfieldCases), /fixture matrix changed/);
+	}
+	for (const mutate of [
+		proof => { proof.cases[1] = structuredClone(proof.cases[0]); },
+		proof => { proof.skippedReferences = [{ fixture: anonymousBitfieldCases[0].id, direction: 'clang-gcc' }]; },
+		proof => { proof.directions = ['gcc-gcc']; proof.cases = proof.cases.filter(entry => entry.direction === 'gcc-gcc'); proof.counts = { total: proof.cases.length, passed: proof.cases.length, failed: 0 }; },
+		proof => { delete proof.cases[0].units[0].signatures; },
+		proof => { proof.cases[0].units[0].signatures.ab_make = { params: ['i32', 'i32'], results: [] }; },
+		proof => { proof.cases[0].units[1].signatures.ab_make = { params: ['i32', 'i32'], results: [] }; },
+		proof => { proof.cases[0].abi.exports.ab_make = { params: ['i32', 'i32'], results: [] }; },
+		proof => { proof.cases[0].commands.at(-2).argv = ['-lc']; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyAnonymousBitfieldQualification(changed, expected, anonymousBitfieldCases));
 	}
 });
 
