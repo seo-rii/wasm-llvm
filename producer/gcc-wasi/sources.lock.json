@@ -91,8 +91,14 @@
         "path": "patches/0016-wasm-simd128-header.patch",
         "purpose": "Install the documented 169-name SIMD128 header, typed direct lane operations and scalar/vector partial-copy legalization without changing the public vector ABI.",
         "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+      },
+      {
+        "path": "patches/0017-symbol-aliases.patch",
+        "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e",
+        "purpose": "Define strong function/data aliases with shared addresses and independent symbol binding, visibility and relocations."
       }
-    ]
+    ],
+    "sourceDiffSha256": "152915d721c9b743f0345efd564bbf143bf53b8f7bf36b8f261dd25ba1cdd7d1"
   },
   "wabt": {
     "version": "1.0.37",
@@ -105,9 +111,14 @@
         "path": "patches/wabt-0001-simd-target-features.patch",
         "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6",
         "purpose": "Record actual SIMD instructions and v128 types, merge target_features and reject malformed or conflicting declarations."
+      },
+      {
+        "path": "patches/wabt-0002-symbol-aliases.patch",
+        "sha256": "ecc5664fb48d4337fad9c469076c06cf97162dae870ee76d7eb948233d83a759",
+        "purpose": "Resolve strong symbol aliases and preserve independent linking names and relocation identities through annotated WAT and binary round trips."
       }
     ],
-    "sourceDiffSha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6",
+    "sourceDiffSha256": "1cf55c9739b0fddc3177d2dbfe0899403140b18fc41b64a5a912d1aaffc7f8eb",
     "submodules": {
       "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
     }

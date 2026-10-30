@@ -14,6 +14,7 @@ import { cases as headerCases, disabledCases as headerDisabledCases, diagnosticC
 import { verifySimdHeaderQualificationOptions, reopenSimdHeaderQualification, verifySimdHeaderInstallation } from './simd-header-qualification.mjs';
 import { conversionInstructions, verifyConversionInstructions } from './simd-conversions-inspect.mjs';
 import { inspectVectorAbi, inspectObjectFunctionSignatures } from './inspect-vector-abi.mjs';
+import { verifySymbolAliasQualificationOptions, reopenSymbolAliasQualification } from './symbol-alias-qualification.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const json = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -469,6 +470,17 @@ export function verifyInt128Qualification(report, expected, fixtures) {
 	return verifyWideScalarQualification(report, expected, fixtures, 'gcc-wasi-int128-qualification', 'Int128');
 }
 
+export function verifySymbolAliasPrograms(report, expected, fixtures) {
+	assert.equal(report.counts?.total, 106, 'Symbol aliases require every native compiler direction');
+	const skipped = fixtures.flatMap(fixture => ['gcc-gcc', 'gcc-clang', 'clang-gcc', 'clang-clang']
+		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.filter(direction => fixture.clang === false && direction.includes('clang'))
+		.map(direction => ({ fixture: fixture.id, direction, reason: fixture.clangReason })));
+	assert.deepEqual(report.skippedReferences, skipped, 'Symbol aliases may omit only the declared GNU runtime references');
+	verifyFixtureIdentities(report, fixtures, 'Symbol alias');
+	return verifyWideScalarQualification(report, expected, fixtures, 'gcc-wasi-wide-integer-qualification', 'Symbol alias');
+}
+
 // Both real harnesses have the same compiler-direction matrix and artifact
 // contract. Keep their provenance and ABI validation identical while retaining
 // the binary128 verifier's established diagnostics and public test entry point.
@@ -558,7 +570,7 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -617,6 +629,12 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const simdConversionsProof = simdConversionsQualification && await fs.readFile(simdConversionsQualification);
 	verifySimdHeaderQualificationOptions(lock.gcc.patches, { simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, nativeLinker });
 	const simdHeaderProof = simdHeaderQualification && await fs.readFile(simdHeaderQualification);
+	verifySymbolAliasQualificationOptions(lock.gcc.patches, { symbolAliasQualification, nativeLinker, libstdcxx });
+	const symbolAliasProof = symbolAliasQualification && await fs.readFile(symbolAliasQualification);
+	const aliasReport = symbolAliasProof && JSON.parse(symbolAliasProof);
+	const aliasProgramPath = aliasReport?.programs?.path;
+	const aliasProgramProof = symbolAliasProof && await fs.readFile(aliasProgramPath);
+	if (aliasProgramProof) assert.deepEqual(identity(aliasProgramProof), { bytes: aliasReport.programs.bytes, sha256: aliasReport.programs.sha256 });
 	let vectorAbiProof;
 	if (vectorAbiQualification) {
 		assert(simdProof, '--vector-abi-qualification requires --simd-qualification');
@@ -650,7 +668,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const sysroot = await readNativeTree(path.join(runtime, 'sysroot'));
 	verifyInventory(sysroot, runtimeReceipt.files, 'WASI sysroot');
 	verifyRuntimeLibraryIdentities(sysroot, runtimeLock.wasiLibc.libraryIdentities);
-	const targetSource = simdProof || longDoubleProof || int128Proof || gnuFloat128Proof || emptyAbiProof || bitfieldProof || anonymousBitfieldProof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
+	const targetSource = simdProof || longDoubleProof || int128Proof || gnuFloat128Proof || emptyAbiProof || bitfieldProof || anonymousBitfieldProof || symbolAliasProof ? Object.fromEntries(inventory(await readNativeTree(path.join(work, 'gcc/gcc/config/wasm'))).map(({ path: name, ...receipt }) => [name, receipt])) : undefined;
 	const runtimeHeaders = sysroot.filter(file => file.path.startsWith('include/')).map(file => ({ ...file, path: file.path.slice('include/'.length) }));
 	for (const [proof, qualificationPath, fixtureName, recipeName, kind] of [
 		[simdProof, simdQualification, 'simd-fixtures.mjs', 'test-simd.mjs', 'gcc-wasi-native-simd-qualification'],
@@ -886,7 +904,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		[gnuFloat128Proof, gnuFloat128Qualification, 'gnu-float128-fixtures.mjs', 'wide-integer-test.mjs', verifyGnuFloat128Qualification, 'GNU float128'],
 		[emptyAbiProof, emptyAbiQualification, 'empty-abi-fixtures.mjs', 'test-empty-abi.mjs', verifyEmptyAbiQualification, 'Empty ABI'],
 		[bitfieldProof, bitfieldQualification, 'wide-integer-bitfields-fixtures.mjs', 'wide-integer-test.mjs', verifyBitfieldQualification, 'Bitfield'],
-		[anonymousBitfieldProof, anonymousBitfieldQualification, 'anonymous-bitfield-fixtures.mjs', 'wide-integer-test.mjs', verifyAnonymousBitfieldQualification, 'Anonymous bitfield']
+		[anonymousBitfieldProof, anonymousBitfieldQualification, 'anonymous-bitfield-fixtures.mjs', 'wide-integer-test.mjs', verifyAnonymousBitfieldQualification, 'Anonymous bitfield'],
+		[aliasProgramProof, aliasProgramPath, 'symbol-alias-fixtures.mjs', 'wide-integer-test.mjs', verifySymbolAliasPrograms, 'Symbol alias']
 	]) {
 		if (!proof) continue;
 		const report = JSON.parse(proof);
@@ -912,7 +931,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		const recipes = {};
 		for (const [name, file] of [['fixtures', fixtureName], ['harness', harnessName], ['inspector', 'inspect-vector-abi.mjs']])
 			recipes[name] = identity(await fs.readFile(path.join(here, file)));
-		if (languageOnly || label === 'GNU float128') recipes.sourceLock = identity(lockBytes);
+		if (languageOnly || label === 'GNU float128' || label === 'Symbol alias') recipes.sourceLock = identity(lockBytes);
 		if (label === 'Empty ABI') recipes.build = identity(nativeReceiptBytes);
 		const cxxPrefix = `include/c++/${lock.gcc.version}/`;
 		verify(report, {
@@ -1017,6 +1036,19 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (simdSaturatingProof) provenanceFiles.set('native-simd-saturating-qualification.json', simdSaturatingProof);
 	if (simdConversionsProof) provenanceFiles.set('native-simd-conversions-qualification.json', simdConversionsProof);
 	if (simdHeaderProof) provenanceFiles.set('native-simd-header-qualification.json', simdHeaderProof);
+	if (symbolAliasProof) {
+		const sdkRoot = path.resolve(path.dirname(nativeLinker), '..');
+		const toolPaths = { gcc: path.join(work, 'gcc-native/gcc/cc1'), gccCpp: path.join(work, 'gcc-native/gcc/cc1plus'),
+			clang: path.join(sdkRoot, 'bin/clang'), assembler: path.join(work, 'wabt-native/wat2wasm'),
+			linker: nativeLinker, archive: path.join(sdkRoot, 'bin/llvm-ar'), node: process.execPath };
+		const tools = Object.fromEntries(await Promise.all(Object.entries(toolPaths).map(async ([name, file]) => [name, identity(await fs.readFile(file))])));
+		const recipes = Object.fromEntries(await Promise.all(['test-symbol-alias.mjs', 'symbol-alias-fixtures.mjs', 'symbol-alias-inspect.mjs', 'wide-integer-test.mjs'].map(async name => [name, identity(await fs.readFile(path.join(here, name)))])));
+		await reopenSymbolAliasQualification(aliasReport, {
+			sourceLock: identity(lockBytes), nativeBuild: identity(nativeReceiptBytes), gccSource: nativeReceipt.gccSource,
+			tools, recipes, programs: JSON.parse(aliasProgramProof),
+			gnuRuntimeArchive: identity(sysroot.find(file => file.path === 'lib/wasm32-wasi/libsupc++.a').bytes)
+		});
+	}
 	if (vectorAbiProof) provenanceFiles.set('native-vector-abi-qualification.json', vectorAbiProof);
 	if (longDoubleProof) provenanceFiles.set('native-long-double-qualification.json', longDoubleProof);
 	if (int128Proof) provenanceFiles.set('native-int128-qualification.json', int128Proof);
@@ -1024,6 +1056,10 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (emptyAbiProof) provenanceFiles.set('native-empty-abi-qualification.json', emptyAbiProof);
 	if (bitfieldProof) provenanceFiles.set('native-bitfield-qualification.json', bitfieldProof);
 	if (anonymousBitfieldProof) provenanceFiles.set('native-anonymous-bitfield-qualification.json', anonymousBitfieldProof);
+	if (symbolAliasProof) {
+		provenanceFiles.set('native-symbol-alias-qualification.json', symbolAliasProof);
+		provenanceFiles.set('native-symbol-alias-programs.json', aliasProgramProof);
+	}
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
 	for (const [name, bytes] of wabtRecipes) provenanceFiles.set(`wabt-${name}`, bytes);
@@ -1069,8 +1105,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}

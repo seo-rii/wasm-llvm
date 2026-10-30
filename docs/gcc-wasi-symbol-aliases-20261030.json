@@ -1,0 +1,3019 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/80",
+  "status": "native-qualified-browser-pending",
+  "profile": "Real GCC 17 C/C++ frontend and RTL backend, strong function/data aliases, wasm32-wasi-preview1, static single-threaded GNU runtime.",
+  "dependencies": [
+    "https://github.com/seo-rii/wasm-llvm/pull/99",
+    "https://github.com/seo-rii/wasm-llvm/pull/95"
+  ],
+  "sourceLock": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/sources.lock.json",
+    "bytes": 7801,
+    "sha256": "b67f012a85daaea1c5703d081fffc8b4d9a614d4cdd4eafbe86f8806963658ca"
+  },
+  "gccSource": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      },
+      {
+        "path": "patches/0012-anonymous-bitfield-abi.patch",
+        "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+        "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+      },
+      {
+        "path": "patches/0013-simd-saturating-arithmetic.patch",
+        "purpose": "Add signed/unsigned i8x16 and i16x8 saturating add/subtract optabs and typed GCC target builtins with explicit SIMD feature gating.",
+        "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+      },
+      {
+        "path": "patches/0014-gnu-float128.patch",
+        "purpose": "Expose GNU __float128, exact Q/q literal typing, distinct C++ mangling, consistent same-format conversion ranks and GNU library feature detection over the qualified binary128 representation.",
+        "sha256": "703b8ab823b53d815f1edd0d89dab60a5cd3cde2871b7c956705d96cf53d4476"
+      },
+      {
+        "path": "patches/0015-simd-conversions.patch",
+        "purpose": "Add baseline SIMD conversion optabs and exactly typed saturation builtins, with composed packs/high halves and existing scalar fallbacks.",
+        "sha256": "6ed61fc595bc513fc64582e6983fe27f2c0a7aa7e291e4e50af02f4f60c4133a"
+      },
+      {
+        "path": "patches/0016-wasm-simd128-header.patch",
+        "purpose": "Install the documented 169-name SIMD128 header, typed direct lane operations and scalar/vector partial-copy legalization without changing the public vector ABI.",
+        "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+      },
+      {
+        "path": "patches/0017-symbol-aliases.patch",
+        "purpose": "Define strong function/data aliases with shared addresses and independent symbol binding, visibility and relocations.",
+        "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e"
+      }
+    ],
+    "sourceDiffSha256": "152915d721c9b743f0345efd564bbf143bf53b8f7bf36b8f261dd25ba1cdd7d1"
+  },
+  "assemblerSource": {
+    "patches": [
+      {
+        "path": "patches/wabt-0001-simd-target-features.patch",
+        "purpose": "Record actual SIMD instructions and v128 types, merge target_features and reject malformed or conflicting declarations.",
+        "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6"
+      },
+      {
+        "path": "patches/wabt-0002-symbol-aliases.patch",
+        "purpose": "Resolve strong symbol aliases and preserve independent linking names and relocation identities through annotated WAT and binary round trips.",
+        "sha256": "ecc5664fb48d4337fad9c469076c06cf97162dae870ee76d7eb948233d83a759"
+      }
+    ],
+    "sourceDiffSha256": "1cf55c9739b0fddc3177d2dbfe0899403140b18fc41b64a5a912d1aaffc7f8eb",
+    "submodules": {
+      "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
+    },
+    "wabtCommit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173"
+  },
+  "patches": [
+    {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/patches/0017-symbol-aliases.patch",
+      "bytes": 3067,
+      "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e"
+    },
+    {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/patches/wabt-0002-symbol-aliases.patch",
+      "bytes": 36898,
+      "sha256": "ecc5664fb48d4337fad9c469076c06cf97162dae870ee76d7eb948233d83a759"
+    }
+  ],
+  "gnuRuntimePatch": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/patches/libstdcxx-wasi-config.patch",
+    "bytes": 9823,
+    "sha256": "a616d2d51da9d9292c0bfa472b529069d800c9667fd9e57e5ba9bc4066a95b9e"
+  },
+  "fixtures": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/symbol-alias-fixtures.mjs",
+    "bytes": 13913,
+    "sha256": "34d121cbe9c6efee3a6db552d8657343e3d12c50b71880339c0bbdeb33d063e1"
+  },
+  "nativeCompiler": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/native-build.json",
+    "bytes": 6143,
+    "sha256": "ae299b2ccbcd72bff1efb641446117bebae28050f6b9dc642d91064a6c924c79"
+  },
+  "nativeValidation": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/final-native-status.json",
+    "bytes": 41986,
+    "sha256": "30384a5cb8163f6fb9a8ccf5ca868bf6f962f477d8c26ba1b97af50309ed5ff2"
+  },
+  "nativeSuites": [
+    {
+      "id": "symbol-alias-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-symbol-alias.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/qualification.json",
+        "bytes": 2221131,
+        "sha256": "cfe6b896bd2438485031a0210d62e0082fee9199e5424fe5ff6873026e48d1ec"
+      },
+      "cases": 106,
+      "diagnostics": 40,
+      "counts": {
+        "programs": 106,
+        "diagnostics": 40,
+        "linkRejections": 32
+      }
+    },
+    {
+      "id": "symbol-alias-assembler-qualification",
+      "command": [
+        "python3",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-wabt-symbol-alias.py",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--reference",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/report.json",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-assembler-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-assembler-qualification/report.json",
+        "bytes": 1939004,
+        "sha256": "fb71af9d4d592c5b9828b60a4f4a4081524fba231817ae5a6dfcdda91c86f21a"
+      },
+      "cases": 239,
+      "diagnostics": 0,
+      "counts": {
+        "checks": 239,
+        "commands": 694,
+        "executions": 108,
+        "roundtrips": 110,
+        "rejections": 21
+      }
+    },
+    {
+      "id": "native-smoke",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/qualify-native.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-idle-gcc-filesystem-343-20261030/scripts/gcc-wasi-fixtures.mjs",
+        "--cases",
+        "c-hello,c-core,c-libm,c-wide-integers-o0,c-wide-integers-o2,c-errno,c-multiple,c-defines,c-wasm32-abi,cpp-core,cpp-static-lifecycle,cpp-typedef-void-o0,cpp-typedef-void-o2",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/native-programs"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/native-programs/provenance.json",
+        "bytes": 76361,
+        "sha256": "c151e515b503ea13f7bb171f97cf40788d15e1c55443596499ba1fa77ba643d9"
+      },
+      "cases": 13,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-header-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-simd-header.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-header-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-header-qualification/qualification.json",
+        "bytes": 52419450,
+        "sha256": "b2c19744da3f6e731ee1246d46d60f64c73a43755351681697c1b1b1586c39f4"
+      },
+      "cases": 680,
+      "diagnostics": 296,
+      "defaultControls": 4,
+      "clangOracleExecutions": 0,
+      "counts": null
+    },
+    {
+      "id": "vector-subreg-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/vector-subreg-fixtures.mjs",
+        "--directions",
+        "gcc-gcc,clang-clang",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/vector-subreg-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/vector-subreg-qualification/report.json",
+        "bytes": 7691089,
+        "sha256": "b1c1978e1aa4b052e36fe63cabc4cfd3e45cb891c3a37bd290195425e8e05087"
+      },
+      "cases": 48,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "id": "half-vector-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-half-vector-abi.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/half-vector-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/half-vector-abi-qualification/report.json",
+        "bytes": 222077,
+        "sha256": "a2d09a23c58cda71e44aed5a149c3b40580060b82a28b77b165f3461f1d93ee3"
+      },
+      "cases": 48,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": null
+    },
+    {
+      "id": "gnu-float128-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/sysroot",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/gnu-float128-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gnu-float128-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gnu-float128-qualification/report.json",
+        "bytes": 9522639,
+        "sha256": "0ad7e822910fd18f6dcdf830cb21376a28b6ab5f5a0c9e59047d896204e429aa"
+      },
+      "cases": 78,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 78,
+        "passed": 78,
+        "failed": 0
+      }
+    },
+    {
+      "id": "abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/abi-interop.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/abi-qualification/report.json",
+        "bytes": 1336251,
+        "sha256": "6ca23cdd7d4b7500a3e502dde5dc5b6443dba68b11c0c4e4cf7cae95aa2f31d0"
+      },
+      "cases": 200,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 200,
+        "passed": 200,
+        "failed": 0
+      }
+    },
+    {
+      "id": "atomic-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-atomic-libcall.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/atomic-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/atomic-abi-qualification/report.json",
+        "bytes": 60351,
+        "sha256": "6c8b54b8ed2dadb3721548f3150e56a7492ba2ab789dc8dfe2c33d146a4e3fc2"
+      },
+      "cases": 8,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 8,
+        "passed": 8
+      }
+    },
+    {
+      "id": "simd-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-simd.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-qualification/qualification.json",
+        "bytes": 549807,
+        "sha256": "20a5f043fa8d59bd378bc251ef88d2e6bba881be8068abc6c7c99052780ac019"
+      },
+      "cases": 25,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-extended-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-simd-extended.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--oracle",
+        "clang",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-extended-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-extended-qualification/qualification.json",
+        "bytes": 3248342,
+        "sha256": "c9a449502dbc8e03c1091e77f32ad1e9ff4bd0aecd4086faab1493692a71c696"
+      },
+      "cases": 62,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 62,
+      "counts": null
+    },
+    {
+      "id": "simd-saturating-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-simd-saturating.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-saturating-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-saturating-qualification/qualification.json",
+        "bytes": 1472301,
+        "sha256": "e6a68281a5bc34c99b4ebe3bba8406d396348579eeea8950da372f2cfeca4c9f"
+      },
+      "cases": 36,
+      "diagnostics": 80,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-conversions-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-simd-conversions.mjs",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-conversions-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-conversions-qualification/qualification.json",
+        "bytes": 9376714,
+        "sha256": "3a95893e46334474e18b287abcaa6d334890a77881b1818e5dce9764c981e823"
+      },
+      "cases": 176,
+      "diagnostics": 192,
+      "defaultControls": 12,
+      "clangOracleExecutions": 0,
+      "counts": null
+    },
+    {
+      "id": "vector-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-vector-abi.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/vector-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/vector-abi-qualification/report.json",
+        "bytes": 65442482,
+        "sha256": "346cf82d7dc177ccaea6a719b2882be1c9c2d6a045e1a48699d8676dad7fe5a8"
+      },
+      "cases": 684,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 684,
+        "passed": 684,
+        "failed": 0
+      }
+    },
+    {
+      "id": "empty-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-empty-abi.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/empty-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/empty-abi-qualification/report.json",
+        "bytes": 6630403,
+        "sha256": "61bafa6b3f864cf3a0509540037bc9cdbf2f73a9ac635f97713f061df0bcd161"
+      },
+      "cases": 112,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 112,
+        "passed": 112,
+        "failed": 0
+      }
+    },
+    {
+      "id": "wide-builtins-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-builtins-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/wide-builtins-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/wide-builtins-qualification/report.json",
+        "bytes": 8456330,
+        "sha256": "4049ed07d47e0e6a7e511dbfaf8342bdf85c9b027d30aed2939fb78bc6df244b"
+      },
+      "cases": 50,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 50,
+        "passed": 50,
+        "failed": 0
+      }
+    },
+    {
+      "id": "wide-bitfields-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-bitfields-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/wide-bitfields-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/wide-bitfields-qualification/report.json",
+        "bytes": 11028640,
+        "sha256": "de8e22d1b81e72a67dfd552ba908643bc7e5c2b65bddd8bbb3872d43366a9ac9"
+      },
+      "cases": 72,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 72,
+        "passed": 72,
+        "failed": 0
+      }
+    },
+    {
+      "id": "singleton-bitfield-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/singleton-bitfield-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/singleton-bitfield-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/singleton-bitfield-qualification/report.json",
+        "bytes": 7710613,
+        "sha256": "650914877b9539ce62c4b58578d83cc0967a2b76d3dfe3e16aef93c0c83c5b3a"
+      },
+      "cases": 32,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0
+      }
+    },
+    {
+      "id": "anonymous-bitfield-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/anonymous-bitfield-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/anonymous-bitfield-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/anonymous-bitfield-qualification/report.json",
+        "bytes": 17143247,
+        "sha256": "cb9a76805e978602a581cfc5f4870e6528b999fb860a8f4efdb4656a4000ecde"
+      },
+      "cases": 160,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 160,
+        "passed": 160,
+        "failed": 0
+      }
+    },
+    {
+      "id": "long-double-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-long-double.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/long-double-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/long-double-qualification/report.json",
+        "bytes": 14322239,
+        "sha256": "0e58f82d4ab7600be29323dc633362714668bc926bbdedab7a33a75c6227d292"
+      },
+      "cases": 124,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 124,
+        "passed": 124,
+        "failed": 0
+      }
+    },
+    {
+      "id": "int128-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/test-int128.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/int128-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/int128-qualification/report.json",
+        "bytes": 13948930,
+        "sha256": "cb443c843296f0c1459798eefab9198b9bbf3563202de0df6f7a50e4d4285a70"
+      },
+      "cases": 116,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 116,
+        "passed": 116,
+        "failed": 0
+      }
+    },
+    {
+      "id": "fp-extension-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/producer/gcc-wasi/fp-extension-native.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/fp-extension-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/fp-extension-qualification/report.json",
+        "bytes": 12353055,
+        "sha256": "c63cba93d0acda59b423bb160b2330101f0168a69933398c0a7ee89caaf37126"
+      },
+      "cases": 124,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "clangOracleExecutions": 0,
+      "counts": {
+        "total": 124,
+        "passed": 124,
+        "failed": 0
+      }
+    }
+  ],
+  "aliasQualification": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/qualification.json",
+    "bytes": 2221131,
+    "sha256": "cfe6b896bd2438485031a0210d62e0082fee9199e5424fe5ff6873026e48d1ec"
+  },
+  "aliasPrograms": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/report.json",
+    "bytes": 10604078,
+    "sha256": "28cad37b3591d37ef539d5829b3c25d24db7383022731099eddc929b6c01d2ef"
+  },
+  "aliasCounts": {
+    "programs": 106,
+    "diagnostics": 40,
+    "linkRejections": 32
+  },
+  "aliasGate": {
+    "status": "passed",
+    "kind": "issue80-actual-alias-package-gate-preflight",
+    "reopened": {
+      "objects": 259,
+      "programs": 106,
+      "diagnostics": 40,
+      "linkRejections": 32
+    },
+    "qualification": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/qualification.json",
+      "bytes": 2221131,
+      "sha256": "cfe6b896bd2438485031a0210d62e0082fee9199e5424fe5ff6873026e48d1ec"
+    },
+    "recipes": {
+      "package": {
+        "bytes": 89111,
+        "sha256": "7f60679baa68d11e1d48ae5d8d3a17bcf74df5f716d546a6227afb88ff891ca1"
+      },
+      "aliasGate": {
+        "bytes": 8834,
+        "sha256": "0c76a4bc4e5d4ad233e16077ff48e3c1f0b5a84748cd13b9bd42c388b82584d2"
+      }
+    }
+  },
+  "aliasCases": [
+    {
+      "id": "symbol-alias-forward-chains-c-o0-gcc-gcc",
+      "fixture": "symbol-alias-forward-chains-c-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-gcc-gcc/unit0.o",
+          "bytes": 1016,
+          "sha256": "24a036cf0c77733da346ff9bd2b34bc65a3c6c8bf321f6000f453e76813d1486"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-gcc-gcc/unit1.o",
+          "bytes": 263,
+          "sha256": "6f4235a56a37e69e7469e258ef1b8278734ec577f6fdd4f7aee0e173a95d9ff3"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o0-gcc-clang",
+      "fixture": "symbol-alias-forward-chains-c-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-gcc-clang/unit0.o",
+          "bytes": 1016,
+          "sha256": "125b269025430c509b644252456e9bb7cb69d8e58bb3f36207621d09ca184365"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-gcc-clang/unit1.o",
+          "bytes": 529,
+          "sha256": "c0ce91dbc0d9857ec052b750ed72f6f461474a0c2c54667395440085de6dbb7b"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o0-clang-gcc",
+      "fixture": "symbol-alias-forward-chains-c-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-clang-gcc/unit0.o",
+          "bytes": 1217,
+          "sha256": "294da1719680f7d7ed00cb61387d12be8a71a6cdfbce211e9657fdcfab6c5824"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-clang-gcc/unit1.o",
+          "bytes": 263,
+          "sha256": "6f4235a56a37e69e7469e258ef1b8278734ec577f6fdd4f7aee0e173a95d9ff3"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o0-clang-clang",
+      "fixture": "symbol-alias-forward-chains-c-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-clang-clang/unit0.o",
+          "bytes": 1217,
+          "sha256": "294da1719680f7d7ed00cb61387d12be8a71a6cdfbce211e9657fdcfab6c5824"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o0-clang-clang/unit1.o",
+          "bytes": 529,
+          "sha256": "c0ce91dbc0d9857ec052b750ed72f6f461474a0c2c54667395440085de6dbb7b"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o2-gcc-gcc",
+      "fixture": "symbol-alias-forward-chains-c-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-gcc-gcc/unit0.o",
+          "bytes": 908,
+          "sha256": "d684b2fcb9b916b295c16c5469e36520da15124bbf3622b8bc2d3bd6d9c324c5"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-gcc-gcc/unit1.o",
+          "bytes": 243,
+          "sha256": "2415054f209f9e8934d6a920a002af3176bb865c2867b5c2798466000024e82e"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o2-gcc-clang",
+      "fixture": "symbol-alias-forward-chains-c-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-gcc-clang/unit0.o",
+          "bytes": 908,
+          "sha256": "48bb364fe876c417ddcc58b7d51f0b65dd0501b71567e3b82dfc3a54b7f2c3cd"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-gcc-clang/unit1.o",
+          "bytes": 457,
+          "sha256": "956475bc4794d05b4ebed00cb897b5df163a2b14f32fbdb6eac1dfd8aa30ae85"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o2-clang-gcc",
+      "fixture": "symbol-alias-forward-chains-c-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-clang-gcc/unit0.o",
+          "bytes": 1179,
+          "sha256": "aa6c9f24d235941ca96037d839d2be9f8f4e84003849d9cab479d5d5e5797bb8"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-clang-gcc/unit1.o",
+          "bytes": 243,
+          "sha256": "2415054f209f9e8934d6a920a002af3176bb865c2867b5c2798466000024e82e"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-c-o2-clang-clang",
+      "fixture": "symbol-alias-forward-chains-c-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-clang-clang/unit0.o",
+          "bytes": 1179,
+          "sha256": "aa6c9f24d235941ca96037d839d2be9f8f4e84003849d9cab479d5d5e5797bb8"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-c-o2-clang-clang/unit1.o",
+          "bytes": 457,
+          "sha256": "956475bc4794d05b4ebed00cb897b5df163a2b14f32fbdb6eac1dfd8aa30ae85"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o0-gcc-gcc",
+      "fixture": "symbol-alias-forward-chains-cpp-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-gcc-gcc/unit0.o",
+          "bytes": 1057,
+          "sha256": "82e0d5af40ef6b0fa868659288ef4329fb8f71c42c2cbf814043ca7357e6f01d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-gcc-gcc/unit1.o",
+          "bytes": 263,
+          "sha256": "6f4235a56a37e69e7469e258ef1b8278734ec577f6fdd4f7aee0e173a95d9ff3"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o0-gcc-clang",
+      "fixture": "symbol-alias-forward-chains-cpp-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-gcc-clang/unit0.o",
+          "bytes": 1057,
+          "sha256": "e70231795e6b01768d889c37ee626a483a799c0b298b0ad886375ea5c335f35d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-gcc-clang/unit1.o",
+          "bytes": 529,
+          "sha256": "c0ce91dbc0d9857ec052b750ed72f6f461474a0c2c54667395440085de6dbb7b"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o0-clang-gcc",
+      "fixture": "symbol-alias-forward-chains-cpp-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-clang-gcc/unit0.o",
+          "bytes": 1217,
+          "sha256": "294da1719680f7d7ed00cb61387d12be8a71a6cdfbce211e9657fdcfab6c5824"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-clang-gcc/unit1.o",
+          "bytes": 263,
+          "sha256": "6f4235a56a37e69e7469e258ef1b8278734ec577f6fdd4f7aee0e173a95d9ff3"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o0-clang-clang",
+      "fixture": "symbol-alias-forward-chains-cpp-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-clang-clang/unit0.o",
+          "bytes": 1217,
+          "sha256": "294da1719680f7d7ed00cb61387d12be8a71a6cdfbce211e9657fdcfab6c5824"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o0-clang-clang/unit1.o",
+          "bytes": 529,
+          "sha256": "c0ce91dbc0d9857ec052b750ed72f6f461474a0c2c54667395440085de6dbb7b"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o2-gcc-gcc",
+      "fixture": "symbol-alias-forward-chains-cpp-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-gcc-gcc/unit0.o",
+          "bytes": 908,
+          "sha256": "d0606514554bb17066dafa8c699e47995471a60d9202bd5e65902ad22c84fde8"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-gcc-gcc/unit1.o",
+          "bytes": 243,
+          "sha256": "2415054f209f9e8934d6a920a002af3176bb865c2867b5c2798466000024e82e"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o2-gcc-clang",
+      "fixture": "symbol-alias-forward-chains-cpp-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-gcc-clang/unit0.o",
+          "bytes": 908,
+          "sha256": "1b0eb5953cc9a761b7d17c5ba068b41cb58e1d91deaac05f6837d8805489dacc"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-gcc-clang/unit1.o",
+          "bytes": 457,
+          "sha256": "956475bc4794d05b4ebed00cb897b5df163a2b14f32fbdb6eac1dfd8aa30ae85"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o2-clang-gcc",
+      "fixture": "symbol-alias-forward-chains-cpp-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-clang-gcc/unit0.o",
+          "bytes": 1179,
+          "sha256": "aa6c9f24d235941ca96037d839d2be9f8f4e84003849d9cab479d5d5e5797bb8"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-clang-gcc/unit1.o",
+          "bytes": 243,
+          "sha256": "2415054f209f9e8934d6a920a002af3176bb865c2867b5c2798466000024e82e"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-forward-chains-cpp-o2-clang-clang",
+      "fixture": "symbol-alias-forward-chains-cpp-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 23 30 37\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-clang-clang/unit0.o",
+          "bytes": 1179,
+          "sha256": "aa6c9f24d235941ca96037d839d2be9f8f4e84003849d9cab479d5d5e5797bb8"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-forward-chains-cpp-o2-clang-clang/unit1.o",
+          "bytes": 457,
+          "sha256": "956475bc4794d05b4ebed00cb897b5df163a2b14f32fbdb6eac1dfd8aa30ae85"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o0-gcc-gcc",
+      "fixture": "symbol-alias-data-storage-c-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-gcc-gcc/unit0.o",
+          "bytes": 1912,
+          "sha256": "51e16f78350ef0d16b3f9020e6bcf07add9f4c0e56211ac21a95e97c286a7ce4"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-gcc-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "0508068cc6d11c9a82fce7c8ed6ad6ec159b2df320db06e1b60449b5cd983713"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o0-gcc-clang",
+      "fixture": "symbol-alias-data-storage-c-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-gcc-clang/unit0.o",
+          "bytes": 1912,
+          "sha256": "c18173b2786975ef4720c6f132ee00fe11b53eaf33f65f56a9679fea9f889d79"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-gcc-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o0-clang-gcc",
+      "fixture": "symbol-alias-data-storage-c-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-clang-gcc/unit0.o",
+          "bytes": 1761,
+          "sha256": "7d2b328568a7af4ecc7f222d54a32c9eadaea15e14eeb6a35cb96ccdf7631c6c"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-clang-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "0508068cc6d11c9a82fce7c8ed6ad6ec159b2df320db06e1b60449b5cd983713"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o0-clang-clang",
+      "fixture": "symbol-alias-data-storage-c-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-clang-clang/unit0.o",
+          "bytes": 1761,
+          "sha256": "7d2b328568a7af4ecc7f222d54a32c9eadaea15e14eeb6a35cb96ccdf7631c6c"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o0-clang-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o2-gcc-gcc",
+      "fixture": "symbol-alias-data-storage-c-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-gcc-gcc/unit0.o",
+          "bytes": 1565,
+          "sha256": "ddc742186a5cb575ed066356263394059e6d6c24ecbb0019dd10d7b1eb1c1aec"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-gcc-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "468c9330348c43267c37656447a39f1602233fa1032e6876c586d7e3be7503ab"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o2-gcc-clang",
+      "fixture": "symbol-alias-data-storage-c-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-gcc-clang/unit0.o",
+          "bytes": 1565,
+          "sha256": "a9508f03d3b705ec90c165ee67d16e5215d3e222726078fc40007dc74e282cb3"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-gcc-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o2-clang-gcc",
+      "fixture": "symbol-alias-data-storage-c-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-clang-gcc/unit0.o",
+          "bytes": 1737,
+          "sha256": "313c369538d3aa799b3834936cffa3def656256d8dfa3a9cefe98770b112be97"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-clang-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "468c9330348c43267c37656447a39f1602233fa1032e6876c586d7e3be7503ab"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-c-o2-clang-clang",
+      "fixture": "symbol-alias-data-storage-c-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-clang-clang/unit0.o",
+          "bytes": 1737,
+          "sha256": "313c369538d3aa799b3834936cffa3def656256d8dfa3a9cefe98770b112be97"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-c-o2-clang-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o0-gcc-gcc",
+      "fixture": "symbol-alias-data-storage-cpp-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-gcc-gcc/unit0.o",
+          "bytes": 1960,
+          "sha256": "406c92121c42e5ba86124939c69ee50ee68812394d546ac85aa44145c8e8fdb2"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-gcc-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "0508068cc6d11c9a82fce7c8ed6ad6ec159b2df320db06e1b60449b5cd983713"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o0-gcc-clang",
+      "fixture": "symbol-alias-data-storage-cpp-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-gcc-clang/unit0.o",
+          "bytes": 1960,
+          "sha256": "2119f291882900dea783186fe96c627771583e2303a22a0b730e53390a0c890d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-gcc-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o0-clang-gcc",
+      "fixture": "symbol-alias-data-storage-cpp-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-clang-gcc/unit0.o",
+          "bytes": 1761,
+          "sha256": "7d2b328568a7af4ecc7f222d54a32c9eadaea15e14eeb6a35cb96ccdf7631c6c"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-clang-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "0508068cc6d11c9a82fce7c8ed6ad6ec159b2df320db06e1b60449b5cd983713"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o0-clang-clang",
+      "fixture": "symbol-alias-data-storage-cpp-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-clang-clang/unit0.o",
+          "bytes": 1761,
+          "sha256": "7d2b328568a7af4ecc7f222d54a32c9eadaea15e14eeb6a35cb96ccdf7631c6c"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o0-clang-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o2-gcc-gcc",
+      "fixture": "symbol-alias-data-storage-cpp-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-gcc-gcc/unit0.o",
+          "bytes": 1565,
+          "sha256": "8e9ec32323e953fcf3daa60cbff0cace39c7873e12e3747429433727dc6746b9"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-gcc-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "468c9330348c43267c37656447a39f1602233fa1032e6876c586d7e3be7503ab"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o2-gcc-clang",
+      "fixture": "symbol-alias-data-storage-cpp-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-gcc-clang/unit0.o",
+          "bytes": 1565,
+          "sha256": "1bef27dab0a626fa88051dd6a90515de4f52bfe0df2aaf58e49a8a051d764691"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-gcc-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o2-clang-gcc",
+      "fixture": "symbol-alias-data-storage-cpp-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-clang-gcc/unit0.o",
+          "bytes": 1737,
+          "sha256": "313c369538d3aa799b3834936cffa3def656256d8dfa3a9cefe98770b112be97"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-clang-gcc/unit1.o",
+          "bytes": 378,
+          "sha256": "468c9330348c43267c37656447a39f1602233fa1032e6876c586d7e3be7503ab"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-data-storage-cpp-o2-clang-clang",
+      "fixture": "symbol-alias-data-storage-cpp-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 17 1 4 11 9 1 103 4\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-clang-clang/unit0.o",
+          "bytes": 1737,
+          "sha256": "313c369538d3aa799b3834936cffa3def656256d8dfa3a9cefe98770b112be97"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-data-storage-cpp-o2-clang-clang/unit1.o",
+          "bytes": 708,
+          "sha256": "a4550c0d8c08662efde6e6caf53063d8233a036c2e648a43ff6ce45ed03c0d89"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o0-gcc-gcc",
+      "fixture": "symbol-alias-visibility-c-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-gcc-gcc/unit0.o",
+          "bytes": 1335,
+          "sha256": "ddded49040ff6b825c99591f5ccd0454a6b70475d340ed57561a23534cf2b48b"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-gcc-gcc/unit1.o",
+          "bytes": 1368,
+          "sha256": "12149e9df86a55b5388dc31b0d4029493a6d9e6a3bfdb154ac2a40c5d366a4d9"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o0-gcc-clang",
+      "fixture": "symbol-alias-visibility-c-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-gcc-clang/unit0.o",
+          "bytes": 1335,
+          "sha256": "26af5c7357e956986a6c0059abb2832826ab23f0a9beef3dd1fc0d7767a4c5c6"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-gcc-clang/unit1.o",
+          "bytes": 1231,
+          "sha256": "5950bace85c417bdc6f037a3f01e379966fa08dfa9447cb2dba183d8b998879c"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o0-clang-gcc",
+      "fixture": "symbol-alias-visibility-c-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-clang-gcc/unit0.o",
+          "bytes": 1339,
+          "sha256": "7c3f3f25232ffc98592ba4076211d64ee2066c14ddd1d57daa512bb83fa30a29"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-clang-gcc/unit1.o",
+          "bytes": 1368,
+          "sha256": "12149e9df86a55b5388dc31b0d4029493a6d9e6a3bfdb154ac2a40c5d366a4d9"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o0-clang-clang",
+      "fixture": "symbol-alias-visibility-c-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-clang-clang/unit0.o",
+          "bytes": 1339,
+          "sha256": "7c3f3f25232ffc98592ba4076211d64ee2066c14ddd1d57daa512bb83fa30a29"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o0-clang-clang/unit1.o",
+          "bytes": 1231,
+          "sha256": "5950bace85c417bdc6f037a3f01e379966fa08dfa9447cb2dba183d8b998879c"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o2-gcc-gcc",
+      "fixture": "symbol-alias-visibility-c-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-gcc-gcc/unit0.o",
+          "bytes": 1069,
+          "sha256": "de94621e037d2ace0b678bc93266c0a1c0f358aa44d65ad1b7d4d6a6acdaaecf"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-gcc-gcc/unit1.o",
+          "bytes": 1015,
+          "sha256": "1455888be95b1ce31c669abca8818786384546fec7aea5e1b35dce5687f6a1f7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o2-gcc-clang",
+      "fixture": "symbol-alias-visibility-c-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-gcc-clang/unit0.o",
+          "bytes": 1069,
+          "sha256": "de94621e037d2ace0b678bc93266c0a1c0f358aa44d65ad1b7d4d6a6acdaaecf"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-gcc-clang/unit1.o",
+          "bytes": 1167,
+          "sha256": "452714a701ca4a5fd1c2f41a644b7e648aa23aecc7b429191a3ec5f90c2a7005"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o2-clang-gcc",
+      "fixture": "symbol-alias-visibility-c-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-clang-gcc/unit0.o",
+          "bytes": 1317,
+          "sha256": "e80b306c6175e0d9db9882743a332f42f18f88b28062b5a84b4e503b9293d0fb"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-clang-gcc/unit1.o",
+          "bytes": 1015,
+          "sha256": "1455888be95b1ce31c669abca8818786384546fec7aea5e1b35dce5687f6a1f7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-c-o2-clang-clang",
+      "fixture": "symbol-alias-visibility-c-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-clang-clang/unit0.o",
+          "bytes": 1317,
+          "sha256": "e80b306c6175e0d9db9882743a332f42f18f88b28062b5a84b4e503b9293d0fb"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-c-o2-clang-clang/unit1.o",
+          "bytes": 1167,
+          "sha256": "452714a701ca4a5fd1c2f41a644b7e648aa23aecc7b429191a3ec5f90c2a7005"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o0-gcc-gcc",
+      "fixture": "symbol-alias-visibility-cpp-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-gcc-gcc/unit0.o",
+          "bytes": 1377,
+          "sha256": "d8a08899e9bfb7695391681c8ce971735957664c35a5380f5fae34c3968eae51"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-gcc-gcc/unit1.o",
+          "bytes": 1372,
+          "sha256": "3f48bf90b42816219bde0a53a652bcda73059bff1562fc0fd21d903ac251e92d"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o0-gcc-clang",
+      "fixture": "symbol-alias-visibility-cpp-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-gcc-clang/unit0.o",
+          "bytes": 1377,
+          "sha256": "5da020307b3fa4aafa03b699a372bc8795344eba58fd9205082b9309cc6af829"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-gcc-clang/unit1.o",
+          "bytes": 1261,
+          "sha256": "aa656daeb1aded1f09ca05fd3ca2be0a1689520d83ed962c4892d8824a3e9ad2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o0-clang-gcc",
+      "fixture": "symbol-alias-visibility-cpp-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-clang-gcc/unit0.o",
+          "bytes": 1339,
+          "sha256": "7c3f3f25232ffc98592ba4076211d64ee2066c14ddd1d57daa512bb83fa30a29"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-clang-gcc/unit1.o",
+          "bytes": 1372,
+          "sha256": "3f48bf90b42816219bde0a53a652bcda73059bff1562fc0fd21d903ac251e92d"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o0-clang-clang",
+      "fixture": "symbol-alias-visibility-cpp-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-clang-clang/unit0.o",
+          "bytes": 1339,
+          "sha256": "7c3f3f25232ffc98592ba4076211d64ee2066c14ddd1d57daa512bb83fa30a29"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o0-clang-clang/unit1.o",
+          "bytes": 1261,
+          "sha256": "aa656daeb1aded1f09ca05fd3ca2be0a1689520d83ed962c4892d8824a3e9ad2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o2-gcc-gcc",
+      "fixture": "symbol-alias-visibility-cpp-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-gcc-gcc/unit0.o",
+          "bytes": 1069,
+          "sha256": "333539c3ed9cca933a6e93e7852f44a3744f33cd05f503846360b3b84c6b486a"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-gcc-gcc/unit1.o",
+          "bytes": 1015,
+          "sha256": "1455888be95b1ce31c669abca8818786384546fec7aea5e1b35dce5687f6a1f7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o2-gcc-clang",
+      "fixture": "symbol-alias-visibility-cpp-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-gcc-clang/unit0.o",
+          "bytes": 1069,
+          "sha256": "be15ce75bca064999bfbe61e338a8f8ee4814196a93ec46703c4b9568cc40358"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-gcc-clang/unit1.o",
+          "bytes": 1197,
+          "sha256": "cf6e1274427be46dbab90709b49fbe44f98a8fbed717ba53d8ae857f15068a22"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o2-clang-gcc",
+      "fixture": "symbol-alias-visibility-cpp-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-clang-gcc/unit0.o",
+          "bytes": 1317,
+          "sha256": "e80b306c6175e0d9db9882743a332f42f18f88b28062b5a84b4e503b9293d0fb"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-clang-gcc/unit1.o",
+          "bytes": 1015,
+          "sha256": "1455888be95b1ce31c669abca8818786384546fec7aea5e1b35dce5687f6a1f7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-visibility-cpp-o2-clang-clang",
+      "fixture": "symbol-alias-visibility-cpp-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 103 104 40\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-clang-clang/unit0.o",
+          "bytes": 1317,
+          "sha256": "e80b306c6175e0d9db9882743a332f42f18f88b28062b5a84b4e503b9293d0fb"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-visibility-cpp-o2-clang-clang/unit1.o",
+          "bytes": 1197,
+          "sha256": "cf6e1274427be46dbab90709b49fbe44f98a8fbed717ba53d8ae857f15068a22"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o0-gcc-gcc",
+      "fixture": "symbol-alias-pointer-relocations-c-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-gcc-gcc/unit0.o",
+          "bytes": 1371,
+          "sha256": "1f45bbc072c28f1b2b84c1d8e5387f642036dd1e0a394c5e8136d0ae0e7fa3c4"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-gcc-gcc/unit1.o",
+          "bytes": 419,
+          "sha256": "1884333deb4634edfe1c714105408a137c6eb4fa9a00ddf17b9e07662ec0a036"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o0-gcc-clang",
+      "fixture": "symbol-alias-pointer-relocations-c-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-gcc-clang/unit0.o",
+          "bytes": 1371,
+          "sha256": "eb3b4072e39fc7d2a712f868c4c93e5f50e01a7baccb276344ebf3d4acec16ff"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-gcc-clang/unit1.o",
+          "bytes": 782,
+          "sha256": "c466933e7dda4df469bf818d57467546a5ec8d28769200bdad99761e7a7be7df"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o0-clang-gcc",
+      "fixture": "symbol-alias-pointer-relocations-c-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-clang-gcc/unit0.o",
+          "bytes": 1321,
+          "sha256": "fa2dae32c848c5844c26a89505130ac8daac469c9e0cc9347d20e5019b1ac33d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-clang-gcc/unit1.o",
+          "bytes": 419,
+          "sha256": "1884333deb4634edfe1c714105408a137c6eb4fa9a00ddf17b9e07662ec0a036"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o0-clang-clang",
+      "fixture": "symbol-alias-pointer-relocations-c-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-clang-clang/unit0.o",
+          "bytes": 1321,
+          "sha256": "fa2dae32c848c5844c26a89505130ac8daac469c9e0cc9347d20e5019b1ac33d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o0-clang-clang/unit1.o",
+          "bytes": 782,
+          "sha256": "c466933e7dda4df469bf818d57467546a5ec8d28769200bdad99761e7a7be7df"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o2-gcc-gcc",
+      "fixture": "symbol-alias-pointer-relocations-c-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-gcc-gcc/unit0.o",
+          "bytes": 1114,
+          "sha256": "19482488f9165666225c9ef032d196b369acfc3b5ed66c6467e193dd75d9fc0a"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-gcc-gcc/unit1.o",
+          "bytes": 399,
+          "sha256": "db86e9d14a0f340e50554236491661c0902f783f40b7579d75e46f155a248486"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o2-gcc-clang",
+      "fixture": "symbol-alias-pointer-relocations-c-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-gcc-clang/unit0.o",
+          "bytes": 1114,
+          "sha256": "3bfab71f5558eaae4d9eb6aec314e84367de0134a2197c76162f1fc536ac4e1f"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-gcc-clang/unit1.o",
+          "bytes": 710,
+          "sha256": "1b5fa6906d22a76fbc2fae09bdd6ae32b327b82ade4517c9b45cdcb54fe82a30"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o2-clang-gcc",
+      "fixture": "symbol-alias-pointer-relocations-c-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-clang-gcc/unit0.o",
+          "bytes": 1236,
+          "sha256": "956813bb47567c7ab5640a7ef80e98b58489aee864507f250501135b7f2c6330"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-clang-gcc/unit1.o",
+          "bytes": 399,
+          "sha256": "db86e9d14a0f340e50554236491661c0902f783f40b7579d75e46f155a248486"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-c-o2-clang-clang",
+      "fixture": "symbol-alias-pointer-relocations-c-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-clang-clang/unit0.o",
+          "bytes": 1236,
+          "sha256": "956813bb47567c7ab5640a7ef80e98b58489aee864507f250501135b7f2c6330"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-c-o2-clang-clang/unit1.o",
+          "bytes": 710,
+          "sha256": "1b5fa6906d22a76fbc2fae09bdd6ae32b327b82ade4517c9b45cdcb54fe82a30"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o0-gcc-gcc",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-gcc-gcc/unit0.o",
+          "bytes": 1412,
+          "sha256": "6f45a6ea43c1e487db5b85e9015fd78dea20dc7f6603501aae4e60c58acb2c56"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-gcc-gcc/unit1.o",
+          "bytes": 419,
+          "sha256": "1884333deb4634edfe1c714105408a137c6eb4fa9a00ddf17b9e07662ec0a036"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o0-gcc-clang",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-gcc-clang/unit0.o",
+          "bytes": 1412,
+          "sha256": "a911e7f0c7cf21f913c8901454306eeea6da7e3dc3ed44c0cdbce128ca779b42"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-gcc-clang/unit1.o",
+          "bytes": 782,
+          "sha256": "c466933e7dda4df469bf818d57467546a5ec8d28769200bdad99761e7a7be7df"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o0-clang-gcc",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-clang-gcc/unit0.o",
+          "bytes": 1321,
+          "sha256": "fa2dae32c848c5844c26a89505130ac8daac469c9e0cc9347d20e5019b1ac33d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-clang-gcc/unit1.o",
+          "bytes": 419,
+          "sha256": "1884333deb4634edfe1c714105408a137c6eb4fa9a00ddf17b9e07662ec0a036"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o0-clang-clang",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-clang-clang/unit0.o",
+          "bytes": 1321,
+          "sha256": "fa2dae32c848c5844c26a89505130ac8daac469c9e0cc9347d20e5019b1ac33d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o0-clang-clang/unit1.o",
+          "bytes": 782,
+          "sha256": "c466933e7dda4df469bf818d57467546a5ec8d28769200bdad99761e7a7be7df"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o2-gcc-gcc",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-gcc-gcc/unit0.o",
+          "bytes": 1114,
+          "sha256": "d23c96a7c04a7c8356d12114cdef759beff4c4275fc56c0e0d3b945e4ec2783f"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-gcc-gcc/unit1.o",
+          "bytes": 399,
+          "sha256": "db86e9d14a0f340e50554236491661c0902f783f40b7579d75e46f155a248486"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o2-gcc-clang",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-gcc-clang/unit0.o",
+          "bytes": 1114,
+          "sha256": "2f3da09afcb7168c2815516c7307dff012fa98dce170db55f21c66e9cfe9a733"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-gcc-clang/unit1.o",
+          "bytes": 710,
+          "sha256": "1b5fa6906d22a76fbc2fae09bdd6ae32b327b82ade4517c9b45cdcb54fe82a30"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o2-clang-gcc",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-clang-gcc/unit0.o",
+          "bytes": 1236,
+          "sha256": "956813bb47567c7ab5640a7ef80e98b58489aee864507f250501135b7f2c6330"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-clang-gcc/unit1.o",
+          "bytes": 399,
+          "sha256": "db86e9d14a0f340e50554236491661c0902f783f40b7579d75e46f155a248486"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-pointer-relocations-cpp-o2-clang-clang",
+      "fixture": "symbol-alias-pointer-relocations-cpp-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 36 1 1 1 23\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-clang-clang/unit0.o",
+          "bytes": 1236,
+          "sha256": "956813bb47567c7ab5640a7ef80e98b58489aee864507f250501135b7f2c6330"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-pointer-relocations-cpp-o2-clang-clang/unit1.o",
+          "bytes": 710,
+          "sha256": "1b5fa6906d22a76fbc2fae09bdd6ae32b327b82ade4517c9b45cdcb54fe82a30"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o0-gcc-gcc",
+      "fixture": "symbol-alias-function-abi-c-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-gcc-gcc/unit0.o",
+          "bytes": 2166,
+          "sha256": "906ff535840285f3ce8c3a247f00894b569376d2f8a803ca252949854a45131c"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-gcc-gcc/unit1.o",
+          "bytes": 544,
+          "sha256": "c9bdfd45637b0f66b84b1860c5117446805df9453bfea3b56d8699df8efe8afa"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o0-gcc-clang",
+      "fixture": "symbol-alias-function-abi-c-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-gcc-clang/unit0.o",
+          "bytes": 2166,
+          "sha256": "4bc05208cec66bb887ca714012c58cf3ddd496ada7a63c3770b3237b387d4b65"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-gcc-clang/unit1.o",
+          "bytes": 720,
+          "sha256": "44026196bdf186cf2fbd886c0af41adbaafecd81575ed58ce3dd8d74ed7ad26d"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o0-clang-gcc",
+      "fixture": "symbol-alias-function-abi-c-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-clang-gcc/unit0.o",
+          "bytes": 1894,
+          "sha256": "e13e6c575392f09898ed7db8f5a112b9d513866912f964650b53019f73affff0"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-clang-gcc/unit1.o",
+          "bytes": 544,
+          "sha256": "c9bdfd45637b0f66b84b1860c5117446805df9453bfea3b56d8699df8efe8afa"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o0-clang-clang",
+      "fixture": "symbol-alias-function-abi-c-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-clang-clang/unit0.o",
+          "bytes": 1894,
+          "sha256": "e13e6c575392f09898ed7db8f5a112b9d513866912f964650b53019f73affff0"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o0-clang-clang/unit1.o",
+          "bytes": 720,
+          "sha256": "44026196bdf186cf2fbd886c0af41adbaafecd81575ed58ce3dd8d74ed7ad26d"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o2-gcc-gcc",
+      "fixture": "symbol-alias-function-abi-c-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-gcc-gcc/unit0.o",
+          "bytes": 1516,
+          "sha256": "502ab2d706595067334976c4235d0d094bc0dee6f6fe9668e961bfa5c53bdf90"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-gcc-gcc/unit1.o",
+          "bytes": 455,
+          "sha256": "8bf2b42670fab9769b36f7e40e081fe7f68d4de347896d4a293dcb739f95eb6f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o2-gcc-clang",
+      "fixture": "symbol-alias-function-abi-c-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-gcc-clang/unit0.o",
+          "bytes": 1516,
+          "sha256": "e9b337df481f3b2b68b00787525ea4c0d597c837cbaf97b4c3207f2e4346fd97"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-gcc-clang/unit1.o",
+          "bytes": 579,
+          "sha256": "bb17e23797f2ac355c903e696cd4420f9bc104e3ebd6e8b046e440aa407c4da7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o2-clang-gcc",
+      "fixture": "symbol-alias-function-abi-c-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-clang-gcc/unit0.o",
+          "bytes": 1807,
+          "sha256": "2b16955fb7d48fd628bb85425a158d0c4947fc4c05ff166d342d6b570aa70075"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-clang-gcc/unit1.o",
+          "bytes": 455,
+          "sha256": "8bf2b42670fab9769b36f7e40e081fe7f68d4de347896d4a293dcb739f95eb6f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-c-o2-clang-clang",
+      "fixture": "symbol-alias-function-abi-c-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-clang-clang/unit0.o",
+          "bytes": 1807,
+          "sha256": "2b16955fb7d48fd628bb85425a158d0c4947fc4c05ff166d342d6b570aa70075"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-c-o2-clang-clang/unit1.o",
+          "bytes": 579,
+          "sha256": "bb17e23797f2ac355c903e696cd4420f9bc104e3ebd6e8b046e440aa407c4da7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o0-gcc-gcc",
+      "fixture": "symbol-alias-function-abi-cpp-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-gcc-gcc/unit0.o",
+          "bytes": 2272,
+          "sha256": "697116181121890bf5230cf2af41e1a40e1414b0df7234a8a7c199214488465d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-gcc-gcc/unit1.o",
+          "bytes": 604,
+          "sha256": "fc1e7da90c707b53816550aaeb722b073869da48a257d0b9161ce7866fed9ec2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o0-gcc-clang",
+      "fixture": "symbol-alias-function-abi-cpp-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-gcc-clang/unit0.o",
+          "bytes": 2272,
+          "sha256": "1b5d4f715878ab0bbb01030132d7b24a9254e700d11c0a3fe8894f1fbc5f3703"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-gcc-clang/unit1.o",
+          "bytes": 720,
+          "sha256": "44026196bdf186cf2fbd886c0af41adbaafecd81575ed58ce3dd8d74ed7ad26d"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o0-clang-gcc",
+      "fixture": "symbol-alias-function-abi-cpp-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-clang-gcc/unit0.o",
+          "bytes": 1944,
+          "sha256": "d14d9d347331a8cc19e0bb9539af222c0b4dda1b574ce3ab13c32ea3692d9f43"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-clang-gcc/unit1.o",
+          "bytes": 604,
+          "sha256": "fc1e7da90c707b53816550aaeb722b073869da48a257d0b9161ce7866fed9ec2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o0-clang-clang",
+      "fixture": "symbol-alias-function-abi-cpp-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-clang-clang/unit0.o",
+          "bytes": 1944,
+          "sha256": "d14d9d347331a8cc19e0bb9539af222c0b4dda1b574ce3ab13c32ea3692d9f43"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o0-clang-clang/unit1.o",
+          "bytes": 720,
+          "sha256": "44026196bdf186cf2fbd886c0af41adbaafecd81575ed58ce3dd8d74ed7ad26d"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o2-gcc-gcc",
+      "fixture": "symbol-alias-function-abi-cpp-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-gcc-gcc/unit0.o",
+          "bytes": 1516,
+          "sha256": "9a58eb12596f70e158d6c6fd29dcb9ed1f3b45cfabeff684e729e530e12190f5"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-gcc-gcc/unit1.o",
+          "bytes": 455,
+          "sha256": "8bf2b42670fab9769b36f7e40e081fe7f68d4de347896d4a293dcb739f95eb6f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o2-gcc-clang",
+      "fixture": "symbol-alias-function-abi-cpp-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-gcc-clang/unit0.o",
+          "bytes": 1516,
+          "sha256": "376477c4b6b8cebb2a992885298ffdd75dab7f28b8bde361c0c330b673526361"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-gcc-clang/unit1.o",
+          "bytes": 579,
+          "sha256": "bb17e23797f2ac355c903e696cd4420f9bc104e3ebd6e8b046e440aa407c4da7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o2-clang-gcc",
+      "fixture": "symbol-alias-function-abi-cpp-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-clang-gcc/unit0.o",
+          "bytes": 1807,
+          "sha256": "2b16955fb7d48fd628bb85425a158d0c4947fc4c05ff166d342d6b570aa70075"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-clang-gcc/unit1.o",
+          "bytes": 455,
+          "sha256": "8bf2b42670fab9769b36f7e40e081fe7f68d4de347896d4a293dcb739f95eb6f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-function-abi-cpp-o2-clang-clang",
+      "fixture": "symbol-alias-function-abi-cpp-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 1 1 1 1\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-clang-clang/unit0.o",
+          "bytes": 1807,
+          "sha256": "2b16955fb7d48fd628bb85425a158d0c4947fc4c05ff166d342d6b570aa70075"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-function-abi-cpp-o2-clang-clang/unit1.o",
+          "bytes": 579,
+          "sha256": "bb17e23797f2ac355c903e696cd4420f9bc104e3ebd6e8b046e440aa407c4da7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o0-gcc-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-c-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-gcc-gcc/unit0.o",
+          "bytes": 1220,
+          "sha256": "02a3ee14393cf3cb553b9da0e44ffa6352d1c2c4b0f7bf4c22357c661e167296"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-gcc-gcc/unit1.o",
+          "bytes": 297,
+          "sha256": "5082e19737d6d2c8cbe1fb4bc648cea7a3892a6aadf5f32c7962a73c74946bd2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o0-gcc-clang",
+      "fixture": "symbol-alias-asm-symbol-names-c-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-gcc-clang/unit0.o",
+          "bytes": 1220,
+          "sha256": "2c1781d8d5b4c75e2f37ec7c588352cfc496e6b49fd7d773ab36bcc5c6cf51f7"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-gcc-clang/unit1.o",
+          "bytes": 624,
+          "sha256": "3aceec9a773f1ad7cd37e9fc773ddf8343f07ab1e412e9c81a9d31044ee09fcd"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o0-clang-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-c-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-clang-gcc/unit0.o",
+          "bytes": 1252,
+          "sha256": "a15a052b09c74ce2fe7b0f1f3465d370a0fd89ad7dc4c45e82d9d2a45f40e453"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-clang-gcc/unit1.o",
+          "bytes": 297,
+          "sha256": "5082e19737d6d2c8cbe1fb4bc648cea7a3892a6aadf5f32c7962a73c74946bd2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o0-clang-clang",
+      "fixture": "symbol-alias-asm-symbol-names-c-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-clang-clang/unit0.o",
+          "bytes": 1252,
+          "sha256": "a15a052b09c74ce2fe7b0f1f3465d370a0fd89ad7dc4c45e82d9d2a45f40e453"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o0-clang-clang/unit1.o",
+          "bytes": 624,
+          "sha256": "3aceec9a773f1ad7cd37e9fc773ddf8343f07ab1e412e9c81a9d31044ee09fcd"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o2-gcc-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-c-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-gcc-gcc/unit0.o",
+          "bytes": 970,
+          "sha256": "e4220586f4919133b607e59c7b782d4df0688da7fd854b9c1d8e7e2c2debc0bc"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-gcc-gcc/unit1.o",
+          "bytes": 285,
+          "sha256": "848b39758c674cc0efb7c7a8ca5559c583ae872ab5acb8036843d1477e64d96f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o2-gcc-clang",
+      "fixture": "symbol-alias-asm-symbol-names-c-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-gcc-clang/unit0.o",
+          "bytes": 970,
+          "sha256": "4161fc9cf1dd4337e2d89baef9722d540360a102e8468ae7a3be7665695e3433"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-gcc-clang/unit1.o",
+          "bytes": 552,
+          "sha256": "c0441e7ee77797c44a5e4086504dd8d3e848c8bfb1a04767ffd3aa80a469ac51"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o2-clang-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-c-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-clang-gcc/unit0.o",
+          "bytes": 1238,
+          "sha256": "d75a9cccd2497c7d8c5b3edc8b493a0fe4ea3944b3d6dd4180e8807dc3fc083d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-clang-gcc/unit1.o",
+          "bytes": 285,
+          "sha256": "848b39758c674cc0efb7c7a8ca5559c583ae872ab5acb8036843d1477e64d96f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-c-o2-clang-clang",
+      "fixture": "symbol-alias-asm-symbol-names-c-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-clang-clang/unit0.o",
+          "bytes": 1238,
+          "sha256": "d75a9cccd2497c7d8c5b3edc8b493a0fe4ea3944b3d6dd4180e8807dc3fc083d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-c-o2-clang-clang/unit1.o",
+          "bytes": 552,
+          "sha256": "c0441e7ee77797c44a5e4086504dd8d3e848c8bfb1a04767ffd3aa80a469ac51"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o0-gcc-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-gcc-gcc/unit0.o",
+          "bytes": 1262,
+          "sha256": "0060cb80c391164b20ff0b7b798cb3b992d6d45035d94cf8a80b9164791c390a"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-gcc-gcc/unit1.o",
+          "bytes": 297,
+          "sha256": "5082e19737d6d2c8cbe1fb4bc648cea7a3892a6aadf5f32c7962a73c74946bd2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o0-gcc-clang",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-gcc-clang/unit0.o",
+          "bytes": 1262,
+          "sha256": "f7eb2bd8189ffbddb4fc2120736bbc585e4c06f805f36762f4d15bb281c7c391"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-gcc-clang/unit1.o",
+          "bytes": 624,
+          "sha256": "3aceec9a773f1ad7cd37e9fc773ddf8343f07ab1e412e9c81a9d31044ee09fcd"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o0-clang-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-clang-gcc/unit0.o",
+          "bytes": 1252,
+          "sha256": "a15a052b09c74ce2fe7b0f1f3465d370a0fd89ad7dc4c45e82d9d2a45f40e453"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-clang-gcc/unit1.o",
+          "bytes": 297,
+          "sha256": "5082e19737d6d2c8cbe1fb4bc648cea7a3892a6aadf5f32c7962a73c74946bd2"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o0-clang-clang",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-clang-clang/unit0.o",
+          "bytes": 1252,
+          "sha256": "a15a052b09c74ce2fe7b0f1f3465d370a0fd89ad7dc4c45e82d9d2a45f40e453"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o0-clang-clang/unit1.o",
+          "bytes": 624,
+          "sha256": "3aceec9a773f1ad7cd37e9fc773ddf8343f07ab1e412e9c81a9d31044ee09fcd"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o2-gcc-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-gcc-gcc/unit0.o",
+          "bytes": 970,
+          "sha256": "d6f7f47540e0fd02056eb2dc6a5ada5f95b90147e5a89e49ab906bbb511dcf02"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-gcc-gcc/unit1.o",
+          "bytes": 285,
+          "sha256": "848b39758c674cc0efb7c7a8ca5559c583ae872ab5acb8036843d1477e64d96f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o2-gcc-clang",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-gcc-clang/unit0.o",
+          "bytes": 970,
+          "sha256": "912d95e4a1ca7a0f5d008a90265e322e872aa7f1f1c99a061ce0c3224e781516"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-gcc-clang/unit1.o",
+          "bytes": 552,
+          "sha256": "c0441e7ee77797c44a5e4086504dd8d3e848c8bfb1a04767ffd3aa80a469ac51"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o2-clang-gcc",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-clang-gcc/unit0.o",
+          "bytes": 1238,
+          "sha256": "d75a9cccd2497c7d8c5b3edc8b493a0fe4ea3944b3d6dd4180e8807dc3fc083d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-clang-gcc/unit1.o",
+          "bytes": 285,
+          "sha256": "848b39758c674cc0efb7c7a8ca5559c583ae872ab5acb8036843d1477e64d96f"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-asm-symbol-names-cpp-o2-clang-clang",
+      "fixture": "symbol-alias-asm-symbol-names-cpp-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 14 10\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-clang-clang/unit0.o",
+          "bytes": 1238,
+          "sha256": "d75a9cccd2497c7d8c5b3edc8b493a0fe4ea3944b3d6dd4180e8807dc3fc083d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-asm-symbol-names-cpp-o2-clang-clang/unit1.o",
+          "bytes": 552,
+          "sha256": "c0441e7ee77797c44a5e4086504dd8d3e848c8bfb1a04767ffd3aa80a469ac51"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o0-gcc-gcc",
+      "fixture": "symbol-alias-cpp-mangling-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-gcc-gcc/unit0.o",
+          "bytes": 1711,
+          "sha256": "ac56d69e02d36861b10e8ada3973dceaf3f67b8ba08c1889322bc468b78e63fd"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-gcc-gcc/unit1.o",
+          "bytes": 422,
+          "sha256": "0a4d9d0034b26cebd4c69b366c0aaa530be443955108d42579d4af861168ace7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o0-gcc-clang",
+      "fixture": "symbol-alias-cpp-mangling-o0",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-gcc-clang/unit0.o",
+          "bytes": 1711,
+          "sha256": "298731286659c52b338b4f3ef9e6c0c562afa75cd366fcdc05a6bfa04594d3ea"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-gcc-clang/unit1.o",
+          "bytes": 712,
+          "sha256": "8f1f04c52d1f33d891b11ee91b54a04f3056054b50bd43231bdfae544957ee16"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o0-clang-gcc",
+      "fixture": "symbol-alias-cpp-mangling-o0",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-clang-gcc/unit0.o",
+          "bytes": 1500,
+          "sha256": "001af65abc031373de1371d1a51917e6036b7d906e9ede71cf3eab921992d3ff"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-clang-gcc/unit1.o",
+          "bytes": 422,
+          "sha256": "0a4d9d0034b26cebd4c69b366c0aaa530be443955108d42579d4af861168ace7"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o0-clang-clang",
+      "fixture": "symbol-alias-cpp-mangling-o0",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-clang-clang/unit0.o",
+          "bytes": 1500,
+          "sha256": "001af65abc031373de1371d1a51917e6036b7d906e9ede71cf3eab921992d3ff"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o0-clang-clang/unit1.o",
+          "bytes": 712,
+          "sha256": "8f1f04c52d1f33d891b11ee91b54a04f3056054b50bd43231bdfae544957ee16"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-gnu-typeinfo-o0-gcc-gcc",
+      "fixture": "symbol-alias-gnu-typeinfo-o0",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 0 1 0\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-gnu-typeinfo-o0-gcc-gcc/unit0.o",
+          "bytes": 2285,
+          "sha256": "1407e04700864d96df2fa890ac50acd0895e70931c6e48e4475868d25b24d632"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o2-gcc-gcc",
+      "fixture": "symbol-alias-cpp-mangling-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-gcc-gcc/unit0.o",
+          "bytes": 1257,
+          "sha256": "c20c8d9866cff105003678720db0baac16fed9b21b918ab37bdd41d8092a0c7c"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-gcc-gcc/unit1.o",
+          "bytes": 397,
+          "sha256": "320fa0df1c51b7a8558d976dda5ebebc6434f8b6af057caacf3e2fbc580a4f3b"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o2-gcc-clang",
+      "fixture": "symbol-alias-cpp-mangling-o2",
+      "direction": "gcc-clang",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-gcc-clang/unit0.o",
+          "bytes": 1257,
+          "sha256": "65c8195abaf4cf2d09ddfff91af6ba20738be4f9ea2835f8ed06724cb277ca0d"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-gcc-clang/unit1.o",
+          "bytes": 613,
+          "sha256": "9bf75c4aeed22ac148d48af435b20a596c78b1bcf78763d2e21739ef910be5d1"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o2-clang-gcc",
+      "fixture": "symbol-alias-cpp-mangling-o2",
+      "direction": "clang-gcc",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-clang-gcc/unit0.o",
+          "bytes": 1496,
+          "sha256": "c255c7b98ac7a909407e82ea1a33cda6dbe88cc3f750243d3aaa43d4e54fe917"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-clang-gcc/unit1.o",
+          "bytes": 397,
+          "sha256": "320fa0df1c51b7a8558d976dda5ebebc6434f8b6af057caacf3e2fbc580a4f3b"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-cpp-mangling-o2-clang-clang",
+      "fixture": "symbol-alias-cpp-mangling-o2",
+      "direction": "clang-clang",
+      "stdout": "1 1 1 13 1 8\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-clang-clang/unit0.o",
+          "bytes": 1496,
+          "sha256": "c255c7b98ac7a909407e82ea1a33cda6dbe88cc3f750243d3aaa43d4e54fe917"
+        },
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-cpp-mangling-o2-clang-clang/unit1.o",
+          "bytes": 613,
+          "sha256": "9bf75c4aeed22ac148d48af435b20a596c78b1bcf78763d2e21739ef910be5d1"
+        }
+      ]
+    },
+    {
+      "id": "symbol-alias-gnu-typeinfo-o2-gcc-gcc",
+      "fixture": "symbol-alias-gnu-typeinfo-o2",
+      "direction": "gcc-gcc",
+      "stdout": "1 1 0 1 0\n",
+      "objects": [
+        {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/programs/symbol-alias-gnu-typeinfo-o2-gcc-gcc/unit0.o",
+          "bytes": 1742,
+          "sha256": "3c109d852d1fb5bc6abf077fb7edb0a9d83ceb4faeb0808904db5053535cd5a4"
+        }
+      ]
+    }
+  ],
+  "diagnosticCompilers": {
+    "gcc": 24,
+    "clang": 16
+  },
+  "diagnosticBoundary": "Eight function/data-kind declarations are GCC-only negative controls because pinned Clang permits them. Both compilers reject undefined targets and cycles during code generation.",
+  "linkControls": {
+    "successfulSingleProvider": 16,
+    "duplicateRejections": 16,
+    "undefinedRejections": 16,
+    "fatalWarnings": true
+  },
+  "gnuRuntime": {
+    "build": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/build.json",
+      "bytes": 6544095,
+      "sha256": "ee797ef64474c9e03266b89da79cebf323e63c1c6ef7c39591bca4680cc11340"
+    },
+    "receipt": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/libstdcxx-build.json",
+      "bytes": 157849,
+      "sha256": "0e62effb76c262287864590328809681d1b4103718ad608c04c807665fb1afb6"
+    },
+    "qualification": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/qualification/qualification.json",
+      "bytes": 6386,
+      "sha256": "2913133b43c720b6ac2a3502a9863e36f54bc2ca15f60d68b2ef005ce7392e50"
+    },
+    "aliasArchive": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/libstdcxx-current/sysroot/lib/wasm32-wasi/libsupc++.a",
+      "bytes": 248428,
+      "sha256": "6851b4f91a4996dcd7977f3e080d08bb2e4f7f7b3b67ce52bd8e8f1f62af8775"
+    },
+    "aliasMember": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/gnu-tinfo.o",
+      "bytes": 1606,
+      "sha256": "51bbc90b73e2e6710d8751106863c6e6e9d3ae920175b081c51f626ae31f3d9c"
+    },
+    "aliasSymbols": [
+      {
+        "symbolIndex": 5,
+        "kind": "function",
+        "flags": 64,
+        "binding": "global",
+        "visibility": "default",
+        "undefined": false,
+        "entityIndex": 5,
+        "name": "_ZNKSt9type_infoeqERKS_"
+      },
+      {
+        "symbolIndex": 16,
+        "kind": "function",
+        "flags": 64,
+        "binding": "global",
+        "visibility": "default",
+        "undefined": false,
+        "entityIndex": 5,
+        "name": "_ZNKSt9type_info7__equalERKS_"
+      }
+    ],
+    "forwarderRemoved": true
+  },
+  "assemblerQualification": {
+    "report": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-assembler-qualification/report.json",
+      "bytes": 1939004,
+      "sha256": "fb71af9d4d592c5b9828b60a4f4a4081524fba231817ae5a6dfcdda91c86f21a"
+    },
+    "counts": {
+      "checks": 239,
+      "commands": 694,
+      "executions": 108,
+      "roundtrips": 110,
+      "rejections": 21
+    }
+  },
+  "assemblerLegacyControls": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-alias-draft/legacy-tests-production.json",
+    "bytes": 3061,
+    "sha256": "0d09c425e4e1c61818a52e3623f94966ec49a4c12fbc0b170c0c0d4ef3fb0656"
+  },
+  "assemblerLegacyBoundary": "Six pre-existing legacy expectation failures produce identical object bytes and objdump output under PR95 and the final alias assembler. One malformed fixture has three segment-info records for two data segments; its rejection has a dedicated positive/negative control.",
+  "targetFeaturesRegression": {
+    "report": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/target-features-qualification/qualification.json",
+      "bytes": 246819,
+      "sha256": "639e1fbdf20c8538b0c78f5ff53f639b22c519d1e6862043baeb52286010c481"
+    },
+    "assemblerProfiles": 62,
+    "gccPrograms": 6
+  },
+  "unitTests": {
+    "passed": 46,
+    "logs": [
+      {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-preparation/alias-gate-unit-tests-v2.log",
+        "bytes": 4447,
+        "sha256": "599b9060219b326e64e9909c198d66c530df474a83acabff979b87e9648f538d"
+      },
+      {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-preparation/assembler-lock-tests.log",
+        "bytes": 547,
+        "sha256": "484c7c156b49ebf13f7f674cc3a2f51a069f8459ad88fad7dba622160355da19"
+      }
+    ]
+  },
+  "preservedInitialAliasAttempt": {
+    "report": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification/programs/report.json",
+      "bytes": 10484914,
+      "sha256": "ec0cb0d995711efb2edc3e0161ce3caf52fb7a44c532e50ff309848f165f7a81"
+    },
+    "counts": {
+      "total": 106,
+      "passed": 102,
+      "failed": 4
+    },
+    "fixtureSnapshot": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-fixtures-draft/symbol-alias-fixtures.mjs",
+      "bytes": 13966,
+      "sha256": "0dc67a354e4a81d49237b67a71fc5aabdd7119c1162fcd6d7f253f13b354ab25"
+    },
+    "failedCases": [
+      "symbol-alias-visibility-cpp-o0-gcc-gcc",
+      "symbol-alias-visibility-cpp-o0-clang-gcc",
+      "symbol-alias-visibility-cpp-o2-gcc-gcc",
+      "symbol-alias-visibility-cpp-o2-clang-gcc"
+    ],
+    "cause": "The visibility fixture assumed Clang internal C-linkage mangling for C++ static targets. GCC correctly used C names. Explicit private assembler labels now preserve the local/hidden/default checks across both compilers; the public namespace/overload mangling tests remain unchanged."
+  },
+  "boundaries": [
+    "Weak aliases are explicitly rejected; weakref emission is issue81.",
+    "No expanded RTTI, exceptions, COMDAT, TLS, threads, symbol-versioning or dynamic-linking support.",
+    "Mixed compiler qualification covers the declared original-source fixtures, not general C++ ABI or runtime interchangeability."
+  ],
+  "logs": {
+    "gcc": {
+      "log": "/home/seorii/logs/wasm-llvm-80-gcc-native-qebpknrq.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-80-gcc-native-qebpknrq.log.status",
+        "bytes": 78,
+        "sha256": "36a1e0e1b369e9af5fe6cb59c9e63acd08068267c09265206a2da20992e51291"
+      }
+    },
+    "gnu": {
+      "log": "/home/seorii/logs/wasm-llvm-80-gnu-73wpuc17.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-80-gnu-73wpuc17.log.status",
+        "bytes": 1026,
+        "sha256": "03e5b09a6f884461837e10afd3086320c2698ce289f4f6bd2dbdfc68a3022fc4"
+      }
+    },
+    "alias-v2": {
+      "log": "/home/seorii/logs/wasm-llvm-80-alias-v2-nqq9dv40.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-80-alias-v2-nqq9dv40.log.status",
+        "bytes": 3318,
+        "sha256": "b2d1c1d478e75addd59bbef1e0af6956962869a4a559e0b54b6c55885fe000a8"
+      }
+    },
+    "regression": {
+      "log": "/home/seorii/logs/wasm-llvm-80-regression20-wzuo53nt.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-80-regression20-wzuo53nt.log.status",
+        "bytes": 31789,
+        "sha256": "51d951adfd0e021928153fcde421863dd3c589c0ea784bef855433e43cca60ed"
+      }
+    }
+  },
+  "browser": {
+    "status": "pending",
+    "plannedCanonicalPrograms": 1559,
+    "plannedDefaultPrograms": 4,
+    "plannedTargetFeaturePrograms": 6,
+    "plannedGccDiagnostics": 592,
+    "plannedProviderObjects": 26,
+    "plannedAliasAssemblerObjects": 110,
+    "plannedAliasAssemblerRejections": 18,
+    "plannedLinkControls": 8,
+    "plannedLinkRejections": 16,
+    "plan": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-plan.json",
+      "bytes": 258060,
+      "sha256": "f9547f5cd1801fa7ff298007bc030bae8737bc76c2ca11aa1155da85d6e90fa0"
+    }
+  }
+}
