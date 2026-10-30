@@ -10,6 +10,8 @@ import { deterministicTar } from '../clang-browser/scripts/package-language-sysr
 import { cases as simdCases, disabledCases } from './simd-fixtures.mjs';
 import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
 import { cases as conversionCases, disabledCases as conversionDisabledCases, diagnosticCases as conversionDiagnosticCases } from './simd-conversions-fixtures.mjs';
+import { cases as headerCases, disabledCases as headerDisabledCases, diagnosticCases as headerDiagnosticCases } from './simd-header-fixtures.mjs';
+import { verifySimdHeaderQualificationOptions, reopenSimdHeaderQualification, verifySimdHeaderInstallation } from './simd-header-qualification.mjs';
 import { conversionInstructions, verifyConversionInstructions } from './simd-conversions-inspect.mjs';
 import { inspectVectorAbi, inspectObjectFunctionSignatures } from './inspect-vector-abi.mjs';
 
@@ -540,7 +542,7 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -597,6 +599,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const simdSaturatingProof = simdSaturatingQualification && await fs.readFile(simdSaturatingQualification);
 	verifySimdConversionsQualificationOptions(lock.gcc.patches, { simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, vectorAbiQualification, nativeLinker });
 	const simdConversionsProof = simdConversionsQualification && await fs.readFile(simdConversionsQualification);
+	verifySimdHeaderQualificationOptions(lock.gcc.patches, { simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, nativeLinker });
+	const simdHeaderProof = simdHeaderQualification && await fs.readFile(simdHeaderQualification);
 	let vectorAbiProof;
 	if (vectorAbiQualification) {
 		assert(simdProof, '--vector-abi-qualification requires --simd-qualification');
@@ -733,6 +737,47 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const gccDirectory = `lib/gcc/wasm32-wasi/${lock.gcc.version}`;
 	for (const f of compilerFiles.filter((f) => f.path.startsWith('resource-include/'))) {
 		sysroot.push({ path: `${gccDirectory}/include/${f.path.slice('resource-include/'.length)}`, bytes: f.bytes });
+	}
+	if (simdHeaderProof) {
+		const report = JSON.parse(simdHeaderProof);
+		const sdk = path.resolve(path.dirname(nativeLinker), '..');
+		const gccHeaders = path.join(work, 'gcc-native/gcc/include');
+		const clangHeaders = path.join(sdk, 'lib/clang/22/include');
+		const sourceHeader = await fs.readFile(path.join(work, 'gcc/gcc/config/wasm/wasm_simd128.h'));
+		const installedHeader = await fs.readFile(path.join(gccHeaders, 'wasm_simd128.h'));
+		const sourceLicenses = Object.fromEntries(await Promise.all(['COPYING3', 'COPYING.RUNTIME'].map(async name => [name, await fs.readFile(path.join(work, 'gcc', name))])));
+		verifySimdHeaderInstallation({
+			source: sourceHeader, installed: installedHeader,
+			browser: compilerFiles.find(file => file.path === 'resource-include/wasm_simd128.h')?.bytes,
+			packaged: sysroot.find(file => file.path === `${gccDirectory}/include/wasm_simd128.h`)?.bytes,
+			licenses: sourceLicenses,
+			packagedLicenses: Object.fromEntries(['COPYING3', 'COPYING.RUNTIME'].map(name => [name, compilerFiles.find(file => file.path === `licenses/gcc-${name}`)?.bytes]))
+		});
+		const indexed = files => Object.fromEntries(files.map(file => [file.path, identity(file.bytes)]));
+		const toolPaths = { gcc: path.join(work, 'gcc-native/gcc/cc1'), gccCpp: path.join(work, 'gcc-native/gcc/cc1plus'),
+			clang: path.join(sdk, 'bin/clang'), clangCpp: path.join(sdk, 'bin/clang++'),
+			assembler: path.join(work, 'wabt-native/wat2wasm'), objdump: path.join(work, 'wabt-native/wasm-objdump'),
+			linker: nativeLinker, node: process.execPath, validator: path.join(work, 'wabt-native/wasm-validate') };
+		const expected = {
+			cases: headerCases, disabledCases: headerDisabledCases, diagnosticCases: headerDiagnosticCases,
+			sourceLock: identity(lockBytes), gccSource: nativeReceipt.gccSource, targetSource,
+			tools: Object.fromEntries(await Promise.all(Object.entries(toolPaths).map(async ([name, file]) => [name, identity(await fs.readFile(file))]))),
+			// An independently imported target sysroot may have another path. Its
+			// complete bytes must equal this package's current imported headers;
+			// the gate also reopens the original qualification root below.
+			headerRoots: { gcc: gccHeaders, clang: clangHeaders, target: report.headerRoots?.target },
+			headers: { gcc: indexed(await readNativeTree(gccHeaders)), clang: indexed(await readNativeTree(clangHeaders)), target: indexed(runtimeHeaders) },
+			runtime: Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a'].map(name => [name, identity(sysroot.find(file => file.path === `lib/wasm32-wasi/${name}`).bytes)])),
+			publicHeader: { source: identity(sourceHeader), installed: identity(installedHeader), clangReference: identity(await fs.readFile(path.join(clangHeaders, 'wasm_simd128.h'))) },
+			licenses: Object.fromEntries(Object.entries(sourceLicenses).map(([name, bytes]) => [name, identity(bytes)])),
+			fixtureDependencies: { 'simd-conversions-fixtures.mjs': identity(await fs.readFile(path.join(here, 'simd-conversions-fixtures.mjs'))) }
+		};
+		assert(path.isAbsolute(expected.headerRoots.target), 'Missing absolute qualified target header root');
+		for (const [field, name] of [['fixtures', 'simd-header-fixtures.mjs'], ['apiContract', 'simd-header-api.mjs'], ['testRecipe', 'test-simd-header.mjs'], ['inspectionRecipe', 'simd-conversions-inspect.mjs'], ['gateRecipe', 'simd-header-qualification.mjs']])
+			expected[field] = identity(await fs.readFile(path.join(here, name)));
+		assert.equal(expected.tools.gcc.sha256, nativeReceipt.tools.cc1.sha256, 'Header gate GCC differs from native build');
+		assert.equal(expected.tools.gccCpp.sha256, nativeReceipt.tools.cc1plus.sha256, 'Header gate C++ compiler differs from native build');
+		await reopenSimdHeaderQualification(report, simdHeaderQualification, expected);
 	}
 	let stdReceipt;
 	const runtimeProofs = new Map();
@@ -932,7 +977,9 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			'Arbitrary external objects are outside the SDK input contract.',
 			'C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.',
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
-			...(simdProof ? ['SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization and wasm_simd128.h intrinsics are not qualified.'] : []),
+			...(simdProof ? [simdHeaderProof
+				? 'SIMD128 is explicit opt-in for GNU 128-bit vectors and the documented 169-name wasm_simd128.h subset; automatic vectorization and other header APIs are not qualified.'
+				: 'SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization and wasm_simd128.h intrinsics are not qualified.'] : []),
 			...(vectorAbiProof
 				? ['Direct v128 and qualified vector aggregate ABI require -msimd128 on both sides; the disabled profile retains indirect vector arguments/results.']
 				: ['Direct LLVM v128 and vector aggregate ABI interoperability are not qualified.']),
@@ -952,6 +999,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (simdExtendedProof) provenanceFiles.set('native-simd-extended-qualification.json', simdExtendedProof);
 	if (simdSaturatingProof) provenanceFiles.set('native-simd-saturating-qualification.json', simdSaturatingProof);
 	if (simdConversionsProof) provenanceFiles.set('native-simd-conversions-qualification.json', simdConversionsProof);
+	if (simdHeaderProof) provenanceFiles.set('native-simd-header-qualification.json', simdHeaderProof);
 	if (vectorAbiProof) provenanceFiles.set('native-vector-abi-qualification.json', vectorAbiProof);
 	if (longDoubleProof) provenanceFiles.set('native-long-double-qualification.json', longDoubleProof);
 	if (int128Proof) provenanceFiles.set('native-int128-qualification.json', int128Proof);
@@ -1003,8 +1051,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}

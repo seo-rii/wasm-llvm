@@ -1,0 +1,2152 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/74",
+  "basePr": "https://github.com/seo-rii/wasm-llvm/pull/98",
+  "status": "native-and-actual-chromium-worker-passed",
+  "outputTarget": "wasm32-wasi",
+  "scope": {
+    "header": "wasm_simd128.h",
+    "publicApiNames": 169,
+    "typedInternalLaneBuiltins": 30,
+    "publicVectorModes": [
+      "V16QI",
+      "V8HI",
+      "V4SI",
+      "V2DI",
+      "V4SF",
+      "V2DF"
+    ],
+    "apiContract": {
+      "path": "producer/gcc-wasi/simd-header-api.mjs",
+      "bytes": 5077,
+      "sha256": "758d180d5ffd6d1a9042977eb49ba9aa9d04d42b5d40b0839ebc0c63c4f35acd"
+    },
+    "publicHeaderSha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130",
+    "frontends": "Actual GCC C/C++ frontends and RTL backend; original source reaches both GCC and the pinned original-header Clang reference.",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1; independently implemented by wasm-llvm contributors."
+  },
+  "source": {
+    "lock": {
+      "path": "producer/gcc-wasi/sources.lock.json",
+      "bytes": 6568,
+      "sha256": "696b80aa954499ff21d99f47269f56d4c56afe51be4385cc8e210ad9f221e795"
+    },
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patchCount": 16,
+    "sourceDiffSha256": "aadf5dd3f3b6b4369f8ddea850ee951c64337929af0f9116f4635839e11ce315",
+    "addedPatch": {
+      "path": "producer/gcc-wasi/patches/0016-wasm-simd128-header.patch",
+      "bytes": 51862,
+      "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+    },
+    "sourceReceipt": {
+      "path": "out/issue74-build-v2/work/gcc-source.json",
+      "bytes": 4473,
+      "sha256": "4881339a6bef1924ea9753d948fcba5521fe297c6c3c4abd215d848cf855aad6"
+    }
+  },
+  "nativeBuild": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue74-build-v2/work/native-build.json",
+      "bytes": 5848,
+      "sha256": "3f3aa81c5124e51427ca7c39d5b40dfac33c43f2d84f01872da3255168822344"
+    },
+    "tools": {
+      "cc1": {
+        "sha256": "45a2b63f739542113a4e0342fb36bcca9a617b5f4b8b2415c0ad8e397b85577a"
+      },
+      "cc1plus": {
+        "sha256": "6e7e795f3619720a035f78955ab26ac3a01dba5742fdfc1baae16ca8abfeb4dc"
+      },
+      "xgcc": {
+        "sha256": "26e41e9c5aa68143e6af2e3bfdc154acb1471b7208bbf3680f86b4953e600659"
+      }
+    },
+    "sourceHeader": {
+      "path": "out/issue74-build-v2/work/gcc/gcc/config/wasm/wasm_simd128.h",
+      "bytes": 32303,
+      "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+    },
+    "installedHeader": {
+      "path": "out/issue74-build-v2/work/gcc-native/gcc/include/wasm_simd128.h",
+      "bytes": 32303,
+      "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+    },
+    "licenses": {
+      "COPYING3": {
+        "path": "out/issue74-build-v2/work/gcc/COPYING3",
+        "bytes": 35147,
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+      },
+      "COPYING.RUNTIME": {
+        "path": "out/issue74-build-v2/work/gcc/COPYING.RUNTIME",
+        "bytes": 3324,
+        "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+      }
+    }
+  },
+  "nativeHeader": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue74-build-v2/work/simd-header-qualification/qualification.json",
+      "bytes": 52419128,
+      "sha256": "6083eb4330d98146bca8e7a225a102b1cfeac350e14b3e9a0b4e428a5bea929b"
+    },
+    "reinspection": {
+      "path": "out/issue74-build-v2/work/simd-header-qualification/reinspection.json",
+      "bytes": 1414,
+      "sha256": "e63ecc281d587c5582109c2ff4eece5f2a327658dabcf931b6840e9e4177aa23"
+    },
+    "gccPrograms": 684,
+    "clangPrograms": 680,
+    "canonicalEnabledPrograms": 676,
+    "explicitDisabledControls": 4,
+    "additionalDefaultControls": 4,
+    "diagnosticCompilations": 296,
+    "apiCoverage": {
+      "wasm_v128_load": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_v128_store": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_make": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_splat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_extract_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_replace_lane": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_add": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_sub": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_neg": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_add": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_sub": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_neg": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_add": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_sub": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_neg": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_add": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_sub": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_neg": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_mul": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_mul": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_mul": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_add": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_sub": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_mul": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_div": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_neg": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_add": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_sub": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_mul": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_div": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_neg": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_v128_and": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_v128_or": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_v128_xor": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_v128_not": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_eq": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_ne": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_eq": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_ne": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_eq": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_ne": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_eq": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_ne": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_eq": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_ne": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_eq": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_ne": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_lt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_le": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_gt": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_ge": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_shl": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_shl": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_shl": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_shl": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_shr": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_add_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_sub_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_add_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_sub_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_add_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_sub_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_add_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_sub_sat": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_extend_low_i8x16": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_extend_high_i8x16": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_extend_low_i16x8": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_extend_high_i16x8": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_extend_low_i32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_extend_high_i32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_extend_low_u8x16": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_extend_high_u8x16": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_extend_low_u16x8": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_extend_high_u16x8": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_extend_low_u32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u64x2_extend_high_u32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_narrow_i16x8": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u8x16_narrow_i16x8": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_narrow_i32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u16x8_narrow_i32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_convert_i32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_convert_u32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_trunc_sat_f32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_trunc_sat_f32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_convert_low_i32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_convert_low_u32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_trunc_sat_f64x2_zero": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_u32x4_trunc_sat_f64x2_zero": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f64x2_promote_low_f32x4": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_f32x4_demote_f64x2_zero": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i8x16_shuffle": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i16x8_shuffle": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i32x4_shuffle": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ],
+      "wasm_i64x2_shuffle": [
+        "c-o0",
+        "c-o2",
+        "cpp-o0",
+        "cpp-o2"
+      ]
+    },
+    "reopenedObjects": 1364,
+    "reopenedPrograms": 1364,
+    "fixture": {
+      "path": "producer/gcc-wasi/simd-header-fixtures.mjs",
+      "bytes": 15147,
+      "sha256": "9caedd0eecddbc53fe500f751214241da02ecef33f960f74fcf9a45ffde896ee"
+    },
+    "fixtureDependency": {
+      "path": "producer/gcc-wasi/simd-conversions-fixtures.mjs",
+      "bytes": 20975,
+      "sha256": "cc5a296d58b9e59a9b74f86bf44a787d77d1c35c6da90413a1177ebcafdcf2da"
+    },
+    "recipes": {
+      "test-simd-header.mjs": {
+        "path": "producer/gcc-wasi/test-simd-header.mjs",
+        "bytes": 13454,
+        "sha256": "7765607e6dea531ea5c907e02033cbc3dec84936b3af4c2638c5dd1b72f7a883"
+      },
+      "simd-header-qualification.mjs": {
+        "path": "producer/gcc-wasi/simd-header-qualification.mjs",
+        "bytes": 16327,
+        "sha256": "bd0685bb9ede57860d95f4154dfa44bf2dc8f2dfb742cbef642b1d3eafc1f9ea"
+      },
+      "simd-conversions-inspect.mjs": {
+        "path": "producer/gcc-wasi/simd-conversions-inspect.mjs",
+        "bytes": 1910,
+        "sha256": "c028f0644c3016b7c83ae05f96c233be5f867720062a8d834eb192595313801e"
+      }
+    },
+    "tools": {
+      "gcc": {
+        "bytes": 24435696,
+        "sha256": "45a2b63f739542113a4e0342fb36bcca9a617b5f4b8b2415c0ad8e397b85577a"
+      },
+      "gccCpp": {
+        "bytes": 26984280,
+        "sha256": "6e7e795f3619720a035f78955ab26ac3a01dba5742fdfc1baae16ca8abfeb4dc"
+      },
+      "clang": {
+        "bytes": 118656,
+        "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+      },
+      "clangCpp": {
+        "bytes": 118656,
+        "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+      },
+      "assembler": {
+        "bytes": 1635504,
+        "sha256": "8203fbf4dc22d46fc2cb334c4666dc9712c7b53d3726cf47719d6b6d91eff8a6"
+      },
+      "objdump": {
+        "bytes": 990704,
+        "sha256": "fe4ec3fb6b6177627cf00851057c9870f3f4d971dcbdda7ba9597bb5f85fb3ad"
+      },
+      "linker": {
+        "bytes": 4165088,
+        "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+      },
+      "node": {
+        "bytes": 126879696,
+        "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+      },
+      "validator": {
+        "bytes": 1297256,
+        "sha256": "102061d82e2cda05dd2f3c5b890d887f70dd53e143c4f28b457fe8d4a89ce91d"
+      }
+    },
+    "publicHeader": {
+      "source": {
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "installed": {
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "clangReference": {
+        "bytes": 83675,
+        "sha256": "93a4905ac462809f5a5d970286e0ef7cca11b27726c2e8461304e7bc701f9db7"
+      }
+    },
+    "inputsUnchanged": true,
+    "instructionChecks": "Every enabled GCC operation must satisfy the fixture opcode contract inside its actual convert function; disabled/default modules validate without SIMD."
+  },
+  "partialVectorCopies": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue74-build-v2/work/vector-subreg-qualification/report.json",
+      "bytes": 7689637,
+      "sha256": "88d4e48decfb6f7e82f852450b8607c1221aead18a68a5b4782ed6f2e81f773a"
+    },
+    "fixture": {
+      "path": "producer/gcc-wasi/vector-subreg-fixtures.mjs",
+      "bytes": 2316,
+      "sha256": "e1330f82e28b51f1cd7339d265bda89b345bfe639c52bccf181ea43ed5bffea0"
+    },
+    "gccPrograms": 24,
+    "clangPrograms": 24,
+    "scope": "Scalar QI/HI/SI/DI/SF/DF memcpy reads/writes of first/last lanes; nonzero surrounding bytes must be preserved. No public header calls.",
+    "baseline": {
+      "receipt": {
+        "path": "out/issue74-subreg-draft/baseline/report.json",
+        "bytes": 7457414,
+        "sha256": "9431f2d59f97c4ffc52d3625d7baf8af85de0a2382b9a68d743a653d2beb55b6"
+      },
+      "gccPassed": 16,
+      "gccInternalErrors": 8,
+      "clangPassed": 24,
+      "includedInFinalTotals": false
+    }
+  },
+  "fullNativeQualification": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue74-build-v2/native-validation-summary.json",
+      "bytes": 17762,
+      "sha256": "44fcdb67d23ada84f2ee27e52770862f45b9a3679a1786031d463a2085addc0d"
+    },
+    "regressionSuites": 16,
+    "regressionExecutions": 2071,
+    "totalExecutionCases": 3546,
+    "executionCasesExcludingNewClangReferences": 2842,
+    "newClangReferenceExecutions": 704,
+    "diagnosticCompilations": 568,
+    "note": "Each completed execution matrix is counted once. The 16 inherited regression matrices retain all compiler directions and default controls. Header and independent SUBREG Clang references are explicit; nested inherited Clang oracles, auxiliary preflight and preserved earlier attempts are not added to the totals.",
+    "matrices": [
+      {
+        "id": "gnu-float128-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/gnu-float128-qualification/report.json",
+        "bytes": 9521517,
+        "sha256": "f09ef043634e176973258532697002e8937aff9e6f51e33b2b84b9f2485318e2",
+        "cases": 78,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "abi-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/abi-qualification/report.json",
+        "bytes": 1336249,
+        "sha256": "8e3ac6f5ce1d0a4a741d382f264535a94a731a439f80748902ff98d6e83de968",
+        "cases": 200,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "atomic-abi-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/atomic-abi-qualification/report.json",
+        "bytes": 60345,
+        "sha256": "6b15da918059989e8eef65b7905f1367eea606c503f33e981aad43bc61989955",
+        "cases": 8,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "simd-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/simd-qualification/qualification.json",
+        "bytes": 549807,
+        "sha256": "3e083ed6de16e5805c13419a28a32fb7f221b030b2a690f1261d7a06a0ffdceb",
+        "cases": 25,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "simd-extended-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/simd-extended-qualification/qualification.json",
+        "bytes": 3248342,
+        "sha256": "abbe569fe12de1f74607f7caa91f2d9b0793e41f47796467f6e03ac94c17e5bc",
+        "cases": 62,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 62
+      },
+      {
+        "id": "simd-saturating-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/simd-saturating-qualification/qualification.json",
+        "bytes": 1471991,
+        "sha256": "c4f98b85ec6d0cf80a946648081bb79b0a1b056e5de22e3b36411658f3c80ed1",
+        "cases": 36,
+        "defaultControls": 0,
+        "diagnostics": 80,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "simd-conversions-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/simd-conversions-qualification/qualification.json",
+        "bytes": 9376401,
+        "sha256": "c2864b2f293919c067143fb61ba64a8571f94ddece0c404ad5ebb2cb6f0e7172",
+        "cases": 176,
+        "defaultControls": 12,
+        "diagnostics": 192,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "vector-abi-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/vector-abi-qualification/report.json",
+        "bytes": 65388031,
+        "sha256": "27280a5519d1b62844c227a1bff186f5be5922a3558099155fb5ddc478643189",
+        "cases": 684,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "empty-abi-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/empty-abi-qualification/report.json",
+        "bytes": 6626942,
+        "sha256": "35a21d18265a0878c47897f39e86d6df3d55d0ef466001215864e092868b2b8b",
+        "cases": 112,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "wide-builtins-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/wide-builtins-qualification/report.json",
+        "bytes": 8456222,
+        "sha256": "29d0d410ad93ff53becc6ffb16a2e115977773334233d27942f9a9870977784c",
+        "cases": 50,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "wide-bitfields-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/wide-bitfields-qualification/report.json",
+        "bytes": 11028142,
+        "sha256": "a59d81349e8ae51226f7898d4192e9f667acdfa67ab844286f16039fe0dbbf27",
+        "cases": 72,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "singleton-bitfield-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/singleton-bitfield-qualification/report.json",
+        "bytes": 7710537,
+        "sha256": "4b615a140e9f08ea5768b4e09177330aa62b6a296d6ee1816e6b6805afc41fb0",
+        "cases": 32,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "anonymous-bitfield-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/anonymous-bitfield-qualification/report.json",
+        "bytes": 17142915,
+        "sha256": "7ed687bf992ae519b072dd483a1d7c8fadbdbe5272269a9796ca34b1a5212f35",
+        "cases": 160,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "long-double-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/long-double-qualification/report.json",
+        "bytes": 14313006,
+        "sha256": "67e7558c23ce7c11687f2ae6ecde30a979e33d3fd2ed4f95df5e2de5900905d3",
+        "cases": 124,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "int128-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/int128-qualification/report.json",
+        "bytes": 13933841,
+        "sha256": "d4fc64f3150e762f04af06465cbbee23c993b646425563dde53261e87765912b",
+        "cases": 116,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      },
+      {
+        "id": "fp-extension-qualification",
+        "status": "passed",
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/fp-extension-qualification/report.json",
+        "bytes": 12345003,
+        "sha256": "924c1dde33375b8d1ba775bbdfc2ddbca580c7ba8af1f1088211c729841b0352",
+        "cases": 124,
+        "defaultControls": 0,
+        "diagnostics": 0,
+        "nestedClangOracles": 0
+      }
+    ],
+    "halfVectorAbi": {
+      "gccExecutions": 48,
+      "qualification": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/half-vector-abi-qualification/report.json",
+        "bytes": 221782,
+        "sha256": "af0a89d09e36adf4dcbdff1ce26b472de30c84ba5320e656f299aa660e6d0b09"
+      }
+    },
+    "smoke": {
+      "gccExecutions": 13,
+      "qualification": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/native-programs/provenance.json",
+        "bytes": 75220,
+        "sha256": "cfb66c3f944e4af2ce95cef4ef1f7f3bac9413a67a4903116dcca2f5259f548c"
+      }
+    },
+    "gnuRuntime": {
+      "gccExecutions": 2,
+      "qualification": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/work/libstdcxx-current/qualification/qualification.json",
+        "bytes": 6386,
+        "sha256": "9b506cbe48748cb8eb57b78fdc003722ee158ff4f0e1098dbf54ee76e9411188"
+      }
+    },
+    "inputsUnchanged": true
+  },
+  "freshGnuRuntime": {
+    "status": "passed",
+    "build": {
+      "path": "out/issue74-build-v2/work/libstdcxx-current/libstdcxx-build.json",
+      "bytes": 157850,
+      "sha256": "4d99424285ff79ae3d2b70a911c6b869f9bbe71c3260483e392bc7dc54951ee5"
+    },
+    "qualification": {
+      "path": "out/issue74-build-v2/work/libstdcxx-current/qualification/qualification.json",
+      "bytes": 6386,
+      "sha256": "9b506cbe48748cb8eb57b78fdc003722ee158ff4f0e1098dbf54ee76e9411188"
+    },
+    "programs": 2
+  },
+  "originalClangHeaderReference": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue74-clang-reference/result-1/qualification.json",
+      "bytes": 13614579,
+      "sha256": "bf569dc9a0b6bcaa5000ec9177d74d6b6709c7ed7ee4b02b197c406ae3c6ecdb"
+    },
+    "reinspection": {
+      "path": "out/issue74-fixtures-draft/clang-reinspection.json",
+      "bytes": 901,
+      "sha256": "406724c98d03680b7c9c3c2cec949d5ee6c9b35c2aa110eada108509cb653f43"
+    },
+    "programs": 680,
+    "header": {
+      "bytes": 83675,
+      "sha256": "93a4905ac462809f5a5d970286e0ef7cca11b27726c2e8461304e7bc701f9db7"
+    },
+    "includedInFinalTotals": false,
+    "note": "This earlier independent reference used the same original public fixture bytes; the final native matrix separately reran all680 Clang programs."
+  },
+  "unitTests": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue74-build-v2/control/focused-unit-tests.json",
+      "bytes": 899,
+      "sha256": "1dcc07eae561c489969bc92fb9ab40834f103b1ab6bb782f4de8c239ddfa56e6"
+    },
+    "result": {
+      "status": "passed",
+      "exitCode": 0,
+      "command": [
+        "node",
+        "--test",
+        "producer/gcc-wasi/package.test.mjs",
+        "producer/gcc-wasi/simd-header-fixtures.test.mjs",
+        "producer/gcc-wasi/simd-header-qualification.test.mjs",
+        "producer/gcc-wasi/simd-conversions-fixtures.test.mjs",
+        "producer/gcc-wasi/simd-conversions-inspect.test.mjs",
+        "producer/gcc-wasi/simd-conversions-qualification.test.mjs"
+      ],
+      "summary": [
+        "\u2139 tests 58",
+        "\u2139 suites 0",
+        "\u2139 pass 58",
+        "\u2139 fail 0",
+        "\u2139 cancelled 0",
+        "\u2139 skipped 0",
+        "\u2139 todo 0",
+        "\u2139 duration_ms 1801.198738"
+      ],
+      "log": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/focused-unit-tests.log",
+        "bytes": 5635,
+        "sha256": "cd7f95db742c3db8dc9c7b97998348c860a1e3ddbce75a6b499e4aeabdd1adce"
+      }
+    }
+  },
+  "sdkEngineProbe": {
+    "status": "passed-node-unit-and-actual-chromium-worker",
+    "receipt": {
+      "path": "out/issue74-preparation/sdk-simd-engine-probe.json",
+      "bytes": 1690,
+      "sha256": "a177b330f59352a91086837a70b7b95428b05924387b9dce2f776dec2b2cba95"
+    },
+    "positive": "Actual Node engine WebAssembly.validate on SDK SIMD probe.",
+    "negative": "Mocked WebAssembly.validate=false; no claim about an actual SIMD-less browser.",
+    "actualChromiumProbe": {
+      "receipt": {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-raw-controls.json",
+        "bytes": 927166,
+        "sha256": "1eb494b379de28f3108adf3cf639042b597368457595b76b4c087619c77fcb47"
+      },
+      "engineProbe": {
+        "simd128": true,
+        "kind": "actual-SDK-v128-const-drop-WebAssembly.validate",
+        "host": "chromium-worker",
+        "mocked": false
+      }
+    },
+    "distUnchanged": true
+  },
+  "resolvedFirstAttempt": {
+    "status": "preserved-and-fixed",
+    "receipt": {
+      "path": "out/issue74-build/work/simd-header-qualification/qualification.json",
+      "bytes": 49479950,
+      "sha256": "8c8d4ad8d4c3f8b3e9f6e6e5b67db67d967e6977acf6e58f3697faf9ba7d79f1"
+    },
+    "failedPrograms": 68,
+    "internalCompilerErrors": 18,
+    "directInstructionMismatches": 50,
+    "all50OutputsSeparatelyPassed": {
+      "path": "out/issue74-first-attempt-semantics/report.json",
+      "bytes": 221360,
+      "sha256": "09132cef857b0e84a78a46e6714b9e63c226c3b71af14c4afc29d3df8eed2960"
+    },
+    "failureGroups": {
+      "path": "out/issue74-build/control/header-first-failure-groups.json",
+      "bytes": 4307,
+      "sha256": "343a03c4454a55b826d58a0e683cf49ee38cb8c89a284415b96ad23d3f3c63fc"
+    },
+    "fix": "Typed lane/splat target builtins retain intrinsic intent through RTL; aligned scalar views of native v128 registers use real lane extraction/replacement and preserve other bytes. Original public fixtures were not weakened.",
+    "currentAllHeaderProgramsPassed": true,
+    "includedInFinalTotals": false
+  },
+  "wasmHost": {
+    "status": "passed",
+    "compilerBuild": {
+      "path": "out/issue74-build-v2/work/browser-compiler/compiler-build.json",
+      "bytes": 11313,
+      "sha256": "2a8ce78f54f2460679654dcbf010a05d53680ad9e3c8fd61e8324a5542afac4f"
+    },
+    "manifest": {
+      "path": "out/issue74-build-v2/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 19510,
+      "sha256": "4c325d2331f332f021bf305303e02462c5c3714b914163b66d75658c2a2cb034"
+    },
+    "packageResult": {
+      "path": "out/issue74-build-v2/control/package-result.json",
+      "bytes": 295,
+      "sha256": "83091dcb47aff822d0df38b30b1e9510571b3b170b1c2821a6c683b79b289331"
+    },
+    "workerSummary": {
+      "path": "out/issue74-build-v2/worker-summary.json",
+      "bytes": 60922,
+      "sha256": "db1f023ea7216b3e9604c4d0d3cef3674ecdc24b7930de1e029887e0d43a107e"
+    },
+    "sourceSnapshot": {
+      "path": "out/issue74-build-v2/control/worker-inputs-final.json",
+      "bytes": 141911,
+      "sha256": "2388ddad31114067964a46ea0cf01bfdd323f5e0e35498d4f03ff862d20bdc7a"
+    },
+    "executionCommands": {
+      "path": "out/issue74-build-v2/control/worker-commands.json",
+      "bytes": 37181,
+      "sha256": "23ffad70d870234cf334ab50a4249006c843190e795e75dfd285041fb8feedd3"
+    },
+    "plan": {
+      "path": "out/issue74-build-v2/control/worker-plan.json",
+      "bytes": 252895,
+      "sha256": "7c3cb5a6717417fc24f539a4cd345157133e1e2b0444888b3f65312cdca46bf7"
+    },
+    "sdkHead": "9b0b50f23a116fd99bdb7b423bb6e75327ae2959",
+    "canonicalPrograms": 1531,
+    "chromiumExecutions": 1531,
+    "independentNodeWasiExecutions": 1531,
+    "additionalDefaultPrograms": 4,
+    "additionalDefaultChromiumExecutions": 4,
+    "additionalDefaultNodeWasiExecutions": 4,
+    "diagnosticChecks": 568,
+    "diagnosticCounts": {
+      "diagnostics": 568,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "defaultControls": 4
+    },
+    "totalSimdOpcodeChecks": 979,
+    "counts": {
+      "chromium": 1531,
+      "nodeWasi": 1531,
+      "objects": 1301,
+      "wat": 1301,
+      "objectSignatureChecks": 382
+    },
+    "diagnostics": {
+      "path": "out/issue74-build-v2/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 927166,
+      "sha256": "1eb494b379de28f3108adf3cf639042b597368457595b76b4c087619c77fcb47"
+    },
+    "browserVersions": [
+      "156.0.8078.4"
+    ],
+    "inputsUnchanged": true,
+    "suites": [
+      {
+        "name": "header",
+        "counts": {
+          "chromium": 680,
+          "nodeWasi": 680,
+          "objects": 680,
+          "wat": 680,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-header-inspection.json",
+          "bytes": 20923123,
+          "sha256": "6a712c1f393709370cde8618352fb44e41dd2b1a736b669cd6cac45e804adfd1"
+        }
+      },
+      {
+        "name": "vector-subreg",
+        "counts": {
+          "chromium": 24,
+          "nodeWasi": 24,
+          "objects": 24,
+          "wat": 24,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-vector-subreg-inspection.json",
+          "bytes": 46805,
+          "sha256": "a604d7a3fe37729dd78fc2ce8b0deba6ab484a6a67d079280d138fc09f6de364"
+        }
+      },
+      {
+        "name": "conversions",
+        "counts": {
+          "chromium": 176,
+          "nodeWasi": 176,
+          "objects": 176,
+          "wat": 176,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-conversions-inspection.json",
+          "bytes": 4999709,
+          "sha256": "d385bcdac2e95d2e66722cdbff0f92ec324691ed58048dbf9b2d11ab77612e86"
+        }
+      },
+      {
+        "name": "gnu-float128",
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 22
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-gnu-float128-inspection.json",
+          "bytes": 106891,
+          "sha256": "bbb095a9a38baf31b3fdc71d7e54ff033f26aa787e91b3c02eb06dc80226fa07"
+        }
+      },
+      {
+        "name": "saturating",
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-saturating-inspection.json",
+          "bytes": 88843,
+          "sha256": "b4531536e1502f6a8d1c15fd38dd04596cea2fc26df97a132a9d196efefba6b5"
+        }
+      },
+      {
+        "name": "anonymous-bitfield",
+        "counts": {
+          "chromium": 40,
+          "nodeWasi": 40,
+          "objects": 40,
+          "wat": 40,
+          "objectSignatureChecks": 160
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-anonymous-bitfield-inspection.json",
+          "bytes": 97949,
+          "sha256": "fa1eeb3b46e6efb23ce64c9e0f1845102bd6addb959a4da8f1d5ae8791c41252"
+        }
+      },
+      {
+        "name": "empty-abi",
+        "counts": {
+          "chromium": 28,
+          "nodeWasi": 28,
+          "objects": 28,
+          "wat": 28,
+          "objectSignatureChecks": 168
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-empty-abi-inspection.json",
+          "bytes": 79084,
+          "sha256": "fdc6c03f698c5120086fc95191cea195f4ec2fd0c70d04ffe8e1382e595bef58"
+        }
+      },
+      {
+        "name": "singleton-bitfield",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 8,
+          "wat": 8,
+          "objectSignatureChecks": 32
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-singleton-bitfield-inspection.json",
+          "bytes": 23364,
+          "sha256": "c1c5dd5e72594c1744d839dbadefb655a63eebd1f8bb029bf42a84f0695e5e5b"
+        }
+      },
+      {
+        "name": "basic",
+        "counts": {
+          "chromium": 17,
+          "nodeWasi": 17,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-basic-inspection.json",
+          "bytes": 15211,
+          "sha256": "7896692d2d0056c1fd9326bfc400f41794e3c6147e55d9fa40a692ced7c4149d"
+        }
+      },
+      {
+        "name": "scalar-abi",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-scalar-abi-inspection.json",
+          "bytes": 20681,
+          "sha256": "4b981cd993352b5f716703a28c19d75605e129a9b195598e454037f5e4380aa9"
+        }
+      },
+      {
+        "name": "atomic",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-atomic-inspection.json",
+          "bytes": 9707,
+          "sha256": "86147483705d7c559f95dc19396944f16134a1e0a23fe213c4807e5bc849ba67"
+        }
+      },
+      {
+        "name": "simd",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 25,
+          "wat": 25,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-simd-inspection.json",
+          "bytes": 47155,
+          "sha256": "c4eb176300fe0c7863a46adb872c77292e1ae2f94a6ec0e43d5b5dd912a79c54"
+        }
+      },
+      {
+        "name": "extended",
+        "counts": {
+          "chromium": 62,
+          "nodeWasi": 62,
+          "objects": 62,
+          "wat": 62,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-extended-inspection.json",
+          "bytes": 117613,
+          "sha256": "4685c6b9cb727722dbc73e368a15b95ddb51502f233f1303810d779741f743b9"
+        }
+      },
+      {
+        "name": "vector-abi",
+        "counts": {
+          "chromium": 180,
+          "nodeWasi": 180,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-vector-abi-inspection.json",
+          "bytes": 124836,
+          "sha256": "b25b14f097dd8d0b33b1407e40eda276c5a8405f46db2289ff63985c6928c0af"
+        }
+      },
+      {
+        "name": "long-double",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-long-double-inspection.json",
+          "bytes": 132363,
+          "sha256": "28258c88cdad9e74fb31f3808df2926cad7da5e0d10ef256f6edb21e6a7960d9"
+        }
+      },
+      {
+        "name": "int128",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-int128-inspection.json",
+          "bytes": 108328,
+          "sha256": "190832a799a9c2053f6d0dad9c8a0c688f07a2e277b45f85959f3cfe5bf13bf1"
+        }
+      },
+      {
+        "name": "wide-integer",
+        "counts": {
+          "chromium": 52,
+          "nodeWasi": 52,
+          "objects": 52,
+          "wat": 52,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-wide-integer-inspection.json",
+          "bytes": 101690,
+          "sha256": "3734571e44bb28b531ea6cd0f5ccb9286259c25e7cd4a1b13edc4911829b424e"
+        }
+      },
+      {
+        "name": "fp-extension",
+        "counts": {
+          "chromium": 50,
+          "nodeWasi": 50,
+          "objects": 50,
+          "wat": 50,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-fp-extension-inspection.json",
+          "bytes": 135990,
+          "sha256": "6ff06020a71978a42052a80b3fa6977b56f69d0b7dd764da5ee2348f4640f0cf"
+        }
+      }
+    ],
+    "opcodes": [
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-header-opcodes.json",
+        "bytes": 2881027,
+        "sha256": "666fa5b94565a991c58078b97880502f5e46e30f4ed739decb33a6ee0ee33df6"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-conversions-opcodes.json",
+        "bytes": 769975,
+        "sha256": "c9128a91021726c30ebaa1f3d29ecd418bd4c3e6a4466d302f20f7b72c60dca3"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-saturating-opcodes.json",
+        "bytes": 150695,
+        "sha256": "0906d1acb82de3a462d0e35056198ad9ba6ac948fb9c71c18841c1ddedd37898"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-simd-opcodes.json",
+        "bytes": 98287,
+        "sha256": "fd7fdf12478fc431f52b7336fb90ec587c869b09d7d1776811b3767d31bc6072"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-extended-opcodes.json",
+        "bytes": 319474,
+        "sha256": "3ed4c914af9c8a1582572ac1eaa02f19ec6ca6ecbff03189eb93d8d982513533"
+      }
+    ],
+    "assets": {
+      "cc1Js": {
+        "path": "out/issue74-build-v2/bundle-final/cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "out/issue74-build-v2/bundle-final/cc1.wasm",
+        "bytes": 15608963,
+        "sha256": "1edb4243a6353f28b52969ec2b8ef99391cb27cba645024ee76c67ff2bbd4d87"
+      },
+      "cc1plusJs": {
+        "path": "out/issue74-build-v2/bundle-final/cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "out/issue74-build-v2/bundle-final/cc1plus.wasm",
+        "bytes": 17266279,
+        "sha256": "5eb021469760d81f06a8ff995dbe2232e8125b194c0f03f0bdd2a323134fc4a8"
+      },
+      "asJs": {
+        "path": "out/issue74-build-v2/bundle-final/as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "out/issue74-build-v2/bundle-final/as.wasm",
+        "bytes": 597157,
+        "sha256": "339a199928446a5c15d540df3d328a68421fc8bbb64b0aad36bef5e221c5093d"
+      },
+      "ldWasm": {
+        "path": "out/issue74-build-v2/bundle-final/ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "out/issue74-build-v2/bundle-final/sysroot.tar",
+        "bytes": 25481216,
+        "sha256": "a7627ee80cdd01e5ff51fe69c7fbc35515ce978d3063c65e71f1de7b123858b6"
+      }
+    },
+    "headerInstallation": {
+      "source": {
+        "path": "out/issue74-build-v2/work/gcc/gcc/config/wasm/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "native": {
+        "path": "out/issue74-build-v2/work/gcc-native/gcc/include/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "browser": {
+        "path": "out/issue74-build-v2/work/browser-compiler/resource-include/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "sysroot": {
+        "archive": {
+          "path": "out/issue74-build-v2/bundle-final/sysroot.tar",
+          "bytes": 25481216,
+          "sha256": "a7627ee80cdd01e5ff51fe69c7fbc35515ce978d3063c65e71f1de7b123858b6"
+        },
+        "entry": "lib/gcc/wasm32-wasi/17.0.0/include/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "equalBytes": true
+    },
+    "licenses": {
+      "COPYING3": {
+        "path": "out/issue74-build-v2/bundle-final/licenses/gcc-COPYING3",
+        "bytes": 35147,
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+      },
+      "COPYING.RUNTIME": {
+        "path": "out/issue74-build-v2/bundle-final/licenses/gcc-COPYING.RUNTIME",
+        "bytes": 3324,
+        "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+      }
+    },
+    "inputSnapshots": {
+      "browser-inputs.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/browser-inputs.json",
+          "bytes": 16501,
+          "sha256": "0be989d60b465c0c137aece20b19844b4b4fdfc1ca4484fdca24ffbb09579d7f"
+        },
+        "verifiedFiles": 67
+      },
+      "package-inputs-v2.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/package-inputs-v2.json",
+          "bytes": 855891,
+          "sha256": "104db609962e745d6b5bb2264da6b7360bd122521e3ef5ba459dda6e19c6823a"
+        },
+        "verifiedFiles": 2996
+      },
+      "package-browser-inputs.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/package-browser-inputs.json",
+          "bytes": 8874,
+          "sha256": "77aeba0b91c3a4855184e8d129d510630d69b117bf20c4eb7689bd6769d37c7e"
+        },
+        "verifiedFiles": 34
+      },
+      "worker-inputs-final.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/worker-inputs-final.json",
+          "bytes": 141911,
+          "sha256": "2388ddad31114067964a46ea0cf01bfdd323f5e0e35498d4f03ff862d20bdc7a"
+        },
+        "verifiedFiles": 558
+      }
+    },
+    "reopenedArtifactFiles": 4145,
+    "note": "Every canonical fixture compiles with actual packaged GCC in Chromium Worker and runs in both Chromium and Node WASI. Four separate no-flag header controls use actual packaged GCC/WABT/WASI LLD and SDK Worker execution, followed by independent Node execution. The producer manifest keeps qualification.status=unverified by design; these separate execution receipts establish qualification. SDK source and distribution files remained unchanged. All native public-header fixtures and the original Clang header were preserved.",
+    "finalReinspection": {
+      "path": "out/issue74-build-v2/control/final-browser-reinspection.json",
+      "bytes": 3954,
+      "sha256": "bd28f5538a19f3c6a7c422ab6016601bee5487692e0837f798e74e72ac173b30"
+    }
+  },
+  "completedProcesses": [
+    {
+      "pid": 2606251,
+      "log": "/home/seorii/logs/wasm-llvm-74-native-v2-o8uxkntm.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/native-status.json",
+      "startedUnix": 1793355812.6406357,
+      "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/native-inputs.json",
+      "exit": 0,
+      "elapsedSeconds": 814.9447793960571
+    },
+    {
+      "pid": 2651997,
+      "log": "/home/seorii/logs/wasm-llvm-74-focused-v2-2fpjxdy3.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/focused-status.json",
+      "startedUnix": 1793356221.9991574,
+      "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/focused-inputs.json",
+      "exit": 0,
+      "elapsedSeconds": 788.6644372940063
+    },
+    {
+      "pid": 2651998,
+      "log": "/home/seorii/logs/wasm-llvm-74-gnu-v2-4rfswk65.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/gnu-status.json",
+      "startedUnix": 1793356222.0519235,
+      "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/gnu-inputs.json",
+      "exit": 0,
+      "elapsedSeconds": 899.7028546333313
+    },
+    {
+      "pid": 2651999,
+      "log": "/home/seorii/logs/wasm-llvm-74-regression-v2-pqrapnwm.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/regression-status.json",
+      "startedUnix": 1793356222.1050014,
+      "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/regression-inputs.json",
+      "exit": 0,
+      "elapsedSeconds": 1541.408499956131
+    },
+    {
+      "pid": 2822302,
+      "log": "/home/seorii/logs/wasm-llvm-74-browser-9ztle_3v.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/browser-status.json",
+      "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/browser-inputs.json",
+      "frozenFiles": 67,
+      "jobs": 2,
+      "startedUnix": 1793360701.6620421,
+      "sourceDiffSha256": "aadf5dd3f3b6b4369f8ddea850ee951c64337929af0f9116f4635839e11ce315",
+      "commit": "c6db014af4a07b8a460ff3e00a2700452c71152b",
+      "exit": 0,
+      "elapsedSeconds": 1701.312736272812,
+      "result": {
+        "path": "out/issue74-build-v2/control/browser-status.json",
+        "bytes": 178,
+        "sha256": "f40d7d550050439349fd33f06487a48018402350f1f4e82596b24361dc8c33da"
+      }
+    },
+    {
+      "pid": 2905526,
+      "log": "/home/seorii/logs/wasm-llvm-74-package-v2-8hqsu9on.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/package-status-v2.json",
+      "startedUnix": 1793361124.5970364,
+      "phase": "waiting-for-browser",
+      "exit": 0,
+      "elapsedSeconds": 1386.044136762619,
+      "result": {
+        "path": "out/issue74-build-v2/control/package-status-v2.json",
+        "bytes": 201,
+        "sha256": "1740065df3a8c68e532633fa9cd0b17bcb9f5190dcb8396640cc67e2b986be89"
+      }
+    },
+    {
+      "pid": 2905527,
+      "log": "/home/seorii/logs/wasm-llvm-74-worker-v2-pdwm0w4e.log",
+      "status": "/home/seorii/logs/wasm-llvm-74-worker-v2-pdwm0w4e.log.status",
+      "startedUnix": 1793361124.6001875,
+      "phase": "waiting-for-package",
+      "exit": 0,
+      "elapsedSeconds": 2279.752674818039,
+      "result": {
+        "path": "/home/seorii/logs/wasm-llvm-74-worker-v2-pdwm0w4e.log.status",
+        "bytes": 9297,
+        "sha256": "a104756d2c4bec774914801e21630f03134870e382e9915e185f1f5b030673de"
+      }
+    }
+  ],
+  "reproduction": {
+    "nativeHeader": "node producer/gcc-wasi/test-simd-header.mjs --compiler \"$GCC_WASI_WORK_DIR/gcc-native/gcc\" --source \"$GCC_WASI_WORK_DIR/gcc\" --work \"$GCC_WASI_WORK_DIR\" --sdk \"$WASI_SDK_PATH\" --sysroot \"$GCC_WASI_WORK_DIR/runtime-current/sysroot\" --output \"$GCC_WASI_WORK_DIR/simd-header-qualification\"",
+    "partialVectorCopies": "node producer/gcc-wasi/wide-integer-test.mjs --suite producer/gcc-wasi/vector-subreg-fixtures.mjs --compiler \"$GCC_WASI_WORK_DIR/gcc-native/gcc\" --source \"$GCC_WASI_WORK_DIR/gcc\" --work \"$GCC_WASI_WORK_DIR\" --sdk \"$WASI_SDK_PATH\" --sysroot \"$GCC_WASI_WORK_DIR/runtime-current/sysroot\" --directions gcc-gcc,clang-clang --output \"$GCC_WASI_WORK_DIR/vector-subreg-qualification\""
+  },
+  "pullRequest": "https://github.com/seo-rii/wasm-llvm/pull/99"
+}
