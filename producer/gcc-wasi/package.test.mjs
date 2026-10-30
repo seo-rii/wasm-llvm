@@ -12,6 +12,27 @@ import { verifySaturatingSimdQualification, verifySaturatingSimdQualificationOpt
 import { verifyGnuFloat128Qualification } from './package.mjs';
 import { cases as gnuFloat128Cases } from './gnu-float128-fixtures.mjs';
 import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
+import { verifySimdHeaderInstallation } from './simd-header-qualification.mjs';
+
+test('packaged SIMD header is identical at every installation boundary and retains full GCC notices', () => {
+	const source = Buffer.from('/* SPDX-License-Identifier: GPL-3.0-or-later WITH GCC-exception-3.1 */\n' + 'independent header\n'.repeat(1000));
+	const licenses = { COPYING3: Buffer.alloc(35147, 'g'), 'COPYING.RUNTIME': Buffer.alloc(3324, 'r') };
+	const inputs = () => ({ source, installed: Buffer.from(source), browser: Buffer.from(source), packaged: Buffer.from(source),
+		licenses, packagedLicenses: Object.fromEntries(Object.entries(licenses).map(([name, bytes]) => [name, Buffer.from(bytes)])) });
+	verifySimdHeaderInstallation(inputs());
+	for (const stage of ['installed', 'browser', 'packaged']) {
+		const changed = inputs(); changed[stage][0] ^= 1;
+		assert.throws(() => verifySimdHeaderInstallation(changed), /Changed .* SIMD header/);
+		const missing = inputs(); delete missing[stage];
+		assert.throws(() => verifySimdHeaderInstallation(missing), /Missing .* SIMD header/);
+	}
+	for (const name of ['COPYING3', 'COPYING.RUNTIME']) {
+		const missing = inputs(); delete missing.packagedLicenses[name];
+		assert.throws(() => verifySimdHeaderInstallation(missing), /Missing packaged/);
+		const shortened = inputs(); shortened.packagedLicenses[name] = shortened.packagedLicenses[name].subarray(0, 100);
+		assert.throws(() => verifySimdHeaderInstallation(shortened), /Changed packaged/);
+	}
+});
 
 test('saturating patch requires current saturation and existing SIMD/vector qualification', () => {
 	const patches = [{ path: 'patches/0013-simd-saturating-arithmetic.patch' }];
