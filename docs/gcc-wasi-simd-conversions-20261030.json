@@ -3,7 +3,7 @@
   "issue": "https://github.com/seo-rii/wasm-llvm/issues/76",
   "pullRequest": "https://github.com/seo-rii/wasm-llvm/pull/98",
   "basePr": "https://github.com/seo-rii/wasm-llvm/pull/97",
-  "status": "native-feature-passed-bundle-qualification-pending",
+  "status": "passed",
   "implementationCommit": "e8ea49cabb375c82e221575931415fd082678324",
   "outputTarget": "wasm32-wasi",
   "scope": {
@@ -137,7 +137,7 @@
       "sha256": "7746052c466d3bf87196a108c09f01a00294d8c5d4969560732d25e37535d70d"
     },
     "reopenedArtifacts": 944,
-    "claim": "The new mandatory native gate accepted the actual compiler receipt and reopened source/WAT/object/program bytes. A complete newly built Wasm-host bundle has not yet been packaged or qualified."
+    "claim": "The mandatory native conversion gate accepted the actual source-matched compiler receipt and reopened source/WAT/object/program bytes. Full packaging also passed every existing gate with the fresh GNU runtime and same-source Wasm-host compiler."
   },
   "halfVectorPublicAbi": {
     "status": "passed",
@@ -250,26 +250,586 @@
     }
   },
   "fullNativeRegressions": {
-    "status": "running",
-    "process": {
-      "path": "out/issue76-build/native-regression-process.json",
-      "bytes": 328,
-      "sha256": "ba3f5070e8596646a55d33fea1d23d8ec6ee5a8cd6890c4f00864d2cb039f002"
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue76-build/native-validation-summary.json",
+      "bytes": 14273,
+      "sha256": "f3152029b89aa08c600c1fe3ec0483e0dfd434708f8df8fe0b2f77d51fa59ff3"
     },
     "commands": {
       "path": "out/issue76-build/native-regression-commands.json",
       "bytes": 16632,
       "sha256": "3a8c7a88e400d5184a3a4a1206ccc186cfd6be4e2fe6d42007d87af8931cfa4a"
     },
-    "expectedSuites": 15,
-    "expectedExecutions": 1883
+    "suites": 15,
+    "executions": 1883,
+    "diagnosticCompilations": 272,
+    "inputsUnchanged": true,
+    "elapsedSeconds": 762.9636793136597,
+    "matrix": [
+      {
+        "name": "gnu-float128-qualification",
+        "programs": 78,
+        "receipt": {
+          "path": "out/issue76-build/work/gnu-float128-qualification/report.json",
+          "bytes": 9526835,
+          "sha256": "bff8f3b80de646f738912a15e033290b78ef339e508940837904f0345871415f"
+        }
+      },
+      {
+        "name": "abi-qualification",
+        "programs": 200,
+        "receipt": {
+          "path": "out/issue76-build/work/abi-qualification/report.json",
+          "bytes": 1343461,
+          "sha256": "7b53086e036eca542acc855b487b518ae01835dd7888c6f005c9217ceb97f521"
+        }
+      },
+      {
+        "name": "atomic-abi-qualification",
+        "programs": 8,
+        "receipt": {
+          "path": "out/issue76-build/work/atomic-abi-qualification/report.json",
+          "bytes": 60733,
+          "sha256": "2b899418f504b30a6e45e18a118fa78b679d44c6945bff490ab3b069a827f233"
+        }
+      },
+      {
+        "name": "simd-qualification",
+        "programs": 25,
+        "receipt": {
+          "path": "out/issue76-build/work/simd-qualification/qualification.json",
+          "bytes": 551147,
+          "sha256": "497faf7d2037b52f6630ad808f7af519c854da2ea0c439a9336644e25daced62"
+        }
+      },
+      {
+        "name": "simd-extended-qualification",
+        "programs": 62,
+        "receipt": {
+          "path": "out/issue76-build/work/simd-extended-qualification/qualification.json",
+          "bytes": 3250834,
+          "sha256": "5b57acf762334e7385568417451636ffeb52719d25c798fbe11c3708fa8e5b4d"
+        }
+      },
+      {
+        "name": "simd-saturating-qualification",
+        "programs": 36,
+        "receipt": {
+          "path": "out/issue76-build/work/simd-saturating-qualification/qualification.json",
+          "bytes": 1478881,
+          "sha256": "dcc0ad894704eb937779f36822c8aaad4990224d86bebd91eab29cb5d5c0723c"
+        }
+      },
+      {
+        "name": "vector-abi-qualification",
+        "programs": 684,
+        "receipt": {
+          "path": "out/issue76-build/work/vector-abi-qualification/report.json",
+          "bytes": 65425631,
+          "sha256": "fc541b0d73f91efc5cdddbb9052b362fcc0d1cfa75ed25f16cecaba92d037677"
+        }
+      },
+      {
+        "name": "empty-abi-qualification",
+        "programs": 112,
+        "receipt": {
+          "path": "out/issue76-build/work/empty-abi-qualification/report.json",
+          "bytes": 6634328,
+          "sha256": "9c150985e57be220eff92fa3d4df6cd9dc9a560260b7f71f8ece567b6f448b39"
+        }
+      },
+      {
+        "name": "wide-builtins-qualification",
+        "programs": 50,
+        "receipt": {
+          "path": "out/issue76-build/work/wide-builtins-qualification/report.json",
+          "bytes": 8458271,
+          "sha256": "927168f91c684397e1e93b9c31ea225c57e1c1d7f3694909c7ca722f10636019"
+        }
+      },
+      {
+        "name": "wide-bitfields-qualification",
+        "programs": 72,
+        "receipt": {
+          "path": "out/issue76-build/work/wide-bitfields-qualification/report.json",
+          "bytes": 11031639,
+          "sha256": "0ee4bbf05936311b71d961b28c3401fdbdaefdc5e75ed21a00c2459b04d12cc5"
+        }
+      },
+      {
+        "name": "singleton-bitfield-qualification",
+        "programs": 32,
+        "receipt": {
+          "path": "out/issue76-build/work/singleton-bitfield-qualification/report.json",
+          "bytes": 7712514,
+          "sha256": "709ef794e760f3ca21228e9aa7870f127d2ea623d812f0637deaef589cb34b56"
+        }
+      },
+      {
+        "name": "anonymous-bitfield-qualification",
+        "programs": 160,
+        "receipt": {
+          "path": "out/issue76-build/work/anonymous-bitfield-qualification/report.json",
+          "bytes": 17153084,
+          "sha256": "31cef6057decee2035236192f2abc8c051120497674bf0e9bfc1d6e50e4285d5"
+        }
+      },
+      {
+        "name": "long-double-qualification",
+        "programs": 124,
+        "receipt": {
+          "path": "out/issue76-build/work/long-double-qualification/report.json",
+          "bytes": 14321729,
+          "sha256": "68b8a524eec52d80fd39672067c7cce3c4692fbe79466fb29e133a7b2b6f5c2f"
+        }
+      },
+      {
+        "name": "int128-qualification",
+        "programs": 116,
+        "receipt": {
+          "path": "out/issue76-build/work/int128-qualification/report.json",
+          "bytes": 13941820,
+          "sha256": "f8ebe30d82277b9503f588f1cf1fd62507a54e75a8fcfff406678e53d2ea52c8"
+        }
+      },
+      {
+        "name": "fp-extension-qualification",
+        "programs": 124,
+        "receipt": {
+          "path": "out/issue76-build/work/fp-extension-qualification/report.json",
+          "bytes": 12352756,
+          "sha256": "bcec63beda7a88e4d0b661afc026173c3bddd6ce4facea73f4a6298c38fd3899"
+        }
+      }
+    ],
+    "totalNativeQualificationExecutions": 2134,
+    "countingNote": "Native totals count each qualification matrix once, including its GCC/Clang interoperation directions and Clang controls. The separate baseline-half, Clang-conversion-reference and old-bundle harness-preflight runs are excluded."
   },
   "wasmHost": {
-    "status": "pending",
-    "expectedWorkerAndNodePrograms": 827,
-    "expectedRawWorkerDiagnostics": 272,
-    "expectedAdditionalDefaultPrograms": 12,
-    "note": "Same-source compiler build, full packaging and actual Chromium Worker qualification remain required. Expected counts are plans, not completed claims."
+    "status": "passed",
+    "compilerBuild": {
+      "path": "out/issue76-build/work/browser-compiler/compiler-build.json",
+      "bytes": 10817,
+      "sha256": "40e93867b9e625a0647500dff104e840f9a57f6f82944686af8670596f72ac2e"
+    },
+    "manifest": {
+      "path": "out/issue76-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 18661,
+      "sha256": "f97f89e4b0489bb1e4d8f58c15016757f9f0a9ee2ece512279d142b611d72cad"
+    },
+    "packageResult": {
+      "path": "out/issue76-build/control/package-result.json",
+      "bytes": 297,
+      "sha256": "8e2fb3a22c19ba173e0bca2385937e32a756269471a8296544c4fbab57817db5"
+    },
+    "workerSummary": {
+      "path": "out/issue76-build/worker-summary.json",
+      "bytes": 54901,
+      "sha256": "e908b29356abf11ebdd8813417d2464278628b2b02402b31529729bcb25ad147"
+    },
+    "sourceSnapshot": {
+      "path": "out/issue76-build/control/worker-inputs-final.json",
+      "bytes": 139926,
+      "sha256": "0ce93a3b10df3c1b662e074db6d624edb82b282a4b7b0760703ce8069989d771"
+    },
+    "executionCommands": {
+      "path": "out/issue76-build/control/worker-commands.json",
+      "bytes": 33207,
+      "sha256": "1d1b7bd4a0811f76e123145270737b4500907fbb4738d47c75aefe3fbb6857f5"
+    },
+    "sdkHead": "9b0b50f23a116fd99bdb7b423bb6e75327ae2959",
+    "canonicalPrograms": 827,
+    "chromiumExecutions": 827,
+    "independentNodeWasiExecutions": 827,
+    "additionalDefaultPrograms": 12,
+    "additionalDefaultChromiumExecutions": 12,
+    "additionalDefaultNodeWasiExecutions": 12,
+    "builtinDiagnosticChecks": 272,
+    "conversionFunctionOpcodeChecks": 176,
+    "totalSimdOpcodeChecks": 299,
+    "counts": {
+      "chromium": 827,
+      "nodeWasi": 827,
+      "objects": 597,
+      "wat": 597,
+      "objectSignatureChecks": 382
+    },
+    "diagnostics": [
+      {
+        "kind": "saturating",
+        "counts": {
+          "total": 80,
+          "defaultDisabled": 32,
+          "explicitDisabled": 32,
+          "invalidBuiltin": 16
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-saturating-diagnostics.json",
+          "bytes": 115010,
+          "sha256": "5564bf8d63bb966b65c9afca81123d5378b375c00c744cb24324052be190d1b9"
+        }
+      },
+      {
+        "kind": "conversions",
+        "counts": {
+          "total": 192,
+          "defaultDisabled": 32,
+          "explicitDisabled": 32,
+          "invalidBuiltin": 128
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-conversions-diagnostics.json",
+          "bytes": 291351,
+          "sha256": "912d6a70c46d0a34f9527601b0402676459eac2a8191d1915be123fed290eee6"
+        }
+      }
+    ],
+    "defaultControls": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-conversions-default.json",
+      "bytes": 735688,
+      "sha256": "a54ea2f1139c6fbae55943fc199a4b09fb07f8b932cd6896c7ab3d8e148725b6"
+    },
+    "browserVersions": [
+      "156.0.8078.4"
+    ],
+    "inputsUnchanged": true,
+    "note": "Every canonical fixture compiles through the actual packaged GCC in Chromium Worker and runs in both Chromium and Node WASI. The separate default12 preserve native default-profile argv with only paths relocated and run packaged GCC/WABT/WASI LLD plus SDK execution in Chromium, followed by independent Node execution. Raw272 diagnostics include saturation80 and conversion192. The producer manifest retains qualification.status=unverified by design; successful qualification is established by these separate execution receipts.",
+    "suites": [
+      {
+        "name": "conversions",
+        "counts": {
+          "chromium": 176,
+          "nodeWasi": 176,
+          "objects": 176,
+          "wat": 176,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-conversions-inspection.json",
+          "bytes": 5651093,
+          "sha256": "68725401c9ca9c6912f493ef5779df548804045699139b876cabe5221b90e420"
+        }
+      },
+      {
+        "name": "gnu-float128",
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 22
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-gnu-float128-inspection.json",
+          "bytes": 107113,
+          "sha256": "ac1cf60dfa0f0375e269f4a25ce1ad79832913fadf3195e03ee03dffcf7c247d"
+        }
+      },
+      {
+        "name": "saturating",
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-saturating-inspection.json",
+          "bytes": 89209,
+          "sha256": "7b1b296e63a19153223d244716c04a3cbe5450c3d7b6bbdd6d20bf5237f5fe61"
+        }
+      },
+      {
+        "name": "anonymous-bitfield",
+        "counts": {
+          "chromium": 40,
+          "nodeWasi": 40,
+          "objects": 40,
+          "wat": 40,
+          "objectSignatureChecks": 160
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-anonymous-bitfield-inspection.json",
+          "bytes": 98195,
+          "sha256": "9fb4d223798913aca6956305c3fa590c029eff9c92f377fe962c35154538394b"
+        }
+      },
+      {
+        "name": "empty-abi",
+        "counts": {
+          "chromium": 28,
+          "nodeWasi": 28,
+          "objects": 28,
+          "wat": 28,
+          "objectSignatureChecks": 168
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-empty-abi-inspection.json",
+          "bytes": 79258,
+          "sha256": "5c36fc91f4e89f2c057fee0c3076810e9a93b007f216240af09e8c2d45c3a35b"
+        }
+      },
+      {
+        "name": "singleton-bitfield",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 8,
+          "wat": 8,
+          "objectSignatureChecks": 32
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-singleton-bitfield-inspection.json",
+          "bytes": 23418,
+          "sha256": "f146671a47c83d7e3109d7f36ebbe4ea9f061ee4871891dd5ebde77f28740f1e"
+        }
+      },
+      {
+        "name": "basic",
+        "counts": {
+          "chromium": 17,
+          "nodeWasi": 17,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-basic-inspection.json",
+          "bytes": 15251,
+          "sha256": "db2f6f9dbf30383ee8ca0cda2cf3346c01494beb0a78aa9c3ed0d630b98e605d"
+        }
+      },
+      {
+        "name": "scalar-abi",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-scalar-abi-inspection.json",
+          "bytes": 20737,
+          "sha256": "2aa66d70a11a18a3e64eb2b3f9144b3a738f92b159ebd22ee8415bdf34797325"
+        }
+      },
+      {
+        "name": "atomic",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-atomic-inspection.json",
+          "bytes": 9729,
+          "sha256": "896338a9a056572f0e70604a02e6e9b0c5fb54aedbd66c5ff64c565964cc5bbf"
+        }
+      },
+      {
+        "name": "simd",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 25,
+          "wat": 25,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-simd-inspection.json",
+          "bytes": 47311,
+          "sha256": "624a24d5b0d9cfeea2226d2fc048d8f0faf9d66dbfd99b05db8b35677ad2962c"
+        }
+      },
+      {
+        "name": "extended",
+        "counts": {
+          "chromium": 62,
+          "nodeWasi": 62,
+          "objects": 62,
+          "wat": 62,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-extended-inspection.json",
+          "bytes": 117991,
+          "sha256": "3e8989bd99ae33defa28cd6d051d0e75961a5af5d342558238133035defbb2e3"
+        }
+      },
+      {
+        "name": "vector-abi",
+        "counts": {
+          "chromium": 180,
+          "nodeWasi": 180,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-vector-abi-inspection.json",
+          "bytes": 125202,
+          "sha256": "b9b96bc902a79f5e0d6fcf740fc1bbc0062ad97c9395bdeea7d7d096f6a5e131"
+        }
+      },
+      {
+        "name": "long-double",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-long-double-inspection.json",
+          "bytes": 132621,
+          "sha256": "560cd9c45a20efe29a3acdf9b26795bb1e38e02482b42cb2fa0862ea95f0293e"
+        }
+      },
+      {
+        "name": "int128",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-int128-inspection.json",
+          "bytes": 108586,
+          "sha256": "d34c2b38e986b28472f65278ba2f6d13b01196aa47f7802a3a85020311062d69"
+        }
+      },
+      {
+        "name": "wide-integer",
+        "counts": {
+          "chromium": 52,
+          "nodeWasi": 52,
+          "objects": 52,
+          "wat": 52,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-wide-integer-inspection.json",
+          "bytes": 102008,
+          "sha256": "c57ae542ee652616d859981ac1add54a33c03ef8267d56c863e74a1cbaf8e7b9"
+        }
+      },
+      {
+        "name": "fp-extension",
+        "counts": {
+          "chromium": 50,
+          "nodeWasi": 50,
+          "objects": 50,
+          "wat": 50,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-fp-extension-inspection.json",
+          "bytes": 136296,
+          "sha256": "f98cb5862f589b5aba60ac03ca3e5c12a0af23b459d854e82977d709a9839596"
+        }
+      }
+    ],
+    "loadingBytes": {
+      "uncompressedBytes": {
+        "minimum": 75437141,
+        "maximum": 75437141
+      },
+      "gzipBytes": {
+        "minimum": 24058432,
+        "maximum": 24058432
+      },
+      "sdkUncompressedBytes": {
+        "minimum": 5630311,
+        "maximum": 5630315
+      },
+      "totalUncompressedBytes": {
+        "minimum": 81067452,
+        "maximum": 81067456
+      },
+      "actualInitialResponseBodyBytes": {
+        "minimum": 29688743,
+        "maximum": 29688747
+      }
+    },
+    "assets": {
+      "cc1Js": {
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "bytes": 15605468,
+        "sha256": "68a0c2eaf5499862cfbe1e6139e6999ae1a939fcfb996be0a6b604f16d893b69"
+      },
+      "cc1plusJs": {
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "bytes": 17262886,
+        "sha256": "25aa92c0cf4f871c83a54e824cafe5e0c5b61b2900264111979ba6e13a542d8a"
+      },
+      "asJs": {
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "bytes": 597157,
+        "sha256": "339a199928446a5c15d540df3d328a68421fc8bbb64b0aad36bef5e221c5093d"
+      },
+      "ldWasm": {
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "bytes": 25447936,
+        "sha256": "b6a4ab56ea40aa1dfd6a59d8cf0d76d4b115970ed41509fb556f085541603b0c"
+      }
+    },
+    "opcodeReceipts": [
+      {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-conversions-opcodes.json",
+        "bytes": 772467,
+        "sha256": "f60cacdc110e9fe0d4ec5c2fdd61bc480500d4b56311605ffac8d782f796e731"
+      },
+      {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-saturating-opcodes.json",
+        "bytes": 151227,
+        "sha256": "f5968de8ac42aaa3aa066f59013848662808a6f22c29f5af8c9437afbed47087"
+      },
+      {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-simd-opcodes.json",
+        "bytes": 98665,
+        "sha256": "9319219ed44def9a65536e46aefbac50730802d2704753a273ce99801917ce27"
+      },
+      {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-conversions-76-20261030/out/issue76-build/worker-qualification-final/worker-extended-opcodes.json",
+        "bytes": 320370,
+        "sha256": "26568d7ff8d23cce4728c1cb11029f12ffc83bef18c435092b70d6ad639b7a79"
+      }
+    ],
+    "completionCommands": {
+      "path": "out/issue76-build/control/worker-completion-commands.json",
+      "bytes": 935,
+      "sha256": "1096edf7ed46fa4de92673631ed1bd7bf75d9ced9b9c83b68248dd42d879d4b8"
+    },
+    "completionInputSnapshot": {
+      "path": "out/issue76-build/control/worker-completion-inputs.json",
+      "bytes": 2179,
+      "sha256": "31179bed07f0c70c650b0f4bb3ffde5747407dcb5d8dfb49b5986faff1202515"
+    },
+    "conversionDiagnosticRecipe": {
+      "path": "out/issue76-build/control/worker-conversion-diagnostics-v2.mjs",
+      "bytes": 9035,
+      "sha256": "417bdb676b58ef54ce54e97a602071fef620dcf43650e7175297cbfe581d2a06"
+    }
   },
   "completedJobs": [
     {
@@ -315,6 +875,74 @@
       "exitCode": 0,
       "log": "/home/seorii/logs/wasm-llvm-76-half-abi-repro-aixli1m5.log",
       "statusFile": "/home/seorii/logs/wasm-llvm-76-half-abi-repro-aixli1m5.log.status"
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/native-regression-process.json",
+        "bytes": 328,
+        "sha256": "ba3f5070e8596646a55d33fea1d23d8ec6ee5a8cd6890c4f00864d2cb039f002"
+      },
+      "pid": 2322945,
+      "exitCode": 0,
+      "log": "/home/seorii/logs/wasm-llvm-76-native-regressions-901o9nzq.log",
+      "statusFile": "/home/seorii/logs/wasm-llvm-76-native-regressions-901o9nzq.log.status"
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/control/browser-process.json",
+        "bytes": 638,
+        "sha256": "7b273bf315538d36e68c77952390eb5a523492ac1f0b5a98f984a3f4b5f33c2f"
+      },
+      "pid": 2381931,
+      "exitCode": 0,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-76-browser-zj65fs8k.log",
+        "bytes": 7249286,
+        "sha256": "fe1473bab69e6cc0f1793a6772cb727c224796e80da71b102294d2cbbfd580e7"
+      },
+      "statusFile": {
+        "path": "/home/seorii/logs/wasm-llvm-76-browser-zj65fs8k.log.status",
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      }
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/control/package-process.json",
+        "bytes": 282,
+        "sha256": "bc4ccf1046863aef6ab99549d8529626ac65ff5d3844d77cd69f7551a1fc86c1"
+      },
+      "pid": 2501381,
+      "exitCode": 0,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-76-package-20afm06k.log",
+        "bytes": 271,
+        "sha256": "02672c6744c1dd566a3373faa810733308042aab1a0fa34d027de9079d64ba5e"
+      },
+      "statusFile": {
+        "path": "/home/seorii/logs/wasm-llvm-76-package-20afm06k.log.status",
+        "bytes": 64,
+        "sha256": "5eda39bd4b6ed57a0952d9ea6b6365b7bc8ca9a44d42b23daf86ffd7865f36c8"
+      }
+    },
+    {
+      "process": {
+        "path": "out/issue76-build/control/worker-completion-process.json",
+        "bytes": 402,
+        "sha256": "2d271d7c714d086dac3cf21f6f05685463efee77a4f1c51a86b93c41cad13257"
+      },
+      "pid": 2634046,
+      "exitCode": 0,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-76-worker-completion-6jn0gw99.log",
+        "bytes": 267,
+        "sha256": "3b1a740e5c1d0fb8b99aa352b6f9e1fa040ee56b8023f900b0f3ce131d36c9dd"
+      },
+      "statusFile": {
+        "path": "/home/seorii/logs/wasm-llvm-76-worker-completion-6jn0gw99.log.status",
+        "bytes": 64,
+        "sha256": "714fb4509a9142747a71cdb634becb52d25205e079812f52aecd4c01f6e3d331"
+      }
     }
   ],
   "reproduction": {
@@ -328,5 +956,69 @@
       "producer/gcc-wasi/simd-conversions-qualification.test.mjs",
       "producer/gcc-wasi/package.test.mjs"
     ]
-  }
+  },
+  "nativeSdkDecoder": {
+    "status": "passed",
+    "receipt": {
+      "path": "out/issue76-build/native-sdk-decoder-inspection.json",
+      "bytes": 599825,
+      "sha256": "924579f9061287feecefd8152ed7af624e788d372facc7973feb4e26a0bccfe2"
+    },
+    "recipe": {
+      "path": "out/issue76-build/control/inspect-native-sdk-decoder.mjs",
+      "bytes": 2165,
+      "sha256": "4199dbc18ac8db41ae2e2a90b0d2d5abcf6a87fa906657cf9d3a98ac0728e390"
+    },
+    "counts": {
+      "programs": 188,
+      "objects": 188,
+      "simdEnabled": 164,
+      "explicitDisabled": 12,
+      "defaultControls": 12
+    },
+    "note": "The unchanged real SDK decoder accepted every actual native object/program and correctly identified enabled, disabled and default profiles. This is additional native-artifact inspection, not Wasm-host compiler qualification."
+  },
+  "finishedAt": "2026-10-30T10:26:09.357Z",
+  "evidenceAssemblyRecipe": {
+    "path": "out/issue76-build/control/finalize-browser-evidence.py",
+    "bytes": 9303,
+    "sha256": "e24d79f8df2c79c424a09a18f1fa331f2eea956beccfc857e8cc8f3977042966"
+  },
+  "setupAttemptHistory": [
+    {
+      "status": "resolved",
+      "compilerFailure": false,
+      "action": "initial conversion diagnostic fixture selection",
+      "cause": "The copied diagnostic helper retained a literal saturation fixture path. The conversions count assertion saw16 instead of192 and stopped before browser initialization.",
+      "resolution": "Preserve original frozen helpers and completed artifacts. A distinct v2 helper selects the requested fixture, rechecks itself before/after, then the untouched default12 helper and original final artifact inspection complete the remaining proof.",
+      "completedCanonicalProgramsPreserved": 827,
+      "completedSaturatingDiagnosticsPreserved": 80,
+      "conversionCompilerInvocationsBeforeFailure": 0,
+      "failureRecord": {
+        "path": "out/issue76-build/control/diagnostic-selection-failure.json",
+        "bytes": 1667,
+        "sha256": "8cbc2a768b9034ca83403128e3e63471c52d2f0b474453ee603780f4988793c8"
+      },
+      "process": {
+        "path": "out/issue76-build/control/worker-process.json",
+        "bytes": 280,
+        "sha256": "6293f03d82a30f0bd00e5aeda108cfec905d8a3a51176b95224b44e31a5c527f"
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-76-worker-tp5c48ru.log",
+        "bytes": 71209,
+        "sha256": "305b43c4145c7afcd4dc5d2ca8f91671efa8787113459edc91c6753b6d9d0815"
+      },
+      "statusFile": {
+        "path": "/home/seorii/logs/wasm-llvm-76-worker-tp5c48ru.log.status",
+        "bytes": 8320,
+        "sha256": "a5deb84ccfbd28e660afa78549894bd59034f32a2babf72a26db3dacef8ade71"
+      },
+      "retry": {
+        "path": "out/issue76-build/control/worker-completion-process.json",
+        "bytes": 402,
+        "sha256": "2d271d7c714d086dac3cf21f6f05685463efee77a4f1c51a86b93c41cad13257"
+      }
+    }
+  ]
 }

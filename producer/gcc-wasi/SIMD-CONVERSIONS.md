@@ -88,6 +88,16 @@ not promise that every equivalent source spelling selects the same instruction.
 
 ## Qualification
 
+The [completed qualification record](../../docs/gcc-wasi-simd-conversions-20261030.json)
+binds the fifteen-patch source, fresh GNU runtime and packaged Wasm-host
+compiler. Native qualification passed 2,134 executions, including its
+GCC/Clang interoperability and reference controls, plus 272 diagnostic checks.
+The same-source Wasm-host compiler produced 827 canonical programs and another
+12 default-option programs; all passed actual Chromium Worker and independent
+Node WASI execution. All 272 raw Worker diagnostics and 176 conversion-function
+opcode checks passed. Historical baseline and harness-preflight executions are
+recorded separately from these totals.
+
 ```sh
 node producer/gcc-wasi/test-simd-conversions.mjs \
   --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" \
