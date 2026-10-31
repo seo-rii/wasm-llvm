@@ -20,6 +20,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
 [strong function and data aliases](SYMBOL-ALIASES.md),
 [weak references and weak definitions](WEAK-REFERENCES.md),
+[optional C++ RTTI](RTTI.md),
 [binary128 implementation and reproduction](LONG-DOUBLE.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
 [public int128 implementation and reproduction](INT128.md),
@@ -42,7 +43,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0018`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases and weak references; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0019`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references and one-only RTTI binding; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md) and [symbol alias](SYMBOL-ALIASES.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -213,6 +214,12 @@ It copies the pinned runtime source and adds a WASI configure case with real
 feature probes. Patch `0017` supports the original `std::type_info::__equal`
 alias, so the former forwarding-function substitution has been removed. The
 compiler source remains untouched. This is GNU libstdc++, not libc++ or a shim.
+Patch `0019` fixes vague-linkage typeinfo/name coalescing. The runtime now
+builds with `-frtti -fno-exceptions` and verifies both generated CXXFLAGS and
+EXTRA_CXX_FLAGS. Its native qualification executes two existing RTTI-disabled
+programs, one native frontend flag-omission program and two explicitly enabled
+programs, including C++23 streambuf printing; the SDK default remains
+`-fno-rtti`. See [RTTI.md](RTTI.md).
 The WASI `errno` header also has an explicit GCC single-thread profile patch:
 `__GCC_WASI_SINGLE_THREAD__=1` selects the existing libc's ordinary linear-memory
 storage. Real C and C++ overflow tests confirm that libc and GCC use the same
@@ -294,6 +301,13 @@ node producer/gcc-wasi/test-weakrefs.mjs \
   --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
   --output "$GCC_WASI_WORK_DIR/weakref-qualification"
 
+node producer/gcc-wasi/test-rtti.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/rtti-qualification"
+
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -310,14 +324,15 @@ node producer/gcc-wasi/package.mjs \
   --anonymous-bitfield-qualification "$GCC_WASI_WORK_DIR/anonymous-bitfield-qualification/report.json" \
   --symbol-alias-qualification "$GCC_WASI_WORK_DIR/symbol-alias-qualification/qualification.json" \
   --weakref-qualification "$GCC_WASI_WORK_DIR/weakref-qualification/qualification.json" \
+  --rtti-qualification "$GCC_WASI_WORK_DIR/rtti-qualification/qualification.json" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current eighteen-patch compiler, `--long-double-qualification`,
+For the current nineteen-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
-`--weakref-qualification`, all five SIMD
+`--weakref-qualification`, `--rtti-qualification`, all five SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -452,14 +467,18 @@ are `wasi_snapshot_preview1` functions. `int`, `long`, pointers and `size_t` are
 Scalar integer/float/double arithmetic, branches, loops, calls, function
 pointers, GCC-to-GCC structures, globals, allocation, stdin/stdout, double libm,
 headers, multiple translation units and real `-D` options are qualification
-targets. C++ uses `-fno-exceptions -fno-rtti -fuse-cxa-atexit
+targets. The default C++ profile uses `-fno-exceptions -fno-rtti -fuse-cxa-atexit
 -fno-threadsafe-statics` consistently so single-threaded global/local static
 objects are constructed and destroyed. GNU library/STL support is gated by its
 own build and execution tests, independently of the C++ frontend.
 
 SIMD128 is available with explicit SDK `simd: true` and a qualified capable bundle;
 the default scalar profile passes `-mno-simd128`. See [the exact SIMD scope](SIMD.md).
-Exceptions, RTTI, threads/TLS/atomics and shared/dynamic linking are unsupported.
+RTTI requires an explicit SDK request and a bundle with qualified RTTI support.
+Exceptions, threads/TLS/atomics and shared/dynamic linking are unsupported.
+Failed reference casts and null-polymorphic `typeid` remain exception-dependent
+boundaries; mixed GCC/Clang C++ support is limited to the qualified interfaces
+described in [RTTI.md](RTTI.md).
 x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
 x86 API. Unsupported target attributes/pragmas are GCC errors in this profile.
 The GNU C++ time-zone database, C++26 debugger functions and prebuilt `std`
