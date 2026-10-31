@@ -22,10 +22,10 @@ int use_optional(void) {
 }
 ```
 
-The completed source18 result is **native-qualified-browser-pending**. The
+The completed source18 result is **qualified** on native and Wasm compiler hosts. The
 [evidence record](../../docs/gcc-wasi-weakrefs-20261030.json) identifies the exact
 compiler source, assembler, fresh GNU runtime, commands and retained results.
-Native success does not establish execution of the compiler inside a browser.
+Actual Chromium module Workers compile the original GCC sources and execute the resulting programs; Node WASI independently executes the same output bytes.
 
 ## Binding and object contract
 
@@ -147,12 +147,18 @@ arguments, original source hashes, fixed WASI runner body and runtime stdin/
 stdout. It reopens the actual object metadata, signatures and programs, checks
 current headers/archives and rejects incomplete, changed or stale proofs.
 The actual package-gate preflight accepted the final result after reopening all
-2,469 recorded files; packaging and browser execution remain separate stages.
+2,469 recorded files. The same-source Wasm-host build and package gates also passed.
 
-`weakref-worker-fixtures.mjs` defines 148 GCC-only executable cases for the
-public SDK. Browser compilation, mixed-object raw linker controls, metadata
-inspection and actual Chromium Worker/Node execution remain a separate pending
-qualification. Native mixed GCC/Clang success does not replace that stage.
+`weakref-worker-fixtures.mjs` adds 148 GCC-only executable cases to the public
+SDK regression matrix. All 1,707 canonical programs compiled and ran in actual
+Chromium Workers, with the same program bytes independently run in Node WASI.
+The separate mixed-object matrix compiles 118 GCC objects inside the Worker,
+combines them with 114 hash-verified native Clang reference objects, and checks
+all 528 link cases: 480 programs pass in both execution engines and 48 strict
+links are rejected. Every object is reopened for binding, relocation, signature
+and same-unit alias checks. Existing 592 diagnostics, four compiler-default
+controls, six target-feature programs and strong-alias controls also pass.
+The evidence record keeps these overlapping matrices separate.
 
 Weak alias definitions (`weak` combined with `alias`) remain rejected. COMDAT,
 symbol versioning, shared/dynamic linking, TLS, threads, exceptions and RTTI are

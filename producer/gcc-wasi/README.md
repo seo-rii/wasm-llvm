@@ -390,8 +390,8 @@ function signatures and executable programs. Both strong/weak encounter orders
 and both strong-override link orders are covered. Same-unit GCC local aliases
 must share the defined target's function index or data storage; external weakrefs
 must name their public target. See [WEAK-REFERENCES.md](WEAK-REFERENCES.md).
-The [source18 evidence](../../docs/gcc-wasi-weakrefs-20261030.json) currently
-records native qualification; browser and Worker qualification remain pending.
+The [source18 evidence](../../docs/gcc-wasi-weakrefs-20261030.json) records
+completed native, Wasm-host compiler and actual Chromium Worker qualification.
 The binary128 gate requires all 42 O0/O2 fixtures and 124 applicable native
 GCC/Clang runs, the pinned print/scan extension and the rebuilt GNU archives.
 It checks both actual Clang invocations, executed tool paths, header inventories,
@@ -519,7 +519,7 @@ Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user
 source units, not arbitrary external binary objects or libraries. The backend
 supports the qualified strong aliases described in [SYMBOL-ALIASES.md](SYMBOL-ALIASES.md)
-and the native weak-reference/weak-definition contract in
+and the weak-reference/weak-definition contract in
 [WEAK-REFERENCES.md](WEAK-REFERENCES.md). Weak alias definitions, COMDAT groups,
 symbol versioning, profiling and general debug output remain outside this profile;
 this is an experimental qualified profile,
