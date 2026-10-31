@@ -1,0 +1,655 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/67",
+  "status": "native-qualified-browser-pending",
+  "profile": "Experimental GCC 17, 19 locked local patches (source19), wasm32-wasi-preview1, static single-threaded GNU C++ runtime with opt-in RTTI and exceptions disabled.",
+  "sourceLabelBoundary": "source19 names the 19-patch source profile, not the GCC major version.",
+  "sdkDefault": "-fno-rtti; a capable bundle and explicit RTTI request select -frtti. Native frontend default cases omit an RTTI flag and therefore test a different default.",
+  "sourceLock": {
+    "path": "producer/gcc-wasi/sources.lock.json",
+    "bytes": 8452,
+    "sha256": "6bb1e863fb88ea6616f56528b8cb6d047ee032097d91597470e93b3bb5222071"
+  },
+  "gccSource": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      },
+      {
+        "path": "patches/0012-anonymous-bitfield-abi.patch",
+        "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+        "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+      },
+      {
+        "path": "patches/0013-simd-saturating-arithmetic.patch",
+        "purpose": "Add signed/unsigned i8x16 and i16x8 saturating add/subtract optabs and typed GCC target builtins with explicit SIMD feature gating.",
+        "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+      },
+      {
+        "path": "patches/0014-gnu-float128.patch",
+        "purpose": "Expose GNU __float128, exact Q/q literal typing, distinct C++ mangling, consistent same-format conversion ranks and GNU library feature detection over the qualified binary128 representation.",
+        "sha256": "703b8ab823b53d815f1edd0d89dab60a5cd3cde2871b7c956705d96cf53d4476"
+      },
+      {
+        "path": "patches/0015-simd-conversions.patch",
+        "purpose": "Add baseline SIMD conversion optabs and exactly typed saturation builtins, with composed packs/high halves and existing scalar fallbacks.",
+        "sha256": "6ed61fc595bc513fc64582e6983fe27f2c0a7aa7e291e4e50af02f4f60c4133a"
+      },
+      {
+        "path": "patches/0016-wasm-simd128-header.patch",
+        "purpose": "Install the documented 169-name SIMD128 header, typed direct lane operations and scalar/vector partial-copy legalization without changing the public vector ABI.",
+        "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+      },
+      {
+        "path": "patches/0017-symbol-aliases.patch",
+        "purpose": "Define strong function/data aliases with shared addresses and independent symbol binding, visibility and relocations.",
+        "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e"
+      },
+      {
+        "path": "patches/0018-weak-references.patch",
+        "purpose": "Normalize optional weak reference imports and asm-labelled symbol references, with typed weak target collection and strong-reference precedence.",
+        "sha256": "d958924db4487b9531849ffbc6147607e10f4b94719992c580c9e071db80c895"
+      },
+      {
+        "path": "patches/0019-rtti-one-only.patch",
+        "purpose": "Coalesce emitted C++ vague-linkage RTTI data through Wasm weak binding without enabling unsupported COMDAT aliases or weakening ordinary C definitions.",
+        "sha256": "ae57e781b94bce58265af1a1bacfccb78c030287bd3450b15ff3ad376e27ddeb"
+      }
+    ],
+    "sourceDiffSha256": "19e0a620c1cc5b45ab15f8910c5214502bb21eda5a3cdfe297972b4aa6b17cd5"
+  },
+  "patch": {
+    "path": "producer/gcc-wasi/patches/0019-rtti-one-only.patch",
+    "bytes": 880,
+    "sha256": "ae57e781b94bce58265af1a1bacfccb78c030287bd3450b15ff3ad376e27ddeb"
+  },
+  "implementation": "Emit public, defined C++ DECL_COMDAT data with weak Wasm binding. Keep generic COMDAT group support disabled so ordinary STL code does not acquire unsupported weak ABI aliases; preserve ordinary C tentative-definition binding.",
+  "nativeCompiler": {
+    "path": "out/issue67-build/work/native-build.json",
+    "bytes": 6794,
+    "sha256": "eeebe2e1c4f539492b0dfec95caf832fc18724b8d83388a7243ad0bb2e077eba"
+  },
+  "assemblerSource": {
+    "patches": [
+      {
+        "path": "patches/wabt-0001-simd-target-features.patch",
+        "purpose": "Record actual SIMD instructions and v128 types, merge target_features and reject malformed or conflicting declarations.",
+        "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6"
+      },
+      {
+        "path": "patches/wabt-0002-symbol-aliases.patch",
+        "purpose": "Resolve strong symbol aliases and preserve independent linking names and relocation identities through annotated WAT and binary round trips.",
+        "sha256": "ecc5664fb48d4337fad9c469076c06cf97162dae870ee76d7eb948233d83a759"
+      }
+    ],
+    "sourceDiffSha256": "1cf55c9739b0fddc3177d2dbfe0899403140b18fc41b64a5a912d1aaffc7f8eb",
+    "submodules": {
+      "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
+    },
+    "wabtCommit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173"
+  },
+  "assemblerProvenance": {
+    "path": "out/issue67-build/work/wabt-native/provenance.json",
+    "bytes": 2337,
+    "sha256": "e437d4c5796d4a0a09e160fbb9f3aa275b9a15543b1ef9c4ca7dd5fdf54e3d93"
+  },
+  "nativeQualification": {
+    "path": "out/issue67-build/work/rtti-qualification-v2/qualification.json",
+    "bytes": 2082778,
+    "sha256": "fdfc69d507006105552eba23d818d1df9ab8507c72b6b00f220bda47c6e1dcb7"
+  },
+  "counts": {
+    "units": 74,
+    "cases": 96,
+    "runtimePasses": 88,
+    "linkRejections": 8,
+    "exceptionBoundaries": 8,
+    "diagnostics": 8
+  },
+  "inputsUnchanged": true,
+  "frozenInputAndArtifactCount": 1750,
+  "fixtures": {
+    "path": "producer/gcc-wasi/rtti-fixtures.mjs",
+    "bytes": 19683,
+    "sha256": "d5ed596bbdffa5b53ea8a2c91ec030b094929029ff783dbb02f130f661ab94b7"
+  },
+  "recipes": {
+    "test-rtti.mjs": {
+      "path": "producer/gcc-wasi/test-rtti.mjs",
+      "bytes": 21678,
+      "sha256": "4bf837b76c4f159cfadca338cc9d4a1fe4a538c886c3d93d220be9667bd8f49d"
+    },
+    "rtti-fixtures.mjs": {
+      "path": "producer/gcc-wasi/rtti-fixtures.mjs",
+      "bytes": 19683,
+      "sha256": "d5ed596bbdffa5b53ea8a2c91ec030b094929029ff783dbb02f130f661ab94b7"
+    },
+    "rtti-inspect.mjs": {
+      "path": "producer/gcc-wasi/rtti-inspect.mjs",
+      "bytes": 3464,
+      "sha256": "c030b5486e5627963f8b15a55a669fee499d63920ec9884357a7ef862afc5264"
+    },
+    "symbol-alias-inspect.mjs": {
+      "path": "producer/gcc-wasi/symbol-alias-inspect.mjs",
+      "bytes": 7722,
+      "sha256": "c00b7d632cdfa242195b4ee51929845d0faab283c4b1e8b31dbbfef53b78ba27"
+    },
+    "inspect-vector-abi.mjs": {
+      "path": "producer/gcc-wasi/inspect-vector-abi.mjs",
+      "bytes": 5970,
+      "sha256": "e017791927d7782e4da9c92ec704adc1a504d4668f6be90bdec565d6b3554c12"
+    },
+    "prepare-source.py": {
+      "path": "producer/gcc-wasi/prepare-source.py",
+      "bytes": 5859,
+      "sha256": "aab5bb957d90f1e8eff999e2f751ba54b37ab3fd8efb2029c0d543b2bc8169f3"
+    },
+    "build-native.sh": {
+      "path": "producer/gcc-wasi/build-native.sh",
+      "bytes": 4041,
+      "sha256": "9e986668497fcf388bad789bc998b0ba7fe326915b6d6385191ff592c983c679"
+    },
+    "build-wabt.sh": {
+      "path": "producer/gcc-wasi/build-wabt.sh",
+      "bytes": 6606,
+      "sha256": "4cca114d9daf1b375e826da783f2faff5c63fdddbdcf9a6f778a059caa47031d"
+    },
+    "build-libstdcxx.sh": {
+      "path": "producer/gcc-wasi/build-libstdcxx.sh",
+      "bytes": 11385,
+      "sha256": "6a8658f78251437e2a96c483d8b36bba6aeec05b54c2d35a39cd67c93ca883bd"
+    },
+    "test-libstdcxx.mjs": {
+      "path": "producer/gcc-wasi/test-libstdcxx.mjs",
+      "bytes": 13639,
+      "sha256": "e39b641b6e43a27c24b71553ca0d2b3eb00d0cb172f9ad300ea24b2aebd78668"
+    },
+    "runtime.lock.json": {
+      "path": "producer/gcc-wasi/runtime.lock.json",
+      "bytes": 1911,
+      "sha256": "169312117c848eb4505d5217b101269a7c223d96bf9959b693f9bfa7bd370e02"
+    }
+  },
+  "tools": {
+    "gcc": {
+      "path": "out/issue67-build/work/gcc-native/gcc/cc1",
+      "bytes": 24436552,
+      "sha256": "baea71a309c86a0419d5fdabcd8836a03751e21efe1245d679feaf092cc0aa5f"
+    },
+    "gccCpp": {
+      "path": "out/issue67-build/work/gcc-native/gcc/cc1plus",
+      "bytes": 26993448,
+      "sha256": "6b18e0290733634686941108efd3de555173ab50ebcf5b78f58750c6278a9d90"
+    },
+    "xgcc": {
+      "path": "out/issue67-build/work/gcc-native/gcc/xgcc",
+      "bytes": 2445440,
+      "sha256": "87cbc6c41dd364cbacd08248e11681ae156ca2729547ae3ef34f3007f48da89a"
+    },
+    "clang": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/bin/clang",
+      "bytes": 118656,
+      "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+    },
+    "clangCpp": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/bin/clang++",
+      "bytes": 118656,
+      "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+    },
+    "assembler": {
+      "path": "out/issue67-build/work/wabt-native/wat2wasm",
+      "bytes": 1657000,
+      "sha256": "9ad500132bffbfec07f02dd78099244ef460d382f6ddb1938ccb9cdb47ff69f4"
+    },
+    "objdump": {
+      "path": "out/issue67-build/work/wabt-native/wasm-objdump",
+      "bytes": 990704,
+      "sha256": "44fdac8330d0169e8aab97b59d96a95d451dcaa579cfc26e3fa1ed199ebb0e0a"
+    },
+    "validator": {
+      "path": "out/issue67-build/work/wabt-native/wasm-validate",
+      "bytes": 1304104,
+      "sha256": "ea007dafdffed3a5e0148dc1eadd8b15e9bbadf7f7a2ccdab68ffc24a0249dd2"
+    },
+    "linker": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/bin/wasm-ld",
+      "bytes": 4165088,
+      "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+    },
+    "node": {
+      "path": "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+      "bytes": 126879696,
+      "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+    }
+  },
+  "headerCounts": {
+    "gcc": 18,
+    "target": 206,
+    "gnu": 862,
+    "clang": 267
+  },
+  "archives": {
+    "crt": {
+      "path": "out/issue67-build/work/runtime-current/sysroot/lib/wasm32-wasi/crt1-command.o",
+      "bytes": 1990,
+      "sha256": "27bf9846868f00d770b724fd0a27e22f799c6d550c335d5e8e770391d6ae3231"
+    },
+    "libc": {
+      "path": "out/issue67-build/work/runtime-current/sysroot/lib/wasm32-wasi/libc.a",
+      "bytes": 3085600,
+      "sha256": "d7ebab1b8ee60d06c31fe809c52b8fe8c12591d4bf1e8989431e67787eff3cf4"
+    },
+    "libm": {
+      "path": "out/issue67-build/work/runtime-current/sysroot/lib/wasm32-wasi/libm.a",
+      "bytes": 8,
+      "sha256": "f0a17a43c74d2fe5474fa2fd29c8f14799e777d7d75a2cc4d11c20a6e7b161c5"
+    },
+    "libstdcxx": {
+      "path": "out/issue67-build/work/libstdcxx-rtti-v3/sysroot/lib/wasm32-wasi/libstdc++.a",
+      "bytes": 6461002,
+      "sha256": "4e85351a1628aabd81cda19e42f9927eb9f9d46e6294b11ebd0f628293060822"
+    },
+    "libsupcxx": {
+      "path": "out/issue67-build/work/libstdcxx-rtti-v3/sysroot/lib/wasm32-wasi/libsupc++.a",
+      "bytes": 255748,
+      "sha256": "e36da51a20f494e6d4a57fa0dc79081a627c6a4fa3ee27958cc2e01c80bfb703"
+    },
+    "builtins": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/lib/clang/22/lib/wasm32-unknown-wasi/libclang_rt.builtins.a",
+      "bytes": 456060,
+      "sha256": "b1e23c0376609e09052ff225f290d971b0f8eabd3ffd0737e5d0ebb10f1880d1"
+    }
+  },
+  "matrix": {
+    "optimizations": [
+      "O0",
+      "O2"
+    ],
+    "hierarchies": [
+      "single",
+      "multiple",
+      "virtual",
+      "weak-typeinfo",
+      "gnu-base"
+    ],
+    "compilerPairings": [
+      "gcc/gcc",
+      "gcc/clang",
+      "clang/gcc",
+      "clang/clang"
+    ],
+    "runtimeInputsPerSuccessfulHierarchyPair": 2,
+    "nativeFrontendProfiles": [
+      "enabled",
+      "disabled",
+      "default"
+    ],
+    "ordinaryCControls": [
+      "-fcommon",
+      "-fno-common"
+    ]
+  },
+  "objectContract": {
+    "typeinfo": "Actual linking-v2 _ZTI/_ZTS weak definitions and imports, visibility, storage, and relocations are inspected. The uninstantiated inline Base vtable may be optimized away; the hierarchy's six typeinfo/name definitions remain mandatory.",
+    "dynamicCastSignature": {
+      "params": [
+        "i32",
+        "i32",
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32"
+      ]
+    },
+    "strictLinkFlag": "--fatal-warnings",
+    "exceptionBoundaries": "Eight separate objects are compiled and linked; no exception-dependent failure is executed or counted as a runtime pass."
+  },
+  "gnuRuntime": {
+    "build": {
+      "path": "out/issue67-build/work/libstdcxx-rtti-v3/build.json",
+      "bytes": 6527562,
+      "sha256": "b8394f5e8a272ba69bbb938204dd5dcb5d7696ee3ed1ca24043548501c3a29f2"
+    },
+    "qualification": {
+      "path": "out/issue67-build/work/libstdcxx-rtti-v3/qualification/qualification.json",
+      "bytes": 13755,
+      "sha256": "12dfaad8736bed9449d4eb3ed61190e042fcde60e2766e06b2ef7ddcdb7d6993"
+    },
+    "receipt": {
+      "path": "out/issue67-build/work/libstdcxx-rtti-v3/libstdcxx-build.json",
+      "bytes": 157850,
+      "sha256": "80d8a1cd45e683499d5c82f518a7a5edb89d513da6894b27715b793e393d1721"
+    },
+    "profiles": {
+      "disabled": 2,
+      "default": 1,
+      "enabled": 2
+    },
+    "cases": [
+      {
+        "id": "stl-static-multiple",
+        "rtti": "disabled",
+        "status": "passed",
+        "exitCode": 0,
+        "stdout": "17 18 1 9 gcc-wasi\n"
+      },
+      {
+        "id": "iostream",
+        "rtti": "disabled",
+        "status": "passed",
+        "exitCode": 0,
+        "stdout": "45\n"
+      },
+      {
+        "id": "rtti-gnu-default",
+        "rtti": "default",
+        "status": "passed",
+        "exitCode": 0,
+        "stdout": "31 7\n"
+      },
+      {
+        "id": "rtti-gnu-enabled",
+        "rtti": "enabled",
+        "status": "passed",
+        "exitCode": 0,
+        "stdout": "31 7\n"
+      },
+      {
+        "id": "rtti-streambuf-print",
+        "rtti": "enabled",
+        "status": "passed",
+        "exitCode": 0,
+        "stdout": "stream 24\n"
+      }
+    ],
+    "compilerFlags": {
+      "CXXFLAGS": "-O0 -fno-exceptions -frtti -fuse-cxa-atexit -fno-threadsafe-statics",
+      "EXTRA_CXX_FLAGS": " -fno-exceptions "
+    },
+    "rtti": true,
+    "exceptions": false,
+    "files": 864,
+    "wasiPrintPort": "Exclude the native-filebuf dup branch on WASI Preview 1; retain ordinary FILE*/stdio streambuf and print behavior."
+  },
+  "baseline": {
+    "report": {
+      "path": "out/issue67-preparation/baseline-v2/report.json",
+      "bytes": 1071731,
+      "sha256": "7980b319a5c6ac1a71d98072f0786163fbeecffb12c5cd364eb83701517fda1d"
+    },
+    "status": "baseline-complete",
+    "counts": {
+      "units": 44,
+      "objectReady": 44,
+      "programs": 40,
+      "linkedPrograms": 28,
+      "passingPrograms": 28,
+      "runtimeExecutions": 56,
+      "passingRuntimeExecutions": 56,
+      "hostPrograms": 10,
+      "hostExecutions": 20,
+      "exceptionBoundaryUnits": 8
+    },
+    "inputsUnchanged": true
+  },
+  "readiness": {
+    "path": "out/issue67-build/control/native-gnu-v3-readiness.json",
+    "bytes": 10554,
+    "sha256": "1c1307574e1fabf5b875681fca5509ff042bbeea42a5c53e119056c49d3e9469"
+  },
+  "assemblerReceiptRefresh": {
+    "status": {
+      "path": "/home/seorii/logs/wasm-llvm-67-wabt-native-v3-vn6gf8fw.log.status",
+      "bytes": 3354,
+      "sha256": "36400faac4663e075cffea33982e5fcaa31d7eaa7a74b91d097bf9064a0a3817"
+    },
+    "preservedOldReceipt": {
+      "path": "out/issue67-build/control/preserved-wabt-before-v3/provenance.json",
+      "bytes": 2337,
+      "sha256": "4a2abf649cc015554a676fa904f3934895a93212828e4f8b931cbca2ba6751ea"
+    },
+    "assemblerSourceAndBinaryBytesUnchanged": true,
+    "reason": "The normal incremental assembler build refreshed its whole source-lock identity after the GCC-only patch changed; every original GNU input was reopened and the prior receipt preserved."
+  },
+  "unitTests": {
+    "command": "node --test producer/gcc-wasi/rtti-fixtures.test.mjs producer/gcc-wasi/rtti-inspect.test.mjs",
+    "passed": 11,
+    "failed": 0,
+    "allProducer": {
+      "command": "node --test producer/gcc-wasi/*.test.mjs",
+      "passed": 135,
+      "failed": 0,
+      "log": {
+        "path": "out/issue67-build/control/unit-tests-final.log",
+        "bytes": 13063,
+        "sha256": "27c34b86583917a213085cb5551ee85a581979a2226509c9bab0fffe6ed3bb86"
+      }
+    }
+  },
+  "preservedMetadataAttempt": {
+    "report": {
+      "path": "out/issue67-build/work/rtti-qualification-v1/qualification.json",
+      "bytes": 2060352,
+      "sha256": "7bd3ff07b543e35e42f1e21b14c1625124a7a0aae62612a0f98f4faf2bad592a"
+    },
+    "fixture": {
+      "path": "out/issue67-build/control/preserved-rtti-v1-fixtures.mjs",
+      "bytes": 19583,
+      "sha256": "ddf9a20c350bf307d6b6512308b8fb487338b1927128b870209a6451c52c5cba"
+    },
+    "reason": "The unused inline Base vtable is absent in the actual GCC O2 object; the full matrix was rerun after correcting only that expectation."
+  },
+  "boundaries": [
+    "Exceptions remain disabled; failed reference casts and null-polymorphic typeid depend on exception-runtime entry points and are not supported execution paths.",
+    "Four Clang-provider std::exception hierarchies must reject the existing D2 destructor ABI disagreement: Clang (i32)->i32 versus GNU (i32)->void.",
+    "Four duplicate ordinary C definitions must be rejected; ordinary -fcommon data is not weakened.",
+    "Successful mixed-compiler cases qualify only the tested interfaces, not general C++ ABI compatibility.",
+    "Browser compiler, Worker, and public SDK qualification are separate stages."
+  ],
+  "processes": {
+    "native19-v3": {
+      "process": {
+        "path": "out/issue67-build/control/native19-v3-process.json",
+        "bytes": 422,
+        "sha256": "8994b6458bc9d0a240b6ed088d423658caa55c1e54b0b3b09c39f085940686f3"
+      },
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-67-native19-v3-6gzqf1cz.log.status",
+        "bytes": 12154,
+        "sha256": "20e5a7cdc5c8f57621c88fbc32d168a54d0a8e8ca8e9f3f16ddbd84f02de3178"
+      },
+      "elapsedSeconds": 724.0670747756958
+    },
+    "runtime-v3": {
+      "process": {
+        "path": "out/issue67-build/control/runtime-v3-process.json",
+        "bytes": 431,
+        "sha256": "15acfee17f366e124fbdfe1b730d6f77ce5c4a77f1c8f4348f3b046042a5afe7"
+      },
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-67-runtime19-v3-d1lcdoz2.log.status",
+        "bytes": 1473,
+        "sha256": "88d0d74620edb236e75f4ebc4236ab1cd083e02c99a752f572c6d5b85b073728"
+      },
+      "elapsedSeconds": 117.59496116638184
+    },
+    "wabt-native-v3": {
+      "process": {
+        "path": "out/issue67-build/control/wabt-native-v3-process.json",
+        "bytes": 350,
+        "sha256": "3afe2c7a63d0037a41bd741668a89eb6248b66c1d827373e856e708c93e97f51"
+      },
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-67-wabt-native-v3-vn6gf8fw.log.status",
+        "bytes": 3354,
+        "sha256": "36400faac4663e075cffea33982e5fcaa31d7eaa7a74b91d097bf9064a0a3817"
+      },
+      "elapsedSeconds": 1.6369314193725586
+    },
+    "rtti-native-v2": {
+      "process": {
+        "path": "out/issue67-build/control/rtti-native-v2-process.json",
+        "bytes": 465,
+        "sha256": "6f6d3aa8dd2fac0f2f40987eb9fa7a1e81cb5a323ef21fdd6f4397caf9484492"
+      },
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-67-rtti-native-v2-0wiy90x5.log.status",
+        "bytes": 2853,
+        "sha256": "f15d7e4728aa44a4a99d3f14db1061cd525dc99cd4ea2f2ae678def0a7ab7092"
+      },
+      "elapsedSeconds": 40.25697994232178
+    }
+  },
+  "logs": {
+    "native19-v3": {
+      "path": "/home/seorii/logs/wasm-llvm-67-native19-v3-6gzqf1cz.log",
+      "statusPath": "/home/seorii/logs/wasm-llvm-67-native19-v3-6gzqf1cz.log.status",
+      "exitCode": 0
+    },
+    "runtime-v3": {
+      "path": "/home/seorii/logs/wasm-llvm-67-runtime19-v3-d1lcdoz2.log",
+      "statusPath": "/home/seorii/logs/wasm-llvm-67-runtime19-v3-d1lcdoz2.log.status",
+      "exitCode": 0
+    },
+    "wabt-native-v3": {
+      "path": "/home/seorii/logs/wasm-llvm-67-wabt-native-v3-vn6gf8fw.log",
+      "statusPath": "/home/seorii/logs/wasm-llvm-67-wabt-native-v3-vn6gf8fw.log.status",
+      "exitCode": 0
+    },
+    "rtti-native-v2": {
+      "path": "/home/seorii/logs/wasm-llvm-67-rtti-native-v2-0wiy90x5.log",
+      "statusPath": "/home/seorii/logs/wasm-llvm-67-rtti-native-v2-0wiy90x5.log.status",
+      "exitCode": 0
+    }
+  },
+  "inheritedRegression": {
+    "status": "passed",
+    "stages": 24,
+    "inputsUnchanged": true,
+    "sameSource18CaseSetsAndFixtureIdentities": true,
+    "coverage": {
+      "cases": 3727,
+      "diagnostics": 608,
+      "watCases": 62,
+      "defaultControls": 16,
+      "negativeLinks": 16,
+      "units": 232
+    },
+    "coverageNote": "Each field is a separate coverage category; units and diagnostic/link groups are not additional execution totals.",
+    "receipt": {
+      "path": "out/issue67-regression/control/regression-final.json",
+      "bytes": 3734,
+      "sha256": "0b3a947193bae0e229d9b9016f96a7cbcff88bad8b17550e1611948a0fc8c00b"
+    },
+    "combinedNativeStages": 25,
+    "combinedStatus": {
+      "path": "out/issue67-build/control/final-native-status.json",
+      "bytes": 36275,
+      "sha256": "257168fbaba565f98b8a1ed31e9702b0c7259d5fb7043c3e94990aa4dd037da5"
+    }
+  },
+  "browser": {
+    "status": "build-in-progress",
+    "process": {
+      "path": "out/issue67-build/control/browser-process.json",
+      "bytes": 392,
+      "sha256": "30a26664cfc434e7b41518476bf267393df0166d33bdb85539bb5cba8319816b"
+    }
+  },
+  "packageGate": {
+    "status": "native-preflights-passed-packaging-pending",
+    "rtti": {
+      "path": "out/issue67-build/control/rtti-gate-preflight-v2.json",
+      "bytes": 1423,
+      "sha256": "92c891b7a66327f9b6427a319a8012b3dd947ba7464479002ad635ed4653aeb1"
+    },
+    "weakrefs": {
+      "path": "out/issue67-build/control/weakref-gate-preflight.json",
+      "bytes": 1378,
+      "sha256": "25c7652e05561be95e64f6f20afe3c483fa87f8c97e592b93b890306950c6eb2"
+    },
+    "aliases": {
+      "path": "out/issue67-build/control/alias-gate-preflight.json",
+      "bytes": 745,
+      "sha256": "472e32379ed280501d083e71ea7d56459a091bbf2539025ae5d739ad6b9abb38"
+    },
+    "recipe": {
+      "path": "producer/gcc-wasi/rtti-qualification.mjs",
+      "bytes": 17206,
+      "sha256": "683d00c1edb0f6d1a270b9ce73e1eacb5b6e04aa289dd3341fee88361ccdb0f7"
+    },
+    "packageRecipe": {
+      "path": "producer/gcc-wasi/package.mjs",
+      "bytes": 93494,
+      "sha256": "43a6a41e255532d01dbdcf066b50458a5877a135d0eb683a744b3c7dde48eca4"
+    }
+  },
+  "publicWorkerPlan": {
+    "programs": 27,
+    "plan": {
+      "path": "out/issue67-build/control/rtti-worker-plan-preflight.json",
+      "bytes": 280,
+      "sha256": "408a42797e070ce2c12f2573580da79dcc261b4a354dca70072e3b8f4884eaea"
+    },
+    "fixtures": {
+      "path": "producer/gcc-wasi/rtti-worker-fixtures.mjs",
+      "bytes": 3012,
+      "sha256": "f282ad7049783a56d2703ffc4872f2a9c78f3cf9a34e529365afd45f84369619"
+    },
+    "status": "execution-pending"
+  }
+}

@@ -136,7 +136,7 @@ PY
 export CC="$runtime/driver/gcc" CXX="$runtime/driver/g++"
 export AR="$sdk/bin/llvm-ar" RANLIB="$sdk/bin/llvm-ranlib" NM="$sdk/bin/llvm-nm"
 export AS="$runtime/driver/as" LD="$runtime/driver/ld"
-export CFLAGS='-O0' CXXFLAGS='-O0 -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics'
+export CFLAGS='-O0' CXXFLAGS='-O0 -fno-exceptions -frtti -fuse-cxa-atexit -fno-threadsafe-statics'
 export MAKEINFO=true
 # AC_CHECK_FUNCS uses char fn(), which gives a false negative when Wasm's
 # strict linker compares it to an actual math.h function type. Cache only
@@ -181,7 +181,17 @@ if gcc_source != json.loads((runtime/'gcc-source.json').read_text()):
 math_probe = json.loads((runtime/'math-probes/report.json').read_text())
 if math_probe['status'] != 'passed' or not math_probe['inputsUnchanged'] or math_probe['missingRequired']:
     raise SystemExit('Typed math probes are not complete and unchanged')
+# Both variables affect every libsupc++ translation unit.  A later configure.host
+# -fno-rtti would override CXXFLAGS, so verify the actual generated Makefile.
+makefile = runtime/'build/libsupc++/Makefile'
+flags = dict(line.split(' = ', 1) for line in makefile.read_text().splitlines()
+             if line.startswith(('CXXFLAGS = ', 'EXTRA_CXX_FLAGS = ')))
+if '-frtti' not in flags['CXXFLAGS'].split() or any('-fno-rtti' in value.split() for value in flags.values()):
+    raise SystemExit('GNU runtime was not built with RTTI enabled')
+if '-fno-exceptions' not in (flags['CXXFLAGS'] + ' ' + flags['EXTRA_CXX_FLAGS']).split():
+    raise SystemExit('GNU runtime must keep exceptions disabled')
 receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-wasi',
+    'compilerFlags': flags, 'compilerFlagsMakefile': identity(makefile),
     'gccCommit': json.loads((recipe/'sources.lock.json').read_text())['gcc']['commit'],
     'recipe': identity(recipe/'build-libstdcxx.sh'),
     'patch': identity(recipe/'patches/libstdcxx-wasi-config.patch'),
@@ -193,6 +203,6 @@ receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-w
         'report': identity(runtime/'math-probes/report.json'),
         'cache': identity(runtime/'math-probes/config.site'), 'evidence': math_probe},
     'libraries': {name: identity(runtime/'install/lib'/name) for name in ['libstdc++.a', 'libsupc++.a']},
-    'exceptions': False, 'rtti': False, 'threads': False, 'timezoneDatabase': False, 'debugger': False, 'stdModules': False}
+    'exceptions': False, 'rtti': True, 'threads': False, 'timezoneDatabase': False, 'debugger': False, 'stdModules': False}
 (runtime/'build.json').write_text(json.dumps(receipt, indent=2)+'\n')
 PY

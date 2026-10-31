@@ -34,6 +34,10 @@ const identity = (file) => {
 const build = JSON.parse(
   readFileSync(path.join(runtime, "build.json"), "utf8"),
 );
+assert.equal(build.rtti, true, "Expected an RTTI-enabled GNU runtime build");
+assert.equal(build.exceptions, false, "Exception handling remains unsupported");
+assert.ok(build.compilerFlags.CXXFLAGS.split(/\s+/).includes('-frtti'));
+assert.ok(Object.values(build.compilerFlags).every(flags => !flags.split(/\s+/).includes('-fno-rtti')));
 function checkCompilerIdentity() {
   for (const tool of ["cc1", "cc1plus", "xgcc"])
     assert.equal(
@@ -58,7 +62,6 @@ const common = [
   "-g0",
   "-std=gnu++20",
   "-fno-exceptions",
-  "-fno-rtti",
   "-fuse-cxa-atexit",
   "-fno-threadsafe-statics",
   "-nostdinc++",
@@ -69,6 +72,7 @@ const common = [
 const cases = [
   {
     id: "stl-static-multiple",
+    rtti: "disabled",
     stdin: "4 9 1 5 3\n",
     stdout: "17 18 1 9 gcc-wasi\n",
     files: {
@@ -82,6 +86,7 @@ const cases = [
   },
   {
     id: "iostream",
+    rtti: "disabled",
     stdin: "44\n",
     stdout: "45\n",
     files: {
@@ -91,6 +96,44 @@ const cases = [
     sources: ["main.cpp"],
   },
 ];
+for (const profile of ['default', 'enabled']) cases.push({
+  id: `rtti-gnu-${profile}`,
+  rtti: profile,
+  stdin: '7\n',
+  stdout: '31 7\n',
+  sources: ['main.cpp'],
+  files: { 'main.cpp': `#include <exception>
+#include <typeinfo>
+#include <cstdio>
+#ifndef __GXX_RTTI
+#error GNU RTTI qualification requires RTTI
+#endif
+struct Derived:std::exception { int value; explicit Derived(int n):value(n){} };
+struct Other:std::exception {};
+int main(){int n;if(std::scanf("%d",&n)!=1)return 2;Derived d(n);std::exception*p=&d;
+int mask=(dynamic_cast<Derived*>(p)==&d?1:0)|(dynamic_cast<Other*>(p)==nullptr?2:0)
+|(dynamic_cast<void*>(p)==&d?4:0)|(typeid(*p)==typeid(Derived)?8:0)
+|(typeid(std::exception)!=typeid(Derived)?16:0);
+std::printf("%d %d\\n",mask,d.value);}
+` },
+});
+cases.push({
+  id: 'rtti-streambuf-print',
+  rtti: 'enabled',
+  standard: 'gnu++23',
+  stdin: '23\n',
+  stdout: 'stream 24\n',
+  sources: ['main.cpp'],
+  files: { 'main.cpp': `#include <iostream>
+#include <print>
+#include <sstream>
+#ifndef __GXX_RTTI
+#error Streambuf printing must exercise the RTTI-enabled runtime
+#endif
+int main(){int n;if(!(std::cin>>n))return 2;std::ostringstream text;
+std::print(text,"stream {}",n+1);std::println(std::cout,"{}",text.str());}
+` },
+});
 const runner = `
 import { WASI } from 'node:wasi';
 import { openSync, readFileSync } from 'node:fs';
@@ -106,6 +149,8 @@ const report = {
   compiler: "gcc",
   gccCommit: build.gccCommit,
   target: "wasm32-wasi",
+  rtti: true,
+  exceptions: false,
   buildReceipt: identity(path.join(runtime, "build.json")),
   testRecipe: identity(fileURLToPath(import.meta.url)),
   cases: [],
@@ -117,7 +162,8 @@ try {
     for (const [name, contents] of Object.entries(test.files))
       writeFileSync(path.join(directory, name), contents);
     const args = [
-      ...common,
+      ...common.map(flag => flag.startsWith('-std=') ? '-std=' + (test.standard || 'gnu++20') : flag),
+      ...(test.rtti === 'disabled' ? ['-fno-rtti'] : test.rtti === 'enabled' ? ['-frtti'] : []),
       ...test.sources,
       "-L" + path.join(runtime, "install/lib"),
       "-lstdc++",
@@ -190,6 +236,7 @@ try {
     );
     report.cases.push({
       id: test.id,
+      rtti: test.rtti,
       status: "passed",
       command: [compiler, ...args],
       source: Object.fromEntries(
@@ -233,6 +280,7 @@ try {
       compiler,
       [
         ...common,
+        '-fno-rtti',
         ...test.flags,
         "main.cpp",
         "-L" + path.join(runtime, "install/lib"),
@@ -264,6 +312,9 @@ try {
     });
   }
   checkCompilerIdentity();
+  report.profiles = Object.fromEntries(['disabled', 'default', 'enabled'].map(profile =>
+    [profile, report.cases.filter(test => test.rtti === profile).length]));
+  assert.deepEqual(report.profiles, { disabled: 2, default: 1, enabled: 2 });
   report.status = "passed";
   // A completed native execution receipt gates the producer's optional runtime merge.
   // Preserve prior qualified output instead of mutating a bundle another build may use.
@@ -315,7 +366,7 @@ try {
         gccCommit: build.gccCommit,
         version: "17.0.0",
         exceptions: false,
-        rtti: false,
+        rtti: true,
         threads: false,
         timezoneDatabase: false,
         debugger: false,
