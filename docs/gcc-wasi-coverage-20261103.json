@@ -1,0 +1,2640 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/82",
+  "status": "qualified",
+  "finishedAtUTC": "2026-11-02T16:19:16.632568+00:00",
+  "profile": "Experimental GCC17 source20: explicit single-counter gcov coverage, WASI Preview1, static single-threaded programs, official libgcov writer and matching native gcov analysis.",
+  "sourceLabelBoundary": "source20 is the count of locked local patches, not the GCC major version.",
+  "implementationCommit": "9d541382b415a8698dedde0f5cc55bdb1bf302cd",
+  "sdkSourceCommit": "cb162403816453c8cd242e09a8f09a6bb1169f2f",
+  "pullRequests": {
+    "producer": "https://github.com/seo-rii/wasm-llvm/pull/105",
+    "sdk": "https://github.com/seo-rii/wasm-idle/pull/366"
+  },
+  "source": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      },
+      {
+        "path": "patches/0012-anonymous-bitfield-abi.patch",
+        "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+        "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+      },
+      {
+        "path": "patches/0013-simd-saturating-arithmetic.patch",
+        "purpose": "Add signed/unsigned i8x16 and i16x8 saturating add/subtract optabs and typed GCC target builtins with explicit SIMD feature gating.",
+        "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+      },
+      {
+        "path": "patches/0014-gnu-float128.patch",
+        "purpose": "Expose GNU __float128, exact Q/q literal typing, distinct C++ mangling, consistent same-format conversion ranks and GNU library feature detection over the qualified binary128 representation.",
+        "sha256": "703b8ab823b53d815f1edd0d89dab60a5cd3cde2871b7c956705d96cf53d4476"
+      },
+      {
+        "path": "patches/0015-simd-conversions.patch",
+        "purpose": "Add baseline SIMD conversion optabs and exactly typed saturation builtins, with composed packs/high halves and existing scalar fallbacks.",
+        "sha256": "6ed61fc595bc513fc64582e6983fe27f2c0a7aa7e291e4e50af02f4f60c4133a"
+      },
+      {
+        "path": "patches/0016-wasm-simd128-header.patch",
+        "purpose": "Install the documented 169-name SIMD128 header, typed direct lane operations and scalar/vector partial-copy legalization without changing the public vector ABI.",
+        "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+      },
+      {
+        "path": "patches/0017-symbol-aliases.patch",
+        "purpose": "Define strong function/data aliases with shared addresses and independent symbol binding, visibility and relocations.",
+        "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e"
+      },
+      {
+        "path": "patches/0018-weak-references.patch",
+        "purpose": "Normalize optional weak reference imports and asm-labelled symbol references, with typed weak target collection and strong-reference precedence.",
+        "sha256": "d958924db4487b9531849ffbc6147607e10f4b94719992c580c9e071db80c895"
+      },
+      {
+        "path": "patches/0019-rtti-one-only.patch",
+        "purpose": "Coalesce emitted C++ vague-linkage RTTI data through Wasm weak binding without enabling unsupported COMDAT aliases or weakening ordinary C definitions.",
+        "sha256": "ae57e781b94bce58265af1a1bacfccb78c030287bd3450b15ff3ad376e27ddeb"
+      },
+      {
+        "path": "patches/0020-coverage-profile.patch",
+        "purpose": "Qualify single-counter arc/test coverage with early unsupported profiling diagnostics and official libgcov normal-exit registration for WASI.",
+        "sha256": "7d41f14e928c29cef958cdf79fc5f0824823ffa382631d6c264daf9732ed089b"
+      }
+    ],
+    "sourceDiffSha256": "d8ebbf096b10682c8d95abcbb27584ea09c6c4480eb70c12a32fa5f597720577"
+  },
+  "identities": {
+    "sourceLock20": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/sources.lock.json",
+      "bytes": 8773,
+      "sha256": "7fdc94c2a6b17cfaa69ba725f6430b562750d3d0e7679ae42b76318b5a047518"
+    },
+    "patch20": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/patches/0020-coverage-profile.patch",
+      "bytes": 3533,
+      "sha256": "7d41f14e928c29cef958cdf79fc5f0824823ffa382631d6c264daf9732ed089b"
+    },
+    "source20Receipt": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-source.json",
+      "bytes": 5588,
+      "sha256": "977b351d2fba6efa5fd6b1f0fb433947ab67ba1e6f691b35c9fa1fdf1a5fe4e9"
+    },
+    "nativeBuildFinalV5": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/native-build.json",
+      "bytes": 7115,
+      "sha256": "921f37cf7b311767ec3c2f3cffe41de18bf676635b738bbcab3623506a77dbf2"
+    },
+    "runtimeLock": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/runtime.lock.json",
+      "bytes": 2241,
+      "sha256": "07d7d2b9b96dd9f8a2c9db07dd252cafe5747b527083f25c7dfe59bf198b3ccf"
+    },
+    "native-cc1": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/cc1",
+      "bytes": 24440648,
+      "sha256": "ef7fce92baaac6af8d2bec3d551fc0e5cf7ad5136a24eb0b0ce6c473206a4d8c"
+    },
+    "native-cc1plus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/cc1plus",
+      "bytes": 26993448,
+      "sha256": "08fb2949005558a3f1c78fd5c0cb4a608f1b2a85b9b022f40ffb52b432a72049"
+    },
+    "native-xgcc": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/xgcc",
+      "bytes": 2445440,
+      "sha256": "470421a10da0765bcd9b17ad8b75b3dcc002bc8107ebfca57a723da4e3e4be2d"
+    },
+    "native-gcov": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/gcov",
+      "bytes": 1697232,
+      "sha256": "cb4a1a947e766ea60db94d704f349eafea72a2e8ba90e5808317b429b596233c"
+    },
+    "native-gcov-dump": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/gcov-dump",
+      "bytes": 1432096,
+      "sha256": "fbac10e215d19ceaa19f5b3dbd66f94b9e1dc65adb883b33a2d8e5e25aeef22f"
+    },
+    "nativeWabtReceipt": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/wabt-native/provenance.json",
+      "bytes": 2337,
+      "sha256": "cfc9a3723051bc25292efbf0ca59d5d55f6e5a8558b35f2118da360fef1faccb"
+    },
+    "nativeAnalysisBuildMakefile": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/Makefile",
+      "bytes": 191333,
+      "sha256": "7cb4f99bcb742f150ffe42d80ee9844ecbf96838793bee2dabed4719c6712a64"
+    },
+    "coverageGate": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/coverage-qualification.mjs",
+      "bytes": 29868,
+      "sha256": "9af56ed3b143b13ae6d29437bd4e269c861f0f2d8f260e06588f0d6ad09ad579"
+    },
+    "coverageGateTests": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/coverage-qualification.test.mjs",
+      "bytes": 7646,
+      "sha256": "331178903e7aa51a5cc347a52d2a91930a18d40c841496ccc9b139038ce37f13"
+    },
+    "coverageGateTestResults": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/gate-review/final-checks.json",
+      "bytes": 4014,
+      "sha256": "6b4288f803befe7b385543f667a7bbe775504c8b157c57a1f4e7c46462f4ac33"
+    },
+    "coverageGateFinalPreflight": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/gate-review/coverage-gate-preflight-fixed.json",
+      "bytes": 1243,
+      "sha256": "be382d62d9a65d452d4372b4202b5de37cb80a33d7febc0bb721660a621431bf"
+    },
+    "libgcovGateFinalPreflight": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/gate-review/libgcov-gate-preflight-fixed.json",
+      "bytes": 1073,
+      "sha256": "39aea1ac8aa8aacf79f08d9139e9fca6fe85121db6ee620d4033af0649f73a98"
+    },
+    "runtimeImport": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/runtime-current/runtime-build.json",
+      "bytes": 59741,
+      "sha256": "1e7c493dbf66e4ae2169638e70a338283434bb9f677653bb199c84e0b12310a8"
+    },
+    "sdk33Archive": {
+      "path": "/data/toolchains/wasi-sdk-33.0-x86_64-linux.tar.gz",
+      "bytes": 193563606,
+      "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce"
+    },
+    "runtime-crt": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/runtime-current/sysroot/lib/wasm32-wasi/crt1-command.o",
+      "bytes": 1990,
+      "sha256": "27bf9846868f00d770b724fd0a27e22f799c6d550c335d5e8e770391d6ae3231"
+    },
+    "runtime-libc": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/runtime-current/sysroot/lib/wasm32-wasi/libc.a",
+      "bytes": 3085600,
+      "sha256": "d7ebab1b8ee60d06c31fe809c52b8fe8c12591d4bf1e8989431e67787eff3cf4"
+    },
+    "runtime-libm": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/runtime-current/sysroot/lib/wasm32-wasi/libm.a",
+      "bytes": 8,
+      "sha256": "f0a17a43c74d2fe5474fa2fd29c8f14799e777d7d75a2cc4d11c20a6e7b161c5"
+    },
+    "runtime-libstdcxx": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libstdcxx/sysroot/lib/wasm32-wasi/libstdc++.a",
+      "bytes": 6461006,
+      "sha256": "9aef2b10f6097a14dea0349ce48fc028790c2aa7ea038510e87222dff76fd572"
+    },
+    "runtime-libsupcxx": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libstdcxx/sysroot/lib/wasm32-wasi/libsupc++.a",
+      "bytes": 255748,
+      "sha256": "1cb0c5186812d3ceaa87a91dcbcc121a0cda21add1d85c772c717009013cde00"
+    },
+    "runtime-builtins": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/runtime-current/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a",
+      "bytes": 456060,
+      "sha256": "b1e23c0376609e09052ff225f290d971b0f8eabd3ffd0737e5d0ebb10f1880d1"
+    },
+    "runtime-libgcov": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/sysroot/lib/wasm32-wasi/libgcov.a",
+      "bytes": 22730,
+      "sha256": "7bf0430ee5e92ab008925ee9289ad04b8c8aaae218b7c1397005c02e74cf8060"
+    },
+    "runtime-getpid": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/sysroot/lib/wasm32-wasi/libwasi-emulated-getpid.a",
+      "bytes": 1466,
+      "sha256": "3931dfd6b1873b4ef02d1e5408d7d28621c046bbdd2fb1ceca777b6522c750cc"
+    },
+    "gnuBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libstdcxx/build.json",
+      "bytes": 6524935,
+      "sha256": "ddafbc9c641d44f2147fe81eb3133bf91c912a4f07b1d2cfa4c8251fa4e41306"
+    },
+    "gnuQualification": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libstdcxx/qualification/qualification.json",
+      "bytes": 13667,
+      "sha256": "76540af219f2c83803556b459b0e089b9bc761cf63479d832e92db9f19f30ed8"
+    },
+    "gnuPackageReceipt": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libstdcxx/libstdcxx-build.json",
+      "bytes": 157850,
+      "sha256": "ec419620423029ddcb34c58ce3b26a69764a810c9ff6e8bea05be5455e788822"
+    },
+    "officialLibgcovBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/build.json",
+      "bytes": 156449,
+      "sha256": "5b7bcb6286a77df3a9a0341950173297d8c825af0621e05be262905373a08bce"
+    },
+    "libgcov-config-Makefile": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/configuration/Makefile",
+      "bytes": 40254,
+      "sha256": "53efb48b5214807d874ea53b457b2dbde977fc0a62ea15649de98a892d8bed61"
+    },
+    "libgcov-config-auto-target.h": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/configuration/auto-target.h",
+      "bytes": 3163,
+      "sha256": "4a17f9e4755131aa3c3bba57aa4c4d710797fbdccdb115ba6618e354028c0898"
+    },
+    "libgcov-config-libgcc_tm.h": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/configuration/libgcc_tm.h",
+      "bytes": 112,
+      "sha256": "a17020fe85909e7d4b4bbc236cec6181eaf7d9c9e9c294bbadf92e2701c1ad34"
+    },
+    "libgcov-source-0": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc/libgcc/libgcov-driver.c",
+      "bytes": 22539,
+      "sha256": "a4439faf97d37021112ac6f5f48824d957e9a99236227c0096d868bc86ca54e3"
+    },
+    "libgcov-object-0": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/objects/_gcov.o",
+      "bytes": 21539,
+      "sha256": "43efbf0d3970eca9e0a36e22d63b511aae79fcace9375048222a03570b730337"
+    },
+    "libgcov-source-1": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc/libgcc/libgcov-merge.c",
+      "bytes": 4497,
+      "sha256": "b7aa661c6d757f7db5e1699882df6f3ce572a225998274e8436912452e49e542"
+    },
+    "libgcov-object-1": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-v2/objects/_gcov_merge_add.o",
+      "bytes": 444,
+      "sha256": "478dad1741af71a94054835265490f008c914dda9447ba0ab2232b98ba6d5120"
+    }
+  },
+  "native": {
+    "documentationData": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-doc-data.json",
+      "bytes": 107855,
+      "sha256": "17e04b4710f097d5eadb0e2efea32ec0b5d759906709a38a51581e336a2bf2c9"
+    },
+    "qualification": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/qualification.json",
+      "bytes": 3000768,
+      "sha256": "07c760f778a146b8e8450bb92ddc791705f30d7f995837cc0e10831b38fa6a26"
+    },
+    "counts": {
+      "units": 36,
+      "cases": 28,
+      "coverage": 16,
+      "controls": 12,
+      "nativeExecutions": 32,
+      "profileExecutions": 20,
+      "metadataControls": 8,
+      "diagnostics": 120
+    },
+    "executionHost": "Node WASI with native GCC compiler",
+    "keyResults": [
+      {
+        "id": "core-c-o0-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "core-c-o0-coverage-main",
+                "functions": {
+                  "classify": 6,
+                  "main": 1
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o0-coverage-main/source.c",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o0-coverage-main/program.o",
+                  "bytes": 2125,
+                  "sha256": "aa69ded3a8de9f3704c00ca4bb01cb71f3332c6588d3ef600ce1b0d2ffe2cc5f"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o0-coverage/run-1/analysis/core-c-o0-coverage-main/program.gcno",
+                  "bytes": 3823,
+                  "sha256": "69f1885854a1b1b9c8593ca6b6ac6414dfbae38f099c8d2aecf85772f899cc4b"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o0-coverage/run-1/analysis/core-c-o0-coverage-main/program.gcda",
+                  "bytes": 172,
+                  "sha256": "7d4d3cabfdca0d4375e68d86a9871d63090d0035b46330487a9853905f1c38e0"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o0-coverage/run-1/analysis/core-c-o0-coverage-main/gcov.json",
+                  "bytes": 3883,
+                  "sha256": "366284edaf2a708925a325b10b6fc5a742f8ecdcd50b9d230b707f0e8ae7fc2d"
+                }
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "multiplier": 2,
+            "stdout": "11\n",
+            "preexistingProfileCount": 1,
+            "analysis": [
+              {
+                "unit": "core-c-o0-coverage-main",
+                "functions": {
+                  "classify": 12,
+                  "main": 2
+                },
+                "classifyBranches": [
+                  [
+                    6,
+                    6
+                  ],
+                  [
+                    2,
+                    4
+                  ]
+                ],
+                "loopBranches": [
+                  12,
+                  2
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o0-coverage-main/source.c",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o0-coverage-main/program.o",
+                  "bytes": 2125,
+                  "sha256": "aa69ded3a8de9f3704c00ca4bb01cb71f3332c6588d3ef600ce1b0d2ffe2cc5f"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o0-coverage/run-2/analysis/core-c-o0-coverage-main/program.gcno",
+                  "bytes": 3823,
+                  "sha256": "69f1885854a1b1b9c8593ca6b6ac6414dfbae38f099c8d2aecf85772f899cc4b"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o0-coverage/run-2/analysis/core-c-o0-coverage-main/program.gcda",
+                  "bytes": 172,
+                  "sha256": "eed07580ea552b28a55211dfeddff00f62ee5ec507f5fa6cb51f9126978875b3"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o0-coverage/run-2/analysis/core-c-o0-coverage-main/gcov.json",
+                  "bytes": 3889,
+                  "sha256": "84a78d393f033f754a9214fdb356f67c1664f23cb40d44e87e8ce329d9510e36"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "exit-c-o0-coverage",
+        "stdout": "11\nexit 7\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\nexit 7\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "exit-c-o0-coverage-main",
+                "functions": {
+                  "classify": 7,
+                  "user_exit": 1,
+                  "main": 1
+                },
+                "classifyBranches": [
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-c-o0-coverage-main/source.c",
+                  "bytes": 566,
+                  "sha256": "7ab35acc3d2c1d5c748181bf83d94aa29e793f93b41a3ff3fb80296a039e9e93"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-c-o0-coverage-main/program.o",
+                  "bytes": 2823,
+                  "sha256": "53713b1e0928794521f249f59b74d2ac075d9dce45a713ffc3d89554c9f4c049"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-c-o0-coverage/run-1/analysis/exit-c-o0-coverage-main/program.gcno",
+                  "bytes": 5314,
+                  "sha256": "6229fb28bdf516237bbcaa6518b2113877bee94ead9c3dc59086f83608eb3b68"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-c-o0-coverage/run-1/analysis/exit-c-o0-coverage-main/program.gcda",
+                  "bytes": 240,
+                  "sha256": "09a875dbad52dd8d1fbbfe3a593778c0a1c88a2f99942e13438fbea293355866"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-c-o0-coverage/run-1/analysis/exit-c-o0-coverage-main/gcov.json",
+                  "bytes": 4856,
+                  "sha256": "326374b1a0b99f2e04aedafdff0ee0a2de71b1e0a8d81d1c2b7e25cf6d0c23cb"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "multiple-c-o0-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "multiple-c-o0-coverage-main",
+                "functions": {
+                  "main": 1
+                },
+                "classifyBranches": null,
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o0-coverage-main/source.c",
+                  "bytes": 338,
+                  "sha256": "c25dac15b35d658eedf605ef1322006c9b4ee4738272501fc7cbc9d78311ce92"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o0-coverage-main/program.o",
+                  "bytes": 1620,
+                  "sha256": "cec1fd4f0b6225b147269e18d4cd85982378b2f396a9daebbbb27e1c767b5f11"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o0-coverage/run-1/analysis/multiple-c-o0-coverage-main/program.gcno",
+                  "bytes": 2576,
+                  "sha256": "7f6918a8f6fbecbf542d095a36fe13968ab5944239cbc7907a8ae6ffafc6bd36"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o0-coverage/run-1/analysis/multiple-c-o0-coverage-main/program.gcda",
+                  "bytes": 120,
+                  "sha256": "ceb58304c62714378380632305c6d7735685f9f1b1678362e67a40681acaf3a9"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o0-coverage/run-1/analysis/multiple-c-o0-coverage-main/gcov.json",
+                  "bytes": 2625,
+                  "sha256": "284b838b0ff9cb134d26a5ad21111c69331c0f47540d59da4ac5abe27dbfe676"
+                }
+              },
+              {
+                "unit": "multiple-c-o0-coverage-provider",
+                "functions": {
+                  "classify": 6
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": null,
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o0-coverage-provider/source.c",
+                  "bytes": 212,
+                  "sha256": "0a72e6a414eec5013b3773899dcc261af67f1767afe6c8fafc124902f5b19e2f"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o0-coverage-provider/program.o",
+                  "bytes": 1077,
+                  "sha256": "bf0a1ff2f3fb94f2b92a47be49bb1264845a54fbb27363a6f49dc3a7d68556da"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o0-coverage/run-1/analysis/multiple-c-o0-coverage-provider/program.1.gcno",
+                  "bytes": 1517,
+                  "sha256": "cbf4435efa5e33537e3fc9a381fedc30d38354c4d42835292abc04daa5be34f1"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o0-coverage/run-1/analysis/multiple-c-o0-coverage-provider/program.1.gcda",
+                  "bytes": 88,
+                  "sha256": "7fa0b70681185aab30ba5e57a1d6bfdfed7fb8c10d855c4a03ecaeefbb0ec4bb"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o0-coverage/run-1/analysis/multiple-c-o0-coverage-provider/gcov.json",
+                  "bytes": 1952,
+                  "sha256": "199388c244ecb9a62c1d1a9ebc2e2d487fc1dfc97f00785390a7c0d4889372ec"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "core-c-o2-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "core-c-o2-coverage-main",
+                "functions": {
+                  "classify": 6,
+                  "main": 1
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o2-coverage-main/source.c",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o2-coverage-main/program.o",
+                  "bytes": 1766,
+                  "sha256": "53964e0633e3e84fc083c234e56c0d7083f675cd1c047d81e29c38d00423ea58"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o2-coverage/run-1/analysis/core-c-o2-coverage-main/program.gcno",
+                  "bytes": 3182,
+                  "sha256": "8233c018d32cb5fbf2bfb94205235ed294a1dbe00443b32d038412577ac10a2e"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o2-coverage/run-1/analysis/core-c-o2-coverage-main/program.gcda",
+                  "bytes": 164,
+                  "sha256": "ed75712a282a34d7c26fae3e670305786a8b257dd60b2eab3e1dea317db13140"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o2-coverage/run-1/analysis/core-c-o2-coverage-main/gcov.json",
+                  "bytes": 3657,
+                  "sha256": "307d9a5431f3aee9794f615002cac7495d378e025ea502c1214c9b7706b6138a"
+                }
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "multiplier": 2,
+            "stdout": "11\n",
+            "preexistingProfileCount": 1,
+            "analysis": [
+              {
+                "unit": "core-c-o2-coverage-main",
+                "functions": {
+                  "classify": 12,
+                  "main": 2
+                },
+                "classifyBranches": [
+                  [
+                    6,
+                    6
+                  ],
+                  [
+                    2,
+                    4
+                  ]
+                ],
+                "loopBranches": [
+                  12,
+                  2
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o2-coverage-main/source.c",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-c-o2-coverage-main/program.o",
+                  "bytes": 1766,
+                  "sha256": "53964e0633e3e84fc083c234e56c0d7083f675cd1c047d81e29c38d00423ea58"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o2-coverage/run-2/analysis/core-c-o2-coverage-main/program.gcno",
+                  "bytes": 3182,
+                  "sha256": "8233c018d32cb5fbf2bfb94205235ed294a1dbe00443b32d038412577ac10a2e"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o2-coverage/run-2/analysis/core-c-o2-coverage-main/program.gcda",
+                  "bytes": 164,
+                  "sha256": "0a5f8fee79234fc878612ee1fcecbccce562197aea6e9f39e699b2e964957e4b"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-c-o2-coverage/run-2/analysis/core-c-o2-coverage-main/gcov.json",
+                  "bytes": 3662,
+                  "sha256": "73caefd07f8fe6e2e792127fd750ad2a63058526441330aa83b3c62dee56b0ef"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "exit-c-o2-coverage",
+        "stdout": "11\nexit 7\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\nexit 7\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "exit-c-o2-coverage-main",
+                "functions": {
+                  "classify": 7,
+                  "user_exit": 1,
+                  "main": 1
+                },
+                "classifyBranches": [
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-c-o2-coverage-main/source.c",
+                  "bytes": 566,
+                  "sha256": "7ab35acc3d2c1d5c748181bf83d94aa29e793f93b41a3ff3fb80296a039e9e93"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-c-o2-coverage-main/program.o",
+                  "bytes": 2291,
+                  "sha256": "5201a0dd41da33b70be4d3441b932af2ce042a9aa60987bcd345a4f9eae518a9"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-c-o2-coverage/run-1/analysis/exit-c-o2-coverage-main/program.gcno",
+                  "bytes": 4259,
+                  "sha256": "d06c5b1d48297140c3d6b6cbcca0e4ca00966d3eed841cac50acfd5f4e529fcd"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-c-o2-coverage/run-1/analysis/exit-c-o2-coverage-main/program.gcda",
+                  "bytes": 224,
+                  "sha256": "79e4ae1a04f76957e29fa383cf2a536d052d5820406a373acbfc1ee8361c6547"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-c-o2-coverage/run-1/analysis/exit-c-o2-coverage-main/gcov.json",
+                  "bytes": 4558,
+                  "sha256": "12eee6f6d5966d1a58106ff2d484d2bb91f04adf77afde18d104f5a536fd4e9f"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "multiple-c-o2-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "multiple-c-o2-coverage-main",
+                "functions": {
+                  "main": 1
+                },
+                "classifyBranches": null,
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o2-coverage-main/source.c",
+                  "bytes": 338,
+                  "sha256": "c25dac15b35d658eedf605ef1322006c9b4ee4738272501fc7cbc9d78311ce92"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o2-coverage-main/program.o",
+                  "bytes": 1398,
+                  "sha256": "d41d9403c370157dac1417252419e1e1a3a769082173fd5d9ce927ef1f450ece"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o2-coverage/run-1/analysis/multiple-c-o2-coverage-main/program.gcno",
+                  "bytes": 2138,
+                  "sha256": "0e01f5b241390e8d523cc10fe853fe5e3bd7cc4378dba143ed583b83a39000a3"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o2-coverage/run-1/analysis/multiple-c-o2-coverage-main/program.gcda",
+                  "bytes": 120,
+                  "sha256": "abcb137396f30794d50d739b0cfcb22cbdda31043c712a88759daa3cbfbfe765"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o2-coverage/run-1/analysis/multiple-c-o2-coverage-main/gcov.json",
+                  "bytes": 2468,
+                  "sha256": "c5fd18601460477e3b0438df1101c4b85133c689d931b4b60b2d9c76b0b18686"
+                }
+              },
+              {
+                "unit": "multiple-c-o2-coverage-provider",
+                "functions": {
+                  "classify": 6
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": null,
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o2-coverage-provider/source.c",
+                  "bytes": 212,
+                  "sha256": "0a72e6a414eec5013b3773899dcc261af67f1767afe6c8fafc124902f5b19e2f"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-c-o2-coverage-provider/program.o",
+                  "bytes": 983,
+                  "sha256": "07b44a24e1e0d60941f5b1968edf61502a33edc6b53fd1e7d2ac2afee26a9665"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o2-coverage/run-1/analysis/multiple-c-o2-coverage-provider/program.1.gcno",
+                  "bytes": 1517,
+                  "sha256": "4ae99bad39d8722807e36f40ead637d8432761ad30bc834915396a8294e0bec2"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o2-coverage/run-1/analysis/multiple-c-o2-coverage-provider/program.1.gcda",
+                  "bytes": 88,
+                  "sha256": "c1eebc327ebab0752e8faca0ddc5e65af90f320f43fe31434b068a27f8bd3f9c"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-c-o2-coverage/run-1/analysis/multiple-c-o2-coverage-provider/gcov.json",
+                  "bytes": 1952,
+                  "sha256": "534efa64d724d1d3bd784768327a9b7af712b268cc8879d95ab634611a3e61ed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "core-cpp-o0-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "core-cpp-o0-coverage-main",
+                "functions": {
+                  "classify": 6,
+                  "main": 1
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o0-coverage-main/source.cpp",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o0-coverage-main/program.o",
+                  "bytes": 2229,
+                  "sha256": "4d21356902022a74c9e32f03d66ac76938ccb777abaff9b66090e0788b4f10a7"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o0-coverage/run-1/analysis/core-cpp-o0-coverage-main/program.gcno",
+                  "bytes": 4522,
+                  "sha256": "c1c4ffb8034d2a3a6882ca3be7e2e0e8b78c6e4bfff25dfb8f488f1eef86bbc1"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o0-coverage/run-1/analysis/core-cpp-o0-coverage-main/program.gcda",
+                  "bytes": 180,
+                  "sha256": "e5d8d93552743e1782b912ed2304c6d6fa6cccff9d07202ef30f316a96b22edf"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o0-coverage/run-1/analysis/core-cpp-o0-coverage-main/gcov.json",
+                  "bytes": 4110,
+                  "sha256": "8d7791fc4801b1a2861a2dfd8cdfd6bffb8fb21c1f60c4b1ec99cb062f1d1e24"
+                }
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "multiplier": 2,
+            "stdout": "11\n",
+            "preexistingProfileCount": 1,
+            "analysis": [
+              {
+                "unit": "core-cpp-o0-coverage-main",
+                "functions": {
+                  "classify": 12,
+                  "main": 2
+                },
+                "classifyBranches": [
+                  [
+                    6,
+                    6
+                  ],
+                  [
+                    2,
+                    4
+                  ]
+                ],
+                "loopBranches": [
+                  12,
+                  2
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o0-coverage-main/source.cpp",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o0-coverage-main/program.o",
+                  "bytes": 2229,
+                  "sha256": "4d21356902022a74c9e32f03d66ac76938ccb777abaff9b66090e0788b4f10a7"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o0-coverage/run-2/analysis/core-cpp-o0-coverage-main/program.gcno",
+                  "bytes": 4522,
+                  "sha256": "c1c4ffb8034d2a3a6882ca3be7e2e0e8b78c6e4bfff25dfb8f488f1eef86bbc1"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o0-coverage/run-2/analysis/core-cpp-o0-coverage-main/program.gcda",
+                  "bytes": 180,
+                  "sha256": "c10e934eae22214fc6f0e3ef3c6c4bea64ae1ddd87eda0a3c17d2f96e08e5441"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o0-coverage/run-2/analysis/core-cpp-o0-coverage-main/gcov.json",
+                  "bytes": 4116,
+                  "sha256": "6a289dbee86bba0d42fadcb0b5dace14423cb32016e2895877aa1d33be6fc16f"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "exit-cpp-o0-coverage",
+        "stdout": "11\nexit 7\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\nexit 7\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "exit-cpp-o0-coverage-main",
+                "functions": {
+                  "classify": 7,
+                  "main": 1,
+                  "_ZN4TailD1Ev": 1
+                },
+                "classifyBranches": [
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-cpp-o0-coverage-main/source.cpp",
+                  "bytes": 581,
+                  "sha256": "c90073912968dc9dfd09e29cb78e0d7fc19ef681079462fcd1299fbc928102ec"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-cpp-o0-coverage-main/program.o",
+                  "bytes": 3610,
+                  "sha256": "09408db40f7e43ee25113f897296cc7437d658e1c22e429426797b5af7f30506"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-cpp-o0-coverage/run-1/analysis/exit-cpp-o0-coverage-main/program.gcno",
+                  "bytes": 6792,
+                  "sha256": "92fe27bdf879a2238309df3cfb3fc1b7b6933c4175862e750852fbc0d0be1fa6"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-cpp-o0-coverage/run-1/analysis/exit-cpp-o0-coverage-main/program.gcda",
+                  "bytes": 320,
+                  "sha256": "865e9206ef1a0c5592ecc80b1b35eb4d4d647b35831c50f18aa934cd071b473f"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-cpp-o0-coverage/run-1/analysis/exit-cpp-o0-coverage-main/gcov.json",
+                  "bytes": 4668,
+                  "sha256": "7578c284efd12d742e6f11776a3f471ec68c05dd869cfb7a1981073b576802dc"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "multiple-cpp-o0-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "multiple-cpp-o0-coverage-main",
+                "functions": {
+                  "main": 1
+                },
+                "classifyBranches": null,
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o0-coverage-main/source.cpp",
+                  "bytes": 338,
+                  "sha256": "c25dac15b35d658eedf605ef1322006c9b4ee4738272501fc7cbc9d78311ce92"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o0-coverage-main/program.o",
+                  "bytes": 1725,
+                  "sha256": "7d0553e5ba18b48e72e8ecba9195c75adf9acfaffcfe51ad6a6dc18bb1d44c3f"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o0-coverage/run-1/analysis/multiple-cpp-o0-coverage-main/program.gcno",
+                  "bytes": 3263,
+                  "sha256": "5c2b4c5a9557b7f1536127ba039ffe69438b2917cb5a80a9999a43bb51da1848"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o0-coverage/run-1/analysis/multiple-cpp-o0-coverage-main/program.gcda",
+                  "bytes": 128,
+                  "sha256": "c67662fbdc021e5c6969c46cfd794cce3320d0087b197de45e1dd30889e6a996"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o0-coverage/run-1/analysis/multiple-cpp-o0-coverage-main/gcov.json",
+                  "bytes": 2852,
+                  "sha256": "5a930bd20d981f14f7a1f4829c6498fc2f9a49f01212fcbc7e6cad48c3437ea1"
+                }
+              },
+              {
+                "unit": "multiple-cpp-o0-coverage-provider",
+                "functions": {
+                  "classify": 6
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": null,
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o0-coverage-provider/source.cpp",
+                  "bytes": 212,
+                  "sha256": "0a72e6a414eec5013b3773899dcc261af67f1767afe6c8fafc124902f5b19e2f"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o0-coverage-provider/program.o",
+                  "bytes": 1077,
+                  "sha256": "70471199b0c688a83223d31f7bd1d25d7bbb98a6713fdccc317c08f60db40402"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o0-coverage/run-1/analysis/multiple-cpp-o0-coverage-provider/program.1.gcno",
+                  "bytes": 1543,
+                  "sha256": "a5c673c597eeccc643227d6d7ea31d029a9c1d9813bfb3041d845336fd46ed6a"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o0-coverage/run-1/analysis/multiple-cpp-o0-coverage-provider/program.1.gcda",
+                  "bytes": 88,
+                  "sha256": "570bababf73e478f0aa64c8a8927975e10ec59b3c25d10c1fa2967318037e38f"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o0-coverage/run-1/analysis/multiple-cpp-o0-coverage-provider/gcov.json",
+                  "bytes": 1962,
+                  "sha256": "4068f8fac79d71ed5d01f75d4f1308900371221b879f07dd883d49a17e355803"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "core-cpp-o2-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "core-cpp-o2-coverage-main",
+                "functions": {
+                  "classify": 6,
+                  "main": 1
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o2-coverage-main/source.cpp",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o2-coverage-main/program.o",
+                  "bytes": 1766,
+                  "sha256": "7989047d76689d8759666caafb1a1232a5a635a57ae4a90f6e30cc629b4c3a3a"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o2-coverage/run-1/analysis/core-cpp-o2-coverage-main/program.gcno",
+                  "bytes": 3240,
+                  "sha256": "0b5b17ed56224d787dae25c3f2665595cda6d0d7a706611f1ae2291964de13ec"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o2-coverage/run-1/analysis/core-cpp-o2-coverage-main/program.gcda",
+                  "bytes": 164,
+                  "sha256": "46922e78a521904db9cd1bb99cfbf0426b00d5a613b7ccf780fa5120c6c3db3a"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o2-coverage/run-1/analysis/core-cpp-o2-coverage-main/gcov.json",
+                  "bytes": 3667,
+                  "sha256": "527e07395ef51a6b7019bd8bc21b3efa6700e10b602498b9210a435b6e9f03ed"
+                }
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "multiplier": 2,
+            "stdout": "11\n",
+            "preexistingProfileCount": 1,
+            "analysis": [
+              {
+                "unit": "core-cpp-o2-coverage-main",
+                "functions": {
+                  "classify": 12,
+                  "main": 2
+                },
+                "classifyBranches": [
+                  [
+                    6,
+                    6
+                  ],
+                  [
+                    2,
+                    4
+                  ]
+                ],
+                "loopBranches": [
+                  12,
+                  2
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o2-coverage-main/source.cpp",
+                  "bytes": 464,
+                  "sha256": "6a77bbd62e486eb5fd6a547462c62291b5eb55fa4696673f32ec51978e473b37"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/core-cpp-o2-coverage-main/program.o",
+                  "bytes": 1766,
+                  "sha256": "7989047d76689d8759666caafb1a1232a5a635a57ae4a90f6e30cc629b4c3a3a"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o2-coverage/run-2/analysis/core-cpp-o2-coverage-main/program.gcno",
+                  "bytes": 3240,
+                  "sha256": "0b5b17ed56224d787dae25c3f2665595cda6d0d7a706611f1ae2291964de13ec"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o2-coverage/run-2/analysis/core-cpp-o2-coverage-main/program.gcda",
+                  "bytes": 164,
+                  "sha256": "ade39487b6bcc88f6e4c1efba561d23cc07bb95e63a27a51ffcf032a5187a657"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/core-cpp-o2-coverage/run-2/analysis/core-cpp-o2-coverage-main/gcov.json",
+                  "bytes": 3672,
+                  "sha256": "2e87b4a0e9aebcf0336b0d4c81c81cccf3a976ba4fa6940691e9aa321a99eb33"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "exit-cpp-o2-coverage",
+        "stdout": "11\nexit 7\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\nexit 7\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "exit-cpp-o2-coverage-main",
+                "functions": {
+                  "classify": 7,
+                  "main": 1,
+                  "_ZN4TailD1Ev": 1
+                },
+                "classifyBranches": [
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-cpp-o2-coverage-main/source.cpp",
+                  "bytes": 581,
+                  "sha256": "c90073912968dc9dfd09e29cb78e0d7fc19ef681079462fcd1299fbc928102ec"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/exit-cpp-o2-coverage-main/program.o",
+                  "bytes": 2594,
+                  "sha256": "7dcb559e322c2b449b40d951e5c05cb935bad074c82a797f44961f716a63e229"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-cpp-o2-coverage/run-1/analysis/exit-cpp-o2-coverage-main/program.gcno",
+                  "bytes": 4591,
+                  "sha256": "52d2473e3ce8277bd779c1b788ff70ea6a6e1c5e6140507c3e3f5d086402a39b"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-cpp-o2-coverage/run-1/analysis/exit-cpp-o2-coverage-main/program.gcda",
+                  "bytes": 252,
+                  "sha256": "25cd0d822036a6757b53bbfe36fe4855a07c4c2748a1fe358a9ad874d3f087a9"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/exit-cpp-o2-coverage/run-1/analysis/exit-cpp-o2-coverage-main/gcov.json",
+                  "bytes": 4156,
+                  "sha256": "84ad2b6ba9c623dbfc52b80e54a17b391f1cafc970f9d0dd96b84e3cc57c9779"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "multiple-cpp-o2-coverage",
+        "stdout": "11\n",
+        "status": "passed",
+        "runs": [
+          {
+            "index": 1,
+            "multiplier": 1,
+            "stdout": "11\n",
+            "preexistingProfileCount": 0,
+            "analysis": [
+              {
+                "unit": "multiple-cpp-o2-coverage-main",
+                "functions": {
+                  "main": 1
+                },
+                "classifyBranches": null,
+                "loopBranches": [
+                  6,
+                  1
+                ],
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o2-coverage-main/source.cpp",
+                  "bytes": 338,
+                  "sha256": "c25dac15b35d658eedf605ef1322006c9b4ee4738272501fc7cbc9d78311ce92"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o2-coverage-main/program.o",
+                  "bytes": 1398,
+                  "sha256": "5a8dbea6c7b202ced4727a6ffe7952b619d91aedac173403e6ba751ec4201ae4"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o2-coverage/run-1/analysis/multiple-cpp-o2-coverage-main/program.gcno",
+                  "bytes": 2176,
+                  "sha256": "7ac6f595653dc57c7379967f1c7e843aab50dd4d726de2cd33c8c779f340df21"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o2-coverage/run-1/analysis/multiple-cpp-o2-coverage-main/program.gcda",
+                  "bytes": 120,
+                  "sha256": "ed3637fddf77d1f4b1d3f89b3d5c8ae90f3d151318b2412f83f2904d1f018473"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o2-coverage/run-1/analysis/multiple-cpp-o2-coverage-main/gcov.json",
+                  "bytes": 2478,
+                  "sha256": "d1975508c903b8b8ce4fb02c5ac385327d77ef4dffa01a64c8f2cdbe02860bca"
+                }
+              },
+              {
+                "unit": "multiple-cpp-o2-coverage-provider",
+                "functions": {
+                  "classify": 6
+                },
+                "classifyBranches": [
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    1,
+                    2
+                  ]
+                ],
+                "loopBranches": null,
+                "source": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o2-coverage-provider/source.cpp",
+                  "bytes": 212,
+                  "sha256": "0a72e6a414eec5013b3773899dcc261af67f1767afe6c8fafc124902f5b19e2f"
+                },
+                "object": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/units/multiple-cpp-o2-coverage-provider/program.o",
+                  "bytes": 983,
+                  "sha256": "db1d04f8940745f021a44d12e9c87f490aa53eefcf82efa73ade8bb4541c55cd"
+                },
+                "notes": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o2-coverage/run-1/analysis/multiple-cpp-o2-coverage-provider/program.1.gcno",
+                  "bytes": 1543,
+                  "sha256": "968a3d72beeafe302461a7b7f5c24145424ff363db05f6e55913048654f05b4a"
+                },
+                "profile": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o2-coverage/run-1/analysis/multiple-cpp-o2-coverage-provider/program.1.gcda",
+                  "bytes": 88,
+                  "sha256": "c255da60bb320b49067d49c93db8fadc084f6d31c12baea22de4fdba82620b90"
+                },
+                "gcovJson": {
+                  "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/cases/multiple-cpp-o2-coverage/run-1/analysis/multiple-cpp-o2-coverage-provider/gcov.json",
+                  "bytes": 1962,
+                  "sha256": "40aa3dce84ef9042aa1669abfb49d0be556500681704a1395915b9840ca1f79f"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "gate": {
+      "source": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/coverage-qualification.mjs",
+        "bytes": 29868,
+        "sha256": "9af56ed3b143b13ae6d29437bd4e269c861f0f2d8f260e06588f0d6ad09ad579"
+      },
+      "testsSource": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/coverage-qualification.test.mjs",
+        "bytes": 7646,
+        "sha256": "331178903e7aa51a5cc347a52d2a91930a18d40c841496ccc9b139038ce37f13"
+      },
+      "actualEvidenceTests": 15,
+      "testEvidence": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/gate-review/final-checks.json",
+        "bytes": 4014,
+        "sha256": "6b4288f803befe7b385543f667a7bbe775504c8b157c57a1f4e7c46462f4ac33"
+      },
+      "nativeReopenedFiles": 1620,
+      "runtimeReopenedFiles": 122,
+      "coveragePreflight": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/gate-review/coverage-gate-preflight-fixed.json",
+        "bytes": 1243,
+        "sha256": "be382d62d9a65d452d4372b4202b5de37cb80a33d7febc0bb721660a621431bf"
+      },
+      "runtimePreflight": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/gate-review/libgcov-gate-preflight-fixed.json",
+        "bytes": 1073,
+        "sha256": "39aea1ac8aa8aacf79f08d9139e9fca6fe85121db6ee620d4033af0649f73a98"
+      },
+      "fixedChecks": [
+        "Reanalyzes private copied GCNO/GCDA pairs with actual pinned gcov and compares normalized full JSON plus independent exact counts.",
+        "Binds header/sysroot/GNU/coverage roots and archives to expected canonical paths.",
+        "Binds crt/libc/libm/builtins to the target library search directory."
+      ],
+      "negativeCases": [
+        "changed compiler hash",
+        "injected compile include",
+        "injected link library",
+        "broken preexisting merge chain",
+        "unbound GCC include root",
+        "unbound existing C sysroot",
+        "unbound link search root",
+        "changed raw profile with unchanged JSON",
+        "changed JSON source",
+        "changed JSON count plus summary"
+      ],
+      "tamperingTestsAreRuntimeEvidence": false
+    },
+    "history": [
+      {
+        "name": "nativeAttempt1",
+        "exitStatus": 1,
+        "description": "Syntax-only hook preflight lacked the libcpp include path and failed to find line-map.h.",
+        "pid": 97062,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-attempt1-process.json",
+          "bytes": 375,
+          "sha256": "85c47ee445be8b57701649171ff5d937a7055568f0625a490fc71416f4f65238"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-attempt1.status",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-native-20261102T142612Z.log",
+          "bytes": 15318,
+          "sha256": "0d05e67e31b1b7c25ad5c9561c492ec5ead41a56d4a052a55dfc219cd39cddbf"
+        },
+        "command": "bash out/issue82-build/control/build-native.sh"
+      },
+      {
+        "name": "nativeAttempt2",
+        "exitStatus": 1,
+        "description": "Syntax-only hook preflight used an older C++ language mode; auto lambda parameters require the explicit GNU C++14 mode later used by v4.",
+        "pid": 101866,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-attempt2-process.json",
+          "bytes": 227,
+          "sha256": "b81454827365771b20c4a4c9d2157fbdf184ae6ffe520efacdbd24d39541a762"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-attempt2.status",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-native-20261102T142803Z.log",
+          "bytes": 25908,
+          "sha256": "b4a36d3b128ef284ed4f4b0a67f77850432d3a6126eebe0b5e4f1ee4727a0c91"
+        }
+      },
+      {
+        "name": "nativeAttempt3",
+        "exitStatus": 1,
+        "description": "Exited during required host-tool preflight after printing LLD 22.1.0; no compiler build error was printed. v4 explicitly provided the existing bison/flex tool prefix.",
+        "pid": 106324,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-attempt3-process.json",
+          "bytes": 227,
+          "sha256": "c30fea6f077bd9a0ac5cb7773e4f3f10a2e0e8698a8132d6ba8790faed2a1995"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-attempt3.status",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-native-20261102T142920Z.log",
+          "bytes": 28547,
+          "sha256": "7efd531c2958f9a2205a9d7a1fe0622d9801f7703f9f2397b35c50a55c5b3736"
+        }
+      },
+      {
+        "name": "nativeV4",
+        "exitStatus": 0,
+        "description": "Fresh source20 native build passed; preserved receipt and lock retain the pre-correction combined-diff field.",
+        "pid": 125498,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-v4-process.json",
+          "bytes": 291,
+          "sha256": "1608264716e0c804c4aa035fa54794e8cfe7eb307908d02b6d55c3cb84aeaac2"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-v4.status",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-native-v4-20261102T143417Z.log",
+          "bytes": 1582501,
+          "sha256": "d9e38d3d132971ef6b7e1a1df4f23b2d7cca3a1fbfa14b431600557a6444d237"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/build-native-v4.sh",
+          "bytes": 2423,
+          "sha256": "ad5d2006a91902999c6f2fac3733fed0eb865cd5bde1112f09453148006d856d"
+        },
+        "buildReceipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-v4-build.json",
+          "bytes": 7115,
+          "sha256": "f7691ff6fdc04a9f9029992f97dde5aba70ecf6f882ccdad1bac3981465dd896"
+        },
+        "sourceLock": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-v4-sources.lock.json",
+          "bytes": 8773,
+          "sha256": "9ea9ab9208d5b68f9ff5be5117569cd53a6c9d7d721e5ed2a2f7a4b95472dcde"
+        }
+      },
+      {
+        "name": "nativeV5",
+        "exitStatus": 0,
+        "description": "Rebound native build to final source20 lock. cc1/cc1plus stayed byte-identical; config.status regenerated gcc.o/xgcc. The surrounding runtime pipeline then stopped on its conservative all-three-tools-unchanged assertion.",
+        "pid": 256901,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-process.json",
+          "bytes": 487,
+          "sha256": "1ebf41c270f537e629772b36389202bfade624fc654d7f2f17d74383d62c3c59"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native.status",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-runtimes-v1-20261102T150652Z.log",
+          "bytes": 88086,
+          "sha256": "3c24bc6eefc23bdaeff4410565e724e9a1ce631ec51239da1a6f91e9d2c54461"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/build-runtimes-v1.sh",
+          "bytes": 2516,
+          "sha256": "11082cbe6f2b5e69d25cd1420979222149c099c1bace9f90430b9b901e94ef81"
+        },
+        "toolComparison": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-v5-tools-comparison.json",
+          "bytes": 544,
+          "sha256": "c822dfa6be8be59ffe166fe180ffc3b03e41679ccf83c818f0eb283ab09d0bbd"
+        },
+        "comparison": {
+          "unchanged": false,
+          "before": {
+            "cc1": "ef7fce92baaac6af8d2bec3d551fc0e5cf7ad5136a24eb0b0ce6c473206a4d8c",
+            "cc1plus": "08fb2949005558a3f1c78fd5c0cb4a608f1b2a85b9b022f40ffb52b432a72049",
+            "xgcc": "ca13d57162354a61673a540f971fb70d5a7819345f1ce37a41025fdaea74fae9"
+          },
+          "after": {
+            "cc1": "ef7fce92baaac6af8d2bec3d551fc0e5cf7ad5136a24eb0b0ce6c473206a4d8c",
+            "cc1plus": "08fb2949005558a3f1c78fd5c0cb4a608f1b2a85b9b022f40ffb52b432a72049",
+            "xgcc": "470421a10da0765bcd9b17ad8b75b3dcc002bc8107ebfca57a723da4e3e4be2d"
+          }
+        }
+      },
+      {
+        "name": "runtimeAttempt1",
+        "exitStatus": 1,
+        "description": "Overall pipeline exited1 after native v5 succeeded, because xgcc changed while cc1/cc1plus did not.",
+        "pid": 256901,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/runtimes-attempt1-process.json",
+          "bytes": 454,
+          "sha256": "e13a7e3d6fc4c791b290d654b334f7c4f5480d819a345702ffa4321e14419389"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/runtimes-attempt1.status",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-runtimes-v1-20261102T150652Z.log",
+          "bytes": 88086,
+          "sha256": "3c24bc6eefc23bdaeff4410565e724e9a1ce631ec51239da1a6f91e9d2c54461"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/build-runtimes-v1.sh",
+          "bytes": 2516,
+          "sha256": "11082cbe6f2b5e69d25cd1420979222149c099c1bace9f90430b9b901e94ef81"
+        }
+      },
+      {
+        "name": "runtimeAttempt2",
+        "exitStatus": 1,
+        "description": "Runtime import, native WABT and GNU build completed. Official libgcov final source check failed after raw cc1 -M also emitted two .s files beside source inputs. Generated outputs and failed build were preserved.",
+        "pid": 273948,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/runtimes-attempt2-process.json",
+          "bytes": 470,
+          "sha256": "9abdc91477c1872a52e442311502724733824c53ca60a5f51f7194cfeeffb847"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/runtimes-attempt2.status",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-runtimes-v2-20261102T150934Z.log",
+          "bytes": 743175,
+          "sha256": "b81c990a674eecbe8339ab556b4bae085a97a3006087f179099603b946f88986"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/build-runtimes-v2.sh",
+          "bytes": 1308,
+          "sha256": "1f2408b45c7b7e8b2cf1fac25917bbea2ff4e7f8808a3b7f375b203c527c4a0b"
+        },
+        "failedRuntimeBuild": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-current/build.json",
+          "bytes": 135589,
+          "sha256": "496dd03a03d24ecb4da962b25b047fc2ac554878cb36ccebd84d80a959d3a9bd"
+        },
+        "generatedOutputs": [
+          {
+            "originalPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc/libgcc/libgcov-driver.s",
+            "preserved": {
+              "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-current/generated-source-outputs/libgcov-driver.s",
+              "bytes": 213815,
+              "sha256": "fa517225fed9b36ff2dc7612ec509be693ffab4f71405dcb8eb9c9322b5c20c9"
+            },
+            "mtimeNs": 1793632356037277641
+          },
+          {
+            "originalPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc/libgcc/libgcov-merge.s",
+            "preserved": {
+              "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/libgcov-current/generated-source-outputs/libgcov-merge.s",
+              "bytes": 2813,
+              "sha256": "2bbf4f71cf24b180a2b913a3b7e8743985a9304c8ffec7e6f293ef6033f31391"
+            },
+            "mtimeNs": 1793632356161277696
+          }
+        ]
+      },
+      {
+        "name": "runtimeAttempt3",
+        "exitStatus": 0,
+        "description": "Fixed dependency extraction with explicit -o /dev/null and built official libgcov into fresh libgcov-v2. Final source/input checks passed.",
+        "pid": 307297,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/runtimes-process.json",
+          "bytes": 509,
+          "sha256": "71359a89fca11bd4ba068b7e47b28d4f508bd88cda82b3e906f6d74f42dfced2"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/runtimes.status",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-runtimes-v3-20261102T151424Z.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/build-runtimes-v3.sh",
+          "bytes": 675,
+          "sha256": "9c11cc1ca8ce1bbd1ed8cb682da1ba55521a46eb15dfd0ddc8ab42a18571549d"
+        },
+        "sourceRestoredReceipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/libgcov-source-restored.json",
+          "bytes": 5588,
+          "sha256": "977b351d2fba6efa5fd6b1f0fb433947ab67ba1e6f691b35c9fa1fdf1a5fe4e9"
+        }
+      },
+      {
+        "name": "qualificationV1",
+        "exitStatus": 1,
+        "description": "All36 units/8 metadata/120 diagnostics passed; 24/28 cases passed. Four driver --coverage runs embedded absolute nested paths from driver-injected -dumpdir. Failure output and original harness were preserved.",
+        "pid": 317114,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/qualification-native-attempt1-process.json",
+          "bytes": 638,
+          "sha256": "3f10eaa73565f6950ef664a29048d8a916b8c9e3199a4cb0c8a7ae47f79b637e"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/qualification-native-attempt1.status",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-native-qualification-v1-20261102T151737Z.log",
+          "bytes": 1410,
+          "sha256": "3d697d05b118382895a26f661c83ccfedb42a90bd962c1b4123598b16ce9e9bb"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/qualify-native-v1.sh",
+          "bytes": 821,
+          "sha256": "13f92384ab7b377e9335e4074945b6e9a0506afee0fb8fcdb89c97736b35c917"
+        },
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v1/qualification.json",
+          "bytes": 2936831,
+          "sha256": "c200b1d407b07f4f3c012aecb762f0d2b283b44ab39db1a46f3a2d54d3d70f52"
+        },
+        "harness": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/native-v1-test-coverage.mjs",
+          "bytes": 25739,
+          "sha256": "e9de6267ec8875926f153117484511a72bd6b98f9ad34a522d6e889eb34dfef6"
+        }
+      },
+      {
+        "name": "qualificationV2",
+        "exitStatus": 0,
+        "description": "Driver -o became relative program.wat inside its isolated cwd, with original source unchanged. All36 units/28 cases/32 runs/8 metadata/120 diagnostics passed, including real doubled profile counts.",
+        "pid": 335934,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/qualification-native-process.json",
+          "bytes": 638,
+          "sha256": "bf2603eb86f838db445639e89aab287da0ae82740e166ce28167c1280a7b1b0c"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/qualification-native.status",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-issue82-native-qualification-v2-20261102T151929Z.log",
+          "bytes": 252,
+          "sha256": "6c132dc1c0b64c93e957294120d283cd744e0eafdc968284a2b1685e36ef3dbf"
+        },
+        "wrapper": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/qualify-native-v2.sh",
+          "bytes": 821,
+          "sha256": "5ae61e31676d5c0963c4b431e9231c180c0607fe44565b7640fc6ecb88fbd482"
+        }
+      },
+      {
+        "name": "gnuQualificationAndPackage",
+        "exitStatus": 0,
+        "pid": 312170,
+        "receipt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-regression/control/gnu-process.json",
+          "bytes": 852,
+          "sha256": "ab056c447533632e5f285d7ab6cdb918db16b44b004b5f5a064f3932b91c4190"
+        },
+        "status": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-regression/control/gnu-status.json",
+          "bytes": 18364,
+          "sha256": "be17ca5f86127ce8dcc445c89aed8d48429782492b67571e434ddddc6cf33691"
+        },
+        "log": {
+          "path": "/home/seorii/logs/wasm-llvm-82-gnu-gqrybhp8.log",
+          "bytes": 280,
+          "sha256": "da0211faec25c5ebfcccd762c6d5466528f954f19de60dbef9a3e2415256cf13"
+        },
+        "exitStatusFile": {
+          "path": "/home/seorii/logs/wasm-llvm-82-gnu-gqrybhp8.log.status",
+          "bytes": 18364,
+          "sha256": "be17ca5f86127ce8dcc445c89aed8d48429782492b67571e434ddddc6cf33691"
+        },
+        "command": [
+          "python3",
+          "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-regression/control/complete-gnu.py",
+          "/home/seorii/logs/wasm-llvm-82-gnu-gqrybhp8.log.status",
+          "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-regression/control/tmp-gnu-hjg2nof0"
+        ],
+        "description": "Five genuine GNU runtime cases passed and qualified sysroot/package receipts were finalized before native coverage inputs froze."
+      }
+    ],
+    "source19Preserved": {
+      "allHashesAndMtimesUnchanged": true,
+      "checkedInputs": 10,
+      "scope": "The ten original source19 receipts/compiler/assembler files in the retained baseline; this is not a claim about every historical source19 file."
+    }
+  },
+  "inheritedNative": {
+    "report": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-regression/control/regression-final.json",
+      "bytes": 9838,
+      "sha256": "cc68d3957ec3aa021baad4244e9b03923eec3a0d881f6a10a772dc0966175f07"
+    },
+    "stages": 25,
+    "status": "passed",
+    "inputsUnchanged": true,
+    "sourceFixtureIdsAndHashesPreserved": true,
+    "artifactReinspection": {
+      "status": "passed",
+      "files": 30527
+    },
+    "frozenInputFiles": 20685
+  },
+  "bundle": {
+    "manifest": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 24890,
+      "sha256": "fae8c0c6e546959d6c45a5c754b2d83070b4ac4576de95276c009a55f9d0c6e4"
+    },
+    "compilerBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/browser-compiler/compiler-build.json",
+      "bytes": 12580,
+      "sha256": "094085ff0248b4efe3525a85745b730264856688d8659fead4ab316d169146e8"
+    },
+    "assets": {
+      "cc1Js": {
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "cc1.wasm",
+        "bytes": 15611085,
+        "sha256": "90ca25dd5fd92ca9dfa747a178f21a84b18a0e2d4751ad8e41d9399c4f8cc972"
+      },
+      "cc1plusJs": {
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "cc1plus.wasm",
+        "bytes": 17272406,
+        "sha256": "ec1b670895cd9cf0d78eda91720b4f33f7b34a878e9f363e181b96010e657492"
+      },
+      "asJs": {
+        "path": "as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "as.wasm",
+        "bytes": 612891,
+        "sha256": "9e4d71ab9c34b5a1426007593fcd02bf5632808f2e1950d1c08f3e78a2770a8b"
+      },
+      "ldWasm": {
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "sysroot.tar",
+        "bytes": 26156544,
+        "sha256": "03d6461597c88c34d8d9420d8cc67f5f05edae4db3879cc77b64712985b32885"
+      }
+    },
+    "capabilities": {
+      "c": true,
+      "cpp": true,
+      "libc": true,
+      "libm": true,
+      "libstdcxx": true,
+      "staticInitialization": true,
+      "coverage": true,
+      "longDouble": true,
+      "int128": true,
+      "exceptions": false,
+      "rtti": true,
+      "threads": false,
+      "dynamicLinking": false,
+      "simd": true
+    },
+    "qualificationField": {
+      "status": "unverified"
+    },
+    "qualificationFieldBoundary": "Packaging emits unverified and the immutable manifest is never rewritten. Actual host/target qualification is the separate measured evidence recorded here."
+  },
+  "inheritedWorker": {
+    "report": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/worker-summary.json",
+      "bytes": 73151,
+      "sha256": "059504d0a2da16db6b5f7b94915eefa70f330da7bd00ee92b4ce759a4198a1ab"
+    },
+    "counts": {
+      "chromium": 1734,
+      "nodeWasi": 1734,
+      "objects": 1504,
+      "wat": 1504,
+      "objectSignatureChecks": 382
+    },
+    "sourceSnapshot": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/worker-inputs-final.json",
+      "bytes": 1114594,
+      "sha256": "92e4a000d3062998d084c3692b68287db7bb3500e14e3dc856e982f31c5e2d2e"
+    },
+    "opcodeChecks": 979,
+    "diagnosticCounts": {
+      "diagnostics": 592,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "symbolAliases": 24,
+      "defaultControls": 4
+    },
+    "rawDefaultControlExecutions": {
+      "chromium": 4,
+      "nodeWasi": 4
+    },
+    "aliasCounts": {
+      "providers": 26,
+      "objects": 50,
+      "linkControls": 8,
+      "linkRejections": 16,
+      "assemblerObjects": 110,
+      "assemblerRejections": 18
+    },
+    "weakrefCounts": {
+      "units": 232,
+      "cases": 528,
+      "runtimePasses": 480,
+      "linkRejections": 48,
+      "gccObjects": 118,
+      "clangObjects": 114,
+      "chromiumPrograms": 480,
+      "nodePrograms": 480
+    },
+    "rttiCounts": {
+      "units": 74,
+      "cases": 96,
+      "runtimePasses": 88,
+      "linkRejections": 8,
+      "gccObjects": 42,
+      "clangObjects": 32,
+      "chromiumPrograms": 88,
+      "nodePrograms": 88,
+      "exceptionLinkOnly": 8,
+      "gccDiagnostics": 4
+    },
+    "targetFeatures": {
+      "assembler": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/worker-qualification-final/wabt-target-features.json",
+        "bytes": 45856,
+        "sha256": "23fbe06ebd343300b29992ff35a4bb513a260dd79cee0117cccaf2486e22cfde"
+      },
+      "sdk": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/worker-qualification-final/target-features/qualification.json",
+        "bytes": 118537,
+        "sha256": "2c603101b18f83a39efee96b89d4a9c140bd3f8e6f4d17d9c0c2f2f43b79ff34"
+      },
+      "assemblerCases": 62,
+      "chromiumPrograms": 6,
+      "nodePrograms": 6
+    },
+    "inputsUnchanged": true
+  },
+  "sdkCoverage": {
+    "evidence": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/final-sdk-evidence-v2.json",
+      "bytes": 15941,
+      "sha256": "6bdf0bff9b366d48f3c47ad7541daa255de8c25ed89b65e8f9a6291960fcdf9d"
+    },
+    "results": {
+      "schemaVersion": 2,
+      "kind": "gcc-wasi-coverage-public-sdk-evidence",
+      "status": "passed",
+      "completedAt": "2026-11-02T15:51:52.120982+00:00",
+      "sdk": {
+        "root": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102",
+        "head": "cb162403816453c8cd242e09a8f09a6bb1169f2f",
+        "pullRequest": "https://github.com/seo-rii/wasm-idle/pull/366",
+        "inputs": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/inputs-v2.json",
+          "bytes": 91138,
+          "sha256": "edf42f2300a9db087ab453db027ad41c6f649c06290e5db0eb48a81d6b744a41"
+        },
+        "sourceAndDistUnchanged": true,
+        "sourceAndDistFilesOnDisk": 365,
+        "sparseGitFilesVerified": [
+          {
+            "path": "src/lib/verify-package.test.ts",
+            "bytes": 10877,
+            "sha256": "7ae6784a2177a9b5c7d196354aa0bbe92943b444af4cc3cdba760430da6c242b"
+          }
+        ],
+        "sourceAndDistIdentityManifestSha256": "22a2a8e175f10e99393b97fbb3d14ed3daaaeeafea20ec4f278e12f89608f2bc",
+        "originalArtifactsUnchanged": [
+          {
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/sdk-inputs.json",
+            "bytes": 78313,
+            "sha256": "7bd364b1cce6aa9542747f3d42fb99dd8714a04992545a15031c12892b65e459"
+          },
+          {
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/handoff.json",
+            "bytes": 4199,
+            "sha256": "91fe89f9f5207347e67417553589849c32e1e289f2b258910811e99bee45007f"
+          },
+          {
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/validation-receipt.json",
+            "bytes": 7305,
+            "sha256": "f34c1e698aabbd6a7fe5117595ef217440f6a9bc19eb3211f94e8e25c0d9ad85"
+          },
+          {
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/coverage-worker-prepared.mjs",
+            "bytes": 25404,
+            "sha256": "b1cc8582e03bed92a42233d6cd9eeaf0a40e8751122a634d9438d708eef358c7"
+          }
+        ],
+        "runtimeDependencyFilesReadOnly": 43,
+        "dependencyRoots": {
+          "browser_wasi_shim": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-link-inputs-342-20261030/node_modules/.pnpm/@bjorn3+browser_wasi_shim@0.4.2/node_modules/@bjorn3/browser_wasi_shim",
+          "fflate": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-link-inputs-342-20261030/node_modules/.pnpm/fflate@0.8.3/node_modules/fflate",
+          "vite": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-link-inputs-342-20261030/node_modules/.pnpm/vite@8.3.3_@types+node@24.19.2_esbuild@0.28.2_terser@5.47.1_tsx@4.22.3_yaml@2.9.1/node_modules/vite",
+          "playwright_core": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-link-inputs-342-20261030/node_modules/.pnpm/playwright-core@1.64.1/node_modules/playwright-core"
+        }
+      },
+      "nativeProvenance": {
+        "qualification": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/coverage-qualification-v2/qualification.json",
+          "bytes": 3000768,
+          "sha256": "07c760f778a146b8e8450bb92ddc791705f30d7f995837cc0e10831b38fa6a26"
+        },
+        "gcov": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/gcov",
+          "bytes": 1697232,
+          "sha256": "cb4a1a947e766ea60db94d704f349eafea72a2e8ba90e5808317b429b596233c"
+        },
+        "gcovDump": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-native/gcc/gcov-dump",
+          "bytes": 1432096,
+          "sha256": "fbac10e215d19ceaa19f5b3dbd66f94b9e1dc65adb883b33a2d8e5e25aeef22f"
+        },
+        "versionWord": "B70 ",
+        "jsonFormatVersion": "2",
+        "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+        "nativeCounts": {
+          "units": 36,
+          "cases": 28,
+          "coverage": 16,
+          "controls": 12,
+          "nativeExecutions": 32,
+          "profileExecutions": 20,
+          "metadataControls": 8,
+          "diagnostics": 120
+        },
+        "packagedNativeQualificationIdentityMatches": true,
+        "packagedAnalysisToolSourceAndBuildIdentitiesMatch": true
+      },
+      "actualPublicWorker": {
+        "report": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/actual-v2/sdk/qualification.json",
+          "bytes": 2738246,
+          "sha256": "7a4284a7c2aff5ce384f64449c99233c1621928d44bb9f43538ff7bb3970645d"
+        },
+        "counts": {
+          "publicSdkPrograms": 24,
+          "coveragePrograms": 12,
+          "normalPrograms": 12,
+          "chromiumExecutions": 28,
+          "sameBytesNodeExecutions": 28,
+          "officialJsonProfileExecutionsPerHost": 16,
+          "officialJsonDocumentsPerHost": 20,
+          "assemblyAndObjectNoteOutputs": 4,
+          "legacyPrograms": 8
+        },
+        "failedCompileWithoutArtifactOrPartialNotes": "passed-no-artifact-or-partial-notes",
+        "requestSourceAndPreprocessingUnchanged": true,
+        "publicBinaryNotesAndFilesTransport": true,
+        "sameCompileArtifactChromiumAndNode": true,
+        "driverRouteClaimed": false,
+        "sharedDriverCasesExcluded": 4,
+        "fixedProfilePaths": true,
+        "exactWritableProfileMountAndRedirectionRejections": 4,
+        "compositionAndCoverageProvenanceRejections": 8,
+        "normalExecutionsWithoutProfileFiles": 24
+      },
+      "rawBytes": {
+        "notesReturned": 16,
+        "notes": [
+          {
+            "program": "core-c-o0-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1431,
+            "sha256": "b2e82a32a8b719a2a861ad8fb5e250535b888b390cd6ee70fc69903f54b43f47"
+          },
+          {
+            "program": "exit-c-o0-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1991,
+            "sha256": "7f7a6c0ff3a1a443ec6273997aa6b48919f556a39aaacf0cf1724b46ab80dccf"
+          },
+          {
+            "program": "multiple-c-o0-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 934,
+            "sha256": "017aeac9915a1126ec7b098ab05a378bcae6ad3ce9ce4834a803c27ef47f54c1"
+          },
+          {
+            "program": "multiple-c-o0-coverage",
+            "path": "program.1.gcno",
+            "dataPath": "/profile/program.1.gcda",
+            "bytes": 556,
+            "sha256": "139eb98d04ac02b232a4b8ff490f3fbe6e803c31509bb20add3071f4fda6b84f"
+          },
+          {
+            "program": "core-c-o2-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1189,
+            "sha256": "140764c7351126b78ccf6e2ffc047ae4f42636c126b7f777d3ed3b5415a6ab65"
+          },
+          {
+            "program": "exit-c-o2-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1601,
+            "sha256": "85aaab86d27ab9db94a6e54827a64c6f5704087c7e58a9b84b1b79d2dd8127fe"
+          },
+          {
+            "program": "multiple-c-o2-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 770,
+            "sha256": "1829e3160e565e48e1b25e3779d8d15eb648117c578e1f8df93228798d20413f"
+          },
+          {
+            "program": "multiple-c-o2-coverage",
+            "path": "program.1.gcno",
+            "dataPath": "/profile/program.1.gcda",
+            "bytes": 556,
+            "sha256": "4825190f0870b40f55c354795d15416ee429233150cd5d9eed71d7a970ca249c"
+          },
+          {
+            "program": "core-cpp-o0-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1689,
+            "sha256": "b3a03099effa677141834257a39da2ce0314ac0d591c7699618dc3457902b55c"
+          },
+          {
+            "program": "exit-cpp-o0-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 2609,
+            "sha256": "ccf07adc24b4df06148dd421093a085e2f335e5bd4f7f226b067356813c21da8"
+          },
+          {
+            "program": "multiple-cpp-o0-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1180,
+            "sha256": "f253d325eb9970037edbf564f438bdc702577e43aaa90b07520be5543d4ad2cd"
+          },
+          {
+            "program": "multiple-cpp-o0-coverage",
+            "path": "program.1.gcno",
+            "dataPath": "/profile/program.1.gcda",
+            "bytes": 568,
+            "sha256": "0e93b8a130f4e238bad9e05717a6fe7bf0b0b668f61567bb83073405666f9576"
+          },
+          {
+            "program": "core-cpp-o2-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1217,
+            "sha256": "c2816c6d6fce6fe45b9e215c42b89dbde859f23a893981542a1aa01f7002c945"
+          },
+          {
+            "program": "exit-cpp-o2-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 1758,
+            "sha256": "ca03602479fe222cb6d3008810614a7930c5b3fad53e7ac55f836701510b992a"
+          },
+          {
+            "program": "multiple-cpp-o2-coverage",
+            "path": "program.gcno",
+            "dataPath": "/profile/program.gcda",
+            "bytes": 788,
+            "sha256": "27df8a5da73ed8051f9ab6e2c4df60d7b65082484d94ce8548037a7564491c7e"
+          },
+          {
+            "program": "multiple-cpp-o2-coverage",
+            "path": "program.1.gcno",
+            "dataPath": "/profile/program.1.gcda",
+            "bytes": 568,
+            "sha256": "85db4f5029538efdddc82d138ef6c9e31e81c1099799241db228251c0c5f5330"
+          }
+        ],
+        "analysisPairs": 40,
+        "gcnoCopiesAndGcdaSnapshotsPreserved": true,
+        "gcnoAndGcdaIdentityManifestSha256": "42be638f981fd0fec2dc66e6b4396d6e3157c1508e7acfef48ce5249d70b7b7e",
+        "officialJsonSemanticProofManifestSha256": "269d0907870b0baa55d282f41c42d36222100186686f3fd8feb0609b56d50a57",
+        "officialJsonExactFunctionBranchAndLoopAssertions": true,
+        "merge": {
+          "sameArtifactFreshRunsWithExplicitPriorProfileInputs": true,
+          "secondRunMultiplier": 2,
+          "mergedProfileExecutionsPerHost": 4
+        },
+        "crossHostBinaryEqualityClaimed": false
+      },
+      "legacy": {
+        "manifestSha256": "dd2894ce7b23ba6965b5a3dd8941411f0b197cd8792fc98baf5e6d36939e56f1",
+        "coverageAbsentNormalizesFalse": true,
+        "programs": 8,
+        "chromiumExecutions": 8,
+        "nodeSameBytesExecutions": 8,
+        "omittedFalseExactArgvAndExecutableBytePairs": [
+          {
+            "language": "c",
+            "optimization": "0",
+            "bytes": 25682,
+            "sha256": "042937ca39dcd554917675c26f5dd24059fa7a688c1ebc06d4b0137510920824"
+          },
+          {
+            "language": "c",
+            "optimization": "2",
+            "bytes": 25674,
+            "sha256": "04ddefd7dced2997045ae7281d9982aff55ef0e6117c6000ed2d049d68194592"
+          },
+          {
+            "language": "cpp",
+            "optimization": "0",
+            "bytes": 25682,
+            "sha256": "042937ca39dcd554917675c26f5dd24059fa7a688c1ebc06d4b0137510920824"
+          },
+          {
+            "language": "cpp",
+            "optimization": "2",
+            "bytes": 25674,
+            "sha256": "04ddefd7dced2997045ae7281d9982aff55ef0e6117c6000ed2d049d68194592"
+          }
+        ],
+        "optInRejections": 4,
+        "noCoverageResultOrArtifactProperties": true,
+        "actualOldObjectReceiptRunsClaimed": false
+      },
+      "actualRawFrontend": {
+        "report": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/actual-v2/raw/qualification.json",
+          "bytes": 621687,
+          "sha256": "237a03e3cacd321b537c7ff0b166aa65a145340c29f71176ec6f704f66c586cc"
+        },
+        "counts": {
+          "diagnostics": 116,
+          "metadata": 8,
+          "notesOnly": 4,
+          "arcsOnly": 4
+        },
+        "earlyUnsupportedOptionExitStatus": 1,
+        "unchangedOriginalSourcesAndRelocatedQualifiedArgv": true,
+        "metadataObjectsUsePackagedWasmWabt": true,
+        "metadataCounterAbiAndConstructorInspection": true,
+        "rawNotesUseOfficialGcovDump": true,
+        "gcovBinaryParserAdded": false
+      },
+      "priorFocusedAndPackageChecks": {
+        "validationToCurrentHeadBinding": {
+          "validationReceipt": {
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/validation-receipt.json",
+            "bytes": 7305,
+            "sha256": "f34c1e698aabbd6a7fe5117595ef217440f6a9bc19eb3211f94e8e25c0d9ad85"
+          },
+          "validatedSourceHead": "105ac41c270e7b505b75cbe2a6c7e359ce703ee5",
+          "validatedWorkingDiffSha256": "fa9532c64e464a567c48a96d9d7ce5ec03c593c7679a49318da4d24373c31967",
+          "validatedInputSnapshot": {
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/sdk-inputs.json",
+            "bytes": 78313,
+            "sha256": "7bd364b1cce6aa9542747f3d42fb99dd8714a04992545a15031c12892b65e459"
+          },
+          "validatedFiles": 366,
+          "validatedFilesManifestSha256": "eec1f8b4a7579f32ac3b2121b36e64101c99af8eb148f9aa3f86a5c57ad35645",
+          "currentSdkHead": "cb162403816453c8cd242e09a8f09a6bb1169f2f",
+          "currentObservedFilesManifestSha256": "eec1f8b4a7579f32ac3b2121b36e64101c99af8eb148f9aa3f86a5c57ad35645",
+          "allValidatedFileBytesExactlyMatchCurrentSdkSourceAndDist": true,
+          "onDiskFilesReopened": 365,
+          "sparseFileVerifiedFromCurrentGitBlob": "src/lib/verify-package.test.ts",
+          "explanation": "The 185 SDK and 36 package tests were executed before commit on 105ac41c plus the recorded task diff. Every one of the 366 frozen validated source/dist/config/test file byte identities exactly matches committed cb162403, using the current Git blob for the one sparse file. No new test run at cb162403 is claimed."
+        },
+        "validation": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/validation-receipt.json",
+          "bytes": 7305,
+          "sha256": "f34c1e698aabbd6a7fe5117595ef217440f6a9bc19eb3211f94e8e25c0d9ad85"
+        },
+        "sdkTests": {
+          "passed": 185,
+          "failed": 0,
+          "files": 7,
+          "kind": "synthetic SDK contract and transport; no real compiler qualification"
+        },
+        "packageTests": {
+          "passed": 36,
+          "failed": 0,
+          "files": 1
+        },
+        "build": {
+          "coreCleanIsolatedBuild": true,
+          "gccCleanIsolatedBuild": true,
+          "coreNoEmitTypecheck": true,
+          "gccNoEmitTypecheck": true,
+          "packedFilesMatchOwnCurrentSourceAndDist": true,
+          "sourceAndDistReinspectionPassed": true
+        },
+        "packedInstall": {
+          "bytes": 2721254,
+          "files": 182,
+          "packages": 4
+        },
+        "packedConsumerTypesAndImports": true,
+        "byteBudget": {
+          "maxBytes": 2721792,
+          "maxFiles": 184,
+          "maxPackages": 4
+        },
+        "headroomBytes": 538,
+        "gccPackedPaths": 32,
+        "gccUnpackedGrowthBytes": 11470,
+        "newDependenciesOrFiles": false,
+        "aggregateInstallExecuted": false
+      },
+      "execution": {
+        "waitSupervisor": 532592,
+        "waitLog": "/home/seorii/logs/wasm-idle-issue82-browser-wait-v2-20261102T154011Z-d60708d4.log",
+        "waitExitCode": 0,
+        "suiteSupervisor": 547568,
+        "suiteLog": "/home/seorii/logs/wasm-idle-issue82-coverage-worker-v2-20261102T154813Z-25c50f72.log",
+        "suiteExitCode": 0,
+        "status": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/execution-v2.status.json",
+          "bytes": 5106,
+          "sha256": "dbf53ac119e25fd1a5aee22c4196c7d6662653d48e4839d515c6193af5d98547"
+        },
+        "job": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/execution-v2.job.json",
+          "bytes": 1583,
+          "sha256": "a4732ccb1d3d7f6be54974e453fc67eeebcffcb3715a2e8911f6e93c8986a60a"
+        }
+      },
+      "finalReinspection": {
+        "allPublicAndRawInputs": 1136,
+        "allPublicAndRawArtifacts": 236,
+        "allInputsAndArtifactsReopenedAndMatched": true,
+        "sdkHeadUnchanged": true,
+        "originalFrozenArtifactsUnchanged": true
+      },
+      "limits": [
+        "Coverage describes the selected optimized program.",
+        "PGO/value profiling, atomic updates, info-section, condition/path coverage, manual gcov APIs, and PID semantics are outside the SDK contract.",
+        "These controls do not claim native driver-route execution; the paired native proof covers those cases."
+      ]
+    },
+    "publicQualification": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/actual-v2/sdk/qualification.json",
+      "bytes": 2738246,
+      "sha256": "7a4284a7c2aff5ce384f64449c99233c1621928d44bb9f43538ff7bb3970645d"
+    },
+    "rawQualification": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-browser-controls/actual-v2/raw/qualification.json",
+      "bytes": 621687,
+      "sha256": "237a03e3cacd321b537c7ff0b166aa65a145340c29f71176ec6f704f66c586cc"
+    },
+    "publicCounts": {
+      "publicSdkPrograms": 24,
+      "coveragePrograms": 12,
+      "normalPrograms": 12,
+      "chromiumExecutions": 28,
+      "sameBytesNodeExecutions": 28,
+      "officialJsonProfileExecutionsPerHost": 16,
+      "officialJsonDocumentsPerHost": 20,
+      "assemblyAndObjectNoteOutputs": 4,
+      "legacyPrograms": 8
+    },
+    "rawCounts": {
+      "diagnostics": 116,
+      "metadata": 8,
+      "notesOnly": 4,
+      "arcsOnly": 4
+    }
+  },
+  "sdkValidation": {
+    "receipt": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-sdk/validation-receipt.json",
+      "bytes": 7305,
+      "sha256": "f34c1e698aabbd6a7fe5117595ef217440f6a9bc19eb3211f94e8e25c0d9ad85"
+    },
+    "unitTests": {
+      "passed": 185,
+      "failed": 0,
+      "files": 7,
+      "kind": "synthetic SDK contract and transport; no real compiler qualification"
+    },
+    "packageTests": {
+      "passed": 36,
+      "failed": 0,
+      "files": 1
+    },
+    "build": {
+      "coreCleanIsolatedBuild": true,
+      "gccCleanIsolatedBuild": true,
+      "coreNoEmitTypecheck": true,
+      "gccNoEmitTypecheck": true,
+      "packedFilesMatchOwnCurrentSourceAndDist": true,
+      "sourceAndDistReinspectionPassed": true
+    },
+    "packedInstall": {
+      "status": "passed",
+      "installation": "Offline npm ci --ignore-scripts from four exact tarballs; registry dependency bytes verified against pnpm-lock.yaml SHA-512, consumer lock unchanged by ci.",
+      "installed": {
+        "bytes": 2721254,
+        "files": 182,
+        "packages": 4
+      },
+      "contributors": [
+        {
+          "name": "@wasm-idle/gcc@1.3.0",
+          "bytes": 199037,
+          "files": 32
+        },
+        {
+          "name": "@wasm-idle/core@1.3.0",
+          "bytes": 1609551,
+          "files": 106
+        },
+        {
+          "name": "@bjorn3/browser_wasi_shim@0.4.2",
+          "bytes": 114555,
+          "files": 26
+        },
+        {
+          "name": "fflate@0.8.3",
+          "bytes": 796742,
+          "files": 17
+        }
+      ],
+      "budget": {
+        "maxBytes": 2721792,
+        "maxFiles": 184,
+        "maxPackages": 4
+      },
+      "headroomBytes": 538,
+      "noWorkerOrFetchOnImport": true,
+      "consumerTypecheckPassed": true,
+      "boundaryPassed": true,
+      "noUnexpectedDependencies": true,
+      "consumerLockSha256": "419f63ff0172c6e511d63178f3f8345f0e741f6cc914e81295ca2b5b8842908c"
+    },
+    "budgetChange": {
+      "gccKiB": {
+        "old": 87,
+        "new": 98,
+        "increment": 11
+      },
+      "aggregateKiB": {
+        "old": 685,
+        "new": 697,
+        "increment": 12
+      },
+      "measuredInstalledOverflowOverOldCap": 10726,
+      "actualPackedGccUnpackedGrowth": 11470,
+      "packageFileCountUnchanged": true,
+      "packageDependencyFieldsUnchanged": true,
+      "aggregateInstallExecuted": false,
+      "aggregateReason": "Propagate the rounded 11,470-byte GCC emitted/documentation growth while preserving existing aggregate headroom; no new files or dependencies."
+    }
+  },
+  "x86Preservation": {
+    "report": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-x86-controls/result-v2/qualification.json",
+      "bytes": 34068,
+      "sha256": "ecf14f0820141db7ba3ae75d7b139f673e2742358b54766d61a0efa27d50a2d2"
+    },
+    "versions": [
+      {
+        "version": "gcc13",
+        "manifest": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-completion-20261027/x86-inputs-20261028/gcc13/bundle/gcc-toolchain.v1.json",
+          "bytes": 7776,
+          "sha256": "4de4c401cabad291caa0eb20ec435bdda336597c7ee25954d95323012b8a0867"
+        },
+        "publicQualification": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-x86-controls/result-v2/gcc13/public/qualification.json",
+          "bytes": 11245,
+          "sha256": "82e51ad07d2a4c47c1e3b032d1f7daf5d27a0eb3d86d84105903cbe8f0364dd9"
+        },
+        "publicChromiumCases": 4,
+        "nativeStdinStdoutPrograms": 2,
+        "directFrontendCases": 12
+      },
+      {
+        "version": "gcc16",
+        "manifest": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-completion-20261027/x86-inputs-20261028/gcc16/bundle/gcc-toolchain.v1.json",
+          "bytes": 7280,
+          "sha256": "aa9f5d3e2ef15721a8224f71ec53a21c575fd548bd995981759f21556862ea5f"
+        },
+        "publicQualification": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-coverage-sdk-82-20261102/out/issue82-x86-controls/result-v2/gcc16/public/qualification.json",
+          "bytes": 11202,
+          "sha256": "faf783db649b39d3697c936241b4cf04f71b5c72ee7ec0b0f3a8c00c6b813325"
+        },
+        "publicChromiumCases": 4,
+        "nativeStdinStdoutPrograms": 2,
+        "directFrontendCases": 12
+      }
+    ],
+    "profilingScope": "existing direct frontend -p and single-counter gcov assembly/notes; no new x86 SDK coverage API or profile runtime claim",
+    "inputsUnchanged": true
+  },
+  "processes": {
+    "browser": {
+      "process": {
+        "pid": 366920,
+        "log": "/home/seorii/logs/wasm-llvm-82-browser-z843aufl.log",
+        "status": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/browser-status.json",
+        "startedUnix": 1793632933.139291,
+        "jobs": 2,
+        "frozenFiles": 83,
+        "gccBuildStorage": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gcc-browser"
+      },
+      "exitStatus": {
+        "code": 0,
+        "status": "passed",
+        "stage": "complete",
+        "startedUnix": 1793632933.18021,
+        "commands": [
+          {
+            "stage": "wabt-browser",
+            "argv": [
+              "bash",
+              "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/build-wabt.sh",
+              "browser"
+            ],
+            "code": 0
+          },
+          {
+            "stage": "gcc-browser",
+            "argv": [
+              "bash",
+              "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/producer/gcc-wasi/build-browser.sh"
+            ],
+            "code": 0
+          }
+        ],
+        "inputsUnchanged": true,
+        "finishedUnix": 1793634386.6090846,
+        "elapsedSeconds": 1453.428875207901
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-82-browser-z843aufl.log",
+        "bytes": 6877790,
+        "sha256": "67cc0188fb99ebcbf0c7a88cf5974ec90f9c11b150d20e5b999d7545c9d39b39"
+      }
+    },
+    "package": {
+      "process": {
+        "pid": 527139,
+        "log": "/home/seorii/logs/wasm-llvm-82-package-lo0lecud.log",
+        "status": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/package-status.json",
+        "startedUnix": 1793633835.212575
+      },
+      "exitStatus": {
+        "code": 0,
+        "status": "passed",
+        "stage": "complete",
+        "startedUnix": 1793633835.248272,
+        "inputsUnchanged": true,
+        "finishedUnix": 1793634479.2291439,
+        "elapsedSeconds": 643.9808723926544
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-82-package-lo0lecud.log",
+        "bytes": 258,
+        "sha256": "3a319897b321e2820f6d0413e9e982e44de33d360b4cb5d8619e56caa653ae72"
+      }
+    },
+    "worker": {
+      "process": {
+        "pid": 529870,
+        "log": "/home/seorii/logs/wasm-llvm-82-worker-nz1sj0jw.log",
+        "status": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/worker-supervisor-status.json",
+        "workerStatus": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/control/worker-status.json",
+        "startedUnix": 1793633929.1642613
+      },
+      "exitStatus": {
+        "status": "passed",
+        "stage": "complete",
+        "pid": 529870,
+        "startedUnix": 1793633929.2409525,
+        "code": 0,
+        "elapsedSeconds": 2375.124500513077,
+        "finishedUnix": 1793636304.3657184
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-82-worker-nz1sj0jw.log",
+        "bytes": 141596,
+        "sha256": "c03db431a1c8e4cd413fbc0e64eeb26696e31022dbb6a3716c6dbd0bc79205e1"
+      }
+    }
+  },
+  "limitations": [
+    "Coverage is source-only and requires the exact writable /profile preopen; notes/data remain paired with their original compiled objects.",
+    "No PGO, atomic counters, profile info-section streaming, condition/path/value profiling, manual gcov API support, nested-directory creation or host PID semantics.",
+    "Normal process termination only; abrupt termination does not promise profiles. GCC driver --coverage was qualified natively, whereas the public SDK invokes cc1/cc1plus directly.",
+    "The general backend static-destructor registration limitation remains ARCH-002; the WASI-specific official libgcov registration is explicitly covered.",
+    "No x86 SDK coverage API is added; existing x86 direct frontend profiling output and ordinary SDK behavior were preserved.",
+    "No deployment or GitHub PR merge was performed."
+  ]
+}

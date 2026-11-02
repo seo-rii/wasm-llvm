@@ -5,6 +5,12 @@ its official gcov notes, merging, and serialization. Enable it in the WASI SDK
 with `coverage: true`. The SDK checks the bundle's `coverage` capability before
 compilation; legacy bundles continue to default to coverage disabled.
 
+The [qualification report](../../docs/gcc-wasi-coverage-20261103.md) and
+[artifact identities](../../docs/gcc-wasi-coverage-20261103.json) record the
+measured native, Chromium Worker, official analysis and existing-feature checks.
+Counter updates use GCC's `single` mode: ordinary non-atomic operations in the
+single-threaded WASI runtime.
+
 The supported compiler modes are `-fprofile-arcs -ftest-coverage` and driver
 `--coverage`, with single counter updates. The SDK uses both flags and retains
 one raw `.gcno` file per translation unit. Notes alone (`-ftest-coverage`) do
