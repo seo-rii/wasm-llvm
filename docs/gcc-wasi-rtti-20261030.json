@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": "https://github.com/seo-rii/wasm-llvm/issues/67",
-  "status": "native-qualified-browser-pending",
+  "status": "qualified",
   "profile": "Experimental GCC 17, 19 locked local patches (source19), wasm32-wasi-preview1, static single-threaded GNU C++ runtime with opt-in RTTI and exceptions disabled.",
   "sourceLabelBoundary": "source19 names the 19-patch source profile, not the GCC major version.",
   "sdkDefault": "-fno-rtti; a capable bundle and explicit RTTI request select -frtti. Native frontend default cases omit an RTTI flag and therefore test a different default.",
@@ -574,6 +574,45 @@
       "path": "/home/seorii/logs/wasm-llvm-67-rtti-native-v2-0wiy90x5.log",
       "statusPath": "/home/seorii/logs/wasm-llvm-67-rtti-native-v2-0wiy90x5.log.status",
       "exitCode": 0
+    },
+    "browser": {
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-67-browser-kwzqn0rf.log",
+        "bytes": 6758627,
+        "sha256": "671530a66ac33b554d778612a2de05839b8593eebb9e24b59d70fce430678959"
+      },
+      "status": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/browser-status.json",
+        "bytes": 648,
+        "sha256": "d35cb0f8acd39be09cea3a9e404832409b8762078281e30c98e012139356e2f3"
+      },
+      "exitCode": 0
+    },
+    "package": {
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-67-package-1splhw0t.log",
+        "bytes": 254,
+        "sha256": "48a6654af04bb38d610d9dea9fd2df992d40b5b2a94f964dc9a23d3fbc2c5794"
+      },
+      "status": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/package-status.json",
+        "bytes": 199,
+        "sha256": "e59e5f9c7faa59f7df33bd429ca962cd3b011051ddbd16f788ca50fd1742d448"
+      },
+      "exitCode": 0
+    },
+    "worker": {
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-67-worker-v3-xpdzio8f.log",
+        "bytes": 137768,
+        "sha256": "f7d104b0d96e53331fda5f2256502c78f38090ce3bbcd002184fa3dced84890e"
+      },
+      "status": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-status-v3.json",
+        "bytes": 10506,
+        "sha256": "7c146153980b3ab307e1fa0d27bd546ad4f087357e9dd08fbf0bfd6e444e6867"
+      },
+      "exitCode": 0
     }
   },
   "inheritedRegression": {
@@ -603,15 +642,148 @@
     }
   },
   "browser": {
-    "status": "build-in-progress",
-    "process": {
-      "path": "out/issue67-build/control/browser-process.json",
-      "bytes": 392,
-      "sha256": "30a26664cfc434e7b41518476bf267393df0166d33bdb85539bb5cba8319816b"
-    }
+    "status": "passed",
+    "summary": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-summary.json",
+      "bytes": 73016,
+      "sha256": "e5d15ef713799278c18dbb5107f89e60f2f6e72b464e16664d0e9fdf68d70f4f"
+    },
+    "manifest": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 23358,
+      "sha256": "dd2894ce7b23ba6965b5a3dd8941411f0b197cd8792fc98baf5e6d36939e56f1"
+    },
+    "counts": {
+      "chromium": 1734,
+      "nodeWasi": 1734,
+      "objects": 1504,
+      "wat": 1504,
+      "objectSignatureChecks": 382
+    },
+    "newPublicRttiPrograms": 27,
+    "preservedPreviousPublicPrograms": 1707,
+    "rttiCounts": {
+      "units": 74,
+      "cases": 96,
+      "runtimePasses": 88,
+      "linkRejections": 8,
+      "gccObjects": 42,
+      "clangObjects": 32,
+      "chromiumPrograms": 88,
+      "nodePrograms": 88,
+      "exceptionLinkOnly": 8,
+      "gccDiagnostics": 4
+    },
+    "rttiControls": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-rtti-controls-v3.json",
+      "bytes": 1905428,
+      "sha256": "a7f1e90acee6303871c784bf2940f79821b327523a7f5da613271e83df1b1460"
+    },
+    "rttiReinspection": {
+      "status": "passed",
+      "qualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-rtti-controls-v3.json",
+        "bytes": 1905428,
+        "sha256": "a7f1e90acee6303871c784bf2940f79821b327523a7f5da613271e83df1b1460"
+      },
+      "counts": {
+        "units": 74,
+        "cases": 96,
+        "runtimePasses": 88,
+        "linkRejections": 8,
+        "gccObjects": 42,
+        "clangObjects": 32,
+        "chromiumPrograms": 88,
+        "nodePrograms": 88,
+        "exceptionLinkOnly": 8,
+        "gccDiagnostics": 4
+      },
+      "objectArtifacts": 74,
+      "programArtifacts": 96,
+      "runtimePrograms": 88,
+      "exceptionPrograms": 8,
+      "diagnosticSources": 8,
+      "workerReopenedFiles": 399,
+      "nativeReopenedFiles": 1750
+    },
+    "weakrefCounts": {
+      "units": 232,
+      "cases": 528,
+      "runtimePasses": 480,
+      "linkRejections": 48,
+      "gccObjects": 118,
+      "clangObjects": 114,
+      "chromiumPrograms": 480,
+      "nodePrograms": 480
+    },
+    "weakrefControls": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-weakref-controls.json",
+      "bytes": 3879855,
+      "sha256": "7d2eeee483e0cafcd494c494a0d4033b3761d1d3184201fc8e3391d3fd97240e"
+    },
+    "aliasCounts": {
+      "providers": 26,
+      "objects": 50,
+      "linkControls": 8,
+      "linkRejections": 16,
+      "assemblerObjects": 110,
+      "assemblerRejections": 18
+    },
+    "aliasControls": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-alias-controls.json",
+      "bytes": 964439,
+      "sha256": "38fa6bad56cfb709a378761d9bf5bbcff9fd13bd9d9e912ba2fbe29e4c82749c"
+    },
+    "diagnosticCounts": {
+      "diagnostics": 592,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "symbolAliases": 24,
+      "defaultControls": 4
+    },
+    "diagnostics": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 958978,
+      "sha256": "8c6647d8223d4c782f763c0b77ab175875db9580baab879e7fb0e00b6febae3b"
+    },
+    "opcodeChecks": 979,
+    "targetFeatures": {
+      "assembler": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/wabt-target-features.json",
+        "bytes": 45612,
+        "sha256": "4edbf376d8a12e4f5d8dc6c7afe75af64745e92275853864341a2ba5d2a7438a"
+      },
+      "sdk": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/target-features/qualification.json",
+        "bytes": 118040,
+        "sha256": "f314847031af86491d62bafb071443727c4402a368ff2987b4db8548747d5599"
+      },
+      "assemblerCases": 62,
+      "chromiumPrograms": 6,
+      "nodePrograms": 6
+    },
+    "rawDefaultControlExecutions": {
+      "chromium": 4,
+      "nodeWasi": 4
+    },
+    "sourceSnapshot": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-inputs-final-v3.json",
+      "bytes": 1093378,
+      "sha256": "36b1b9bff996cd408c54c9c33344aebceeaa068e9d8730b1b69af17eac73718f"
+    },
+    "frozenInputFiles": 3916,
+    "engineProbe": {
+      "simd128": true,
+      "kind": "actual-SDK-v128-const-drop-WebAssembly.validate",
+      "host": "chromium-worker",
+      "mocked": false
+    },
+    "inputsUnchanged": true,
+    "boundary": "The public SDK compiles original GCC sources in Chromium Workers. The separate RTTI matrix compiles 42 GCC objects in the Worker and reuses 32 hash-verified native Clang reference objects. Its 88 successful programs run in Worker and Node, eight strict links are rejected, and eight exception-dependent programs are linked without execution. Native Clang diagnostics are not counted as Worker compiler executions."
   },
   "packageGate": {
-    "status": "native-preflights-passed-packaging-pending",
+    "status": "passed",
     "rtti": {
       "path": "out/issue67-build/control/rtti-gate-preflight-v2.json",
       "bytes": 1423,
@@ -636,6 +808,11 @@
       "path": "producer/gcc-wasi/package.mjs",
       "bytes": 93494,
       "sha256": "43a6a41e255532d01dbdcf066b50458a5877a135d0eb683a744b3c7dde48eca4"
+    },
+    "result": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/package-result.json",
+      "bytes": 280,
+      "sha256": "c9bc796caa8dd507ac1dfaa3b2ac853aab72eeb8daa9611c0b6273c1f3219dfa"
     }
   },
   "publicWorkerPlan": {
@@ -650,6 +827,145 @@
       "bytes": 3012,
       "sha256": "f282ad7049783a56d2703ffc4872f2a9c78f3cf9a34e529365afd45f84369619"
     },
-    "status": "execution-pending"
+    "status": "passed"
+  },
+  "preservedWorkerMetadataAttempt": {
+    "reason": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-continuation-reason.json",
+      "bytes": 1469,
+      "sha256": "9e2a8e4bea17f6daa3db1603eb8e1e2e9e42d170c1ce70aa2e7a5aa6aed44b9d"
+    },
+    "status": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-status.json",
+      "bytes": 592,
+      "sha256": "1ba28e60863e1bbd29cb8006c0ed8363f8c8fe73629c3b0e1cd2ccca5285ab43"
+    },
+    "originalSnapshot": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-inputs-final.json",
+      "bytes": 1062320,
+      "sha256": "cf04fe1760c24851b8e4a748fe5802728b0c2d555df9264a4521d196185f1a18"
+    },
+    "failedMatrix": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-rtti-controls.json",
+      "bytes": 39811,
+      "sha256": "b75c6c248d4dc13f9be6a32b89e65bc87b914ca3de91f8be3cd8108c39ae74f4"
+    },
+    "secondAttemptStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-status-v2.json",
+      "bytes": 596,
+      "sha256": "1a90e7aa1c82ea30de9d39241ec506c43ff2ff3543faf16efe08569fdbeff0eb"
+    },
+    "secondAttemptSnapshot": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/worker-inputs-final-v2.json",
+      "bytes": 1088965,
+      "sha256": "e60cef7fe34c79e728cd32a781937950144b66ce2254d2f21ca13173b01b16dc"
+    },
+    "secondFailedMatrix": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/worker-qualification-final/worker-rtti-controls-v2.json",
+      "bytes": 73955,
+      "sha256": "2587c8a3c06d01d5ebcd1547f0de38739c11e85f56e0e35166866b17fc586daf"
+    },
+    "canonicalComparisonReview": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/control/rtti-worker-v3-review.json",
+      "bytes": 65755,
+      "sha256": "fd839cd35e401ff8f46aa8af558c418a84efea91e8a86954a4b5050ae6f7eb19"
+    },
+    "boundary": "The 27 public programs passed before a direct cross-host comparison rejected legal import-symbol numbering. The versioned continuation preserves all original inputs and successful artifacts, validates index-to-name mappings, and compares named symbol/relocation semantics."
+  },
+  "sdkCompatibility": {
+    "status": "passed",
+    "sdkCommit": "105ac41c270e7b505b75cbe2a6c7e359ce703ee5",
+    "qualification": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/rtti-v3/qualification.json",
+      "bytes": 423196,
+      "sha256": "809873a53606f946cf04592b54ec64f97b566954e1ed36fe151a70ab4acb7b25"
+    },
+    "statusReceipt": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/rtti-v3.status.json",
+      "bytes": 794,
+      "sha256": "a7ed236bba04a239d18c8c50f6bc2eaf6cb40a8bfca7547f1c31856478c7b2f3"
+    },
+    "counts": {
+      "chromiumPrograms": 16,
+      "sameBytesNodePrograms": 16,
+      "gccObjects": 5,
+      "realGnuArchives": 3,
+      "requestRejections": 1,
+      "linkProfileRejectionsBeforeTools": 7,
+      "frontendDefaultOffDiagnostics": 4,
+      "oldSdkManifestRejections": 1
+    },
+    "oldBundle": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 21551,
+      "sha256": "d8fa39679b4c9f9f8fd5376ed84b33942f0ac81f76b0e10ce8767efe4b7e547d"
+    },
+    "newBundle": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-rtti-67-20261030/out/issue67-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 23358,
+      "sha256": "dd2894ce7b23ba6965b5a3dd8941411f0b197cd8792fc98baf5e6d36939e56f1"
+    },
+    "profileContract": "RTTI opt-in, default/off, known C neutrality, C++ mode matching, conservative legacy provenance, real object/archive receipts, old false-capability bundle behavior, and the old SDK manifest rejection boundary."
+  },
+  "x86Regression": {
+    "status": "passed",
+    "summary": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/summary.json",
+      "bytes": 133732,
+      "sha256": "c9d9ea4ece604ba539424c1f847a4f4be8b10ab9a613ec460c19903152f7afb5"
+    },
+    "chromiumCompilerCases": 8,
+    "nativeElfPrograms": 4,
+    "versions": [
+      {
+        "version": "gcc13",
+        "command": [
+          "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+          "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/scripts/verify-x86-cross-gcc.mjs",
+          "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-completion-20261027/x86-inputs-20261028/gcc13/bundle/gcc-toolchain.v1.json",
+          "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/suite",
+          "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/gcc13"
+        ],
+        "code": 0,
+        "elapsedSeconds": 17.12263774871826,
+        "success": true,
+        "chromiumCases": 4,
+        "nativeStdinStdoutPrograms": 2,
+        "intrinsicAssemblyCases": 1,
+        "intrinsicObjectDisassemblies": 1,
+        "cppStlPbdsExceptionUnwinding": "passed",
+        "workerCancellation": "passed",
+        "qualification": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/gcc13/qualification.json",
+          "bytes": 11219,
+          "sha256": "8abf654f4eca45de04937b5bffe439a396df544d833264a0fdf56db6ee4802aa"
+        }
+      },
+      {
+        "version": "gcc16",
+        "command": [
+          "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+          "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/scripts/verify-x86-cross-gcc.mjs",
+          "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-gcc-wasi-20261026/out/gcc-wasi-completion-20261027/x86-inputs-20261028/gcc16/bundle/gcc-toolchain.v1.json",
+          "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/suite",
+          "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/gcc16"
+        ],
+        "code": 0,
+        "elapsedSeconds": 18.449963092803955,
+        "success": true,
+        "chromiumCases": 4,
+        "nativeStdinStdoutPrograms": 2,
+        "intrinsicAssemblyCases": 1,
+        "intrinsicObjectDisassemblies": 1,
+        "cppStlPbdsExceptionUnwinding": "passed",
+        "workerCancellation": "passed",
+        "qualification": {
+          "path": "/data/codex-wasm-idle-worktrees/wasm-idle-rtti-sdk-67-20261030/out/issue67-browser-controls/x86-v1/gcc16/qualification.json",
+          "bytes": 11194,
+          "sha256": "fbb9a08dc31d2831ca15cbd44ee8aebf49769f45065c34d80ac17a9347ed6a3c"
+        }
+      }
+    ],
+    "boundary": "Original GCC 13/16 Wasm compilers execute in Chromium module Workers; their returned ELF programs execute on native Linux x86-64."
   }
 }

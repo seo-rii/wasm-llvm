@@ -120,6 +120,22 @@ matrix, compiler/assembler/linker identities, header trees, GNU archives,
 ordered link inputs, real object metadata, and executed output bytes. Browser
 compiler and actual Worker execution are separate qualification stages.
 
+## Actual browser qualification
+
+The same-source Wasm-host compiler and package gates passed. Actual Chromium
+module Workers compile and run all 1,734 public SDK programs, including 27 new
+RTTI programs; Node WASI independently executes the same program bytes. The
+separate RTTI object matrix checks 74 objects and 96 link cases: 88 programs
+pass in both engines, eight strict links are rejected, and eight additional
+exception-dependent programs are linked without execution. Four GCC disabled
+RTTI diagnostics run in the Worker; four Clang diagnostics remain native evidence.
+
+The companion SDK controls pass 16 programs in both engines, five generated
+object receipts, three real GNU archives, seven profile rejections before tool
+execution, four default/off diagnostics, and the old SDK's rejection of the new
+manifest. Existing false-capability bundle behavior is preserved. These controls
+are recorded separately from the overlapping public and mixed-object matrices.
+
 ## Preserved baseline
 
 The source18 baseline compiled 44 positive objects and linked 28 of 40 programs;
