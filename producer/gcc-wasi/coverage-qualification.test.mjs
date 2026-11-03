@@ -11,7 +11,7 @@ const command = (tool, argv) => ({ command: tool.path, argv, status: 0, stdin: n
 
 // Admission controls only. These records are never reopened, executed or
 // packaged as successful runtime evidence.
-function fixture() {
+function fixture({ canonicalSources = false } = {}) {
   const expected = Object.fromEntries(['sourceLock', 'runtimeLock', 'nativeBuild', 'runtimeImport', 'getpid'].map(name => [name, receipt(name)]));
   Object.assign(expected, { gccSource: { source: 'gcc-source-test' },
     nativeCompiler: Object.fromEntries(['cc1', 'cc1plus', 'xgcc'].map(name => [name, receipt('compiler/' + name)])),
@@ -31,7 +31,9 @@ function fixture() {
       '-I/synthetic/configuration', '-I/synthetic/compiler', '-I/synthetic/gcc/libgcc', '-I/synthetic/gcc/gcc',
       '-I/synthetic/gcc/include', '-isystem', '/synthetic/compiler/include', '-isystem', '/synthetic/sysroot/include/wasm32-wasi',
       selection, source.path, '-o', assembly.path];
-    report.objects.push({ selection, source, assembly, object, headers: [receipt('header.h')], commands: {
+    report.objects.push({ selection,
+      source: canonicalSources ? { ...source, path: '/canonical/gcc/libgcc/' + path.basename(source.path) } : source,
+      assembly, object, headers: [receipt('header.h')], commands: {
       compile: command(report.nativeCompiler.cc1, argv),
       assemble: command(report.tools.assembler, ['-r', '--enable-annotations', assembly.path, '-o', object.path]),
       validate: command(report.tools.validator, [object.path]), symbols: command(report.tools.nm, ['--undefined-only', object.path]) } });
@@ -68,6 +70,32 @@ test('only the pinned official libgcov objects and supported runtime profile are
   ]) {
     const changed = structuredClone(report); edit(changed);
     assert.throws(() => verifyLibgcovBuild(changed, expected));
+  }
+});
+
+test('official libgcov accepts logical compile paths with canonical frozen source receipts', () => {
+  const { report, expected } = fixture({ canonicalSources: true });
+  verifyLibgcovBuild(report, expected);
+});
+
+test('official libgcov still binds source arguments, content and include order to trusted inputs', () => {
+  for (const index of [0, 1]) {
+    const { report, expected } = fixture();
+    report.objects[index].source = { ...report.objects[index].source,
+      path: '/canonical/gcc/libgcc/' + path.basename(report.objects[index].source.path) };
+    for (const sourcePath of [report.objects[index].source.path, '/untrusted/' + path.basename(report.objects[index].source.path)]) {
+      const changed = structuredClone(report);
+      changed.objects[index].commands.compile.argv.splice(-3, 1, sourcePath);
+      assert.throws(() => verifyLibgcovBuild(changed, expected), /Changed official libgcov compile profile or include order/);
+    }
+    const changedContent = structuredClone(report);
+    changedContent.objects[index].source.bytes++;
+    assert.throws(() => verifyLibgcovBuild(changedContent, expected), /Official libgcov source changed/);
+    const changedOrder = structuredClone(report);
+    const argv = changedOrder.objects[index].commands.compile.argv;
+    const libgcc = argv.indexOf('-I/synthetic/gcc/libgcc'), gcc = argv.indexOf('-I/synthetic/gcc/gcc');
+    [argv[libgcc], argv[gcc]] = [argv[gcc], argv[libgcc]];
+    assert.throws(() => verifyLibgcovBuild(changedOrder, expected), /Changed official libgcov compile profile or include order/);
   }
 });
 

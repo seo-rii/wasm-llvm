@@ -62,14 +62,14 @@ export function verifyLibgcovBuild(report, expected) {
       ...[configurationRoot, compilerRoot, path.join(sourceRoot, 'libgcc'), path.join(sourceRoot, 'gcc'),
         path.join(sourceRoot, 'include')].map(root => '-I' + root),
       '-isystem', path.join(compilerRoot, 'include'), '-isystem', path.join(sysroot, 'include/wasm32-wasi'),
-      entry.selection, entry.source.path, '-o', entry.assembly.path], 'Changed official libgcov compile profile or include order');
+      entry.selection, expected.sources[filename].path, '-o', entry.assembly.path], 'Changed official libgcov compile profile or include order');
     assert.deepEqual(argv.filter(flag => /^-O/.test(flag)), ['-O0']);
     assert(argv.includes('-std=gnu11') && argv.includes('-fbuilding-libgcc'));
     assert(argv.includes('-DIN_LIBGCC2') && argv.includes('-DIN_GCC') && argv.includes('-DCROSS_DIRECTORY_STRUCTURE'));
     assert(argv.includes('-D__GCC_WASI_SINGLE_THREAD__=1') && argv.includes('-D_WASI_EMULATED_GETPID=1'));
     assert(!argv.some(flag => /^-D(?:inhibit_libc|TARGET_POSIX_IO)(?:=|$)/.test(flag)), 'Dummy or POSIX libgcov profile is unsupported');
     assert.deepEqual(argv.filter(flag => /^-DL_gcov/.test(flag)), [entry.selection]);
-    assert.deepEqual(argv.slice(-3), [entry.source.path, '-o', entry.assembly.path]);
+    assert.deepEqual(argv.slice(-3), [expected.sources[filename].path, '-o', entry.assembly.path]);
     successful(entry.commands.assemble, report.tools.assembler.path);
     assert.deepEqual(entry.commands.assemble.argv, ['-r', '--enable-annotations', entry.assembly.path, '-o', entry.object.path]);
     successful(entry.commands.validate, report.tools.validator.path);

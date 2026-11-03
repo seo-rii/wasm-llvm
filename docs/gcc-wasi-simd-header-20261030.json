@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "issue": "https://github.com/seo-rii/wasm-llvm/issues/74",
   "basePr": "https://github.com/seo-rii/wasm-llvm/pull/98",
-  "status": "native-passed-wasm-host-qualification-pending",
+  "status": "native-and-actual-chromium-worker-passed",
   "outputTarget": "wasm32-wasi",
   "scope": {
     "header": "wasm_simd128.h",
@@ -1521,7 +1521,7 @@
     }
   },
   "sdkEngineProbe": {
-    "status": "passed-unit-scope",
+    "status": "passed-node-unit-and-actual-chromium-worker",
     "receipt": {
       "path": "out/issue74-preparation/sdk-simd-engine-probe.json",
       "bytes": 1690,
@@ -1529,7 +1529,19 @@
     },
     "positive": "Actual Node engine WebAssembly.validate on SDK SIMD probe.",
     "negative": "Mocked WebAssembly.validate=false; no claim about an actual SIMD-less browser.",
-    "actualChromiumProbe": "pending Worker qualification",
+    "actualChromiumProbe": {
+      "receipt": {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-raw-controls.json",
+        "bytes": 927166,
+        "sha256": "1eb494b379de28f3108adf3cf639042b597368457595b76b4c087619c77fcb47"
+      },
+      "engineProbe": {
+        "simd128": true,
+        "kind": "actual-SDK-v128-const-drop-WebAssembly.validate",
+        "host": "chromium-worker",
+        "mocked": false
+      }
+    },
     "distUnchanged": true
   },
   "resolvedFirstAttempt": {
@@ -1557,16 +1569,496 @@
     "includedInFinalTotals": false
   },
   "wasmHost": {
-    "status": "pending",
-    "plannedCanonicalPrograms": 1531,
-    "plannedAdditionalDefaultControls": 4,
-    "plannedDiagnostics": 568,
+    "status": "passed",
+    "compilerBuild": {
+      "path": "out/issue74-build-v2/work/browser-compiler/compiler-build.json",
+      "bytes": 11313,
+      "sha256": "2a8ce78f54f2460679654dcbf010a05d53680ad9e3c8fd61e8324a5542afac4f"
+    },
+    "manifest": {
+      "path": "out/issue74-build-v2/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 19510,
+      "sha256": "4c325d2331f332f021bf305303e02462c5c3714b914163b66d75658c2a2cb034"
+    },
+    "packageResult": {
+      "path": "out/issue74-build-v2/control/package-result.json",
+      "bytes": 295,
+      "sha256": "83091dcb47aff822d0df38b30b1e9510571b3b170b1c2821a6c683b79b289331"
+    },
+    "workerSummary": {
+      "path": "out/issue74-build-v2/worker-summary.json",
+      "bytes": 60922,
+      "sha256": "db1f023ea7216b3e9604c4d0d3cef3674ecdc24b7930de1e029887e0d43a107e"
+    },
+    "sourceSnapshot": {
+      "path": "out/issue74-build-v2/control/worker-inputs-final.json",
+      "bytes": 141911,
+      "sha256": "2388ddad31114067964a46ea0cf01bfdd323f5e0e35498d4f03ff862d20bdc7a"
+    },
+    "executionCommands": {
+      "path": "out/issue74-build-v2/control/worker-commands.json",
+      "bytes": 37181,
+      "sha256": "23ffad70d870234cf334ab50a4249006c843190e795e75dfd285041fb8feedd3"
+    },
     "plan": {
       "path": "out/issue74-build-v2/control/worker-plan.json",
-      "bytes": 252863,
-      "sha256": "aece1a1e42cb304109193ef8d7b86e1fd30218dae976fb263a84f1679c382a64"
+      "bytes": 252895,
+      "sha256": "7c3cb5a6717417fc24f539a4cd345157133e1e2b0444888b3f65312cdca46bf7"
     },
-    "note": "Actual same-source Wasm-host build, full package and Chromium Worker/Node execution still required; planned counts are not completed claims."
+    "sdkHead": "9b0b50f23a116fd99bdb7b423bb6e75327ae2959",
+    "canonicalPrograms": 1531,
+    "chromiumExecutions": 1531,
+    "independentNodeWasiExecutions": 1531,
+    "additionalDefaultPrograms": 4,
+    "additionalDefaultChromiumExecutions": 4,
+    "additionalDefaultNodeWasiExecutions": 4,
+    "diagnosticChecks": 568,
+    "diagnosticCounts": {
+      "diagnostics": 568,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "defaultControls": 4
+    },
+    "totalSimdOpcodeChecks": 979,
+    "counts": {
+      "chromium": 1531,
+      "nodeWasi": 1531,
+      "objects": 1301,
+      "wat": 1301,
+      "objectSignatureChecks": 382
+    },
+    "diagnostics": {
+      "path": "out/issue74-build-v2/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 927166,
+      "sha256": "1eb494b379de28f3108adf3cf639042b597368457595b76b4c087619c77fcb47"
+    },
+    "browserVersions": [
+      "156.0.8078.4"
+    ],
+    "inputsUnchanged": true,
+    "suites": [
+      {
+        "name": "header",
+        "counts": {
+          "chromium": 680,
+          "nodeWasi": 680,
+          "objects": 680,
+          "wat": 680,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-header-inspection.json",
+          "bytes": 20923123,
+          "sha256": "6a712c1f393709370cde8618352fb44e41dd2b1a736b669cd6cac45e804adfd1"
+        }
+      },
+      {
+        "name": "vector-subreg",
+        "counts": {
+          "chromium": 24,
+          "nodeWasi": 24,
+          "objects": 24,
+          "wat": 24,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-vector-subreg-inspection.json",
+          "bytes": 46805,
+          "sha256": "a604d7a3fe37729dd78fc2ce8b0deba6ab484a6a67d079280d138fc09f6de364"
+        }
+      },
+      {
+        "name": "conversions",
+        "counts": {
+          "chromium": 176,
+          "nodeWasi": 176,
+          "objects": 176,
+          "wat": 176,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-conversions-inspection.json",
+          "bytes": 4999709,
+          "sha256": "d385bcdac2e95d2e66722cdbff0f92ec324691ed58048dbf9b2d11ab77612e86"
+        }
+      },
+      {
+        "name": "gnu-float128",
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 22
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-gnu-float128-inspection.json",
+          "bytes": 106891,
+          "sha256": "bbb095a9a38baf31b3fdc71d7e54ff033f26aa787e91b3c02eb06dc80226fa07"
+        }
+      },
+      {
+        "name": "saturating",
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-saturating-inspection.json",
+          "bytes": 88843,
+          "sha256": "b4531536e1502f6a8d1c15fd38dd04596cea2fc26df97a132a9d196efefba6b5"
+        }
+      },
+      {
+        "name": "anonymous-bitfield",
+        "counts": {
+          "chromium": 40,
+          "nodeWasi": 40,
+          "objects": 40,
+          "wat": 40,
+          "objectSignatureChecks": 160
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-anonymous-bitfield-inspection.json",
+          "bytes": 97949,
+          "sha256": "fa1eeb3b46e6efb23ce64c9e0f1845102bd6addb959a4da8f1d5ae8791c41252"
+        }
+      },
+      {
+        "name": "empty-abi",
+        "counts": {
+          "chromium": 28,
+          "nodeWasi": 28,
+          "objects": 28,
+          "wat": 28,
+          "objectSignatureChecks": 168
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-empty-abi-inspection.json",
+          "bytes": 79084,
+          "sha256": "fdc6c03f698c5120086fc95191cea195f4ec2fd0c70d04ffe8e1382e595bef58"
+        }
+      },
+      {
+        "name": "singleton-bitfield",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 8,
+          "wat": 8,
+          "objectSignatureChecks": 32
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-singleton-bitfield-inspection.json",
+          "bytes": 23364,
+          "sha256": "c1c5dd5e72594c1744d839dbadefb655a63eebd1f8bb029bf42a84f0695e5e5b"
+        }
+      },
+      {
+        "name": "basic",
+        "counts": {
+          "chromium": 17,
+          "nodeWasi": 17,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-basic-inspection.json",
+          "bytes": 15211,
+          "sha256": "7896692d2d0056c1fd9326bfc400f41794e3c6147e55d9fa40a692ced7c4149d"
+        }
+      },
+      {
+        "name": "scalar-abi",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-scalar-abi-inspection.json",
+          "bytes": 20681,
+          "sha256": "4b981cd993352b5f716703a28c19d75605e129a9b195598e454037f5e4380aa9"
+        }
+      },
+      {
+        "name": "atomic",
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-atomic-inspection.json",
+          "bytes": 9707,
+          "sha256": "86147483705d7c559f95dc19396944f16134a1e0a23fe213c4807e5bc849ba67"
+        }
+      },
+      {
+        "name": "simd",
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 25,
+          "wat": 25,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-simd-inspection.json",
+          "bytes": 47155,
+          "sha256": "c4eb176300fe0c7863a46adb872c77292e1ae2f94a6ec0e43d5b5dd912a79c54"
+        }
+      },
+      {
+        "name": "extended",
+        "counts": {
+          "chromium": 62,
+          "nodeWasi": 62,
+          "objects": 62,
+          "wat": 62,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-extended-inspection.json",
+          "bytes": 117613,
+          "sha256": "4685c6b9cb727722dbc73e368a15b95ddb51502f233f1303810d779741f743b9"
+        }
+      },
+      {
+        "name": "vector-abi",
+        "counts": {
+          "chromium": 180,
+          "nodeWasi": 180,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-vector-abi-inspection.json",
+          "bytes": 124836,
+          "sha256": "b25b14f097dd8d0b33b1407e40eda276c5a8405f46db2289ff63985c6928c0af"
+        }
+      },
+      {
+        "name": "long-double",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-long-double-inspection.json",
+          "bytes": 132363,
+          "sha256": "28258c88cdad9e74fb31f3808df2926cad7da5e0d10ef256f6edb21e6a7960d9"
+        }
+      },
+      {
+        "name": "int128",
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-int128-inspection.json",
+          "bytes": 108328,
+          "sha256": "190832a799a9c2053f6d0dad9c8a0c688f07a2e277b45f85959f3cfe5bf13bf1"
+        }
+      },
+      {
+        "name": "wide-integer",
+        "counts": {
+          "chromium": 52,
+          "nodeWasi": 52,
+          "objects": 52,
+          "wat": 52,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-wide-integer-inspection.json",
+          "bytes": 101690,
+          "sha256": "3734571e44bb28b531ea6cd0f5ccb9286259c25e7cd4a1b13edc4911829b424e"
+        }
+      },
+      {
+        "name": "fp-extension",
+        "counts": {
+          "chromium": 50,
+          "nodeWasi": 50,
+          "objects": 50,
+          "wat": 50,
+          "objectSignatureChecks": 0
+        },
+        "receipt": {
+          "path": "out/issue74-build-v2/worker-qualification-final/worker-fp-extension-inspection.json",
+          "bytes": 135990,
+          "sha256": "6ff06020a71978a42052a80b3fa6977b56f69d0b7dd764da5ee2348f4640f0cf"
+        }
+      }
+    ],
+    "opcodes": [
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-header-opcodes.json",
+        "bytes": 2881027,
+        "sha256": "666fa5b94565a991c58078b97880502f5e46e30f4ed739decb33a6ee0ee33df6"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-conversions-opcodes.json",
+        "bytes": 769975,
+        "sha256": "c9128a91021726c30ebaa1f3d29ecd418bd4c3e6a4466d302f20f7b72c60dca3"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-saturating-opcodes.json",
+        "bytes": 150695,
+        "sha256": "0906d1acb82de3a462d0e35056198ad9ba6ac948fb9c71c18841c1ddedd37898"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-simd-opcodes.json",
+        "bytes": 98287,
+        "sha256": "fd7fdf12478fc431f52b7336fb90ec587c869b09d7d1776811b3767d31bc6072"
+      },
+      {
+        "path": "out/issue74-build-v2/worker-qualification-final/worker-extended-opcodes.json",
+        "bytes": 319474,
+        "sha256": "3ed4c914af9c8a1582572ac1eaa02f19ec6ca6ecbff03189eb93d8d982513533"
+      }
+    ],
+    "assets": {
+      "cc1Js": {
+        "path": "out/issue74-build-v2/bundle-final/cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "out/issue74-build-v2/bundle-final/cc1.wasm",
+        "bytes": 15608963,
+        "sha256": "1edb4243a6353f28b52969ec2b8ef99391cb27cba645024ee76c67ff2bbd4d87"
+      },
+      "cc1plusJs": {
+        "path": "out/issue74-build-v2/bundle-final/cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "out/issue74-build-v2/bundle-final/cc1plus.wasm",
+        "bytes": 17266279,
+        "sha256": "5eb021469760d81f06a8ff995dbe2232e8125b194c0f03f0bdd2a323134fc4a8"
+      },
+      "asJs": {
+        "path": "out/issue74-build-v2/bundle-final/as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "out/issue74-build-v2/bundle-final/as.wasm",
+        "bytes": 597157,
+        "sha256": "339a199928446a5c15d540df3d328a68421fc8bbb64b0aad36bef5e221c5093d"
+      },
+      "ldWasm": {
+        "path": "out/issue74-build-v2/bundle-final/ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "out/issue74-build-v2/bundle-final/sysroot.tar",
+        "bytes": 25481216,
+        "sha256": "a7627ee80cdd01e5ff51fe69c7fbc35515ce978d3063c65e71f1de7b123858b6"
+      }
+    },
+    "headerInstallation": {
+      "source": {
+        "path": "out/issue74-build-v2/work/gcc/gcc/config/wasm/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "native": {
+        "path": "out/issue74-build-v2/work/gcc-native/gcc/include/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "browser": {
+        "path": "out/issue74-build-v2/work/browser-compiler/resource-include/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "sysroot": {
+        "archive": {
+          "path": "out/issue74-build-v2/bundle-final/sysroot.tar",
+          "bytes": 25481216,
+          "sha256": "a7627ee80cdd01e5ff51fe69c7fbc35515ce978d3063c65e71f1de7b123858b6"
+        },
+        "entry": "lib/gcc/wasm32-wasi/17.0.0/include/wasm_simd128.h",
+        "bytes": 32303,
+        "sha256": "3da31aae591903c5454473d543946ce432399ae3e3b3bc20eff3df39c8c67130"
+      },
+      "equalBytes": true
+    },
+    "licenses": {
+      "COPYING3": {
+        "path": "out/issue74-build-v2/bundle-final/licenses/gcc-COPYING3",
+        "bytes": 35147,
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+      },
+      "COPYING.RUNTIME": {
+        "path": "out/issue74-build-v2/bundle-final/licenses/gcc-COPYING.RUNTIME",
+        "bytes": 3324,
+        "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+      }
+    },
+    "inputSnapshots": {
+      "browser-inputs.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/browser-inputs.json",
+          "bytes": 16501,
+          "sha256": "0be989d60b465c0c137aece20b19844b4b4fdfc1ca4484fdca24ffbb09579d7f"
+        },
+        "verifiedFiles": 67
+      },
+      "package-inputs-v2.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/package-inputs-v2.json",
+          "bytes": 855891,
+          "sha256": "104db609962e745d6b5bb2264da6b7360bd122521e3ef5ba459dda6e19c6823a"
+        },
+        "verifiedFiles": 2996
+      },
+      "package-browser-inputs.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/package-browser-inputs.json",
+          "bytes": 8874,
+          "sha256": "77aeba0b91c3a4855184e8d129d510630d69b117bf20c4eb7689bd6769d37c7e"
+        },
+        "verifiedFiles": 34
+      },
+      "worker-inputs-final.json": {
+        "receipt": {
+          "path": "out/issue74-build-v2/control/worker-inputs-final.json",
+          "bytes": 141911,
+          "sha256": "2388ddad31114067964a46ea0cf01bfdd323f5e0e35498d4f03ff862d20bdc7a"
+        },
+        "verifiedFiles": 558
+      }
+    },
+    "reopenedArtifactFiles": 4145,
+    "note": "Every canonical fixture compiles with actual packaged GCC in Chromium Worker and runs in both Chromium and Node WASI. Four separate no-flag header controls use actual packaged GCC/WABT/WASI LLD and SDK Worker execution, followed by independent Node execution. The producer manifest keeps qualification.status=unverified by design; these separate execution receipts establish qualification. SDK source and distribution files remained unchanged. All native public-header fixtures and the original Clang header were preserved.",
+    "finalReinspection": {
+      "path": "out/issue74-build-v2/control/final-browser-reinspection.json",
+      "bytes": 3954,
+      "sha256": "bd28f5538a19f3c6a7c422ab6016601bee5487692e0837f798e74e72ac173b30"
+    }
   },
   "completedProcesses": [
     {
@@ -1604,10 +2096,57 @@
       "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/regression-inputs.json",
       "exit": 0,
       "elapsedSeconds": 1541.408499956131
+    },
+    {
+      "pid": 2822302,
+      "log": "/home/seorii/logs/wasm-llvm-74-browser-9ztle_3v.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/browser-status.json",
+      "inputManifest": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/browser-inputs.json",
+      "frozenFiles": 67,
+      "jobs": 2,
+      "startedUnix": 1793360701.6620421,
+      "sourceDiffSha256": "aadf5dd3f3b6b4369f8ddea850ee951c64337929af0f9116f4635839e11ce315",
+      "commit": "c6db014af4a07b8a460ff3e00a2700452c71152b",
+      "exit": 0,
+      "elapsedSeconds": 1701.312736272812,
+      "result": {
+        "path": "out/issue74-build-v2/control/browser-status.json",
+        "bytes": 178,
+        "sha256": "f40d7d550050439349fd33f06487a48018402350f1f4e82596b24361dc8c33da"
+      }
+    },
+    {
+      "pid": 2905526,
+      "log": "/home/seorii/logs/wasm-llvm-74-package-v2-8hqsu9on.log",
+      "status": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-simd-header-74-20261030/out/issue74-build-v2/control/package-status-v2.json",
+      "startedUnix": 1793361124.5970364,
+      "phase": "waiting-for-browser",
+      "exit": 0,
+      "elapsedSeconds": 1386.044136762619,
+      "result": {
+        "path": "out/issue74-build-v2/control/package-status-v2.json",
+        "bytes": 201,
+        "sha256": "1740065df3a8c68e532633fa9cd0b17bcb9f5190dcb8396640cc67e2b986be89"
+      }
+    },
+    {
+      "pid": 2905527,
+      "log": "/home/seorii/logs/wasm-llvm-74-worker-v2-pdwm0w4e.log",
+      "status": "/home/seorii/logs/wasm-llvm-74-worker-v2-pdwm0w4e.log.status",
+      "startedUnix": 1793361124.6001875,
+      "phase": "waiting-for-package",
+      "exit": 0,
+      "elapsedSeconds": 2279.752674818039,
+      "result": {
+        "path": "/home/seorii/logs/wasm-llvm-74-worker-v2-pdwm0w4e.log.status",
+        "bytes": 9297,
+        "sha256": "a104756d2c4bec774914801e21630f03134870e382e9915e185f1f5b030673de"
+      }
     }
   ],
   "reproduction": {
     "nativeHeader": "node producer/gcc-wasi/test-simd-header.mjs --compiler \"$GCC_WASI_WORK_DIR/gcc-native/gcc\" --source \"$GCC_WASI_WORK_DIR/gcc\" --work \"$GCC_WASI_WORK_DIR\" --sdk \"$WASI_SDK_PATH\" --sysroot \"$GCC_WASI_WORK_DIR/runtime-current/sysroot\" --output \"$GCC_WASI_WORK_DIR/simd-header-qualification\"",
     "partialVectorCopies": "node producer/gcc-wasi/wide-integer-test.mjs --suite producer/gcc-wasi/vector-subreg-fixtures.mjs --compiler \"$GCC_WASI_WORK_DIR/gcc-native/gcc\" --source \"$GCC_WASI_WORK_DIR/gcc\" --work \"$GCC_WASI_WORK_DIR\" --sdk \"$WASI_SDK_PATH\" --sysroot \"$GCC_WASI_WORK_DIR/runtime-current/sysroot\" --directions gcc-gcc,clang-clang --output \"$GCC_WASI_WORK_DIR/vector-subreg-qualification\""
-  }
+  },
+  "pullRequest": "https://github.com/seo-rii/wasm-llvm/pull/99"
 }
