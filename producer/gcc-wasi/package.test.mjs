@@ -1,12 +1,41 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { identity } from '../clang-browser/cross/package.mjs';
-import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions, verifyEmptyAbiQualification, verifyBitfieldQualification, verifyAbiQualificationOptions, verifyTypedMathProbes } from './package.mjs';
+import { verifyInventory, verifyRuntimeLibraryIdentities, checkWasm, verifySimdQualification, verifyVectorAbiQualification, verifyLongDoubleQualification, verifyInt128Qualification, verifyWideScalarQualificationOptions, verifyEmptyAbiQualification, verifyBitfieldQualification, verifyAnonymousBitfieldQualification, verifyAbiQualificationOptions, verifyTypedMathProbes } from './package.mjs';
 import { cases, disabledCases } from './simd-fixtures.mjs';
 import { cases as int128Cases } from './int128-fixtures.mjs';
 import { cases as emptyAbiCases } from './empty-abi-fixtures.mjs';
 import { cases as bitfieldCases } from './wide-integer-bitfields-fixtures.mjs';
+import { cases as anonymousBitfieldCases } from './anonymous-bitfield-fixtures.mjs';
 import { verifyBrowserHostProfile, typedMathProbeContract } from './package.mjs';
+import { verifySaturatingSimdQualification, verifySaturatingSimdQualificationOptions } from './package.mjs';
+import { verifyGnuFloat128Qualification } from './package.mjs';
+import { cases as gnuFloat128Cases } from './gnu-float128-fixtures.mjs';
+import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
+import { verifySimdHeaderInstallation } from './simd-header-qualification.mjs';
+import { verifySymbolAliasPrograms } from './package.mjs';
+import { cases as symbolAliasCases } from './symbol-alias-fixtures.mjs';
+
+test('packaged SIMD header is identical at every installation boundary and retains full GCC notices', () => {
+	const source = Buffer.from('/* SPDX-License-Identifier: GPL-3.0-or-later WITH GCC-exception-3.1 */\n' + 'independent header\n'.repeat(1000));
+	const licenses = { COPYING3: Buffer.alloc(35147, 'g'), 'COPYING.RUNTIME': Buffer.alloc(3324, 'r') };
+	const inputs = () => ({ source, installed: Buffer.from(source), browser: Buffer.from(source), packaged: Buffer.from(source),
+		licenses, packagedLicenses: Object.fromEntries(Object.entries(licenses).map(([name, bytes]) => [name, Buffer.from(bytes)])) });
+	verifySimdHeaderInstallation(inputs());
+	for (const stage of ['installed', 'browser', 'packaged']) {
+		const changed = inputs(); changed[stage][0] ^= 1;
+		assert.throws(() => verifySimdHeaderInstallation(changed), /Changed .* SIMD header/);
+		const missing = inputs(); delete missing[stage];
+		assert.throws(() => verifySimdHeaderInstallation(missing), /Missing .* SIMD header/);
+	}
+	for (const name of ['COPYING3', 'COPYING.RUNTIME']) {
+		const missing = inputs(); delete missing.packagedLicenses[name];
+		assert.throws(() => verifySimdHeaderInstallation(missing), /Missing packaged/);
+		const shortened = inputs(); shortened.packagedLicenses[name] = shortened.packagedLicenses[name].subarray(0, 100);
+		assert.throws(() => verifySimdHeaderInstallation(shortened), /Changed packaged/);
+	}
+});
+
 import { verifyWabtAssemblerReceipt } from './package.mjs';
 
 test('assembler receipt requires the exact patched WABT source and build recipes', () => {
@@ -36,6 +65,84 @@ test('assembler receipt requires the exact patched WABT source and build recipes
 	]) {
 		const changed = structuredClone(receipt); mutate(changed);
 		assert.throws(() => verifyWabtAssemblerReceipt(changed, lock, recipes));
+	}
+});
+
+test('saturating patch requires current saturation and existing SIMD/vector qualification', () => {
+	const patches = [{ path: 'patches/0013-simd-saturating-arithmetic.patch' }];
+	const options = Object.fromEntries(['simdQualification', 'simdExtendedQualification', 'vectorAbiQualification', 'simdSaturatingQualification', 'nativeLinker'].map(name => [name, `/qualified/${name}`]));
+	verifySaturatingSimdQualificationOptions(patches, options);
+	verifySaturatingSimdQualificationOptions([], {});
+	for (const key of Object.keys(options)) assert.throws(() => verifySaturatingSimdQualificationOptions(patches, { ...options, [key]: undefined }), /Saturating SIMD requires/);
+});
+
+test('saturating proof binds every builtin/profile, exact opcodes and disabled/type diagnostics (synthetic receipts)', () => {
+	const toolPaths = Object.fromEntries(Object.entries({ gcc: 'cc1', gccCpp: 'cc1plus', assembler: 'wat2wasm', objdump: 'wasm-objdump', linker: 'wasm-ld', node: 'node', validator: 'wasm-validate' }).map(([key, name]) => [key, `/qualified/${name}`]));
+	const tools = Object.fromEntries(Object.keys(toolPaths).map(name => [name, identity(Buffer.from(`measured ${name}`))]));
+	const expected = {
+		gccCommit: 'a'.repeat(40), compilerSha256: tools.gcc.sha256, compilerCppSha256: tools.gccCpp.sha256,
+		fixture: identity(Buffer.from('current fixture')), testRecipe: identity(Buffer.from('current recipe')),
+		assembler: tools.assembler, objdump: tools.objdump, linker: tools.linker, validator: tools.validator, node: tools.node,
+		runtime: { 'libc.a': identity(Buffer.from('current libc')) }, targetSource: { 'simd.md': identity(Buffer.from('current patterns')) },
+		sourceLock: identity(Buffer.from('current source lock')), gccSource: { patches: [{ path: 'patches/0013-simd-saturating-arithmetic.patch' }] },
+		headers: { gcc: { 'stddef.h': identity(Buffer.from('gcc header')) }, target: { 'stdio.h': identity(Buffer.from('target header')) } }
+	};
+	const argv = (fixture, profile) => [`-O${fixture.request.optimization}`, `-std=${fixture.request.standard}`, ...(profile === 'default' ? [] : [profile === 'disabled' ? '-mno-simd128' : '-msimd128'])];
+	const report = {
+		...structuredClone(expected), kind: 'gcc-wasi-native-simd-saturating-qualification', status: 'passed', inputsUnchanged: true,
+		compiler: tools.gcc, compilerCpp: tools.gccCpp, toolPaths,
+		inputs: Object.fromEntries(Object.entries(toolPaths).map(([name, file]) => [file, tools[name]])),
+		cases: [...saturatingCases, ...saturatingDisabledCases].map(fixture => {
+			const instructions = fixture.request.simd ? fixture.requiredInstructions : ['i32.add'];
+			const dump = instructions.map(opcode => `001000: fd 6f | ${opcode}`).join('\n');
+			return {
+				id: fixture.id, status: 'passed', source: identity(Buffer.from(fixture.request.code)), stdin: fixture.stdin, stdout: fixture.stdout,
+				wasm: identity(Buffer.from('fake program identity')), object: identity(Buffer.from('fake object identity')), assembly: identity(Buffer.from('fake assembly identity')), instructions,
+				commands: [fixture.request.language === 'cpp' ? toolPaths.gccCpp : toolPaths.gcc, toolPaths.assembler, toolPaths.objdump, toolPaths.linker, toolPaths.node].map((command, index) => ({
+					command, argv: index === 0 ? argv(fixture, fixture.request.simd ? 'enabled' : 'disabled') : index === 3 ? ['--fatal-warnings'] : [],
+					status: 0, signal: null, stdout: index === 2 ? dump : index === 4 ? fixture.stdout : '', stderr: ''
+				})), imports: [], exports: [{ name: 'memory', kind: 'memory' }, { name: '_start', kind: 'function' }],
+				simdDisabledValidation: { command: toolPaths.validator, argv: ['--disable-simd', `/qualified/${fixture.id}/main.wasm`], status: fixture.request.simd ? 1 : 0, signal: null, stdout: '', stderr: '' }
+			};
+		}),
+		diagnostics: [...saturatingCases.flatMap(fixture => ['disabled', 'default'].map(profile => ({ fixture, profile }))), ...saturatingDiagnosticCases.map(fixture => ({ fixture, profile: 'enabled-invalid' }))].map(({ fixture, profile }) => ({
+			id: `${fixture.id}-${profile}`, fixture: fixture.id, profile, source: identity(Buffer.from(fixture.request.code)), emittedSimd: false,
+			command: { command: fixture.request.language === 'cpp' ? toolPaths.gccCpp : toolPaths.gcc, argv: argv(fixture, profile), status: 1, signal: null, stdout: '',
+				stderr: profile === 'enabled-invalid' ? fixture.diagnosticPattern.split('|')[0] : 'error: SIMD128 is disabled' }
+		})),
+		disabledDiagnostic: { status: 1, stderr: 'SIMD128 is disabled' }, defaultDiagnostic: { status: 1, stderr: 'SIMD128 is disabled' }
+	};
+	verifySaturatingSimdQualification(report, expected);
+	for (const mutate of [
+		proof => { proof.kind = 'gcc-wasi-native-simd-qualification'; },
+		proof => { proof.cases.pop(); },
+		proof => { proof.diagnostics.pop(); },
+		proof => { proof.diagnostics[0] = structuredClone(proof.diagnostics[1]); },
+		proof => { proof.inputsUnchanged = false; },
+		proof => { proof.compiler.sha256 = '0'.repeat(64); },
+		proof => { proof.compilerCpp.sha256 = '0'.repeat(64); },
+		proof => { proof.targetSource = {}; },
+		proof => { proof.gccSource.patches = []; },
+		proof => { proof.fixture.sha256 = '0'.repeat(64); },
+		proof => { proof.testRecipe.sha256 = '0'.repeat(64); },
+		proof => { proof.headers.gcc = {}; },
+		proof => { proof.objdump.sha256 = '0'.repeat(64); },
+		proof => { proof.toolPaths.gcc = '/unmeasured/cc1'; },
+		proof => { delete proof.cases[0].object; },
+		proof => { proof.cases[0].stdin = '0\n'; },
+		proof => { proof.cases[0].instructions = []; proof.cases[0].commands[2].stdout = ''; },
+		proof => { proof.cases[0].instructions = ['i8x16.sub_sat_s']; proof.cases[0].commands[2].stdout = '001000: fd 6f | i8x16.sub_sat_s'; },
+		proof => { proof.cases[0].simdDisabledValidation.status = 0; },
+		proof => { proof.cases[0].commands[0].argv.push('-mno-simd128'); },
+		proof => { proof.diagnostics[0].command.argv.push('-msimd128'); },
+		proof => { proof.diagnostics[1].command.argv.push('-mno-simd128'); },
+		proof => { proof.diagnostics[0].command.stderr = 'unrelated error'; },
+		proof => { proof.diagnostics[0].command.status = 0; },
+		proof => { proof.diagnostics[0].emittedSimd = true; },
+		proof => { proof.diagnostics.at(-1).source.sha256 = '0'.repeat(64); }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifySaturatingSimdQualification(changed, expected));
 	}
 });
 
@@ -105,6 +212,8 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 	expected.targetSource = { 'wasm-cg.cc': identity(Buffer.from('TI target')) };
 	expected.recipes = Object.fromEntries(['fixtures', 'harness', 'inspector'].map(name => [name, identity(Buffer.from(`int128 ${name}`))]));
 	expected.runtime = Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'builtins', 'gnuCpp', 'gnuAbi', 'clangCpp', 'clangAbi'].map(name => [name, identity(Buffer.from(name))]));
+	if (fixtures.some(fixture => fixture.printscan))
+		expected.runtime.printscan = identity(Buffer.from('printscan'));
 	expected.headers.gcc = { 'stddef.h': identity(Buffer.from('GCC stddef')) };
 	expected.headers.gnuCpp = { vector: identity(Buffer.from('GNU vector')) };
 	const report = {
@@ -115,8 +224,15 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 	};
 	for (const [key, name] of Object.entries({ gcc: 'cc1', gccCpp: 'cc1plus', clang: 'clang', assembler: 'wat2wasm', inspector: 'wasm-objdump', linker: 'wasm-ld', node: 'node' }))
 		report.tools[key].path = `/verified/tools/${name}`;
+	if (report.runtime.printscan)
+		report.runtime.printscan.path = '/sysroot/lib/wasm32-wasi/libc-printscan-long-double.a';
+	report.skippedReferences = fixtures.flatMap(fixture => report.directions
+		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.filter(direction => fixture.clang === false && direction.includes('clang'))
+		.map(direction => ({ fixture: fixture.id, direction, reason: fixture.clangReason })));
 	report.cases = fixtures.flatMap(fixture => report.directions
 		.filter(direction => fixture.interop || direction === 'gcc-gcc' || direction === 'clang-clang')
+		.filter(direction => fixture.clang !== false || !direction.includes('clang'))
 		.map(direction => {
 			const families = direction.split('-');
 			const sources = [fixture.request.code, ...(fixture.request.sources || []).map(name => fixture.request.files.find(file => file.path === name).contents)];
@@ -131,9 +247,10 @@ function int128ProofFixture(fixtures = int128Cases, kind = 'gcc-wasi-int128-qual
 					argv: family === 'clang' && step < 2 ? [...common, ...(step === 0 ? ['-S', '-emit-llvm'] : ['-c'])] : step === 0 ? [...common] : [],
 					status: 0, signal: null, stdout: '', stderr: ''
 				});
-				return { compiler: family, source: identity(Buffer.from(source)) };
+				return { compiler: family, source: identity(Buffer.from(source)),
+					...(fixture.id.startsWith('anonymous-bitfield-') || fixture.objectSignatures ? { signatures: structuredClone(fixture.signatures) } : {}) };
 			});
-			commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', '-lc'], status: 0, signal: null },
+			commands.push({ command: report.tools.linker.path, argv: ['--fatal-warnings', ...(fixture.printscan ? [report.runtime.printscan.path] : []), '-lc'], status: 0, signal: null },
 				{ command: report.tools.node.path, argv: [], status: 0, signal: null, stdout: fixture.stdout, stderr: '' });
 			return {
 				id: `${fixture.id}-${direction}`, fixture: fixture.id, fixtureSha256: identity(Buffer.from(JSON.stringify(fixture))).sha256,
@@ -161,9 +278,28 @@ test('ABI correction patches require complete current native proofs and a real l
 	}
 });
 
+test('anonymous bitfield patch requires its own native proof without replacing existing ABI proofs', () => {
+	const patches = ['0010-empty-record-abi', '0011-bitfield-layout', '0012-anonymous-bitfield-abi']
+		.map(name => ({ path: `patches/${name}.patch` }));
+	const complete = { emptyAbiQualification: 'empty.json', bitfieldQualification: 'bitfield.json',
+		anonymousBitfieldQualification: 'anonymous.json', nativeLinker: 'wasm-ld' };
+	verifyAbiQualificationOptions(patches, complete);
+	for (const field of Object.keys(complete)) {
+		const changed = { ...complete }; delete changed[field];
+		assert.throws(() => verifyAbiQualificationOptions(patches, changed));
+	}
+	assert.throws(() => verifyAbiQualificationOptions([patches[2]], {}), /requires --anonymous-bitfield-qualification/);
+	assert.throws(() => verifyAbiQualificationOptions([], { anonymousBitfieldQualification: 'anonymous.json' }),
+		/--anonymous-bitfield-qualification requires --native-linker/);
+	verifyAbiQualificationOptions(patches.slice(0, 2), {
+		emptyAbiQualification: 'empty.json', bitfieldQualification: 'bitfield.json', nativeLinker: 'wasm-ld'
+	});
+});
+
 for (const [label, fixtures, kind, verify] of [
 	['Empty ABI', emptyAbiCases, 'gcc-wasi-empty-record-abi-qualification', verifyEmptyAbiQualification],
-	['Bitfield', bitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyBitfieldQualification]
+	['Bitfield', bitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyBitfieldQualification],
+	['Anonymous bitfield', anonymousBitfieldCases, 'gcc-wasi-wide-integer-qualification', verifyAnonymousBitfieldQualification]
 ]) test(`${label} rejects partial, stale and forged ABI/source/command proof (synthetic receipts)`, () => {
 	const { expected, report } = int128ProofFixture(fixtures, kind);
 	verify(report, expected, fixtures);
@@ -183,6 +319,83 @@ for (const [label, fixtures, kind, verify] of [
 	]) {
 		const changed = structuredClone(report); mutate(changed);
 		assert.throws(() => verify(changed, expected, fixtures));
+	}
+});
+
+test('anonymous bitfield proof binds every optimization, compiler direction and object/program signature (synthetic receipts)', () => {
+	const { expected, report } = int128ProofFixture(anonymousBitfieldCases, 'gcc-wasi-wide-integer-qualification');
+	assert.equal(report.counts.total, anonymousBitfieldCases.length * 4);
+	verifyAnonymousBitfieldQualification(report, expected, anonymousBitfieldCases);
+	assert.throws(() => verifyAnonymousBitfieldQualification(undefined, expected, anonymousBitfieldCases), /requires native qualification proof/);
+	for (const partialFixtures of [bitfieldCases, anonymousBitfieldCases.filter(fixture => fixture.request.optimization === '0')]) {
+		const partial = int128ProofFixture(partialFixtures, 'gcc-wasi-wide-integer-qualification').report;
+		assert.throws(() => verifyAnonymousBitfieldQualification(partial, expected, anonymousBitfieldCases), /fixture matrix changed/);
+	}
+	for (const mutate of [
+		proof => { proof.cases[1] = structuredClone(proof.cases[0]); },
+		proof => { proof.skippedReferences = [{ fixture: anonymousBitfieldCases[0].id, direction: 'clang-gcc' }]; },
+		proof => { proof.directions = ['gcc-gcc']; proof.cases = proof.cases.filter(entry => entry.direction === 'gcc-gcc'); proof.counts = { total: proof.cases.length, passed: proof.cases.length, failed: 0 }; },
+		proof => { delete proof.cases[0].units[0].signatures; },
+		proof => { proof.cases[0].units[0].signatures.ab_make = { params: ['i32', 'i32'], results: [] }; },
+		proof => { proof.cases[0].units[1].signatures.ab_make = { params: ['i32', 'i32'], results: [] }; },
+		proof => { proof.cases[0].abi.exports.ab_make = { params: ['i32', 'i32'], results: [] }; },
+		proof => { proof.cases[0].commands.at(-2).argv = ['-lc']; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyAnonymousBitfieldQualification(changed, expected, anonymousBitfieldCases));
+	}
+});
+
+test('strong alias programs require all original sources and compiler directions (synthetic receipts)', () => {
+	const { expected, report } = int128ProofFixture(symbolAliasCases, 'gcc-wasi-wide-integer-qualification');
+	verifySymbolAliasPrograms(report, expected, symbolAliasCases);
+	for (const mutate of [
+		proof => { proof.counts.total = 104; },
+		proof => { proof.suiteSha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].units[1].source.sha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].commands.at(-2).argv = ['-lc']; },
+		proof => { proof.cases[0].commands.at(-1).stdout = '0\n'; },
+		proof => { proof.skippedReferences = []; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifySymbolAliasPrograms(changed, expected, symbolAliasCases));
+	}
+});
+
+test('GNU float128 requires separate proof, a linker and the freshly qualified GNU runtime', () => {
+	const patch = { path: 'patches/0014-gnu-float128.patch' };
+	const options = { gnuFloat128Qualification: 'GNU-TF.json', nativeLinker: 'wasm-ld', libstdcxx: 'GNU' };
+	verifyWideScalarQualificationOptions([patch], options);
+	for (const key of Object.keys(options)) {
+		const changed = { ...options }; delete changed[key];
+		assert.throws(() => verifyWideScalarQualificationOptions([patch], changed));
+	}
+	assert.throws(() => verifyWideScalarQualificationOptions([patch], {
+		longDoubleQualification: 'TF.json', int128Qualification: 'TI.json', nativeLinker: 'wasm-ld', libstdcxx: 'GNU'
+	}), /requires --gnu-float128-qualification/);
+});
+
+test('GNU float128 proof binds all language, ABI, GNU header and declared Clang-reference boundaries (synthetic receipts)', () => {
+	const { expected, report } = int128ProofFixture(gnuFloat128Cases, 'gcc-wasi-wide-integer-qualification');
+	assert.equal(report.counts.total, 78);
+	assert.equal(report.skippedReferences.length, 6);
+	verifyGnuFloat128Qualification(report, expected, gnuFloat128Cases);
+	for (const mutate of [
+		proof => { proof.cases.pop(); },
+		proof => { proof.cases[1] = structuredClone(proof.cases[0]); },
+		proof => { proof.skippedReferences.pop(); },
+		proof => { proof.skippedReferences.push({ fixture: gnuFloat128Cases[0].id, direction: 'clang-clang', reason: 'not tested' }); },
+		proof => { proof.directions = ['gcc-gcc']; },
+		proof => { proof.suiteSha256 = '0'.repeat(64); },
+		proof => { proof.headers.gnuCpp.vector = identity(Buffer.from('stale GNU headers')); },
+		proof => { proof.cases.find(entry => entry.fixture.includes('cpp-overloads')).units[1].signatures._Z11gf_overloadg.params = ['f64']; },
+		proof => { proof.cases.find(entry => entry.fixture.includes('direct-callback')).units[0].signatures.gq_add.params.pop(); },
+		proof => { proof.cases.find(entry => entry.fixture.includes('library-bridge')).commands.at(-2).argv = ['--fatal-warnings', '-lc']; },
+		proof => { proof.cases.find(entry => entry.fixture.includes('gnu-cpp-library')).commands[0].command = '/unqualified/cc1plus'; },
+		proof => { proof.cases.find(entry => entry.fixture.includes('c-type-relations')).stdout = '1 0 1\n'; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifyGnuFloat128Qualification(changed, expected, gnuFloat128Cases));
 	}
 });
 

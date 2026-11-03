@@ -1,0 +1,1685 @@
+diff --git a/include/wabt/binary-reader.h b/include/wabt/binary-reader.h
+index 94b19c1..bc5de13 100644
+--- a/include/wabt/binary-reader.h
++++ b/include/wabt/binary-reader.h
+@@ -75,6 +75,7 @@ class BinaryReaderDelegate {
+     const uint8_t* data;
+     Offset size;
+     Offset offset;
++    Offset opcode_offset = 0;
+   };
+ 
+   virtual ~BinaryReaderDelegate() {}
+diff --git a/include/wabt/expr-visitor.h b/include/wabt/expr-visitor.h
+index 5be7879..ef85fd7 100644
+--- a/include/wabt/expr-visitor.h
++++ b/include/wabt/expr-visitor.h
+@@ -80,6 +80,7 @@ class ExprVisitor::Delegate {
+   virtual Result OnCallIndirectExpr(CallIndirectExpr*) = 0;
+   virtual Result OnCallRefExpr(CallRefExpr*) = 0;
+   virtual Result OnCodeMetadataExpr(CodeMetadataExpr*) = 0;
++  virtual Result OnDebugAnchorExpr(DebugAnchorExpr*) = 0;
+   virtual Result OnCompareExpr(CompareExpr*) = 0;
+   virtual Result OnConstExpr(ConstExpr*) = 0;
+   virtual Result OnConvertExpr(ConvertExpr*) = 0;
+@@ -157,6 +158,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
+   Result OnCallIndirectExpr(CallIndirectExpr*) override { return Result::Ok; }
+   Result OnCallRefExpr(CallRefExpr*) override { return Result::Ok; }
+   Result OnCodeMetadataExpr(CodeMetadataExpr*) override { return Result::Ok; }
++  Result OnDebugAnchorExpr(DebugAnchorExpr*) override { return Result::Ok; }
+   Result OnCompareExpr(CompareExpr*) override { return Result::Ok; }
+   Result OnConstExpr(ConstExpr*) override { return Result::Ok; }
+   Result OnConvertExpr(ConvertExpr*) override { return Result::Ok; }
+diff --git a/include/wabt/ir.h b/include/wabt/ir.h
+index 3d08432..bc95550 100644
+--- a/include/wabt/ir.h
++++ b/include/wabt/ir.h
+@@ -454,6 +454,7 @@ enum class ExprType {
+   CallIndirect,
+   CallRef,
+   CodeMetadata,
++  DebugAnchor,
+   Compare,
+   Const,
+   Convert,
+@@ -796,6 +797,26 @@ class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
+   std::vector<uint8_t> data;
+ };
+ 
++// An assembler position marker, with no runtime opcode or stack effect.
++class DebugAnchorExpr : public ExprMixin<ExprType::DebugAnchor> {
++ public:
++  DebugAnchorExpr(std::string name, bool after_end = false,
++                  const Location& loc = Location())
++      : ExprMixin<ExprType::DebugAnchor>(loc), name(std::move(name)),
++        after_end(after_end) {}
++  std::string name;
++  bool after_end;
++};
++
++struct DebugCodeLayout {
++  bool present = false;
++  std::vector<Offset> offsets;
++  Offset size = 0;
++  // Binary readback also guards code-section-relative addresses.
++  bool start_present = false;
++  Offset start = 0;
++};
++
+ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
+  public:
+   explicit ReturnCallIndirectExpr(const Location& loc = Location())
+@@ -1006,6 +1027,7 @@ struct Func: SymbolCommon {
+   BindingHash bindings;
+   ExprList exprs;
+   Location loc;
++  DebugCodeLayout debug_layout;
+ 
+   // For a subset of features, the BinaryReaderIR tracks whether they are
+   // actually used by the function. wasm2c (CWriter) uses this information to
+@@ -1299,6 +1321,15 @@ class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
+   Var start;
+ };
+ 
++struct CustomAtom {
++  enum Kind { Bytes, Label, Delta, Ref } kind = Bytes;
++  Location loc;
++  std::vector<uint8_t> bytes;
++  std::string label, begin, width;
++  IrReloc reloc;
++  int64_t addend = 0;
++};
++
+ struct Custom {
+   explicit Custom(const Location& loc = Location(),
+                   std::string_view name = std::string_view(),
+@@ -1308,6 +1339,9 @@ struct Custom {
+   std::string name;
+   std::vector<uint8_t> data;
+   Location loc;
++  std::string id;
++  bool structured = false;
++  std::vector<CustomAtom> atoms;
+ };
+ 
+ class Symbol: public SymbolCommon {
+@@ -1584,6 +1618,7 @@ struct Module {
+   std::vector<DataSegment*> data_segments;
+   std::vector<Var*> starts;
+   std::vector<Custom> customs;
++  std::vector<std::pair<Var, DebugCodeLayout>> debug_layouts;
+   std::vector<DataSym> data_symbols;
+   std::vector<SymbolAlias> aliases;
+   BindingHash alias_bindings;
+diff --git a/include/wabt/wast-parser.h b/include/wabt/wast-parser.h
+index a8d991f..74101af 100644
+--- a/include/wabt/wast-parser.h
++++ b/include/wabt/wast-parser.h
+@@ -217,6 +217,11 @@ class WastParser {
+   Result ParseTableModuleField(Module*);
+ 
+   Result ParseCustomSectionAnnotation(Module*);
++  Result ParseDebugAddend(int64_t*);
++  std::string ConsumeDebugWord();
++  Result ParseDebugAnchor(ExprList*);
++  Result ParseDebugLayout(Module*);
++  bool PeekIsDebugLayout();
+   bool PeekIsCustom();
+   bool PeekIsDataImport();
+   bool PeekIsSymbolAlias();
+diff --git a/src/binary-reader-ir.cc b/src/binary-reader-ir.cc
+index 6e44691..7c47eae 100644
+--- a/src/binary-reader-ir.cc
++++ b/src/binary-reader-ir.cc
+@@ -28,6 +28,7 @@
+ #include "wabt/cast.h"
+ #include "wabt/common.h"
+ #include "wabt/ir.h"
++#include "wabt/leb128.h"
+ 
+ namespace wabt {
+ 
+@@ -97,6 +98,8 @@ class BinaryReaderIR : public BinaryReaderNop {
+   static constexpr size_t kMaxFunctionResults = 1000;  // matches V8
+ 
+  public:
++  bool capture_debug = false;
++  bool capture_code_metadata = false;
+   BinaryReaderIR(Module* out_module, const char* filename, Errors* errors);
+ 
+   bool OnError(const Error&) override;
+@@ -456,6 +459,13 @@ class BinaryReaderIR : public BinaryReaderNop {
+   std::multiset<DataSym> data_symbols;
+ 
+   Index active_section = kInvalidIndex;
++  Offset debug_function_start_ = 0;
++  Offset debug_code_start_ = 0;
++  struct DebugPlacement { ExprList* list; Expr* previous; };
++  std::map<std::pair<Index, Offset>, DebugPlacement> debug_places_;
++  std::map<std::pair<Index, Offset>, std::string> debug_anchor_names_;
++  std::map<Index, Index> physical_customs_;
++  Index debug_function_index_ = kInvalidIndex;
+   void MakeQueue(RelocQueue::Type);
+   RelocQueue* GetQueue();
+ };
+@@ -874,6 +884,13 @@ Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
+ 
+ Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
+   current_func_ = module_->funcs[index];
++  debug_function_start_ = state->offset;
++  debug_function_index_ = index;
++  if (capture_debug) {
++    current_func_->debug_layout.present = true;
++    current_func_->debug_layout.start_present = true;
++    current_func_->debug_layout.start = state->offset - debug_code_start_;
++  }
+   current_func_->loc = GetLocation();
+   return PushLabel(LabelType::Func, &current_func_->exprs);
+ }
+@@ -892,8 +909,15 @@ Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
+ }
+ 
+ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
++  if (capture_debug && current_func_) {
++    Offset offset = state->opcode_offset - debug_function_start_;
++    current_func_->debug_layout.offsets.push_back(offset);
++    LabelNode* label; CHECK_RESULT(TopLabel(&label));
++    debug_places_.emplace(std::make_pair(debug_function_index_, offset),
++        DebugPlacement{label->exprs, label->exprs->empty() ? nullptr : &label->exprs->back()});
++  }
+   std::unique_ptr<CodeMetadataExpr> metadata =
+-      code_metadata_queue_.pop_match(current_func_, GetLocation().offset - 1);
++      code_metadata_queue_.pop_match(current_func_, state->opcode_offset);
+   if (metadata) {
+     return AppendExpr(std::move(metadata));
+   }
+@@ -1394,6 +1418,7 @@ Result BinaryReaderIR::OnUnreachableExpr() {
+ }
+ 
+ Result BinaryReaderIR::EndFunctionBody(Index index) {
++  if (capture_debug) current_func_->debug_layout.size = state->offset - debug_function_start_;
+   current_func_ = nullptr;
+   if (!label_stack_.empty()) {
+     PrintError("function %" PRIindex " missing end marker", index);
+@@ -1995,6 +2020,7 @@ BinaryReaderIR::RelocQueue* BinaryReaderIR::GetQueue() {
+ }
+ 
+ Result BinaryReaderIR::BeginCodeSection(Offset size) {
++  debug_code_start_ = state->offset;
+   MakeQueue(RelocQueue::CODE);
+   return Result::Ok;
+ }
+@@ -2084,6 +2110,11 @@ Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
+   if (size > 0) {
+     memcpy(custom.data.data(), data, size);
+   }
++  physical_customs_[active_section] = module_->customs.size();
++  if (capture_debug) {
++    custom.id = "$__dwarf_section_" + std::to_string(active_section);
++    custom.structured = true;
++  }
+   module_->customs.push_back(std::move(custom));
+   return Result::Ok;
+ }
+@@ -2166,8 +2197,9 @@ Result BinaryReaderIR::EndModule() {
+       // different types. And call that feature templates, that'd be a great
+       // name for it!
+       case SymbolType::Section: {
+-        auto idx = sym.AsSection().section;
+-        return maybe_name(module_->customs, idx);
++        auto found = physical_customs_.find(sym.AsSection().section);
++        return found == physical_customs_.end() ? Var{kInvalidIndex, {}}
++                                               : Var{found->second, {}};
+       }
+       case SymbolType::Function: {
+         auto idx = sym.AsFunction().index;
+@@ -2195,6 +2227,114 @@ Result BinaryReaderIR::EndModule() {
+   };
+ 
+   for (auto& [index, queue] : reloc_queues) {
++    if (capture_debug && queue.type == RelocQueue::CUSTOM) {
++      auto target = physical_customs_.find(index);
++      if (target == physical_customs_.end()) {
++        PrintError("missing custom relocation target"); return Result::Error;
++      }
++      auto& custom = module_->customs[target->second];
++      if (capture_code_metadata && custom.name.rfind("metadata.code.", 0) == 0) {
++        // Typed metadata IR regenerates the function-index fields. Check that
++        // every incoming relocation identifies exactly one such field before
++        // handing ownership to that IR; never discard arbitrary custom relocs.
++        const uint8_t* first = custom.data.data();
++        const uint8_t* cursor = first;
++        const uint8_t* end = first + custom.data.size();
++        auto read = [&](uint32_t* value) {
++          size_t n = ReadU32Leb128(cursor, end, value);
++          if (!n) return false;
++          cursor += n; return true;
++        };
++        std::map<Offset, Index> fields;
++        uint32_t functions;
++        if (!read(&functions)) return Result::Error;
++        for (uint32_t f = 0; f < functions; ++f) {
++          Offset offset = cursor - first;
++          uint32_t index, count;
++          if (!read(&index) || !read(&count)) return Result::Error;
++          fields.emplace(offset, index);
++          for (uint32_t m = 0; m < count; ++m) {
++            uint32_t code_offset, length;
++            if (!read(&code_offset) || !read(&length) || length > size_t(end - cursor))
++              return Result::Error;
++            cursor += length;
++          }
++        }
++        std::set<Offset> seen;
++        for (const auto& reloc : queue.incoming_relocs) {
++          auto field = fields.find(reloc.offset);
++          Var symbol = lookup_reloc(reloc);
++          if (reloc.type != RelocType::FuncIndexLEB || field == fields.end() ||
++              !symbol.is_index() || symbol.index() != field->second || !seen.insert(reloc.offset).second) {
++            PrintError("invalid code metadata function relocation"); return Result::Error;
++          }
++        }
++        continue;
++      }
++      size_t cursor = 0;
++      CustomAtom base; base.kind = CustomAtom::Label;
++      base.label = custom.id + "_base"; custom.atoms.push_back(base);
++      for (const auto& reloc : queue.incoming_relocs) {
++        if (reloc.offset < cursor || reloc.offset > custom.data.size() ||
++            custom.data.size() - reloc.offset < 4) {
++          PrintError("overlapping or out-of-bounds custom relocation"); return Result::Error;
++        }
++        if (reloc.type != RelocType::SectionOffsetI32 && reloc.type != RelocType::FunctionOffsetI32 &&
++            reloc.type != RelocType::MemoryAddressI32 && reloc.type != RelocType::GlobalIndexI32) {
++          PrintError("unsupported custom debug relocation"); return Result::Error;
++        }
++        SymbolType expected = reloc.type == RelocType::SectionOffsetI32 ? SymbolType::Section
++            : reloc.type == RelocType::FunctionOffsetI32 ? SymbolType::Function
++            : reloc.type == RelocType::MemoryAddressI32 ? SymbolType::Data : SymbolType::Global;
++        if (reloc.index >= table.symbols().size() || table.symbols()[reloc.index].type() != expected) {
++          PrintError("wrong custom debug relocation symbol kind/index"); return Result::Error;
++        }
++        CustomAtom bytes; bytes.bytes.assign(custom.data.begin() + cursor, custom.data.begin() + reloc.offset);
++        if (!bytes.bytes.empty()) custom.atoms.push_back(std::move(bytes));
++        CustomAtom ref; ref.kind = CustomAtom::Ref; ref.reloc = {reloc.type, lookup_reloc(reloc)};
++        if (ref.reloc.symbol.is_name()) {
++          Index resolved = reloc.type == RelocType::GlobalIndexI32
++              ? module_->GetGlobalIndex(ref.reloc.symbol)
++              : module_->data_symbol_bindings.FindIndex(ref.reloc.symbol);
++          ref.reloc.symbol.set_index(resolved);
++        }
++        if (ref.reloc.symbol.index() == kInvalidIndex) {
++          PrintError("invalid custom relocation symbol"); return Result::Error;
++        }
++        Index owner = ref.reloc.symbol.index();
++        ref.addend = reloc.addend;
++        if (reloc.type == RelocType::SectionOffsetI32) {
++          ref.label = module_->customs[owner].id + "_base";
++        } else if (reloc.type == RelocType::FunctionOffsetI32) {
++          if (owner < module_->num_func_imports || owner >= module_->funcs.size() || reloc.addend < 0) {
++            PrintError("invalid debug code anchor function/addend"); return Result::Error;
++          }
++          auto key = std::make_pair(owner, Offset(reloc.addend));
++          auto named = debug_anchor_names_.find(key);
++          if (named == debug_anchor_names_.end()) {
++            std::string name = "$__dwarf_code_" + std::to_string(owner) + "_" + std::to_string(reloc.addend);
++            auto* f = module_->funcs[owner];
++            if (Offset(reloc.addend) == f->debug_layout.size) {
++              f->exprs.push_back(std::make_unique<DebugAnchorExpr>(name, true));
++            } else {
++              auto place = debug_places_.find(key);
++              if (place == debug_places_.end()) {
++                PrintError("debug code anchor is not an opcode boundary"); return Result::Error;
++              }
++              auto& list = *place->second.list;
++              auto position = place->second.previous ? ++ExprList::iterator(list, place->second.previous) : list.begin();
++              list.insert(position, std::make_unique<DebugAnchorExpr>(name));
++            }
++            named = debug_anchor_names_.emplace(key, name).first;
++          }
++          ref.label = named->second; ref.addend = 0;
++        }
++        custom.atoms.push_back(std::move(ref)); cursor = reloc.offset + 4;
++      }
++      CustomAtom bytes; bytes.bytes.assign(custom.data.begin() + cursor, custom.data.end());
++      if (!bytes.bytes.empty()) custom.atoms.push_back(std::move(bytes));
++      continue;
++    }
+     for (auto reloc : queue.incoming_relocs) {
+       bool applied_relocation = false;
+       Var sym_id = lookup_reloc(reloc);
+@@ -2266,6 +2406,27 @@ Result ReadBinaryIr(const char* filename,
+                     Errors* errors,
+                     Module* out_module) {
+   BinaryReaderIR reader(out_module, filename, errors);
++  reader.capture_code_metadata = options.features.code_metadata_enabled();
++  const auto* cursor = static_cast<const uint8_t*>(data);
++  const auto* end = cursor + size;
++  if (size >= 8) {
++    cursor += 8;
++    while (cursor < end) {
++      uint8_t section = *cursor++;
++      uint32_t length;
++      size_t used = ReadU32Leb128(cursor, end, &length);
++      if (!used || size_t(end - cursor) < used || length > size_t(end - cursor) - used) break;
++      cursor += used;
++      const auto* next = cursor + length;
++      if (section == 0) {
++        uint32_t name_length;
++        used = ReadU32Leb128(cursor, next, &name_length);
++        if (used && name_length <= size_t(next - cursor) - used && name_length >= 7 &&
++            memcmp(cursor + used, ".debug_", 7) == 0) reader.capture_debug = true;
++      }
++      cursor = next;
++    }
++  }
+   return ReadBinary(data, size, &reader, options);
+ }
+ 
+diff --git a/src/binary-reader.cc b/src/binary-reader.cc
+index 434e15b..6148b61 100644
+--- a/src/binary-reader.cc
++++ b/src/binary-reader.cc
+@@ -269,6 +269,7 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode, const char* where) {
+ }
+ 
+ Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
++  state_.opcode_offset = state_.offset;
+   uint8_t value = 0;
+   CHECK_RESULT(ReadU8(&value, desc));
+ 
+diff --git a/src/binary-writer.cc b/src/binary-writer.cc
+index 64c0575..02a7e8a 100644
+--- a/src/binary-writer.cc
++++ b/src/binary-writer.cc
+@@ -16,14 +16,18 @@
+ 
+ #include "wabt/binary-writer.h"
+ 
++#include <algorithm>
+ #include <cassert>
+ #include <cmath>
+ #include <cstdarg>
+ #include <cstdint>
+ #include <cstdio>
++#include <functional>
++#include <limits>
+ #include <map>
+ #include <set>
+ #include <string_view>
++#include <unordered_map>
+ #include <vector>
+ 
+ #include "wabt/config.h"
+@@ -114,7 +118,7 @@ struct RelocSection {
+   RelocSection(const char* name, Index index)
+       : name(name), section_index(index) {}
+ 
+-  const char* name;
++  std::string name;
+   Index section_index;
+   std::vector<Reloc> relocations;
+ };
+@@ -198,6 +202,21 @@ class BinaryWriter {
+   template <typename T>
+   void WriteNames(const std::vector<T*>& elems, NameSectionSubsection type);
+   void WriteCodeMetadataSections();
++  Result WriteDebugCustoms();
++  void DebugError(const char* reason);
++  struct DebugLabel {
++    bool code;
++    Index owner;
++    uint64_t offset;
++  };
++  std::map<std::string, DebugLabel> debug_labels_;
++  std::vector<Index> custom_symbols_;
++  std::vector<uint64_t> function_starts_;
++  std::vector<DebugCodeLayout> function_layouts_;
++  std::vector<Offset> opcode_offsets_;
++  bool writing_function_ = false;
++  bool debug_error_ = false;
++  std::string current_custom_name_;
+ 
+   Stream* stream_;
+   const WriteBinaryOptions& options_;
+@@ -214,6 +233,7 @@ class BinaryWriter {
+   size_t last_section_leb_size_guess_ = 0;
+   BinarySection last_section_type_ = BinarySection::Invalid;
+   size_t last_section_payload_offset_ = 0;
++  size_t custom_payload_offset_ = 0;
+ 
+   size_t last_subsection_offset_ = 0;
+   size_t last_subsection_leb_size_guess_ = 0;
+@@ -251,6 +271,8 @@ void BinaryWriter::WriteOpcode(Stream* stream, Opcode opcode) {
+     // All 0xfd opcodes >= 0x100 in this pinned WABT are relaxed SIMD.
+     uses_relaxed_simd_ |= opcode.GetCode() >= 0x100;
+   }
++  if (writing_function_)
++    opcode_offsets_.push_back(stream->offset() - cur_func_start_offset_);
+   wabt::WriteOpcode(stream, opcode);
+ }
+ 
+@@ -406,6 +428,7 @@ void BinaryWriter::BeginCustomSection(const char* name) {
+   wabt_snprintf(desc, sizeof(desc), "section \"%s\"", name);
+   WriteSectionHeader(desc, BinarySection::Custom);
+   WriteStr(stream_, name, "custom section name", PrintChars::Yes);
++  custom_payload_offset_ = stream_->offset();
+ }
+ 
+ void BinaryWriter::EndSection() {
+@@ -454,6 +477,8 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
+       return symtab_.DataSymbolIndex(index);
+     case RelocKind::Tag:
+       return symtab_.TagSymbolIndex(index);
++    case RelocKind::Section:
++      return index < custom_symbols_.size() ? custom_symbols_[index] : kInvalidIndex;
+     case RelocKind::Type:
+       // Type indexes don't create entries in the symbol table; instead their
+       // index is used directly.
+@@ -469,8 +494,11 @@ void BinaryWriter::AddRelocAt(IrReloc r, Offset offset) {
+   // Add a new reloc section if needed
+   if (!current_reloc_section_ ||
+       current_reloc_section_->section_index != section_count_) {
+-    reloc_sections_.emplace_back(GetSectionName(last_section_type_),
+-                                 section_count_);
++    const char* name = last_section_type_ == BinarySection::Custom &&
++                               !current_custom_name_.empty()
++                           ? current_custom_name_.c_str()
++                           : GetSectionName(last_section_type_);
++    reloc_sections_.emplace_back(name, section_count_);
+     current_reloc_section_ = &reloc_sections_.back();
+   }
+ 
+@@ -490,7 +518,9 @@ void BinaryWriter::AddRelocAt(IrReloc r, Offset offset) {
+ 
+ void BinaryWriter::AddReloc(IrReloc r) {
+   // Add a new relocation to the curent reloc section
+-  size_t offset = stream_->offset() - last_section_payload_offset_;
++  size_t offset = stream_->offset() - (last_section_type_ == BinarySection::Custom
++                                               ? custom_payload_offset_
++                                               : last_section_payload_offset_);
+   return AddRelocAt(r, offset);
+ }
+ 
+@@ -1038,6 +1068,21 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
+     case ExprType::Unreachable:
+       WriteOpcode(stream_, Opcode::Unreachable);
+       break;
++    case ExprType::DebugAnchor: {
++      auto* anchor = cast<DebugAnchorExpr>(expr);
++      if (!func || (anchor->after_end &&
++          (func->exprs.empty() || expr != &func->exprs.back()))) {
++        DebugError("after-end anchor must be the final outer function annotation");
++        break;
++      }
++      uint64_t offset = anchor->after_end
++                            ? UINT64_MAX
++                            : stream_->offset() - cur_func_start_offset_;
++      if (!debug_labels_.emplace(anchor->name,
++              DebugLabel{true, cur_func_index_, offset}).second)
++        DebugError("duplicate debug label");
++      break;
++    }
+     case ExprType::CodeMetadata: {
+       auto* meta_expr = cast<CodeMetadataExpr>(expr);
+       auto& s = code_metadata_sections_[meta_expr->name];
+@@ -1079,9 +1124,23 @@ void BinaryWriter::WriteFuncLocals(const Func* func,
+ }
+ 
+ void BinaryWriter::WriteFunc(const Func* func) {
++  opcode_offsets_.clear();
+   WriteFuncLocals(func, func->local_types);
++  writing_function_ = true;
+   WriteExprList(func, func->exprs);
+   WriteOpcode(stream_, Opcode::End);
++  writing_function_ = false;
++  Offset size = stream_->offset() - cur_func_start_offset_;
++  function_layouts_[cur_func_index_] = {true, opcode_offsets_, size};
++  for (auto& entry : debug_labels_) {
++    if (entry.second.code && entry.second.owner == cur_func_index_ &&
++        entry.second.offset == UINT64_MAX)
++      entry.second.offset = size;
++  }
++  if (func->debug_layout.present &&
++      (func->debug_layout.offsets != opcode_offsets_ ||
++       func->debug_layout.size != size))
++    DebugError("code.layout changed while opaque DWARF is retained");
+ }
+ 
+ void BinaryWriter::WriteTable(const Table* table) {
+@@ -1113,10 +1172,9 @@ void BinaryWriter::WriteTagType(const Tag* tag) {
+ }
+ 
+ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
+-  char section_name[128];
+-  wabt_snprintf(section_name, sizeof(section_name), "%s.%s",
+-                WABT_BINARY_SECTION_RELOC, reloc_section->name);
+-  BeginCustomSection(section_name);
++  std::string section_name =
++      std::string(WABT_BINARY_SECTION_RELOC) + "." + reloc_section->name;
++  BeginCustomSection(section_name.c_str());
+   WriteU32Leb128(stream_, reloc_section->section_index, "reloc section index");
+   const std::vector<Reloc>& relocs = reloc_section->relocations;
+   WriteU32Leb128(stream_, relocs.size(), "num relocs");
+@@ -1150,6 +1208,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
+       case RelocType::TableIndexI64:
+       case RelocType::TypeIndexLEB:
+       case RelocType::GlobalIndexLEB:
++      case RelocType::GlobalIndexI32:
+       case RelocType::TagIndexLEB:
+       case RelocType::TableIndexRelSLEB:
+       case RelocType::TableIndexRelSLEB64:
+@@ -1562,6 +1621,8 @@ Result BinaryWriter::WriteModule() {
+     data_count_end_ = stream_->offset();
+   }
+ 
++  function_starts_.resize(module_->funcs.size(), UINT64_MAX);
++  function_layouts_.resize(module_->funcs.size());
+   if (num_funcs) {
+     code_start_ = stream_->offset();
+     BeginKnownSection(BinarySection::Code);
+@@ -1582,6 +1643,13 @@ Result BinaryWriter::WriteModule() {
+       auto func_end_offset = stream_->offset() - last_section_payload_offset_;
+       auto delta = WriteFixupU32Leb128Size(body_size_offset, leb_size_guess,
+                                            "FIXUP func body size");
++      Offset prefix_size = options_.canonicalize_lebs ? leb_size_guess + delta
++                                                     : MAX_U32_LEB128_BYTES;
++      function_starts_[cur_func_index_] =
++          body_size_offset - last_section_payload_offset_ + prefix_size;
++      if (func->debug_layout.present && func->debug_layout.start_present &&
++          func->debug_layout.start != function_starts_[cur_func_index_])
++        DebugError("code.layout start changed while opaque DWARF is retained");
+       if (current_reloc_section_ && delta != 0) {
+         for (Reloc& reloc : current_reloc_section_->relocations) {
+           if (reloc.offset >= func_start_offset &&
+@@ -1652,23 +1720,8 @@ Result BinaryWriter::WriteModule() {
+     EndSection();
+   }
+ 
+-  for (const Custom& custom : module_->customs) {
+-    // These custom sections are already specially handled by BinaryWriter, so
+-    // we don't want to double-write.
+-    if (custom.name == "target_features" || custom.name == "producers" ||
+-        (custom.name == WABT_BINARY_SECTION_NAME &&
+-         options_.write_debug_names) ||
+-        (custom.name.rfind(WABT_BINARY_SECTION_RELOC) == 0 &&
+-         options_.relocatable) ||
+-        (custom.name == WABT_BINARY_SECTION_LINKING && options_.relocatable) ||
+-        (custom.name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0 &&
+-         options_.features.code_metadata_enabled())) {
+-      continue;
+-    }
+-    BeginCustomSection(custom.name.data());
+-    stream_->WriteData(custom.data, "custom data");
+-    EndSection();
+-  }
++  if (debug_error_) return Result::Error;
++  CHECK_RESULT(WriteDebugCustoms());
+ 
+   if (options_.write_debug_names) {
+     std::vector<std::string> index_to_name;
+@@ -1750,6 +1803,190 @@ Result BinaryWriter::WriteModule() {
+   return stream_->result();
+ }
+ 
++void BinaryWriter::DebugError(const char* reason) {
++  fprintf(stderr, "error: debug transport: %s\n", reason);
++  debug_error_ = true;
++}
++
++Result BinaryWriter::WriteDebugCustoms() {
++  const auto& customs = module_->customs;
++  auto emit = [&](const Custom& c) {
++    return !(c.name == "target_features" || c.name == "producers" ||
++      (c.name == WABT_BINARY_SECTION_NAME && options_.write_debug_names) ||
++      (c.name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0 && options_.relocatable) ||
++      (c.name == WABT_BINARY_SECTION_LINKING && options_.relocatable) ||
++      (c.name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0 &&
++       options_.features.code_metadata_enabled()));
++  };
++  // Label declarations are independent of serialization order. For custom
++  // deltas, calculate differences directly so common variable-width prefixes
++  // cancel rather than introducing spurious dependency cycles.
++  std::map<std::string, std::pair<Index, size_t>> custom_labels;
++  for (Index ci = 0; ci < customs.size(); ++ci) {
++    for (size_t ai = 0; ai < customs[ci].atoms.size(); ++ai) {
++      const auto& a = customs[ci].atoms[ai];
++      if (a.kind != CustomAtom::Label) continue;
++      if (!debug_labels_.emplace(a.label, DebugLabel{false, ci, 0}).second)
++        DebugError("duplicate debug label");
++      custom_labels.emplace(a.label, std::make_pair(ci, ai));
++    }
++  }
++  if (debug_error_) return Result::Error;
++  std::vector<std::vector<size_t>> widths(customs.size());
++  std::vector<std::vector<uint8_t>> state(customs.size());
++  for (Index ci = 0; ci < customs.size(); ++ci) {
++    widths[ci].resize(customs[ci].atoms.size());
++    state[ci].resize(customs[ci].atoms.size());
++  }
++  auto encode = [&](const std::string& type, __int128 value,
++                    std::vector<uint8_t>* out) {
++    out->clear();
++    if (type == "uleb") {
++      if (value < 0 || value > __int128(UINT64_MAX)) {
++        DebugError("ULEB delta is negative or exceeds u64"); return;
++      }
++      uint64_t v = uint64_t(value);
++      do { uint8_t byte = v & 127; v >>= 7;
++        out->push_back(byte | (v ? 128 : 0)); } while (v);
++    } else if (type == "sleb") {
++      if (value < INT64_MIN || value > INT64_MAX) {
++        DebugError("SLEB delta exceeds i64"); return;
++      }
++      int64_t v = int64_t(value);
++      for (;;) { uint8_t byte = v & 127; v >>= 7;
++        bool done = (v == 0 && !(byte & 64)) || (v == -1 && (byte & 64));
++        out->push_back(byte | (done ? 0 : 128)); if (done) break; }
++    } else {
++      unsigned bits = type == "i8" ? 8 : type == "i16" ? 16 : type == "i32" ? 32 : 64;
++      if (value < -(__int128(1) << (bits - 1)) || value >= (__int128(1) << bits)) {
++        DebugError("fixed-width delta overflows its slot"); return;
++      }
++      uint64_t v = uint64_t(value);
++      for (unsigned i = 0; i < bits / 8; ++i) { out->push_back(v & 255); v >>= 8; }
++    }
++  };
++  std::function<size_t(Index, size_t)> width;
++  std::function<__int128(const CustomAtom&)> delta;
++  delta = [&](const CustomAtom& a) -> __int128 {
++    auto end = debug_labels_.find(a.label), begin = debug_labels_.find(a.begin);
++    if (end == debug_labels_.end() || begin == debug_labels_.end()) {
++      DebugError("unresolved delta label"); return 0;
++    }
++    auto e = end->second, b = begin->second;
++    if (e.code != b.code || e.owner != b.owner) {
++      DebugError("delta labels have different owners"); return 0;
++    }
++    __int128 value = a.addend;
++    if (e.code) return value + __int128(e.offset) - __int128(b.offset);
++    size_t ei = custom_labels.at(a.label).second;
++    size_t bi = custom_labels.at(a.begin).second;
++    for (size_t i = std::min(ei, bi); i < std::max(ei, bi); ++i)
++      value += (ei >= bi ? 1 : -1) * __int128(width(e.owner, i));
++    return value;
++  };
++  width = [&](Index ci, size_t ai) -> size_t {
++    if (state[ci][ai] == 2) return widths[ci][ai];
++    if (state[ci][ai] == 1) { DebugError("cyclic LEB width dependency"); return 0; }
++    state[ci][ai] = 1;
++    const auto& a = customs[ci].atoms[ai];
++    size_t result = 0;
++    if (a.kind == CustomAtom::Bytes) result = a.bytes.size();
++    else if (a.kind == CustomAtom::Ref) result = 4;
++    else if (a.kind == CustomAtom::Delta) {
++      if (a.width == "uleb" || a.width == "sleb") {
++        std::vector<uint8_t> bytes; encode(a.width, delta(a), &bytes); result = bytes.size();
++      } else result = a.width == "i8" ? 1 : a.width == "i16" ? 2 : a.width == "i32" ? 4 : 8;
++    }
++    state[ci][ai] = 2; widths[ci][ai] = result; return result;
++  };
++  auto custom_offset = [&](Index ci, size_t end) {
++    uint64_t offset = 0;
++    for (size_t ai = 0; ai < end; ++ai) offset += width(ci, ai);
++    return offset;
++  };
++  for (Index ci = 0; ci < customs.size(); ++ci)
++    for (size_t ai = 0; ai < customs[ci].atoms.size(); ++ai) width(ci, ai);
++  if (debug_error_) return Result::Error;
++  custom_symbols_.resize(customs.size(), kInvalidIndex);
++  // Create placeholders only after Code/DataCount/code-metadata layout is
++  // final. Physical custom indices are filled when each payload is emitted.
++  for (const auto& c : customs) for (const auto& a : c.atoms) {
++    if (a.kind != CustomAtom::Ref) continue;
++    if (!options_.relocatable) { DebugError("debug references require relocatable output"); continue; }
++    if (a.reloc.type == RelocType::SectionOffsetI32) {
++      Index target = a.reloc.symbol.index();
++      if (target >= customs.size() || !emit(customs[target])) {
++        DebugError("invalid custom reference target"); continue;
++      }
++      if (custom_symbols_[target] == kInvalidIndex) {
++        custom_symbols_[target] = symtab_.symbols().size();
++        CHECK_RESULT(symtab_.AddSymbol({"", uint32_t(SymbolBinding::Local), Symbol::Section{0}}));
++      }
++    }
++  }
++  if (debug_error_) return Result::Error;
++  for (Index ci = 0; ci < customs.size(); ++ci) {
++    const auto& c = customs[ci];
++    if (!emit(c)) continue;
++    current_custom_name_ = c.name;
++    if (custom_symbols_[ci] != kInvalidIndex)
++      symtab_.symbols()[custom_symbols_[ci]] = Symbol("", uint32_t(SymbolBinding::Local),
++                                                   Symbol::Section{section_count_});
++    BeginCustomSection(c.name.c_str());
++    // LLVM custom relocation offsets start AFTER the encoded custom name.
++    Offset payload_start = stream_->offset();
++    if (!c.structured) stream_->WriteData(c.data, "custom data");
++    else for (size_t ai = 0; ai < c.atoms.size(); ++ai) {
++      const auto& a = c.atoms[ai];
++      if (a.kind == CustomAtom::Bytes) stream_->WriteData(a.bytes, "debug bytes");
++      else if (a.kind == CustomAtom::Delta) {
++        std::vector<uint8_t> bytes; encode(a.width, delta(a), &bytes);
++        stream_->WriteData(bytes, "debug delta");
++      } else if (a.kind == CustomAtom::Ref) {
++        IrReloc reloc = a.reloc;
++        __int128 addend = a.addend, value = 0;
++        Index target = reloc.symbol.index();
++        if (reloc.type == RelocType::SectionOffsetI32 || reloc.type == RelocType::FunctionOffsetI32) {
++          auto found = debug_labels_.find(a.label);
++          bool code = reloc.type == RelocType::FunctionOffsetI32;
++          if (found == debug_labels_.end() || found->second.code != code || found->second.owner != target) {
++            DebugError("reference label has wrong or unresolved owner"); continue;
++          }
++          if (code) {
++            if (target >= function_starts_.size() || function_starts_[target] == UINT64_MAX) {
++              DebugError("text reference requires a defined function"); continue;
++            }
++            addend += found->second.offset;
++            const auto& layout = function_layouts_[target];
++            if (addend != layout.size && std::find(layout.offsets.begin(), layout.offsets.end(), addend) == layout.offsets.end()) {
++              DebugError("text reference is not an instruction boundary"); continue;
++            }
++            value = function_starts_[target] + addend;
++          } else {
++            addend += custom_offset(target, custom_labels.at(a.label).second);
++            if (addend < 0 || addend > custom_offset(target, customs[target].atoms.size()))
++              DebugError("custom reference lies outside target payload");
++            value = addend;
++          }
++        } else if (reloc.type == RelocType::GlobalIndexI32) {
++          if (target >= module_->globals.size()) DebugError("invalid global reference");
++          value = target;
++        } else if (target >= module_->data_symbols.size()) DebugError("invalid data reference");
++        if (addend < INT32_MIN || addend > INT32_MAX) DebugError("relocation addend exceeds i32");
++        if (value < 0 || value > UINT32_MAX) DebugError("reference value exceeds u32");
++        if (debug_error_) return Result::Error;
++        reloc.addend = int32_t(addend);
++        AddRelocAt(reloc, stream_->offset() - payload_start);
++        stream_->WriteU32(uint32_t(value), "debug reference");
++      }
++    }
++    EndSection();
++    if (debug_error_) return Result::Error;
++  }
++  current_custom_name_.clear();
++  return Result::Ok;
++}
++
+ void BinaryWriter::WriteCodeMetadataSections() {
+   if (code_metadata_sections_.empty())
+     return;
+diff --git a/src/c-writer.cc b/src/c-writer.cc
+index da58d1c..1df9946 100644
+--- a/src/c-writer.cc
++++ b/src/c-writer.cc
+@@ -3698,6 +3698,7 @@ void CWriter::Write(const ExprList& exprs) {
+         break;
+       }
+ 
++      case ExprType::DebugAnchor:
+       case ExprType::CodeMetadata:
+         break;
+ 
+diff --git a/src/decompiler.cc b/src/decompiler.cc
+index 7881ce8..31128cb 100644
+--- a/src/decompiler.cc
++++ b/src/decompiler.cc
+@@ -607,6 +607,8 @@ struct Decompiler {
+         ts += "](";
+         return WrapChild(args[0], ts, ")", Precedence::Atomic);
+       }
++      case ExprType::DebugAnchor:
++        return Value{{"// debug anchor"}, Precedence::None};
+       case ExprType::CodeMetadata: {
+         auto cme = cast<CodeMetadataExpr>(n.e);
+         std::string c = "// @metadata.code." + cme->name + " ";
+diff --git a/src/expr-visitor.cc b/src/expr-visitor.cc
+index 217d45c..8d1384d 100644
+--- a/src/expr-visitor.cc
++++ b/src/expr-visitor.cc
+@@ -235,6 +235,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
+       CHECK_RESULT(delegate_->OnCodeMetadataExpr(cast<CodeMetadataExpr>(expr)));
+       break;
+ 
++    case ExprType::DebugAnchor:
++      CHECK_RESULT(delegate_->OnDebugAnchorExpr(cast<DebugAnchorExpr>(expr)));
++      break;
++
+     case ExprType::Compare:
+       CHECK_RESULT(delegate_->OnCompareExpr(cast<CompareExpr>(expr)));
+       break;
+diff --git a/src/ir-util.cc b/src/ir-util.cc
+index 5266a26..8bf8500 100644
+--- a/src/ir-util.cc
++++ b/src/ir-util.cc
+@@ -165,6 +165,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
+     case ExprType::DataDrop:
+     case ExprType::ElemDrop:
+     case ExprType::AtomicFence:
++    case ExprType::DebugAnchor:
+     case ExprType::CodeMetadata:
+       return {0, 0};
+ 
+diff --git a/src/ir.cc b/src/ir.cc
+index 26f3fdf..c60c54d 100644
+--- a/src/ir.cc
++++ b/src/ir.cc
+@@ -41,6 +41,7 @@ const char* ExprTypeName[] = {
+     "CallIndirect",
+     "CallRef",
+     "CodeMetadata",
++    "DebugAnchor",
+     "Compare",
+     "Const",
+     "Convert",
+diff --git a/src/resolve-names.cc b/src/resolve-names.cc
+index f512350..e4313c9 100644
+--- a/src/resolve-names.cc
++++ b/src/resolve-names.cc
+@@ -19,6 +19,7 @@
+ #include <cassert>
+ #include <cstdio>
+ #include <functional>
++#include <map>
+ 
+ #include "wabt/cast.h"
+ #include "wabt/expr-visitor.h"
+@@ -721,6 +722,34 @@ Result NameResolver::VisitModule(Module* module) {
+     VisitDataSegment(data_segment);
+   for (Var* start : module->starts)
+     ResolveFuncVar(start);
++  std::map<std::string, Index> custom_ids;
++  for (Index i = 0; i < module->customs.size(); ++i) {
++    auto& custom = module->customs[i];
++    if (!custom.id.empty() && !custom_ids.emplace(custom.id, i).second) {
++      PrintError(&custom.loc, "duplicate custom section ID: %s", custom.id.c_str());
++      result_ = Result::Error;
++    }
++  }
++  for (auto& custom : module->customs) for (auto& atom : custom.atoms) {
++    if (atom.kind != CustomAtom::Ref) continue;
++    if (atom.reloc.type == RelocType::SectionOffsetI32) {
++      auto& var = atom.reloc.symbol;
++      auto it = var.is_name() ? custom_ids.find(var.name()) : custom_ids.end();
++      if (it == custom_ids.end()) {
++        PrintError(&atom.loc, "unknown custom section ID");
++        result_ = Result::Error;
++      } else var.set_index(it->second);
++    } else ResolveReloc(&atom.reloc);
++  }
++  for (auto& request : module->debug_layouts) {
++    ResolveFuncVar(&request.first);
++    Index index = module->GetFuncIndex(request.first);
++    if (index < module->num_func_imports || index >= module->funcs.size() ||
++        module->funcs[index]->debug_layout.present) {
++      PrintError(&request.first.loc, "invalid or duplicate code.layout function");
++      result_ = Result::Error;
++    } else module->funcs[index]->debug_layout = request.second;
++  }
+   current_module_ = nullptr;
+   return result_;
+ }
+diff --git a/src/validator.cc b/src/validator.cc
+index fcb4e69..c497b9f 100644
+--- a/src/validator.cc
++++ b/src/validator.cc
+@@ -103,6 +103,7 @@ class Validator : public ExprVisitor::Delegate {
+   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+   Result OnCallRefExpr(CallRefExpr*) override;
+   Result OnCodeMetadataExpr(CodeMetadataExpr*) override;
++  Result OnDebugAnchorExpr(DebugAnchorExpr*) override { return Result::Ok; }
+   Result OnCompareExpr(CompareExpr*) override;
+   Result OnConstExpr(ConstExpr*) override;
+   Result OnConvertExpr(ConvertExpr*) override;
+diff --git a/src/wast-parser.cc b/src/wast-parser.cc
+index c63d3b3..a78f09e 100644
+--- a/src/wast-parser.cc
++++ b/src/wast-parser.cc
+@@ -16,6 +16,8 @@
+ 
+ #include "wabt/wast-parser.h"
+ 
++#include <limits>
++
+ #include "wabt/binary-reader-ir.h"
+ #include "wabt/binary-reader.h"
+ #include "wabt/cast.h"
+@@ -588,6 +590,8 @@ TokenType WastParser::Peek(size_t n) {
+       if ((options_->features.code_metadata_enabled() &&
+            cur.text().find("metadata.code.") == 0) ||
+           cur.text() == "custom" || cur.text() == "reloc" ||
++          cur.text() == "label" || cur.text() == "delta" || cur.text() == "ref" ||
++          cur.text() == "code.label" || cur.text() == "code.layout" ||
+           cur.text() == "sym.import.data" || cur.text() == "sym.alias" ||
+           cur.text() == "sym") {
+         tokens_.push_back(cur);
+@@ -1222,7 +1226,7 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
+       auto module_command = cast<ScriptModuleCommand>(std::move(command));
+       *module = std::move(module_command->module);
+     }
+-  } else if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() || PeekIsSymbolAlias()) {
++  } else if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() || PeekIsSymbolAlias() || PeekIsDebugLayout()) {
+     // Parse an inline module (i.e. one with no surrounding (module)).
+     CHECK_RESULT(ParseModuleFieldList(module.get()));
+   } else if (PeekMatch(TokenType::Eof)) {
+@@ -1281,6 +1285,8 @@ Result WastParser::ParseCustomSectionAnnotation(Module* module) {
+         !"ParseCustomSectionAnnotation should only be called if PeekIsCustom() is true");
+     return Result::Error;
+   }
++  std::string id;
++  ParseBindVarOpt(&id);
+   std::string section_name;
+   CHECK_RESULT(ParseQuotedText(&section_name));
+   if (Match(TokenType::Lpar)) {
+@@ -1311,13 +1317,148 @@ Result WastParser::ParseCustomSectionAnnotation(Module* module) {
+     }
+     EXPECT(Rpar);
+   }
+-  std::vector<uint8_t> data;
+-  CHECK_RESULT(ParseTextList(&data));
++  Custom custom(loc, section_name);
++  custom.id = id;
++  custom.structured = !id.empty();
++  while (!PeekMatch(TokenType::Rpar)) {
++    CustomAtom atom;
++    atom.loc = GetLocation();
++    if (PeekMatch(TokenType::Text)) {
++      CHECK_RESULT(ParseTextList(&atom.bytes));
++      custom.data.insert(custom.data.end(), atom.bytes.begin(), atom.bytes.end());
++    } else {
++      if (!PeekMatch(TokenType::LparAnn))
++        return ErrorExpected({"raw bytes", "debug payload annotation"});
++      std::string kind(Consume().text());
++      custom.structured = true;
++      Var label;
++      if (kind == "label") {
++        atom.kind = CustomAtom::Label;
++        CHECK_RESULT(ParseVar(&label));
++        if (!label.is_name()) return ErrorExpected({"debug label name"});
++        atom.label = label.name();
++      } else if (kind == "delta") {
++        atom.kind = CustomAtom::Delta;
++        atom.width = ConsumeDebugWord();
++        if (atom.width != "i8" && atom.width != "i16" && atom.width != "i32" &&
++            atom.width != "i64" && atom.width != "uleb" && atom.width != "sleb")
++          return ErrorExpected({"i8/i16/i32/i64/uleb/sleb delta width"});
++        CHECK_RESULT(ParseVar(&label));
++        if (!label.is_name()) return ErrorExpected({"debug label name"});
++        atom.label = label.name();
++        CHECK_RESULT(ParseVar(&label));
++        if (!label.is_name()) return ErrorExpected({"debug label name"});
++        atom.begin = label.name();
++        CHECK_RESULT(ParseDebugAddend(&atom.addend));
++      } else if (kind == "ref") {
++        atom.kind = CustomAtom::Ref;
++        if (ConsumeDebugWord() != "i32")
++          return ErrorExpected({"i32 reference slot"});
++        std::string target = ConsumeDebugWord();
++        if (target == "custom") atom.reloc.type = RelocType::SectionOffsetI32;
++        else if (target == "text") atom.reloc.type = RelocType::FunctionOffsetI32;
++        else if (target == "data") atom.reloc.type = RelocType::MemoryAddressI32;
++        else if (target == "global") atom.reloc.type = RelocType::GlobalIndexI32;
++        else return ErrorExpected({"custom/text/data/global reference"});
++        CHECK_RESULT(ParseVar(&atom.reloc.symbol));
++        if (target == "custom" || target == "text") {
++          CHECK_RESULT(ParseVar(&label));
++          if (!label.is_name()) return ErrorExpected({"debug label name"});
++          atom.label = label.name();
++        }
++        if (target != "global") CHECK_RESULT(ParseDebugAddend(&atom.addend));
++      } else {
++        return ErrorExpected({"label", "delta", "ref"});
++      }
++      EXPECT(Rpar);
++    }
++    custom.atoms.push_back(std::move(atom));
++  }
++  EXPECT(Rpar);
++  module->customs.push_back(std::move(custom));
++  return Result::Ok;
++}
++
++std::string WastParser::ConsumeDebugWord() {
++  Token token = GetToken();
++  Consume();
++  return token.to_string();
++}
++
++Result WastParser::ParseDebugAddend(int64_t* result) {
++  *result = 0;
++  if (PeekMatch(TokenType::Rpar)) return Result::Ok;
++  if (!PeekMatch(TokenType::Int)) return ErrorExpected({"signed integer addend"});
++  Token token = Consume();
++  auto text = token.literal().text;
++  if (text.empty() || (text.front() != '+' && text.front() != '-'))
++    return ErrorExpected({"explicit signed integer addend"});
++  uint64_t magnitude;
++  if (Failed(ParseUint64(text.substr(1), &magnitude)) ||
++      magnitude > uint64_t(std::numeric_limits<int64_t>::max()) + (text.front() == '-')) {
++    Error(token.loc, "debug addend exceeds signed i64");
++    return Result::Error;
++  }
++  *result = text.front() == '-' ? int64_t(uint64_t(0) - magnitude) : int64_t(magnitude);
++  return Result::Ok;
++}
++
++Result WastParser::ParseDebugAnchor(ExprList* exprs) {
++  Location loc = GetLocation();
++  Consume();
++  Var label;
++  CHECK_RESULT(ParseVar(&label));
++  if (!label.is_name()) return ErrorExpected({"debug anchor name"});
++  bool after = false;
++  if (Match(TokenType::Lpar)) {
++    EXPECT(After);
++    EXPECT(End);
++    EXPECT(Rpar);
++    after = true;
++  }
+   EXPECT(Rpar);
++  exprs->push_back(std::make_unique<DebugAnchorExpr>(label.name(), after, loc));
++  return Result::Ok;
++}
+ 
+-  Custom custom = Custom(loc, section_name, data);
+-  module->customs.push_back(custom);
++bool WastParser::PeekIsDebugLayout() {
++  return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
++         tokens_.front().text() == "code.layout";
++}
+ 
++Result WastParser::ParseDebugLayout(Module* module) {
++  Consume();
++  Var function;
++  CHECK_RESULT(ParseVar(&function));
++  DebugCodeLayout layout;
++  layout.present = true;
++  EXPECT(Lpar);
++  if (ConsumeDebugWord() != "offsets") return ErrorExpected({"offsets"});
++  while (!PeekMatch(TokenType::Rpar)) {
++    uint64_t value;
++    CHECK_RESULT(ParseNat(&value, true));
++    if (value > UINT32_MAX) return ErrorExpected({"u32 opcode offset"});
++    layout.offsets.push_back(value);
++  }
++  EXPECT(Rpar);
++  EXPECT(Lpar);
++  if (ConsumeDebugWord() != "size") return ErrorExpected({"size"});
++  uint64_t size;
++  CHECK_RESULT(ParseNat(&size, true));
++  if (size > UINT32_MAX) return ErrorExpected({"u32 function payload size"});
++  layout.size = size;
++  EXPECT(Rpar);
++  if (Match(TokenType::Lpar)) {
++    if (ConsumeDebugWord() != "start") return ErrorExpected({"start"});
++    uint64_t start;
++    CHECK_RESULT(ParseNat(&start, true));
++    if (start > UINT32_MAX) return ErrorExpected({"u32 function payload start"});
++    layout.start_present = true;
++    layout.start = start;
++    EXPECT(Rpar);
++  }
++  EXPECT(Rpar);
++  module->debug_layouts.emplace_back(function, std::move(layout));
+   return Result::Ok;
+ }
+ 
+@@ -1639,7 +1780,11 @@ Result WastParser::ParseModuleFieldList(Module* module) {
+   resolve_funcs_.clear();
+ 
+   while (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() ||
+-         PeekIsSymbolAlias()) {
++         PeekIsSymbolAlias() || PeekIsDebugLayout()) {
++    if (PeekIsDebugLayout()) {
++      CHECK_RESULT(ParseDebugLayout(module));
++      continue;
++    }
+     if (PeekIsCustom()) {
+       CHECK_RESULT(ParseCustomSectionAnnotation(module));
+       continue;
+@@ -2547,7 +2692,9 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
+       Token tk = GetToken();
+       constexpr std::string_view pfx = "metadata.code.";
+       std::string_view name = tk.text();
+-      if (name.substr(0, size(pfx)) == pfx) {
++      if (name == "code.label" && options_->features.annotations_enabled()) {
++        CHECK_RESULT(ParseDebugAnchor(exprs));
++      } else if (name.substr(0, size(pfx)) == pfx) {
+         if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
+           exprs->splice(exprs->end(), new_exprs);
+         } else {
+diff --git a/src/wat-writer.cc b/src/wat-writer.cc
+index 77d6072..bf043a3 100644
+--- a/src/wat-writer.cc
++++ b/src/wat-writer.cc
+@@ -569,6 +569,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
+   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+   Result OnCallRefExpr(CallRefExpr*) override;
+   Result OnCodeMetadataExpr(CodeMetadataExpr*) override;
++  Result OnDebugAnchorExpr(DebugAnchorExpr*) override;
+   Result OnCompareExpr(CompareExpr*) override;
+   Result OnConstExpr(ConstExpr*) override;
+   Result OnConvertExpr(ConvertExpr*) override;
+@@ -699,6 +700,14 @@ Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
+   return Result::Ok;
+ }
+ 
++Result WatWriter::ExprVisitorDelegate::OnDebugAnchorExpr(DebugAnchorExpr* expr) {
++  writer_->WriteOpenSpace("@code.label");
++  writer_->WritePutsSpace(expr->name.c_str());
++  if (expr->after_end) writer_->WritePutsSpace("(after end)");
++  writer_->WriteCloseNewline();
++  return Result::Ok;
++}
++
+ Result WatWriter::ExprVisitorDelegate::OnCodeMetadataExpr(
+     CodeMetadataExpr* expr) {
+   writer_->WriteOpen("@metadata.code.", NextChar::None);
+@@ -1923,8 +1932,44 @@ void WatWriter::WriteStartFunction(const Var& start) {
+ 
+ void WatWriter::WriteCustom(const Custom& custom) {
+   WriteOpenSpace("@custom");
++  if (!custom.id.empty())
++    WriteName(custom.id, NextChar::Space);
+   WriteQuotedString(custom.name, NextChar::Space);
+-  WriteQuotedData(custom.data.data(), custom.data.size());
++  if (!custom.structured) {
++    WriteQuotedData(custom.data.data(), custom.data.size());
++  } else {
++    for (const auto& atom : custom.atoms) {
++      if (atom.kind == CustomAtom::Bytes) {
++        WriteQuotedData(atom.bytes.data(), atom.bytes.size());
++        continue;
++      }
++      WriteOpenSpace(atom.kind == CustomAtom::Label ? "@label" :
++                     atom.kind == CustomAtom::Delta ? "@delta" : "@ref");
++      if (atom.kind == CustomAtom::Delta) {
++        WritePutsSpace(atom.width.c_str());
++        WriteName(atom.label, NextChar::Space);
++        WriteName(atom.begin, NextChar::Space);
++      } else if (atom.kind == CustomAtom::Ref) {
++        WritePutsSpace("i32");
++        bool section = atom.reloc.type == RelocType::SectionOffsetI32;
++        const char* kind = section ? "custom" :
++            atom.reloc.type == RelocType::FunctionOffsetI32 ? "text" :
++            atom.reloc.type == RelocType::MemoryAddressI32 ? "data" : "global";
++        WritePutsSpace(kind);
++        if (section)
++          WriteName(module.customs[atom.reloc.symbol.index()].id, NextChar::Space);
++        else
++          WriteVar(atom.reloc.symbol, NextChar::Space);
++        if (!atom.label.empty())
++          WriteName(atom.label, NextChar::Space);
++      } else {
++        WriteName(atom.label, NextChar::Space);
++      }
++      if (atom.addend)
++        Writef("%+" PRId64, atom.addend);
++      WriteCloseSpace();
++    }
++  }
+   WriteCloseNewline();
+ }
+ 
+@@ -1993,7 +2038,35 @@ Result WatWriter::WriteModule() {
+         break;
+     }
+   }
++  bool retained_dwarf = false;
++  for (const auto& custom : module.customs)
++    retained_dwarf |= custom.name.rfind(".debug_", 0) == 0;
++  if (retained_dwarf && !options_.features.annotations_enabled()) {
++    fprintf(stderr, "error: DWARF readback requires enabled annotations\n");
++    return Result::Error;
++  }
+   if (options_.features.annotations_enabled()) {
++    for (Index i = module.num_func_imports; i < module.funcs.size(); ++i) {
++      const auto& layout = module.funcs[i]->debug_layout;
++      if (!layout.present) continue;
++      WriteOpenSpace("@code.layout");
++      WriteVar(Var(i, {}), NextChar::Space);
++      WriteOpenSpace("offsets");
++      for (auto offset : layout.offsets) {
++        Writef("%zu", offset);
++        WritePutc(' ');
++      }
++      WriteCloseSpace();
++      WriteOpenSpace("size");
++      Writef("%zu", layout.size);
++      WriteCloseSpace();
++      if (layout.start_present) {
++        WriteOpenSpace("start");
++        Writef("%zu", layout.start);
++        WriteCloseSpace();
++      }
++      WriteCloseNewline();
++    }
+     for (const Custom& custom : module.customs) {
+       if (custom.name == "linking")
+         continue;
+diff --git a/test/dwarf-transport.py b/test/dwarf-transport.py
+new file mode 100644
+index 0000000..c633981
+--- /dev/null
++++ b/test/dwarf-transport.py
+@@ -0,0 +1,363 @@
++#!/usr/bin/env python3
++"""Native black-box checks for owning DWARF slots and checked code layout.
++
++Requires the pinned native LLVM tools. This validates assembler transport;
++genuine GCC source/type/local-value qualification remains a separate gate.
++"""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import struct
++import subprocess
++import time
++
++parser = argparse.ArgumentParser(description=__doc__)
++parser.add_argument('--bindir', required=True, type=Path)
++parser.add_argument('--llvm-bindir', required=True, type=Path)
++parser.add_argument('--output', required=True, type=Path)
++parser.add_argument('--baseline-bindir', type=Path)
++args = parser.parse_args()
++args.output.mkdir(parents=True, exist_ok=False)
++commands, cases = [], []
++started = time.time()
++
++
++def identity(file):
++    data = file.read_bytes()
++    return {'path': str(file.resolve()), 'bytes': len(data),
++            'sha256': hashlib.sha256(data).hexdigest()}
++
++
++def run(argv, expected=0):
++    result = subprocess.run(list(map(str, argv)), capture_output=True, text=True, timeout=120)
++    commands.append({'argv': list(map(str, argv)), 'exitCode': result.returncode,
++                     'stdout': result.stdout, 'stderr': result.stderr})
++    assert (result.returncode == 0) if expected == 0 else (result.returncode > 0), commands[-1]
++    return result
++
++
++def assemble(name, source, good=True, extra=()):
++    wat = args.output / (name + '.wat')
++    binary = args.output / (name + '.o')
++    wat.write_text(source)
++    result = run([args.bindir / 'wat2wasm', '--enable-annotations', '-r', *extra,
++                  wat, '-o', binary], 0 if good else 1)
++    if good:
++        run([args.bindir / 'wasm-validate', *[x for x in extra if x.startswith('--enable-')], binary])
++    else:
++        assert not binary.exists(), 'Rejected input left a binary'
++    cases.append({'id': name, 'status': 'passed', 'accepted': good,
++                  'source': identity(wat), **({'binary': identity(binary)} if good else {})})
++    return binary, result
++
++
++def uleb(data, offset):
++    value, shift = 0, 0
++    while True:
++        byte = data[offset]
++        offset += 1
++        value |= (byte & 127) << shift
++        if byte < 128:
++            return value, offset
++        shift += 7
++        assert shift <= 35
++
++
++def sections(file):
++    data = file.read_bytes()
++    assert data[:8] == b'\0asm\1\0\0\0'
++    result, cursor = [], 8
++    while cursor < len(data):
++        kind = data[cursor]
++        size, start = uleb(data, cursor + 1)
++        end = start + size
++        name = None
++        if kind == 0:
++            length, start = uleb(data, start)
++            name = data[start:start + length].decode()
++            start += length
++        result.append({'kind': kind, 'name': name, 'data': data[start:end]})
++        cursor = end
++    return result
++
++
++def custom(file, name):
++    return next(s['data'] for s in sections(file) if s['name'] == name)
++
++
++def relocations(file, name):
++    data = custom(file, 'reloc.' + name)
++    section, cursor = uleb(data, 0)
++    count, cursor = uleb(data, cursor)
++    result = []
++    for _ in range(count):
++        kind, cursor = uleb(data, cursor)
++        offset, cursor = uleb(data, cursor)
++        symbol, cursor = uleb(data, cursor)
++        addend = 0
++        if kind in (5, 8, 9):
++            begin = cursor
++            unsigned, cursor = uleb(data, cursor)
++            width = 7 * (cursor - begin)
++            addend = unsigned - (1 << width) if data[cursor - 1] & 64 else unsigned
++        result.append((kind, offset, symbol, addend))
++    assert cursor == len(data)
++    actual = sections(file)[section]
++    assert actual['name'] == name, 'Physical relocation target differs'
++    return result
++
++
++def roundtrip(name, binary, extra=()):
++    wat = args.output / (name + '-readback.wat')
++    run([args.bindir / 'wasm2wat', '--enable-annotations', '-r', binary, '-o', wat])
++    text = wat.read_text()
++    assert '(@code.layout' in text
++    rebuilt, _ = assemble(name + '-roundtrip', text, extra=extra)
++    for section in sections(binary):
++        if section['name'] and section['name'].startswith('.debug_'):
++            assert custom(rebuilt, section['name']) == section['data']
++            old = relocations(binary, section['name']) if any(
++                s['name'] == 'reloc.' + section['name'] for s in sections(binary)) else []
++            new = relocations(rebuilt, section['name']) if old else []
++            assert [(t, o, a) for t, o, _, a in old] == [(t, o, a) for t, o, _, a in new]
++    return text
++
++
++def encode_uleb(value):
++    out = bytearray()
++    while value >= 128:
++        out.append((value & 127) | 128)
++        value >>= 7
++    out.append(value)
++    return bytes(out)
++
++
++def encode_sleb(value):
++    out = bytearray()
++    while True:
++        byte = value & 127
++        value >>= 7
++        done = (value == 0 and byte < 64) or (value == -1 and byte >= 64)
++        out.append(byte if done else byte | 128)
++        if done:
++            return bytes(out)
++
++
++def corrupt_relocations(name, binary, entries, expected):
++    target, _ = uleb(custom(binary, 'reloc..debug_slots'), 0)
++    payload = encode_uleb(target) + encode_uleb(len(entries))
++    for kind, offset, symbol, addend in entries:
++        payload += encode_uleb(kind) + encode_uleb(offset) + encode_uleb(symbol)
++        if kind in (5, 8, 9):
++            payload += encode_sleb(addend)
++    encoded = bytearray(b'\0asm\1\0\0\0')
++    for section in sections(binary):
++        data = payload if section['name'] == 'reloc..debug_slots' else section['data']
++        if section['kind'] == 0:
++            section_name = section['name'].encode()
++            data = encode_uleb(len(section_name)) + section_name + data
++        encoded += bytes([section['kind']]) + encode_uleb(len(data)) + data
++    bad = args.output / (name + '.o')
++    bad.write_bytes(encoded)
++    result = run([args.bindir / 'wasm2wat', '--enable-annotations', '-r', bad], 1)
++    assert expected in result.stderr, result.stderr
++    cases.append({'id': name, 'status': 'passed', 'accepted': False,
++                  'binary': identity(bad), 'diagnostic': expected})
++
++
++status, error = 'failed', None
++try:
++    simple = '(func $f (@code.label $b) nop (@code.label $e (after end)))'
++    binary, _ = assemble('owning-slots', '(module ' + simple + '''
++      (@custom $s ".debug_slots" (@label $base) "A"
++        (@ref i32 text $f $b) (@ref i32 custom $s $base +1)
++        (@delta i32 $e $b) "Z"))''')
++    data = custom(binary, '.debug_slots')
++    assert len(data) == 14 and data[:1] == b'A' and data[-1:] == b'Z'
++    assert struct.unpack_from('<I', data, 5)[0] == 1
++    assert struct.unpack_from('<I', data, 9)[0] == 2
++    assert [(t, o, a) for t, o, _, a in relocations(binary, '.debug_slots')] == [(8, 1, 1), (9, 5, 1)]
++    records = relocations(binary, '.debug_slots')
++    corrupt_relocations('reject-overlapping-slots', binary, [records[0], (9, 3, records[1][2], 1)], 'overlapping or out-of-bounds')
++    corrupt_relocations('reject-out-of-bounds-slot', binary, [(8, 12, records[0][2], 1)], 'overlapping or out-of-bounds')
++    corrupt_relocations('reject-wrong-section-symbol', binary, [(9, 1, records[0][2], 1)], 'wrong custom debug relocation symbol')
++    corrupt_relocations('reject-wrong-function-symbol', binary, [(8, 1, records[1][2], 1)], 'wrong custom debug relocation symbol')
++    corrupt_relocations('reject-unsupported-custom-reloc', binary, [(7, 1, records[0][2], 0)], 'unsupported custom debug relocation')
++    text = roundtrip('owning-slots', binary)
++    assemble('guard-rejects-layout-change', text.replace('    nop', '    i32.const 0\n    drop\n    nop', 1), False)
++
++    padded, _ = assemble('padded-body-size', '(module ' + simple + ' (@custom $s ".debug_padded" (@ref i32 text $f $b)))', extra=['--no-canonicalize-leb128s'])
++    # Function-count byte + five-byte body-size field + one-byte locals vector.
++    assert struct.unpack('<I', custom(padded, '.debug_padded'))[0] == 7
++    padded_text = roundtrip('padded-body-size', padded, ['--no-canonicalize-leb128s'])
++    assert '(start 6)' in padded_text
++    _, rejected = assemble('reject-padded-address-movement', padded_text, False)
++    assert 'code.layout start changed' in rejected.stderr
++
++    for width, length in [('i8', 1), ('i16', 2), ('i32', 4), ('i64', 8), ('uleb', 2), ('sleb', 2)]:
++        obj, _ = assemble('delta-' + width, '(module (@custom $s ".debug_delta" '
++            f'(@delta {width} $e $b) (@label $b) "' + '\\00' * 128 + '" (@label $e)))')
++        assert custom(obj, '.debug_delta')[:length] == (bytes([128]) + b'\0' * (length - 1) if width.startswith('i') else b'\x80\x01')
++    obj, _ = assemble('negative-fixed-and-sleb', '(module (@custom $s ".debug_delta" (@label $b) "X" '
++        '(@label $e) (@delta i8 $b $e) (@delta sleb $b $e)))')
++    assert custom(obj, '.debug_delta') == b'X\xff\x7f'
++    for value, encoding in [(0, b'\0'), (127, b'\x7f'), (128, b'\x80\1'), (16383, b'\xff\x7f'), (16384, b'\x80\x80\1')]:
++        obj, _ = assemble('uleb-' + str(value), f'(module (@custom $s ".debug_delta" (@label $l) (@delta uleb $l $l +{value})))')
++        assert custom(obj, '.debug_delta') == encoding
++    for value, encoding in [(-65, b'\xbf\x7f'), (-64, b'\x40'), (63, b'\x3f'), (64, b'\xc0\0')]:
++        sign = '+' if value >= 0 else ''
++        obj, _ = assemble('sleb-' + str(value), f'(module (@custom $s ".debug_delta" (@label $l) (@delta sleb $l $l {sign}{value})))')
++        assert custom(obj, '.debug_delta') == encoding
++
++    rejects = {
++        'missing-label': '(module (@custom $s ".debug_x" (@delta i32 $bad $bad)))',
++        'duplicate-label': '(module (@custom $s ".debug_x" (@label $l) (@label $l)))',
++        'duplicate-section-id': '(module (@custom $s ".debug_x" "") (@custom $s ".debug_y" ""))',
++        'cross-section': '(module (@custom $s ".debug_x" (@label $a) (@delta i32 $b $a)) (@custom $t ".debug_y" (@label $b)))',
++        'cross-function': '(module (func (@code.label $a)) (func (@code.label $b)) (@custom $s ".debug_x" (@delta i32 $b $a)))',
++        'negative-uleb': '(module (@custom $s ".debug_x" (@label $a) (@delta uleb $a $a -1)))',
++        'i8-overflow': '(module (@custom $s ".debug_x" (@label $a) (@delta i8 $a $a +256)))',
++        'i8-underflow': '(module (@custom $s ".debug_x" (@label $a) (@delta i8 $a $a -129)))',
++        'cyclic-uleb': '(module (@custom $s ".debug_x" (@label $a) (@delta uleb $b $a) (@label $b)))',
++        'wrong-reference-owner': '(module ' + simple + ' (@custom $s ".debug_x" (@ref i32 custom $s $b)))',
++        'misplaced-end': '(module (func (@code.label $a (after end)) nop))',
++        'nested-end': '(module (func (block (@code.label $a (after end)))))',
++        'global-addend': '(module (global $g i32 (i32.const 0)) (@custom $s ".debug_x" (@ref i32 global $g +1)))',
++    }
++    for name, source in rejects.items():
++        assemble('reject-' + name, source, False)
++    assemble('reject-no-check-delta', rejects['negative-uleb'], False, ['--no-check'])
++
++    for width, value, size in [('i8', 255, 1), ('i16', 65535, 2), ('i32', 4294967295, 4)]:
++        obj, _ = assemble('unsigned-fixed-' + width, f'(module (@custom $s ".debug_bits" (@label $l) (@delta {width} $l $l +{value})))')
++        assert custom(obj, '.debug_bits') == b'\xff' * size
++    obj, _ = assemble('unsigned-i64-bit63', '(module (@custom $s ".debug_bits" (@label $b) "X" (@label $e) (@delta i64 $e $b +9223372036854775807)))')
++    assert custom(obj, '.debug_bits') == b'X' + struct.pack('<Q', 1 << 63)
++    for width, label_order, addend in [('sleb', '$e $b', '+9223372036854775807'), ('i64', '$b $e', '-9223372036854775808')]:
++        _, rejected = assemble('reject-limit-' + width, f'(module (@custom $s ".debug_bits" (@label $b) "X" (@label $e) (@delta {width} {label_order} {addend})))', False)
++        assert 'delta' in rejected.stderr
++    for value, replacement in [(63, 64), (-64, -65)]:
++        obj, _ = assemble('signed-immediate-' + str(value), '(module (func $f (@code.label $b) i32.const ' + str(value) + ' drop) (@custom $s ".debug_imm" (@ref i32 text $f $b)))')
++        text = roundtrip('signed-immediate-' + str(value), obj)
++        _, rejected = assemble('reject-signed-immediate-' + str(value), text.replace('i32.const ' + str(value), 'i32.const ' + str(replacement)), False)
++        assert 'code.layout changed' in rejected.stderr
++    for groups in [127, 128]:
++        locals_ = ' '.join('i32' if i % 2 == 0 else 'i64' for i in range(groups))
++        obj, _ = assemble('local-groups-' + str(groups), '(module (func $f (local ' + locals_ + ') (@code.label $b) nop) (@custom $s ".debug_groups" (@ref i32 text $f $b)))')
++        roundtrip('local-groups-' + str(groups), obj)
++
++    for nops in [125, 126]:
++        source = '(module (func $f (@code.label $b) ' + 'nop ' * nops
++        source += '(@code.label $e (after end))) (@custom $s ".debug_size" (@ref i32 text $f $b) (@ref i32 text $f $e)))'
++        obj, _ = assemble('body-exact-' + str(nops + 2), source)
++        roundtrip('body-exact-' + str(nops + 2), obj)
++        assert relocations(obj, '.debug_size')[-1][3] == nops + 2
++
++    for count in [123, 124, 127, 128, 16383, 16384]:
++        source = '(module (func $f (local ' + ' '.join(['i32'] * count) + ') (@code.label $b) '
++        source += 'nop ' * (128 if count == 128 else 2)
++        source += '(@code.label $e (after end))) (@custom $s ".debug_boundary" (@ref i32 text $f $b) (@ref i32 text $f $e)))'
++        obj, _ = assemble('locals-body-' + str(count), source)
++        roundtrip('locals-body-' + str(count), obj)
++
++    source = '(module (memory 1) (func $f (@code.label $b) (block (if (i32.const 1) (then nop) (else nop))) '
++    source += 'i32.const 0 i32.const 0 i32.const 0 (@code.label $fc) memory.copy (@code.label $fd) v128.const i32x4 0 0 0 0 (@code.label $fdwide) i16x8.abs drop '
++    source += '(@code.label $e (after end))) (@custom $s ".debug_prefix" (@ref i32 text $f $b) (@ref i32 text $f $e) (@ref i32 text $f $fc) (@ref i32 text $f $fd) (@ref i32 text $f $fdwide)))'
++    obj, _ = assemble('nested-prefixed-opcodes', source)
++    roundtrip('nested-prefixed-opcodes', obj)
++
++    source = '(module (func $f (local ' + ' '.join(['i32'] * 129) + ') '
++    source += '(@code.label $b) local.get 127 drop local.get 128 drop (@code.label $e (after end))) '
++    source += '(@custom $s ".debug_indices" (@ref i32 text $f $b) (@ref i32 text $f $e)))'
++    obj, _ = assemble('local-index-127-128', source)
++    roundtrip('local-index-127-128', obj)
++
++    obj, _ = assemble('data-and-global-slots', '(module (@sym.import.data $d (name "data")) '
++        '(global $g (@sym (name "glob")) i32 (i32.const 0)) (func nop) '
++        '(@custom $s ".debug_data" (@ref i32 data $d -1) (@ref i32 global $g)))')
++    assert len(custom(obj, '.debug_data')) == 8
++    assert [(t, o, a) for t, o, _, a in relocations(obj, '.debug_data')] == [(5, 0, -1), (13, 4, 0)]
++    roundtrip('data-and-global-slots', obj)
++
++    obj, _ = assemble('function-alias-ref', '(module (func $f (@sym (name "primary")) (@code.label $b) nop) '
++        '(@sym.alias $a (func $f) (@sym (name "alias"))) '
++        '(@custom $s ".debug_alias" (@ref i32 text $f $b) (@ref i32 text $a $b)))')
++    refs = relocations(obj, '.debug_alias')
++    assert refs[0][2] != refs[1][2]
++    text = roundtrip('function-alias-ref', obj)
++    assert '(@sym.alias' in text and '(@ref i32 text $alias ' in text
++    rebuilt = args.output / 'function-alias-ref-roundtrip.o'
++    new_refs = relocations(rebuilt, '.debug_alias')
++    assert new_refs[0][2] != new_refs[1][2]
++
++    for used in [False, True]:
++        instructions = 'i32.const 0 i32.const 0 i32.const 1 memory.init 0 data.drop 0' if used else 'nop'
++        source = '(module (memory 1) (data "X") (@custom "unrelated" "raw") '
++        source += '(func $f (@metadata.code.marker "X") (@code.label $b) ' + instructions
++        source += ' (@code.label $e (after end))) '
++        source += '(@custom $long "' + '.debug_' + 'x' * 130 + '" (@label $l) "Z") '
++        source += '(@custom $s ".debug_ordinals" (@ref i32 custom $long $l) (@ref i32 text $f $b)))'
++        obj, _ = assemble('section-ordinals-' + str(used), source, extra=['--enable-code-metadata'])
++        assert len(custom(obj, '.debug_ordinals')) == 8
++        assert [(t, o) for t, o, _, _ in relocations(obj, '.debug_ordinals')] == [(9, 0), (8, 4)]
++        assert any(s['kind'] == 12 for s in sections(obj)) == used
++        readback = args.output / ('ordinals-' + str(used) + '-readback.wat')
++        run([args.bindir / 'wasm2wat', '--enable-annotations', '--enable-code-metadata', '-r', obj, '-o', readback])
++        rebuilt, _ = assemble('ordinals-' + str(used) + '-roundtrip', readback.read_text(), extra=['--enable-code-metadata'])
++        assert custom(obj, '.debug_ordinals') == custom(rebuilt, '.debug_ordinals')
++
++    long_name = '.debug_' + 'r' * 140
++    obj, _ = assemble('long-reloc-section-name', '(module ' + simple + ' (@custom $s "' + long_name + '" (@ref i32 text $f $b)))')
++    assert [(t, o) for t, o, _, _ in relocations(obj, long_name)] == [(8, 0)]
++    roundtrip('long-reloc-section-name', obj)
++
++    obj, _ = assemble('same-named-customs', '(module (@custom $a ".debug_same" (@label $a0) "A") '
++        '(@custom $b ".debug_same" (@label $b0) "B") '
++        '(@custom $r ".debug_refs" (@ref i32 custom $a $a0) (@ref i32 custom $b $b0)))')
++    same = [x for x in sections(obj) if x['name'] == '.debug_same']
++    assert [x['data'] for x in same] == [b'A', b'B']
++    refs = relocations(obj, '.debug_refs')
++    assert refs[0][2] != refs[1][2]
++    readback = args.output / 'same-named-readback.wat'
++    run([args.bindir / 'wasm2wat', '--enable-annotations', '-r', obj, '-o', readback])
++    rebuilt, _ = assemble('same-named-roundtrip', readback.read_text())
++    assert [x['data'] for x in sections(rebuilt) if x['name'] == '.debug_same'] == [b'A', b'B']
++
++    if args.baseline_bindir:
++        for name, source in {
++            'integer': '(module (func (export "f") (param i32) (result i32) local.get 0 i32.const 7 i32.add))',
++            'simd': '(module (func i32.const 7 i8x16.splat drop v128.const i32x4 0 1 2 3 drop))',
++            'memory': '(module (memory 1) (data (i32.const 4) "abc") (func (result i32) i32.const 4 i32.load8_u))',
++            'nested': '(module (func (param i32) (result i32) local.get 0 (if (result i32) (then i32.const 63) (else i32.const 64))))',
++            'long-body': '(module (func ' + 'nop ' * 128 + '))',
++        }.items():
++            candidate, _ = assemble('release-' + name, source)
++            old = args.output / ('baseline-' + name + '.o')
++            run([args.baseline_bindir / 'wat2wasm', '--enable-annotations', '-r', args.output / ('release-' + name + '.wat'), '-o', old])
++            assert candidate.read_bytes() == old.read_bytes(), name
++
++    fixture = Path(__file__).with_suffix('.wat').read_text()
++    obj, _ = assemble('real-dwarf4-slots', fixture)
++    run([args.llvm_bindir / 'llvm-dwarfdump', '--verify', obj])
++    rebuilt_text = roundtrip('real-dwarf4-slots', obj)
++    linked = args.output / 'real-dwarf4-slots.wasm'
++    run([args.llvm_bindir / 'wasm-ld', '--no-entry', '--export=probe', obj, '-o', linked])
++    run([args.llvm_bindir / 'llvm-dwarfdump', '--verify', linked])
++    roundtrip('linked-dwarf4-slots', linked)
++    for flag in ['--strip-debug', '--strip-all']:
++        stripped = args.output / (flag[2:] + '.wasm')
++        run([args.llvm_bindir / 'wasm-ld', '--no-entry', '--export=probe', flag, obj, '-o', stripped])
++        assert not any(s['name'] and s['name'].startswith('.debug_') for s in sections(stripped))
++    run([args.llvm_bindir / 'wasm-ld', '--no-entry', '--compress-relocations', obj,
++         '-o', args.output / 'must-not-compress.wasm'], 1)
++    status = 'passed'
++except Exception as exception:
++    error = str(exception)
++    raise
++finally:
++    report = {'kind': 'wabt-native-dwarf-transport-tests', 'status': status, 'error': error,
++              'elapsedSeconds': time.time() - started, 'cases': cases, 'commands': commands,
++              'scope': 'Assembler transport and real LLVM object/link validation; not genuine GCC debug qualification'}
++    (args.output / 'qualification.json').write_text(json.dumps(report, indent=2) + '\n')
++    print(json.dumps({'status': status, 'cases': len(cases), 'commands': len(commands), 'output': str(args.output)}))
+diff --git a/test/dwarf-transport.wat b/test/dwarf-transport.wat
+new file mode 100644
+index 0000000..5f9ef93
+--- /dev/null
++++ b/test/dwarf-transport.wat
+@@ -0,0 +1,50 @@
++;; Focused assembler transport fixture. Genuine GCC qualification is separate.
++(module
++  (import "env" "__stack_pointer" (global $__stack_pointer (mut i32)))
++  (func $probe (@sym (name "probe")) (param $p i32) (result i32) (local $tmp i32)
++    (@code.label $LFB0)
++    local.get $p
++    i32.const 127
++    i32.add
++    (@code.label $LM0)
++    local.set $tmp
++    local.get $tmp
++    (@code.label $Lfinal_opcode)
++    (@code.label $LFE0 (after end)))
++
++  (export "probe" (func $probe))
++
++  ;; A minimal CU abbreviation: name=strp, low_pc=addr, high_pc=data4.
++  (@custom $abbrev ".debug_abbrev"
++    (@label $Labbrev0)
++    "\01\11\00\03\0e\11\01\12\06\00\00\00")
++
++  (@custom $strings ".debug_str"
++    (@label $Lname0)
++    "probe\00")
++
++  (@custom $info ".debug_info"
++    (@delta i32 $Lcu_end $Lcu_body)
++    (@label $Lcu_body)
++    "\04\00"                         ;; DWARF version 4
++    (@ref i32 custom $abbrev $Labbrev0)
++    "\04\01"                         ;; address size 4, abbreviation 1
++    (@ref i32 custom $strings $Lname0)
++    (@ref i32 text $probe $LFB0)
++    (@delta i32 $LFE0 $LFB0)
++    (@label $Lcu_end))
++
++  ;; A location-list illustration; a real GCC DIE must reference its offset.
++  (@custom $locations ".debug_loc"
++    (@label $Lloc0)
++    (@ref i32 text $probe $LFB0)
++    (@ref i32 text $probe $LFE0)
++    "\06\00\ed\03"                 ;; expression length 6, global-u32 form
++    (@ref i32 global $__stack_pointer)
++    "\00\00\00\00\00\00\00\00")
++
++  ;; Fresh GCC WAT omits this readback-only assertion. For these illustrative
++  ;; instructions the expected payload has three local-declaration bytes,
++  ;; opcode starts 3,5,8,9,11,13 and exclusive end 14. Body-size LEB is excluded.
++  ;; (@code.layout $probe (offsets 3 5 8 9 11 13) (size 14))
++)

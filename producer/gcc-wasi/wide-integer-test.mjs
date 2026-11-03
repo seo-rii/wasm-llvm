@@ -15,7 +15,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { inspectVectorAbi } from './inspect-vector-abi.mjs';
+import { inspectObjectFunctionSignatures, inspectVectorAbi } from './inspect-vector-abi.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const options = {};
@@ -188,7 +188,11 @@ for (const fixture of selected) for (const direction of directions) {
       const disassembly = command(tools.inspector, ['-dx', object]);
       await fs.writeFile(path.join(directory, `unit${index}.disassembly.txt`), disassembly.stdout);
       const emittedWat=family==='gcc'?await fs.readFile(assembly,'utf8'):null;
-      entry.units.push({ compiler: family, sourceVariant:family==='clang'&&fixture.oracle?'explicit-independent-reference':'original-source',emittedHelperCalls:emittedWat?[...new Set([...emittedWat.matchAll(/\(call \$(__[A-Za-z0-9_]+)/g)].map(m=>m[1]))].sort():[],objectImports:WebAssembly.Module.imports(module),wordBitOpcodes:emittedWat?Object.fromEntries(['i64.clz','i64.ctz','i64.popcnt'].map(op=>[op,emittedWat.split('('+op+' ').length-1])):{},source: await identify(input), assembly: await identify(assembly), object: await identify(object) }); objects.push(object);
+      const signatures = inspectObjectFunctionSignatures(objectBytes);
+      entry.units.push({ compiler: family, signatures, sourceVariant:family==='clang'&&fixture.oracle?'explicit-independent-reference':'original-source',emittedHelperCalls:emittedWat?[...new Set([...emittedWat.matchAll(/\(call \$(__[A-Za-z0-9_]+)/g)].map(m=>m[1]))].sort():[],objectImports:WebAssembly.Module.imports(module),wordBitOpcodes:emittedWat?Object.fromEntries(['i64.clz','i64.ctz','i64.popcnt'].map(op=>[op,emittedWat.split('('+op+' ').length-1])):{},source: await identify(input), assembly: await identify(assembly), object: await identify(object) }); objects.push(object);
+      if (fixture.objectSignatures)
+        for (const [name, signature] of Object.entries(fixture.signatures))
+          assert.deepEqual(signatures[name], signature, `${family} ${unit} object ABI for ${name}`);
     }
     const program = path.join(directory, 'program.wasm');
     const stdlibs = !fixture.stdcpp ? [] : families[0] === 'gcc' ? [runtime.gnuCpp, runtime.gnuAbi] : [runtime.clangCpp, runtime.clangAbi];

@@ -65,7 +65,7 @@ receipt = {
     "submodules": subprocess.check_output(["git", "-C", str(source), "submodule", "status", "third_party/picosha2"], text=True).strip(),
 }
 if host == "native":
-    names = ("wat2wasm", "wasm-objdump", "wasm-validate")
+    names = ("wat2wasm", "wasm2wat", "wasm-objdump", "wasm-validate")
     receipt["version"] = subprocess.check_output([str(output / "wat2wasm"), "--version"], text=True).strip()
 else:
     names = ("as.mjs", "as.wasm")
@@ -83,7 +83,7 @@ common_options=(
 )
 if [[ $mode == native || $mode == all ]]; then
   cmake -S "$source_dir" -B "$native_dir" "${common_options[@]}" -DBUILD_TOOLS=ON
-  cmake --build "$native_dir" --target wat2wasm wasm-objdump wasm-validate --parallel "$jobs"
+  cmake --build "$native_dir" --target wat2wasm wasm2wat wasm-objdump wasm-validate --parallel "$jobs"
   "$native_dir/wat2wasm" --version
   write_receipt "$native_dir" native
 fi
