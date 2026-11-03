@@ -110,7 +110,7 @@ license notices.
 
 ## Status
 
-The [native qualification record](../../docs/gcc-wasi-simd-header-20261030.json)
+The [qualification record](../../docs/gcc-wasi-simd-header-20261030.json)
 binds the final sixteen-patch source and freshly rebuilt GNU runtime. The
 complete matrix passed 3,546 executions: 2,071 inherited regression executions,
 684 GCC header executions, 680 independent original-header Clang executions,
@@ -120,10 +120,16 @@ compiler diagnostics passed, including the header's 296 diagnostics. The
 package gate reopened all 1,364 header objects and 1,364 linked programs.
 Focused fixture, instruction-inspector and package tests passed 58/58.
 
-Same-source Wasm-host compilation, packaging and actual Chromium Worker
-qualification are still pending. The planned matrix is 1,531 canonical programs
-plus four default-option controls, with independent Node WASI execution and
-568 raw compiler diagnostics. These planned counts are not completed claims.
+The same-source Wasm-host compiler and package passed actual Chromium Worker
+qualification: 1,531 canonical programs plus four default-option controls each
+executed in Chromium and independently in Node WASI. All 568 raw compiler
+diagnostics passed. Reinspection checked 979 SIMD opcode cases, 382 ABI object
+signatures and 4,145 saved artifact files. The source, native-installed,
+browser-resource and sysroot-tar header bytes match, and the package retains
+the complete GPL and Runtime Library Exception notices. The SDK's real
+Chromium SIMD probe passed; its separate negative unit probe remains explicitly
+mocked. These results and frozen input identities are recorded for
+[PR #99](https://github.com/seo-rii/wasm-llvm/pull/99).
 
 The preserved first full GCC attempt found 18 partial-copy internal compiler
 errors and 50 direct-instruction mismatches. All 50 existing object files

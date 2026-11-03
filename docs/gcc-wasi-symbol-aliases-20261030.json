@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": "https://github.com/seo-rii/wasm-llvm/issues/80",
-  "status": "native-qualified-browser-pending",
+  "status": "qualified",
   "profile": "Real GCC 17 C/C++ frontend and RTL backend, strong function/data aliases, wasm32-wasi-preview1, static single-threaded GNU runtime.",
   "dependencies": [
     "https://github.com/seo-rii/wasm-llvm/pull/99",
@@ -2997,23 +2997,123 @@
         "bytes": 31789,
         "sha256": "51d951adfd0e021928153fcde421863dd3c589c0ea784bef855433e43cca60ed"
       }
+    },
+    "browser": {
+      "log": "/home/seorii/logs/wasm-llvm-80-browser-v2-4xktlgdb.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/browser-status-v2.json",
+        "bytes": 678,
+        "sha256": "36acaee401f15d84c9a1680a1de408a5256b2476b7a32307e9d28bd65fd5a683"
+      }
+    },
+    "package": {
+      "log": "/home/seorii/logs/wasm-llvm-80-package-3ck48sf2.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/package-status.json",
+        "bytes": 202,
+        "sha256": "f495d62be5bb6444ac5684c76c1235fef37fe0b400090a92bf70c6a30bc39f8a"
+      }
+    },
+    "worker-completion": {
+      "log": "/home/seorii/logs/wasm-llvm-80-worker-completion-iqcwuiip.log",
+      "exitCode": 0,
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-completion-status.json",
+        "bytes": 3231,
+        "sha256": "40faddc1cc5ca7e1846950e3c4c15cb7713fba7a7e2a4b5a204be0db58a21081"
+      }
+    },
+    "worker-initial": {
+      "log": "/home/seorii/logs/wasm-llvm-80-worker-02z4ntba.log",
+      "exitCode": 1,
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-status.json",
+        "bytes": 9837,
+        "sha256": "35aa558079eaca87f7c7d77ec32930c1999df119ff44d72859c8f6c3e6c3a022"
+      },
+      "completedCanonicalSuites": 19,
+      "cause": "The extra WABT negative diagnostic comparison encountered ANSI color in Wasm-host stderr. Original program suites, raw diagnostics and artifacts remain immutable; a supplemental verifier strips only ANSI SGR and completes the exact diagnostic comparisons and remaining steps."
     }
   },
   "browser": {
-    "status": "pending",
-    "plannedCanonicalPrograms": 1559,
-    "plannedDefaultPrograms": 4,
-    "plannedTargetFeaturePrograms": 6,
-    "plannedGccDiagnostics": 592,
-    "plannedProviderObjects": 26,
-    "plannedAliasAssemblerObjects": 110,
-    "plannedAliasAssemblerRejections": 18,
-    "plannedLinkControls": 8,
-    "plannedLinkRejections": 16,
-    "plan": {
-      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-plan.json",
-      "bytes": 258060,
-      "sha256": "f9547f5cd1801fa7ff298007bc030bae8737bc76c2ca11aa1155da85d6e90fa0"
+    "summary": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/worker-summary.json",
+      "bytes": 65296,
+      "sha256": "727f95422562bbc661ceca2c29d4ca9e3a6a3e428370b9de34bfe3e37da4730c"
+    },
+    "manifest": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 21551,
+      "sha256": "d8fa39679b4c9f9f8fd5376ed84b33942f0ac81f76b0e10ce8767efe4b7e547d"
+    },
+    "counts": {
+      "chromium": 1559,
+      "nodeWasi": 1559,
+      "objects": 1329,
+      "wat": 1329,
+      "objectSignatureChecks": 382
+    },
+    "diagnosticCounts": {
+      "diagnostics": 592,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "symbolAliases": 24,
+      "defaultControls": 4
+    },
+    "aliasCounts": {
+      "providers": 26,
+      "objects": 50,
+      "linkControls": 8,
+      "linkRejections": 16,
+      "assemblerObjects": 110,
+      "assemblerRejections": 18
+    },
+    "targetFeatures": {
+      "assembler": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/worker-qualification-final/wabt-target-features.json",
+        "bytes": 46527,
+        "sha256": "b870a52729342f592ba097884d4a58c9fcc414ac84a47ae219c5e2720854b8c6"
+      },
+      "sdk": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/worker-qualification-final/target-features/qualification.json",
+        "bytes": 117082,
+        "sha256": "8b7378f1b07e5ca67095eca6084f55cd69ed80e41ddb042d99600b87e44e91a5"
+      },
+      "assemblerCases": 62,
+      "chromiumPrograms": 6,
+      "nodePrograms": 6
+    },
+    "rawDefaultControlExecutions": {
+      "chromium": 4,
+      "nodeWasi": 4
+    },
+    "inputSnapshot": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-inputs-final.json",
+      "bytes": 281687,
+      "sha256": "be37af05a0cbab876b0947356a2185deb4c5d63cf3c677d9900b190e78caaa9f"
+    },
+    "completionSnapshot": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-completion-inputs.json",
+      "bytes": 1184,
+      "sha256": "b333ba3add4c03304057de6b9b2b81592210c91c2baa970a9b33e523a16186da"
+    },
+    "completionReason": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/control/worker-completion-reason.json",
+      "bytes": 508,
+      "sha256": "2d05160ee24ae11057b5797ce06bb535d7ef4346b23f12497b1e357cabd46f2d"
+    },
+    "aliasControls": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/worker-qualification-final/worker-alias-controls-v2.json",
+      "bytes": 972024,
+      "sha256": "cf62a72d5ed443dbeb0086618812cdb1cccf32904c7503e4638a10ac12bc710d"
+    },
+    "diagnostics": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 959608,
+      "sha256": "afba991b99529309f635565b2a8f82792a2ce3f6e69d54812790163aadbd56a7"
     }
   }
 }
