@@ -82,3 +82,11 @@ Packaging still produces an unverified manifest. Native evidence alone does
 not qualify the Wasm-hosted compiler: the actual compiler/assembler bundle must
 also pass its Chromium Worker and public SDK checks before debug requests are
 enabled on a verified manifest.
+
+## Measured qualification
+
+The [native and Wasm-hosted qualification report](../../docs/gcc-wasi-dwarf-20261103.md)
+records exact sources, tool/runtime bytes, real source and variable checks,
+release/compatibility controls and package measurements. It also documents the
+private status-only manifest bootstrap, Node loader adapter, unchanged fixture
+header mirrors and the observed pre-existing Lean CI instability.
