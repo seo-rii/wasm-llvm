@@ -22,6 +22,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [weak references and weak definitions](WEAK-REFERENCES.md),
 [optional C++ RTTI](RTTI.md),
 [optional GCC gcov coverage](COVERAGE.md),
+[embedded DWARF4 debug information](DWARF.md),
 [binary128 implementation and reproduction](LONG-DOUBLE.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
 [public int128 implementation and reproduction](INT128.md),
@@ -44,8 +45,8 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0020`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding and single-counter coverage; SHA-256 pinned in `sources.lock.json` |
-| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md) and [symbol alias](SYMBOL-ALIASES.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
+| Local GCC patches | `0001`–`0021`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage and embedded DWARF4; SHA-256 pinned in `sources.lock.json` |
+| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md) and [DWARF transport](DWARF.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
 | Browser linker | Existing wasm-llvm WASI-host LLD `22.1.8`, `ca7933e47d3a3451d81e72ac174dcb5aa28b59d1`; archive and original producer receipt pinned |
@@ -339,16 +340,17 @@ node producer/gcc-wasi/package.mjs \
   --weakref-qualification "$GCC_WASI_WORK_DIR/weakref-qualification/qualification.json" \
   --rtti-qualification "$GCC_WASI_WORK_DIR/rtti-qualification/qualification.json" \
   --coverage-qualification "$GCC_WASI_WORK_DIR/coverage-qualification/qualification.json" \
+  --dwarf-qualification "$GCC_WASI_WORK_DIR/dwarf-qualification/qualification.json" \
   --libgcov "$GCC_LIBGCOV_WORK_DIR" \
   --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twenty-patch compiler, `--long-double-qualification`,
+For the current twenty-one-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
-`--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`,
+`--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
 `--libgcov`, `--native-gcov`, all five SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
@@ -365,6 +367,10 @@ all 36 translation units, 28 cases, 32 executions, eight metadata controls and
 official gcov JSON counts, including the previous profile bytes consumed by
 each merge run. Matching analysis-tool versions and hashes are retained in
 bundle provenance. See [the coverage contract](COVERAGE.md).
+The embedded DWARF gate also requires full same-source native GCC/WABT/GNU
+runtime qualification, actual LLVM source/type/location consumers and retained
+Chromium paused-frame values. Partial examples cannot satisfy it. See
+[the debug contract and reproduction command](DWARF.md).
 Packaging verifies input inventories, source identities, the native gate and
 module formats. It writes a fresh output directory and the final v2 manifest
 last. It always emits `qualification.status:
@@ -507,6 +513,9 @@ official single-thread arc counters and libgcov normal-exit writes to an exact
 writable `/profile` preopen. The SDK returns original notes and binary profile
 files for matching native gcov analysis. PGO, atomic counter updates, manual
 gcov APIs and abrupt-exit recovery remain unsupported; see [COVERAGE.md](COVERAGE.md).
+Debug requires explicit `debug: true`, a verified capable bundle, and `-O0`.
+It embeds standard DWARF4 in WAT/object/executable output; other optimization
+levels are rejected by the SDK. See [DWARF.md](DWARF.md).
 x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
 x86 API. Unsupported target attributes/pragmas are GCC errors in this profile.
 The GNU C++ time-zone database, C++26 debugger functions and prebuilt `std`
@@ -545,11 +554,12 @@ ABI limitations remain and must not be hidden by passing scalar tests:
 
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user
-source units, not arbitrary external binary objects or libraries. The backend
+source units and explicitly validated static object/archive link inputs. The backend
 supports the qualified strong aliases described in [SYMBOL-ALIASES.md](SYMBOL-ALIASES.md)
 and the weak-reference/weak-definition contract in
 [WEAK-REFERENCES.md](WEAK-REFERENCES.md). Weak alias definitions, COMDAT groups,
-symbol versioning, advanced profiling and general debug output remain outside this profile;
+symbol versioning, advanced profiling and debug profiles beyond embedded DWARF4
+at `-O0` remain outside this profile;
 this is an experimental qualified profile,
 not a claim that all GCC tests or all ISO C/C++ programs pass.
 
