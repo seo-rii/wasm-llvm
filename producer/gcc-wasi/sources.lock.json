@@ -74,7 +74,18 @@
     "repository": "https://github.com/feedab1e/wabt.git",
     "commit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173",
     "license": "Apache-2.0",
-    "purpose": "Assembler for GCC's annotated relocatable WAT; upstream WABT is insufficient"
+    "purpose": "Assembler for GCC's annotated relocatable WAT; upstream WABT is insufficient",
+    "patches": [
+      {
+        "path": "patches/wabt-0001-simd-target-features.patch",
+        "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6",
+        "purpose": "Record actual SIMD instructions and v128 types, merge target_features and reject malformed or conflicting declarations."
+      }
+    ],
+    "sourceDiffSha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6",
+    "submodules": {
+      "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
+    }
   },
   "wasiSdk": {
     "version": "33.0",
