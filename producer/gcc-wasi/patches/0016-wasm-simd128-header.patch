@@ -1,0 +1,1621 @@
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index d14ab457c..6148e6309 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -611,6 +611,7 @@ tic6x-*-*)
+ 	;;
+ wasm*-*-*)
+ 	cpu_type=wasm
++	extra_headers="${extra_headers} wasm_simd128.h"
+ 	target_has_targetm_common=no
+ 	extra_objs="wasm-cg.o wasm-asm.o wasm-passes.o"
+ 	;;
+diff --git a/gcc/config/wasm/simd.md b/gcc/config/wasm/simd.md
+index 0e3dff2f4..12d224f54 100644
+--- a/gcc/config/wasm/simd.md
++++ b/gcc/config/wasm/simd.md
+@@ -124,6 +124,26 @@
+   "TARGET_SIMD128"
+   "(%o0 (<lanes>.extract_lane<extract_sign> %2 %i1))")
+ 
++;; Header extraction preserves explicit signed/unsigned i32 extension
++;; for byte and halfword lanes instead of adding scalar masking sequences.
++(define_insn "wasm_extract_s_<mode>"
++  [(set (match_operand:SI 0 "wasm_register_operand")
++        (sign_extend:SI
++          (vec_select:<VUNIT>
++            (match_operand:VSAT128 1 "wasm_register_operand")
++            (parallel [(match_operand:SI 2 "const_int_operand")]))))]
++  "TARGET_SIMD128 && UINTVAL (operands[2]) < 16 / GET_MODE_UNIT_SIZE (<MODE>mode)"
++  "(%o0 (<lanes>.extract_lane_s %2 %i1))")
++
++(define_insn "wasm_extract_u_<mode>"
++  [(set (match_operand:SI 0 "wasm_register_operand")
++        (zero_extend:SI
++          (vec_select:<VUNIT>
++            (match_operand:VSAT128 1 "wasm_register_operand")
++            (parallel [(match_operand:SI 2 "const_int_operand")]))))]
++  "TARGET_SIMD128 && UINTVAL (operands[2]) < 16 / GET_MODE_UNIT_SIZE (<MODE>mode)"
++  "(%o0 (<lanes>.extract_lane_u %2 %i1))")
++
+ (define_expand "vec_set<mode>"
+   [(match_operand:V128 0 "wasm_register_operand")
+    (match_operand:<VUNIT> 1 "wasm_register_operand")
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+index 34983b429..a09fe1b4f 100644
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -239,11 +239,76 @@ legalize_floating_pair_source (rtx value)
+   return copy_to_mode_reg (mode, gen_lowpart (mode, bits));
+ }
+ 
++/* A scalar view of a native v128 is a lane, not an ordinary scalar
++   local.  Generic block/bit-field expansion can create these SUBREGs even
++   when its vector mode has a different element size (e.g. a DI memcpy into
++   V4SI).  Keep the containing v128 and use a same-size lane interpretation.  */
++static machine_mode
++scalar_vector_subreg_mode (rtx value)
++{
++  if (!TARGET_SIMD128 || !SUBREG_P (value) || !REG_P (SUBREG_REG (value))
++      || !targetm.vector_mode_supported_p (GET_MODE (SUBREG_REG (value))))
++    return VOIDmode;
++  machine_mode vector_mode;
++  switch (GET_MODE (value))
++    {
++    case E_QImode: vector_mode = V16QImode; break;
++    case E_HImode: vector_mode = V8HImode; break;
++    case E_SImode: vector_mode = V4SImode; break;
++    case E_DImode: vector_mode = V2DImode; break;
++    case E_SFmode: vector_mode = V4SFmode; break;
++    case E_DFmode: vector_mode = V2DFmode; break;
++    default: return VOIDmode;
++    }
++  unsigned byte = SUBREG_BYTE (value).to_constant ();
++  unsigned size = GET_MODE_SIZE (GET_MODE (value));
++  gcc_assert (byte % size == 0 && byte + size <= 16);
++  return vector_mode;
++}
++
++static rtx
++legalize_vector_subreg_source (rtx value)
++{
++  machine_mode vector_mode = scalar_vector_subreg_mode (value);
++  if (vector_mode == VOIDmode)
++    return value;
++  machine_mode scalar_mode = GET_MODE (value);
++  rtx vector = copy_to_mode_reg (vector_mode,
++                                gen_lowpart (vector_mode, SUBREG_REG (value)));
++  unsigned lane = SUBREG_BYTE (value).to_constant ()
++                  / GET_MODE_SIZE (scalar_mode);
++  rtx scalar = gen_reg_rtx (scalar_mode);
++  rtx index = gen_rtx_PARALLEL (VOIDmode, gen_rtvec (1, GEN_INT (lane)));
++  emit_insn (gen_rtx_SET (scalar,
++                         gen_rtx_VEC_SELECT (scalar_mode, vector, index)));
++  return scalar;
++}
++
+ bool
+ wasm_expand_mov (rtx dest, rtx src, machine_mode mode)
+ {
+   temporary_volatile_ok g {1};
+-  src = legalize_floating_pair_source (legalize_pair_source (src));
++  src = legalize_vector_subreg_source (
++          legalize_floating_pair_source (legalize_pair_source (src)));
++  machine_mode vector_mode = scalar_vector_subreg_mode (dest);
++  if (vector_mode != VOIDmode)
++    {
++      rtx base = SUBREG_REG (dest);
++      rtx vector = copy_to_mode_reg (vector_mode,
++                                    gen_lowpart (vector_mode, base));
++      rtx scalar = force_reg (mode, src);
++      unsigned lane = SUBREG_BYTE (dest).to_constant ()
++                      / GET_MODE_SIZE (mode);
++      rtx duplicate = gen_rtx_VEC_DUPLICATE (vector_mode, scalar);
++      rtx mask = GEN_INT (HOST_WIDE_INT_1U << lane);
++      /* Preserve the other lanes, including initialized bytes surrounding
++         a partial memcpy or bit-field update.  */
++      emit_insn (gen_rtx_SET (vector,
++                             gen_rtx_VEC_MERGE (vector_mode, duplicate,
++                                               vector, mask)));
++      emit_move_insn (base, gen_lowpart (GET_MODE (base), vector));
++      return true;
++    }
+   if (floating_pair_subreg_p (dest))
+     {
+       rtx value = force_reg (mode, src);
+@@ -367,7 +432,7 @@ wasm_expand_tf_sign (rtx dest, rtx value, rtx sign, rtx_code code)
+ void
+ wasm_expand_conv (rtx dest, rtx src, rtx_code code)
+ {
+-  src = legalize_pair_source (src);
++  src = legalize_vector_subreg_source (legalize_pair_source (src));
+   /* Unlike an ordinary DI subreg, a word of TF/TI has no single
+      underlying scalar register for real_reg below to unwrap.  Keep
+      both conversion operands in ordinary scalar pseudos.  */
+@@ -380,7 +445,8 @@ wasm_expand_conv (rtx dest, rtx src, rtx_code code)
+     };
+   if (pair_word_p (src))
+     src = copy_to_mode_reg (DImode, src);
+-  if (narrow_pair_subreg_p (dest) || pair_word_p (dest))
++  if (scalar_vector_subreg_mode (dest) != VOIDmode
++      || narrow_pair_subreg_p (dest) || pair_word_p (dest))
+     {
+       rtx temp = gen_reg_rtx (GET_MODE (dest));
+       wasm_expand_conv (temp, src, code);
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index 7b29ffa3d..21c4f870e 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -66,6 +66,37 @@ enum wasm_builtin_code
+   WASM_BUILTIN_NARROW_U_I8X16_I16X8,
+   WASM_BUILTIN_NARROW_S_I16X8_I32X4,
+   WASM_BUILTIN_NARROW_U_I16X8_I32X4,
++  WASM_BUILTIN_VECTOR_MAX,
++  WASM_BUILTIN_SPLAT_I8X16 = WASM_BUILTIN_VECTOR_MAX,
++  WASM_BUILTIN_SPLAT_U8X16,
++  WASM_BUILTIN_SPLAT_I16X8,
++  WASM_BUILTIN_SPLAT_U16X8,
++  WASM_BUILTIN_SPLAT_I32X4,
++  WASM_BUILTIN_SPLAT_U32X4,
++  WASM_BUILTIN_SPLAT_I64X2,
++  WASM_BUILTIN_SPLAT_U64X2,
++  WASM_BUILTIN_SPLAT_F32X4,
++  WASM_BUILTIN_SPLAT_F64X2,
++  WASM_BUILTIN_EXTRACT_LANE_I8X16,
++  WASM_BUILTIN_EXTRACT_LANE_U8X16,
++  WASM_BUILTIN_EXTRACT_LANE_I16X8,
++  WASM_BUILTIN_EXTRACT_LANE_U16X8,
++  WASM_BUILTIN_EXTRACT_LANE_I32X4,
++  WASM_BUILTIN_EXTRACT_LANE_U32X4,
++  WASM_BUILTIN_EXTRACT_LANE_I64X2,
++  WASM_BUILTIN_EXTRACT_LANE_U64X2,
++  WASM_BUILTIN_EXTRACT_LANE_F32X4,
++  WASM_BUILTIN_EXTRACT_LANE_F64X2,
++  WASM_BUILTIN_REPLACE_LANE_I8X16,
++  WASM_BUILTIN_REPLACE_LANE_U8X16,
++  WASM_BUILTIN_REPLACE_LANE_I16X8,
++  WASM_BUILTIN_REPLACE_LANE_U16X8,
++  WASM_BUILTIN_REPLACE_LANE_I32X4,
++  WASM_BUILTIN_REPLACE_LANE_U32X4,
++  WASM_BUILTIN_REPLACE_LANE_I64X2,
++  WASM_BUILTIN_REPLACE_LANE_U64X2,
++  WASM_BUILTIN_REPLACE_LANE_F32X4,
++  WASM_BUILTIN_REPLACE_LANE_F64X2,
+   WASM_BUILTIN_MAX
+ };
+ 
+@@ -84,7 +115,7 @@ struct wasm_builtin_description
+   insn_code instruction;
+ };
+ 
+-static const wasm_builtin_description wasm_builtins[WASM_BUILTIN_MAX] =
++static const wasm_builtin_description wasm_builtins[WASM_BUILTIN_VECTOR_MAX] =
+ {
+   { "__builtin_wasm_add_sat_s_i8x16",
+     V16QImode, V16QImode, 2, false, false, ssadd_optab,
+@@ -136,12 +167,89 @@ static const wasm_builtin_description wasm_builtins[WASM_BUILTIN_MAX] =
+     CODE_FOR_wasm_narrow_unsigned_v4si }
+ };
+ 
++/* These typed entry points keep the public header's lane operations
++   visible until RTL expansion.  Generic vector lvalues otherwise become
++   memory stores at -O0, and vector permutations can hide splat/extract/replace
++   operations from their dedicated Wasm instructions at -O2.  */
++enum wasm_lane_operation { WASM_LANE_SPLAT, WASM_LANE_EXTRACT,
++                           WASM_LANE_REPLACE };
++struct wasm_lane_builtin_description
++{
++  const char *name;
++  machine_mode vector_mode;
++  bool unsigned_p;
++  wasm_lane_operation operation;
++  insn_code instruction;
++};
++static const wasm_lane_builtin_description wasm_lane_builtins[] =
++{
++  { "__builtin_wasm_splat_i8x16", V16QImode, false, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev16qi },
++  { "__builtin_wasm_splat_u8x16", V16QImode, true, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev16qi },
++  { "__builtin_wasm_splat_i16x8", V8HImode, false, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev8hi },
++  { "__builtin_wasm_splat_u16x8", V8HImode, true, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev8hi },
++  { "__builtin_wasm_splat_i32x4", V4SImode, false, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev4si },
++  { "__builtin_wasm_splat_u32x4", V4SImode, true, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev4si },
++  { "__builtin_wasm_splat_i64x2", V2DImode, false, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev2di },
++  { "__builtin_wasm_splat_u64x2", V2DImode, true, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev2di },
++  { "__builtin_wasm_splat_f32x4", V4SFmode, false, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev4sf },
++  { "__builtin_wasm_splat_f64x2", V2DFmode, false, WASM_LANE_SPLAT,
++    CODE_FOR_vec_duplicatev2df },
++  { "__builtin_wasm_extract_lane_i8x16", V16QImode, false, WASM_LANE_EXTRACT,
++    CODE_FOR_wasm_extract_s_v16qi },
++  { "__builtin_wasm_extract_lane_u8x16", V16QImode, true, WASM_LANE_EXTRACT,
++    CODE_FOR_wasm_extract_u_v16qi },
++  { "__builtin_wasm_extract_lane_i16x8", V8HImode, false, WASM_LANE_EXTRACT,
++    CODE_FOR_wasm_extract_s_v8hi },
++  { "__builtin_wasm_extract_lane_u16x8", V8HImode, true, WASM_LANE_EXTRACT,
++    CODE_FOR_wasm_extract_u_v8hi },
++  { "__builtin_wasm_extract_lane_i32x4", V4SImode, false, WASM_LANE_EXTRACT,
++    CODE_FOR_vec_extractv4sisi },
++  { "__builtin_wasm_extract_lane_u32x4", V4SImode, true, WASM_LANE_EXTRACT,
++    CODE_FOR_vec_extractv4sisi },
++  { "__builtin_wasm_extract_lane_i64x2", V2DImode, false, WASM_LANE_EXTRACT,
++    CODE_FOR_vec_extractv2didi },
++  { "__builtin_wasm_extract_lane_u64x2", V2DImode, true, WASM_LANE_EXTRACT,
++    CODE_FOR_vec_extractv2didi },
++  { "__builtin_wasm_extract_lane_f32x4", V4SFmode, false, WASM_LANE_EXTRACT,
++    CODE_FOR_vec_extractv4sfsf },
++  { "__builtin_wasm_extract_lane_f64x2", V2DFmode, false, WASM_LANE_EXTRACT,
++    CODE_FOR_vec_extractv2dfdf },
++  { "__builtin_wasm_replace_lane_i8x16", V16QImode, false, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv16qi },
++  { "__builtin_wasm_replace_lane_u8x16", V16QImode, true, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv16qi },
++  { "__builtin_wasm_replace_lane_i16x8", V8HImode, false, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv8hi },
++  { "__builtin_wasm_replace_lane_u16x8", V8HImode, true, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv8hi },
++  { "__builtin_wasm_replace_lane_i32x4", V4SImode, false, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv4si },
++  { "__builtin_wasm_replace_lane_u32x4", V4SImode, true, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv4si },
++  { "__builtin_wasm_replace_lane_i64x2", V2DImode, false, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv2di },
++  { "__builtin_wasm_replace_lane_u64x2", V2DImode, true, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv2di },
++  { "__builtin_wasm_replace_lane_f32x4", V4SFmode, false, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv4sf },
++  { "__builtin_wasm_replace_lane_f64x2", V2DFmode, false, WASM_LANE_REPLACE,
++    CODE_FOR_vec_setv2df }
++};
++
+ static GTY(()) tree wasm_builtin_decls[WASM_BUILTIN_MAX];
+ 
+ static tree
+-wasm_builtin_vector_type (machine_mode mode, bool unsigned_p)
++wasm_builtin_scalar_type (machine_mode inner, bool unsigned_p)
+ {
+-  machine_mode inner = GET_MODE_INNER (mode);
+   tree scalar;
+   switch (inner)
+     {
+@@ -154,6 +262,10 @@ wasm_builtin_vector_type (machine_mode mode, bool unsigned_p)
+     case SImode:
+       scalar = unsigned_p ? unsigned_type_node : integer_type_node;
+       break;
++    case DImode:
++      scalar = unsigned_p ? long_long_unsigned_type_node
++                          : long_long_integer_type_node;
++      break;
+     case SFmode:
+       scalar = float_type_node;
+       break;
+@@ -163,7 +275,14 @@ wasm_builtin_vector_type (machine_mode mode, bool unsigned_p)
+     default:
+       gcc_unreachable ();
+     }
+-  return build_vector_type_for_mode (scalar, mode);
++  return scalar;
++}
++
++static tree
++wasm_builtin_vector_type (machine_mode mode, bool unsigned_p)
++{
++  return build_vector_type_for_mode
++    (wasm_builtin_scalar_type (GET_MODE_INNER (mode), unsigned_p), mode);
+ }
+ 
+ /* Keep the declarations available in the disabled profile so a live call gets
+@@ -186,7 +305,7 @@ wasm_init_builtins (void)
+     }
+   lang_hooks.types.register_builtin_type (float128t_type_node, "__float128");
+ 
+-  for (unsigned i = 0; i < WASM_BUILTIN_MAX; ++i)
++  for (unsigned i = 0; i < WASM_BUILTIN_VECTOR_MAX; ++i)
+     {
+       const wasm_builtin_description &d = wasm_builtins[i];
+       tree result = wasm_builtin_vector_type (d.result_mode, d.unsigned_result);
+@@ -201,6 +320,34 @@ wasm_init_builtins (void)
+       TREE_NOTHROW (decl) = 1;
+       wasm_builtin_decls[i] = decl;
+     }
++  static_assert (ARRAY_SIZE (wasm_lane_builtins)
++                 == WASM_BUILTIN_MAX - WASM_BUILTIN_VECTOR_MAX);
++  for (unsigned i = 0; i < ARRAY_SIZE (wasm_lane_builtins); ++i)
++    {
++      const wasm_lane_builtin_description &d = wasm_lane_builtins[i];
++      machine_mode inner = GET_MODE_INNER (d.vector_mode);
++      tree vector = wasm_builtin_vector_type (d.vector_mode, d.unsigned_p);
++      tree scalar = wasm_builtin_scalar_type (inner, d.unsigned_p);
++      /* Wasm extracts byte/halfword lanes into i32 with explicit sign or
++         zero extension.  The public macro casts to its exact narrow type.  */
++      tree result = (inner == QImode || inner == HImode)
++        ? (d.unsigned_p ? unsigned_type_node : integer_type_node) : scalar;
++      tree type;
++      if (d.operation == WASM_LANE_SPLAT)
++        type = build_function_type_list (vector, scalar, NULL_TREE);
++      else if (d.operation == WASM_LANE_EXTRACT)
++        type = build_function_type_list (result, vector, integer_type_node,
++                                         NULL_TREE);
++      else
++        type = build_function_type_list (vector, vector, integer_type_node,
++                                         scalar, NULL_TREE);
++      unsigned code = WASM_BUILTIN_VECTOR_MAX + i;
++      tree decl = add_builtin_function (d.name, type, code, BUILT_IN_MD,
++                                        NULL, NULL_TREE);
++      TREE_READONLY (decl) = 1;
++      TREE_NOTHROW (decl) = 1;
++      wasm_builtin_decls[code] = decl;
++    }
+ }
+ #define TARGET_INIT_BUILTINS wasm_init_builtins
+ 
+@@ -230,6 +377,64 @@ wasm_builtin_decl (unsigned code, bool ARG_UNUSED (initialize_p))
+ }
+ #define TARGET_BUILTIN_DECL wasm_builtin_decl
+ 
++static rtx
++wasm_expand_lane_builtin (tree exp, rtx target, unsigned code)
++{
++  const wasm_lane_builtin_description &d = wasm_lane_builtins[code];
++  machine_mode inner = GET_MODE_INNER (d.vector_mode);
++  machine_mode result_mode = d.operation == WASM_LANE_EXTRACT
++    ? ((inner == QImode || inner == HImode) ? SImode : inner)
++    : d.vector_mode;
++  if (!TARGET_SIMD128)
++    {
++      error_at (EXPR_LOCATION (exp),
++                "%qs requires %<-msimd128%>; SIMD128 is disabled", d.name);
++      return CONST0_RTX (result_mode);
++    }
++  HOST_WIDE_INT lane = 0;
++  if (d.operation != WASM_LANE_SPLAT)
++    {
++      tree index = CALL_EXPR_ARG (exp, 1);
++      if (!tree_fits_shwi_p (index))
++        {
++          error_at (EXPR_LOCATION (exp), "%qs lane index must be constant",
++                    d.name);
++          return CONST0_RTX (result_mode);
++        }
++      lane = tree_to_shwi (index);
++      if (lane < 0 || lane >= GET_MODE_NUNITS (d.vector_mode).to_constant ())
++        {
++          error_at (EXPR_LOCATION (exp), "%qs lane index out of range", d.name);
++          return CONST0_RTX (result_mode);
++        }
++    }
++  rtx value = expand_normal (CALL_EXPR_ARG (exp, 0));
++  expand_operand operands[3];
++  if (d.operation == WASM_LANE_REPLACE)
++    {
++      /* vec_set is an in/out optab.  Start from a complete v128 copy and
++         preserve every other lane, including when the scalar aliases it.  */
++      rtx scalar = expand_normal (CALL_EXPR_ARG (exp, 2));
++      value = force_reg (d.vector_mode, value);
++      scalar = force_reg (inner, scalar);
++      if (!target || !wasm_register_operand (target, d.vector_mode))
++        target = gen_reg_rtx (d.vector_mode);
++      emit_move_insn (target, value);
++      create_fixed_operand (&operands[0], target);
++      create_input_operand (&operands[1], scalar, inner);
++      create_integer_operand (&operands[2], lane);
++      expand_insn (d.instruction, 3, operands);
++      return target;
++    }
++  create_output_operand (&operands[0], target, result_mode);
++  create_input_operand (&operands[1], value,
++                        d.operation == WASM_LANE_SPLAT ? inner : d.vector_mode);
++  if (d.operation == WASM_LANE_EXTRACT)
++    create_integer_operand (&operands[2], lane);
++  expand_insn (d.instruction, d.operation == WASM_LANE_SPLAT ? 2 : 3, operands);
++  return operands[0].value;
++}
++
+ static rtx
+ wasm_expand_builtin (tree exp, rtx target, rtx ARG_UNUSED (subtarget),
+ 		     machine_mode ARG_UNUSED (mode), int ARG_UNUSED (ignore))
+@@ -237,6 +442,9 @@ wasm_expand_builtin (tree exp, rtx target, rtx ARG_UNUSED (subtarget),
+   tree decl = get_callee_fndecl (exp);
+   unsigned code = DECL_MD_FUNCTION_CODE (decl);
+   gcc_assert (code < WASM_BUILTIN_MAX);
++  if (code >= WASM_BUILTIN_VECTOR_MAX)
++    return wasm_expand_lane_builtin (exp, target,
++                                     code - WASM_BUILTIN_VECTOR_MAX);
+   const wasm_builtin_description &d = wasm_builtins[code];
+   if (!TARGET_SIMD128)
+     {
+diff --git a/gcc/config/wasm/wasm_simd128.h b/gcc/config/wasm/wasm_simd128.h
+new file mode 100644
+index 000000000..59b318860
+--- /dev/null
++++ b/gcc/config/wasm/wasm_simd128.h
+@@ -0,0 +1,1182 @@
++/* WebAssembly SIMD128 intrinsic subset.
++   Copyright (C) 2026 wasm-llvm contributors.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it under
++   the terms of the GNU General Public License as published by the Free
++   Software Foundation; either version 3, or (at your option) any later
++   version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT ANY
++   WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional permissions
++   described in the GCC Runtime Library Exception, version 3.1, as
++   published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.
++
++   SPDX-License-Identifier: GPL-3.0-or-later WITH GCC-exception-3.1
++
++   Independent GCC implementation of the documented baseline SIMD128
++   subset.  Public API names, types and semantics follow LLVM's
++   wasm_simd128.h at 4434dabb69916856b824f68a64b029c67175e532
++   (Apache-2.0 WITH LLVM-exception).  This is not the complete LLVM header.  */
++
++#ifndef _GCC_WASM_SIMD128_H
++#define _GCC_WASM_SIMD128_H
++
++#ifndef __wasm_simd128__
++#error "wasm_simd128.h requires SIMD128 enabled with -msimd128"
++#else
++
++#include <stdint.h>
++
++typedef int32_t v128_t
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++
++#define __WASM_INLINE \
++  static __inline__ __attribute__ ((__always_inline__, __artificial__))
++typedef int8_t __wasm_i8x16
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef int16_t __wasm_i16x8
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef int32_t __wasm_i32x4
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef int64_t __wasm_i64x2
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef uint8_t __wasm_u8x16
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef uint16_t __wasm_u16x8
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef uint32_t __wasm_u32x4
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef uint64_t __wasm_u64x2
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef float __wasm_f32x4
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++typedef double __wasm_f64x2
++  __attribute__ ((__vector_size__ (16), __aligned__ (16)));
++
++/* This access type promises no alignment and may alias any object.  */
++typedef int32_t __wasm_unaligned_v128
++  __attribute__ ((__vector_size__ (16), __aligned__ (1), __may_alias__));
++
++__WASM_INLINE v128_t
++wasm_v128_load (const void * __p)
++{
++  return (v128_t) *(const __wasm_unaligned_v128 *) __p;
++}
++
++__WASM_INLINE void
++wasm_v128_store (void * __p, v128_t __v)
++{
++  *(__wasm_unaligned_v128 *) __p = (__wasm_unaligned_v128) __v;
++}
++
++/* Checks stay at the public call site, including at -O0.  Immediate APIs
++   are macros: vector and scalar data operands are evaluated exactly once.  */
++#ifdef __cplusplus
++#define __WASM_STATIC_ASSERT(__condition, __message) \
++  static_assert (__condition, __message)
++#else
++#define __WASM_STATIC_ASSERT(__condition, __message) \
++  _Static_assert (__condition, __message)
++#endif
++#define __WASM_LANE_CHECK(__index, __limit) \
++  __WASM_STATIC_ASSERT (__builtin_constant_p (__index), \
++                        "SIMD lane index must be constant"); \
++  __WASM_STATIC_ASSERT ((__index) >= 0 && (__index) < (__limit), \
++                        "SIMD lane index out of range")
++
++__WASM_INLINE v128_t
++wasm_i8x16_make (int8_t __c0, int8_t __c1, int8_t __c2, int8_t __c3, int8_t __c4, int8_t __c5, int8_t __c6, int8_t __c7, int8_t __c8, int8_t __c9, int8_t __c10, int8_t __c11, int8_t __c12, int8_t __c13, int8_t __c14, int8_t __c15)
++{
++  return (v128_t) (__wasm_i8x16) {__c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7, __c8, __c9, __c10, __c11, __c12, __c13, __c14, __c15};
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_splat (int8_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_i8x16 (__x);
++}
++
++#define wasm_i8x16_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 16); \
++    (int8_t) __builtin_wasm_extract_lane_i8x16 ((__wasm_i8x16) (__a), (__i)); \
++  })
++
++#define wasm_i8x16_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 16); \
++    (v128_t) __builtin_wasm_replace_lane_i8x16 ((__wasm_i8x16) (__a), (__i), (int8_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_i16x8_make (int16_t __c0, int16_t __c1, int16_t __c2, int16_t __c3, int16_t __c4, int16_t __c5, int16_t __c6, int16_t __c7)
++{
++  return (v128_t) (__wasm_i16x8) {__c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7};
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_splat (int16_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_i16x8 (__x);
++}
++
++#define wasm_i16x8_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 8); \
++    (int16_t) __builtin_wasm_extract_lane_i16x8 ((__wasm_i16x8) (__a), (__i)); \
++  })
++
++#define wasm_i16x8_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 8); \
++    (v128_t) __builtin_wasm_replace_lane_i16x8 ((__wasm_i16x8) (__a), (__i), (int16_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_i32x4_make (int32_t __c0, int32_t __c1, int32_t __c2, int32_t __c3)
++{
++  return (v128_t) (__wasm_i32x4) {__c0, __c1, __c2, __c3};
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_splat (int32_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_i32x4 (__x);
++}
++
++#define wasm_i32x4_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 4); \
++    (int32_t) __builtin_wasm_extract_lane_i32x4 ((__wasm_i32x4) (__a), (__i)); \
++  })
++
++#define wasm_i32x4_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 4); \
++    (v128_t) __builtin_wasm_replace_lane_i32x4 ((__wasm_i32x4) (__a), (__i), (int32_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_i64x2_make (int64_t __c0, int64_t __c1)
++{
++  return (v128_t) (__wasm_i64x2) {__c0, __c1};
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_splat (int64_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_i64x2 (__x);
++}
++
++#define wasm_i64x2_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 2); \
++    (int64_t) __builtin_wasm_extract_lane_i64x2 ((__wasm_i64x2) (__a), (__i)); \
++  })
++
++#define wasm_i64x2_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 2); \
++    (v128_t) __builtin_wasm_replace_lane_i64x2 ((__wasm_i64x2) (__a), (__i), (int64_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_u8x16_make (uint8_t __c0, uint8_t __c1, uint8_t __c2, uint8_t __c3, uint8_t __c4, uint8_t __c5, uint8_t __c6, uint8_t __c7, uint8_t __c8, uint8_t __c9, uint8_t __c10, uint8_t __c11, uint8_t __c12, uint8_t __c13, uint8_t __c14, uint8_t __c15)
++{
++  return (v128_t) (__wasm_u8x16) {__c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7, __c8, __c9, __c10, __c11, __c12, __c13, __c14, __c15};
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_splat (uint8_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_u8x16 (__x);
++}
++
++#define wasm_u8x16_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 16); \
++    (uint8_t) __builtin_wasm_extract_lane_u8x16 ((__wasm_u8x16) (__a), (__i)); \
++  })
++
++#define wasm_u8x16_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 16); \
++    (v128_t) __builtin_wasm_replace_lane_u8x16 ((__wasm_u8x16) (__a), (__i), (uint8_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_u16x8_make (uint16_t __c0, uint16_t __c1, uint16_t __c2, uint16_t __c3, uint16_t __c4, uint16_t __c5, uint16_t __c6, uint16_t __c7)
++{
++  return (v128_t) (__wasm_u16x8) {__c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7};
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_splat (uint16_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_u16x8 (__x);
++}
++
++#define wasm_u16x8_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 8); \
++    (uint16_t) __builtin_wasm_extract_lane_u16x8 ((__wasm_u16x8) (__a), (__i)); \
++  })
++
++#define wasm_u16x8_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 8); \
++    (v128_t) __builtin_wasm_replace_lane_u16x8 ((__wasm_u16x8) (__a), (__i), (uint16_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_u32x4_make (uint32_t __c0, uint32_t __c1, uint32_t __c2, uint32_t __c3)
++{
++  return (v128_t) (__wasm_u32x4) {__c0, __c1, __c2, __c3};
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_splat (uint32_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_u32x4 (__x);
++}
++
++#define wasm_u32x4_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 4); \
++    (uint32_t) __builtin_wasm_extract_lane_u32x4 ((__wasm_u32x4) (__a), (__i)); \
++  })
++
++#define wasm_u32x4_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 4); \
++    (v128_t) __builtin_wasm_replace_lane_u32x4 ((__wasm_u32x4) (__a), (__i), (uint32_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_u64x2_make (uint64_t __c0, uint64_t __c1)
++{
++  return (v128_t) (__wasm_u64x2) {__c0, __c1};
++}
++
++__WASM_INLINE v128_t
++wasm_u64x2_splat (uint64_t __x)
++{
++  return (v128_t) __builtin_wasm_splat_u64x2 (__x);
++}
++
++#define wasm_u64x2_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 2); \
++    (uint64_t) __builtin_wasm_extract_lane_u64x2 ((__wasm_u64x2) (__a), (__i)); \
++  })
++
++#define wasm_u64x2_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 2); \
++    (v128_t) __builtin_wasm_replace_lane_u64x2 ((__wasm_u64x2) (__a), (__i), (uint64_t) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_f32x4_make (float __c0, float __c1, float __c2, float __c3)
++{
++  return (v128_t) (__wasm_f32x4) {__c0, __c1, __c2, __c3};
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_splat (float __x)
++{
++  return (v128_t) __builtin_wasm_splat_f32x4 (__x);
++}
++
++#define wasm_f32x4_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 4); \
++    (float) __builtin_wasm_extract_lane_f32x4 ((__wasm_f32x4) (__a), (__i)); \
++  })
++
++#define wasm_f32x4_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 4); \
++    (v128_t) __builtin_wasm_replace_lane_f32x4 ((__wasm_f32x4) (__a), (__i), (float) (__x)); \
++  })
++
++__WASM_INLINE v128_t
++wasm_f64x2_make (double __c0, double __c1)
++{
++  return (v128_t) (__wasm_f64x2) {__c0, __c1};
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_splat (double __x)
++{
++  return (v128_t) __builtin_wasm_splat_f64x2 (__x);
++}
++
++#define wasm_f64x2_extract_lane(__a, __i) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 2); \
++    (double) __builtin_wasm_extract_lane_f64x2 ((__wasm_f64x2) (__a), (__i)); \
++  })
++
++#define wasm_f64x2_replace_lane(__a, __i, __x) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__i, 2); \
++    (v128_t) __builtin_wasm_replace_lane_f64x2 ((__wasm_f64x2) (__a), (__i), (double) (__x)); \
++  })
++
++/* Unsigned lanes give wrapping arithmetic without signed overflow.  */
++
++__WASM_INLINE v128_t
++wasm_i8x16_add (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u8x16) __a + (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_sub (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u8x16) __a - (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_neg (v128_t __a)
++{
++  return (v128_t) ((__wasm_u8x16) {0} - (__wasm_u8x16) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_add (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a + (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_sub (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a - (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_mul (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a * (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_neg (v128_t __a)
++{
++  return (v128_t) ((__wasm_u16x8) {0} - (__wasm_u16x8) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_add (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a + (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_sub (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a - (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_mul (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a * (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_neg (v128_t __a)
++{
++  return (v128_t) ((__wasm_u32x4) {0} - (__wasm_u32x4) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_add (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u64x2) __a + (__wasm_u64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_sub (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u64x2) __a - (__wasm_u64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_mul (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u64x2) __a * (__wasm_u64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_neg (v128_t __a)
++{
++  return (v128_t) ((__wasm_u64x2) {0} - (__wasm_u64x2) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_add (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a + (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_sub (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a - (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_mul (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a * (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_div (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a / (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_neg (v128_t __a)
++{
++  return (v128_t) -(__wasm_f32x4) __a;
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_add (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a + (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_sub (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a - (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_mul (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a * (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_div (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a / (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_neg (v128_t __a)
++{
++  return (v128_t) -(__wasm_f64x2) __a;
++}
++
++__WASM_INLINE v128_t
++wasm_v128_and (v128_t __a, v128_t __b)
++{
++  return __a & __b;
++}
++
++__WASM_INLINE v128_t
++wasm_v128_or (v128_t __a, v128_t __b)
++{
++  return __a | __b;
++}
++
++__WASM_INLINE v128_t
++wasm_v128_xor (v128_t __a, v128_t __b)
++{
++  return __a ^ __b;
++}
++
++__WASM_INLINE v128_t
++wasm_v128_not (v128_t __a)
++{
++  return ~__a;
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_eq (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i8x16) __a == (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_ne (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i8x16) __a != (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i8x16) __a < (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i8x16) __a <= (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i8x16) __a > (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i8x16) __a >= (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_eq (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i16x8) __a == (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_ne (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i16x8) __a != (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i16x8) __a < (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i16x8) __a <= (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i16x8) __a > (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i16x8) __a >= (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_eq (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i32x4) __a == (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_ne (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i32x4) __a != (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i32x4) __a < (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i32x4) __a <= (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i32x4) __a > (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i32x4) __a >= (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_eq (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i64x2) __a == (__wasm_i64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_ne (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i64x2) __a != (__wasm_i64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i64x2) __a < (__wasm_i64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i64x2) __a <= (__wasm_i64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i64x2) __a > (__wasm_i64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_i64x2) __a >= (__wasm_i64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u8x16) __a < (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u8x16) __a <= (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u8x16) __a > (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u8x16) __a >= (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a < (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a <= (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a > (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u16x8) __a >= (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a < (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a <= (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a > (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_u32x4) __a >= (__wasm_u32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_eq (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a == (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_ne (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a != (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a < (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a <= (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a > (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f32x4) __a >= (__wasm_f32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_eq (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a == (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_ne (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a != (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_lt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a < (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_le (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a <= (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_gt (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a > (__wasm_f64x2) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_ge (v128_t __a, v128_t __b)
++{
++  return (v128_t) ((__wasm_f64x2) __a >= (__wasm_f64x2) __b);
++}
++
++/* Wasm masks scalar shift counts before applying a lane operation.  */
++
++__WASM_INLINE v128_t
++wasm_i8x16_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_i8x16) __a >> (__n & 7));
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u8x16) __a >> (__n & 7));
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_shl (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u8x16) __a << (__n & 7));
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_i16x8) __a >> (__n & 15));
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u16x8) __a >> (__n & 15));
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_shl (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u16x8) __a << (__n & 15));
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_i32x4) __a >> (__n & 31));
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u32x4) __a >> (__n & 31));
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_shl (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u32x4) __a << (__n & 31));
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_i64x2) __a >> (__n & 63));
++}
++
++__WASM_INLINE v128_t
++wasm_u64x2_shr (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u64x2) __a >> (__n & 63));
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_shl (v128_t __a, uint32_t __n)
++{
++  return (v128_t) ((__wasm_u64x2) __a << (__n & 63));
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_add_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_add_sat_s_i8x16 ((__wasm_i8x16) __a, (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_sub_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_sub_sat_s_i8x16 ((__wasm_i8x16) __a, (__wasm_i8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_add_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_add_sat_u_i8x16 ((__wasm_u8x16) __a, (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_sub_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_sub_sat_u_i8x16 ((__wasm_u8x16) __a, (__wasm_u8x16) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_add_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_add_sat_s_i16x8 ((__wasm_i16x8) __a, (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_sub_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_sub_sat_s_i16x8 ((__wasm_i16x8) __a, (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_add_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_add_sat_u_i16x8 ((__wasm_u16x8) __a, (__wasm_u16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_sub_sat (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_sub_sat_u_i16x8 ((__wasm_u16x8) __a, (__wasm_u16x8) __b);
++}
++
++/* Full input vectors are widened locally before selecting a half.  These
++   256-bit temporaries never cross a public call boundary.  A 64-bit input
++   temporary would scalarize before the target's vector conversion optab.  */
++
++__WASM_INLINE v128_t
++wasm_i16x8_extend_low_i8x16 (v128_t __a)
++{
++  typedef int16_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i8x16) __a, __wasm_wide);
++  return (v128_t) (__wasm_i16x8) {__all[0], __all[1], __all[2], __all[3], __all[4], __all[5], __all[6], __all[7]};
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_extend_high_i8x16 (v128_t __a)
++{
++  typedef int16_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i8x16) __a, __wasm_wide);
++  return (v128_t) (__wasm_i16x8) {__all[8], __all[9], __all[10], __all[11], __all[12], __all[13], __all[14], __all[15]};
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_extend_low_u8x16 (v128_t __a)
++{
++  typedef uint16_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u8x16) __a, __wasm_wide);
++  return (v128_t) (__wasm_u16x8) {__all[0], __all[1], __all[2], __all[3], __all[4], __all[5], __all[6], __all[7]};
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_extend_high_u8x16 (v128_t __a)
++{
++  typedef uint16_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u8x16) __a, __wasm_wide);
++  return (v128_t) (__wasm_u16x8) {__all[8], __all[9], __all[10], __all[11], __all[12], __all[13], __all[14], __all[15]};
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_extend_low_i16x8 (v128_t __a)
++{
++  typedef int32_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i16x8) __a, __wasm_wide);
++  return (v128_t) (__wasm_i32x4) {__all[0], __all[1], __all[2], __all[3]};
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_extend_high_i16x8 (v128_t __a)
++{
++  typedef int32_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i16x8) __a, __wasm_wide);
++  return (v128_t) (__wasm_i32x4) {__all[4], __all[5], __all[6], __all[7]};
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_extend_low_u16x8 (v128_t __a)
++{
++  typedef uint32_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u16x8) __a, __wasm_wide);
++  return (v128_t) (__wasm_u32x4) {__all[0], __all[1], __all[2], __all[3]};
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_extend_high_u16x8 (v128_t __a)
++{
++  typedef uint32_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u16x8) __a, __wasm_wide);
++  return (v128_t) (__wasm_u32x4) {__all[4], __all[5], __all[6], __all[7]};
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_extend_low_i32x4 (v128_t __a)
++{
++  typedef int64_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_i64x2) {__all[0], __all[1]};
++}
++
++__WASM_INLINE v128_t
++wasm_i64x2_extend_high_i32x4 (v128_t __a)
++{
++  typedef int64_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_i64x2) {__all[2], __all[3]};
++}
++
++__WASM_INLINE v128_t
++wasm_u64x2_extend_low_u32x4 (v128_t __a)
++{
++  typedef uint64_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_u64x2) {__all[0], __all[1]};
++}
++
++__WASM_INLINE v128_t
++wasm_u64x2_extend_high_u32x4 (v128_t __a)
++{
++  typedef uint64_t __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_u64x2) {__all[2], __all[3]};
++}
++
++__WASM_INLINE v128_t
++wasm_i8x16_narrow_i16x8 (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_narrow_s_i8x16_i16x8 ((__wasm_i16x8) __a, (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u8x16_narrow_i16x8 (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_narrow_u_i8x16_i16x8 ((__wasm_i16x8) __a, (__wasm_i16x8) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_i16x8_narrow_i32x4 (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_narrow_s_i16x8_i32x4 ((__wasm_i32x4) __a, (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_u16x8_narrow_i32x4 (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_narrow_u_i16x8_i32x4 ((__wasm_i32x4) __a, (__wasm_i32x4) __b);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_convert_i32x4 (v128_t __a)
++{
++  return (v128_t) __builtin_convertvector ((__wasm_i32x4) __a, __wasm_f32x4);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_convert_low_i32x4 (v128_t __a)
++{
++  typedef double __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_i32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_f64x2) {__all[0], __all[1]};
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_trunc_sat_f32x4 (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_trunc_saturate_s_i32x4_f32x4 ((__wasm_f32x4) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_i32x4_trunc_sat_f64x2_zero (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_trunc_sat_s_zero_f64x2_i32x4 ((__wasm_f64x2) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_convert_u32x4 (v128_t __a)
++{
++  return (v128_t) __builtin_convertvector ((__wasm_u32x4) __a, __wasm_f32x4);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_convert_low_u32x4 (v128_t __a)
++{
++  typedef double __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_u32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_f64x2) {__all[0], __all[1]};
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_trunc_sat_f32x4 (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_trunc_saturate_u_i32x4_f32x4 ((__wasm_f32x4) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_u32x4_trunc_sat_f64x2_zero (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_trunc_sat_u_zero_f64x2_i32x4 ((__wasm_f64x2) __a);
++}
++
++__WASM_INLINE v128_t
++wasm_f64x2_promote_low_f32x4 (v128_t __a)
++{
++  typedef double __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_wide __all = __builtin_convertvector ((__wasm_f32x4) __a, __wasm_wide);
++  return (v128_t) (__wasm_f64x2) {__all[0], __all[1]};
++}
++
++__WASM_INLINE v128_t
++wasm_f32x4_demote_f64x2_zero (v128_t __a)
++{
++  typedef double __wasm_wide __attribute__ ((__vector_size__ (32)));
++  __wasm_f64x2 __input = (__wasm_f64x2) __a;
++  __wasm_wide __all = {__input[0], __input[1], 0.0, 0.0};
++  return (v128_t) __builtin_convertvector (__all, __wasm_f32x4);
++}
++
++#define wasm_i8x16_shuffle(__a, __b, __c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7, __c8, __c9, __c10, __c11, __c12, __c13, __c14, __c15) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__c0, 32); \
++    __WASM_LANE_CHECK (__c1, 32); \
++    __WASM_LANE_CHECK (__c2, 32); \
++    __WASM_LANE_CHECK (__c3, 32); \
++    __WASM_LANE_CHECK (__c4, 32); \
++    __WASM_LANE_CHECK (__c5, 32); \
++    __WASM_LANE_CHECK (__c6, 32); \
++    __WASM_LANE_CHECK (__c7, 32); \
++    __WASM_LANE_CHECK (__c8, 32); \
++    __WASM_LANE_CHECK (__c9, 32); \
++    __WASM_LANE_CHECK (__c10, 32); \
++    __WASM_LANE_CHECK (__c11, 32); \
++    __WASM_LANE_CHECK (__c12, 32); \
++    __WASM_LANE_CHECK (__c13, 32); \
++    __WASM_LANE_CHECK (__c14, 32); \
++    __WASM_LANE_CHECK (__c15, 32); \
++    __wasm_i8x16 __wasm_left = (__wasm_i8x16) (__a); \
++    __wasm_i8x16 __wasm_right = (__wasm_i8x16) (__b); \
++    (v128_t) __builtin_shufflevector (__wasm_left, __wasm_right, \
++      __c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7, __c8, __c9, __c10, __c11, __c12, __c13, __c14, __c15); \
++  })
++
++#define wasm_i16x8_shuffle(__a, __b, __c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__c0, 16); \
++    __WASM_LANE_CHECK (__c1, 16); \
++    __WASM_LANE_CHECK (__c2, 16); \
++    __WASM_LANE_CHECK (__c3, 16); \
++    __WASM_LANE_CHECK (__c4, 16); \
++    __WASM_LANE_CHECK (__c5, 16); \
++    __WASM_LANE_CHECK (__c6, 16); \
++    __WASM_LANE_CHECK (__c7, 16); \
++    __wasm_i16x8 __wasm_left = (__wasm_i16x8) (__a); \
++    __wasm_i16x8 __wasm_right = (__wasm_i16x8) (__b); \
++    (v128_t) __builtin_shufflevector (__wasm_left, __wasm_right, \
++      __c0, __c1, __c2, __c3, __c4, __c5, __c6, __c7); \
++  })
++
++#define wasm_i32x4_shuffle(__a, __b, __c0, __c1, __c2, __c3) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__c0, 8); \
++    __WASM_LANE_CHECK (__c1, 8); \
++    __WASM_LANE_CHECK (__c2, 8); \
++    __WASM_LANE_CHECK (__c3, 8); \
++    __wasm_i32x4 __wasm_left = (__wasm_i32x4) (__a); \
++    __wasm_i32x4 __wasm_right = (__wasm_i32x4) (__b); \
++    (v128_t) __builtin_shufflevector (__wasm_left, __wasm_right, \
++      __c0, __c1, __c2, __c3); \
++  })
++
++#define wasm_i64x2_shuffle(__a, __b, __c0, __c1) \
++  __extension__ ({ \
++    __WASM_LANE_CHECK (__c0, 4); \
++    __WASM_LANE_CHECK (__c1, 4); \
++    __wasm_i64x2 __wasm_left = (__wasm_i64x2) (__a); \
++    __wasm_i64x2 __wasm_right = (__wasm_i64x2) (__b); \
++    (v128_t) __builtin_shufflevector (__wasm_left, __wasm_right, \
++      __c0, __c1); \
++  })
++
++#undef __WASM_INLINE
++
++#endif /* __wasm_simd128__ */
++#endif /* _GCC_WASM_SIMD128_H */

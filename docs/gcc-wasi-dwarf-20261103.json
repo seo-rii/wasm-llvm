@@ -1,0 +1,4001 @@
+{
+  "schemaVersion": 1,
+  "kind": "gcc-wasi-dwarf-qualification",
+  "status": "qualified",
+  "createdAtUTC": "2026-11-03T05:05:48.326935+00:00",
+  "implementationCommit": "18f0e954e2490ac2e2e444bc015edcf62e87dfd4",
+  "sdkSourceCommit": "3bf70596c49cd91067f21eacdb9c30e7ff2edd01",
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/83",
+  "pullRequests": {
+    "producer": "https://github.com/seo-rii/wasm-llvm/pull/106",
+    "sdk": "https://github.com/seo-rii/wasm-idle/pull/367"
+  },
+  "profile": "GCC17 locked source21 (21 local patches, not major version21), genuine embedded DWARF32/DWARF4 at O0 for wasm32-wasi. Wasmhost compiler built separately.",
+  "source": {
+    "gcc": {
+      "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "patches": [
+        {
+          "path": "patches/0001-void-type-return.patch",
+          "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+        },
+        {
+          "path": "patches/0002-host-width-format.patch",
+          "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+        },
+        {
+          "path": "patches/0003-simd128.patch",
+          "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+        },
+        {
+          "path": "patches/0004-basic-c-abi.patch",
+          "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+        },
+        {
+          "path": "patches/0005-atomic-libcall-abi.patch",
+          "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+        },
+        {
+          "path": "patches/0006-simd-operations.patch",
+          "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+        },
+        {
+          "path": "patches/0007-vector-abi.patch",
+          "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+        },
+        {
+          "path": "patches/0008-binary128-long-double.patch",
+          "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+        },
+        {
+          "path": "patches/0009-int128.patch",
+          "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+        },
+        {
+          "path": "patches/0010-empty-record-abi.patch",
+          "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+        },
+        {
+          "path": "patches/0011-bitfield-layout.patch",
+          "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+        },
+        {
+          "path": "patches/0012-anonymous-bitfield-abi.patch",
+          "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+        },
+        {
+          "path": "patches/0013-simd-saturating-arithmetic.patch",
+          "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+        },
+        {
+          "path": "patches/0014-gnu-float128.patch",
+          "sha256": "703b8ab823b53d815f1edd0d89dab60a5cd3cde2871b7c956705d96cf53d4476"
+        },
+        {
+          "path": "patches/0015-simd-conversions.patch",
+          "sha256": "6ed61fc595bc513fc64582e6983fe27f2c0a7aa7e291e4e50af02f4f60c4133a"
+        },
+        {
+          "path": "patches/0016-wasm-simd128-header.patch",
+          "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+        },
+        {
+          "path": "patches/0017-symbol-aliases.patch",
+          "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e"
+        },
+        {
+          "path": "patches/0018-weak-references.patch",
+          "sha256": "d958924db4487b9531849ffbc6147607e10f4b94719992c580c9e071db80c895"
+        },
+        {
+          "path": "patches/0019-rtti-one-only.patch",
+          "sha256": "ae57e781b94bce58265af1a1bacfccb78c030287bd3450b15ff3ad376e27ddeb"
+        },
+        {
+          "path": "patches/0020-coverage-profile.patch",
+          "sha256": "7d41f14e928c29cef958cdf79fc5f0824823ffa382631d6c264daf9732ed089b"
+        },
+        {
+          "path": "patches/0021-dwarf-debug.patch",
+          "sha256": "aab871a1c2ac9d5657284d86c377d9bca1a58c7662f0e463a18be9a484d96859"
+        }
+      ],
+      "sourceDiffSha256": "d5eaa9f02306418a26f48f01c92a7e0bcf25ceb4d8f54a1f6a04134d9d39de85"
+    },
+    "wabt": {
+      "patches": [
+        {
+          "path": "patches/wabt-0001-simd-target-features.patch",
+          "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6"
+        },
+        {
+          "path": "patches/wabt-0002-symbol-aliases.patch",
+          "sha256": "ecc5664fb48d4337fad9c469076c06cf97162dae870ee76d7eb948233d83a759"
+        },
+        {
+          "path": "patches/wabt-0003-dwarf-debug.patch",
+          "sha256": "c446f1efc0a7dafc4aa289d69ec8395476b119c89785375693164f29545f6a50"
+        }
+      ],
+      "sourceDiffSha256": "ed771f2fc12af0316db6f0b0e4732a39a6cec6aeae326a846f83955c12368eeb",
+      "submodules": {
+        "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
+      },
+      "wabtCommit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173"
+    }
+  },
+  "identities": {
+    "documentationDraft": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-documentation-data-v1.json",
+      "bytes": 30741,
+      "sha256": "9ff9ac472f45b18f23463eaddedd748ccde807d469576a6e5fd1d60a8fca20c6"
+    },
+    "sourceLock": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/sources.lock.json",
+      "bytes": 9424,
+      "sha256": "ce3cd4440eb7a7417ffd727e97ec0914d4a024b68519aa6d78510916bc8ad878"
+    },
+    "gccPatch21": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/patches/0021-dwarf-debug.patch",
+      "bytes": 38130,
+      "sha256": "aab871a1c2ac9d5657284d86c377d9bca1a58c7662f0e463a18be9a484d96859"
+    },
+    "wabtPatch3": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/patches/wabt-0003-dwarf-debug.patch",
+      "bytes": 75646,
+      "sha256": "c446f1efc0a7dafc4aa289d69ec8395476b119c89785375693164f29545f6a50"
+    },
+    "nativeBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/native-build.json",
+      "bytes": 7435,
+      "sha256": "c727b544cec231133b1ddf131e5033f1611dd7ea01cd23626f2d8d15860b18eb"
+    },
+    "nativeAssemblerBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wabt-native/provenance.json",
+      "bytes": 2668,
+      "sha256": "90fae21034a29ebd496e1e8fd8f19fd361610dd3b7479cd4df1dd0fe8001c885"
+    },
+    "nativeAssemblerQualification": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/wabt-native-qualification-v3/qualification.json",
+      "bytes": 4646,
+      "sha256": "0cd2a1c218cc8e6962851a21581029b698f757ab5c7ed50be051410e1df6a231"
+    },
+    "nativeDwarfQualification": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-preparation/native-qualification/full-v1/qualification.json",
+      "bytes": 36619842,
+      "sha256": "1da383d3aad3eeb7aedb01fcaee24abb46c1297267505d18d4781d56fe504031"
+    },
+    "nativeDwarfReinspection": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-preparation/native-qualification/full-v1-final-reinspection.json",
+      "bytes": 15971,
+      "sha256": "85ae0906ea976f3fcade710f7f614a3d1b17334c10203f350677dee96111d026"
+    },
+    "nativeCoverage": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/coverage-qualification-v1/qualification.json",
+      "bytes": 2986685,
+      "sha256": "682da772de22cb8389698e4dd17c934316ee20f3dc8f0d0655a313d0ed5da0e2"
+    },
+    "gnuBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libstdcxx-v2/build.json",
+      "bytes": 6524613,
+      "sha256": "7dd994d2c55aefc969adfbfd6021807b4401a5f2a0811cd35d5ea2b3d726e3ab"
+    },
+    "gnuQualification": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libstdcxx-v2/qualification/qualification.json",
+      "bytes": 13667,
+      "sha256": "42fb4f9e7e5f139dcad51d0aa98c753f66bb32f41ae2908afe8bad51e8fd2cd7"
+    },
+    "libgcovBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libgcov-current/build.json",
+      "bytes": 155959,
+      "sha256": "675f4eee512a103bf71738a2e4a1748506708c690660f27bc9cb9a4b561f3fe2"
+    },
+    "dwarfGate": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/dwarf-gate-preflight-v1.json",
+      "bytes": 2382,
+      "sha256": "f14a6ed6b774beaf8fa68bcf82f032ad3b933cad6cc0bef806e9999ad89bc31d"
+    },
+    "producerUnits": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/producer-units-v2-status.json",
+      "bytes": 18218,
+      "sha256": "6e4b080cb98d05347f1b0bd9294e3f52b6a6a9c28061560369f89de41f4abd51"
+    },
+    "releaseComparison": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/release-source20-compare-v3/report.json",
+      "bytes": 104289,
+      "sha256": "8a83bd937ea2ccb85f47d930547b5a4d0c1cbb4eb287ffd56d546ace3ffa590b"
+    },
+    "inheritedNativeStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/inherited-native-v2-status.json",
+      "bytes": 58801,
+      "sha256": "191f72a0a0756e2f7d4b38977917fb1bc390fd70cf3824d49f67bf118f8b8ca3"
+    },
+    "sdkValidation": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/sdk-implementation-v3.json",
+      "bytes": 7210,
+      "sha256": "3498d87aff584ffb09960bc24e8ddb93cb75a6a996ea83a706f0b8f940c89f95"
+    },
+    "browserStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/browser-v1-status.json",
+      "bytes": 917,
+      "sha256": "c08e3c5a24a2b163f18d6d3425df2aae3a3398911a433eef03617e59b80272e4"
+    },
+    "browserFinalInspection": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/browser-v1-final-reinspection.json",
+      "bytes": 469,
+      "sha256": "0b0195f5f73f6ae2d3c4bbe23f9922dea30369fc6c6bcacc1a4024786df486a0"
+    },
+    "compilerBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/browser-compiler/compiler-build.json",
+      "bytes": 12900,
+      "sha256": "6287faad0cd1a2a2f928ec4e05fdb58052691bb7ef4647cee2f2b5a38e5677fa"
+    },
+    "browserAssemblerBuild": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wabt-browser/provenance.json",
+      "bytes": 2540,
+      "sha256": "0aeba12509cb92f6189d79bec6d52fffce86d8b632f28f8fa378054beafec9b9"
+    },
+    "packageStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/package-v1-status.json",
+      "bytes": 4873,
+      "sha256": "391c34c1534a380ae31fd04ee7f3de4bdfc972e03fb5e5e2d6509de8048672a8"
+    },
+    "bundleManifest": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 26139,
+      "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+    },
+    "packageImmutableReportDedup": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/package-v1-dedup.json",
+      "bytes": 36655,
+      "sha256": "4a21076d93f71fb6acf40588588715f536df1ee542913436ea4b76c156e0af89"
+    },
+    "workerSupervisorStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/worker-supervisor-status.json",
+      "bytes": 606,
+      "sha256": "d686339f68c0d7752518bc68bafd2e7d43fba7c711b32f03aea797c51ff88d5f"
+    },
+    "workerMatrixStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/worker-status.json",
+      "bytes": 10572,
+      "sha256": "810073517a847673625c5dfc5d8a6e9486abb745a7edc90fc76aee65f6c61296"
+    },
+    "workerSummary": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-summary.json",
+      "bytes": 73043,
+      "sha256": "6f61fe0b9b0be2fb876e1794ac1acb1163f9f6270c84a8bc59b59937437cac31"
+    },
+    "workerInputs": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/worker-inputs-final.json",
+      "bytes": 1127225,
+      "sha256": "af611a0f13504386aa55614e13520695c0955cc0c162f2f8ddd45e768e3cfaaa"
+    },
+    "sdkFullStatus": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/status.json",
+      "bytes": 4724,
+      "sha256": "6c2719077ae4c6a195572b70213e53095d95b975a1f308cea953444309fbe01c"
+    },
+    "sdkHandoff": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/sdk-public-debug-handoff-v1.json",
+      "bytes": 16140,
+      "sha256": "21a735a3c8bc0e46326a99075e80c34464867157758754d3727e084cfc4f62ea"
+    },
+    "sdkReinspection": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/reinspection-v1.json",
+      "bytes": 310907,
+      "sha256": "b8b49cdcaf3cb3e43f6da0f497536b70746fc22a210f7584c513b136ea604d7d"
+    },
+    "sdkCountClarification": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/sdk-public-debug-count-clarification-v1.json",
+      "bytes": 16577,
+      "sha256": "c9183f88695e7e08453fd075589c1a938b18f164ffbe6c8a3f3c30a30a10f481"
+    },
+    "inheritedNativeAudit": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/inherited-native-v2-final-audit.json",
+      "bytes": 23083,
+      "sha256": "d25a0679c7baf606763985a63c447ac0957a267f448de122fd57276f5646e57a"
+    },
+    "sdkBootstrap": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/manifest-bootstrap.json",
+      "bytes": 59040,
+      "sha256": "827bb93fa691886460b7a8a84f41d8cfb16fa1b6409cabd0a54d7c1aaf7508c2"
+    },
+    "gccSourceRelocation": {
+      "path": "/home/seorii/logs/wasm-llvm-83-storage-recovery-20261103/gcc-source-relocation.json",
+      "bytes": 7278,
+      "sha256": "3afbd47b3da2c2bbd89051aee57741eb12cee582df448336cc341d95fd45efb1"
+    },
+    "headerEvidenceRelocation": {
+      "path": "/home/seorii/logs/wasm-llvm-83-storage-recovery-20261103/simd-header-evidence-relocation.json",
+      "bytes": 1024859,
+      "sha256": "9885b2bc6f55bbf59a410b7caede252500f3b86e29e123b73999fe9a3ffbd530"
+    },
+    "sdkReportRelocation": {
+      "path": "/home/seorii/logs/wasm-llvm-83-storage-recovery-20261103/sdk-debug-full-report-relocation-20261103T044011Z-713ab34a11-completed.json",
+      "bytes": 5525,
+      "sha256": "f2492f045178559da5f64d3dee89370d92c69553e2592d545dfaba86642baf41"
+    },
+    "nativeGccStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-v4-gcc-status.json",
+      "bytes": 648,
+      "sha256": "20cb612761c99832faa930ccad1aceb49c606f68c4aecf11d567787231613347"
+    },
+    "nativeGccProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-v4-gcc-process.json",
+      "bytes": 575,
+      "sha256": "c8ba36d6ed2a37536cb6701f0cff6d2f977a5fada0c5f70c90867c391e6855f4"
+    },
+    "nativeWabtStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-v4-wabt-status.json",
+      "bytes": 669,
+      "sha256": "d4293045f8da41ecefc124caca2c8b6747e7a6934b2db32a44c423a64531458e"
+    },
+    "nativeWabtProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-v4-wabt-process.json",
+      "bytes": 579,
+      "sha256": "f0562c6e3aebc3d9008592e4ef06bfb3c191b045cc081468835ae61d9bba0948"
+    },
+    "runtimesStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/runtimes-v1-status.json",
+      "bytes": 8094,
+      "sha256": "eaee9a2f1eba1de6478069f1ff614035cdc55c23c3f87691d5490c2522e52a83"
+    },
+    "runtimesProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/runtimes-v1-process.json",
+      "bytes": 562,
+      "sha256": "b8dbcdf21ebc1683c9f251d3670cb8030604077862388f463479d1e5a268880c"
+    },
+    "coverageStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/coverage-native-v1-status.json",
+      "bytes": 1679,
+      "sha256": "9aa90413b2696ae547fe829d9c5da57535e21c88b3f75ba75aeeb97c19da8e1d"
+    },
+    "coverageProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/coverage-native-v1-process.json",
+      "bytes": 545,
+      "sha256": "a978c01a3e6fbba7a3aaf8cfd4a09e44e3f4f91750a4b7d20c35ca71714f48fe"
+    },
+    "browserProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/browser-v1-process.json",
+      "bytes": 685,
+      "sha256": "a76ac5e453d910f1894b671a90e529782f92de71b4846463e5848248443e09f7"
+    },
+    "packageProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/package-v1-process.json",
+      "bytes": 853,
+      "sha256": "d12279ce36252d4e752aa69c65742427f304eaf0b82c74c18b87f5c230a0c421"
+    },
+    "workerProcess": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/worker-supervisor-process.json",
+      "bytes": 1327,
+      "sha256": "af378a81712914db2b228e65f2251a14e7c8c5a40d4d78f834524231acbb672a"
+    },
+    "nativeDwarfStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-preparation/native-qualification/full-v1-status.json",
+      "bytes": 4060,
+      "sha256": "20adf8b5179d2cff2912400aa76da4f14921e1b708cdedea657d771b14d60680"
+    },
+    "releaseStatus": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/release-v2-status.json",
+      "bytes": 1317,
+      "sha256": "71a2e68478d4275bb1a12e499faf0fba31287cca242bbc9af183686bb9dbe044"
+    },
+    "ciInvestigation": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/ci-lean-invalid-source-investigation-v1.json",
+      "bytes": 19080,
+      "sha256": "53a6fa97c1ad16a5a571ae451805bfb5e4f19fa196593d9eee1d9d91a06132cc"
+    },
+    "optionalProbeAvailability": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/lean-ci-probe-asset-availability-v1.json",
+      "bytes": 10083,
+      "sha256": "85f1c57c28f098d5ba83d9c86e7d09ec78152d37522527531cea1e100b3c2b83"
+    },
+    "optionalProbeInspection": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-lean-ci-probe-20261103/out/lean-ci-probe-v1/run/post-inspection-v1.json",
+      "bytes": 9323,
+      "sha256": "697d565f6abf3339b127d131fa08daea3321477bb0d3526140b8eae3df682500"
+    },
+    "optionalProbeResult": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-lean-ci-probe-20261103/out/lean-ci-probe-v1/run/result.json",
+      "bytes": 56014,
+      "sha256": "55e7fa2e1a7fbdc8fad6c95631f326795b46f4ec180a05be87907e5747edf27b"
+    },
+    "assembledDocumentationData": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/final-documentation-data-v1.json",
+      "bytes": 156130,
+      "sha256": "8d981711a9801322f7b5387e29def2b04321bfafe25414785ff7311d035f0827"
+    },
+    "recordedImplementationCi": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/implementation-ci-final-v1.json",
+      "bytes": 80924,
+      "sha256": "40a025008f7a7ce3a994ca54ac0bf069a0fda7c16c3b85e36c634dcfd8eaecb0"
+    }
+  },
+  "toolchain": {
+    "nativeTools": {
+      "gcc": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc-native/gcc/cc1",
+        "bytes": 24492616,
+        "sha256": "2ffc1cf50aed0851c226386bf5f8faa0bf199de29f2b1ccef06b1b19d280afff"
+      },
+      "gccCpp": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc-native/gcc/cc1plus",
+        "bytes": 27049504,
+        "sha256": "2b5e4730fb740facc191d311d9b60cd68fcb17b7c9076bc2bc33ca7863fd2aa6"
+      },
+      "linker": {
+        "path": "/home/seorii/.local/share/wasi-sdk-33/bin/wasm-ld",
+        "bytes": 4165088,
+        "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+      },
+      "assembler": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wabt-native/wat2wasm",
+        "bytes": 1727336,
+        "sha256": "eb0d407aca8c2a5c6c1776ec7b90afb7189d0780c05281fd91e27bb9072cbcbb"
+      },
+      "objdump": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wabt-native/wasm-objdump",
+        "bytes": 990704,
+        "sha256": "81fdaf1be4d31b49509eb1bb2b8d941e20ff8753642083bf07ad0bb31e1fdbc8"
+      },
+      "validator": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wabt-native/wasm-validate",
+        "bytes": 1332528,
+        "sha256": "b6313f8200403f4416c02ad1f65340447efdb0d1a2238f61fce32abc3de6b1f3"
+      },
+      "llvmDwarf": {
+        "path": "/home/seorii/.local/share/wasi-sdk-33/bin/llvm-dwarfdump",
+        "bytes": 144080,
+        "sha256": "0f281b5b88c8a7ba66a395676111813e91da6a64e57e0aabceeffed521ce9477"
+      },
+      "symbolizer": {
+        "path": "/home/seorii/.local/share/wasi-sdk-33/bin/llvm-symbolizer",
+        "bytes": 94240,
+        "sha256": "59a2ab24ff5ef0b17918b6fbdf62d735eb68e508d83f36de80c4ef54045647df"
+      },
+      "llvmObjdump": {
+        "path": "/home/seorii/.local/share/wasi-sdk-33/bin/llvm-objdump",
+        "bytes": 650384,
+        "sha256": "791e2169997517158d14cf2fc8e1723e89b0d58fe35bb4902641ba488392b8b6"
+      },
+      "objcopy": {
+        "path": "/home/seorii/.local/share/wasi-sdk-33/bin/llvm-objcopy",
+        "bytes": 155384,
+        "sha256": "f020ba49404039ce48e0449bf38c763a5a8e65fd9cfe7e9a26c3d78e21a98ee4"
+      },
+      "node": {
+        "path": "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "bytes": 126879696,
+        "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+      },
+      "chromium": {
+        "path": "/home/seorii/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome",
+        "bytes": 301186376,
+        "sha256": "377a9fc07b495c3b8d0ab8ec1fdfd153641759f9756fea34d8dfce4de82f5025"
+      },
+      "gcov": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc-native/gcc/gcov",
+        "bytes": 1697232,
+        "sha256": "9e681f58dfe9e82d8b98b602d7f4260f9d66b824a3d4f70e44fb3694537e4e30"
+      },
+      "gcovDump": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc-native/gcc/gcov-dump",
+        "bytes": 1432096,
+        "sha256": "6d4c0c401ea6f857d62c3b01b1e9d5e992e433c931be46e32f69d3b2d641c068"
+      }
+    },
+    "dwarfRecipes": {
+      "dwarf-fixtures.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/dwarf-fixtures.mjs",
+        "bytes": 15496,
+        "sha256": "94c9510d83a921091f012d3deda4030c6b0c04a089e6b5be2bca77794cebd0cd"
+      },
+      "dwarf-fixtures.test.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/dwarf-fixtures.test.mjs",
+        "bytes": 10698,
+        "sha256": "3db78b3ce174d0e9dbd864a683aa5ceefa43978e479a7966fc599fbe3d7dffd8"
+      },
+      "dwarf-inspect.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/dwarf-inspect.mjs",
+        "bytes": 20786,
+        "sha256": "43de4040e0951e59afa4890c7eb592a0d689007caf2cfd1f9e2ca953ddbabe4d"
+      },
+      "test-dwarf.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/test-dwarf.mjs",
+        "bytes": 48588,
+        "sha256": "23b03e12ee88517d7894bd374cef460ae78c99233960e4e172930324add06fb2"
+      },
+      "prepare-source.py": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/prepare-source.py",
+        "bytes": 5859,
+        "sha256": "aab5bb957d90f1e8eff999e2f751ba54b37ab3fd8efb2029c0d543b2bc8169f3"
+      },
+      "build-native.sh": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/build-native.sh",
+        "bytes": 4041,
+        "sha256": "9e986668497fcf388bad789bc998b0ba7fe326915b6d6385191ff592c983c679"
+      },
+      "build-wabt.sh": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/build-wabt.sh",
+        "bytes": 6606,
+        "sha256": "4cca114d9daf1b375e826da783f2faff5c63fdddbdcf9a6f778a059caa47031d"
+      },
+      "runtime.lock.json": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/runtime.lock.json",
+        "bytes": 2241,
+        "sha256": "07d7d2b9b96dd9f8a2c9db07dd252cafe5747b527083f25c7dfe59bf198b3ccf"
+      },
+      "coverage-fixtures.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/coverage-fixtures.mjs",
+        "bytes": 6246,
+        "sha256": "dc372ddc0f452616334b4a09588b94ffd7ae6502a3b82ffb27912ab62d234001"
+      },
+      "coverage-inspect.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/coverage-inspect.mjs",
+        "bytes": 7342,
+        "sha256": "5bcc6ac32b9cb2992a2b19b3c82ef3a37ce2160fcddc802debe3b10e73656733"
+      },
+      "symbol-alias-inspect.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/symbol-alias-inspect.mjs",
+        "bytes": 7722,
+        "sha256": "c00b7d632cdfa242195b4ee51929845d0faab283c4b1e8b31dbbfef53b78ba27"
+      },
+      "inspect-vector-abi.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/inspect-vector-abi.mjs",
+        "bytes": 5970,
+        "sha256": "e017791927d7782e4da9c92ec704adc1a504d4668f6be90bdec565d6b3554c12"
+      },
+      "build-libgcov.sh": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/build-libgcov.sh",
+        "bytes": 503,
+        "sha256": "ce7eb060e96c0b0c01924014dffbf6aa1a8d65aadf1d04ae73a3544b3e362e55"
+      },
+      "build-libgcov.py": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/build-libgcov.py",
+        "bytes": 11265,
+        "sha256": "cb6710a2571395eea92cada43a60ab1f979f12e6269069c08f0c1b10bccb6562"
+      }
+    },
+    "browserCompiler": {
+      "cc1.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/browser-compiler/cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1.wasm": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/browser-compiler/cc1.wasm",
+        "bytes": 15744192,
+        "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+      },
+      "cc1plus.mjs": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/browser-compiler/cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plus.wasm": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/browser-compiler/cc1plus.wasm",
+        "bytes": 17403705,
+        "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+      }
+    },
+    "bundleAssets": {
+      "cc1Js": {
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "cc1.wasm",
+        "bytes": 15744192,
+        "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+      },
+      "cc1plusJs": {
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "cc1plus.wasm",
+        "bytes": 17403705,
+        "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+      },
+      "asJs": {
+        "path": "as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "as.wasm",
+        "bytes": 644371,
+        "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+      },
+      "ldWasm": {
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "sysroot.tar",
+        "bytes": 26156544,
+        "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+      }
+    },
+    "runtime": {
+      "sysroot": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/runtime-current/sysroot",
+      "gnuSysroot": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libstdcxx-v2/sysroot",
+      "archives": {
+        "crt": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/runtime-current/sysroot/lib/wasm32-wasi/crt1-command.o",
+          "bytes": 1990,
+          "sha256": "27bf9846868f00d770b724fd0a27e22f799c6d550c335d5e8e770391d6ae3231"
+        },
+        "libc": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/runtime-current/sysroot/lib/wasm32-wasi/libc.a",
+          "bytes": 3085600,
+          "sha256": "d7ebab1b8ee60d06c31fe809c52b8fe8c12591d4bf1e8989431e67787eff3cf4"
+        },
+        "libm": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/runtime-current/sysroot/lib/wasm32-wasi/libm.a",
+          "bytes": 8,
+          "sha256": "f0a17a43c74d2fe5474fa2fd29c8f14799e777d7d75a2cc4d11c20a6e7b161c5"
+        },
+        "libstdcxx": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libstdcxx-v2/sysroot/lib/wasm32-wasi/libstdc++.a",
+          "bytes": 6461044,
+          "sha256": "c4ecd2f25c46083009d22aaef118fb281e2f3323be75690e6400d32338326221"
+        },
+        "builtins": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/runtime-current/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a",
+          "bytes": 456060,
+          "sha256": "b1e23c0376609e09052ff225f290d971b0f8eabd3ffd0737e5d0ebb10f1880d1"
+        },
+        "libgcov": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libgcov-current/sysroot/lib/wasm32-wasi/libgcov.a",
+          "bytes": 22730,
+          "sha256": "8020f0148728b7196c3ff335feaa56bcfd4136f073e1511ba76e9423a0a074c0"
+        },
+        "getpid": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libgcov-current/sysroot/lib/wasm32-wasi/libwasi-emulated-getpid.a",
+          "bytes": 1466,
+          "sha256": "3931dfd6b1873b4ef02d1e5408d7d28621c046bbdd2fb1ceca777b6522c750cc"
+        }
+      },
+      "importReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/runtime-current/runtime-build.json",
+        "bytes": 59741,
+        "sha256": "1e7c493dbf66e4ae2169638e70a338283434bb9f677653bb199c84e0b12310a8"
+      },
+      "gnuBuild": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libstdcxx-v2/build.json",
+        "bytes": 6524613,
+        "sha256": "7dd994d2c55aefc969adfbfd6021807b4401a5f2a0811cd35d5ea2b3d726e3ab"
+      },
+      "gnuQualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libstdcxx-v2/qualification/qualification.json",
+        "bytes": 13667,
+        "sha256": "42fb4f9e7e5f139dcad51d0aa98c753f66bb32f41ae2908afe8bad51e8fd2cd7"
+      },
+      "currentCompilerBound": true,
+      "coverageRoot": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libgcov-current",
+      "coverageBuild": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/libgcov-current/build.json",
+        "bytes": 155959,
+        "sha256": "675f4eee512a103bf71738a2e4a1748506708c690660f27bc9cb9a4b561f3fe2"
+      },
+      "coverageAnalysis": {
+        "sources": {
+          "gcov.cc": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc/gcc/gcov.cc",
+            "bytes": 116443,
+            "sha256": "ebd8ba8090bfa414aeaf352b7cf90b29d61a010aa5c20a4f24a61475ed9b81c5"
+          },
+          "gcov-dump.cc": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc/gcc/gcov-dump.cc",
+            "bytes": 14941,
+            "sha256": "83f61e8c23031fdf282dbcdd024fa81b015b0f95e7058c748d3f6ce057cf2d70"
+          },
+          "gcov-io.cc": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc/gcc/gcov-io.cc",
+            "bytes": 13649,
+            "sha256": "790d85deb0fd6f4874940bd61dcfa36078a34953af4086ff92231f865f85944b"
+          },
+          "gcov-io.h": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc/gcc/gcov-io.h",
+            "bytes": 16549,
+            "sha256": "8dce319d28a81b96c3315d66ee8050d285b2a92a63c92c310d3fa70a51653746"
+          },
+          "gcov-counter.def": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc/gcc/gcov-counter.def",
+            "bytes": 2120,
+            "sha256": "dabe0b51967c0b4989fec6e50888c4666e24615d40ca69aba37c64c2889ac735"
+          }
+        },
+        "buildMakefile": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc-native/gcc/Makefile",
+          "bytes": 191261,
+          "sha256": "6f6659af37e7be7d610a4e3d9dbd90cf441ed626e8bd91099dfc3c9cfebdf5d9"
+        },
+        "versionWord": "B70 ",
+        "jsonFormatVersion": "2"
+      }
+    },
+    "llvmVersion": "22.1.0-wasi-sdk",
+    "gccVersion": "17.0.0"
+  },
+  "nativeDwarf": {
+    "status": "passed",
+    "counts": {
+      "cases": 11,
+      "sourceUnits": 15,
+      "normalExecutionsPerHost": 11,
+      "trappedExecutionsPerHost": 10,
+      "liveSourceFrames": 18,
+      "controls": 14,
+      "diagnostics": 28,
+      "combinations": 2,
+      "actualLocalIndexBoundaries": [
+        127,
+        128,
+        16383,
+        16384
+      ]
+    },
+    "frameCounts": {
+      "sourceFrames": 18,
+      "liveFrameRecords": 18,
+      "framesWithCheckedNamedVariables": 14,
+      "checkedNamedVariableLocations": 38,
+      "emptyValueFrameRecords": 4
+    },
+    "reopenedInputs": 1398,
+    "reopenedArtifacts": 316,
+    "gateTests": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "genuinePositive": 1,
+      "genuineMutations": 2,
+      "rejectionEnvelopesAndOptions": 13
+    },
+    "gateResult": {
+      "programs": 23,
+      "sourceUnits": 47,
+      "liveFrames": 18,
+      "reopenedFiles": 1639
+    },
+    "sourceLineOracle": "Independent fixture source lines compared to actual trap PCs and official LLVM lookup; exact leaf line/caller line windows.",
+    "analysisCopyBoundary": "Official llvm-objcopy removes only name/EXPORT on analysis-only copy to avoid pinned llvm-symbolizer symbol precedence; original CODE/debug bytes verified equal, original module executed and original llvm-dwarfdump lookup independently checked."
+  },
+  "inheritedNative": {
+    "status": "passed",
+    "suites": 25,
+    "frozenInputs": 19828,
+    "qualifiedArtifacts": 27232,
+    "preservedFailedAttemptArtifacts": 2213,
+    "totalPreservedArtifactReceipts": 29445,
+    "qualifiedArtifactBoundary": "27,232 qualified outputs; 2,213 preserved failed-vector files excluded.",
+    "matrices": [
+      {
+        "id": "native-smoke",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/native-programs/provenance.json",
+          "bytes": 75184,
+          "sha256": "2930e07c6c7ed0a723ef9c01dbc67df4ded0dee93dc4b317ce1f969c2f5486b7"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/native-programs/provenance.json",
+          "bytes": 75133,
+          "sha256": "f0a3605c64f5c18db27090199fef76488d6ba8643e2e3158c1f089487a159bef"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 13
+        }
+      },
+      {
+        "id": "simd-header-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/simd-header-qualification/qualification.json",
+          "bytes": 52078737,
+          "sha256": "241dc52417d8a6ab26923432d5f76fc39bdf464836e5b403b5d289229b2755ad"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/simd-header-qualification/qualification.json",
+          "bytes": 52151704,
+          "sha256": "297b072cbb96e110e697e84b30d6c4089e6937bf7202d329601d9d7be704aadd"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 680,
+          "diagnostics": 296,
+          "defaultControls": 4
+        }
+      },
+      {
+        "id": "vector-subreg-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/vector-subreg-qualification/report.json",
+          "bytes": 7674794,
+          "sha256": "3a27d63cc0a26376f8d093d9bc192fe94deef3779c5b3caecbaa473835d23baf"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/vector-subreg-qualification/report.json",
+          "bytes": 7678286,
+          "sha256": "96882e3d91ba292074b7de88bf8ce252a6765eb35e056b447612eabb2da0f691"
+        },
+        "counts": {
+          "total": 48,
+          "passed": 48,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 48
+        }
+      },
+      {
+        "id": "half-vector-abi-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/half-vector-abi-qualification/report.json",
+          "bytes": 213877,
+          "sha256": "f26bea3febbd1d922fef2b1c87496c3ca0e2e1f981280c188fd6b15f8c05535d"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/half-vector-abi-qualification/report.json",
+          "bytes": 215591,
+          "sha256": "87f6280650c2fd46f3d2818dea9adf4dfcb09c4eb90aaca0cf68494f20fed86a"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 48
+        }
+      },
+      {
+        "id": "gnu-float128-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gnu-float128-qualification/report.json",
+          "bytes": 9477023,
+          "sha256": "526ceab600e13a33682e0f9a3b94151265bd9fcc165f2ab111795a314e26b718"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/gnu-float128-qualification/report.json",
+          "bytes": 9483224,
+          "sha256": "354244f66e94914af4f0f42c7887319bf868c1e6aa49e04a46df425c74df9c51"
+        },
+        "counts": {
+          "total": 78,
+          "passed": 78,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 78
+        }
+      },
+      {
+        "id": "abi-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/abi-qualification/report.json",
+          "bytes": 1285767,
+          "sha256": "536838be8370e76a5046ca32dfba9f9780d59bb8b0bad58697a87e5fa94a0974"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/abi-qualification/report.json",
+          "bytes": 1296585,
+          "sha256": "222ed203f13679d9dc2520512e8c3d5732ab48580fe13611aedefeb4cfaf8dfa"
+        },
+        "counts": {
+          "total": 200,
+          "passed": 200,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 200
+        }
+      },
+      {
+        "id": "atomic-abi-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/atomic-abi-qualification/report.json",
+          "bytes": 57677,
+          "sha256": "6712ba6225a6bd34c828a560791e1fe0880fa52c711ae40875cf1d8bccd0a975"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/atomic-abi-qualification/report.json",
+          "bytes": 58250,
+          "sha256": "24124d73aa8a3cdd7df971f34e63109c4295ed73300155ce64724e61b027ec57"
+        },
+        "counts": {
+          "total": 8,
+          "passed": 8
+        },
+        "matrixEntries": {
+          "cases": 8
+        }
+      },
+      {
+        "id": "simd-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/simd-qualification/qualification.json",
+          "bytes": 544040,
+          "sha256": "ac1e2b4ba087e9376b8dafbe39fa4cfae170af8994423c37ef2c166a103c58f5"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/simd-qualification/qualification.json",
+          "bytes": 545276,
+          "sha256": "7b2f86a34b1f35796578edf3b85716243852d5eba43b1ce2f3021a86a8198916"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 25
+        }
+      },
+      {
+        "id": "simd-extended-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/simd-extended-qualification/qualification.json",
+          "bytes": 3229947,
+          "sha256": "aad672edf714e48469d16db49273611cb4b96ad10b0c5edd6b3ef5565b3efcd9"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/simd-extended-qualification/qualification.json",
+          "bytes": 3233889,
+          "sha256": "effc8f5bb61d3670c9fd29e9392521bf503961afd2498558afd171c4999345a0"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 62
+        }
+      },
+      {
+        "id": "simd-saturating-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/simd-saturating-qualification/qualification.json",
+          "bytes": 1455996,
+          "sha256": "83a62c73acbd3636cd20ab2b0411229174dccc145d2ad8a37a801c00ae3aa2a8"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/simd-saturating-qualification/qualification.json",
+          "bytes": 1459447,
+          "sha256": "9abda318928d5d9ef567958661184ccacd1d84e813022efe80e816a36e43a73e"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 36,
+          "diagnostics": 80
+        }
+      },
+      {
+        "id": "simd-conversions-qualification",
+        "reused": true,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/simd-conversions-qualification/qualification.json",
+          "bytes": 9310443,
+          "sha256": "8a37af2206a8bd5d5a7959a5b79371bff12dd42e3c9dd869745de15e321825cc"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/simd-conversions-qualification/qualification.json",
+          "bytes": 9324601,
+          "sha256": "ffe96bc357abc599ca1d3cee406d7f4ff39258521ff866f1a5b6674493c7b46d"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 176,
+          "diagnostics": 192,
+          "defaultControls": 12
+        }
+      },
+      {
+        "id": "vector-abi-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/vector-abi-qualification-v2/report.json",
+          "bytes": 65215497,
+          "sha256": "f3f2c17aa51b24dd46aecf2641883a6088ad063bad987585c7ad49a45dff7d33"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/vector-abi-qualification/report.json",
+          "bytes": 65234154,
+          "sha256": "1e7448738e830144bc897325737d8b5ec4b3cdee6d8f1c31332457cc7cd58fa2"
+        },
+        "counts": {
+          "total": 684,
+          "passed": 684,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 684
+        }
+      },
+      {
+        "id": "empty-abi-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/empty-abi-qualification/report.json",
+          "bytes": 6573538,
+          "sha256": "49f62493df37b708994a2e59414f955f042848d4b4acc176a946f787c2a48706"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/empty-abi-qualification/report.json",
+          "bytes": 6585679,
+          "sha256": "44e8f7e4f9e98faac482f534b7d7cffef8201eac9c862b6d76bfffcf9352633c"
+        },
+        "counts": {
+          "total": 112,
+          "passed": 112,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 112
+        }
+      },
+      {
+        "id": "wide-builtins-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wide-builtins-qualification/report.json",
+          "bytes": 8437963,
+          "sha256": "e7a3c32be2629b3f0b249b7fab9ee0dfc14a70bd4c620c9d507ee2695e09b5b8"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/wide-builtins-qualification/report.json",
+          "bytes": 8441899,
+          "sha256": "ed3a97b1aa80c9f0ce1f7d2d7b8970592e86571c6f898104e7e4e69549f30ac5"
+        },
+        "counts": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 50
+        }
+      },
+      {
+        "id": "wide-bitfields-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/wide-bitfields-qualification/report.json",
+          "bytes": 11000137,
+          "sha256": "83515d036b9c24399d43f27aa64ab208cda2ad3be796a2b9041a4729c3161300"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/wide-bitfields-qualification/report.json",
+          "bytes": 11006245,
+          "sha256": "b2ec5dafb9e521c8146f750c117a03e998c195a4c080657841bf05513d92038f"
+        },
+        "counts": {
+          "total": 72,
+          "passed": 72,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 72
+        }
+      },
+      {
+        "id": "singleton-bitfield-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/singleton-bitfield-qualification/report.json",
+          "bytes": 7692750,
+          "sha256": "2a96c0bc43829b98f2892b4df76f7dc45abe253876d329552a075dfff9d66250"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/singleton-bitfield-qualification/report.json",
+          "bytes": 7696578,
+          "sha256": "30ca2cfbe98e48e02912d104dbff4f48dfbe8c21904d4fd6ac277c7207c28eb0"
+        },
+        "counts": {
+          "total": 32,
+          "passed": 32,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 32
+        }
+      },
+      {
+        "id": "anonymous-bitfield-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/anonymous-bitfield-qualification/report.json",
+          "bytes": 17068040,
+          "sha256": "c57cef740764ad707a2ba96bc2ec383c2cad89c05f11edbf9e370ec87c491ffd"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/anonymous-bitfield-qualification/report.json",
+          "bytes": 17084156,
+          "sha256": "da4100829eb7c6555a1bd142c376a29893b6d7f9c37fd3de2fd42130300d5a28"
+        },
+        "counts": {
+          "total": 160,
+          "passed": 160,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 160
+        }
+      },
+      {
+        "id": "long-double-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/long-double-qualification/report.json",
+          "bytes": 14252772,
+          "sha256": "218468522f10c57f184d86bc12e8b8166ba06a74e5ba12d6f37c7184c190f06c"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/long-double-qualification/report.json",
+          "bytes": 14264094,
+          "sha256": "2c1c72535e4a94a7001785b296d7a9b7d359c2783580f0b6cd4683742983ad2f"
+        },
+        "counts": {
+          "total": 124,
+          "passed": 124,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 124
+        }
+      },
+      {
+        "id": "int128-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/int128-qualification/report.json",
+          "bytes": 13884671,
+          "sha256": "2bbfa9a6d1b7f129d129759875990b985151c58f7bb95be9b360c14d54eed7af"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/int128-qualification/report.json",
+          "bytes": 13894880,
+          "sha256": "82e8dbe04a22321603b15931b4c722ba3a170cf4fa03e4c3406805e6c90e6d82"
+        },
+        "counts": {
+          "total": 116,
+          "passed": 116,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 116
+        }
+      },
+      {
+        "id": "fp-extension-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/fp-extension-qualification/report.json",
+          "bytes": 12290406,
+          "sha256": "bd0f97de46f36ad7d1797ea6de6f1e5ed1c55b8b469041a7d71f28a2694d3a9f"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/fp-extension-qualification/report.json",
+          "bytes": 12300273,
+          "sha256": "f88b08ac15d36ec8f00fe5d8247ad07bd239b6abc4e789baf16750b9c09e2338"
+        },
+        "counts": {
+          "total": 124,
+          "passed": 124,
+          "failed": 0
+        },
+        "matrixEntries": {
+          "cases": 124
+        }
+      },
+      {
+        "id": "symbol-alias-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/symbol-alias-qualification-v2/qualification.json",
+          "bytes": 2208178,
+          "sha256": "35e05ffa9ccc622446eb0f6c31006f9aa620551163a8db39d8cdc1d7330d3e33"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/symbol-alias-qualification-v2/qualification.json",
+          "bytes": 2211231,
+          "sha256": "c02fcd93f3c1077cc6e8e520f5af93ae0cec1b492aae12b8ae9cf636888ae5e3"
+        },
+        "counts": {
+          "programs": 106,
+          "diagnostics": 40,
+          "linkRejections": 32
+        },
+        "matrixEntries": {
+          "cases": 106,
+          "diagnostics": 40,
+          "negativeLinks": 16
+        }
+      },
+      {
+        "id": "symbol-alias-assembler-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/symbol-alias-assembler-qualification/report.json",
+          "bytes": 1891812,
+          "sha256": "daa044c6e0a317509b3c409b931cc679ffa67e7c9bd79a5c2e32c530c0b62d93"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/symbol-alias-assembler-qualification/report.json",
+          "bytes": 1901813,
+          "sha256": "7add31f368da29374fd34a291b240a3e4995ce6ecd48fe5e98f7382b93d3a6c7"
+        },
+        "counts": {
+          "checks": 239,
+          "commands": 694,
+          "executions": 108,
+          "roundtrips": 110,
+          "rejections": 21
+        },
+        "matrixEntries": {
+          "cases": 239
+        }
+      },
+      {
+        "id": "target-features-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/target-features-qualification/qualification.json",
+          "bytes": 241288,
+          "sha256": "5ab3226389d7eb006daa6264ee79ad6068ac09dde0433459a3a141581f34f60f"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/target-features-qualification/qualification.json",
+          "bytes": 242170,
+          "sha256": "bb65eb1edfa07d6f12abd9496b4b1022031008f7bf34a29912256a4f47fae503"
+        },
+        "counts": null,
+        "matrixEntries": {
+          "cases": 6,
+          "watCases": 62
+        }
+      },
+      {
+        "id": "weakref-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/weakref-qualification/qualification.json",
+          "bytes": 4161817,
+          "sha256": "c0e120da030fcc265e5aad8d33bdcdba904cfc479573a9430643dff095aa0569"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/weakref-qualification/qualification.json",
+          "bytes": 4184480,
+          "sha256": "470101ffa1da21d708292f56f14874d5303e4224d9cc84e7c2710eb72e5ab29d"
+        },
+        "counts": {
+          "units": 232,
+          "cases": 528,
+          "runtimePasses": 480,
+          "linkRejections": 48
+        },
+        "matrixEntries": {
+          "cases": 528,
+          "units": 232
+        }
+      },
+      {
+        "id": "rtti-qualification",
+        "reused": false,
+        "report": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/rtti-qualification/qualification.json",
+          "bytes": 2077696,
+          "sha256": "f4bcb40e52675c27d3f6e5f6842028c33395014f3f862d2f1f8c23e07cb0ac0d"
+        },
+        "reference": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-coverage-82-20261031/out/issue82-build/work/rtti-qualification/qualification.json",
+          "bytes": 2083526,
+          "sha256": "d738ccc75a5847d67c80ecf04784d4a5e31b263954e748fc94a4feb6520bebf3"
+        },
+        "counts": {
+          "units": 74,
+          "cases": 96,
+          "runtimePasses": 88,
+          "linkRejections": 8,
+          "exceptionBoundaries": 8,
+          "diagnostics": 8
+        },
+        "matrixEntries": {
+          "cases": 96,
+          "diagnostics": 8,
+          "units": 74,
+          "exceptionBoundaries": 8
+        }
+      }
+    ],
+    "coverage": {
+      "report": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/coverage-qualification-v1/qualification.json",
+        "bytes": 2986685,
+        "sha256": "682da772de22cb8389698e4dd17c934316ee20f3dc8f0d0655a313d0ed5da0e2"
+      },
+      "counts": {
+        "units": 36,
+        "cases": 28,
+        "coverage": 16,
+        "controls": 12,
+        "nativeExecutions": 32,
+        "profileExecutions": 20,
+        "metadataControls": 8,
+        "diagnostics": 120
+      },
+      "declaredInputsReopened": 1622
+    }
+  },
+  "standardWorker": {
+    "status": "passed",
+    "counts": {
+      "chromium": 1734,
+      "nodeWasi": 1734,
+      "objects": 1504,
+      "wat": 1504,
+      "objectSignatureChecks": 382
+    },
+    "opcodeChecks": 979,
+    "receipts": [
+      {
+        "name": "rtti",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-rtti-inspection.json",
+          "bytes": 334034,
+          "sha256": "e6c6bbd89ae033eb530dc67f7cf2c26e280a06d0a4ece5900085f24fb12d14dc"
+        },
+        "counts": {
+          "chromium": 27,
+          "nodeWasi": 27,
+          "objects": 27,
+          "wat": 27,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "weakref",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-weakref-inspection.json",
+          "bytes": 369175,
+          "sha256": "68f6a3937562d2e04a55b6d4106b72a2409574d4f0839b97d23c6c06bfb0ecc3"
+        },
+        "counts": {
+          "chromium": 148,
+          "nodeWasi": 148,
+          "objects": 148,
+          "wat": 148,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "symbol-alias",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-symbol-alias-inspection.json",
+          "bytes": 65853,
+          "sha256": "521b89ac468b5ea611c8e48d17f3f67f51e0dfdecd8737b649b712bee65826c8"
+        },
+        "counts": {
+          "chromium": 28,
+          "nodeWasi": 28,
+          "objects": 28,
+          "wat": 28,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "header",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-header-inspection.json",
+          "bytes": 20856432,
+          "sha256": "007b71f5c60a65e61e922954de0f620a83aded5adc5c95ef28694947aec8377e"
+        },
+        "counts": {
+          "chromium": 680,
+          "nodeWasi": 680,
+          "objects": 680,
+          "wat": 680,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "vector-subreg",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-vector-subreg-inspection.json",
+          "bytes": 45634,
+          "sha256": "bfb7b2fc2f07811f4a41809fdd48c739fe502a826649ae2f477dd1543b347d5a"
+        },
+        "counts": {
+          "chromium": 24,
+          "nodeWasi": 24,
+          "objects": 24,
+          "wat": 24,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778449,
+          "totalUncompressedBytes": 82258433,
+          "actualInitialResponseBodyBytes": 30092104,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "conversions",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-conversions-inspection.json",
+          "bytes": 4982634,
+          "sha256": "e8894014e4d00ca5aa04ee09642da6ce2d1814c243c13fc41acd645549c9bf4b"
+        },
+        "counts": {
+          "chromium": 176,
+          "nodeWasi": 176,
+          "objects": 176,
+          "wat": 176,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "gnu-float128",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-gnu-float128-inspection.json",
+          "bytes": 105216,
+          "sha256": "4d8db140088e9d7025d78ec8f0f10ff988bcd9b4f12595d9a8288a7a83917116"
+        },
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 22
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "saturating",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-saturating-inspection.json",
+          "bytes": 86160,
+          "sha256": "ba602abfc27f75acbf47f3d04130ab28e1a564cdc6bc1a8d6c9e2dffdd076f93"
+        },
+        "counts": {
+          "chromium": 36,
+          "nodeWasi": 36,
+          "objects": 36,
+          "wat": 36,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "anonymous-bitfield",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-anonymous-bitfield-inspection.json",
+          "bytes": 96106,
+          "sha256": "4e706aa32a133bf7e1e3298133e733107fac0c9ee2a8416deae35a8868d5d5a1"
+        },
+        "counts": {
+          "chromium": 40,
+          "nodeWasi": 40,
+          "objects": 40,
+          "wat": 40,
+          "objectSignatureChecks": 160
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "empty-abi",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-empty-abi-inspection.json",
+          "bytes": 77745,
+          "sha256": "50d8c4e272e4553c473fc890330ef44af8f723cfa4b5201ac42b9b6e6d3b253e"
+        },
+        "counts": {
+          "chromium": 28,
+          "nodeWasi": 28,
+          "objects": 28,
+          "wat": 28,
+          "objectSignatureChecks": 168
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "singleton-bitfield",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-singleton-bitfield-inspection.json",
+          "bytes": 22865,
+          "sha256": "1e1eb4a3647e23622cc4ac89958604cca255b8e76eaa1173981cebe57e2419c1"
+        },
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 8,
+          "wat": 8,
+          "objectSignatureChecks": 32
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "basic",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-basic-inspection.json",
+          "bytes": 14810,
+          "sha256": "1b98a5d2734cd7a2f11d8c8ba9c8714c9c3302c1536f0aa4fa51cf4b889bf646"
+        },
+        "counts": {
+          "chromium": 17,
+          "nodeWasi": 17,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778449,
+          "totalUncompressedBytes": 82258433,
+          "actualInitialResponseBodyBytes": 30092104,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "scalar-abi",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-scalar-abi-inspection.json",
+          "bytes": 20168,
+          "sha256": "803fc8cd60680c63b88c7543fe6653edbddf6b77f3119daeae51656e9c07341e"
+        },
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "atomic",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-atomic-inspection.json",
+          "bytes": 9432,
+          "sha256": "576fb1cfa3cba091eb40c3dc8c1d7c48cda62a558a251175a5f4d13be1519ce2"
+        },
+        "counts": {
+          "chromium": 8,
+          "nodeWasi": 8,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "simd",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-simd-inspection.json",
+          "bytes": 45944,
+          "sha256": "a5bef72964bce8ab13d76e04a460064b7e7111dd7dc6713bc7b4783392e2243b"
+        },
+        "counts": {
+          "chromium": 25,
+          "nodeWasi": 25,
+          "objects": 25,
+          "wat": 25,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778449,
+          "totalUncompressedBytes": 82258433,
+          "actualInitialResponseBodyBytes": 30092104,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "extended",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-extended-inspection.json",
+          "bytes": 114847,
+          "sha256": "2cd317fb4d227dd62c5a6838b507a55627ef3a086cc3c730466c72e927c2474c"
+        },
+        "counts": {
+          "chromium": 62,
+          "nodeWasi": 62,
+          "objects": 62,
+          "wat": 62,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778449,
+          "totalUncompressedBytes": 82258433,
+          "actualInitialResponseBodyBytes": 30092104,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "vector-abi",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-vector-abi-inspection.json",
+          "bytes": 122153,
+          "sha256": "d2df0dea2ab2e39a3964f9c63022f4530e6c0106668e3b22cd3a5c89381260bf"
+        },
+        "counts": {
+          "chromium": 180,
+          "nodeWasi": 180,
+          "objects": 0,
+          "wat": 0,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "long-double",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-long-double-inspection.json",
+          "bytes": 130437,
+          "sha256": "dc217e3f6c7e97875ab3466027068a29a8041c3b283cd60c2cf2841a7ed7094c"
+        },
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778449,
+          "totalUncompressedBytes": 82258433,
+          "actualInitialResponseBodyBytes": 30092104,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "int128",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-int128-inspection.json",
+          "bytes": 106401,
+          "sha256": "c2129aa005485d9e9646c04317dbae4b42ab62ef512f4b870def32cec0c071cf"
+        },
+        "counts": {
+          "chromium": 42,
+          "nodeWasi": 42,
+          "objects": 42,
+          "wat": 42,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "wide-integer",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-wide-integer-inspection.json",
+          "bytes": 99343,
+          "sha256": "dc6a0af1a7d5bb03566f74310ff566d8840e92e19fbd6c7e523beee9107517f3"
+        },
+        "counts": {
+          "chromium": 52,
+          "nodeWasi": 52,
+          "objects": 52,
+          "wat": 52,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      },
+      {
+        "name": "fp-extension",
+        "file": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-fp-extension-inspection.json",
+          "bytes": 133727,
+          "sha256": "5f56c84748a0188bd9262058c7aad81b8391840187f07efc8e8e301c0f2c375b"
+        },
+        "counts": {
+          "chromium": 50,
+          "nodeWasi": 50,
+          "objects": 50,
+          "wat": 50,
+          "objectSignatureChecks": 0
+        },
+        "initialAssets": {
+          "encoding": "gzip-level-9",
+          "note": "Reproducible compressed payload estimate; excludes HTTP headers and browser SDK modules, which are measured separately.",
+          "manifest": {
+            "bytes": 26139,
+            "gzipBytes": 7758,
+            "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+          },
+          "assets": [
+            {
+              "name": "cc1Js",
+              "path": "cc1.mjs",
+              "bytes": 133499,
+              "gzipBytes": 31635,
+              "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+            },
+            {
+              "name": "cc1Wasm",
+              "path": "cc1.wasm",
+              "bytes": 15744192,
+              "gzipBytes": 5585216,
+              "sha256": "4d780611ec08ffee6173c8ba6b34a85de14e566e7a654affc412f824c64f5e4d"
+            },
+            {
+              "name": "cc1plusJs",
+              "path": "cc1plus.mjs",
+              "bytes": 139030,
+              "gzipBytes": 32900,
+              "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+            },
+            {
+              "name": "cc1plusWasm",
+              "path": "cc1plus.wasm",
+              "bytes": 17403705,
+              "gzipBytes": 6288581,
+              "sha256": "252326c4ff9a47d4c1d72d067bcde8d8cf28b9cbf72f5d3f3464169135241263"
+            },
+            {
+              "name": "asJs",
+              "path": "as.mjs",
+              "bytes": 61491,
+              "gzipBytes": 17414,
+              "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+            },
+            {
+              "name": "asWasm",
+              "path": "as.wasm",
+              "bytes": 644371,
+              "gzipBytes": 222810,
+              "sha256": "c302da975db538980f6655dca6a66c7f82c176a02bd0a457ece783e943b50031"
+            },
+            {
+              "name": "ldWasm",
+              "path": "ld.wasm",
+              "bytes": 16171013,
+              "gzipBytes": 6417339,
+              "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+            },
+            {
+              "name": "sysroot",
+              "path": "sysroot.tar",
+              "bytes": 26156544,
+              "gzipBytes": 5710002,
+              "sha256": "3a4d0b480b8f2b6f2508e309dc51dc9c7582a97db8fc810c77b43904ad79b9c2"
+            }
+          ],
+          "uncompressedBytes": 76479984,
+          "gzipBytes": 24313655,
+          "sdkUncompressedBytes": 5778437,
+          "totalUncompressedBytes": 82258421,
+          "actualInitialResponseBodyBytes": 30092092,
+          "delivery": "Bundle gzip level 9; SDK modules uncompressed from the isolated Vite qualification server."
+        },
+        "browser": "156.0.8078.4"
+      }
+    ],
+    "diagnostics": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 959019,
+      "sha256": "be17686fdbf6d345cb993003cde2c0be5e47a0a68212e9c4b2785798a4c34dcd"
+    },
+    "diagnosticCounts": {
+      "diagnostics": 592,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "symbolAliases": 24,
+      "defaultControls": 4
+    },
+    "rawDefaultControlExecutions": {
+      "chromium": 4,
+      "nodeWasi": 4
+    },
+    "aliasControls": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-alias-controls.json",
+      "bytes": 964901,
+      "sha256": "6dc18beb2d3feb6340c03cde11f8797ba9f8460761f2fc8e7e20426a7894c616"
+    },
+    "aliasCounts": {
+      "providers": 26,
+      "objects": 50,
+      "linkControls": 8,
+      "linkRejections": 16,
+      "assemblerObjects": 110,
+      "assemblerRejections": 18
+    },
+    "weakrefControls": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-weakref-controls.json",
+      "bytes": 3882554,
+      "sha256": "51e20974dff62bf2402774898bcfc22657d6cd5d874f021db6c2d8c662935887"
+    },
+    "weakrefCounts": {
+      "units": 232,
+      "cases": 528,
+      "runtimePasses": 480,
+      "linkRejections": 48,
+      "gccObjects": 118,
+      "clangObjects": 114,
+      "chromiumPrograms": 480,
+      "nodePrograms": 480
+    },
+    "rttiControls": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-rtti-controls.json",
+      "bytes": 1908364,
+      "sha256": "2a8ae91a888ab0ec6645cee04a8c2259107dde9d797d1ba1ff3bd91f878eda53"
+    },
+    "rttiCounts": {
+      "units": 74,
+      "cases": 96,
+      "runtimePasses": 88,
+      "linkRejections": 8,
+      "gccObjects": 42,
+      "clangObjects": 32,
+      "chromiumPrograms": 88,
+      "nodePrograms": 88,
+      "exceptionLinkOnly": 8,
+      "gccDiagnostics": 4
+    },
+    "rttiReinspection": {
+      "status": "passed",
+      "qualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/worker-rtti-controls.json",
+        "bytes": 1908364,
+        "sha256": "2a8ae91a888ab0ec6645cee04a8c2259107dde9d797d1ba1ff3bd91f878eda53"
+      },
+      "counts": {
+        "units": 74,
+        "cases": 96,
+        "runtimePasses": 88,
+        "linkRejections": 8,
+        "gccObjects": 42,
+        "clangObjects": 32,
+        "chromiumPrograms": 88,
+        "nodePrograms": 88,
+        "exceptionLinkOnly": 8,
+        "gccDiagnostics": 4
+      },
+      "objectArtifacts": 74,
+      "programArtifacts": 96,
+      "runtimePrograms": 88,
+      "exceptionPrograms": 8,
+      "diagnosticSources": 8,
+      "workerReopenedFiles": 399,
+      "nativeReopenedFiles": 1753
+    },
+    "targetFeatures": {
+      "assembler": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/wabt-target-features.json",
+        "bytes": 46004,
+        "sha256": "e7fdf7b3af13b98d4c341247cee5f8d85ed788b71b804557e96d7ac3b5c44b5f"
+      },
+      "sdk": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/worker-qualification-final/target-features/qualification.json",
+        "bytes": 119128,
+        "sha256": "eb5ac80baa90476bc7dd6a5942f0be5da80192bbfce725f93ebbb66147dd1fb2"
+      },
+      "assemblerCases": 62,
+      "chromiumPrograms": 6,
+      "nodePrograms": 6
+    },
+    "sourceSnapshot": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/worker-inputs-final.json",
+      "bytes": 1127225,
+      "sha256": "af611a0f13504386aa55614e13520695c0955cc0c162f2f8ddd45e768e3cfaaa"
+    },
+    "manifest": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 26139,
+      "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+    },
+    "inputsUnchanged": true,
+    "engineProbe": {
+      "simd128": true,
+      "kind": "actual-SDK-v128-const-drop-WebAssembly.validate",
+      "host": "chromium-worker",
+      "mocked": false
+    }
+  },
+  "publicSdkDebug": {
+    "status": "passed",
+    "qualification": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/qualification/qualification.json",
+      "bytes": 160486864,
+      "sha256": "53ca5ed0a6179876d42e41721f666fc1f7310b7af70685b5956a975de996242f"
+    },
+    "counts": {
+      "programs": 22,
+      "combinations": 4,
+      "assemblyOutputs": 4,
+      "objectOutputs": 4,
+      "debugObjectCompositions": 4,
+      "defaultFalsePairs": 16,
+      "rejections": 28,
+      "actualTrapsPerHost": 20,
+      "actualLocalIndices": [
+        127,
+        128,
+        16383,
+        16384,
+        127,
+        128,
+        16383,
+        16384
+      ]
+    },
+    "frameCounts": {
+      "sourceFrames": 36,
+      "liveFrameRecords": 36,
+      "framesWithCheckedNamedVariables": 28,
+      "checkedNamedVariableLocations": 76,
+      "emptyValueFrameRecords": 8
+    },
+    "frameCountsPerCompilerHost": {
+      "chromium": {
+        "liveVariableFrameRecords": 18,
+        "framesContainingCheckedNamedValues": 14,
+        "checkedNamedVariableLocations": 38,
+        "framesWithoutNamedValueEntries": 4
+      },
+      "node": {
+        "liveVariableFrameRecords": 18,
+        "framesContainingCheckedNamedValues": 14,
+        "checkedNamedVariableLocations": 38,
+        "framesWithoutNamedValueEntries": 4
+      }
+    },
+    "topLevelCommandRecords": 449,
+    "compilerSnapshots": 98,
+    "declaredInputs": 818,
+    "artifacts": 314,
+    "pathsReopened": 1133,
+    "uniquePhysicalContentHashes": 1017,
+    "normalExecutions": {
+      "publicChromiumWorker": 22,
+      "nodeWasi": 22
+    },
+    "trapExecutions": {
+      "nodeWasi": 20,
+      "separateChromiumCdp": 20
+    },
+    "commandCountingBoundary": "Top-level records include Git, Node and native WABT; 449 is not an LLVM-only command count.",
+    "classification": {
+      "compilerImplementation": "wasm32-emscripten",
+      "outputTarget": "wasm32-wasi",
+      "compilerHosts": [
+        "chromium-public-sdk-worker",
+        "node-sdk-compiler-module-url-adapter"
+      ],
+      "nativeCompilerUsedForSdkCompilation": false,
+      "nodeAdapter": {
+        "kind": "pinned-physical-module-for-verified-blob",
+        "productionSourceChanged": false,
+        "loaders": [
+          {
+            "name": "cc1Js",
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/candidate-bundle/cc1.mjs",
+            "bytes": 133499,
+            "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3",
+            "verifiedBlobBytes": true
+          },
+          {
+            "name": "cc1plusJs",
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/candidate-bundle/cc1plus.mjs",
+            "bytes": 139030,
+            "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37",
+            "verifiedBlobBytes": true
+          },
+          {
+            "name": "asJs",
+            "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/candidate-bundle/as.mjs",
+            "bytes": 61491,
+            "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb",
+            "verifiedBlobBytes": true
+          }
+        ]
+      },
+      "executionHosts": [
+        "actual public Chromium Worker normal run",
+        "same original artifact independent Node WASI normal/trap",
+        "same original artifact separate Chromium CDP WASI trap/live values"
+      ],
+      "assemblyModeInspection": "Native WABT assembles only the emitted assembly as an independent consumer; public object/executable production uses actual Wasm-hosted GCC/WABT."
+    },
+    "originalSourceAndHeaderBytesPreserved": true,
+    "fixtureAdaptation": "All original source/header bytes unchanged; exact header mirrors left/record.h and right/record.h explicitly recorded to provide quoted include resolution without arbitrary SDK include flags."
+  },
+  "producerUnits": {
+    "passed": 162,
+    "optionalSkipped": 4,
+    "separateGatePassed": 16,
+    "separateGateSkipped": 0,
+    "overlappingRejectionCases": 13,
+    "countingBoundary": "The separate gate is not 16 additional unique ordinary tests."
+  },
+  "sdkValidation": {
+    "gccFocusedTests": 188,
+    "coreAndGccBuildsAndTypes": "passed originalv1 inputstate; currentproduction/test/core sourceidentities reopened equal",
+    "v1UnchangedSourceCount": null,
+    "sourceReceipt": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/validate-v1-inputs.json",
+      "bytes": 20244,
+      "sha256": "d91814c65baf7087e416509229e5cb10506ee9d6e3dd9292a38b63bb9a35ac89"
+    },
+    "result": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/validate-v1-status.json",
+      "bytes": 1990,
+      "sha256": "ea90559d55fbaa52562e979e3a59c103be106a6a7faf9e97fc4fbd2ea7ac1f44"
+    },
+    "budgetGuardTests": 36,
+    "budgetResult": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/budget-validation-v1-status.json",
+      "bytes": 1231,
+      "sha256": "95225a07c84aeb47baf814c445ecabe288c355977690fa6610aa9068ee78eeaa"
+    },
+    "exactPackedResult": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/packed-consumer-v5/status.json",
+      "bytes": 5521,
+      "sha256": "fade781167139b32b31a8d8907d1affd639136a8ea5b672b9ad70ec4de0ed415"
+    },
+    "packedHeadBytes": 2723557,
+    "packedHeadFiles": 182,
+    "packedHeadPackages": 4,
+    "baseToHeadGrowthBytes": 2235,
+    "gccAllowance": "2.5MiB +101KiB",
+    "gccHeadroomBytes": 1307,
+    "aggregateAllowance": "40MiB +700KiB; deltaonly,noaggregateinstallmeasurement",
+    "v1SourceStateNote": "SDKproduction source and testcode remain unchanged from original188-test build; actual object/metadata fixtures were subsequently replaced and relevant21 parser tests rerun. Do not claim all original fixturedata unchanged.",
+    "genuineFixture": {
+      "result": {
+        "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/genuine-fixture-validation-v1/status.json",
+        "bytes": 6092,
+        "sha256": "c92f91842bf7a52104b535729df9d814b0da54ad00d0496524b10af1c4d3c76e"
+      },
+      "parserTests": 21,
+      "inputIdentitiesReopened": 22,
+      "publishedArchiveFiles": 32,
+      "publishedArchiveContents": "byteidentical tofinalv5packedconsumer; fixture/source/header excluded",
+      "wholeInstalledByteMeasurementRepeated": false
+    },
+    "x86CurrentSdk": {
+      "qualification": {
+        "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/x86-controls/result-v1/qualification.json",
+        "bytes": 36303,
+        "sha256": "d726d2d80583eb397a0c3c66589c50a4a682208141f0f62b8e52ddeaf493b695"
+      },
+      "reinspection": {
+        "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/x86-controls/reinspection-v1.json",
+        "bytes": 25568,
+        "sha256": "5aca26d4ca631442877ce0b483eaa51691acb638e0fafc88230ea3fc8e6be31e"
+      },
+      "actualPublicWorkerPrograms": 8,
+      "nativeElfExecutions": 4,
+      "rawFrontendCases": 24,
+      "debugApiRejections": 8,
+      "sourceWorkingDiffSha256": "08cace872d08b768f49db059415a3b4bbf7a80991f8267df54a9d30d59641a1a",
+      "inputsReopened": 630,
+      "artifactsReopened": 94
+    }
+  },
+  "releaseComparison": {
+    "fixtures": 6,
+    "comparisons": 24,
+    "actualCompiles": 48,
+    "rawBytesIdentical": 21,
+    "importOrderNormalizedIdentical": 24,
+    "normalization": "Only complete contiguous import declaration ordering is normalized.",
+    "boundary": "21 raw identical pairs; all 24 normalized pairs; 48 real compiles. No claim of 24 raw identical pairs."
+  },
+  "bundle": {
+    "originalManifest": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 26139,
+      "sha256": "a9fc5b34ff636caea462f2774b004d38a9b3e8870e820e85a2f0bd3ab85845e9"
+    },
+    "originalQualificationStatus": "unverified",
+    "capabilities": {
+      "c": true,
+      "cpp": true,
+      "libc": true,
+      "libm": true,
+      "libstdcxx": true,
+      "staticInitialization": true,
+      "coverage": true,
+      "debug": true,
+      "longDouble": true,
+      "int128": true,
+      "exceptions": false,
+      "rtti": true,
+      "threads": false,
+      "dynamicLinking": false,
+      "simd": true
+    },
+    "privateCandidate": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/candidate-bundle/gcc-toolchain.v2.json",
+      "bytes": 26137,
+      "sha256": "47ff570522beff49567d14fbc1579c3ec73d930c4b086c5d1a71912a62eb74f8"
+    },
+    "bootstrapReceipt": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/manifest-bootstrap.json",
+      "bytes": 59040,
+      "sha256": "827bb93fa691886460b7a8a84f41d8cfb16fa1b6409cabd0a54d7c1aaf7508c2"
+    },
+    "change": {
+      "path": "qualification.status",
+      "from": "unverified",
+      "to": "verified",
+      "sourceByteStart": 4688,
+      "sourceByteEnd": 4700,
+      "oldLiteral": "\"unverified\"",
+      "newLiteral": "\"verified\"",
+      "allOtherManifestBytesPreserved": true
+    },
+    "identicalPayloads": 106,
+    "publishedOrPromoted": false,
+    "nativeReportDedup": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/package-v1-dedup.json",
+      "bytes": 36655,
+      "sha256": "4a21076d93f71fb6acf40588588715f536df1ee542913436ea4b76c156e0af89"
+    }
+  },
+  "processes": {
+    "nativeGccBuild": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 118685,
+      "elapsedSeconds": 103.97692704200745,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-v4-gcc-status.json",
+        "bytes": 648,
+        "sha256": "20cb612761c99832faa930ccad1aceb49c606f68c4aecf11d567787231613347"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-native-v4-gcc-f1yf8acr.log"
+    },
+    "nativeWabtBuild": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 118686,
+      "elapsedSeconds": 2.30344295501709,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/native-v4-wabt-status.json",
+        "bytes": 669,
+        "sha256": "d4293045f8da41ecefc124caca2c8b6747e7a6934b2db32a44c423a64531458e"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-native-v4-wabt-o6zlvn48.log"
+    },
+    "gnuAndLibgcovBuild": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 134768,
+      "elapsedSeconds": 161.1664056777954,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/runtimes-v1-status.json",
+        "bytes": 8094,
+        "sha256": "eaee9a2f1eba1de6478069f1ff614035cdc55c23c3f87691d5490c2522e52a83"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-runtimes-v1-6h6iwnii.log"
+    },
+    "nativeCoverage": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 165068,
+      "elapsedSeconds": 55.00876975059509,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/coverage-native-v1-status.json",
+        "bytes": 1679,
+        "sha256": "9aa90413b2696ae547fe829d9c5da57535e21c88b3f75ba75aeeb97c19da8e1d"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-coverage-native-v1-ljsu6utd.log"
+    },
+    "browserBuild": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 255867,
+      "elapsedSeconds": 1637.3391244411469,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/browser-v1-status.json",
+        "bytes": 917,
+        "sha256": "c08e3c5a24a2b163f18d6d3425df2aae3a3398911a433eef03617e59b80272e4"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-browser-v1-pdxn7kx_.log"
+    },
+    "package": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 402358,
+      "elapsedSeconds": 228.62902212142944,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/package-v1-status.json",
+        "bytes": 4873,
+        "sha256": "391c34c1534a380ae31fd04ee7f3de4bdfc972e03fb5e5e2d6509de8048672a8"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-package-v1-e3a962qb.log"
+    },
+    "standardWorker": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 406659,
+      "elapsedSeconds": 2002.2972402572632,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/worker-supervisor-status.json",
+        "bytes": 606,
+        "sha256": "d686339f68c0d7752518bc68bafd2e7d43fba7c711b32f03aea797c51ff88d5f"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-standard-worker-v1-usj4yhok.log"
+    },
+    "nativeDwarf": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 159172,
+      "elapsedSeconds": 56.156471490859985,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-preparation/native-qualification/full-v1-status.json",
+        "bytes": 4060,
+        "sha256": "20adf8b5179d2cff2912400aa76da4f14921e1b708cdedea657d771b14d60680"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-native-dwarf-full-v1-tldwlh5w.log"
+    },
+    "inheritedNative": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 239243,
+      "elapsedSeconds": 740.1209425926208,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/inherited-native-v2-status.json",
+        "bytes": 58801,
+        "sha256": "191f72a0a0756e2f7d4b38977917fb1bc390fd70cf3824d49f67bf118f8b8ca3"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-inherited-native-v2-gyozmj41.log"
+    },
+    "publicSdkDebug": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "pid": 435048,
+      "elapsedSeconds": 218.04077339172363,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/status.json",
+        "bytes": 4724,
+        "sha256": "6c2719077ae4c6a195572b70213e53095d95b975a1f308cea953444309fbe01c"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-idle-83-public-debug-full-v1-vah52yjb.log"
+    },
+    "producerUnits": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "elapsedSeconds": 4.08451509475708,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/producer-units-v2-status.json",
+        "bytes": 18218,
+        "sha256": "6e4b080cb98d05347f1b0bd9294e3f52b6a6a9c28061560369f89de41f4abd51"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-producer-units-v2-ujchxmen.log"
+    },
+    "releaseComparison": {
+      "status": "passed",
+      "exitCode": 0,
+      "fullyExited": true,
+      "elapsedSeconds": 0.9312899112701416,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/control/release-v2-status.json",
+        "bytes": 1317,
+        "sha256": "71a2e68478d4275bb1a12e499faf0fba31287cca242bbc9af183686bb9dbe044"
+      },
+      "privateLogPath": "/home/seorii/logs/wasm-llvm-83-release-v6-0342gil1.log"
+    }
+  },
+  "storagePreservation": {
+    "aliases": [
+      {
+        "logicalPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/gcc",
+        "physicalPath": "/home/seorii/dev/hancomac/.build-sources/wasm-llvm-dwarf-83-20261103/gcc",
+        "preservationReceipt": {
+          "path": "/home/seorii/logs/wasm-llvm-83-storage-recovery-20261103/gcc-source-relocation.json",
+          "bytes": 7278,
+          "sha256": "3afbd47b3da2c2bbd89051aee57741eb12cee582df448336cc341d95fd45efb1"
+        },
+        "preserved": {
+          "fileCount": 159296,
+          "logicalBytes": 1041816336
+        }
+      },
+      {
+        "logicalPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/issue83-build/work/simd-header-qualification",
+        "physicalPath": "/home/seorii/dev/hancomac/.build-sources/wasm-llvm-dwarf-83-20261103/qualified-artifacts/simd-header-qualification",
+        "preservationReceipt": {
+          "path": "/home/seorii/logs/wasm-llvm-83-storage-recovery-20261103/simd-header-evidence-relocation.json",
+          "bytes": 1024859,
+          "sha256": "9885b2bc6f55bbf59a410b7caede252500f3b86e29e123b73999fe9a3ffbd530"
+        },
+        "preserved": {
+          "fileCount": 6054,
+          "logicalBytes": 386169098
+        }
+      },
+      {
+        "logicalPath": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/actual-full-v1/qualification/qualification.json",
+        "physicalPath": "/home/seorii/dev/hancomac/.build-sources/wasm-llvm-dwarf-83-20261103/qualified-artifacts/sdk-public-debug-full-v1/qualification.json",
+        "preservationReceipt": {
+          "path": "/home/seorii/logs/wasm-llvm-83-storage-recovery-20261103/sdk-debug-full-report-relocation-20261103T044011Z-713ab34a11-completed.json",
+          "bytes": 5525,
+          "sha256": "f2492f045178559da5f64d3dee89370d92c69553e2592d545dfaba86642baf41"
+        },
+        "preserved": {
+          "bytes": 160486864,
+          "sha256": "53ca5ed0a6179876d42e41721f666fc1f7310b7af70685b5956a975de996242f"
+        }
+      }
+    ],
+    "failedVectorDirectoryUntouched": true,
+    "restoreSdkReportInstructions": "Use the exact verified restoration procedure in its preservation receipt; retain the ROOT copy until duplicate cleanup is separately reviewed."
+  },
+  "ci": {
+    "allGreen": true,
+    "status": "recorded-implementation-checks-passed",
+    "investigationReceipt": {
+      "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/ci-lean-invalid-source-investigation-v1.json",
+      "bytes": 19080,
+      "sha256": "53a6fa97c1ad16a5a571ae451805bfb5e4f19fa196593d9eee1d9d91a06132cc"
+    },
+    "assessment": {
+      "directGccDebugSourceRegression": "Not supported by observed source graph/diff or pinned assets; all Lean/direct shared dependencies match the passing parent tested tree.",
+      "mostSupportedClassification": "Pre-existing Lean native/error-path instability exposed by repeated CI execution, after the correct type-error diagnostic. Threading/timing/cleanup or host-sensitive behavior are plausible inferences, not proven causes.",
+      "causeProven": false
+    },
+    "currentCiAttempt": {
+      "id": 125734699601,
+      "runId": 41574115860,
+      "attempt": 3,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "optionalProbe": {
+      "status": "completed-bounded-diagnostic-only",
+      "availabilityReceipt": {
+        "path": "/data/codex-wasm-idle-worktrees/wasm-idle-dwarf-sdk-83-20261103/out/issue83-sdk/lean-ci-probe-asset-availability-v1.json",
+        "bytes": 10083,
+        "sha256": "85f1c57c28f098d5ba83d9c86e7d09ec78152d37522527531cea1e100b3c2b83"
+      },
+      "inspectionReceipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-lean-ci-probe-20261103/out/lean-ci-probe-v1/run/post-inspection-v1.json",
+        "bytes": 9323,
+        "sha256": "697d565f6abf3339b127d131fa08daea3321477bb0d3526140b8eae3df682500"
+      },
+      "resultReceipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-idle-lean-ci-probe-20261103/out/lean-ci-probe-v1/run/result.json",
+        "bytes": 56014,
+        "sha256": "55e7fa2e1a7fbdc8fad6c95631f326795b46f4ec180a05be87907e5747edf27b"
+      },
+      "summary": {
+        "mainEntries": 4,
+        "validCases": 1,
+        "invalidCases": 3,
+        "runtimeTrapsObserved": 0,
+        "ordinaryInvalidExits": 3,
+        "onAbortObserved": 0,
+        "wasmErrorFramesObserved": 0
+      },
+      "qualification": false,
+      "interpretation": "The exact pinned real Lean compiler returned normally in this bounded local worker-path run: valid exit 0/true; all three invalid cases exit 1/false with the original HAdd diagnostic. All four passed through onExit and callMain-return after native pthread termination. No onAbort/error stack or Wasm trap PC was observed, so this probe cannot locate the failing CI instruction. Earlier BUG-013 evidence confirms that this failure pattern predates PR 367; its internal cause remains unconfirmed.",
+      "scopeLimit": "Routing, invocation history, timing and some runtime wrappers differ from full SDK/UI CI; no fix or exclusion of CI instability is inferred.",
+      "privateLogPath": "/home/seorii/logs/wasm-idle-lean-ci-probe-v1-qe9imh3b.log",
+      "exitCode": 0,
+      "fullyExited": true
+    },
+    "observedAtUTC": "2026-11-03T05:08:19.688704+00:00",
+    "scope": "Recorded implementation commits 18f0e954 and 3bf70596; final documentation checks are recorded separately in the handoff.",
+    "knownRiskId": "BUG-013",
+    "knownRiskFixedByThisChange": false,
+    "recordedImplementations": {
+      "wasm-llvm": {
+        "commit": "18f0e954e2490ac2e2e444bc015edcf62e87dfd4",
+        "pullRequest": "https://github.com/seo-rii/wasm-llvm/pull/106",
+        "checks": [
+          {
+            "name": "Repository contracts",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "GitGuardian Security Checks",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          }
+        ]
+      },
+      "wasm-idle": {
+        "commit": "3bf70596c49cd91067f21eacdb9c30e7ff2edd01",
+        "pullRequest": "https://github.com/seo-rii/wasm-idle/pull/367",
+        "checks": [
+          {
+            "name": "packages",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "workspace-unit",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "gcc-api-contract-fuzz",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "gcc-worker-browser-contract",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "changed-runtimes",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "lsp-browser-smoke",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "lsp-browser-full",
+            "status": "COMPLETED",
+            "conclusion": "SKIPPED"
+          },
+          {
+            "name": "runtime-browser-full",
+            "status": "COMPLETED",
+            "conclusion": "SKIPPED"
+          },
+          {
+            "name": "runtime-browser-required (clang)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (debug)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (dotnet)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (esolangs)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (go)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (nim)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (python)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (specialized)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (stdin)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (workers)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "runtime-browser-required (workspace)",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          },
+          {
+            "name": "GitGuardian Security Checks",
+            "status": "COMPLETED",
+            "conclusion": "SUCCESS"
+          }
+        ]
+      }
+    },
+    "failureObservationBoundary": "Attempts1/2 and historical same-asset Lean traps remain preserved. Final retry success is not a Lean fix or an inferred failure frequency."
+  },
+  "scope": {
+    "embedded": "DWARF32 / DWARF4 / -O0 / wasm32-wasi",
+    "generalDebuggerOrExpressionEvaluator": false,
+    "unsupported": [
+      "optimized register locations",
+      "split/compressed/external DWARF",
+      "DWARF64",
+      "alternate debug formats",
+      "native CFA unwinding",
+      "general debugger UI"
+    ],
+    "publicDataExcluded": [
+      "raw CI console output",
+      "raw private logs",
+      "private bookkeeping incidents"
+    ]
+  },
+  "assemblerAudit": {
+    "mapsReopened": {
+      "standardWorkerFrozenInputs": 4022,
+      "standardTargetFeatures-assembler": 61,
+      "standardTargetFeatures-sdk": 21,
+      "publicSdkDeclaredInputs": 818,
+      "publicSdkArtifacts": 314,
+      "publicSdkIndependentReinspection": 1133,
+      "nativeDwarfInputs": 1398,
+      "nativeDwarfArtifacts": 316,
+      "inheritedNativeFrozenInputs": 19828,
+      "inheritedNativeAllPreservedArtifacts": 29445,
+      "nativeCoverageInputs": 1622
+    },
+    "uniqueLogicalPathsRehashed": 57720,
+    "uniquePhysicalFilesHashed": 57421,
+    "virtualMetadataIdentityOccurrencesNotTreatedAsHostFiles": 220,
+    "checksAreEvidenceReinspection": true,
+    "newCompilerOrRuntimeInvocation": false
+  },
+  "sourceLabelBoundary": "Source21 is the count of 21 locked local GCC patches, not the GCC major version.",
+  "finishedAtUTC": "2026-11-03T05:09:21.291375+00:00"
+}
