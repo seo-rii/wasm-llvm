@@ -1,0 +1,1204 @@
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+index 7574572e7..dbcd3efb2 100644
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -21,6 +21,9 @@
+ #define IN_TARGET_CODE 1
+ 
+ #include <utility>
++#include <map>
++#include <string>
++#include <vector>
+ 
+ #include "config.h"
+ #include "system.h"
+@@ -55,6 +58,7 @@
+ #include "builtins.h"
+ #include "tree-pass.h"
+ #include "cgraph.h"
++#include "flags.h"
+ 
+ void wasm_print_operand (FILE *stream, rtx value, int mode);
+ 
+@@ -82,6 +86,242 @@ char *fake_out_file_data;
+ size_t fake_out_file_length;
+ FILE *saved_asm_out_file;
+ 
++/* Only GCC's DWARF emitter creates these fragments.  A reference is retained
++   as a typed fixup until all forward-defined debug labels are known. */
++struct dwarf_section_buffer
++{
++  std::string name, id;
++  char *bytes = nullptr;
++  size_t length = 0, size = 0;
++  FILE *stream = nullptr;
++};
++struct dwarf_symbol
++{
++  std::string owner, label;
++  bool code;
++};
++struct dwarf_fixup
++{
++  enum kind { reference, difference, data_reference } type;
++  unsigned size;
++  std::string high, low;
++  HOST_WIDE_INT addend;
++};
++struct dwarf_function
++{
++  std::string name, begin, ready;
++  std::vector<std::string> ends;
++  std::map<unsigned, std::vector<wasm_dwarf_piece>> registers;
++  unsigned next_index = 0;
++  bool sealed = false;
++  bool has_frame = false;
++};
++FILE *program_asm_stream;
++dwarf_section_buffer *active_debug_section;
++std::vector<dwarf_section_buffer *> dwarf_sections;
++std::map<std::string, dwarf_symbol> dwarf_symbols;
++std::vector<dwarf_fixup> dwarf_fixups;
++std::map<unsigned, dwarf_function> dwarf_functions;
++dwarf_function *emitting_dwarf_function;
++
++std::string
++dwarf_name (const char *name)
++{
++  while (*name == '*')
++    ++name;
++  return name;
++}
++
++void
++restore_program_section (const char *)
++{
++  active_debug_section = nullptr;
++  if (program_asm_stream)
++    asm_out_file = program_asm_stream;
++}
++
++void
++record_debug_symbol (const std::string &name, const std::string &owner,
++		     const std::string &label, bool code)
++{
++  if (!dwarf_symbols.emplace (name, dwarf_symbol {owner, label, code}).second)
++    error ("duplicate WebAssembly debug label %qs", name.c_str ());
++}
++
++/* Generic DWARF uses label+constant strings for range/DIE offsets and
++   label-1 for views at a previous instruction.  Retain only that bounded
++   expression grammar; declared data symbol names are never parsed here.  */
++bool
++split_debug_reference (const char *input, std::string &label,
++		       HOST_WIDE_INT &offset)
++{
++  label = dwarf_name (input);
++  offset = 0;
++  size_t sign = label.find_first_of ("+-");
++  size_t base_length = sign == std::string::npos ? label.size () : sign;
++  bool valid = base_length != 0;
++  for (size_t i = 0; i < base_length; ++i)
++    if (!(ISALNUM (label[i]) || label[i] == '_' || label[i] == '.'
++	  || label[i] == '$'))
++      valid = false;
++  if (!valid)
++    {
++      error ("unsupported WebAssembly debug label expression %qs", input);
++      return false;
++    }
++  if (sign == std::string::npos)
++    return true;
++  if (!sign || sign + 1 == label.size ()
++      || label.find_first_of ("+-", sign + 1) != std::string::npos)
++    {
++      error ("unsupported WebAssembly debug label expression %qs", input);
++      return false;
++    }
++  const char *digits = label.c_str () + sign + 1;
++  bool negative = label[sign] == '-';
++  bool hex = digits[0] == '0' && (digits[1] == 'x' || digits[1] == 'X');
++  const char *begin = digits + (hex ? 2 : 0);
++  if (!*begin)
++    {
++      error ("unsupported WebAssembly debug label expression %qs", input);
++      return false;
++    }
++  for (const char *p = begin; *p; ++p)
++    if (!(hex ? ISXDIGIT (*p) : ISDIGIT (*p)))
++      {
++	error ("unsupported WebAssembly debug label expression %qs", input);
++	return false;
++      }
++  errno = 0;
++  char *end;
++  unsigned HOST_WIDE_INT magnitude = strtoull (digits, &end, hex ? 16 : 10);
++  unsigned HOST_WIDE_INT limit
++    = (unsigned HOST_WIDE_INT) HOST_WIDE_INT_MAX + (negative ? 1 : 0);
++  if (errno == ERANGE || *end || magnitude > limit)
++    {
++      error ("WebAssembly debug label addend overflows in %qs", input);
++      return false;
++    }
++  if (negative && magnitude == limit)
++    offset = HOST_WIDE_INT_MIN;
++  else
++    offset = negative ? -(HOST_WIDE_INT) magnitude : (HOST_WIDE_INT) magnitude;
++  label.resize (sign);
++  return true;
++}
++
++void
++record_debug_fixup (FILE *stream, dwarf_fixup::kind type, unsigned size,
++		    const char *high, const char *low, HOST_WIDE_INT addend)
++{
++  gcc_assert (active_debug_section && stream == active_debug_section->stream);
++  std::string high_label = dwarf_name (high), low_label;
++  if (type != dwarf_fixup::data_reference)
++    {
++      HOST_WIDE_INT high_offset, low_offset = 0;
++      if (!split_debug_reference (high, high_label, high_offset)
++	  || (low && !split_debug_reference (low, low_label, low_offset)))
++	return;
++      bool overflow;
++      HOST_WIDE_INT total = add_hwi (addend, high_offset, &overflow);
++      if (overflow || __builtin_sub_overflow (total, low_offset, &addend))
++	{
++	  error ("WebAssembly debug reference addend overflows");
++	  return;
++	}
++    }
++  unsigned index = dwarf_fixups.size ();
++  dwarf_fixups.push_back ({type, size, high_label, low_label, addend});
++  /* Raw control bytes cannot occur in target-escaped WAT literals. */
++  fprintf (stream, "\036%u\037", index);
++  if (size)
++    active_debug_section->size += size;
++}
++
++void
++write_debug_fixup (FILE *stream, const dwarf_fixup &fixup)
++{
++  if (fixup.type != dwarf_fixup::difference && fixup.size != 4)
++    {
++      error ("WebAssembly debug references require a four-byte address");
++      return;
++    }
++  if (fixup.type == dwarf_fixup::data_reference)
++    {
++      fprintf (stream, " (@ref i32 data $%s %+" HOST_WIDE_INT_PRINT "d)",
++	       fixup.high.c_str (), fixup.addend);
++      return;
++    }
++  auto high = dwarf_symbols.find (fixup.high);
++  if (high == dwarf_symbols.end ())
++    {
++      error ("unresolved WebAssembly debug label %qs", fixup.high.c_str ());
++      return;
++    }
++  const dwarf_symbol &symbol = high->second;
++  if (fixup.type == dwarf_fixup::difference)
++    {
++      auto low = dwarf_symbols.find (fixup.low);
++      if (low == dwarf_symbols.end () || low->second.code != symbol.code
++	  || low->second.owner != symbol.owner)
++	{
++	  error ("WebAssembly debug difference crosses label owners: %qs and %qs",
++		 fixup.high.c_str (), fixup.low.c_str ());
++	  return;
++	}
++      if (fixup.size)
++	fprintf (stream, " (@delta i%u $%s $%s", fixup.size * 8,
++		 symbol.label.c_str (), low->second.label.c_str ());
++      else
++	fprintf (stream, " (@delta uleb $%s $%s", symbol.label.c_str (),
++		 low->second.label.c_str ());
++      if (fixup.addend)
++	fprintf (stream, " %+" HOST_WIDE_INT_PRINT "d", fixup.addend);
++      fputc (')', stream);
++      return;
++    }
++  fprintf (stream, " (@ref i32 %s $%s $%s %+" HOST_WIDE_INT_PRINT "d)",
++	   symbol.code ? "text" : "custom", symbol.owner.c_str (),
++	   symbol.label.c_str (), fixup.addend);
++}
++
++void
++write_debug_section (FILE *stream, dwarf_section_buffer *section)
++{
++  fflush (section->stream);
++  fprintf (stream, "  (@custom $%s \"%s\"\n", section->id.c_str (),
++	   section->name.c_str ());
++  const char *cursor = section->bytes;
++  const char *end = cursor + section->length;
++  while (cursor != end)
++    {
++      if (*cursor != '\036')
++	{
++	  fputc (*cursor++, stream);
++	  continue;
++	}
++      char *next;
++      unsigned long index = strtoul (cursor + 1, &next, 10);
++      gcc_assert (next != cursor + 1 && next < end && *next == '\037'
++		  && index < dwarf_fixups.size ());
++      write_debug_fixup (stream, dwarf_fixups[index]);
++      cursor = next + 1;
++    }
++  fputs ("\n  )\n", stream);
++}
++
++void
++record_local_declaration (rtx reg, unsigned offset, unsigned size)
++{
++  if (!emitting_dwarf_function)
++    return;
++  dwarf_function &function = *emitting_dwarf_function;
++  gcc_assert (!function.sealed);
++  function.registers[REGNO (reg)].push_back
++    ({function.next_index++, offset, size});
++}
++
++
+ /* Keep binding separate from the type declaration: a weakref has a local
+    alias declaration, and weak_finish can synthesize a target without
+    DECL_WEAK set.  A direct strong reference must dominate either one.  */
+@@ -116,6 +356,8 @@ is_escape (char x)
+ void
+ assemble_string (FILE *stream, const char *string, int size, bool hex_only)
+ {
++  if (active_debug_section && stream == active_debug_section->stream)
++    active_debug_section->size += size;
+   fprintf (stream, " \"");
+   for (int i = 0; i != size; ++i)
+     {
+@@ -131,6 +373,8 @@ assemble_string (FILE *stream, const char *string, int size, bool hex_only)
+ void
+ assemble_zeroes (FILE *stream, unsigned HOST_WIDE_INT size)
+ {
++  if (active_debug_section && stream == active_debug_section->stream)
++    active_debug_section->size += size;
+   fputs (" \"", stream);
+   for (unsigned HOST_WIDE_INT i = 0; i != size; ++i)
+     fputs ("\\00", stream);
+@@ -179,6 +423,46 @@ assemble_integer (FILE *stream, rtx x, unsigned size, int)
+ {
+   HOST_WIDE_INT addend = 0;
+ 
++  if (active_debug_section)
++    {
++      if (GET_CODE (x) == CONST)
++	x = XEXP (x, 0);
++      if (GET_CODE (x) == MINUS
++	  && GET_CODE (XEXP (x, 0)) == SYMBOL_REF
++	  && GET_CODE (XEXP (x, 1)) == SYMBOL_REF)
++	{
++	  record_debug_fixup (stream, dwarf_fixup::difference, size,
++			      XSTR (XEXP (x, 0), 0),
++			      XSTR (XEXP (x, 1), 0), 0);
++	  return true;
++	}
++      if (GET_CODE (x) == PLUS && CONST_INT_P (XEXP (x, 1)))
++	{
++	  addend = INTVAL (XEXP (x, 1));
++	  x = XEXP (x, 0);
++	}
++      if (GET_CODE (x) == SYMBOL_REF)
++	{
++	  tree decl = SYMBOL_REF_DECL (x);
++	  if (decl && TREE_CODE (decl) == FUNCTION_DECL)
++	    {
++	      error ("function-pointer debug constants are not qualified for WebAssembly");
++	      return true;
++	    }
++	  record_debug_fixup (stream, decl ? dwarf_fixup::data_reference
++					  : dwarf_fixup::reference,
++			      size, XSTR (x, 0), nullptr, addend);
++	  return true;
++	}
++      if (CONST_INT_P (x))
++	{
++	  assemble_const_int (stream, INTVAL (x) + addend, size);
++	  return true;
++	}
++      error ("unsupported WebAssembly debug address expression");
++      return true;
++    }
++
+   if (GET_CODE (x) == CONST)
+     {
+       x = XEXP (x, 0);
+@@ -287,6 +571,7 @@ print_local_decl (FILE *stream, rtx reg, bool param = false)
+       gcc_assert (!param && REGNO (reg) >= FIRST_PSEUDO_REGISTER);
+       for (unsigned i = 0; i != 2; ++i)
+         {
++	  record_local_declaration (reg, i * 8, 8);
+           output_indent (stream);
+           fprintf (stream, "(local ");
+           wasm_print_operand (stream, gen_rtx_SUBREG (DImode, reg, i * 8), 0);
+@@ -294,6 +579,7 @@ print_local_decl (FILE *stream, rtx reg, bool param = false)
+         }
+       return;
+     }
++  record_local_declaration (reg, 0, GET_MODE_SIZE (GET_MODE (reg)));
+   output_indent (stream);
+   fprintf (stream, "(%s ", param ? "param" : "local");
+   wasm_print_operand (stream, reg, 0);
+@@ -540,6 +826,243 @@ print_nan_payload (FILE *stream, rtx value)
+ 
+ }
+ 
++bool
++wasm_dwarf_enabled_p ()
++{
++  return debug_info_level != DINFO_LEVEL_NONE && write_symbols == DWARF2_DEBUG;
++}
++
++void
++wasm_dwarf_named_section (const char *name, unsigned flags, tree)
++{
++  if (!wasm_dwarf_enabled_p () || strncmp (name, ".debug_", 7))
++    {
++      /* Code and data retain the existing Wasm entity serializer; only
++	 debug payloads need a separate logical output stream.  */
++      (void) flags;
++      restore_program_section (nullptr);
++      return;
++    }
++  for (auto section : dwarf_sections)
++    if (section->name == name)
++      {
++	active_debug_section = section;
++	asm_out_file = section->stream;
++	return;
++      }
++  dwarf_section_buffer *section = new dwarf_section_buffer;
++  section->name = name;
++  section->id = "__gcc_debug_section_" + std::to_string (dwarf_sections.size ());
++  section->stream = open_memstream (&section->bytes, &section->length);
++  gcc_assert (section->stream);
++  dwarf_sections.push_back (section);
++  active_debug_section = section;
++  asm_out_file = section->stream;
++}
++
++section *
++wasm_dwarf_function_section (tree decl, enum node_frequency, bool, bool)
++{
++  if (!wasm_dwarf_enabled_p ())
++    return nullptr;
++  std::string name = ".text.";
++  name += IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
++  return get_named_section (decl, name.c_str (), 0);
++}
++
++void
++wasm_dwarf_output_label (FILE *stream, const char *name)
++{
++  if (!wasm_dwarf_enabled_p ())
++    return;
++  std::string label = dwarf_name (name);
++  if (active_debug_section)
++    {
++      record_debug_symbol (label, active_debug_section->id, label, false);
++      fprintf (stream, " (@label $%s)\n", label.c_str ());
++    }
++  else if (emitting_dwarf_function)
++    {
++      if (label.compare (0, 3, "LFB") == 0)
++	record_debug_symbol (label, emitting_dwarf_function->name,
++			     emitting_dwarf_function->begin, true);
++      else if (label.compare (0, 3, "LFE") == 0)
++	{
++	  record_debug_symbol (label, emitting_dwarf_function->name, label, true);
++	  emitting_dwarf_function->ends.push_back (label);
++	}
++      else
++	{
++	  record_debug_symbol (label, emitting_dwarf_function->name, label, true);
++	  fprintf (stream, "(@code.label $%s)\n", label.c_str ());
++	}
++    }
++  /* Unreferenced generic file-level text labels have no Wasm PC.  A real
++     reference to one is rejected when typed fixups are resolved at file-end. */
++}
++
++void
++wasm_dwarf_output_delta (FILE *stream, unsigned size, const char *high,
++			 const char *low)
++{
++  record_debug_fixup (stream, dwarf_fixup::difference, size, high, low, 0);
++}
++
++void
++wasm_dwarf_output_delta_uleb (FILE *stream, const char *high, const char *low)
++{
++  record_debug_fixup (stream, dwarf_fixup::difference, 0, high, low, 0);
++}
++
++void
++wasm_dwarf_output_offset (FILE *stream, unsigned size, const char *label,
++			  HOST_WIDE_INT offset)
++{
++  record_debug_fixup (stream, dwarf_fixup::reference, size, label, nullptr,
++		      offset);
++}
++
++void
++wasm_dwarf_end_prologue ()
++{
++  if (!emitting_dwarf_function || !wasm_dwarf_enabled_p ())
++    return;
++  dwarf_function &function = *emitting_dwarf_function;
++  if (!function.ready.empty ())
++    return;
++  function.ready = "__gcc_wasm_frame_ready_"
++		   + std::to_string (DECL_UID (current_function_decl));
++  record_debug_symbol (function.ready, function.name, function.ready, true);
++  fprintf (asm_out_file, "(@code.label $%s)\n", function.ready.c_str ());
++}
++
++unsigned
++wasm_dwarf_register_pieces (rtx value, wasm_dwarf_piece *pieces,
++			    unsigned capacity)
++{
++  if (optimize || !current_function_decl)
++    return 0;
++  auto function = dwarf_functions.find (DECL_UID (current_function_decl));
++  if (function == dwarf_functions.end () || !function->second.sealed)
++    return 0;
++  unsigned offset = 0;
++  unsigned requested = GET_MODE_SIZE (GET_MODE (value));
++  if (SUBREG_P (value))
++    {
++      offset = SUBREG_BYTE (value).to_constant ();
++      value = SUBREG_REG (value);
++    }
++  if (!REG_P (value))
++    return 0;
++  auto location = function->second.registers.find (REGNO (value));
++  if (location == function->second.registers.end ())
++    return 0;
++  unsigned count = 0;
++  for (auto piece : location->second)
++    if (piece.offset >= offset && piece.offset + piece.size <= offset + requested
++	&& count < capacity)
++      {
++	piece.offset -= offset;
++	pieces[count++] = piece;
++      }
++  return count;
++}
++
++bool
++wasm_dwarf_finalized_locations_p ()
++{
++  if (!wasm_dwarf_enabled_p () || optimize || !current_function_decl)
++    return false;
++  auto function = dwarf_functions.find (DECL_UID (current_function_decl));
++  return function != dwarf_functions.end () && function->second.sealed;
++}
++
++/* Restore only an unused scalar parameter whose actual ABI local still
++   contains its incoming value throughout the function.  Merely finding an
++   unwritten incoming local is insufficient: dead stores to a reassigned
++   source parameter can also disappear at -O0.  TREE_USED distinguishes that
++   case in the C and C++ frontends, including assignments without any reads. */
++rtx
++wasm_dwarf_parameter_location (tree decl, rtx current)
++{
++  if (!wasm_dwarf_finalized_locations_p ()
++      || TREE_CODE (decl) != PARM_DECL
++      || TREE_USED (decl) || TREE_ADDRESSABLE (decl) || DECL_BY_REFERENCE (decl)
++      || !cfun || cfun->decl != current_function_decl)
++    return current;
++
++  wasm_dwarf_piece pieces[2];
++  if (current
++      && ((!REG_P (current) && !SUBREG_P (current))
++	  || wasm_dwarf_register_pieces (current, pieces, 2)))
++    return current;
++
++  tree passed_type = DECL_ARG_TYPE (decl);
++  machine_mode mode = TYPE_MODE (TREE_TYPE (decl));
++  rtx incoming = DECL_INCOMING_RTL (decl);
++  if (!passed_type || mode != TYPE_MODE (passed_type)
++      || (!SCALAR_INT_MODE_P (mode) && !SCALAR_FLOAT_MODE_P (mode))
++      || !incoming || !REG_P (incoming) || GET_MODE (incoming) != mode
++      || REGNO (incoming) < FIRST_PSEUDO_REGISTER
++      || wasm_dwarf_register_pieces (incoming, pieces, 2) != 1
++      || pieces[0].offset != 0 || pieces[0].size != GET_MODE_SIZE (mode))
++    return current;
++
++  /* DECL_INCOMING_RTL must identify a real parameter, rather than a return,
++     argument-buffer, frame, or outgoing-call temporary local.  Compare regnos
++     since generic parameter setup may have copied or annotated the RTL. */
++  bool parameter = false;
++  unsigned i;
++  rtx arg;
++  FOR_EACH_VEC_SAFE_ELT (cfun->machine->func_args, i, arg)
++    if (REG_P (arg) && REGNO (arg) == REGNO (incoming)
++	&& GET_MODE (arg) == mode)
++      {
++	parameter = true;
++	break;
++      }
++  if (!parameter)
++    return current;
++
++  /* A single location is valid for the whole body only if no instruction
++     sets or clobbers the incoming local, including partial writes and call
++     function-usage clobbers.  Do not infer safety from ordinary liveness. */
++  for (rtx_insn *insn = get_insns (); insn; insn = NEXT_INSN (insn))
++    if (NONDEBUG_INSN_P (insn) && reg_set_p (incoming, insn))
++      return current;
++  return incoming;
++}
++
++bool
++wasm_dwarf_frame_index (unsigned *index)
++{
++  wasm_dwarf_piece piece[2];
++  auto function = dwarf_functions.find (DECL_UID (current_function_decl));
++  if (function != dwarf_functions.end () && function->second.has_frame
++      && wasm_dwarf_register_pieces (frame_pointer_rtx, piece, 2) == 1)
++    {
++      *index = piece[0].index;
++      return true;
++    }
++  if (wasm_dwarf_register_pieces (regno_reg_rtx[WASM_BASE_POINTER_REGNUM],
++				  piece, 2) == 1)
++    {
++      *index = piece[0].index;
++      return true;
++    }
++  return false;
++}
++
++const char *
++wasm_dwarf_frame_ready_label ()
++{
++  if (!current_function_decl)
++    return nullptr;
++  auto function = dwarf_functions.find (DECL_UID (current_function_decl));
++  return function != dwarf_functions.end () && !function->second.ready.empty ()
++	 ? function->second.ready.c_str () : nullptr;
++}
++
+ /* Define a genuine linking symbol for the existing function or data object.
+    TARGET is the target assembler-name IDENTIFIER_NODE supplied by varasm.  */
+ void
+@@ -603,8 +1126,8 @@ wasm_assemble_alias_name (FILE *stream, const char *name, const char *target)
+ void
+ wasm_asm_init_sections ()
+ {
+-  text_section = get_unnamed_section (SECTION_CODE, [](const char *){}, "T");
+-  data_section = get_unnamed_section (SECTION_WRITE, [](const char *){}, "D");
++  text_section = get_unnamed_section (SECTION_CODE, restore_program_section, "T");
++  data_section = get_unnamed_section (SECTION_WRITE, restore_program_section, "D");
+ }
+ 
+ /* Implemetation of TARGET_ASM_FILE_START.  */
+@@ -616,6 +1139,13 @@ wasm_asm_file_start ()
+   fprintf (asm_out_file, "(module\n");
+   saved_asm_out_file = asm_out_file;
+   asm_out_file = open_memstream (&fake_out_file_data, &fake_out_file_length);
++  program_asm_stream = asm_out_file;
++  active_debug_section = nullptr;
++  dwarf_sections.clear ();
++  dwarf_symbols.clear ();
++  dwarf_fixups.clear ();
++  dwarf_functions.clear ();
++  emitting_dwarf_function = nullptr;
+ }
+ 
+ /* Implemetation of TARGET_ASM_FILE_END.  */
+@@ -654,16 +1184,34 @@ wasm_asm_file_end ()
+                               *type);
+     }
+ 
+-  fflush (asm_out_file);
++  fflush (program_asm_stream);
+   fwrite (fake_out_file_data, 1, fake_out_file_length, saved_asm_out_file);
+-
++  for (auto section : dwarf_sections)
++    write_debug_section (saved_asm_out_file, section);
+   fprintf (saved_asm_out_file, ")\n");
++  for (auto section : dwarf_sections)
++    {
++      fclose (section->stream);
++      free (section->bytes);
++      delete section;
++    }
++  dwarf_sections.clear ();
++  active_debug_section = nullptr;
++  asm_out_file = saved_asm_out_file;
+ }
+ 
+ /* Implemetation of ASM_OUTPUT_FUNCTION_LABEL.  */
+ void
+ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
+ {
++  if (wasm_dwarf_enabled_p ())
++    {
++      dwarf_function &function = dwarf_functions[DECL_UID (decl)];
++      function.name = dwarf_name (name);
++      function.has_frame = known_ne (get_frame_size (), 0);
++      function.begin = "__gcc_wasm_begin_" + std::to_string (DECL_UID (decl));
++      emitting_dwarf_function = &function;
++    }
+   output_indent (stream);
+   ++indent;
+   fprintf (stream, "(func $");
+@@ -699,11 +1247,15 @@ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
+ 	  print_local_decl (stream, reg, i < 2);
+       if (i < 1)
+ 	{
++	  if (emitting_dwarf_function)
++	    ++emitting_dwarf_function->next_index;
+ 	  output_indent (stream);
+ 	  fprintf (stream, "(param i32)\n");
+ 	}
+       if (i < 2)
+ 	{
++	  if (emitting_dwarf_function)
++	    ++emitting_dwarf_function->next_index;
+ 	  output_indent (stream);
+ 	  fprintf (stream, "(param i32)\n");
+ 	}
+@@ -763,6 +1315,13 @@ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
+ 	continue;
+       print_local_decl (stream, reg);
+     }
++  if (emitting_dwarf_function)
++    {
++      dwarf_function &function = *emitting_dwarf_function;
++      function.sealed = true;
++      record_debug_symbol (function.begin, function.name, function.begin, true);
++      fprintf (stream, "(@code.label $%s)\n", function.begin.c_str ());
++    }
+   output_indent (stream);
+   fprintf (stream, "(local.set $control (i32.const 0))\n");
+   output_indent (stream);
+@@ -793,6 +1352,12 @@ wasm_asm_end_function (FILE *stream, tree, const char *name)
+   --indent;
+   output_indent (stream);
+   fprintf (stream, ") ;; loop $control\n");
++  if (emitting_dwarf_function)
++    {
++      for (const auto &label : emitting_dwarf_function->ends)
++	fprintf (stream, "(@code.label $%s (after end))\n", label.c_str ());
++      emitting_dwarf_function = nullptr;
++    }
+   --indent;
+   output_indent (stream);
+   fprintf (stream, ") ;;%s\n",
+@@ -983,6 +1548,12 @@ wasm_assemble_data_begin (FILE *stream, tree decl, const char *name,
+ void
+ wasm_specify_align (HOST_WIDE_INT new_align)
+ {
++  if (active_debug_section)
++    {
++      size_t padding = (-active_debug_section->size) & (new_align - 1);
++      assemble_zeroes (asm_out_file, padding);
++      return;
++    }
+   // gcc_assert (!align);
+   align = new_align;
+ }
+@@ -1254,10 +1825,20 @@ wasm_output_internal_label (FILE *stream, const char *pfx, size_t no)
+ 	  fprintf (stream, ") ;; $%d\n", l);
+ 	}
+     }
+-  else if (!strcmp (pfx, "LFB"))
+-    /* Function begin label, skip.  */;
+-  else if (!strcmp (pfx, "LFE"))
+-    /* Function end label, skip.  */;
+-  else
+-    /* unknown label type, skip.  */;
++  else if (wasm_dwarf_enabled_p ())
++    {
++      char name[128];
++      wasm_generate_internal_label (name, pfx, no);
++      if (!strcmp (pfx, "LFB") && emitting_dwarf_function)
++	record_debug_symbol (dwarf_name (name), emitting_dwarf_function->name,
++			     emitting_dwarf_function->begin, true);
++      else if (!strcmp (pfx, "LFE") && emitting_dwarf_function)
++	{
++	  std::string label = dwarf_name (name);
++	  record_debug_symbol (label, emitting_dwarf_function->name, label, true);
++	  emitting_dwarf_function->ends.push_back (label);
++	}
++      else
++	wasm_dwarf_output_label (stream, name);
++    }
+ }
+diff --git a/gcc/config/wasm/wasm-protos.h b/gcc/config/wasm/wasm-protos.h
+index 481d4dc19..bad6e72e3 100644
+--- a/gcc/config/wasm/wasm-protos.h
++++ b/gcc/config/wasm/wasm-protos.h
+@@ -19,6 +19,19 @@ Copyright (C) 2025-2026 Free Software Foundation, Inc.
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #ifdef RTX_CODE
++struct wasm_dwarf_piece
++{
++  unsigned index;
++  unsigned offset;
++  unsigned size;
++};
++extern bool wasm_dwarf_enabled_p ();
++extern bool wasm_dwarf_finalized_locations_p ();
++extern rtx wasm_dwarf_parameter_location (tree, rtx);
++extern void wasm_dwarf_end_prologue ();
++extern unsigned wasm_dwarf_register_pieces (rtx, wasm_dwarf_piece *, unsigned);
++extern bool wasm_dwarf_frame_index (unsigned *);
++extern const char *wasm_dwarf_frame_ready_label ();
+ extern const_tree wasm_abi_singleton_type (const_tree);
+ extern bool wasm_abi_empty_type_p (const_tree);
+ extern void wasm_expand_prologue ();
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index 24b87c0a0..84afde009 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -44,6 +44,7 @@
+ #include "expr.h"
+ #include "builtins.h"
+ #include "opts.h"
++#include "flags.h"
+ #include "toplev.h"
+ #include "vec-perm-indices.h"
+ 
+@@ -494,6 +495,35 @@ wasm_option_override (void)
+   flag_pcc_struct_return = 0;
+   init_machine_status = wasm_init_machine_status;
+ 
++  /* Preserve the existing generic section/linkage policy for release code.
++     DWARF alone needs logical named sections for independent code ranges
++     and buffered debug payloads; it does not enable COMDAT-group support.  */
++  targetm_common.have_named_sections
++    = debug_info_level != DINFO_LEVEL_NONE && write_symbols == DWARF2_DEBUG;
++
++  /* WRITE_SYMBOLS is a format bit set, and CTF has an independent level.
++     A DWARF bit does not make a combined CTF/BTF request supported.  Match
++     generic debug-hook selection's fully disabled case before diagnosing.  */
++  if ((debug_info_level != DINFO_LEVEL_NONE
++       || ctf_debug_info_level != CTFINFO_LEVEL_NONE)
++      && (write_symbols & ~DWARF2_DEBUG))
++    error ("GCC wasm32-wasi supports embedded DWARF32/DWARF4 only");
++
++  if (debug_info_level != DINFO_LEVEL_NONE && write_symbols == DWARF2_DEBUG)
++    {
++      if (dwarf_version != 4 || dwarf_offset_size != 4
++	  || dwarf_split_debug_info || flag_debug_types_section
++	  || flag_debug_asm)
++	error ("GCC wasm32-wasi supports embedded DWARF32/DWARF4 only");
++      debug_variable_location_views = 0;
++      flag_var_tracking = 0;
++      flag_var_tracking_assignments = 0;
++      flag_dwarf2_cfi_asm = 0;
++      flag_asynchronous_unwind_tables = 0;
++      flag_unwind_tables = 0;
++      flag_function_sections = 1;
++    }
++
+   /* Arc counters use the ordinary scalar Wasm operations.  Other profiling
+      modes need distinct runtime/section/return-address contracts; diagnose
+      them before generic passes can ICE or silently fall back to single
+@@ -587,7 +617,13 @@ void wasm_print_operand (FILE *stream, rtx value, int mode);
+ #define TARGET_PRINT_OPERAND wasm_print_operand
+ void wasm_output_internal_label (FILE *stream, const char *pfx, size_t no);
+ #define TARGET_ASM_INTERNAL_LABEL wasm_output_internal_label
++#define TARGET_ASM_FUNCTION_END_PROLOGUE \
++  [] (FILE *) { wasm_dwarf_end_prologue (); }
+ #define TARGET_HAVE_NAMED_SECTIONS false
++void wasm_dwarf_named_section (const char *, unsigned, tree);
++#define TARGET_ASM_NAMED_SECTION wasm_dwarf_named_section
++section *wasm_dwarf_function_section (tree, enum node_frequency, bool, bool);
++#define TARGET_ASM_FUNCTION_SECTION wasm_dwarf_function_section
+ 
+ bool wasm_regno_mode_ok (unsigned regno, machine_mode mode);
+ #define TARGET_HARD_REGNO_MODE_OK wasm_regno_mode_ok
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+index ab9e69973..370098dcd 100644
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -27,7 +27,11 @@
+ #endif
+ 
+ /* Debug.  */
+-#define PREFERRED_DEBUGGING_TYPE NO_DEBUG
++#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
++#define DWARF2_DEBUGGING_INFO 1
++#define DWARF_VERSION_DEFAULT 4
++#define DWARF2_ASM_LINE_DEBUG_INFO 0
++#define WASM_DWARF_DEBUG 1
+ /* End debug.  */
+ 
+ #define CC1PLUS_SPEC "-stdlib=libc++"
+@@ -242,10 +246,19 @@ struct wasm_cumulative_args {
+ 
+ #ifndef USED_FOR_TARGET
+ void wasm_generate_internal_label (char *buf, const char *pfx, size_t no);
++/* ASM macros are also used by writers without RTL or tm_p.h declarations.  */
++void wasm_dwarf_output_label (FILE *, const char *);
++void wasm_dwarf_output_delta (FILE *, unsigned, const char *, const char *);
++void wasm_dwarf_output_offset (FILE *, unsigned, const char *, HOST_WIDE_INT);
++void wasm_dwarf_output_delta_uleb (FILE *, const char *, const char *);
+ #define ASM_GENERATE_INTERNAL_LABEL(LABEL, PREFIX, NUM)\
+   wasm_generate_internal_label (LABEL, PREFIX, NUM)
+ #define ASM_OUTPUT_LABEL(stream, name) \
+-  (void)stream, (void)name, gcc_unreachable ()
++  wasm_dwarf_output_label (stream, name)
++#define ASM_OUTPUT_DWARF_DELTA(stream, size, high, low) \
++  wasm_dwarf_output_delta (stream, size, high, low)
++#define ASM_OUTPUT_DWARF_OFFSET(stream, size, label, offset, base) \
++  wasm_dwarf_output_offset (stream, size, label, offset)
+ void wasm_specify_align (HOST_WIDE_INT align);
+ #define ASM_OUTPUT_ALIGN(FILE, ALIGN) \
+   (void)FILE, wasm_specify_align ((HOST_WIDE_INT)1 << (ALIGN))
+diff --git a/gcc/dwarf2asm.cc b/gcc/dwarf2asm.cc
+index bfd05e6be..333cdd47d 100644
+--- a/gcc/dwarf2asm.cc
++++ b/gcc/dwarf2asm.cc
+@@ -40,6 +40,28 @@ along with GCC; see the file COPYING3.  If not see
+ #endif
+ 
+ 
++/* A WAT target has no GAS integer directives.  Keep GCC's real byte and
++   LEB generation, routing it through the target serializer only for debug. */
++static const char *
++dwarf_integer_asm_op (int size, bool aligned)
++{
++#ifdef WASM_DWARF_DEBUG
++  if (wasm_dwarf_enabled_p ())
++    return NULL;
++#endif
++  return integer_asm_op (size, aligned);
++}
++
++static bool
++dwarf_assembler_leb128_p ()
++{
++#ifdef WASM_DWARF_DEBUG
++  if (wasm_dwarf_enabled_p ())
++    return false;
++#endif
++  return HAVE_AS_LEB128;
++}
++
+ /* Output an unaligned integer with the given value and size.  Prefer not
+    to print a newline, since the caller may want to add a comment.  */
+ 
+@@ -52,7 +74,7 @@ dw2_assemble_integer (int size, rtx x)
+ 	 relocations usually result in assembler errors.  Assume
+ 	 all such values are positive and emit the relocation only
+ 	 in the least significant half.  */
+-      const char *op = integer_asm_op (DWARF2_ADDR_SIZE, false);
++      const char *op = dwarf_integer_asm_op (DWARF2_ADDR_SIZE, false);
+       if (BYTES_BIG_ENDIAN)
+ 	{
+ 	  if (op)
+@@ -92,7 +114,7 @@ dw2_assemble_integer (int size, rtx x)
+       return;
+     }
+ 
+-  const char *op = integer_asm_op (size, false);
++  const char *op = dwarf_integer_asm_op (size, false);
+ 
+   if (op)
+     {
+@@ -142,7 +164,7 @@ dw2_asm_output_data (int size, unsigned HOST_WIDE_INT value,
+ 		     const char *comment, ...)
+ {
+   va_list ap;
+-  const char *op = integer_asm_op (size, false);
++  const char *op = dwarf_integer_asm_op (size, false);
+ 
+   va_start (ap, comment);
+ 
+@@ -686,7 +708,7 @@ dw2_asm_output_data_uleb128 (unsigned HOST_WIDE_INT value,
+ 
+   va_start (ap, comment);
+ 
+-  if (HAVE_AS_LEB128)
++  if (dwarf_assembler_leb128_p ())
+     {
+       fputs ("\t.uleb128 ", asm_out_file);
+       fprint_whex (asm_out_file, value);
+@@ -700,7 +722,7 @@ dw2_asm_output_data_uleb128 (unsigned HOST_WIDE_INT value,
+   else
+     {
+       unsigned HOST_WIDE_INT work = value;
+-      const char *byte_op = targetm.asm_out.byte_op;
++      const char *byte_op = dwarf_integer_asm_op (1, false);
+ 
+       if (byte_op)
+ 	fputs (byte_op, asm_out_file);
+@@ -773,7 +795,7 @@ dw2_asm_output_data_sleb128 (HOST_WIDE_INT value,
+ 
+   va_start (ap, comment);
+ 
+-  if (HAVE_AS_LEB128)
++  if (dwarf_assembler_leb128_p ())
+     {
+       fprintf (asm_out_file, "\t.sleb128 " HOST_WIDE_INT_PRINT_DEC, value);
+ 
+@@ -787,7 +809,7 @@ dw2_asm_output_data_sleb128 (HOST_WIDE_INT value,
+     {
+       HOST_WIDE_INT work = value;
+       int more, byte;
+-      const char *byte_op = targetm.asm_out.byte_op;
++      const char *byte_op = dwarf_integer_asm_op (1, false);
+ 
+       if (byte_op)
+ 	fputs (byte_op, asm_out_file);
+@@ -867,6 +889,15 @@ dw2_asm_output_delta_uleb128 (const char *lab1 ATTRIBUTE_UNUSED,
+ 
+   va_start (ap, comment);
+ 
++#ifdef WASM_DWARF_DEBUG
++  if (wasm_dwarf_enabled_p ())
++    {
++      wasm_dwarf_output_delta_uleb (asm_out_file, lab1, lab2);
++      fputc ('\n', asm_out_file);
++      va_end (ap);
++      return;
++    }
++#endif
+   gcc_assert (HAVE_AS_LEB128);
+ 
+   fputs ("\t.uleb128 ", asm_out_file);
+diff --git a/gcc/dwarf2cfi.cc b/gcc/dwarf2cfi.cc
+index f2ffaa8ad..ab61f7eee 100644
+--- a/gcc/dwarf2cfi.cc
++++ b/gcc/dwarf2cfi.cc
+@@ -3804,6 +3804,11 @@ public:
+ bool
+ pass_dwarf2_frame::gate (function *)
+ {
++#ifdef WASM_DWARF_DEBUG
++  /* Wasm virtual locals/linear-memory frames are not native CFA registers. */
++  if (wasm_dwarf_enabled_p ())
++    return false;
++#endif
+   /* Targets which still implement the prologue in assembler text
+      cannot use the generic dwarf2 unwinding.  */
+   if (!targetm.have_prologue ())
+diff --git a/gcc/dwarf2out.cc b/gcc/dwarf2out.cc
+index bf342e468..9aec7b790 100644
+--- a/gcc/dwarf2out.cc
++++ b/gcc/dwarf2out.cc
+@@ -1279,6 +1279,10 @@ dwarf2out_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
+ void
+ dwarf2out_frame_finish (void)
+ {
++#ifdef WASM_DWARF_DEBUG
++  if (wasm_dwarf_enabled_p ())
++    return;
++#endif
+   /* Output call frame information.  */
+   if (targetm.debug_unwind_info () == UI_DWARF2)
+     output_call_frame_info (0);
+@@ -1840,6 +1844,10 @@ size_of_loc_descr (dw_loc_descr_ref loc)
+ 
+   switch (loc->dw_loc_opc)
+     {
++    case DW_OP_WASM_location:
++      size += 1 + (loc->dw_loc_oprnd1.v.val_unsigned == 3 ? 4
++		   : size_of_uleb128 (loc->dw_loc_oprnd2.v.val_unsigned));
++      break;
+     case DW_OP_addr:
+       size += DWARF2_ADDR_SIZE;
+       break;
+@@ -2322,6 +2330,13 @@ output_loc_operands (dw_loc_descr_ref loc, int for_eh_or_skip)
+       dw2_asm_output_data (1, val1->v.val_int, NULL);
+       break;
+ 
++    case DW_OP_WASM_location:
++      dw2_asm_output_data (1, val1->v.val_unsigned, NULL);
++      if (val1->v.val_unsigned == 3)
++	dw2_asm_output_data (4, val2->v.val_unsigned, NULL);
++      else
++	dw2_asm_output_data_uleb128 (val2->v.val_unsigned, NULL);
++      break;
+     case DW_OP_addr:
+       if (loc->dw_loc_dtprel)
+ 	{
+@@ -14604,6 +14619,26 @@ add_loc_descr_op_piece (dw_loc_descr_ref *list_head, int size)
+     }
+ }
+ 
++#ifdef WASM_DWARF_DEBUG
++/* Query the actual declarations emitted by the Wasm backend, after its final
++   liveness pass.  Never assign native DWARF register numbers to pseudos. */
++static dw_loc_descr_ref
++wasm_register_loc_descriptor (rtx rtl)
++{
++  wasm_dwarf_piece pieces[2];
++  unsigned count = wasm_dwarf_register_pieces (rtl, pieces, 2);
++  dw_loc_descr_ref result = NULL;
++  for (unsigned i = 0; i < count; ++i)
++    {
++      add_loc_descr (&result,
++		     new_loc_descr (DW_OP_WASM_location, 0, pieces[i].index));
++      if (count > 1)
++	add_loc_descr_op_piece (&result, pieces[i].size);
++    }
++  return result;
++}
++#endif
++
+ /* Return a location descriptor that designates a machine register or
+    zero if there is none.  */
+ 
+@@ -14611,6 +14646,10 @@ static dw_loc_descr_ref
+ reg_loc_descriptor (rtx rtl, enum var_init_status initialized)
+ {
+   rtx regs;
++#ifdef WASM_DWARF_DEBUG
++  if (wasm_dwarf_enabled_p ())
++    return wasm_register_loc_descriptor (rtl);
++#endif
+ 
+   if (REGNO (rtl) >= FIRST_PSEUDO_REGISTER)
+     return 0;
+@@ -15181,6 +15220,18 @@ based_loc_descr (rtx reg, poly_int64 offset,
+   dw_loc_descr_ref result;
+   dw_fde_ref fde = cfun->fde;
+ 
++#ifdef WASM_DWARF_DEBUG
++  if (wasm_dwarf_enabled_p ())
++    {
++      HOST_WIDE_INT displacement;
++      if (!optimize && wasm_dwarf_frame_ready_label ()
++	  && reg == frame_pointer_rtx
++	  && offset.is_constant (&displacement))
++	return new_loc_descr (DW_OP_fbreg, displacement, 0);
++      return NULL;
++    }
++#endif
++
+   /* We only use "frame base" when we're sure we're talking about the
+      post-prologue local stack frame.  We do this by *not* running
+      register elimination until this point, and recognizing the special
+@@ -16378,6 +16429,17 @@ mem_loc_descriptor (rtx rtl, machine_mode mode,
+       break;
+ 
+     case REG:
++#ifdef WASM_DWARF_DEBUG
++      if (wasm_dwarf_enabled_p ())
++	{
++	  /* Arbitrary local-as-address expressions and the separate
++	     variadic-argument buffer are not the stable frame base.  */
++	  if (rtl == frame_pointer_rtx)
++	    mem_loc_result
++	      = based_loc_descr (rtl, 0, VAR_INIT_STATUS_INITIALIZED);
++	  break;
++	}
++#endif
+       if (!is_a <scalar_int_mode> (mode, &int_mode)
+ 	  || (GET_MODE_SIZE (int_mode) > DWARF2_ADDR_SIZE
+ 	      && rtl != arg_pointer_rtx
+@@ -21040,10 +21102,22 @@ rtl_for_decl_location (tree decl)
+   /* Use DECL_RTL as the "location" unless we find something better.  */
+   rtl = DECL_RTL_IF_SET (decl);
+ 
++  /* This target keeps real Wasm locals instead of running native reload.
++     Only a finalized O0 function's own declarations may retain that RTL;
++     abstract/early DIEs and optimized locations keep the generic filtering. */
++  bool wasm_finalized_location = false;
++#ifdef WASM_DWARF_DEBUG
++  wasm_finalized_location = !early_dwarf
++    && wasm_dwarf_finalized_locations_p ()
++    && decl_function_context (decl) == current_function_decl;
++  if (wasm_finalized_location && TREE_CODE (decl) == PARM_DECL)
++    rtl = wasm_dwarf_parameter_location (decl, rtl);
++#endif
++
+   /* When generating abstract instances, ignore everything except
+      constants, symbols living in memory, and symbols living in
+      fixed registers.  */
+-  if (! reload_completed)
++  if (! reload_completed && !wasm_finalized_location)
+     {
+       if (rtl
+ 	  && (CONSTANT_P (rtl)
+@@ -21058,7 +21132,7 @@ rtl_for_decl_location (tree decl)
+ 	}
+       rtl = NULL_RTX;
+     }
+-  else if (TREE_CODE (decl) == PARM_DECL)
++  else if (TREE_CODE (decl) == PARM_DECL && !wasm_finalized_location)
+     {
+       if (rtl == NULL_RTX
+ 	  || is_pseudo_reg (rtl)
+@@ -24410,6 +24484,29 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
+                                false);
+ 	}
+ 
++#ifdef WASM_DWARF_DEBUG
++      if (wasm_dwarf_enabled_p ())
++	{
++	  unsigned index;
++	  const char *ready = wasm_dwarf_frame_ready_label ();
++	  if (!optimize && ready && wasm_dwarf_frame_index (&index))
++	    {
++	      dw_loc_descr_ref location
++		= new_loc_descr (DW_OP_WASM_location, 0, index);
++	      add_loc_descr (&location,
++			     new_loc_descr (DW_OP_stack_value, 0, 0));
++	      dw_loc_list_ref list
++		= new_loc_list (location, ready, 0, fun->fde->dw_fde_end, 0,
++				secname_for_decl (decl));
++	      gen_llsym (list);
++	      add_AT_loc_list (subr_die, DW_AT_frame_base, list);
++	    }
++	  frame_pointer_fb_offset = 0;
++	  frame_pointer_fb_offset_valid = true;
++	}
++      else
++#endif
++	{
+       cfa_fb_offset = CFA_FRAME_BASE_OFFSET (decl);
+ 
+       /* We define the "frame base" as the function's CFA.  This is more
+@@ -24441,6 +24538,8 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
+ 	 by this displacement.  */
+       compute_frame_pointer_to_fb_displacement (cfa_fb_offset);
+ 
++	}
++
+       if (fun->static_chain_decl)
+ 	{
+ 	  /* DWARF requires here a location expression that computes the
+@@ -32228,6 +32327,7 @@ hash_loc_operands (dw_loc_descr_ref loc, inchash::hash &hstate)
+ 	  gcc_unreachable ();
+ 	}
+       break;
++    case DW_OP_WASM_location:
+     case DW_OP_bregx:
+     case DW_OP_bit_piece:
+       hstate.add_object (val1->v.val_int);
+@@ -32478,6 +32578,7 @@ compare_loc_operands (dw_loc_descr_ref x, dw_loc_descr_ref y)
+ 	default:
+ 	  gcc_unreachable ();
+ 	}
++    case DW_OP_WASM_location:
+     case DW_OP_bregx:
+     case DW_OP_bit_piece:
+       return valx1->v.val_int == valy1->v.val_int
+diff --git a/include/dwarf2.def b/include/dwarf2.def
+index 22b4b7d5b..b201061d7 100644
+--- a/include/dwarf2.def
++++ b/include/dwarf2.def
+@@ -673,6 +673,9 @@ DW_OP (DW_OP_reinterpret, 0xa9)
+ DW_OP_DUP (DW_OP_lo_user, 0xe0)	/* Implementation-defined range start.  */
+ DW_OP_DUP (DW_OP_hi_user, 0xff)	/* Implementation-defined range end.  */
+ 
++/* WebAssembly tool-conventions/Dwarf.md virtual storage locations.  */
++DW_OP (DW_OP_WASM_location, 0xed)
++
+ /* GNU extensions.  */
+ DW_OP (DW_OP_GNU_push_tls_address, 0xe0)
+ /* The following is for marking variables that are uninitialized.  */

@@ -1,0 +1,981 @@
+diff --git a/include/wabt/wast-parser.h b/include/wabt/wast-parser.h
+--- a/include/wabt/wast-parser.h
++++ b/include/wabt/wast-parser.h
+@@ -219,6 +219,8 @@
+   Result ParseCustomSectionAnnotation(Module*);
+   bool PeekIsCustom();
+   bool PeekIsDataImport();
++  bool PeekIsSymbolAlias();
++  Result ParseSymbolAlias(Module*);
+ 
+   std::optional<std::string> ParseSymAttrString(TokenType tag);
+   std::optional<uint64_t> ParseSymAttrNumber(TokenType tag);
+diff --git a/include/wabt/ir.h b/include/wabt/ir.h
+--- a/include/wabt/ir.h
++++ b/include/wabt/ir.h
+@@ -71,6 +71,10 @@
+   void set_name(std::string_view);
+ 
+   Location loc;
++
++  // A linking alias is distinct from the resolved Wasm entity. Keep its
++  // identity when name resolution replaces this Var with an entity index.
++  Index symbol_alias = kInvalidIndex;
+ 
+  private:
+   void Destroy();
+@@ -1413,6 +1417,16 @@
+   }
+ };
+ 
++struct SymbolAlias : SymbolCommon {
++  Location loc;
++  std::string name;
++  SymbolType kind = SymbolType::Function;
++  Var target;
++  Index index = kInvalidIndex;
++  Address offset = 0;
++  Address resolved_offset = 0;
++};
++
+ class SymbolTable {
+   std::vector<Symbol> symbols_;
+ 
+@@ -1422,18 +1436,19 @@
+   std::vector<Index> globals_;
+   std::vector<Index> tags_;
+   std::vector<Index> datas_;
+-
+-  std::set<std::string_view> seen_names_;
++  std::vector<Index> aliases_;
++
++  std::set<std::string> seen_names_;
+ 
+   Result EnsureUnique(const std::string_view& name) {
+-    if (seen_names_.count(name)) {
++    if (seen_names_.count(std::string(name))) {
+       fprintf(stderr,
+               "error: duplicate symbol when writing relocatable "
+               "binary: %s\n",
+               &name[0]);
+       return Result::Error;
+     }
+-    seen_names_.insert(name);
++    seen_names_.insert(std::string(name));
+     return Result::Ok;
+   };
+ 
+@@ -1478,6 +1493,9 @@
+   }
+   Index DataSymbolIndex(Index index) const {
+     return SymbolIndex<Symbol::Data>(index);
++  }
++  Index AliasSymbolIndex(Index index) const {
++    return index < aliases_.size() ? aliases_[index] : kInvalidIndex;
+   }
+ };
+ template<>
+@@ -1567,6 +1585,9 @@
+   std::vector<Var*> starts;
+   std::vector<Custom> customs;
+   std::vector<DataSym> data_symbols;
++  std::vector<SymbolAlias> aliases;
++  BindingHash alias_bindings;
++  bool aliases_resolved = false;
+ 
+   BindingHash tag_bindings;
+   BindingHash func_bindings;
+diff --git a/src/ir.cc b/src/ir.cc
+--- a/src/ir.cc
++++ b/src/ir.cc
+@@ -142,8 +142,8 @@
+                   !std::is_same_v<decltype(type), Symbol::Section>) {
+       auto& table = this->GetTable<decltype(type)>();
+       EnlargeFor(table, type.index);
+-      // This is lossy since multiple symbols are genuinely possible, but apart
+-      // from data symbols their semantics is not very clear
++      // Retain the primary symbol for entity-only references. Alias references
++      // carry a separate alias index and select their own linking symbol.
+       if (table[type.index] == kInvalidIndex)
+         table[type.index] = symbols_.size();
+     }
+@@ -159,10 +159,10 @@
+     }
+     return Result::Ok;
+   };
+-  add(module->funcs, [](Index i, auto&) { return Symbol::Function{i}; });
+-  add(module->tables, [](Index i, auto&) { return Symbol::Table{i}; });
+-  add(module->globals, [](Index i, auto&) { return Symbol::Global{i}; });
+-  add(module->tags, [](Index i, auto&) { return Symbol::Tag{i}; });
++  CHECK_RESULT(add(module->funcs, [](Index i, auto&) { return Symbol::Function{i}; }));
++  CHECK_RESULT(add(module->tables, [](Index i, auto&) { return Symbol::Table{i}; }));
++  CHECK_RESULT(add(module->globals, [](Index i, auto&) { return Symbol::Global{i}; }));
++  CHECK_RESULT(add(module->tags, [](Index i, auto&) { return Symbol::Tag{i}; }));
+   for (size_t i = 0; i < module->data_symbols.size(); ++i) {
+     auto& sym = module->data_symbols[i];
+     CHECK_RESULT(
+@@ -171,6 +171,29 @@
+                                 sym.size}}));
+     EnlargeFor(datas_, i);
+     datas_[i] = symbols().size() - 1;
++  }
++
++  // Alias names must identify one linking symbol. Preserve the existing
++  // handling of ordinary modules, including imported and defined symbols
++  // that share a name, while rejecting aliases that collide with either.
++  for (const auto& symbol : symbols_)
++    if (!symbol.name().empty())
++      seen_names_.insert(std::string(symbol.name()));
++  for (const auto& alias : module->aliases) {
++    CHECK_RESULT(EnsureUnique(alias.name_));
++    aliases_.push_back(symbols_.size());
++    if (alias.kind == SymbolType::Function) {
++      CHECK_RESULT(AddSymbol({alias.name_, alias.flags_,
++                              Symbol::Function{alias.index}}));
++    } else {
++      assert(alias.index < module->data_symbols.size());
++      const auto& target = module->data_symbols[alias.index];
++      CHECK_RESULT(AddSymbol({alias.name_, alias.flags_,
++                              Symbol::Data{target.segment,
++                                           static_cast<Offset>(target.offset +
++                                                               alias.resolved_offset),
++                                           target.size - alias.resolved_offset}}));
++    }
+   }
+ 
+   return Result::Ok;
+@@ -684,6 +707,7 @@
+ 
+ Var& Var::operator=(Var&& rhs) {
+   loc = rhs.loc;
++  symbol_alias = rhs.symbol_alias;
+   if (rhs.is_index()) {
+     set_index(rhs.index_);
+   } else {
+@@ -694,6 +718,7 @@
+ 
+ Var& Var::operator=(const Var& rhs) {
+   loc = rhs.loc;
++  symbol_alias = rhs.symbol_alias;
+   if (rhs.is_index()) {
+     set_index(rhs.index_);
+   } else {
+diff --git a/src/binary-reader-ir.cc b/src/binary-reader-ir.cc
+--- a/src/binary-reader-ir.cc
++++ b/src/binary-reader-ir.cc
+@@ -370,12 +370,15 @@
+   Result BeginDataSection(Offset size) override;
+   Result BeginGenericCustomSection(Offset size) override;
+   Result BeginElemSection(Offset size) override;
++  Result BeginGlobalSection(Offset size) override;
+   Result OnRelocCount(Index count, Index section_index) override;
+   Result EndRelocSection() override;
+   Result BeginSection(Index section_index,
+                       BinarySection section_type,
+                       Offset size) override;
+   Result OnInitFunction(uint32_t priority, Index sym) override;
++  Result OnSegmentInfo(Index index, std::string_view name,
++                       Address alignment_log2, uint32_t flags) override;
+   Result EndModule() override;
+ 
+  private:
+@@ -443,11 +446,13 @@
+     Type type;
+     std::vector<Reloc> incoming_relocs;
+     Entries<ConstExpr, LoadExpr, StoreExpr> entries;
++    std::unordered_map<Offset, Var*> function_vars;
+     std::map<Offset, DataSegment*> data_segment_starts;
+   };
+   std::unordered_map<Index, RelocQueue> reloc_queues;
+   decltype(reloc_queues)::iterator active_reloc_section = end(reloc_queues);
+   SymbolTable table;
++  std::unordered_map<Index, Index> function_symbol_aliases;
+   std::multiset<DataSym> data_symbols;
+ 
+   Index active_section = kInvalidIndex;
+@@ -522,13 +527,23 @@
+ }
+ 
+ Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
+-  if (RelocQueue* queue = GetQueue())
++  if (RelocQueue* queue = GetQueue()) {
++    Var* function_var = nullptr;
++    if (auto* call = dyn_cast<CallExpr>(expr.get()))
++      function_var = &call->var;
++    else if (auto* call = dyn_cast<ReturnCallExpr>(expr.get()))
++      function_var = &call->var;
++    else if (auto* ref = dyn_cast<RefFuncExpr>(expr.get()))
++      function_var = &ref->var;
++    if (function_var)
++      queue->function_vars.emplace(state->offset - queue->start, function_var);
+     queue->traverse([&](auto&& map) {
+       using Value = std::remove_reference_t<decltype(map[0])>;
+       if (auto* ce = dynamic_cast<Value>(expr.get())) {
+         map.insert({state->offset - queue->start, ce});
+       }
+     });
++  }
+   expr->loc = GetLocation();
+   LabelNode* label;
+   CHECK_RESULT(TopLabel(&label));
+@@ -1824,9 +1839,9 @@
+             : DataSym{common, MakeDollarName(name), segment, offset, size};
+   data_symbols.emplace(sym);
+   assert(index == table.symbols().size());
+-  table.AddSymbol(
++  CHECK_RESULT(table.AddSymbol(
+       {name2, flags,
+-       Symbol::Data{sym.segment, static_cast<Offset>(sym.offset), sym.size}});
++       Symbol::Data{sym.segment, static_cast<Offset>(sym.offset), sym.size}}));
+   if (name.empty()) {
+     return Result::Ok;
+   }
+@@ -1857,12 +1872,32 @@
+                                         Index func_index) {
+   assert(index == table.symbols().size());
+   Symbol sym = {std::string(name), flags, Symbol::Function{func_index}};
+-  table.AddSymbol(sym);
++  const Index previous = table.FunctionSymbolIndex(func_index);
++  CHECK_RESULT(table.AddSymbol(sym));
+   if (func_index >= module_->funcs.size()) {
+     PrintError("invalid function index: %" PRIindex, func_index);
+     return Result::Error;
+   }
+   Func* func = module_->funcs[func_index];
++  if (previous != kInvalidIndex) {
++    if (name.empty() || sym.undefined()) {
++      PrintError("function alias requires a named, defined target");
++      return Result::Error;
++    }
++    SymbolAlias alias;
++    static_cast<SymbolCommon&>(alias) = sym;
++    alias.loc = GetLocation();
++    alias.name = GetUniqueName(&module_->func_bindings, MakeDollarName(name));
++    alias.kind = SymbolType::Function;
++    alias.target = Var(func_index, GetLocation());
++    alias.index = func_index;
++    Index alias_index = module_->aliases.size();
++    module_->func_bindings.emplace(alias.name, Binding(func_index));
++    module_->alias_bindings.emplace(alias.name, Binding(alias_index));
++    module_->aliases.push_back(std::move(alias));
++    function_symbol_aliases.emplace(index, alias_index);
++    return Result::Ok;
++  }
+   static_cast<SymbolCommon&>(*func) = sym;
+   if (name.empty()) {
+     return Result::Ok;
+@@ -1884,7 +1919,7 @@
+                                       Index global_index) {
+   assert(index == table.symbols().size());
+   Symbol sym = {std::string(name), flags, Symbol::Global{global_index}};
+-  table.AddSymbol(sym);
++  CHECK_RESULT(table.AddSymbol(sym));
+   if (global_index >= module_->globals.size()) {
+     PrintError("invalid global index: %" PRIindex, global_index);
+     return Result::Error;
+@@ -1898,7 +1933,7 @@
+                                        uint32_t flags,
+                                        Index section_index) {
+   assert(index == table.symbols().size());
+-  table.AddSymbol({"", flags, Symbol::Section{section_index}});
++  CHECK_RESULT(table.AddSymbol({"", flags, Symbol::Section{section_index}}));
+   return Result::Ok;
+ }
+ 
+@@ -1908,7 +1943,7 @@
+                                    Index tag_index) {
+   assert(index == table.symbols().size());
+   Symbol sym = {std::string(name), flags, Symbol::Tag{tag_index}};
+-  table.AddSymbol(sym);
++  CHECK_RESULT(table.AddSymbol(sym));
+   if (tag_index >= module_->tags.size()) {
+     PrintError("invalid tag index: %" PRIindex, tag_index);
+     return Result::Error;
+@@ -1931,7 +1966,7 @@
+                                      Index table_index) {
+   assert(index == table.symbols().size());
+   Symbol sym = {std::string(name), flags, Symbol::Table{table_index}};
+-  table.AddSymbol(sym);
++  CHECK_RESULT(table.AddSymbol(sym));
+   if (table_index >= module_->tables.size()) {
+     PrintError("invalid table index: %" PRIindex, table_index);
+     return Result::Error;
+@@ -1975,6 +2010,12 @@
+ }
+ 
+ Result BinaryReaderIR::BeginElemSection(Offset size) {
++  MakeQueue(RelocQueue::CODE);
++  return Result::Ok;
++}
++
++Result BinaryReaderIR::BeginGlobalSection(Offset size) {
++  MakeQueue(RelocQueue::CODE);
+   return Result::Ok;
+ }
+ 
+@@ -2022,6 +2063,19 @@
+   return Result::Ok;
+ }
+ 
++Result BinaryReaderIR::OnSegmentInfo(Index index, std::string_view name,
++                                     Address alignment_log2, uint32_t flags) {
++  if (index >= module_->data_segments.size()) {
++    PrintError("invalid linking data segment index: %" PRIindex, index);
++    return Result::Error;
++  }
++  auto& sym = module_->data_segments[index]->sym;
++  sym.name = name;
++  sym.align = alignment_log2;
++  sym.flags = static_cast<DataSegment::SymInfo::Flags>(flags);
++  return Result::Ok;
++}
++
+ Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
+                                               const void* data,
+                                               Offset size) {
+@@ -2035,6 +2089,27 @@
+ }
+ 
+ Result BinaryReaderIR::EndModule() {
++  // Binary aliases already refer to resolved Wasm indices and their names have
++  // been registered without replacing the primary function symbol.
++  module_->aliases_resolved = true;
++  // Export entries contain entity indices, while linking flags identify the
++  // independently exported symbol. Do not promote a local primary symbol when
++  // an alias was the exported definition in the original object.
++  for (auto* export_ : module_->exports) {
++    if (export_->kind != ExternalKind::Func)
++      continue;
++    Index index = module_->GetFuncIndex(export_->var);
++    if (index >= module_->funcs.size() || module_->funcs[index]->exported())
++      continue;
++    for (Index i = 0; i < module_->aliases.size(); ++i) {
++      const auto& alias = module_->aliases[i];
++      if (alias.kind == SymbolType::Function && alias.index == index &&
++          alias.exported()) {
++        export_->var.symbol_alias = i;
++        break;
++      }
++    }
++  }
+   size_t i = 0;
+   Index range_start = 0, data_segment = -1;
+   for (auto& datasym : data_symbols) {
+@@ -2078,9 +2153,10 @@
+       case SymbolType::Data: {
+         auto& data = sym.AsData();
+         auto&& syms = module_->data_symbols;
+-        auto res =
+-            std::lower_bound(syms.begin(), syms.end(),
+-                             DataSym::MakeForSearch(data.index, data.offset));
++        auto res = std::find_if(syms.begin(), syms.end(), [&](const DataSym& item) {
++          return item.name_ == sym.name() && item.segment == data.index &&
++                 item.offset == data.offset && item.size == data.size;
++        });
+         Index sym = res - syms.begin();
+         return maybe_name(module_->data_symbols, sym);
+       }
+@@ -2095,7 +2171,11 @@
+       }
+       case SymbolType::Function: {
+         auto idx = sym.AsFunction().index;
+-        return maybe_name(module_->funcs, idx);
++        Var result(idx, {});
++        auto alias = function_symbol_aliases.find(r.index);
++        if (alias != function_symbol_aliases.end())
++          result.symbol_alias = alias->second;
++        return result;
+       }
+       case SymbolType::Global: {
+         auto idx = sym.AsGlobal().index;
+@@ -2126,6 +2206,13 @@
+       // We pray that the relocation is always the last operand, and that the
+       // operand is an overlong leb already
+       auto reloc_addr = reloc.offset + reloc_size;
++      if (queue.type == RelocQueue::CODE && reloc.type == RelocType::FuncIndexLEB) {
++        auto operand = queue.function_vars.find(reloc_addr);
++        if (operand != queue.function_vars.end()) {
++          *operand->second = sym_id;
++          continue;
++        }
++      }
+       if (queue.type == RelocQueue::CODE && kRelocDataType[int(reloc.type)] == RelocDataType::LEB) {
+         switch (kRelocSymbolType[int(reloc.type)]) {
+           case RelocKind::Global:
+@@ -2149,17 +2236,21 @@
+       });
+       if (applied_relocation)
+         continue;
+-      auto it = queue.data_segment_starts.lower_bound(reloc.offset);
+-      if (it != end(queue.data_segment_starts)) {
++      const auto abs_offset = reloc.offset + queue.start;
++      auto it = queue.data_segment_starts.upper_bound(abs_offset);
++      if (it != begin(queue.data_segment_starts)) {
++        --it;
+         auto end = it->first + it->second->data.size();
+-        auto abs_offset = reloc.offset + queue.start;
+         if (end >= abs_offset + reloc_size) {
+           it->second->relocs.push_back(
+               {abs_offset - it->first, {reloc.type, sym_id, reloc.addend}});
+           applied_relocation = true;
+         }
+       }
+-      assert(applied_relocation && "Unable to apply relocation");
++      if (!applied_relocation) {
++        PrintError("unable to preserve relocation at offset 0x%zx", reloc.offset);
++        return Result::Error;
++      }
+     }
+   }
+ 
+diff --git a/src/binary-writer.cc b/src/binary-writer.cc
+--- a/src/binary-writer.cc
++++ b/src/binary-writer.cc
+@@ -172,7 +172,8 @@
+   void WriteBlockDecl(const BlockDeclaration& decl);
+   void WriteU32Leb128WithReloc(Index index,
+                                const char* desc,
+-                               RelocType reloc_type);
++                               RelocType reloc_type,
++                               const Var* symbol = nullptr);
+   void WriteS32Leb128WithReloc(int32_t value,
+                                const char* desc,
+                                RelocType reloc_type);
+@@ -474,7 +475,9 @@
+   }
+ 
+   // Add a new relocation to the curent reloc section
+-  Index symbol_index = GetSymbolIndex(r.type, r.symbol.index());
++  Index symbol_index = r.symbol.symbol_alias == kInvalidIndex
++                           ? GetSymbolIndex(r.type, r.symbol.index())
++                           : symtab_.AliasSymbolIndex(r.symbol.symbol_alias);
+   if (symbol_index == kInvalidIndex) {
+     // The file is invalid, for example a reference to function 42 where only 10
+     // functions are defined.  The user must have already passed --no-check, so
+@@ -497,9 +500,16 @@
+ 
+ void BinaryWriter::WriteU32Leb128WithReloc(Index index,
+                                            const char* desc,
+-                                           RelocType reloc_type) {
++                                           RelocType reloc_type,
++                                           const Var* symbol) {
+   if (options_.relocatable) {
+-    AddReloc(reloc_type, index);
++    if (symbol && symbol->symbol_alias != kInvalidIndex) {
++      Var selected(index, symbol->loc);
++      selected.symbol_alias = symbol->symbol_alias;
++      AddReloc({reloc_type, selected});
++    } else {
++      AddReloc(reloc_type, index);
++    }
+     WriteFixedU32Leb128(stream_, index, desc);
+   } else {
+     WriteU32Leb128(stream_, index, desc);
+@@ -646,13 +656,15 @@
+     case ExprType::Call: {
+       Index index = module_->GetFuncIndex(cast<CallExpr>(expr)->var);
+       WriteOpcode(stream_, Opcode::Call);
+-      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
++      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB,
++                             &cast<CallExpr>(expr)->var);
+       break;
+     }
+     case ExprType::ReturnCall: {
+       Index index = module_->GetFuncIndex(cast<ReturnCallExpr>(expr)->var);
+       WriteOpcode(stream_, Opcode::ReturnCall);
+-      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
++      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB,
++                             &cast<ReturnCallExpr>(expr)->var);
+       break;
+     }
+     case ExprType::CallIndirect: {
+@@ -892,7 +904,8 @@
+     case ExprType::RefFunc: {
+       WriteOpcode(stream_, Opcode::RefFunc);
+       Index index = module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var);
+-      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
++      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB,
++                             &cast<RefFuncExpr>(expr)->var);
+       break;
+     }
+     case ExprType::RefNull: {
+@@ -1525,9 +1538,13 @@
+           assert(elem_expr.size() == 1);
+           const Expr* expr = &elem_expr.front();
+           assert(expr->type() == ExprType::RefFunc);
+-          WriteU32Leb128(stream_,
+-                         module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var),
+-                         "elem function index");
++          const Var& var = cast<RefFuncExpr>(expr)->var;
++          Index index = module_->GetFuncIndex(var);
++          if (var.symbol_alias != kInvalidIndex)
++            WriteU32Leb128WithReloc(index, "elem function index",
++                                   RelocType::FuncIndexLEB, &var);
++          else
++            WriteU32Leb128(stream_, index, "elem function index");
+         }
+       }
+     }
+diff --git a/src/apply-names.cc b/src/apply-names.cc
+--- a/src/apply-names.cc
++++ b/src/apply-names.cc
+@@ -163,6 +163,10 @@
+   if (!func) {
+     return Result::Error;
+   }
++  // The WAT writer selects the alias name only for relocatable output. Keep a
++  // canonical entity name here so ordinary WAT remains a standalone module.
++  if (var->symbol_alias != kInvalidIndex && var->is_name())
++    var->set_index(module_->GetFuncIndex(*var));
+   UseNameForVar(func->name, var);
+   return Result::Ok;
+ }
+diff --git a/src/binary-reader-objdump.cc b/src/binary-reader-objdump.cc
+--- a/src/binary-reader-objdump.cc
++++ b/src/binary-reader-objdump.cc
+@@ -181,6 +181,9 @@
+   if (symbol_index >= objdump_state_->symtab.size())
+     return "<illegal_symbol_index>";
+   ObjdumpSymbol& sym = objdump_state_->symtab[symbol_index];
++  // Multiple aliases can share one entity; the relocation selects a symbol.
++  if (!sym.name.empty())
++    return sym.name;
+   switch (sym.kind) {
+     case SymbolType::Function:
+       return GetFunctionName(sym.index);
+diff --git a/src/wat-writer.cc b/src/wat-writer.cc
+--- a/src/wat-writer.cc
++++ b/src/wat-writer.cc
+@@ -369,7 +369,9 @@
+ }
+ 
+ void WatWriter::WriteVar(const Var& var, NextChar next_char) {
+-  if (var.is_index()) {
++  if (options_.relocatable && var.symbol_alias < module.aliases.size()) {
++    WriteName(module.aliases[var.symbol_alias].name, next_char);
++  } else if (var.is_index()) {
+     Writef("%" PRIindex, var.index());
+     next_char_ = next_char;
+   } else {
+@@ -523,7 +525,6 @@
+       assert(0);
+       break;
+   }
+-  WriteReloc(expr.reloc, false);
+ }
+ 
+ template <typename T>
+@@ -1448,18 +1449,17 @@
+   if (sym.binding() == SymbolBinding::Weak)
+     WritePutsSpace("weak");
+   if (sym.binding() == SymbolBinding::Local)
+-    WritePutsSpace("static");
+-  else {
+-    if (sym.visibility() == SymbolVisibility::Hidden)
+-      WritePutsSpace("hidden");
+-  }
++    WritePutsSpace("local");
++  if (sym.visibility() == SymbolVisibility::Hidden)
++    WritePutsSpace("hidden");
+   if (sym.no_strip())
+     WritePutsSpace("retain");
+   if (sym.exported())
+     WritePutsSpace("export");
+   if (!sym.name().empty()) {
+-    WritePuts("name=", NextChar::None);
+-    WriteQuotedString(sym.name(), NextChar::Space);
++    WriteOpenSpace("name");
++    WriteQuotedString(sym.name(), NextChar::None);
++    WriteCloseSpace();
+   }
+ }
+ 
+@@ -1490,7 +1490,7 @@
+     }
+   switch (kRelocSymbolType[int(reloc.type)]) {
+     case RelocKind::Function:
+-      WritePutsSpace("func");
++      WritePutsSpace("function");
+       break;
+     case RelocKind::Data:
+       WritePutsSpace("data");
+@@ -1514,7 +1514,7 @@
+       WritePutsSpace("text");
+       break;
+     case RelocKind::Section:
+-      WritePutsSpace("section");
++      WritePutsSpace("custom");
+       break;
+     default:
+       WABT_UNREACHABLE;
+@@ -1525,9 +1525,9 @@
+   if (bool(kRelocModifiers[int(reloc.type)] & RelocModifiers::PIC))
+     WritePutsSpace("pic");
+ 
+-  WriteVar(reloc.symbol, NextChar::None);
++  WriteVar(reloc.symbol, reloc.addend ? NextChar::Space : NextChar::None);
+   if (reloc.addend)
+-    Writef("+%u", reloc.addend);
++    Writef("%+d", reloc.addend);
+   WriteCloseSpace();
+ }
+ void WatWriter::WriteDataImports() {
+@@ -1549,8 +1549,11 @@
+   if ((func.non_default(import) || func.priority) && options_.relocatable) {
+     WriteOpenSpace("@sym");
+     WriteRelocAttrs(func);
+-    if (func.priority.has_value())
+-      Writef("init=%u", *func.priority);
++    if (func.priority.has_value()) {
++      WriteOpenSpace("init_prio");
++      Writef("%u", *func.priority);
++      WriteCloseSpace();
++    }
+     WriteCloseSpace();
+   }
+   WriteInlineExports(ExternalKind::Func, func_index_);
+@@ -1747,6 +1750,24 @@
+ void WatWriter::WriteDataSegment(const DataSegment& segment) {
+   WriteOpenSpace("data");
+   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
++  if (options_.relocatable) {
++    WriteOpenSpace("@sym");
++    if (!segment.sym.name.empty()) {
++      WriteOpenSpace("name");
++      WriteQuotedString(segment.sym.name, NextChar::None);
++      WriteCloseSpace();
++    }
++    WriteOpenSpace("align");
++    Writef("%" PRIaddress, Address{1} << segment.sym.align);
++    WriteCloseSpace();
++    if (segment.sym.flags & DataSegment::SymInfo::WASM_SEG_FLAG_RETAIN)
++      WritePutsSpace("retain");
++    if (segment.sym.flags & DataSegment::SymInfo::WASM_SEGMENT_FLAG_TLS)
++      WritePutsSpace("tls");
++    if (segment.sym.flags & DataSegment::SymInfo::WASM_SEGMENT_FLAG_STRINGS)
++      WritePutsSpace("strings");
++    WriteCloseSpace();
++  }
+   if (segment.kind != SegmentKind::Passive) {
+     if (module.GetMemoryIndex(segment.memory_var) != 0) {
+       WriteOpenSpace("memory");
+@@ -1777,7 +1798,9 @@
+     if (offset == next_sym) {
+       WriteOpenSpace("@sym");
+       WriteName(module.data_symbols[curr_sym].name, NextChar::Space);
+-      Writef("size=%" PRIaddress, module.data_symbols[curr_sym].size);
++      WriteOpenSpace("size");
++      Writef("%" PRIaddress, module.data_symbols[curr_sym].size);
++      WriteCloseSpace();
+       WriteRelocAttrs(module.data_symbols[curr_sym]);
+       WriteCloseSpace();
+       ++curr_sym;
+@@ -1915,6 +1938,24 @@
+     WriteName(module.name, NextChar::Newline);
+   }
+   WriteDataImports();
++  if (options_.relocatable) {
++    for (const auto& alias : module.aliases) {
++      WriteOpenSpace("@sym.alias");
++      WriteName(alias.name, NextChar::Space);
++      WriteOpenSpace(alias.kind == SymbolType::Function ? "func" : "data");
++      WriteVar(alias.target, NextChar::None);
++      if (alias.offset) {
++        WriteOpenSpace("offset");
++        Writef("%" PRIaddress, alias.offset);
++        WriteCloseSpace();
++      }
++      WriteCloseSpace();
++      WriteOpenSpace("@sym");
++      WriteRelocAttrs(alias);
++      WriteCloseSpace();
++      WriteCloseNewline();
++    }
++  }
+   for (const ModuleField& field : module.fields) {
+     switch (field.type()) {
+       case ModuleFieldType::Func:
+diff --git a/src/wast-parser.cc b/src/wast-parser.cc
+--- a/src/wast-parser.cc
++++ b/src/wast-parser.cc
+@@ -588,7 +588,8 @@
+       if ((options_->features.code_metadata_enabled() &&
+            cur.text().find("metadata.code.") == 0) ||
+           cur.text() == "custom" || cur.text() == "reloc" ||
+-          cur.text() == "sym.import.data" || cur.text() == "sym") {
++          cur.text() == "sym.import.data" || cur.text() == "sym.alias" ||
++          cur.text() == "sym") {
+         tokens_.push_back(cur);
+         continue;
+       }
+@@ -1221,7 +1222,7 @@
+       auto module_command = cast<ScriptModuleCommand>(std::move(command));
+       *module = std::move(module_command->module);
+     }
+-  } else if (IsModuleField(PeekPair()) || PeekIsCustom()) {
++  } else if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() || PeekIsSymbolAlias()) {
+     // Parse an inline module (i.e. one with no surrounding (module)).
+     CHECK_RESULT(ParseModuleFieldList(module.get()));
+   } else if (PeekMatch(TokenType::Eof)) {
+@@ -1247,7 +1248,7 @@
+   // Don't consume the Lpar yet, even though it is required. This way the
+   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
+   // the parsing structure more regular.
+-  if (IsModuleField(PeekPair()) || PeekIsCustom()) {
++  if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() || PeekIsSymbolAlias()) {
+     // Parse an inline module (i.e. one with no surrounding (module)).
+     auto command = std::make_unique<ModuleCommand>();
+     command->module.loc = GetLocation();
+@@ -1333,6 +1334,51 @@
+          tokens_.front().text() == "sym.import.data";
+ }
+ 
++bool WastParser::PeekIsSymbolAlias() {
++  return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
++         tokens_.front().text() == "sym.alias";
++}
++
++Result WastParser::ParseSymbolAlias(Module* module) {
++  SymbolAlias alias;
++  alias.loc = GetLocation();
++  Consume();  // @sym.alias annotation opener.
++  if (!ParseBindVarOpt(&alias.name))
++    return ErrorExpected({"alias identifier"}, "$alias");
++  EXPECT(Lpar);
++  if (Match(TokenType::Func))
++    alias.kind = SymbolType::Function;
++  else if (Match(TokenType::Data))
++    alias.kind = SymbolType::Data;
++  else {
++    ErrorExpected({"func", "data"});
++    return Result::Error;
++  }
++  CHECK_RESULT(ParseVar(&alias.target));
++  if (auto offset = ParseSymAttrNumber(TokenType::Offset)) {
++    if (alias.kind != SymbolType::Data) {
++      Error(alias.loc, "only data aliases may specify an offset");
++      return Result::Error;
++    }
++    alias.offset = *offset;
++  }
++  EXPECT(Rpar);
++  CHECK_RESULT(ParseSymOpt(&alias, false));
++  EXPECT(Rpar);
++  if (alias.name_.empty()) {
++    Error(alias.loc, "alias requires an explicit linking symbol name");
++    return Result::Error;
++  }
++  if (alias.binding() == SymbolBinding::Weak) {
++    Error(alias.loc, "weak aliases are not supported by @sym.alias");
++    return Result::Error;
++  }
++  module->alias_bindings.emplace(alias.name,
++                                Binding(alias.loc, module->aliases.size()));
++  module->aliases.push_back(std::move(alias));
++  return Result::Ok;
++}
++
+ std::optional<std::string> WastParser::ParseSymAttrString(TokenType tag) {
+   if (!MatchLpar(tag))
+     return {};
+@@ -1375,6 +1421,7 @@
+   OnceProperty name{"name", {}};
+   OnceProperty size{"size", {}};
+   OnceProperty priority{"priority", {}};
++  OnceProperty exported{"export", {}};
+ 
+   auto check_once = [this, &last_tok_loc](OnceProperty& var) {
+     if (!var.second)
+@@ -1450,6 +1497,9 @@
+     } else if (Match(TokenType::Retain)) {
+       check_once(retain);
+       sym->flags_ |= WABT_SYMBOL_FLAG_NO_STRIP;
++    } else if (Match(TokenType::Export)) {
++      check_once(exported);
++      sym->flags_ |= WABT_SYMBOL_FLAG_EXPORTED;
+     } else if (Match(TokenType::Hidden)) {
+       check_once(visibility);
+       sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
+@@ -1588,13 +1638,18 @@
+   resolve_types_.clear();
+   resolve_funcs_.clear();
+ 
+-  while (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport()) {
++  while (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() ||
++         PeekIsSymbolAlias()) {
+     if (PeekIsCustom()) {
+       CHECK_RESULT(ParseCustomSectionAnnotation(module));
+       continue;
+     }
+     if (PeekIsDataImport()) {
+       CHECK_RESULT(ParseDataImport(module));
++      continue;
++    }
++    if (PeekIsSymbolAlias()) {
++      CHECK_RESULT(ParseSymbolAlias(module));
+       continue;
+     }
+     if (Failed(ParseModuleField(module))) {
+@@ -1618,6 +1673,12 @@
+   CHECK_RESULT(ResolveFuncTypes(module, errors_));
+   CHECK_RESULT(ResolveNamesModule(module, errors_));
+   for (auto exp : module->exports) {
++    if (exp->kind == ExternalKind::Func &&
++        exp->var.symbol_alias < module->aliases.size()) {
++      module->aliases[exp->var.symbol_alias].flags_ |=
++          WABT_SYMBOL_FLAG_EXPORTED | WABT_SYMBOL_FLAG_NO_STRIP;
++      continue;
++    }
+     auto patch = [&](auto& fields, const BindingHash& bindings) {
+       Index i = bindings.FindIndex(exp->var);
+       if (i >= fields.size())
+@@ -2693,7 +2754,7 @@
+   RelocModifiers mod = RelocModifiers::None;
+   Var sym_name;
+   Var addend_name;
+-  uint32_t addend_num;
++  uint32_t addend_num = 0;
+ 
+   if (tok.token_type() == TokenType::LparAnn && tok.text() == "reloc") {
+     Consume();
+@@ -4411,7 +4472,7 @@
+       auto tsm = std::make_unique<TextScriptModule>();
+       tsm->module.name = name;
+       tsm->module.loc = loc;
+-      if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport()) {
++      if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport() || PeekIsSymbolAlias()) {
+         CHECK_RESULT(ParseModuleFieldList(&tsm->module));
+       } else if (!PeekMatch(TokenType::Rpar)) {
+         ConsumeIfLpar();
+diff --git a/src/resolve-names.cc b/src/resolve-names.cc
+--- a/src/resolve-names.cc
++++ b/src/resolve-names.cc
+@@ -18,6 +18,7 @@
+ 
+ #include <cassert>
+ #include <cstdio>
++#include <functional>
+ 
+ #include "wabt/cast.h"
+ #include "wabt/expr-visitor.h"
+@@ -104,6 +105,7 @@
+   void ResolveDataVar(Var* var);
+   void ResolveLocalVar(Var* var);
+   void ResolveReloc(IrReloc* reloc);
++  void ResolveAliases();
+   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
+   void VisitFunc(Func* func);
+   void VisitExport(Export* export_);
+@@ -192,6 +194,8 @@
+ }
+ 
+ void NameResolver::ResolveFuncVar(Var* var) {
++  if (var->is_name())
++    var->symbol_alias = current_module_->alias_bindings.FindIndex(*var);
+   ResolveVar(&current_module_->func_bindings, var, "function");
+ }
+ 
+@@ -223,7 +227,85 @@
+   ResolveVar(&current_module_->elem_segment_bindings, var, "elem segment");
+ }
+ void NameResolver::ResolveDataVar(Var* var) {
++  if (var->is_name())
++    var->symbol_alias = current_module_->alias_bindings.FindIndex(*var);
+   ResolveVar(&current_module_->data_symbol_bindings, var, "data symbol");
++}
++
++void NameResolver::ResolveAliases() {
++  Module* module = current_module_;
++  if (module->aliases_resolved)
++    return;
++  CheckDuplicateBindings(&module->alias_bindings, "alias");
++  std::vector<unsigned char> state(module->aliases.size(), 0);
++  for (const auto& alias : module->aliases) {
++    if (module->func_bindings.FindIndex(alias.name) != kInvalidIndex ||
++        module->data_symbol_bindings.FindIndex(alias.name) != kInvalidIndex)
++      PrintError(&alias.loc, "duplicate alias identifier \"%s\"",
++                 alias.name.c_str());
++  }
++  if (Failed(result_))
++    return;
++  std::function<Index(Index)> resolve = [&](Index i) -> Index {
++    auto& alias = module->aliases[i];
++    if (state[i] == 2)
++      return alias.index;
++    if (state[i] == 1) {
++      PrintError(&alias.loc, "cyclic alias definition \"%s\"", alias.name.c_str());
++      return kInvalidIndex;
++    }
++    state[i] = 1;
++    Index target = kInvalidIndex;
++    Index next = alias.target.is_name()
++                     ? module->alias_bindings.FindIndex(alias.target)
++                     : kInvalidIndex;
++    if (next != kInvalidIndex) {
++      if (module->aliases[next].kind != alias.kind)
++        PrintError(&alias.loc, "alias target has a different symbol kind");
++      else
++        target = resolve(next);
++    } else {
++      const auto& bindings = alias.kind == SymbolType::Function
++                                 ? module->func_bindings
++                                 : module->data_symbol_bindings;
++      target = bindings.FindIndex(alias.target);
++      bool defined = alias.kind == SymbolType::Function
++                         ? target < module->funcs.size() &&
++                               target >= module->num_func_imports
++                         : target < module->data_symbols.size() &&
++                               !module->data_symbols[target].imported();
++      if (!defined) {
++        PrintError(&alias.loc,
++                   "alias target must be a defined symbol of the same kind");
++        target = kInvalidIndex;
++      }
++    }
++    if (target != kInvalidIndex && alias.kind == SymbolType::Data) {
++      Address inherited = next == kInvalidIndex
++                              ? 0 : module->aliases[next].resolved_offset;
++      const auto& data = module->data_symbols[target];
++      if (inherited > data.size || alias.offset > data.size - inherited) {
++        PrintError(&alias.loc, "data alias offset exceeds the target object");
++        target = kInvalidIndex;
++      } else {
++        alias.resolved_offset = inherited + alias.offset;
++      }
++    }
++    alias.index = target;
++    state[i] = 2;
++    return target;
++  };
++  for (Index i = 0; i < module->aliases.size(); ++i)
++    resolve(i);
++  if (Failed(result_))
++    return;
++  for (const auto& alias : module->aliases) {
++    auto& bindings = alias.kind == SymbolType::Function
++                         ? module->func_bindings
++                         : module->data_symbol_bindings;
++    bindings.emplace(alias.name, Binding(alias.loc, alias.index));
++  }
++  module->aliases_resolved = true;
+ }
+ 
+ void NameResolver::ResolveLocalVar(Var* var) {
+@@ -613,6 +695,9 @@
+ 
+ Result NameResolver::VisitModule(Module* module) {
+   current_module_ = module;
++  ResolveAliases();
++  if (Failed(result_))
++    return result_;
+   CheckDuplicateBindings(&module->elem_segment_bindings, "elem");
+   CheckDuplicateBindings(&module->func_bindings, "function");
+   CheckDuplicateBindings(&module->global_bindings, "global");
+@@ -620,6 +705,7 @@
+   CheckDuplicateBindings(&module->table_bindings, "table");
+   CheckDuplicateBindings(&module->memory_bindings, "memory");
+   CheckDuplicateBindings(&module->tag_bindings, "tag");
++  CheckDuplicateBindings(&module->data_symbol_bindings, "data symbol");
+ 
+   for (Func* func : module->funcs)
+     VisitFunc(func);

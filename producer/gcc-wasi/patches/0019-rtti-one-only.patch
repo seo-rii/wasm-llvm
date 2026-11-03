@@ -1,0 +1,20 @@
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -312,7 +312,16 @@
+ {
+   if (!decl)
+     return;
+-  if (DECL_WEAK (decl))
++  /* C++ creates vague-linkage typeinfo before assigning its initializer.
++     The generic one-only fallback initially chooses DECL_COMMON, which is
++     cleared when that initializer is emitted.  Preserve the required
++     coalescing with Wasm weak binding for these data definitions.  Do not
++     advertise generic COMDAT groups: that also enables C++ weak aliases,
++     which this target cannot emit.  Ordinary C tentative definitions do
++     not have DECL_COMDAT and retain their existing binding.  */
++  if (DECL_WEAK (decl)
++      || (VAR_P (decl) && TREE_PUBLIC (decl) && DECL_COMDAT (decl)
++          && !DECL_EXTERNAL (decl)))
+     fprintf (stream, " weak");
+   if (!TREE_PUBLIC (decl))
+     fprintf (stream, " local");
