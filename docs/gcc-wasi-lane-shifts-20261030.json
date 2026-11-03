@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/78",
+  "status": "native-and-actual-chromium-worker-passed",
+  "outputTarget": "wasm32-wasi",
+  "scope": {
+    "implementation": "Existing GCC generic scalar expansion, now qualified and documented; no backend, source-lock, package or SDK change.",
+    "modes": [
+      "V16QI",
+      "V8HI",
+      "V4SI",
+      "V2DI"
+    ],
+    "elementBits": [
+      8,
+      16,
+      32,
+      64
+    ],
+    "languageStandards": [
+      "gnu11",
+      "gnu++20"
+    ],
+    "optimization": [
+      "O0",
+      "O2"
+    ],
+    "laneOperations": [
+      "unsigned-left",
+      "unsigned-logical-right",
+      "signed-arithmetic-right",
+      "nonnegative-representable-signed-left"
+    ],
+    "counts": "Every valid count from zero through element width minus one, received through stdin in three corpora; differing lane counts per row, with unavoidable twofold repetition for i8x16.",
+    "excluded": "Negative/out-of-range counts and undefined signed-left inputs; no modulo-count promise and no performance claim.",
+    "fallback": "Each variable-count function contains the correct scalar shift and no SIMD shift; enabled profiles may use SIMD movement and lane construction.",
+    "uniformRegression": "Three dynamic scalar-count controls per program; enabled functions require the correct SIMD shift, disabled/default functions contain no SIMD.",
+    "nativeDefaults": "48 GCC fixtures omit both SIMD flags; all 144 Clang scalar references explicitly disable SIMD and both vectorizers.",
+    "sdkDefaults": "48 public SDK requests omit simd and are normalized to -mno-simd128, verified from actual compile stage arguments."
+  },
+  "source": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patchCount": 17,
+    "sourceDiffSha256": "152915d721c9b743f0345efd564bbf143bf53b8f7bf36b8f261dd25ba1cdd7d1",
+    "lock": {
+      "path": "producer/gcc-wasi/sources.lock.json",
+      "bytes": 7801,
+      "sha256": "b67f012a85daaea1c5703d081fffc8b4d9a614d4cdd4eafbe86f8806963658ca"
+    },
+    "nativeBuild": {
+      "path": "../wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/native-build.json",
+      "bytes": 6143,
+      "sha256": "ae299b2ccbcd72bff1efb641446117bebae28050f6b9dc642d91064a6c924c79"
+    },
+    "browserBuild": {
+      "path": "../wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/bundle-final/provenance/compiler-build.json",
+      "bytes": 11608,
+      "sha256": "e0bdda448c2c476e0cb7442f0dbb7534143d0d063ee1274e82e8697b903fa351"
+    },
+    "sameSourceAsNativeAndBrowser": true,
+    "addedPatches": 0
+  },
+  "fixtures": {
+    "total": 144,
+    "enabled": 48,
+    "disabled": 48,
+    "default": 48,
+    "corporaPerConfiguration": 3,
+    "functionsPerProgram": 7,
+    "laneFunctionsPerProgram": 4,
+    "uniformFunctionsPerProgram": 3,
+    "recipes": [
+      {
+        "path": "producer/gcc-wasi/lane-shift-fixtures.mjs",
+        "bytes": 7564,
+        "sha256": "0583690fe1fd70f1ea793e6fbc6a2e14130f53b69e55f3829e710b0c757d02f8"
+      },
+      {
+        "path": "producer/gcc-wasi/lane-shift-fixtures.test.mjs",
+        "bytes": 3455,
+        "sha256": "0e8e9e3f823cc95f9a4eeecf8daa4d61a78a9925063f5512b8222c7c8eb0ae32"
+      },
+      {
+        "path": "producer/gcc-wasi/lane-shift-inspect.mjs",
+        "bytes": 5479,
+        "sha256": "672b5a82c9e198b12d09987bb2d4a31c9c02f3cb07d6056b2429d16761d6953e"
+      },
+      {
+        "path": "producer/gcc-wasi/lane-shift-inspect.test.mjs",
+        "bytes": 3800,
+        "sha256": "e29d1e1f673f63a9e8ce9c3c1a545138c17aa4de0fcc0ff1ca4d84ebedff7b73"
+      },
+      {
+        "path": "producer/gcc-wasi/test-lane-shifts.mjs",
+        "bytes": 14705,
+        "sha256": "dbc80dbde911d21d638998cabe57d57145d94d9124a94077827818ea302e9c6c"
+      }
+    ],
+    "independentOracles": [
+      "BigInt expected decimal arithmetic",
+      "separate scalar Clang source",
+      "preserved Python integer baseline"
+    ],
+    "pythonBigIntComparison": {
+      "path": "out/issue78-qualification/control/oracle-comparison.json",
+      "bytes": 909,
+      "sha256": "6e3a7633d97ec16d9e1fc15c37c7bd497732b2329e0636c1e139135ad9bb9a81"
+    },
+    "baselineInspectorRecheck": {
+      "path": "out/issue78-qualification/control/baseline-inspector-recheck.json",
+      "bytes": 60,
+      "sha256": "69ad5c63b15b940cb2f3ab73c4c1e094543e589d1adfcec30affe2755e2207e3"
+    },
+    "unitTestsPassed": 10
+  },
+  "native": {
+    "status": "passed",
+    "counts": {
+      "fixtures": 144,
+      "gccFunctionChecks": 1008,
+      "clangFunctionChecks": 1008,
+      "gccExecutions": 144,
+      "clangExecutions": 144,
+      "enabled": 48,
+      "disabled": 48,
+      "noFlagDefaults": 48
+    },
+    "inputFiles": 550,
+    "artifactsReopened": 1296,
+    "scalarLaneFunctionChecks": 576,
+    "simdUniformFunctionChecks": 144,
+    "runtimeReference": "Separate scalar-loop source compiled with Clang with SIMD and both vectorizers disabled; never substitutes for original GCC vector expressions.",
+    "tools": {
+      "gcc": {
+        "bytes": 24440640,
+        "sha256": "8ddcc502193b6a968406ed68a5232bbc42604f41772f84de88d47d1c3cc9ad61"
+      },
+      "gccCpp": {
+        "bytes": 26997528,
+        "sha256": "45ad285a68e88722f245ff349266a5aa8de34e4a64f79a5f2295056e9117e8f7"
+      },
+      "clang": {
+        "bytes": 118656,
+        "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+      },
+      "clangCpp": {
+        "bytes": 118656,
+        "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+      },
+      "assembler": {
+        "bytes": 1657000,
+        "sha256": "2d15ac2f497f1d477bc379aedfd6ee0fe13b2a7a6b788cca22006d1faefa1149"
+      },
+      "objdump": {
+        "bytes": 990704,
+        "sha256": "f2c804c8c2f6495f7ca91990bc0c6d1e75f44cb718a62060d3bcb383a2503ada"
+      },
+      "linker": {
+        "bytes": 4165088,
+        "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+      },
+      "validator": {
+        "bytes": 1304104,
+        "sha256": "2077459b2173a6585a35b59977943155e936e728654ddb3df09719cc3ccad960"
+      },
+      "node": {
+        "bytes": 126879696,
+        "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+      }
+    },
+    "node": "v24.22.1",
+    "qualification": {
+      "path": "out/issue78-qualification/native/qualification.json",
+      "bytes": 55943035,
+      "sha256": "2a0d0746e6cc746c02763215033f5a665dbc7b641ae6af2ee0f16879d93b7600"
+    },
+    "reinspection": {
+      "path": "out/issue78-qualification/native-reinspection.json",
+      "bytes": 755,
+      "sha256": "f5f496e4eafa1c36b6f76bb1427ff2f0934deb4e89bca6ddf294edbe488094ba"
+    },
+    "inputSnapshot": {
+      "path": "out/issue78-qualification/native/inputs.json",
+      "bytes": 133248,
+      "sha256": "3515c6816ed9267061cfba7721456d08120792a53eb3b119d3192f8a2e0b3f89"
+    },
+    "statusReceipt": {
+      "path": "out/issue78-qualification/control/native-status.json",
+      "bytes": 121,
+      "sha256": "f6d5ece2c53037dd5f6f29695e2bfeade7c687320b3422f8116406a685e3c4ee"
+    },
+    "inputsUnchanged": true,
+    "exitCode": 0,
+    "elapsedSeconds": 154.42491745948792,
+    "log": {
+      "path": "../../../../logs/wasm-llvm-78-native-pgl37xc0.log",
+      "bytes": 9415,
+      "sha256": "becd321da835546dd7d51243b414782960a80f95aed624e3a1d0e0b5fcab500a"
+    }
+  },
+  "worker": {
+    "status": "passed",
+    "counts": {
+      "chromium": 144,
+      "nodeWasi": 144,
+      "objects": 144,
+      "wat": 144,
+      "functionScopedLaneShifts": 576,
+      "functionScopedUniformControls": 432,
+      "simdUniformControls": 144,
+      "enabled": 48,
+      "disabled": 48,
+      "defaultRequests": 48
+    },
+    "compilerHost": "wasm32-emscripten",
+    "browser": "156.0.8078.4",
+    "sdkCommit": "9b0b50f23a116fd99bdb7b423bb6e75327ae2959",
+    "sdkVersionSource": {
+      "path": "../wasm-idle-gcc-filesystem-343-20261030/packages/gcc/package.json",
+      "bytes": 1036,
+      "sha256": "962c2bb499ce83a5db28aff8aed177348976d7287ac6b93c3abdd4de344652f2"
+    },
+    "node": "24.22.1",
+    "manifest": {
+      "path": "../wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/bundle-final/gcc-toolchain.v2.json",
+      "bytes": 21551,
+      "sha256": "d8fa39679b4c9f9f8fd5376ed84b33942f0ac81f76b0e10ce8767efe4b7e547d"
+    },
+    "manifestCapabilityChange": false,
+    "manifestQualificationState": "Existing immutable package metadata is unchanged; this separate receipt records lane-shift qualification.",
+    "assets": {
+      "cc1Js": {
+        "path": "cc1.mjs",
+        "bytes": 133499,
+        "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+      },
+      "cc1Wasm": {
+        "path": "cc1.wasm",
+        "bytes": 15614723,
+        "sha256": "26ce57b1b1c6beddba440a63df4106f2c067001c7e2d80ed3c61d8cbc28abb45"
+      },
+      "cc1plusJs": {
+        "path": "cc1plus.mjs",
+        "bytes": 139030,
+        "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+      },
+      "cc1plusWasm": {
+        "path": "cc1plus.wasm",
+        "bytes": 17274373,
+        "sha256": "4100d8af56e6bcde74905ec3a8f11c9a62815cdfe58937da0d3f45031ab845bc"
+      },
+      "asJs": {
+        "path": "as.mjs",
+        "bytes": 61491,
+        "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+      },
+      "asWasm": {
+        "path": "as.wasm",
+        "bytes": 612898,
+        "sha256": "b10d92f567e10c61f9fbff0cee583f620242801b88c79452079a84f06a432805"
+      },
+      "ldWasm": {
+        "path": "ld.wasm",
+        "bytes": 16171013,
+        "sha256": "34d39bc410c098e7e09933b61cc8e28699447af9a28abf4544d71b6e9cad1f9d"
+      },
+      "sysroot": {
+        "path": "sysroot.tar",
+        "bytes": 26032128,
+        "sha256": "58647ede0c4eb849c299d0001b8900ea1bf8fba912a2cf1d6eca6f665021a71f"
+      }
+    },
+    "memoryMinimumPages": [
+      2
+    ],
+    "qualification": {
+      "path": "out/issue78-qualification/worker-v2/qualification.json",
+      "bytes": 2311661,
+      "sha256": "871c1e482e8d30a805576f7883da5e5c998903ec89e6cc06e51c3016fb1219ee"
+    },
+    "inspection": {
+      "path": "out/issue78-qualification/worker-inspection-v2.json",
+      "bytes": 12861193,
+      "sha256": "2e8ba51dee91570b11d137bbcd286ace221612f50d94eba412785455c5e6e047"
+    },
+    "inputSnapshot": {
+      "path": "out/issue78-qualification/control-v2/worker-inputs.json",
+      "bytes": 123877,
+      "sha256": "e2ea55d2da7cf706fcdd2322ea8483637124a6f3ef1a927e5697c417aba06234"
+    },
+    "inputFiles": 487,
+    "artifactsReopened": 576,
+    "statusReceipt": {
+      "path": "out/issue78-qualification/control-v2/worker-status.json",
+      "bytes": 99,
+      "sha256": "c13325f6b47313b7166a1c7d492d426c1321b2b9cb00197c1a1861e13d565406"
+    },
+    "inputsUnchanged": true,
+    "exitCode": 0,
+    "elapsedSeconds": 100.01179909706116,
+    "log": {
+      "path": "../../../../logs/wasm-llvm-78-worker-v2-nf9mtlir.log",
+      "bytes": 11729,
+      "sha256": "b7f74809698da37871a255d1d2cae65b9156bcf0dcdce69c04f534dae2ec2f4c"
+    },
+    "unsupportedFeatureControls": [
+      {
+        "feature": "exceptions",
+        "rejected": true,
+        "diagnostic": "GCC wasm32-wasi does not support exceptions"
+      },
+      {
+        "feature": "rtti",
+        "rejected": true,
+        "diagnostic": "GCC wasm32-wasi does not support rtti"
+      },
+      {
+        "feature": "threads",
+        "rejected": true,
+        "diagnostic": "GCC wasm32-wasi does not support threads"
+      },
+      {
+        "feature": "dynamicLinking",
+        "rejected": true,
+        "diagnostic": "GCC wasm32-wasi does not support dynamicLinking"
+      },
+      {
+        "feature": "cpu",
+        "rejected": true,
+        "diagnostic": "GCC wasm32-wasi supports only cpu=wasm32; x86 AVX2/FMA is not Wasm SIMD"
+      },
+      {
+        "feature": "x86-target-pragma",
+        "rejected": true,
+        "diagnostic": "/workspace/main.c:1:9: error: '#pragma GCC target' is not supported for this machine [-Werror=pragmas]\n    1 | #pragma GCC target(\"avx2\")\n      |         ^~~\nthis.program: some warnings being treated as errors\n"
+      }
+    ],
+    "missingManifestAssets": []
+  },
+  "reinspection": {
+    "receipt": {
+      "path": "out/issue78-qualification/final-reinspection.json",
+      "bytes": 246,
+      "sha256": "3148401ad59dc875a939de8b64564f0e51e38e0a9e10d9c112d1a939d7ff826b"
+    },
+    "status": "passed",
+    "artifactsReopened": 1872,
+    "snapshotEntriesReopened": 1037,
+    "nativeWorkerFunctionInventoryComparisons": 1008,
+    "nativeWorkerFunctionInventoryMatches": 1008,
+    "inputsUnchanged": true,
+    "artifactsUnchanged": true
+  },
+  "baseline": {
+    "status": "passed",
+    "compiledModules": 64,
+    "actualExecutions": 192,
+    "gccExecutions": 144,
+    "scalarClangExecutions": 48,
+    "qualification": {
+      "path": "out/issue78-preparation/baseline-1/report.json",
+      "bytes": 12005623,
+      "sha256": "c4a83fafa3214b54d85996c1647e426080f456e301ca7629f2deee7eabcf1bcc"
+    },
+    "handoff": {
+      "path": "out/issue78-preparation/native-handoff.json",
+      "bytes": 10127,
+      "sha256": "4a4e0869a5ae13692621d53ca31d427d7aeddf521e4c286f8d3a58f43982ba0f"
+    },
+    "distinction": "Preserved investigation before production fixtures. Its 64 programs reused three stdin corpora; production qualification recompiles every one of 144 fixture requests."
+  },
+  "firstWorkerAttempt": {
+    "status": "failed-before-compilation",
+    "reason": "Long TMPDIR exceeded the Chromium Unix SingletonSocket path limit; a fresh short private /data directory fixed startup without source, SDK or bundle changes.",
+    "receipt": {
+      "path": "out/issue78-qualification/worker-first-launch-failure.json",
+      "bytes": 533,
+      "sha256": "cced75548a3586e92019cdd003c5a51dfb1c2be464cd4ec684b958c9b5ad84fb"
+    },
+    "qualification": {
+      "path": "out/issue78-qualification/worker/qualification.json",
+      "bytes": 92403,
+      "sha256": "b068340eb157a534d12debbc514e5f2a1b94e871724b9763280a45579075c42a"
+    },
+    "successfulProgramExecutions": 0,
+    "inputsUnchanged": true
+  },
+  "documentation": [
+    {
+      "path": "producer/gcc-wasi/SIMD-LANE-SHIFTS.md",
+      "bytes": 6293,
+      "sha256": "81ae64a19f75bfbb929df13ec143d97c979e6ca368f0a5129d84fc478846f011"
+    },
+    {
+      "path": "producer/gcc-wasi/SIMD-EXTENDED.md",
+      "bytes": 5473,
+      "sha256": "c5bd14b17fdbb5f391bfc62377759c72b31b744da527ac437db38dc16de7325e"
+    },
+    {
+      "path": "producer/gcc-wasi/README.md",
+      "bytes": 32110,
+      "sha256": "7b43425550e5e1ebf5f4277359bf18dba3f851fb802ae1da0486832d85f32d90"
+    }
+  ]
+}
