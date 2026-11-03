@@ -17,9 +17,14 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [additional SIMD operations and vector ABI](../../docs/gcc-wasi-simd-extension.md),
 [SIMD saturating arithmetic](SIMD-SATURATING.md),
 [SIMD conversions](SIMD-CONVERSIONS.md),
+[lane-wise vector shifts and their scalar fallback](SIMD-LANE-SHIFTS.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
 [strong function and data aliases](SYMBOL-ALIASES.md),
 [weak references and weak definitions](WEAK-REFERENCES.md),
+[optional C++ RTTI](RTTI.md),
+[optional GCC gcov coverage](COVERAGE.md),
+[embedded DWARF4 debug information](DWARF.md)
+([measured qualification](../../docs/gcc-wasi-dwarf-20261103.md)),
 [binary128 implementation and reproduction](LONG-DOUBLE.md),
 [binary128 qualification results](../../docs/gcc-wasi-long-double.md),
 [public int128 implementation and reproduction](INT128.md),
@@ -42,8 +47,8 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0018`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases and weak references; SHA-256 pinned in `sources.lock.json` |
-| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md) and [symbol alias](SYMBOL-ALIASES.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
+| Local GCC patches | `0001`–`0021`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage and embedded DWARF4; SHA-256 pinned in `sources.lock.json` |
+| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md) and [DWARF transport](DWARF.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
 | Browser linker | Existing wasm-llvm WASI-host LLD `22.1.8`, `ca7933e47d3a3451d81e72ac174dcb5aa28b59d1`; archive and original producer receipt pinned |
@@ -199,7 +204,8 @@ filesystem traversal for these host utilities is not provided. The normal
 `all-gcc` preparation must exit zero before either real `cc1`/`cc1plus` module
 is separately linked. Failure aborts packaging, and both the profile and actual
 bootstrap result are bound into the compiler receipt. Existing build directories
-configured with gcov enabled are rejected. This does not add target profiling.
+configured with gcov enabled are rejected. The matching native build supplies
+the official gcov analysis utilities for the separate target coverage profile.
 The recipe canonicalizes Emscripten cache/ports paths before configuration:
 Emscripten's cold-cache library builder can resolve generated relative source
 paths incorrectly when the cache directory is a symlink. Function/type detection
@@ -213,6 +219,12 @@ It copies the pinned runtime source and adds a WASI configure case with real
 feature probes. Patch `0017` supports the original `std::type_info::__equal`
 alias, so the former forwarding-function substitution has been removed. The
 compiler source remains untouched. This is GNU libstdc++, not libc++ or a shim.
+Patch `0019` fixes vague-linkage typeinfo/name coalescing. The runtime now
+builds with `-frtti -fno-exceptions` and verifies both generated CXXFLAGS and
+EXTRA_CXX_FLAGS. Its native qualification executes two existing RTTI-disabled
+programs, one native frontend flag-omission program and two explicitly enabled
+programs, including C++23 streambuf printing; the SDK default remains
+`-fno-rtti`. See [RTTI.md](RTTI.md).
 The WASI `errno` header also has an explicit GCC single-thread profile patch:
 `__GCC_WASI_SINGLE_THREAD__=1` selects the existing libc's ordinary linear-memory
 storage. Real C and C++ overflow tests confirm that libc and GCC use the same
@@ -294,6 +306,24 @@ node producer/gcc-wasi/test-weakrefs.mjs \
   --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
   --output "$GCC_WASI_WORK_DIR/weakref-qualification"
 
+node producer/gcc-wasi/test-rtti.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/rtti-qualification"
+
+export GCC_LIBGCOV_WORK_DIR="$GCC_WASI_WORK_DIR/libgcov-current"
+export GCC_WASI_SYSROOT="$GCC_WASI_WORK_DIR/runtime-c/sysroot"
+bash producer/gcc-wasi/build-libgcov.sh
+node producer/gcc-wasi/test-coverage.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_SYSROOT" \
+  --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --libgcov "$GCC_LIBGCOV_WORK_DIR" \
+  --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
+  --output "$GCC_WASI_WORK_DIR/coverage-qualification"
+
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -310,14 +340,20 @@ node producer/gcc-wasi/package.mjs \
   --anonymous-bitfield-qualification "$GCC_WASI_WORK_DIR/anonymous-bitfield-qualification/report.json" \
   --symbol-alias-qualification "$GCC_WASI_WORK_DIR/symbol-alias-qualification/qualification.json" \
   --weakref-qualification "$GCC_WASI_WORK_DIR/weakref-qualification/qualification.json" \
+  --rtti-qualification "$GCC_WASI_WORK_DIR/rtti-qualification/qualification.json" \
+  --coverage-qualification "$GCC_WASI_WORK_DIR/coverage-qualification/qualification.json" \
+  --dwarf-qualification "$GCC_WASI_WORK_DIR/dwarf-qualification/qualification.json" \
+  --libgcov "$GCC_LIBGCOV_WORK_DIR" \
+  --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current eighteen-patch compiler, `--long-double-qualification`,
+For the current twenty-one-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
-`--weakref-qualification`, all five SIMD
+`--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
+`--libgcov`, `--native-gcov`, all five SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -327,6 +363,16 @@ run with the pinned Clang frontend/library and are recorded as inapplicable.
 Earlier
 compiler profiles can omit `--libstdcxx` and advertise `libstdcxx: false` with core C++ language support. Every supplied GNU
 runtime must have a successful real native qualification receipt.
+The coverage gate reopens the two official runtime objects and their archive,
+all 36 translation units, 28 cases, 32 executions, eight metadata controls and
+120 unsupported-option diagnostics. It checks raw notes/profile identities and
+official gcov JSON counts, including the previous profile bytes consumed by
+each merge run. Matching analysis-tool versions and hashes are retained in
+bundle provenance. See [the coverage contract](COVERAGE.md).
+The embedded DWARF gate also requires full same-source native GCC/WABT/GNU
+runtime qualification, actual LLVM source/type/location consumers and retained
+Chromium paused-frame values. Partial examples cannot satisfy it. See
+[the debug contract and reproduction command](DWARF.md).
 Packaging verifies input inventories, source identities, the native gate and
 module formats. It writes a fresh output directory and the final v2 manifest
 last. It always emits `qualification.status:
@@ -452,14 +498,26 @@ are `wasi_snapshot_preview1` functions. `int`, `long`, pointers and `size_t` are
 Scalar integer/float/double arithmetic, branches, loops, calls, function
 pointers, GCC-to-GCC structures, globals, allocation, stdin/stdout, double libm,
 headers, multiple translation units and real `-D` options are qualification
-targets. C++ uses `-fno-exceptions -fno-rtti -fuse-cxa-atexit
+targets. The default C++ profile uses `-fno-exceptions -fno-rtti -fuse-cxa-atexit
 -fno-threadsafe-statics` consistently so single-threaded global/local static
 objects are constructed and destroyed. GNU library/STL support is gated by its
 own build and execution tests, independently of the C++ frontend.
 
 SIMD128 is available with explicit SDK `simd: true` and a qualified capable bundle;
 the default scalar profile passes `-mno-simd128`. See [the exact SIMD scope](SIMD.md).
-Exceptions, RTTI, threads/TLS/atomics and shared/dynamic linking are unsupported.
+RTTI requires an explicit SDK request and a bundle with qualified RTTI support.
+Exceptions, threads/TLS/atomics and shared/dynamic linking are unsupported.
+Failed reference casts and null-polymorphic `typeid` remain exception-dependent
+boundaries; mixed GCC/Clang C++ support is limited to the qualified interfaces
+described in [RTTI.md](RTTI.md).
+Coverage requires `coverage: true` and a qualified capable bundle. It uses
+official single-thread arc counters and libgcov normal-exit writes to an exact
+writable `/profile` preopen. The SDK returns original notes and binary profile
+files for matching native gcov analysis. PGO, atomic counter updates, manual
+gcov APIs and abrupt-exit recovery remain unsupported; see [COVERAGE.md](COVERAGE.md).
+Debug requires explicit `debug: true`, a verified capable bundle, and `-O0`.
+It embeds standard DWARF4 in WAT/object/executable output; other optimization
+levels are rejected by the SDK. See [DWARF.md](DWARF.md).
 x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
 x86 API. Unsupported target attributes/pragmas are GCC errors in this profile.
 The GNU C++ time-zone database, C++26 debugger functions and prebuilt `std`
@@ -498,11 +556,12 @@ ABI limitations remain and must not be hidden by passing scalar tests:
 
 Linking uses `--fatal-warnings` to reject detectable signature mismatches. It
 cannot detect every layout/calling-convention mismatch. The SDK accepts user
-source units, not arbitrary external binary objects or libraries. The backend
+source units and explicitly validated static object/archive link inputs. The backend
 supports the qualified strong aliases described in [SYMBOL-ALIASES.md](SYMBOL-ALIASES.md)
 and the weak-reference/weak-definition contract in
 [WEAK-REFERENCES.md](WEAK-REFERENCES.md). Weak alias definitions, COMDAT groups,
-symbol versioning, profiling and general debug output remain outside this profile;
+symbol versioning, advanced profiling and debug profiles beyond embedded DWARF4
+at `-O0` remain outside this profile;
 this is an experimental qualified profile,
 not a claim that all GCC tests or all ISO C/C++ programs pass.
 

@@ -16,6 +16,10 @@ import { conversionInstructions, verifyConversionInstructions } from './simd-con
 import { inspectVectorAbi, inspectObjectFunctionSignatures } from './inspect-vector-abi.mjs';
 import { verifySymbolAliasQualificationOptions, reopenSymbolAliasQualification } from './symbol-alias-qualification.mjs';
 import { verifyWeakrefQualificationOptions, reopenWeakrefQualification } from './weakref-qualification.mjs';
+import { verifyRttiQualificationOptions, verifyRttiRuntimeProfile, reopenRttiQualification } from './rtti-qualification.mjs';
+import { verifyCoverageQualificationOptions, reopenLibgcovBuild, reopenCoverageQualification } from './coverage-qualification.mjs';
+import { wasiRunnerSource as coverageRunnerSource } from './coverage-fixtures.mjs';
+import { verifyDwarfQualificationOptions, reopenDwarfQualification } from './dwarf-qualification.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const json = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -571,12 +575,13 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, nativeGcov, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
+	if (libgcov) libgcov = await fs.realpath(libgcov);
 	const out = path.resolve(output);
-	const inputs = [work, runtime, libstdcxx].filter(Boolean);
+	const inputs = [work, runtime, libstdcxx, libgcov].filter(Boolean);
 	// Existing parent realpaths also catch output aliases through a symlink.
 	await fs.mkdir(path.dirname(out), { recursive: true });
 	const finalOut = path.join(await fs.realpath(path.dirname(out)), path.basename(out));
@@ -638,6 +643,12 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (aliasProgramProof) assert.deepEqual(identity(aliasProgramProof), { bytes: aliasReport.programs.bytes, sha256: aliasReport.programs.sha256 });
 	verifyWeakrefQualificationOptions(lock.gcc.patches, { weakrefQualification, nativeLinker, libstdcxx });
 	const weakrefProof = weakrefQualification && await fs.readFile(weakrefQualification);
+	verifyRttiQualificationOptions(lock.gcc.patches, { rttiQualification, nativeLinker, libstdcxx });
+	const rttiProof = rttiQualification && await fs.readFile(rttiQualification);
+	verifyCoverageQualificationOptions(lock.gcc.patches, { coverageQualification, libgcov, nativeGcov, nativeLinker, libstdcxx });
+	const coverageProof = coverageQualification && await fs.readFile(coverageQualification);
+	verifyDwarfQualificationOptions(lock.gcc.patches, { dwarfQualification, nativeLinker, libstdcxx, libgcov, nativeGcov });
+	const dwarfProof = dwarfQualification && await fs.readFile(dwarfQualification);
 	let vectorAbiProof;
 	if (vectorAbiQualification) {
 		assert(simdProof, '--vector-abi-qualification requires --simd-qualification');
@@ -879,10 +890,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			assert.deepEqual(stdReceipt[field], build[field]);
 			runtimeProofs.set(path.basename(name), bytes);
 		}
-		for (const feature of ['exceptions', 'rtti', 'threads', 'timezoneDatabase', 'debugger', 'stdModules']) {
-			assert.equal(build[feature], false, `Unsupported libstdc++ feature: ${feature}`);
-			assert.equal(stdReceipt[feature], false, `Qualified runtime feature differs: ${feature}`);
-		}
+		verifyRttiRuntimeProfile(build, stdReceipt, Boolean(rttiProof), qualification);
 		const errnoPatch = identity(await fs.readFile(path.join(here, 'patches/wasi-libc-errno.patch')));
 		const errnoHeader = identity(sysroot.find((f) => f.path === 'include/wasm32-wasi/__errno.h').bytes);
 		for (const receipt of [build, stdReceipt]) {
@@ -900,7 +908,140 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			assert(files.some((f) => f.path === required), `GNU libstdc++ missing ${required}`);
 		sysroot.push(...files);
 	}
+	let libgcovBuildBytes, coverageAnalysisBytes;
+	if (coverageProof) {
+		assert(libgcov && nativeGcov && nativeLinker && libstdcxx, 'Coverage requires its runtime, analysis tool, linker and GNU runtime');
+		libgcovBuildBytes = await fs.readFile(path.join(libgcov, 'build.json'));
+		const build = JSON.parse(libgcovBuildBytes);
+		const files = await readNativeTree(path.join(libgcov, 'sysroot'));
+		verifyInventory(files, build.files, 'Official libgcov runtime');
+		const libraries = Object.fromEntries(files.map(file => [path.basename(file.path), identity(file.bytes)]));
+		assert.deepEqual(libraries['libwasi-emulated-getpid.a'], runtimeLock.coverage.sdkLibraries['libwasi-emulated-getpid.a'], 'Coverage getpid archive differs from its pin');
+		const sdkRoot = path.resolve(path.dirname(nativeLinker), '..');
+		const fileIdentity = async file => ({ path: file, ...identity(await fs.readFile(file)) });
+		const tools = Object.fromEntries(await Promise.all(Object.entries({
+			assembler: path.join(work, 'wabt-native/wat2wasm'), validator: path.join(work, 'wabt-native/wasm-validate'),
+			ar: path.join(sdkRoot, 'bin/llvm-ar'), nm: path.join(sdkRoot, 'bin/llvm-nm'),
+			ranlib: path.join(sdkRoot, 'bin/llvm-ranlib'), linker: nativeLinker
+		}).map(async ([name, file]) => [name, await fileIdentity(file)])));
+		const recipes = Object.fromEntries(await Promise.all(['build-libgcov.sh', 'build-libgcov.py', 'prepare-source.py']
+			.map(async name => [name, await fileIdentity(path.join(here, name))])));
+		const nativeCompiler = Object.fromEntries(await Promise.all(['cc1', 'cc1plus', 'xgcc']
+			.map(async name => [name, await fileIdentity(path.join(work, 'gcc-native/gcc', name))])));
+		const sources = Object.fromEntries(await Promise.all(['libgcov-driver.c', 'libgcov-merge.c']
+			.map(async name => [name, await fileIdentity(path.join(work, 'gcc/libgcc', name))])));
+		const libc = Object.fromEntries(['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a']
+			.map(name => [name, identity(sysroot.find(file => file.path === 'lib/wasm32-wasi/' + name).bytes)]));
+		// Keep actual paths for exact compiler/include argument verification.
+		for (const name of Object.keys(libc)) libc[name].path = path.join(runtime, 'sysroot/lib/wasm32-wasi', name);
+		await reopenLibgcovBuild(build, { sourceLock: identity(lockBytes), runtimeLock: identity(runtimeLockBytes),
+			nativeBuild: identity(nativeReceiptBytes), gccSource: nativeReceipt.gccSource, nativeCompiler, tools, recipes, sources, libraries, libc,
+			runtimeImport: identity(await fs.readFile(path.join(runtime, 'runtime-build.json'))),
+			getpid: runtimeLock.coverage.sdkLibraries['libwasi-emulated-getpid.a'] });
+		sysroot.push(...files);
+		const coverageTools = Object.fromEntries(await Promise.all(Object.entries({
+			gcc: nativeCompiler.cc1.path, gccCpp: nativeCompiler.cc1plus.path, xgcc: nativeCompiler.xgcc.path,
+			assembler: tools.assembler.path, validator: tools.validator.path,
+			objdump: path.join(work, 'wabt-native/wasm-objdump'), linker: nativeLinker,
+			ar: tools.ar.path, nm: tools.nm.path, gcov: nativeGcov,
+			gcovDump: path.join(path.dirname(nativeGcov), 'gcov-dump'), node: process.execPath
+		}).map(async ([name, file]) => [name, await fileIdentity(file)])));
+		const coverageRecipes = Object.fromEntries(await Promise.all(['test-coverage.mjs', 'coverage-fixtures.mjs',
+			'coverage-inspect.mjs', 'symbol-alias-inspect.mjs', 'inspect-vector-abi.mjs', 'prepare-source.py',
+			'build-native.sh', 'build-wabt.sh', 'build-libgcov.sh', 'build-libgcov.py', 'runtime.lock.json']
+			.map(async name => [name, await fileIdentity(path.join(here, name))])));
+		const headerRoots = { gcc: path.join(work, 'gcc-native/gcc/include'),
+			target: path.join(runtime, 'sysroot/include'), gnu: path.join(libstdcxx, 'sysroot/include') };
+		const headers = Object.fromEntries(await Promise.all(Object.entries(headerRoots).map(async ([name, root]) =>
+			[name, (await readNativeTree(root)).map(file => ({ path: path.join(root, file.path), ...identity(file.bytes) }))])));
+		const gnuVersion = path.join(headerRoots.gnu, 'c++', lock.gcc.version);
+		const coverageArchives = Object.fromEntries(await Promise.all(Object.entries({
+			crt: 'crt1-command.o', libc: 'libc.a', libm: 'libm.a', builtins: 'libclang_rt.builtins-wasm32.a',
+			libstdcxx: 'libstdc++.a', libsupcxx: 'libsupc++.a', libgcov: 'libgcov.a', getpid: 'libwasi-emulated-getpid.a'
+		}).map(async ([name, filename]) => {
+			const root = ['libstdcxx', 'libsupcxx'].includes(name) ? libstdcxx : ['libgcov', 'getpid'].includes(name) ? libgcov : runtime;
+			return [name, await fileIdentity(path.join(root, 'sysroot/lib/wasm32-wasi', filename))];
+		})));
+		const report = JSON.parse(coverageProof);
+		await reopenCoverageQualification(report, {
+			sourceLock: identity(lockBytes), nativeBuild: identity(nativeReceiptBytes), gccSource: nativeReceipt.gccSource,
+			assemblerSource: asReceipt.source, assemblerProvenance: await fileIdentity(path.join(work, 'wabt-native/provenance.json')),
+			tools: coverageTools, recipes: coverageRecipes, fixtures: coverageRecipes['coverage-fixtures.mjs'],
+			runner: identity(Buffer.from(coverageRunnerSource)),
+			analysisTools: { sources: Object.fromEntries(await Promise.all(['gcov.cc', 'gcov-dump.cc', 'gcov-io.cc', 'gcov-io.h', 'gcov-counter.def']
+				.map(async name => [name, await fileIdentity(path.join(work, 'gcc/gcc', name))]))),
+				buildMakefile: await fileIdentity(path.join(work, 'gcc-native/gcc/Makefile')) },
+			runtime: { sysroot: path.join(runtime, 'sysroot'), gnuSysroot: path.join(libstdcxx, 'sysroot'),
+				coverageRoot: libgcov, archives: coverageArchives, headerRoots, headers,
+				gnuIncludePaths: [gnuVersion, path.join(gnuVersion, 'wasm32-wasi'), path.join(gnuVersion, 'backward'),
+					headerRoots.gcc, path.join(headerRoots.target, 'wasm32-wasi')],
+				importReceipt: await fileIdentity(path.join(runtime, 'runtime-build.json')),
+				gnuBuild: await fileIdentity(path.join(libstdcxx, 'build.json')),
+				gnuQualification: await fileIdentity(path.join(libstdcxx, 'qualification/qualification.json')),
+				gnuReceipt: await fileIdentity(path.join(libstdcxx, 'libstdcxx-build.json')),
+				coverageBuild: await fileIdentity(path.join(libgcov, 'build.json')) }
+		});
+		coverageAnalysisBytes = json({ format: 'gcc-gcov', gccCommit: lock.gcc.commit,
+			versionWord: report.analysisTools.versionWord, jsonFormatVersion: report.analysisTools.jsonFormatVersion,
+			gcov: coverageTools.gcov, gcovDump: coverageTools.gcovDump,
+			sources: report.analysisTools.sources, nativeBuild: report.nativeBuild });
+	}
 	assert.equal(new Set(sysroot.map((f) => f.path)).size, sysroot.length, 'Duplicate merged sysroot path');
+	if (dwarfProof) {
+		const report = JSON.parse(dwarfProof);
+		const sdkRoot = path.resolve(path.dirname(nativeLinker), '..');
+		const fileIdentity = async file => ({ path: file, ...identity(await fs.readFile(file)) });
+		const toolPaths = {
+			gcc: path.join(work, 'gcc-native/gcc/cc1'), gccCpp: path.join(work, 'gcc-native/gcc/cc1plus'),
+			assembler: path.join(work, 'wabt-native/wat2wasm'), objdump: path.join(work, 'wabt-native/wasm-objdump'),
+			validator: path.join(work, 'wabt-native/wasm-validate'), linker: nativeLinker,
+			llvmDwarf: path.join(sdkRoot, 'bin/llvm-dwarfdump'), symbolizer: path.join(sdkRoot, 'bin/llvm-symbolizer'),
+			llvmObjdump: path.join(sdkRoot, 'bin/llvm-objdump'), objcopy: path.join(sdkRoot, 'bin/llvm-objcopy'),
+			node: process.execPath, chromium: report.tools?.chromium?.path,
+			gcov: nativeGcov, gcovDump: path.join(path.dirname(nativeGcov), 'gcov-dump')
+		};
+		const tools = Object.fromEntries(await Promise.all(Object.entries(toolPaths)
+			.map(async ([name, file]) => [name, await fileIdentity(file)])));
+		const recipes = Object.fromEntries(await Promise.all(['dwarf-fixtures.mjs', 'dwarf-fixtures.test.mjs',
+			'dwarf-inspect.mjs', 'test-dwarf.mjs', 'prepare-source.py', 'build-native.sh', 'build-wabt.sh', 'runtime.lock.json',
+			'coverage-fixtures.mjs', 'coverage-inspect.mjs', 'symbol-alias-inspect.mjs', 'inspect-vector-abi.mjs',
+			'build-libgcov.sh', 'build-libgcov.py']
+			.map(async name => [name, await fileIdentity(path.join(here, name))])));
+		const headerRoots = { gcc: path.join(work, 'gcc-native/gcc/include'), target: path.join(runtime, 'sysroot/include'),
+			gnu: path.join(libstdcxx, 'sysroot/include') };
+		const headers = Object.fromEntries(await Promise.all(Object.entries(headerRoots).map(async ([name, root]) =>
+			[name, (await readNativeTree(root)).map(file => ({ path: path.join(root, file.path), ...identity(file.bytes) }))])));
+		const gnuVersion = path.join(headerRoots.gnu, 'c++', lock.gcc.version);
+		const includeRoots = {
+			c: [headerRoots.gcc, path.join(headerRoots.target, 'wasm32-wasi'), headerRoots.target],
+			cpp: [gnuVersion, path.join(gnuVersion, 'wasm32-wasi'), path.join(gnuVersion, 'backward'),
+				headerRoots.gcc, path.join(headerRoots.target, 'wasm32-wasi'), headerRoots.target]
+		};
+		const archives = Object.fromEntries(await Promise.all(Object.entries({ crt: 'crt1-command.o', libc: 'libc.a',
+			libm: 'libm.a', libstdcxx: 'libstdc++.a', builtins: 'libclang_rt.builtins-wasm32.a',
+			libgcov: 'libgcov.a', getpid: 'libwasi-emulated-getpid.a' }).map(async ([name, filename]) => {
+			const root = name === 'libstdcxx' ? libstdcxx : ['libgcov', 'getpid'].includes(name) ? libgcov : runtime;
+			return [name, await fileIdentity(path.join(root, 'sysroot/lib/wasm32-wasi', filename))];
+		})));
+		await reopenDwarfQualification(report, {
+			sourceLock: identity(lockBytes), nativeBuild: identity(nativeReceiptBytes), gccSource: nativeReceipt.gccSource,
+			wabtSource: asReceipt.source, assemblerBuild: await fileIdentity(path.join(work, 'wabt-native/provenance.json')),
+			tools, recipes,
+			analysisToolDependencies: await Promise.all(['libLLVM.so.22.1-wasi-sdk', 'libedit.so.0']
+				.map(name => fileIdentity(path.join(sdkRoot, 'lib', name)))),
+			runtime: { sysroot: path.join(runtime, 'sysroot'), gnuSysroot: path.join(libstdcxx, 'sysroot'),
+				includeRoots, headers, archives, importReceipt: await fileIdentity(path.join(runtime, 'runtime-build.json')),
+				gnuBuild: await fileIdentity(path.join(libstdcxx, 'build.json')),
+				gnuQualification: await fileIdentity(path.join(libstdcxx, 'qualification/qualification.json')),
+				coverageRoot: libgcov, coverageBuild: await fileIdentity(path.join(libgcov, 'build.json')),
+				coverageAnalysis: {
+					sources: Object.fromEntries(await Promise.all(['gcov.cc', 'gcov-dump.cc', 'gcov-io.cc', 'gcov-io.h', 'gcov-counter.def']
+						.map(async name => [name, await fileIdentity(path.join(work, 'gcc/gcc', name))]))),
+					buildMakefile: await fileIdentity(path.join(work, 'gcc-native/gcc/Makefile')),
+					versionWord: 'B70 ', jsonFormatVersion: '2'
+				} }
+		});
+	}
 	for (const [proof, qualificationPath, fixtureName, harnessName, verify, label] of [
 		[longDoubleProof, longDoubleQualification, 'long-double-fixtures.mjs', 'test-long-double.mjs', verifyLongDoubleQualification, 'Binary128'],
 		[int128Proof, int128Qualification, 'int128-fixtures.mjs', 'test-int128.mjs', verifyInt128Qualification, 'Int128'],
@@ -1007,15 +1148,20 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
 		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a'],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: false, threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof) },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			...(longDoubleProof ? [] : ['long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.']),
 			...(int128Proof ? [] : ['Signed/unsigned __int128 is not qualified in this compiler profile.']),
 			...(gnuFloat128Proof ? ['GNU __float128 covers the qualified core language/ABI and GNU type traits/limits/abs; libquadmath, GNU q-math builtins and complex128 remain unavailable.'] : ['GNU __float128 is not qualified in this compiler profile.']),
-			'Arbitrary external objects are outside the SDK input contract.',
-			'C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.',
+			'External objects require the SDK compatibility/profile receipts; general mixed-toolchain C++ interoperability is not qualified.',
+			...(rttiProof ? [
+				'C++ defaults to -fno-rtti; explicit RTTI opt-in uses -frtti with the qualified GNU runtime. Exceptions remain disabled, including failed reference casts and typeid through null polymorphic pointers.',
+				'C++ retains -fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.'
+			] : ['C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.']),
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
+			...(dwarfProof ? ['Debug is explicit embedded DWARF32/DWARF4 at -O0. It uses actual Wasm local indices and initialized frame bases. Optimized register locations, split debug files, alternate debug formats and a general expression evaluator are outside this profile.'] : []),
+			...(coverageProof ? ['Coverage is explicit source-only single-counter GCC gcov instrumentation. Run covered executables with a writable /profile directory and analyze returned .gcno/.gcda files with the pinned matching GCC gcov. PGO, atomic counters, info-section streaming, manual gcov APIs and process PID semantics are unsupported.'] : []),
 			...(simdProof ? [simdHeaderProof
 				? 'SIMD128 is explicit opt-in for GNU 128-bit vectors and the documented 169-name wasm_simd128.h subset; automatic vectorization and other header APIs are not qualified.'
 				: 'SIMD128 is explicit opt-in for GNU 128-bit vector types; automatic vectorization and wasm_simd128.h intrinsics are not qualified.'] : []),
@@ -1034,6 +1180,12 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		...llvmProofs
 	]);
 	if (stdReceipt) provenanceFiles.set('libstdcxx-build.json', json(stdReceipt));
+	if (libgcovBuildBytes) provenanceFiles.set('libgcov-build.json', libgcovBuildBytes);
+	if (dwarfProof) provenanceFiles.set('native-dwarf-qualification.json', dwarfProof);
+	if (coverageProof) {
+		provenanceFiles.set('native-coverage-qualification.json', coverageProof);
+		provenanceFiles.set('coverage-analysis-tools.json', coverageAnalysisBytes);
+	}
 	if (simdProof) provenanceFiles.set('native-simd-qualification.json', simdProof);
 	if (simdExtendedProof) provenanceFiles.set('native-simd-extended-qualification.json', simdExtendedProof);
 	if (simdSaturatingProof) provenanceFiles.set('native-simd-saturating-qualification.json', simdSaturatingProof);
@@ -1063,7 +1215,11 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		provenanceFiles.set('native-symbol-alias-qualification.json', symbolAliasProof);
 		provenanceFiles.set('native-symbol-alias-programs.json', aliasProgramProof);
 	}
-	if (weakrefProof) {
+	for (const [proof, feature, harness, reopen] of [
+		[weakrefProof, 'weakref', 'test-weakrefs.mjs', reopenWeakrefQualification],
+		[rttiProof, 'rtti', 'test-rtti.mjs', reopenRttiQualification]
+	]) {
+		if (!proof) continue;
 		const sdkRoot = path.resolve(path.dirname(nativeLinker), '..');
 		const fileIdentity = async file => ({ path: file, ...identity(await fs.readFile(file)) });
 		const toolPaths = {
@@ -1074,14 +1230,14 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			linker: nativeLinker, node: process.execPath
 		};
 		const tools = Object.fromEntries(await Promise.all(Object.entries(toolPaths).map(async ([name, file]) => [name, await fileIdentity(file)])));
-		const recipeNames = ['test-weakrefs.mjs', 'weakref-fixtures.mjs', 'weakref-inspect.mjs', 'symbol-alias-inspect.mjs',
+		const recipeNames = [harness, feature + '-fixtures.mjs', feature + '-inspect.mjs', 'symbol-alias-inspect.mjs',
 			'inspect-vector-abi.mjs', 'prepare-source.py', 'build-native.sh', 'build-wabt.sh', 'build-libstdcxx.sh',
 			'test-libstdcxx.mjs', 'runtime.lock.json'];
 		const recipes = Object.fromEntries(await Promise.all(recipeNames.map(async name => [name, await fileIdentity(path.join(here, name))])));
 		const archives = Object.fromEntries(Object.entries({ crt: 'crt1-command.o', libc: 'libc.a', libm: 'libm.a',
 			libstdcxx: 'libstdc++.a', libsupcxx: 'libsupc++.a', builtins: 'libclang_rt.builtins-wasm32.a' }).map(([name, filename]) => {
 			const file = sysroot.find(file => file.path === 'lib/wasm32-wasi/' + filename);
-			assert(file, 'Missing weakref runtime archive: ' + filename);
+			assert(file, 'Missing ' + feature + ' runtime archive: ' + filename);
 			return [name, identity(file.bytes)];
 		}));
 		const headerRoots = { gcc: path.join(work, 'gcc-native/gcc/include'), target: path.join(runtime, 'sysroot/include'),
@@ -1091,15 +1247,15 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		const gnuVersionRoot = path.join(headerRoots.gnu, 'c++', lock.gcc.version);
 		const gnuIncludePaths = [gnuVersionRoot, path.join(gnuVersionRoot, 'wasm32-wasi'), path.join(gnuVersionRoot, 'backward'),
 			headerRoots.gcc, path.join(headerRoots.target, 'wasm32-wasi')];
-		await reopenWeakrefQualification(JSON.parse(weakrefProof), {
+		await reopen(JSON.parse(proof), {
 			sourceLock: identity(lockBytes), nativeBuild: identity(nativeReceiptBytes), gccSource: nativeReceipt.gccSource,
-			fixtures: recipes['weakref-fixtures.mjs'], tools, recipes,
+			fixtures: recipes[feature + '-fixtures.mjs'], tools, recipes,
 			assemblerProvenance: await fileIdentity(path.join(work, 'wabt-native/provenance.json')), assemblerSource: asReceipt.source,
 			runtime: { archives, headers, headerRoots, gnuIncludePaths, gnuBuild: await fileIdentity(path.join(libstdcxx, 'build.json')),
 				gnuReceipt: await fileIdentity(path.join(libstdcxx, 'libstdcxx-build.json')),
 				gnuQualification: await fileIdentity(path.join(libstdcxx, 'qualification/qualification.json')) }
 		});
-		provenanceFiles.set('native-weakref-qualification.json', weakrefProof);
+		provenanceFiles.set('native-' + feature + '-qualification.json', proof);
 	}
 	for (const [name, bytes] of runtimeProofs) provenanceFiles.set(name, bytes);
 	provenanceFiles.set('host-dependencies.lock.json', await fs.readFile(path.join(here, '../gcc-browser/sources.lock.json')));
@@ -1146,8 +1302,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}

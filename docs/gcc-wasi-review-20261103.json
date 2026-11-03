@@ -1,0 +1,901 @@
+{
+  "schemaVersion": 1,
+  "kind": "gcc-wasi-review",
+  "date": "2026-11-03",
+  "createdAtUTC": "2026-11-03T08:48:24.432999+00:00",
+  "status": "passed",
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/83",
+  "pullRequests": {
+    "producer": "https://github.com/seo-rii/wasm-llvm/pull/106",
+    "sdk": "https://github.com/seo-rii/wasm-idle/pull/367"
+  },
+  "qualificationRoot": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1",
+  "sourceIdentities": {
+    "reviewedProducerCodeCommit": "1dd94fb885ea2f5e6acebe8498d581a786fb3968",
+    "compiledImplementationCommit": "08b4c5392617322d6d94287a5ea75d7723bb90ce",
+    "sourceLock": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/sources.lock.json",
+      "bytes": 9424,
+      "sha256": "96a89a63f449a98d3168fd0ce9d8fcb1689cfa5525a1c327eae3063286209faf"
+    },
+    "gcc": {
+      "version": "17.0.0",
+      "commit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+      "sourceDiffSha256": "088dce09f2c5f0d3b51012eb7f4b4a29405579cf69f43e5ff25e22a0f5f86564"
+    },
+    "wabt": {
+      "version": "1.0.37",
+      "commit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173",
+      "sourceDiffSha256": "ed771f2fc12af0316db6f0b0e4732a39a6cec6aeae326a846f83955c12368eeb"
+    },
+    "patchCounts": {
+      "gcc": 21,
+      "wabt": 3
+    },
+    "dwarfPatch": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/patches/0021-dwarf-debug.patch",
+      "bytes": 40659,
+      "sha256": "220939ba557c4d48e7aff76beaf509c860d5624b6200606c5218426127ecf279"
+    },
+    "coverageVerifier": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/producer/gcc-wasi/coverage-qualification.mjs",
+      "bytes": 29896,
+      "sha256": "97183a785829fcf8b5cabca83923341c731d86ada0831f8d3ca217b6c3472b87"
+    },
+    "postCompileChanges": "Test/documentation integrations and the source-path coverage verifier fix; compiled compiler/assembler source, source lock and build recipes unchanged.",
+    "target": "wasm32-wasi",
+    "dwarfProfile": "Embedded DWARF32/DWARF4 at O0; opt-in debug information; native and Wasm-host compiler builds are separate.",
+    "sourceGateFixCommit": "92f4edf07195c54cf3930d46ddf12d826e712a20"
+  },
+  "currentPasses": {
+    "nativeGccBuild": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/native-review-v1-gcc-status.json",
+        "bytes": 656,
+        "sha256": "8e62a9667d72dd65bb3f08bea8c3598ff765af16e491ac90289cdd45d81f4b86"
+      },
+      "elapsedSeconds": 496.0218629837036,
+      "inputsUnchanged": true,
+      "processReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/native-review-v1-gcc-process.json",
+        "bytes": 650,
+        "sha256": "03edb4314bee97f414086cd32ae6b1338be3c7bbf41d5939601f440d1e9c2769"
+      },
+      "pid": 607181,
+      "processExited": true,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-native-gcc-quqx_uaf.log",
+        "bytes": 1626015,
+        "sha256": "d45b7aa33ede6ac1b3c6f2141d494cb35fde24ebb39824328cbac31f8c125aa2"
+      },
+      "buildReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/native-build.json",
+        "bytes": 7435,
+        "sha256": "2f09d6b6971ad50fcacfe1612b51c9239ef63be279b53f967f9cb42de55aaf08"
+      }
+    },
+    "nativeWabtBuild": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/native-review-v1-wabt-status.json",
+        "bytes": 681,
+        "sha256": "e08c1570c5888fa9b88867c745ad924c026999687ea946f92d9e3ef947871ce5"
+      },
+      "elapsedSeconds": 101.29448819160461,
+      "inputsUnchanged": true,
+      "processReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/native-review-v1-wabt-process.json",
+        "bytes": 653,
+        "sha256": "caf9a7212590cc4769d3a9d08d946287652e41c3a4fa1b77ec5679bb5306c4eb"
+      },
+      "pid": 607182,
+      "processExited": true,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-native-wabt-161d1b51.log",
+        "bytes": 21678,
+        "sha256": "07d88b6b0c5c0c75db4561bc5bce0f62317fc315f69e1100f2e8226a203283ed"
+      },
+      "buildReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/wabt-native/provenance.json",
+        "bytes": 2668,
+        "sha256": "7193e10cd62dc0ba67c674fb0d46ba0d5ce821b1acc85199afd78af79ed0c438"
+      }
+    },
+    "wasmHostBuilds": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/browser-review-v1-status.json",
+        "bytes": 3678,
+        "sha256": "140149cf17f41523bcc69a6c1960cf2c4d9268add319db6fc0c90f1cc003d7bb"
+      },
+      "elapsedSeconds": 1801.214736700058,
+      "inputsUnchanged": true,
+      "frozenFiles": 10433,
+      "processReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/browser-review-v1-process.json",
+        "bytes": 951,
+        "sha256": "256290cb2542f0b593fb52dd59cceadc5a1084673d3b2c85920b91efa2972a84"
+      },
+      "pid": 698820,
+      "processExited": true,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-wasmhost-cwf39jxj.log",
+        "bytes": 7086763,
+        "sha256": "234999cc54e42d8b274b6d1e3141cfdab5c283e72796d5b98142b8d19834f784"
+      },
+      "compilerReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/browser-compiler/compiler-build.json",
+        "bytes": 12900,
+        "sha256": "82e1a18c63df8263d4e582f86ac68d75c99fd5732d56e3cd964244937a485e62"
+      },
+      "assemblerReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/wabt-browser/provenance.json",
+        "bytes": 2540,
+        "sha256": "8df6201e04794f0b1950b2978351ca8c76865ae9e98d1dbb742a00e4014143c8"
+      },
+      "stages": [
+        {
+          "stage": "wabt-browser",
+          "exitCode": 0,
+          "elapsedSeconds": 181.50255012512207
+        },
+        {
+          "stage": "gcc-browser",
+          "exitCode": 0,
+          "elapsedSeconds": 1434.237194776535
+        }
+      ],
+      "releaseInventory": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/browser-review-v1-release-artifacts.json",
+        "bytes": 22332,
+        "sha256": "537d700e0ef2a09b7ef0ab93a10a9b53199bcafecf6be35ac24f0e77e330998a"
+      },
+      "assets": {
+        "cc1.mjs": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/browser-compiler/cc1.mjs",
+          "bytes": 133499,
+          "sha256": "82daaecc5d19f6d33f945a6622f9dd789666972cb4a68e7305a0d167ccb2bcc3"
+        },
+        "cc1.wasm": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/browser-compiler/cc1.wasm",
+          "bytes": 15749661,
+          "sha256": "c413d2d93d934ffea4a35a1925826f595dc1bd425b87c8f90df7ff6519b376b6"
+        },
+        "cc1plus.mjs": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/browser-compiler/cc1plus.mjs",
+          "bytes": 139030,
+          "sha256": "975bcf17ef90c1c502dfa49664ceb32ac4e84214e45258a454c3a174e72e7c37"
+        },
+        "cc1plus.wasm": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/browser-compiler/cc1plus.wasm",
+          "bytes": 17409260,
+          "sha256": "1fe5dabd140d25eb13fccf639c408d23e12bf149d89754129d4fe692d24d6263"
+        },
+        "as.mjs": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/wabt-browser/as.mjs",
+          "bytes": 61491,
+          "sha256": "c82b3594dbe310c0006fd7ac5c3af3dcf4445353306eb02eece26f6e51fd23fb"
+        },
+        "as.wasm": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/wabt-browser/as.wasm",
+          "bytes": 644385,
+          "sha256": "c9a2e5eb248c2aee6837ef9bcc44a56c5167393df0c69961fea726654b42bda8"
+        }
+      }
+    },
+    "freshRuntimes": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/runtimes-v1-status.json",
+        "bytes": 8103,
+        "sha256": "94889898dd2b01eee15678039e37dbd27e7d08204f578767ebb84b9899ffcdd0"
+      },
+      "elapsedSeconds": 164.8394114971161,
+      "inputsUnchanged": true,
+      "frozenFiles": 18834,
+      "pid": 657341,
+      "processExited": true,
+      "steps": [
+        {
+          "id": "build-gnu",
+          "exitCode": 0,
+          "elapsedSeconds": 96.29375720024109
+        },
+        {
+          "id": "qualify-gnu",
+          "exitCode": 0,
+          "elapsedSeconds": 5.835686445236206
+        },
+        {
+          "id": "build-libgcov",
+          "exitCode": 0,
+          "elapsedSeconds": 25.885392665863037
+        }
+      ],
+      "gnuBuild": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/libstdcxx-v2/build.json",
+        "bytes": 6536253,
+        "sha256": "afdf367ee2584e6950e581d7b4a3f0ef97e4a7705cee841260c200d1f8d58596"
+      },
+      "gnuQualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/libstdcxx-v2/qualification/qualification.json",
+        "bytes": 13887,
+        "sha256": "51daecfd9cac02f69ad09ce01b21406471fce7d4fbe2baa21d0e8796103c0592"
+      },
+      "libgcovBuild": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/libgcov-current/build.json",
+        "bytes": 157646,
+        "sha256": "5eb8f05585f4fb0cc33d49bf709a2cd675be5870640354cc8954105d6fc13444"
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-native-runtime-chain-1gnuhw6e.log",
+        "bytes": 784427,
+        "sha256": "0108da874739fd449849a2e9d883fd9323b5c5dcfb346f2e9bc49fcb980f8c58"
+      },
+      "logScope": "Successful GNU/libgcov substeps are in the v1 chain log; that outer chain later exited 1 on coverage path validation. The runtime subtask itself exited 0."
+    },
+    "nativeRegression25": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/inherited-native-v2-status.json",
+        "bytes": 13400,
+        "sha256": "b7ba3e4176f75aa00354318930f87bad4ec409ef0c0f86a6c36f35559f75b3f4"
+      },
+      "elapsedSeconds": 1811.502364873886,
+      "inputsUnchanged": true,
+      "processReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/inherited-native-v2-process.json",
+        "bytes": 923,
+        "sha256": "692fa059fe7b533a6e3294e2c81ce09ee3a2dae5298cccfaded3754ff422862c"
+      },
+      "pid": 771595,
+      "processExited": true,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-inherited-native-v2-ullk8u0p.log",
+        "bytes": 135018,
+        "sha256": "ee65282eee69244590af4b607f46683d079271d41c168ec0ae14350fa8b634d8"
+      },
+      "suites": 25,
+      "freshlyExecutedSuites": 24,
+      "reusedCurrentCompilerCoreSuites": 1,
+      "oldCompilerProofsReused": false,
+      "nativeCorePrograms": 13,
+      "nativeCoreReport": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/native-programs/provenance.json",
+        "bytes": 77184,
+        "sha256": "51eb907036c9cf4c53cdfa7248b2fd02675c95a6cb94a3fbf67af6e3f3ac5a6f"
+      },
+      "suiteIds": [
+        "native-smoke",
+        "simd-header-qualification",
+        "vector-subreg-qualification",
+        "half-vector-abi-qualification",
+        "gnu-float128-qualification",
+        "abi-qualification",
+        "atomic-abi-qualification",
+        "simd-qualification",
+        "simd-extended-qualification",
+        "simd-saturating-qualification",
+        "simd-conversions-qualification",
+        "vector-abi-qualification",
+        "empty-abi-qualification",
+        "wide-builtins-qualification",
+        "wide-bitfields-qualification",
+        "singleton-bitfield-qualification",
+        "anonymous-bitfield-qualification",
+        "long-double-qualification",
+        "int128-qualification",
+        "fp-extension-qualification",
+        "symbol-alias-qualification",
+        "symbol-alias-assembler-qualification",
+        "target-features-qualification",
+        "weakref-qualification",
+        "rtti-qualification"
+      ],
+      "artifactFiles": 27231,
+      "artifactInventory": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/inherited-native-v2-artifacts.json",
+        "bytes": 8418886,
+        "sha256": "bf51a97946d1628b71275439c8b9c03ec26653ca374d0d903082e96868ff8673"
+      }
+    },
+    "nativeCoverageV2": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/coverage-native-v2-status.json",
+        "bytes": 1738,
+        "sha256": "a3f7cb0643614ae4e7268f41a3d66392615c1963b7c67fceead9220f55bf67a8"
+      },
+      "elapsedSeconds": 59.85288405418396,
+      "inputsUnchanged": true,
+      "pid": 681187,
+      "processExited": true,
+      "counts": {
+        "units": 36,
+        "cases": 28,
+        "coverage": 16,
+        "controls": 12,
+        "nativeExecutions": 32,
+        "profileExecutions": 20,
+        "metadataControls": 8,
+        "diagnostics": 120
+      },
+      "qualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/work/coverage-qualification-v2/qualification.json",
+        "bytes": 3054770,
+        "sha256": "dd3e85771b13e652c10df96313568c103edd818906ec56fa95561daa432f79cc"
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-coverage-recovery-620d2ck7.log",
+        "bytes": 252,
+        "sha256": "6c132dc1c0b64c93e957294120d283cd744e0eafdc968284a2b1685e36ef3dbf"
+      },
+      "readiness": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/native-readiness-v2.json",
+        "bytes": 1983,
+        "sha256": "ea03e64a3128852d6f0fcb6f6aa5f635a70a4f0b83545e6dc4be18820108ae33"
+      },
+      "pathPolicy": "Canonical physical WASI runtime root; original v1 failure is preserved separately."
+    },
+    "fullNativeDwarf": {
+      "status": "passed",
+      "exitCode": 0,
+      "processExited": true,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/native-dwarf/full-v1-status.json",
+        "bytes": 6852,
+        "sha256": "5b3a962368927406e91b4f62f3ce04fb44ce801534035d1542f7f47b433898ec"
+      },
+      "queueReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/native-dwarf/queued-full-v2-status.json",
+        "bytes": 1655,
+        "sha256": "9b74ba7da847511282b490a54997f7aa342b7bf0e98408fd420f46893d636224"
+      },
+      "qualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/native-dwarf/full-v1/qualification.json",
+        "bytes": 36369120,
+        "sha256": "e62f9874bfe5fa1473f39f33966d91e843341248df60f889532930bc7b5ef871"
+      },
+      "counts": {
+        "cases": 11,
+        "sourceUnits": 15,
+        "normalExecutionsPerHost": 11,
+        "trappedExecutionsPerHost": 10,
+        "liveSourceFrames": 18,
+        "controls": 14,
+        "diagnostics": 28,
+        "combinations": 2,
+        "actualLocalIndexBoundaries": [
+          127,
+          128,
+          16383,
+          16384
+        ]
+      },
+      "elapsedSeconds": 81.45127177238464,
+      "inputsUnchanged": true,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-native-dwarf-v2-3o0x8b28.log",
+        "bytes": 2413,
+        "sha256": "3a751610bddac624e409b921a6f12078c256ec23fc63f9a561193a9034f53a99"
+      }
+    },
+    "nativeDwarfGate": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/dwarf-gate-preflight-v1.json",
+        "bytes": 2429,
+        "sha256": "eca2c31624b25ba4e5031cd17657da8938389f753ea7ea367054ed02fab92d99"
+      },
+      "inputsUnchanged": true,
+      "counts": {
+        "programs": 23,
+        "sourceUnits": 47,
+        "liveFrames": 18,
+        "reopenedFiles": 1642
+      },
+      "tests": {
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "genuinePositive": 1,
+        "genuineMutations": 2,
+        "rejectionEnvelopesAndOptions": 13
+      },
+      "testStatus": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/native-dwarf/gate-v1-status.json",
+        "bytes": 1506,
+        "sha256": "68f86c47f1163002eacf53317963fdcbcb811459fb99f6a96aee9debfc7868d3"
+      }
+    },
+    "unusedParameterRegression": {
+      "status": "passed",
+      "comparison": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/pr106-compiler-review-20261103/regression/fixed-v1-comparison.json",
+        "bytes": 2229,
+        "sha256": "a714759098f532bf45c2cfd4509a6332518dd99bbd4123163745a16d9d868c9c"
+      },
+      "qualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/pr106-compiler-review-20261103/regression/fixed-v1/report.json",
+        "bytes": 182564,
+        "sha256": "01c3659d9dc0b2c99efe8f371864be7c05b85adc02b032f661ffa197b6b7b60f"
+      },
+      "fixtureCases": 8,
+      "normalNodeExecutions": 8,
+      "trappedNodeExecutions": 8,
+      "actualCDPPauses": 8,
+      "verifiedEntries": 28,
+      "measuredSourceValues": 26,
+      "intentionallyUnavailableReassignedValues": 2,
+      "negativeFixtures": [
+        "dead-reassignment-c",
+        "dead-reassignment-call-c",
+        "live-reassignment-call-c"
+      ],
+      "wideRetained": "wide-retained-c",
+      "restoredSourceLocations": 10,
+      "finding": "Unused scalar parameters and unused C++ this lacked source locations although unchanged incoming ABI locals retained their values.",
+      "resolution": "Conservative whole-function availability check; reassigned or call-clobbered incoming values are not restored."
+    },
+    "packageV2": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/package-review-v2-status.json",
+        "bytes": 9354,
+        "sha256": "1c6777b41c9165ed87110a2cc422ecabeddfccc42435c114ab72543f4dfd3ee2"
+      },
+      "elapsedSeconds": 129.5250597000122,
+      "inputsUnchanged": true,
+      "frozenFiles": 30037,
+      "processReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/package-review-v2-process.json",
+        "bytes": 618,
+        "sha256": "d20aed8c92f0cdb88d8efe920db72a69eb0940a748dcb556f64574bbcc86ee6e"
+      },
+      "pid": 950411,
+      "processExited": true,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-package-v2-trhs9__c.log",
+        "bytes": 265,
+        "sha256": "c3a25384f6305701b6d65c4ec4d9f3946778a4d4a889fd0a690c038a016528d2"
+      },
+      "manifest": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/bundle-final/gcc-toolchain.v2.json",
+        "bytes": 26139,
+        "sha256": "c2e13a7d697fc2a56a8a19284a8c20d809cbd562a7842b87e4ee95154aa8d768"
+      },
+      "artifactInventory": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/package-review-v2-artifacts.json",
+        "bytes": 26702,
+        "sha256": "0f2155806b839db91c64d3907aaae312e44ab3fa417b920951059e6dbaced5fe"
+      },
+      "outputFiles": 107,
+      "outputBytes": 355782860,
+      "originalManifestStatus": "unverified",
+      "publishedOrPromoted": false
+    },
+    "producerUnitTests": {
+      "status": "passed",
+      "exitCode": 0,
+      "statusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/producer-units-review-v1-status.json",
+        "bytes": 2499,
+        "sha256": "31b95b3f2684086e92bad084d2b722363ca33db99f732aa955443c2d2bc608c8"
+      },
+      "elapsedSeconds": 4.811776876449585,
+      "inputsUnchanged": true,
+      "counts": {
+        "tests": 193,
+        "pass": 189,
+        "fail": 0,
+        "skipped": 4
+      },
+      "testFiles": 26,
+      "log": {
+        "path": "/home/seorii/logs/wasm-llvm-83-review-producer-units-gr13n4lp.log",
+        "bytes": 18287,
+        "sha256": "3485d0e76a97407aa683f61721fdf185bff0e41c7a749f8888699af88d2404ee"
+      },
+      "skipPolicy": "Four optional retained-evidence integration tests were skipped in this unit run; the actual native/fullSDK/package qualifications are recorded separately."
+    },
+    "fullPublicSdk": {
+      "status": "passed",
+      "exitCode": 0,
+      "pid": 959222,
+      "processExited": true,
+      "summary": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/public-sdk-v2-final-summary.json",
+        "bytes": 2994,
+        "sha256": "365c5ec886242e940fc7f1b936a6d9034e5c7d04c926e8e1a94bcf5b3082742a"
+      },
+      "qualification": {
+        "path": "/home/seorii/dev/hancomac/.build-sources/wasm-llvm-dwarf-83-review-20261103/qualified-artifacts/sdk-public-dwarf-review-v2/qualification.json",
+        "bytes": 160558469,
+        "sha256": "45f41fe78d1306f0a5b6d0a857b65db921f83b374d8fbfe608379a51c8f2b7cb"
+      },
+      "sdkCommit": "749c4d5a59845327019142e7890ef16a4baf36f3",
+      "sdkTree": "e6415ce5bed6672ab5e264bd18c537943e023a78",
+      "counts": {
+        "programs": 22,
+        "combinations": 4,
+        "assemblyOutputs": 4,
+        "objectOutputs": 4,
+        "debugObjectCompositions": 4,
+        "defaultFalsePairs": 16,
+        "rejections": 28,
+        "actualTrapsPerHost": 20,
+        "actualLocalIndices": [
+          127,
+          128,
+          16383,
+          16384,
+          127,
+          128,
+          16383,
+          16384
+        ]
+      },
+      "measuredNamedValues": 80,
+      "measuredUnusedParameterValues": [
+        91,
+        91,
+        91,
+        91
+      ],
+      "elapsedSeconds": 171.57563376426697,
+      "inputsUnchanged": true,
+      "artifactsUnchanged": true,
+      "manifestUnchanged": true,
+      "promotionPerformed": false,
+      "log": {
+        "path": "/home/seorii/logs/wasm-83-review-full-sdk-z56xuvsr.log",
+        "bytes": 1797,
+        "sha256": "b9f1c3d645d2becd00dd7051b37aef2c3c8b5f4bbafd95b16595d00898403947"
+      }
+    },
+    "vectorFallbackSideTests": {
+      "status": "passed",
+      "scope": "Current-compiler native smoke subset with independent Clang references; historical full-browser receipts remain bound to their original source and bundle.",
+      "pullRequests": [
+        {
+          "number": 102,
+          "unitTestsPassed": 15,
+          "counts": {
+            "fixtures": 26,
+            "runtimeFixtures": 24,
+            "constantFixtures": 2,
+            "gccExecutions": 26,
+            "clangExecutions": 26,
+            "enabled": 9,
+            "disabled": 9,
+            "noFlagDefaults": 8
+          },
+          "reviewReceipt": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/side-tests/102/review-result.json",
+            "bytes": 1766,
+            "sha256": "e9c60ddad1460f99a840e226bd4ea3f54b8033d2dea011a1ddae076421fdd2f1"
+          },
+          "qualification": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/side-tests/102/native-smoke/qualification.json",
+            "bytes": 3328400,
+            "sha256": "01508729bdd522ac61f2d55e941768c1d9a91d6736d3f82f1d2f416a5d98b6e5"
+          },
+          "sourceDiffSha256": "088dce09f2c5f0d3b51012eb7f4b4a29405579cf69f43e5ff25e22a0f5f86564",
+          "inputsUnchanged": true,
+          "mergeCommitInto100": "c1bc67f9a9eb83fdd7bc23ae6b964ed64c7f8811"
+        },
+        {
+          "number": 103,
+          "unitTestsPassed": 10,
+          "counts": {
+            "fixtures": 16,
+            "gccFunctionChecks": 112,
+            "clangFunctionChecks": 112,
+            "gccExecutions": 16,
+            "clangExecutions": 16,
+            "enabled": 8,
+            "disabled": 4,
+            "noFlagDefaults": 4
+          },
+          "reviewReceipt": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/side-tests/103/review-result.json",
+            "bytes": 1774,
+            "sha256": "a22aa226bae48b9bd4ea085826201990f6e242c20792af8c588ed2fa1f7d775e"
+          },
+          "qualification": {
+            "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/side-tests/103/native-smoke/qualification.json",
+            "bytes": 5755309,
+            "sha256": "676bc0995279e4a635e11dbce0911c12e358ac64765424746f29a1f7a0df88de"
+          },
+          "sourceDiffSha256": "088dce09f2c5f0d3b51012eb7f4b4a29405579cf69f43e5ff25e22a0f5f86564",
+          "inputsUnchanged": true,
+          "mergeCommitInto100": "761ae404934213fa8e5294e246567cd105ba1f6b"
+        }
+      ]
+    },
+    "standardWorker": {
+      "status": "passed",
+      "observedStatus": "complete",
+      "supervisorPid": 964405,
+      "workerPid": 964406,
+      "expectedCounts": {
+        "chromium": 1734,
+        "nodeWasi": 1734,
+        "objects": 1504,
+        "wat": 1504,
+        "objectSignatureChecks": 382,
+        "opcodeChecks": 979
+      },
+      "plan": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-plan.json",
+        "bytes": 288865,
+        "sha256": "9ba26b66693cd38435c8f1675a66bcb030fa6aa1e555a8dbfe199bf2d97b6049"
+      },
+      "sdkBinding": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-sdk-binding.json",
+        "bytes": 88294,
+        "sha256": "faaf79715a31de93fdfb0ccaa090d25cb01b9e69f9819f424d89cf2dcdbace60"
+      },
+      "progressPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-progress.json",
+      "logPath": "/home/seorii/logs/wasm-83-review-standard-worker-43wzym0q.log",
+      "supervisorStatusPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-supervisor-status.json",
+      "workerStatusPath": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-status.json",
+      "exitCode": 0,
+      "processExited": true,
+      "elapsedSeconds": 1972.3777868747711,
+      "completedSuites": 21,
+      "counts": {
+        "chromium": 1734,
+        "nodeWasi": 1734,
+        "objects": 1504,
+        "wat": 1504,
+        "objectSignatureChecks": 382,
+        "opcodeChecks": 979
+      },
+      "supervisorStatusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-supervisor-status.json",
+        "bytes": 635,
+        "sha256": "9ed249c627ddaee65eb848046b69936058ad2f2a27e50602ab97524e9aab31f9"
+      },
+      "workerStatusReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-status.json",
+        "bytes": 10824,
+        "sha256": "b17155abe9ca02ff1684c8a683b29b2c6c7cf87dc1e2679c181ad5610b8b43de"
+      },
+      "artifactInventory": {
+        "kind": "final-reinspection-summary-with-nested-artifact-receipts",
+        "summary": {
+          "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-summary.json",
+          "bytes": 73343,
+          "sha256": "710f7cb008ccc570e1a6bdc649095e73b22292ff687363b72b4dffd067450b30"
+        },
+        "suiteReceipts": 21
+      },
+      "log": {
+        "path": "/home/seorii/logs/wasm-83-review-standard-worker-43wzym0q.log",
+        "bytes": 142239,
+        "sha256": "e8da7e7fd3ef58df2882618e40716608ac4434fa7b631d488b1a64845fee1cae"
+      },
+      "inputsUnchanged": true,
+      "artifactsVerified": true,
+      "originalManifestUnchanged": true,
+      "originalManifestStatus": "unverified",
+      "producerCommit": "1dd94fb885ea2f5e6acebe8498d581a786fb3968",
+      "sdkCommit": "749c4d5a59845327019142e7890ef16a4baf36f3",
+      "sourceSnapshot": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/worker-inputs-final.json",
+        "bytes": 1216643,
+        "sha256": "b9d31531d7f59419538f96f9017ec7f996bc235f282e8fdbc5d29ad6c497fadf"
+      },
+      "packageManifest": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/bundle-final/gcc-toolchain.v2.json",
+        "bytes": 26139,
+        "sha256": "c2e13a7d697fc2a56a8a19284a8c20d809cbd562a7842b87e4ee95154aa8d768"
+      },
+      "suiteNames": [
+        "rtti",
+        "weakref",
+        "symbol-alias",
+        "header",
+        "vector-subreg",
+        "conversions",
+        "gnu-float128",
+        "saturating",
+        "anonymous-bitfield",
+        "empty-abi",
+        "singleton-bitfield",
+        "basic",
+        "scalar-abi",
+        "atomic",
+        "simd",
+        "extended",
+        "vector-abi",
+        "long-double",
+        "int128",
+        "wide-integer",
+        "fp-extension"
+      ],
+      "diagnosticCounts": {
+        "diagnostics": 592,
+        "header": 296,
+        "saturation": 80,
+        "conversions": 192,
+        "symbolAliases": 24,
+        "defaultControls": 4
+      },
+      "aliasCounts": {
+        "providers": 26,
+        "objects": 50,
+        "linkControls": 8,
+        "linkRejections": 16,
+        "assemblerObjects": 110,
+        "assemblerRejections": 18
+      },
+      "weakrefCounts": {
+        "units": 232,
+        "cases": 528,
+        "runtimePasses": 480,
+        "linkRejections": 48,
+        "gccObjects": 118,
+        "clangObjects": 114,
+        "chromiumPrograms": 480,
+        "nodePrograms": 480
+      },
+      "rttiCounts": {
+        "units": 74,
+        "cases": 96,
+        "runtimePasses": 88,
+        "linkRejections": 8,
+        "gccObjects": 42,
+        "clangObjects": 32,
+        "chromiumPrograms": 88,
+        "nodePrograms": 88,
+        "exceptionLinkOnly": 8,
+        "gccDiagnostics": 4
+      },
+      "targetFeatures": {
+        "assembler": {
+          "path": "/home/seorii/dev/hancomac/.build-sources/wasm-llvm-dwarf-83-review-20261103/qualified-artifacts/worker-review-v1/wabt-target-features.json",
+          "bytes": 47919,
+          "sha256": "e332347838cf61aa4532a3b7f67396ac4db56e49684b656e1f5759cd1a32420f"
+        },
+        "sdk": {
+          "path": "/home/seorii/dev/hancomac/.build-sources/wasm-llvm-dwarf-83-review-20261103/qualified-artifacts/worker-review-v1/target-features/qualification.json",
+          "bytes": 121300,
+          "sha256": "a181bba4046ae73bb0aced0db739fd10b24838e07d7cbc94439f67e2eab869d6"
+        },
+        "assemblerCases": 62,
+        "chromiumPrograms": 6,
+        "nodePrograms": 6
+      },
+      "coordinatorReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/browser-validation-v2-status.json",
+        "bytes": 2337,
+        "sha256": "cd2925dce6d6e158e8d40ab9c7c7df386fbf790c9c2be6432a9d1399b3ad3014"
+      },
+      "suites": 21,
+      "artifactVerificationPolicy": "Final summary references the complete per-suite artifact records, opcode receipts and control reports. Final inspection reopened and verified these outputs; no duplicate inventory was generated.",
+      "finalBrowserValidationReceipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/browser-validation-v2-final-receipt.json",
+        "bytes": 17914,
+        "sha256": "d537a2d13ca5d7e425629914c74a7a7678772887195dd74061d6ded49092ec20"
+      },
+      "recordedProcessesExited": 86,
+      "commandsPassed": 82,
+      "frozenInputsChecked": 4069,
+      "completedLogInspection": {
+        "linesPerLog": 10,
+        "performedAfterExit": true
+      }
+    }
+  },
+  "historicalAttempts": [
+    {
+      "id": "coverage-native-v1",
+      "status": "failed",
+      "exitCode": 1,
+      "processExited": true,
+      "receipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/coverage-native-v1-status.json",
+        "bytes": 1263,
+        "sha256": "65db421da51dddb182b934606f45f3539f511998ff68450c381fe2268cee2f91"
+      },
+      "reason": "Logical sysroot alias did not match the canonical runtime path required by strict receipt validation.",
+      "supersededBy": "currentPasses.nativeCoverageV2"
+    },
+    {
+      "id": "native-runtime-chain-v1",
+      "status": "failed",
+      "exitCode": 1,
+      "processExited": true,
+      "receipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/native-runtime-chain-status.json",
+        "bytes": 2082,
+        "sha256": "ea41f31ff64e3f061e0d717ba94d0620fc2fd2752aeaac3ae963c3e606988a20"
+      },
+      "reason": "Native core and fresh GNU/libgcov passed; the chain failed on coverage-v1 path validation.",
+      "supersededBy": "currentPasses.nativeCoverageV2"
+    },
+    {
+      "id": "native-regression-wait-v1",
+      "status": "failed",
+      "exitCode": 1,
+      "processExited": true,
+      "receipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/inherited-native-status.json",
+        "bytes": 250,
+        "sha256": "388ea43200fc5da8c12838821f1d34eb94930923a5b6cb5097e9108d2627eacb"
+      },
+      "reason": "Preparation stopped on the failed v1 prerequisite chain; no successful old compiler proof was substituted.",
+      "supersededBy": "currentPasses.nativeRegression25"
+    },
+    {
+      "id": "native-dwarf-wait-v1",
+      "status": "failed",
+      "exitCode": 1,
+      "processExited": true,
+      "receipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/native-dwarf/queued-full-v1-status.json",
+        "bytes": 844,
+        "sha256": "2fa71ebf52e9552b54b29f1bb076fd091b22499a9070412cf5b3b4f5c6a68637"
+      },
+      "reason": "Preparation stopped on the failed v1 prerequisite chain before executing full DWARF proof.",
+      "supersededBy": "currentPasses.fullNativeDwarf"
+    },
+    {
+      "id": "package-v1",
+      "status": "failed",
+      "exitCode": 1,
+      "processExited": true,
+      "receipt": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/package-review-v1-status.json",
+        "bytes": 4630,
+        "sha256": "f4d3eb2b9adfc7328ebf3b2f8ea973b01592de18eadc494e448237329975e7dc"
+      },
+      "reason": "Verifier expected canonical frozen source paths in compile argv even though the official builder used trusted logical source paths. Fixed by commit 1dd94fb; package-v2 passed.",
+      "supersededBy": "currentPasses.packageV2"
+    },
+    {
+      "id": "unused-parameter-pre-fix",
+      "status": "failed",
+      "qualification": {
+        "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/pr106-compiler-review-20261103/regression/baseline-all-1/report.json",
+        "bytes": 181199,
+        "sha256": "e4e74153b349b7a021cab3f42296d67d40b8052e0724e937317b1e6d6b2262a2"
+      },
+      "reason": "Ten source locations were absent across four positive fixtures.",
+      "supersededBy": "currentPasses.unusedParameterRegression"
+    }
+  ],
+  "pending": {},
+  "storage": {
+    "compilerIntermediateArchive": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/compiler-object-storage-v1-final-receipt.json",
+      "bytes": 2205,
+      "sha256": "f975db7d06a26b94a403f5d614b11bf156d6d15edfc8daa5323d11ce720ed2c4"
+    },
+    "proofStorageAliases": {
+      "path": "/data/codex-wasm-llvm-worktrees/wasm-llvm-dwarf-83-20261103/out/review-qualification-v1/control/dedup-proof-reports-v2-applied.json",
+      "bytes": 47731,
+      "sha256": "62547140e0249cf9b79baed2d4678f45f92f7074c3b881849ba52042b28cb60d"
+    },
+    "retention": "Retain immutable bundle-final/provenance masters while source report aliases exist. Restore archived compiler .o files before any future make/ar/relink; final tools, source, raw proof artifacts and metadata paths remain accessible."
+  },
+  "scope": {
+    "originalBundlePromoted": false,
+    "deploymentPerformed": false,
+    "workerSuccessClaimed": true,
+    "recordDescribesCompletedValidation": true
+  },
+  "evidencePolicy": "Completed status receipts, referenced artifact identities and completed logs were reopened and hashed. Historical failed attempts remain separately identified; all current qualifications passed.",
+  "verifiedAtUTC": "2026-11-03T09:14:09.380659+00:00"
+}

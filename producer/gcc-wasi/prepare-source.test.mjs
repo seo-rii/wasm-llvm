@@ -14,8 +14,9 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		const git = (...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 		git('init', '-q');
 		await fs.writeFile(path.join(source, 'target.cc'), 'first\nsecond\nthird\n');
-		await fs.writeFile(path.join(source, '.gitignore'), '/gmp*/\n');
-		git('add', 'target.cc', '.gitignore');
+		await fs.writeFile(path.join(source, 'obsolete.h'), 'obsolete input\n');
+		await fs.writeFile(path.join(source, '.gitignore'), '/gmp*/\n/target.opt\n');
+		git('add', 'target.cc', 'obsolete.h', '.gitignore');
 		git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'test: source fixture');
 		const commit = git('rev-parse', 'HEAD').trim();
 		const script = path.join(temp, 'prepare-source.py');
@@ -24,7 +25,8 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n-first\n+FIRST\n second\n third\n',
 			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n FIRST\n-second\n+SECOND\n third\n',
 			'--- /dev/null\n+++ b/target.opt\n@@ -0,0 +1,2 @@\n+msimd128\n+Target Mask(SIMD128)\n',
-			'--- a/target.opt\n+++ b/target.opt\n@@ -1,2 +1,2 @@\n msimd128\n-Target Mask(SIMD128)\n+Target Mask(SIMD128) Init(0)\n'
+			'--- a/target.opt\n+++ b/target.opt\n@@ -1,2 +1,2 @@\n msimd128\n-Target Mask(SIMD128)\n+Target Mask(SIMD128) Init(0)\n',
+			'--- a/obsolete.h\n+++ /dev/null\n@@ -1 +0,0 @@\n-obsolete input\n'
 		];
 		const pins = [];
 		for (const [index, contents] of patches.entries()) {
@@ -57,6 +59,12 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.equal(run().status, 0);
 		assert.equal(await fs.readFile(path.join(source, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
 		assert.equal(git('diff', '--cached', '--binary'), stagedBefore);
+		await lock(5);
+		assert.equal(run(true).status, 0, 'a locked patch may delete a tracked source input');
+		await assert.rejects(fs.access(path.join(source, 'obsolete.h')), { code: 'ENOENT' });
+		const prepared = run();
+		assert.equal(prepared.status, 0, prepared.stderr);
+		assert.equal(git('diff', '--cached', '--binary'), stagedBefore, 'locked deletions must preserve the real index');
 		// A fresh build applies the complete ordered series at once, including
 		// patches that modify files introduced by an earlier patch.
 		const fresh = path.join(temp, 'fresh');
@@ -65,8 +73,11 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.equal(freshResult.status, 0, `clean checkout must accept all dependent patches: ${freshResult.stderr}`);
 		assert.equal(await fs.readFile(path.join(fresh, 'target.cc'), 'utf8'), 'FIRST\nSECOND\nthird\n');
 		assert.equal(await fs.readFile(path.join(fresh, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
+		await assert.rejects(fs.access(path.join(fresh, 'obsolete.h')), { code: 'ENOENT' });
 		assert.equal(execFileSync('git', ['-C', fresh, 'diff', '--cached'], { encoding: 'utf8' }), '');
-		assert.equal(spawnSync('python3', [script, '--source', fresh], { encoding: 'utf8' }).status, 0);
+		const freshVerified = spawnSync('python3', [script, '--source', fresh], { encoding: 'utf8' });
+		assert.equal(freshVerified.status, 0, freshVerified.stderr);
+		assert.equal(freshVerified.stdout, prepared.stdout, 'fresh and incremental preparation must retain the same receipt');
 		await fs.writeFile(path.join(source, 'target.cc'), 'unknown local work\n');
 		assert.notEqual(run(true).status, 0, 'unknown source changes must never be patched over');
 		assert.equal(await fs.readFile(path.join(source, 'target.cc'), 'utf8'), 'unknown local work\n');
@@ -112,6 +123,28 @@ test('WABT preparation pins its combined diff and clean submodule inputs', async
 		assert.deepEqual(JSON.parse(applied.stdout), { wabtCommit: revision, patches: lock.wabt.patches, sourceDiffSha256: hash, submodules: lock.wabt.submodules });
 		assert.equal(run().status, 0);
 		assert.equal(git(source, 'diff', '--cached'), '');
+		const header = 'include/wabt/config.h';
+		await fs.mkdir(path.dirname(path.join(source, header)), { recursive: true });
+		for (const ignored of [false, true]) {
+			await fs.writeFile(path.join(source, '.git/info/exclude'), ignored ? `/${header}\n` : '');
+			await fs.writeFile(path.join(source, header), '#error unlocked compilation input\n');
+			if (ignored) assert.equal(git(source, 'check-ignore', header).trim(), header);
+			for (const staged of [false, true]) {
+				if (staged) git(source, 'add', '-f', header);
+				const indexBefore = git(source, 'diff', '--cached', '--binary');
+				for (const apply of [false, true]) {
+					const result = run(apply);
+					assert.notEqual(result.status, 0, `${ignored ? 'ignored' : 'ordinary'} ${staged ? 'staged' : 'untracked'} config.h must fail ${apply ? 'preparation' : 'verification'}`);
+					assert.match(result.stderr, /WABT source contains untracked inputs/);
+					assert.equal(git(source, 'diff', '--cached', '--binary'), indexBefore, 'rejection must preserve the real index');
+				}
+			}
+			git(source, 'restore', '--staged', header);
+			await fs.unlink(path.join(source, header));
+			const restored = run();
+			assert.equal(restored.status, 0, restored.stderr);
+			assert.equal(restored.stdout, applied.stdout, 'removing the extra input must recover the locked receipt');
+		}
 		lock.wabt.sourceDiffSha256 = '0'.repeat(64); await saveLock();
 		assert.notEqual(run().status, 0, 'combined source identity must match the pin');
 		lock.wabt.sourceDiffSha256 = hash; await saveLock();
