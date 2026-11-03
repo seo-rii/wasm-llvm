@@ -34,7 +34,8 @@ bits: 16×i8, 8×i16, 4×i32, 2×i64, 4×f32 and 2×f64.
   sixteen byte selectors inside GCC. Runtime `__builtin_shuffle` uses the
   separately qualified [scalar fallback](SIMD-RUNTIME-PERMUTATION.md); this
   extension does not add a variable permutation instruction pattern. Variable
-  per-lane SIMD shifts remain outside this extension.
+  per-lane shifts use the separately qualified [scalar fallback](SIMD-LANE-SHIFTS.md);
+  no per-lane SIMD shift pattern is added.
 
 The implementation follows GCC's [vector comparison and conditional mask
 optabs](https://gcc.gnu.org/onlinedocs/gccint/Standard-Pattern-Names-for-Vectorization.html)
