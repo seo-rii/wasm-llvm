@@ -35,5 +35,14 @@
     "toolchainReceipt": "producer/gcc-wasi/snapshots/llvm-toolchain-237a4d29.json",
     "toolchainReceiptSha256": "237a4d29d5a0a7edbec9e78f5a61c303b5e3d90eeb2ff7d4b4bb7b8fe77e5ae8",
     "note": "Only the real wasm-ld linker is reused; GCC emits all user-code instructions. Existing LLVM producer carries its WASI host and wasm-only linker patches."
+  },
+  "coverage": {
+    "sdkLibraries": {
+      "libwasi-emulated-getpid.a": {
+        "bytes": 1466,
+        "sha256": "3931dfd6b1873b4ef02d1e5408d7d28621c046bbdd2fb1ceca777b6522c750cc"
+      }
+    },
+    "note": "Official WASI SDK getpid compatibility archive for libgcov; placeholder identity only, no process PID semantics."
   }
 }

@@ -22,12 +22,17 @@ signed/unsigned saturating add/subtract operations for 8-bit and 16-bit lanes;
 see the [builtin contract and qualification](SIMD-SATURATING.md).
 The additional `0006` patch supplies comparisons, scalar-count shifts, condition
 selection and fixed-width constant shuffles; see [its exact scope](SIMD-EXTENDED.md).
+Runtime `__builtin_shuffle` uses the qualified
+[scalar permutation fallback](SIMD-RUNTIME-PERMUTATION.md), including modulo
+selectors for one or two vectors in all six modes.
 The focused qualification requires the corresponding instructions in both GCC
 assembly and the assembled Wasm object, then links and executes each program.
 
-This does not provide x86 intrinsic compatibility, a `wasm_simd128.h` intrinsic
-API, relaxed SIMD, or an auto-vectorization performance guarantee. It does not
-by itself change the draft backend's vector calling convention. Bundles with
+Patch `0016` supplies the documented 169-name
+[`wasm_simd128.h` subset](SIMD-HEADER.md). This does not provide x86 intrinsic
+compatibility, relaxed SIMD, or an auto-vectorization performance guarantee.
+Patch `0003` does not by itself change the draft backend's vector calling
+convention. Bundles with
 patch `0003` alone use indirect memory arguments and a hidden result pointer.
 Patch `0007` adds [direct vector ABI support](VECTOR-ABI.md) when both translation
 units enable SIMD, with separate GCC/Clang interoperation qualification. The
@@ -35,11 +40,18 @@ disabled profile keeps its indirect convention. Do not mix those two profiles
 across vector interfaces or infer compatibility from a shared GCC version string.
 Existing scalar WASI libc calls keep their ordinary ABI.
 
-The pinned WABT assembler emits the relocatable `linking` section but does not
-emit a `target_features` section for SIMD instructions. A loader must determine
-SIMD use by decoding instructions or validating the module on the execution
-engine; searching bytes for `0xfd` is insufficient because immediates and data
-can contain the same byte.
+The pinned WABT assembler with `wabt-0001-simd-target-features.patch` records
+actual SIMD instructions and `v128` types in one `target_features` section,
+including relocatable objects. Merely enabling SIMD does not mark scalar code
+as SIMD. The patch also records `relaxed-simd` when assembling those WAT
+instructions; this does not add relaxed SIMD support to the GCC backend.
+Existing feature declarations are preserved and conflicting declarations fail
+assembly. See [target feature qualification](TARGET-FEATURES.md).
+
+Loaders must still decode instructions and validate on the execution engine.
+Feature metadata can be missing or untrusted, and searching bytes for `0xfd`
+is insufficient because immediates and data can contain the same byte. The SDK's
+decoder and its data/integer/floating-point immediate regressions remain intact.
 
 To qualify an isolated native build containing this patch:
 

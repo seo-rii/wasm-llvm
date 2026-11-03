@@ -1,0 +1,150 @@
+diff --git a/src/binary-writer.cc b/src/binary-writer.cc
+index 09c9aa7..df22798 100644
+--- a/src/binary-writer.cc
++++ b/src/binary-writer.cc
+@@ -21,6 +21,7 @@
+ #include <cstdarg>
+ #include <cstdint>
+ #include <cstdio>
++#include <map>
+ #include <set>
+ #include <string_view>
+ #include <vector>
+@@ -33,6 +34,7 @@
+ #include "wabt/ir.h"
+ #include "wabt/leb128.h"
+ #include "wabt/stream.h"
++#include "wabt/utf8.h"
+ 
+ #define PRINT_HEADER_NO_INDEX -1
+ #define MAX_U32_LEB128_BYTES 5
+@@ -145,6 +147,10 @@ class BinaryWriter {
+   Result WriteModule();
+ 
+  private:
++  // Track instructions/types as they are emitted, never raw data or immediates.
++  void WriteOpcode(Stream* stream, Opcode opcode);
++  void WriteType(Stream* stream, Type type, const char* desc = nullptr);
++  Result WriteTargetFeatures();
+   void WriteHeader(const char* name, int index);
+   Offset WriteU32Leb128Space(Offset leb_size_guess, const char* desc);
+   Offset WriteFixupU32Leb128Size(Offset offset,
+@@ -195,6 +201,8 @@ class BinaryWriter {
+   Stream* stream_;
+   const WriteBinaryOptions& options_;
+   const Module* module_;
++  bool uses_simd128_ = false;
++  bool uses_relaxed_simd_ = false;
+ 
+   SymbolTable symtab_;
+   std::vector<RelocSection> reloc_sections_;
+@@ -236,6 +244,81 @@ BinaryWriter::BinaryWriter(Stream* stream,
+                            const Module* module)
+     : stream_(stream), options_(options), module_(module) {}
+ 
++void BinaryWriter::WriteOpcode(Stream* stream, Opcode opcode) {
++  if (opcode.HasPrefix() && opcode.GetPrefix() == 0xfd) {
++    uses_simd128_ = true;
++    // All 0xfd opcodes >= 0x100 in this pinned WABT are relaxed SIMD.
++    uses_relaxed_simd_ |= opcode.GetCode() >= 0x100;
++  }
++  wabt::WriteOpcode(stream, opcode);
++}
++
++void BinaryWriter::WriteType(Stream* stream, Type type, const char* desc) {
++  uses_simd128_ |= type == Type::V128;
++  wabt::WriteType(stream, type, desc);
++}
++
++Result BinaryWriter::WriteTargetFeatures() {
++  std::map<std::string, uint8_t> features;
++  auto error = [](const char* reason) {
++    fprintf(stderr, "error: target_features: %s\n", reason);
++    return Result::Error;
++  };
++  auto merge = [&](const std::string& name, uint8_t prefix) {
++    auto inserted = features.emplace(name, prefix);
++    if (!inserted.second && inserted.first->second != prefix)
++      return error("conflicting feature declarations or actual SIMD use");
++    return Result::Ok;
++  };
++  // Preserve explicit feature declarations, coalesce duplicates, and reject
++  // malformed or contradictory inputs instead of writing competing sections.
++  for (const Custom& custom : module_->customs) {
++    if (custom.name != "target_features")
++      continue;
++    if (custom.data.empty())
++      return error("missing feature count");
++    const uint8_t* p = custom.data.data();
++    const uint8_t* end = p + custom.data.size();
++    uint32_t count;
++    size_t length = ReadU32Leb128(p, end, &count);
++    if (!length || count > custom.data.size())
++      return error("invalid feature count");
++    p += length;
++    for (uint32_t i = 0; i < count; ++i) {
++      if (p == end || (*p != '+' && *p != '-'))
++        return error("invalid feature prefix");
++      uint8_t prefix = *p++;
++      uint32_t size;
++      length = ReadU32Leb128(p, end, &size);
++      if (!length || size > static_cast<size_t>(end - p) - length)
++        return error("invalid feature name length");
++      p += length;
++      if (!size || !IsValidUtf8(reinterpret_cast<const char*>(p), size))
++        return error("invalid feature name");
++      CHECK_RESULT(merge(std::string(reinterpret_cast<const char*>(p), size),
++                         prefix));
++      p += size;
++    }
++    if (p != end)
++      return error("trailing feature data");
++  }
++  if (uses_simd128_)
++    CHECK_RESULT(merge("simd128", '+'));
++  if (uses_relaxed_simd_)
++    CHECK_RESULT(merge("relaxed-simd", '+'));
++  if (!features.empty()) {
++    // Emit after other custom sections, including any producers section.
++    BeginCustomSection("target_features");
++    WriteU32Leb128(stream_, features.size(), "feature count");
++    for (const auto& feature : features) {
++      stream_->WriteU8(feature.second, "feature prefix");
++      WriteStr(stream_, feature.first, "feature name", PrintChars::Yes);
++    }
++    EndSection();
++  }
++  return Result::Ok;
++}
++
+ void BinaryWriter::WriteHeader(const char* name, int index) {
+   if (stream_->has_log_stream()) {
+     if (index == PRINT_HEADER_NO_INDEX) {
+@@ -1555,7 +1638,8 @@ Result BinaryWriter::WriteModule() {
+   for (const Custom& custom : module_->customs) {
+     // These custom sections are already specially handled by BinaryWriter, so
+     // we don't want to double-write.
+-    if ((custom.name == WABT_BINARY_SECTION_NAME &&
++    if (custom.name == "target_features" || custom.name == "producers" ||
++        (custom.name == WABT_BINARY_SECTION_NAME &&
+          options_.write_debug_names) ||
+         (custom.name.rfind(WABT_BINARY_SECTION_RELOC) == 0 &&
+          options_.relocatable) ||
+@@ -1635,6 +1719,17 @@ Result BinaryWriter::WriteModule() {
+     }
+   }
+ 
++  // LLVM's object reader requires producers after linking/relocation sections,
++  // and the tool conventions require target_features after producers.
++  for (const Custom& custom : module_->customs) {
++    if (custom.name == "producers") {
++      BeginCustomSection("producers");
++      stream_->WriteData(custom.data, "custom data");
++      EndSection();
++    }
++  }
++  CHECK_RESULT(WriteTargetFeatures());
++
+   return stream_->result();
+ }
+ 

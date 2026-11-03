@@ -14,8 +14,9 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		const git = (...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 		git('init', '-q');
 		await fs.writeFile(path.join(source, 'target.cc'), 'first\nsecond\nthird\n');
-		await fs.writeFile(path.join(source, '.gitignore'), '/gmp*/\n');
-		git('add', 'target.cc', '.gitignore');
+		await fs.writeFile(path.join(source, 'obsolete.h'), 'obsolete input\n');
+		await fs.writeFile(path.join(source, '.gitignore'), '/gmp*/\n/target.opt\n');
+		git('add', 'target.cc', 'obsolete.h', '.gitignore');
 		git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'test: source fixture');
 		const commit = git('rev-parse', 'HEAD').trim();
 		const script = path.join(temp, 'prepare-source.py');
@@ -24,7 +25,8 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n-first\n+FIRST\n second\n third\n',
 			'--- a/target.cc\n+++ b/target.cc\n@@ -1,3 +1,3 @@\n FIRST\n-second\n+SECOND\n third\n',
 			'--- /dev/null\n+++ b/target.opt\n@@ -0,0 +1,2 @@\n+msimd128\n+Target Mask(SIMD128)\n',
-			'--- a/target.opt\n+++ b/target.opt\n@@ -1,2 +1,2 @@\n msimd128\n-Target Mask(SIMD128)\n+Target Mask(SIMD128) Init(0)\n'
+			'--- a/target.opt\n+++ b/target.opt\n@@ -1,2 +1,2 @@\n msimd128\n-Target Mask(SIMD128)\n+Target Mask(SIMD128) Init(0)\n',
+			'--- a/obsolete.h\n+++ /dev/null\n@@ -1 +0,0 @@\n-obsolete input\n'
 		];
 		const pins = [];
 		for (const [index, contents] of patches.entries()) {
@@ -57,6 +59,12 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.equal(run().status, 0);
 		assert.equal(await fs.readFile(path.join(source, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
 		assert.equal(git('diff', '--cached', '--binary'), stagedBefore);
+		await lock(5);
+		assert.equal(run(true).status, 0, 'a locked patch may delete a tracked source input');
+		await assert.rejects(fs.access(path.join(source, 'obsolete.h')), { code: 'ENOENT' });
+		const prepared = run();
+		assert.equal(prepared.status, 0, prepared.stderr);
+		assert.equal(git('diff', '--cached', '--binary'), stagedBefore, 'locked deletions must preserve the real index');
 		// A fresh build applies the complete ordered series at once, including
 		// patches that modify files introduced by an earlier patch.
 		const fresh = path.join(temp, 'fresh');
@@ -65,8 +73,11 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		assert.equal(freshResult.status, 0, `clean checkout must accept all dependent patches: ${freshResult.stderr}`);
 		assert.equal(await fs.readFile(path.join(fresh, 'target.cc'), 'utf8'), 'FIRST\nSECOND\nthird\n');
 		assert.equal(await fs.readFile(path.join(fresh, 'target.opt'), 'utf8'), 'msimd128\nTarget Mask(SIMD128) Init(0)\n');
+		await assert.rejects(fs.access(path.join(fresh, 'obsolete.h')), { code: 'ENOENT' });
 		assert.equal(execFileSync('git', ['-C', fresh, 'diff', '--cached'], { encoding: 'utf8' }), '');
-		assert.equal(spawnSync('python3', [script, '--source', fresh], { encoding: 'utf8' }).status, 0);
+		const freshVerified = spawnSync('python3', [script, '--source', fresh], { encoding: 'utf8' });
+		assert.equal(freshVerified.status, 0, freshVerified.stderr);
+		assert.equal(freshVerified.stdout, prepared.stdout, 'fresh and incremental preparation must retain the same receipt');
 		await fs.writeFile(path.join(source, 'target.cc'), 'unknown local work\n');
 		assert.notEqual(run(true).status, 0, 'unknown source changes must never be patched over');
 		assert.equal(await fs.readFile(path.join(source, 'target.cc'), 'utf8'), 'unknown local work\n');
@@ -78,5 +89,72 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 		await fs.writeFile(path.join(source, 'gmp/configure'), '#!/bin/sh\n');
 		assert.equal(git('check-ignore', 'gmp/configure').trim(), 'gmp/configure');
 		assert.notEqual(run().status, 0, 'ignored in-tree dependencies must not bypass source verification');
+	} finally { await fs.rm(temp, { recursive: true, force: true }); }
+});
+
+test('WABT preparation pins its combined diff and clean submodule inputs', async () => {
+	const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'gcc-wasi-wabt-source-test-'));
+	try {
+		const source = path.join(temp, 'wabt'), dependency = path.join(temp, 'dependency');
+		const git = (directory, ...args) => execFileSync('git', ['-C', directory, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+		const commit = directory => git(directory, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'test: pinned fixture');
+		for (const directory of [source, dependency]) { await fs.mkdir(directory); git(directory, 'init', '-q'); }
+		await fs.writeFile(path.join(dependency, 'header.h'), 'pinned dependency\n');
+		await fs.writeFile(path.join(dependency, '.gitignore'), '*.generated\n');
+		git(dependency, 'add', '.'); commit(dependency);
+		git(source, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', dependency, 'third_party/picosha2');
+		await fs.writeFile(path.join(source, 'writer.cc'), 'unpatched\n');
+		git(source, 'add', '.'); commit(source);
+		const revision = git(source, 'rev-parse', 'HEAD').trim();
+		await fs.writeFile(path.join(source, 'writer.cc'), 'patched\n');
+		const patch = git(source, 'diff', '--binary', '--no-ext-diff', 'HEAD');
+		const hash = createHash('sha256').update(patch).digest('hex');
+		await fs.writeFile(path.join(temp, 'wabt.patch'), patch);
+		await fs.writeFile(path.join(source, 'writer.cc'), 'unpatched\n');
+		const lock = { wabt: { commit: revision, patches: [{ path: 'wabt.patch', sha256: hash }], sourceDiffSha256: hash,
+			submodules: { 'third_party/picosha2': git(dependency, 'rev-parse', 'HEAD').trim() } } };
+		const saveLock = () => fs.writeFile(path.join(temp, 'sources.lock.json'), JSON.stringify(lock));
+		await saveLock();
+		const script = path.join(temp, 'prepare-source.py');
+		await fs.copyFile(new URL('./prepare-source.py', import.meta.url), script);
+		const run = (apply = false) => spawnSync('python3', [script, '--component', 'wabt', '--source', source, ...(apply ? ['--apply'] : [])], { encoding: 'utf8' });
+		assert.notEqual(run().status, 0);
+		const applied = run(true); assert.equal(applied.status, 0, applied.stderr);
+		assert.deepEqual(JSON.parse(applied.stdout), { wabtCommit: revision, patches: lock.wabt.patches, sourceDiffSha256: hash, submodules: lock.wabt.submodules });
+		assert.equal(run().status, 0);
+		assert.equal(git(source, 'diff', '--cached'), '');
+		const header = 'include/wabt/config.h';
+		await fs.mkdir(path.dirname(path.join(source, header)), { recursive: true });
+		for (const ignored of [false, true]) {
+			await fs.writeFile(path.join(source, '.git/info/exclude'), ignored ? `/${header}\n` : '');
+			await fs.writeFile(path.join(source, header), '#error unlocked compilation input\n');
+			if (ignored) assert.equal(git(source, 'check-ignore', header).trim(), header);
+			for (const staged of [false, true]) {
+				if (staged) git(source, 'add', '-f', header);
+				const indexBefore = git(source, 'diff', '--cached', '--binary');
+				for (const apply of [false, true]) {
+					const result = run(apply);
+					assert.notEqual(result.status, 0, `${ignored ? 'ignored' : 'ordinary'} ${staged ? 'staged' : 'untracked'} config.h must fail ${apply ? 'preparation' : 'verification'}`);
+					assert.match(result.stderr, /WABT source contains untracked inputs/);
+					assert.equal(git(source, 'diff', '--cached', '--binary'), indexBefore, 'rejection must preserve the real index');
+				}
+			}
+			git(source, 'restore', '--staged', header);
+			await fs.unlink(path.join(source, header));
+			const restored = run();
+			assert.equal(restored.status, 0, restored.stderr);
+			assert.equal(restored.stdout, applied.stdout, 'removing the extra input must recover the locked receipt');
+		}
+		lock.wabt.sourceDiffSha256 = '0'.repeat(64); await saveLock();
+		assert.notEqual(run().status, 0, 'combined source identity must match the pin');
+		lock.wabt.sourceDiffSha256 = hash; await saveLock();
+		const child = path.join(source, 'third_party/picosha2');
+		await fs.writeFile(path.join(child, 'unexpected.generated'), 'ignored source input\n');
+		assert.notEqual(run().status, 0, 'ignored dependency files may change compilation');
+		await fs.unlink(path.join(child, 'unexpected.generated'));
+		await fs.writeFile(path.join(child, 'header.h'), 'changed dependency\n');
+		assert.notEqual(run().status, 0, 'dependency content must match its gitlink');
+		git(child, 'add', 'header.h'); commit(child);
+		assert.notEqual(run().status, 0, 'a clean dependency at another revision must also fail');
 	} finally { await fs.rm(temp, { recursive: true, force: true }); }
 });

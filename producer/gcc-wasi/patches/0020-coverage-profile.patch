@@ -1,0 +1,95 @@
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -43,6 +43,8 @@
+ #include "explow.h"
+ #include "expr.h"
+ #include "builtins.h"
++#include "opts.h"
++#include "toplev.h"
+ #include "vec-perm-indices.h"
+ 
+ #include "target.h"
+@@ -491,6 +493,64 @@
+      for other aggregates.  The generic PCC default bypasses that hook. */
+   flag_pcc_struct_return = 0;
+   init_machine_status = wasm_init_machine_status;
++
++  /* Arc counters use the ordinary scalar Wasm operations.  Other profiling
++     modes need distinct runtime/section/return-address contracts; diagnose
++     them before generic passes can ICE or silently fall back to single
++     updates.  Inspect explicit options as well as implied flags so that
++     -fprofile-generate -fno-profile-values cannot bypass the boundary.  */
++  for (unsigned i = 1; i < save_decoded_options_count; ++i)
++    {
++      const cl_decoded_option &option = save_decoded_options[i];
++      bool unsupported = false;
++      switch (option.opt_index)
++        {
++        case OPT_fprofile_update_:
++          unsupported = option.value != PROFILE_UPDATE_SINGLE;
++          break;
++        case OPT_fprofile_dir_:
++          /* The WASI getpid library supplies a placeholder, not process
++             identity.  Runtime-dependent filename expansion is excluded.  */
++          unsupported = option.arg && strchr (option.arg, '%');
++          break;
++        case OPT_fprofile_reproducible_:
++        case OPT_fprofile_filter_files_:
++        case OPT_fprofile_exclude_files_:
++        case OPT_finstrument_functions_exclude_function_list_:
++        case OPT_finstrument_functions_exclude_file_list_:
++          unsupported = true;
++          break;
++        case OPT_p:
++        case OPT_fprofile:
++        case OPT_fprofile_generate:
++        case OPT_fprofile_generate_:
++        case OPT_fprofile_use:
++        case OPT_fprofile_use_:
++        case OPT_fprofile_values:
++        case OPT_fprofile_correction:
++        case OPT_fprofile_partial_training:
++        case OPT_fprofile_report:
++        case OPT_fprofile_reorder_functions:
++        case OPT_fprofile_prefix_map_:
++        case OPT_fbranch_probabilities:
++        case OPT_fauto_profile:
++        case OPT_fauto_profile_:
++        case OPT_fprofile_info_section:
++        case OPT_fprofile_info_section_:
++        case OPT_fcondition_coverage:
++        case OPT_fpath_coverage:
++        case OPT_finstrument_functions:
++        case OPT_finstrument_functions_once:
++          unsupported = option.value != 0;
++          break;
++        default:
++          break;
++        }
++      if (unsupported)
++        error ("GCC wasm32-wasi does not support profiling option %qs; "
++               "use %<-fprofile-arcs -ftest-coverage%> with single counters",
++               option.orig_option_with_args_text);
++    }
+ }
+ 
+ void wasm_asm_init_sections ();
+--- a/libgcc/libgcov-driver.c
++++ b/libgcc/libgcov-driver.c
+@@ -777,6 +777,16 @@
+ 	    }
+ 	}
+ 
++#if defined (__wasi__)
++      /* The experimental Wasm backend retains constructors but does not
++         register static destructors.  Use WASI libc's normal termination
++         path once per image; keep the official gcov writer and data format.
++         Later user atexit/C++ destructor callbacks run before this writer.  */
++      if (!__gcov_root.list && atexit (__gcov_exit))
++        gcov_error (GCOV_PROF_PREFIX "Cannot register exit handler\n",
++                    info->filename);
++#endif
++
+       info->next = __gcov_root.list;
+       __gcov_root.list = info;
+     }
