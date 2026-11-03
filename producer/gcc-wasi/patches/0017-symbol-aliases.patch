@@ -1,0 +1,87 @@
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -274,6 +274,14 @@
+ #define ASM_OUTPUT_EXTERNAL(stream, decl, name) \
+   wasm_handle_import (stream, name, decl)
+ 
++void wasm_assemble_alias (FILE *, tree, tree);
++void wasm_assemble_alias_name (FILE *, const char *, const char *);
++/* varasm's declaration-aware alias path is guarded by ASM_OUTPUT_DEF.  */
++#define ASM_OUTPUT_DEF(stream, name, target) \
++  wasm_assemble_alias_name (stream, name, target)
++#define ASM_OUTPUT_DEF_FROM_DECLS(stream, decl, target) \
++  wasm_assemble_alias (stream, decl, target)
++
+ void wasm_assemble_skip (FILE *stream, unsigned HOST_WIDE_INT len);
+ #define ASM_OUTPUT_SKIP(...) wasm_assemble_skip (__VA_ARGS__)
+ void wasm_assemble_ascii (FILE *stream, const char *data, int len);
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -518,6 +518,65 @@
+       fprintf (stream, "%08lx", data[i]);
+ }
+ 
++}
++
++/* Define a genuine linking symbol for the existing function or data object.
++   TARGET is the target assembler-name IDENTIFIER_NODE supplied by varasm.  */
++void
++wasm_assemble_alias (FILE *stream, tree decl, tree target)
++{
++  if (DECL_WEAK (decl))
++    {
++      error_at (DECL_SOURCE_LOCATION (decl),
++		"weak aliases are not yet supported on this target");
++      return;
++    }
++  gcc_assert (TREE_CODE (decl) == FUNCTION_DECL || VAR_P (decl));
++  gcc_assert (TREE_CODE (target) == IDENTIFIER_NODE);
++  const char *name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
++  output_indent (stream);
++  fprintf (stream, "(@sym.alias $");
++  assemble_name (stream, name);
++  fprintf (stream, " (%s $", TREE_CODE (decl) == FUNCTION_DECL ? "func" : "data");
++  assemble_name (stream, IDENTIFIER_POINTER (target));
++  fprintf (stream, ") (@sym");
++  assemble_binding (stream, decl);
++  assemble_visibility (stream, decl);
++  assemble_sym_name (stream, name);
++  fprintf (stream, "))\n");
++}
++
++/* The name-only path is used by generic constant-pool sharing. Its symbols
++   are local data labels and may refer to a suffix of another constant.  */
++void
++wasm_assemble_alias_name (FILE *stream, const char *name, const char *target)
++{
++  char *base = xstrdup (target);
++  unsigned HOST_WIDE_INT offset = 0;
++  char *plus = strrchr (base, '+');
++  if (plus)
++    {
++      char *end;
++      offset = strtoull (plus + 1, &end, 10);
++      if (!plus[1] || *end)
++	{
++	  error ("unsupported assembler alias expression %qs", target);
++	  free (base);
++	  return;
++	}
++      *plus = 0;
++    }
++  output_indent (stream);
++  fprintf (stream, "(@sym.alias $");
++  assemble_name (stream, name);
++  fprintf (stream, " (data $");
++  assemble_name (stream, base);
++  if (offset)
++    fprintf (stream, " (offset " HOST_WIDE_INT_PRINT_UNSIGNED ")", offset);
++  fprintf (stream, ") (@sym local");
++  assemble_sym_name (stream, name);
++  fprintf (stream, "))\n");
++  free (base);
+ }
+ 
+ /* Implemetation of TARGET_ASM_INIT_SECTIONS.  */

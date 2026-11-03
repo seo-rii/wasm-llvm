@@ -1,0 +1,2031 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/seo-rii/wasm-llvm/issues/81",
+  "status": "qualified",
+  "profile": "Experimental GCC 17 with 18 locked local patches (source18), C/C++, wasm32-wasi-preview1, static single-threaded linking and freshly rebuilt GNU libstdc++.",
+  "sourceLabelBoundary": "source17/source18 and diagnostic compiler labels gcc17/gcc18 mean 17/18 locked local patches, not GCC major versions.",
+  "dependency": {
+    "issue": "https://github.com/seo-rii/wasm-llvm/issues/80",
+    "pullRequest": "https://github.com/seo-rii/wasm-llvm/pull/100",
+    "purpose": "Strong aliases and patched WABT; generic same-unit weakref optimization can retain local aliases."
+  },
+  "sourceLock": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/sources.lock.json",
+    "bytes": 8124,
+    "sha256": "aefbe92e7a812b59e72efd61f31b97d932c8db46e45d5adff13b882add0a8b53"
+  },
+  "gccSource": {
+    "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+    "patches": [
+      {
+        "path": "patches/0001-void-type-return.patch",
+        "purpose": "Use VOID_TYPE_P for typedef void returns and indirect function signatures.",
+        "sha256": "33ca37c901fe3de4668943edfd0ff12e682e76dc44544ade513e2af230434c1b"
+      },
+      {
+        "path": "patches/0002-host-width-format.patch",
+        "purpose": "Match actual host widths in labels, i64 constants, relocation addends, sizes and memory offsets.",
+        "sha256": "8e6999c57fc667fffd6015c7f9c0ed27cbd69692640da3a7401baf248f4bfac7"
+      },
+      {
+        "path": "patches/0003-simd128.patch",
+        "purpose": "Add opt-in SIMD128 machine modes and GCC RTL instruction patterns; disabled by default.",
+        "sha256": "8ee65fdf7edf00784644f994a60392fcaed32120a5f55d442ca5ed86da3643a5"
+      },
+      {
+        "path": "patches/0004-basic-c-abi.patch",
+        "purpose": "Match Basic C ABI singleton/empty aggregate arguments/results and narrow scalar extension.",
+        "sha256": "d868cf019d1c2bee44262b616478e77eed0eeb1f85348c07b4198f361b35c0df"
+      },
+      {
+        "path": "patches/0005-atomic-libcall-abi.patch",
+        "purpose": "Emit the five-argument external libatomic compare-exchange ABI without changing the builtin declaration.",
+        "sha256": "d3ceee6358dc8e35a857e3083599a3d051d78791c438e9cb255e9c0e16a0a8c5"
+      },
+      {
+        "path": "patches/0006-simd-operations.patch",
+        "purpose": "Add SIMD scalar-count shifts, signed/unsigned and IEEE comparisons, conditional selection and fixed constant shuffles.",
+        "sha256": "47da6711e4118623418fe810f0a9901ef6375bd3246274037e7b8691555845b8"
+      },
+      {
+        "path": "patches/0007-vector-abi.patch",
+        "purpose": "Use direct v128 values for enabled vectors and singleton aggregates; preserve vector register modes and aggregate storage.",
+        "sha256": "ad96812c8aa7f85f011540d5b3b4096c90fd911d3318f6af137b93b7931f5a15"
+      },
+      {
+        "path": "patches/0008-binary128-long-double.patch",
+        "purpose": "Implement IEEE binary128 long double storage, soft-float operations and WASI two-i64 argument/indirect-result ABI independently of SIMD.",
+        "sha256": "6bf0934f2d6a09dfd0a1b420df3266b29997f755771dc702f4896dc6c9ebdd2d"
+      },
+      {
+        "path": "patches/0009-int128.patch",
+        "purpose": "Enable signed/unsigned int128, WASI paired arguments/indirect results, scalar bitwise complement and SI runtime shift counts.",
+        "sha256": "981a5355da764da03a12a754fadf301cef29145c40429fcd410d88c078b9e61e"
+      },
+      {
+        "path": "patches/0010-empty-record-abi.patch",
+        "purpose": "Ignore ABI-empty C++ records consistently during layout and generic O0 parameter setup without reading absent incoming data.",
+        "sha256": "a06a7653e1ceea88e52762ba567b2d07836e4513df78d919e3ebb0dcda5e9609"
+      },
+      {
+        "path": "patches/0011-bitfield-layout.patch",
+        "purpose": "Use declared type alignment/storage units for named bitfields and classify singleton ABI values with the original declared storage type; preserve packed and unnamed-field rules.",
+        "sha256": "06f43d844d8da6b26b16989801abcefc593ae4e0650e19795566934b9cd8406f"
+      },
+      {
+        "path": "patches/0012-anonymous-bitfield-abi.patch",
+        "purpose": "Ignore unnamed bitfields when classifying singleton ABI values, preserve raw storage offsets, and retain empty aggregate storage modes without emitting an unused hard return local.",
+        "sha256": "3f9b3d1dacbecdebd275c8bc4ac751d8c06c198e81792617915c56dbb5d59159"
+      },
+      {
+        "path": "patches/0013-simd-saturating-arithmetic.patch",
+        "purpose": "Add signed/unsigned i8x16 and i16x8 saturating add/subtract optabs and typed GCC target builtins with explicit SIMD feature gating.",
+        "sha256": "9afd3a006bbdae9bbd15491e3fe5ba619e8d625d356e7143cd4bba382d1b44ff"
+      },
+      {
+        "path": "patches/0014-gnu-float128.patch",
+        "purpose": "Expose GNU __float128, exact Q/q literal typing, distinct C++ mangling, consistent same-format conversion ranks and GNU library feature detection over the qualified binary128 representation.",
+        "sha256": "703b8ab823b53d815f1edd0d89dab60a5cd3cde2871b7c956705d96cf53d4476"
+      },
+      {
+        "path": "patches/0015-simd-conversions.patch",
+        "purpose": "Add baseline SIMD conversion optabs and exactly typed saturation builtins, with composed packs/high halves and existing scalar fallbacks.",
+        "sha256": "6ed61fc595bc513fc64582e6983fe27f2c0a7aa7e291e4e50af02f4f60c4133a"
+      },
+      {
+        "path": "patches/0016-wasm-simd128-header.patch",
+        "purpose": "Install the documented 169-name SIMD128 header, typed direct lane operations and scalar/vector partial-copy legalization without changing the public vector ABI.",
+        "sha256": "702fe5bd9952a38e75c7ec1a8167448af9a937fbd07079182844e4872f62082a"
+      },
+      {
+        "path": "patches/0017-symbol-aliases.patch",
+        "purpose": "Define strong function/data aliases with shared addresses and independent symbol binding, visibility and relocations.",
+        "sha256": "ba92c8b6c037587db1049f28c3127279096ab269abdc29c5ef5c969080df176e"
+      },
+      {
+        "path": "patches/0018-weak-references.patch",
+        "purpose": "Normalize optional weak reference imports and asm-labelled symbol references, with typed weak target collection and strong-reference precedence.",
+        "sha256": "d958924db4487b9531849ffbc6147607e10f4b94719992c580c9e071db80c895"
+      }
+    ],
+    "sourceDiffSha256": "3714c5d73bb0618b241f7fdac8164340fc001bd9f0c8949e44c7f07d587ef482"
+  },
+  "assemblerSource": {
+    "patches": [
+      {
+        "path": "patches/wabt-0001-simd-target-features.patch",
+        "purpose": "Record actual SIMD instructions and v128 types, merge target_features and reject malformed or conflicting declarations.",
+        "sha256": "9be749b87a3bacc178d0cd4c03ec8752b7d6008a194a5832ebcb423282bce4c6"
+      },
+      {
+        "path": "patches/wabt-0002-symbol-aliases.patch",
+        "purpose": "Resolve strong symbol aliases and preserve independent linking names and relocation identities through annotated WAT and binary round trips.",
+        "sha256": "ecc5664fb48d4337fad9c469076c06cf97162dae870ee76d7eb948233d83a759"
+      }
+    ],
+    "sourceDiffSha256": "1cf55c9739b0fddc3177d2dbfe0899403140b18fc41b64a5a912d1aaffc7f8eb",
+    "submodules": {
+      "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
+    },
+    "wabtCommit": "651c9ffbce3d0525d2d1324fab79160e5fcf8173"
+  },
+  "patch": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/patches/0018-weak-references.patch",
+    "bytes": 6111,
+    "sha256": "d958924db4487b9531849ffbc6147607e10f4b94719992c580c9e071db80c895"
+  },
+  "nativeCompiler": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/native-build.json",
+    "bytes": 6466,
+    "sha256": "059c3622f6e7571b5b8ae09f310725b769497e768073f2e1f7df3bbbb67de054"
+  },
+  "assemblerProvenance": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wabt-native/provenance.json",
+    "bytes": 2337,
+    "sha256": "d6d09836c16f27d44f22cf3635ca465e6ab170b2e0159cab2a2374668d06d1f7"
+  },
+  "nativeValidation": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/final-native-status.json",
+    "bytes": 42720,
+    "sha256": "1455e08d2b8bf3a938bf50d5f753cfc6706fd2287b32e4c80b842092eeac215b"
+  },
+  "nativeSuites": [
+    {
+      "id": "native-smoke",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/qualify-native.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-idle-gcc-filesystem-343-20261030/scripts/gcc-wasi-fixtures.mjs",
+        "--cases",
+        "c-hello,c-core,c-libm,c-wide-integers-o0,c-wide-integers-o2,c-errno,c-multiple,c-defines,c-wasm32-abi,cpp-core,cpp-static-lifecycle,cpp-typedef-void-o0,cpp-typedef-void-o2",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/native-programs"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/native-programs/provenance.json",
+        "bytes": 75484,
+        "sha256": "0b7e8aabd933a03faaa4ffec37eb37460a646e7f9e2095d25061029cfdabc630"
+      },
+      "cases": 13,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-header-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-simd-header.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-header-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-header-qualification/qualification.json",
+        "bytes": 52273200,
+        "sha256": "c788052c5737b1011891f416b88fff31943722793102a4b596bd8084068da7d5"
+      },
+      "cases": 680,
+      "diagnostics": 296,
+      "defaultControls": 4,
+      "counts": null
+    },
+    {
+      "id": "vector-subreg-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/vector-subreg-fixtures.mjs",
+        "--directions",
+        "gcc-gcc,clang-clang",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/vector-subreg-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/vector-subreg-qualification/report.json",
+        "bytes": 7684106,
+        "sha256": "aa11b454a7b9d58db262cce92cc1254d1efc455686f501d031186f1f8d65884e"
+      },
+      "cases": 48,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "id": "half-vector-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-half-vector-abi.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/half-vector-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/half-vector-abi-qualification/report.json",
+        "bytes": 218332,
+        "sha256": "b971b0abd78521997cc34b8d40eb8486d289b01994b9c40e60046985a5932e04"
+      },
+      "cases": 48,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": null
+    },
+    {
+      "id": "gnu-float128-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/gnu-float128-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gnu-float128-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gnu-float128-qualification/report.json",
+        "bytes": 9504966,
+        "sha256": "3d41534e851db584e379bfdaafd2d7b885260e000b4124234d72c08de41961e8"
+      },
+      "cases": 78,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 78,
+        "passed": 78,
+        "failed": 0
+      }
+    },
+    {
+      "id": "abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/abi-interop.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/abi-qualification/report.json",
+        "bytes": 1314615,
+        "sha256": "6291a937078f257ef5a92ac33ef746d72fc55a3608d5c89072512239fb8a3599"
+      },
+      "cases": 200,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 200,
+        "passed": 200,
+        "failed": 0
+      }
+    },
+    {
+      "id": "atomic-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-atomic-libcall.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/atomic-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/atomic-abi-qualification/report.json",
+        "bytes": 59205,
+        "sha256": "73923d1df8c020fa67bb900d9c546addd41d3b0b63010bf916774ffe7fcdc6a8"
+      },
+      "cases": 8,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 8,
+        "passed": 8
+      }
+    },
+    {
+      "id": "simd-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-simd.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-qualification/qualification.json",
+        "bytes": 547336,
+        "sha256": "ef412650b007ddf111206453e1bf42891cf7fcd4481c2db67c5c1a97df3befd7"
+      },
+      "cases": 25,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-extended-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-simd-extended.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--oracle",
+        "clang",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-extended-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-extended-qualification/qualification.json",
+        "bytes": 3240459,
+        "sha256": "8be6e980f4e0a48bfa6ac71ec94ab3c19b098172494b7871f8eb0e1b7611dacf"
+      },
+      "cases": 62,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-saturating-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-simd-saturating.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-saturating-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-saturating-qualification/qualification.json",
+        "bytes": 1465083,
+        "sha256": "54bb06816b9db82bfc99c874ad5376045f894381ab66ac6b17ef0275d7337a1a"
+      },
+      "cases": 36,
+      "diagnostics": 80,
+      "defaultControls": 0,
+      "counts": null
+    },
+    {
+      "id": "simd-conversions-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-simd-conversions.mjs",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-conversions-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-conversions-qualification/qualification.json",
+        "bytes": 9348082,
+        "sha256": "eca8527c181f762dd6b3a6996283f89770a21de890f4c3f3b7f2fb043ea54a1e"
+      },
+      "cases": 176,
+      "diagnostics": 192,
+      "defaultControls": 12,
+      "counts": null
+    },
+    {
+      "id": "vector-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-vector-abi.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/vector-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/vector-abi-qualification/report.json",
+        "bytes": 65328849,
+        "sha256": "e89c357a93d56027d175d1415837d3f6f60e65a7c91d598bc78d9bd452942ece"
+      },
+      "cases": 684,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 684,
+        "passed": 684,
+        "failed": 0
+      }
+    },
+    {
+      "id": "empty-abi-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-empty-abi.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/empty-abi-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/empty-abi-qualification/report.json",
+        "bytes": 6605795,
+        "sha256": "ee0f41b8d91083e69864d61e5fac8dd2374f76eb1a1438605069789f7799a0af"
+      },
+      "cases": 112,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 112,
+        "passed": 112,
+        "failed": 0
+      }
+    },
+    {
+      "id": "wide-builtins-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-builtins-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wide-builtins-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wide-builtins-qualification/report.json",
+        "bytes": 8448459,
+        "sha256": "bccf64d37e0db5da74a7c55cca459f23fa0efa5c4abeec9d7aa3f73950b69c54"
+      },
+      "cases": 50,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 50,
+        "passed": 50,
+        "failed": 0
+      }
+    },
+    {
+      "id": "wide-bitfields-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-bitfields-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wide-bitfields-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wide-bitfields-qualification/report.json",
+        "bytes": 11016425,
+        "sha256": "c77d353889f2a6d74a8a0aaaca90258b232f46625b2423e75d6736273e36e20f"
+      },
+      "cases": 72,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 72,
+        "passed": 72,
+        "failed": 0
+      }
+    },
+    {
+      "id": "singleton-bitfield-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/singleton-bitfield-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/singleton-bitfield-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/singleton-bitfield-qualification/report.json",
+        "bytes": 7702958,
+        "sha256": "b0edbfed04ce7ae49921b7ffd699a50b398225c8b23ce40218ae4e5c536e3568"
+      },
+      "cases": 32,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0
+      }
+    },
+    {
+      "id": "anonymous-bitfield-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/wide-integer-test.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--suite",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/anonymous-bitfield-fixtures.mjs",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/anonymous-bitfield-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/anonymous-bitfield-qualification/report.json",
+        "bytes": 17111016,
+        "sha256": "9a9e7fe6ae8df542c36d489bfdaa82f5b3e81376affdd33dfa1b7db99dd34849"
+      },
+      "cases": 160,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 160,
+        "passed": 160,
+        "failed": 0
+      }
+    },
+    {
+      "id": "long-double-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-long-double.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/long-double-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/long-double-qualification/report.json",
+        "bytes": 14294358,
+        "sha256": "1e224401ab26edc5a225f1cc1ca39f9ee8fc58ad11bdd2ee383b41734eea891c"
+      },
+      "cases": 124,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 124,
+        "passed": 124,
+        "failed": 0
+      }
+    },
+    {
+      "id": "int128-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-int128.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/int128-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/int128-qualification/report.json",
+        "bytes": 13923257,
+        "sha256": "2b462c6f40cf8cb625ac29a98b95580220e7dc8c789ad6765213f9781523bd03"
+      },
+      "cases": 116,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 116,
+        "passed": 116,
+        "failed": 0
+      }
+    },
+    {
+      "id": "fp-extension-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/fp-extension-native.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/fp-extension-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/fp-extension-qualification/report.json",
+        "bytes": 12328078,
+        "sha256": "b64b0ee13dfd4a5e61f6a92e73058f88c9330d55cf2ab0980a82cb3950c9c171"
+      },
+      "cases": 124,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "total": 124,
+        "passed": 124,
+        "failed": 0
+      }
+    },
+    {
+      "id": "symbol-alias-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-symbol-alias.mjs",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--source",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+        "--gcc-cxx-sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-qualification-v2"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-qualification-v2/qualification.json",
+        "bytes": 2214701,
+        "sha256": "5cdad085404f65b3f5747c7a8425dd953bb5b9e6ca7b0d8a67b7b6660983c84a"
+      },
+      "cases": 106,
+      "diagnostics": 40,
+      "defaultControls": 0,
+      "counts": {
+        "programs": 106,
+        "diagnostics": 40,
+        "linkRejections": 32
+      }
+    },
+    {
+      "id": "symbol-alias-assembler-qualification",
+      "command": [
+        "python3",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-wabt-symbol-alias.py",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--sysroot",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+        "--reference",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-qualification-v2/programs/report.json",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-assembler-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-assembler-qualification/report.json",
+        "bytes": 1919726,
+        "sha256": "2a49ab2b86f07cef8a891dc158ec29d8f61e41cc889721173766499df4924689"
+      },
+      "cases": 239,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": {
+        "checks": 239,
+        "commands": 694,
+        "executions": 108,
+        "roundtrips": 110,
+        "rejections": 21
+      }
+    },
+    {
+      "id": "target-features-qualification",
+      "command": [
+        "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-target-features.mjs",
+        "--compiler",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+        "--compiler-receipt",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/native-build.json",
+        "--runtime",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current",
+        "--work",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+        "--sdk",
+        "/home/seorii/.local/share/wasi-sdk-33",
+        "--output",
+        "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/target-features-qualification"
+      ],
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/target-features-qualification/qualification.json",
+        "bytes": 244076,
+        "sha256": "3b8034e4bc240090e3b85f0f7c9548b9c60299593b7a053ca9d145893192aee1"
+      },
+      "cases": 6,
+      "diagnostics": 0,
+      "defaultControls": 0,
+      "counts": null
+    },
+    {
+      "id": "weakref-qualification",
+      "exitCode": 0,
+      "receipt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/weakref-qualification/qualification.json",
+        "bytes": 4193494,
+        "sha256": "ffdcf189f9fa3b979a41f11420a0e0cb5425994ae7d6cb3607d35443e14afdbb"
+      },
+      "counts": {
+        "units": 232,
+        "cases": 528,
+        "runtimePasses": 480,
+        "linkRejections": 48
+      }
+    }
+  ],
+  "nativeSuiteCount": 24,
+  "weakrefQualification": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/native-v2/qualification.json",
+    "bytes": 4193494,
+    "sha256": "ffdcf189f9fa3b979a41f11420a0e0cb5425994ae7d6cb3607d35443e14afdbb"
+  },
+  "weakrefCommand": [
+    "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-weakrefs.mjs",
+    "--work",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work",
+    "--compiler",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc",
+    "--source",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc",
+    "--sdk",
+    "/home/seorii/.local/share/wasi-sdk-33",
+    "--sysroot",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot",
+    "--gcc-cxx-sysroot",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot",
+    "--output",
+    "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/native-v2"
+  ],
+  "weakrefCounts": {
+    "units": 232,
+    "cases": 528,
+    "runtimePasses": 480,
+    "linkRejections": 48
+  },
+  "inputsUnchanged": true,
+  "frozenInputAndArtifactCount": 2469,
+  "fixtures": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-fixtures.mjs",
+    "bytes": 26604,
+    "sha256": "e74bb7a7f8b900e8a08605ff4e2ee545f353c5b2478278c35f57f0cd8b27dda0"
+  },
+  "recipes": {
+    "test-weakrefs.mjs": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-weakrefs.mjs",
+      "bytes": 18109,
+      "sha256": "984259f4c83f9e7013dd9ed57912fc2a2f8234bcbf15749b5cf90bae24ddbb55"
+    },
+    "weakref-fixtures.mjs": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-fixtures.mjs",
+      "bytes": 26604,
+      "sha256": "e74bb7a7f8b900e8a08605ff4e2ee545f353c5b2478278c35f57f0cd8b27dda0"
+    },
+    "weakref-inspect.mjs": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-inspect.mjs",
+      "bytes": 5045,
+      "sha256": "a7c8b57ab2ee2c8af2496b7bffcfa6672046071e0b8ca0077f631d62a97b38a2"
+    },
+    "symbol-alias-inspect.mjs": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/symbol-alias-inspect.mjs",
+      "bytes": 7722,
+      "sha256": "c00b7d632cdfa242195b4ee51929845d0faab283c4b1e8b31dbbfef53b78ba27"
+    },
+    "inspect-vector-abi.mjs": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/inspect-vector-abi.mjs",
+      "bytes": 5970,
+      "sha256": "e017791927d7782e4da9c92ec704adc1a504d4668f6be90bdec565d6b3554c12"
+    },
+    "prepare-source.py": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/prepare-source.py",
+      "bytes": 5859,
+      "sha256": "aab5bb957d90f1e8eff999e2f751ba54b37ab3fd8efb2029c0d543b2bc8169f3"
+    },
+    "build-native.sh": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/build-native.sh",
+      "bytes": 4041,
+      "sha256": "9e986668497fcf388bad789bc998b0ba7fe326915b6d6385191ff592c983c679"
+    },
+    "build-wabt.sh": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/build-wabt.sh",
+      "bytes": 6606,
+      "sha256": "4cca114d9daf1b375e826da783f2faff5c63fdddbdcf9a6f778a059caa47031d"
+    },
+    "build-libstdcxx.sh": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/build-libstdcxx.sh",
+      "bytes": 10623,
+      "sha256": "d0e9be07dc2377c876c8c615236e9c66126d60fae9cef9a26b19aa4e5875a56d"
+    },
+    "test-libstdcxx.mjs": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-libstdcxx.mjs",
+      "bytes": 11526,
+      "sha256": "65ccf08af07e3cc134ff1d910475bc2d4643d0232ef19843a4c9634aab2f2b5d"
+    },
+    "runtime.lock.json": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/runtime.lock.json",
+      "bytes": 1911,
+      "sha256": "169312117c848eb4505d5217b101269a7c223d96bf9959b693f9bfa7bd370e02"
+    }
+  },
+  "tools": {
+    "gcc": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc/cc1",
+      "bytes": 24440648,
+      "sha256": "97422fc2c4f474665398dc66c94879610a7deb0c2987824812a36e1fd77df18a"
+    },
+    "gccCpp": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc/cc1plus",
+      "bytes": 26997544,
+      "sha256": "8ec8aade4855cc33dbee6cb46efc4c02606ca2c67cae16e060e39a37ca324a49"
+    },
+    "xgcc": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gcc-native/gcc/xgcc",
+      "bytes": 2445440,
+      "sha256": "f452dd4d5280909fb719d69df796f7f3700da52da6a2d4d4f6fbc51760ed2db9"
+    },
+    "clang": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/bin/clang",
+      "bytes": 118656,
+      "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+    },
+    "clangCpp": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/bin/clang++",
+      "bytes": 118656,
+      "sha256": "6985ec66b1065976616156773f95ed318b1793f7761fe9e9f38f8e771571021c"
+    },
+    "assembler": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wabt-native/wat2wasm",
+      "bytes": 1657000,
+      "sha256": "4a5915520847c5026e36184b52af0b7fcad2da91a5056fecf5c18bca5b38dc2b"
+    },
+    "objdump": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wabt-native/wasm-objdump",
+      "bytes": 990704,
+      "sha256": "7a8ec0fbe155b614f2a4907716d7a9eded359f282c82029a4321f98beae48b33"
+    },
+    "validator": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wabt-native/wasm-validate",
+      "bytes": 1304104,
+      "sha256": "ff61e888a80eebc6474e3c54845b10481eefc5c2d1fd653fac30f9c60311a49d"
+    },
+    "linker": {
+      "path": "/home/seorii/.local/share/wasi-sdk-33/bin/wasm-ld",
+      "bytes": 4165088,
+      "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+    },
+    "node": {
+      "path": "/home/seorii/.nvm/versions/node/v24.22.1/bin/node",
+      "bytes": 126879696,
+      "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+    }
+  },
+  "matrix": {
+    "suites": [
+      {
+        "suite": "core",
+        "units": 80,
+        "cases": 240,
+        "runtimePasses": 224,
+        "linkRejections": 16
+      },
+      {
+        "suite": "gnu",
+        "units": 12,
+        "cases": 12,
+        "runtimePasses": 12,
+        "linkRejections": 0
+      },
+      {
+        "suite": "boundaries",
+        "units": 88,
+        "cases": 156,
+        "runtimePasses": 140,
+        "linkRejections": 16
+      },
+      {
+        "suite": "named-sites",
+        "units": 52,
+        "cases": 120,
+        "runtimePasses": 104,
+        "linkRejections": 16
+      }
+    ],
+    "compilers": {
+      "gcc": 118,
+      "clang": 114
+    },
+    "negativeLinks": {
+      "missingStrong": 40,
+      "duplicateStrong": 8
+    },
+    "strongOverrideCases": 64,
+    "coverage": [
+      "C and C++ at O0/O2",
+      "Initialized pointers, local addresses and direct calls",
+      "Absent optional definitions and GCC/Clang providers",
+      "Weak definitions and strong overrides in both object orders",
+      "Direct strong use before/after weakref use",
+      "Merely declared targets, unused refs and multiple weakrefs",
+      "Same-unit definitions before/after weakrefs",
+      "Explicit assembler names and C++ overloaded i32/f64 targets",
+      "Fresh GNU vector/string/I/O consumers with both provider families"
+    ]
+  },
+  "objectContract": {
+    "targets": "Exact linking-v2 names, function/data kinds, weak/global binding, definition status, compiler-specific visibility and function signatures.",
+    "externalWeakrefs": "Local declaration alias names, including C++ local mangling and explicit assembler names, must not survive as linking symbols.",
+    "relocations": "Actual target/alias-selected relocations are preserved in receipts. Initialized function/data pointers require types 2/5; local pointer sites require types 1/4; direct-call profiles also require type 0.",
+    "definedTargetAliases": {
+      "gccUnits": 8,
+      "aliases": [
+        {
+          "name": "ref_f",
+          "target": "optf",
+          "kind": "function"
+        },
+        {
+          "name": "ref_d",
+          "target": "optd",
+          "kind": "data"
+        }
+      ],
+      "required": "Local, defined, default visibility; same function entity index or exact data segment/offset/size; no forwarding body or copied storage.",
+      "clang": "Direct target references with no local alias symbols.",
+      "genericSource": "gcc/ipa-visibility.cc optimize_weakref, locally bound same-unit definitions only."
+    },
+    "visibility": "Clang definitions are hidden by default; GCC definitions use default visibility. Binding is checked independently."
+  },
+  "gnuRuntime": {
+    "build": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/build.json",
+      "bytes": 6537428,
+      "sha256": "5c8d4798c112f1bbfe0f7c63b0c23c0076413bddf4b71db6730f1d85cf60d0fe"
+    },
+    "qualification": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/qualification/qualification.json",
+      "bytes": 6326,
+      "sha256": "4eeeb159587a50c57fcfd698f8d6bf99dbcac99d43afc474a07e07cbe9ee7124"
+    },
+    "receipt": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/libstdcxx-build.json",
+      "bytes": 157849,
+      "sha256": "d52b88484a4e4bd1d6336d0d9929dbd3d085485086f8e9f924c2b439691e8c6a"
+    },
+    "qualifiedPrograms": 2,
+    "sameSource18Compiler": true,
+    "archives": {
+      "crt": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot/lib/wasm32-wasi/crt1-command.o",
+        "bytes": 1990,
+        "sha256": "27bf9846868f00d770b724fd0a27e22f799c6d550c335d5e8e770391d6ae3231"
+      },
+      "libc": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot/lib/wasm32-wasi/libc.a",
+        "bytes": 3085600,
+        "sha256": "d7ebab1b8ee60d06c31fe809c52b8fe8c12591d4bf1e8989431e67787eff3cf4"
+      },
+      "libm": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/runtime-current/sysroot/lib/wasm32-wasi/libm.a",
+        "bytes": 8,
+        "sha256": "f0a17a43c74d2fe5474fa2fd29c8f14799e777d7d75a2cc4d11c20a6e7b161c5"
+      },
+      "libstdcxx": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot/lib/wasm32-wasi/libstdc++.a",
+        "bytes": 6369716,
+        "sha256": "eba8d2506ae525eeb32877a1f725b2ff72442602809f241cd2eed9d327368e5c"
+      },
+      "libsupcxx": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/libstdcxx-current/sysroot/lib/wasm32-wasi/libsupc++.a",
+        "bytes": 248428,
+        "sha256": "75b6538605c0e94405d8b829f5a6167c2c84357dabb536afaa7b593a07a323d4"
+      },
+      "builtins": {
+        "path": "/home/seorii/.local/share/wasi-sdk-33/lib/clang/22/lib/wasm32-unknown-wasi/libclang_rt.builtins.a",
+        "bytes": 456060,
+        "sha256": "b1e23c0376609e09052ff225f290d971b0f8eabd3ffd0737e5d0ebb10f1880d1"
+      }
+    },
+    "headerCounts": {
+      "gcc": 18,
+      "target": 206,
+      "gnu": 862,
+      "clang": 267
+    },
+    "boundary": "GNU libraries were freshly rebuilt with source18. The SDK33 libc/CRT/libm/builtins bytes were preserved; they are not claimed to be rebuilt from GCC source."
+  },
+  "packageGate": {
+    "preflight": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/weakref-gate-preflight.json",
+      "bytes": 674,
+      "sha256": "19e5cca43e290036037a6f35ec77752d5588cbe1e4277fe47f07e3e54fe38d49"
+    },
+    "status": "passed",
+    "report": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/weakref-qualification/qualification.json",
+      "bytes": 4193494,
+      "sha256": "ffdcf189f9fa3b979a41f11420a0e0cb5425994ae7d6cb3607d35443e14afdbb"
+    },
+    "gate": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-qualification.mjs",
+      "bytes": 13371,
+      "sha256": "b23f7d8099d4d14c4d316efbc6d5f57ef80fc973117af80351afa1bd2af7063f"
+    },
+    "reopened": {
+      "units": 232,
+      "cases": 528,
+      "runtimePasses": 480,
+      "linkRejections": 48,
+      "reopenedFiles": 2469
+    }
+  },
+  "inheritedRegression": {
+    "status": "passed",
+    "suiteCount": 23,
+    "receipt": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/regression-status.json",
+      "bytes": 35941,
+      "sha256": "05e1332ad66e27970c529c22f140b9c07a90648ded8b12654f36cf44144a0103"
+    },
+    "coverageComparison": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/regression-comparison.json",
+      "bytes": 18050,
+      "sha256": "9c984c0aeacc4480df24a6c260173c8a69b0d85a6f364e956eb8b653d479cf33"
+    },
+    "sameCaseAndDiagnosticSetsAsSource17": true,
+    "reportedCaseRows": 3199,
+    "diagnosticRows": 608,
+    "targetFeatureWatRows": 62,
+    "countingBoundary": "Inherited case rows include assembler checks and other suite-specific units; this total is not a count of WASI program executions. Weakref480/48 counts remain separate.",
+    "comparisons": [
+      {
+        "id": "native-smoke",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/native-programs/provenance.json",
+          "bytes": 75484,
+          "sha256": "0b7e8aabd933a03faaa4ffec37eb37460a646e7f9e2095d25061029cfdabc630"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/native-programs/provenance.json",
+          "bytes": 76361,
+          "sha256": "c151e515b503ea13f7bb171f97cf40788d15e1c55443596499ba1fa77ba643d9"
+        },
+        "counts": {
+          "cases": 13
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "simd-header-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-header-qualification/qualification.json",
+          "bytes": 52273200,
+          "sha256": "c788052c5737b1011891f416b88fff31943722793102a4b596bd8084068da7d5"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-header-qualification/qualification.json",
+          "bytes": 52419450,
+          "sha256": "b2c19744da3f6e731ee1246d46d60f64c73a43755351681697c1b1b1586c39f4"
+        },
+        "counts": {
+          "cases": 680,
+          "diagnostics": 296,
+          "defaultControls": 4
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "vector-subreg-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/vector-subreg-qualification/report.json",
+          "bytes": 7684106,
+          "sha256": "aa11b454a7b9d58db262cce92cc1254d1efc455686f501d031186f1f8d65884e"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/vector-subreg-qualification/report.json",
+          "bytes": 7691089,
+          "sha256": "b1c1978e1aa4b052e36fe63cabc4cfd3e45cb891c3a37bd290195425e8e05087"
+        },
+        "counts": {
+          "cases": 48
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "half-vector-abi-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/half-vector-abi-qualification/report.json",
+          "bytes": 218332,
+          "sha256": "b971b0abd78521997cc34b8d40eb8486d289b01994b9c40e60046985a5932e04"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/half-vector-abi-qualification/report.json",
+          "bytes": 222077,
+          "sha256": "a2d09a23c58cda71e44aed5a149c3b40580060b82a28b77b165f3461f1d93ee3"
+        },
+        "counts": {
+          "cases": 48
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "gnu-float128-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/gnu-float128-qualification/report.json",
+          "bytes": 9504966,
+          "sha256": "3d41534e851db584e379bfdaafd2d7b885260e000b4124234d72c08de41961e8"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/gnu-float128-qualification/report.json",
+          "bytes": 9522639,
+          "sha256": "0ad7e822910fd18f6dcdf830cb21376a28b6ab5f5a0c9e59047d896204e429aa"
+        },
+        "counts": {
+          "cases": 78
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "abi-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/abi-qualification/report.json",
+          "bytes": 1314615,
+          "sha256": "6291a937078f257ef5a92ac33ef746d72fc55a3608d5c89072512239fb8a3599"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/abi-qualification/report.json",
+          "bytes": 1336251,
+          "sha256": "6ca23cdd7d4b7500a3e502dde5dc5b6443dba68b11c0c4e4cf7cae95aa2f31d0"
+        },
+        "counts": {
+          "cases": 200
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "atomic-abi-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/atomic-abi-qualification/report.json",
+          "bytes": 59205,
+          "sha256": "73923d1df8c020fa67bb900d9c546addd41d3b0b63010bf916774ffe7fcdc6a8"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/atomic-abi-qualification/report.json",
+          "bytes": 60351,
+          "sha256": "6c8b54b8ed2dadb3721548f3150e56a7492ba2ab789dc8dfe2c33d146a4e3fc2"
+        },
+        "counts": {
+          "cases": 8
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "simd-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-qualification/qualification.json",
+          "bytes": 547336,
+          "sha256": "ef412650b007ddf111206453e1bf42891cf7fcd4481c2db67c5c1a97df3befd7"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-qualification/qualification.json",
+          "bytes": 549807,
+          "sha256": "20a5f043fa8d59bd378bc251ef88d2e6bba881be8068abc6c7c99052780ac019"
+        },
+        "counts": {
+          "cases": 25
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "simd-extended-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-extended-qualification/qualification.json",
+          "bytes": 3240459,
+          "sha256": "8be6e980f4e0a48bfa6ac71ec94ab3c19b098172494b7871f8eb0e1b7611dacf"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-extended-qualification/qualification.json",
+          "bytes": 3248342,
+          "sha256": "c9a449502dbc8e03c1091e77f32ad1e9ff4bd0aecd4086faab1493692a71c696"
+        },
+        "counts": {
+          "cases": 62
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "simd-saturating-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-saturating-qualification/qualification.json",
+          "bytes": 1465083,
+          "sha256": "54bb06816b9db82bfc99c874ad5376045f894381ab66ac6b17ef0275d7337a1a"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-saturating-qualification/qualification.json",
+          "bytes": 1472301,
+          "sha256": "e6a68281a5bc34c99b4ebe3bba8406d396348579eeea8950da372f2cfeca4c9f"
+        },
+        "counts": {
+          "cases": 36,
+          "diagnostics": 80
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "simd-conversions-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/simd-conversions-qualification/qualification.json",
+          "bytes": 9348082,
+          "sha256": "eca8527c181f762dd6b3a6996283f89770a21de890f4c3f3b7f2fb043ea54a1e"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/simd-conversions-qualification/qualification.json",
+          "bytes": 9376714,
+          "sha256": "3a95893e46334474e18b287abcaa6d334890a77881b1818e5dce9764c981e823"
+        },
+        "counts": {
+          "cases": 176,
+          "diagnostics": 192,
+          "defaultControls": 12
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "vector-abi-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/vector-abi-qualification/report.json",
+          "bytes": 65328849,
+          "sha256": "e89c357a93d56027d175d1415837d3f6f60e65a7c91d598bc78d9bd452942ece"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/vector-abi-qualification/report.json",
+          "bytes": 65442482,
+          "sha256": "346cf82d7dc177ccaea6a719b2882be1c9c2d6a045e1a48699d8676dad7fe5a8"
+        },
+        "counts": {
+          "cases": 684
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "empty-abi-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/empty-abi-qualification/report.json",
+          "bytes": 6605795,
+          "sha256": "ee0f41b8d91083e69864d61e5fac8dd2374f76eb1a1438605069789f7799a0af"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/empty-abi-qualification/report.json",
+          "bytes": 6630403,
+          "sha256": "61bafa6b3f864cf3a0509540037bc9cdbf2f73a9ac635f97713f061df0bcd161"
+        },
+        "counts": {
+          "cases": 112
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "wide-builtins-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wide-builtins-qualification/report.json",
+          "bytes": 8448459,
+          "sha256": "bccf64d37e0db5da74a7c55cca459f23fa0efa5c4abeec9d7aa3f73950b69c54"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/wide-builtins-qualification/report.json",
+          "bytes": 8456330,
+          "sha256": "4049ed07d47e0e6a7e511dbfaf8342bdf85c9b027d30aed2939fb78bc6df244b"
+        },
+        "counts": {
+          "cases": 50
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "wide-bitfields-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/wide-bitfields-qualification/report.json",
+          "bytes": 11016425,
+          "sha256": "c77d353889f2a6d74a8a0aaaca90258b232f46625b2423e75d6736273e36e20f"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/wide-bitfields-qualification/report.json",
+          "bytes": 11028640,
+          "sha256": "de8e22d1b81e72a67dfd552ba908643bc7e5c2b65bddd8bbb3872d43366a9ac9"
+        },
+        "counts": {
+          "cases": 72
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "singleton-bitfield-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/singleton-bitfield-qualification/report.json",
+          "bytes": 7702958,
+          "sha256": "b0edbfed04ce7ae49921b7ffd699a50b398225c8b23ce40218ae4e5c536e3568"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/singleton-bitfield-qualification/report.json",
+          "bytes": 7710613,
+          "sha256": "650914877b9539ce62c4b58578d83cc0967a2b76d3dfe3e16aef93c0c83c5b3a"
+        },
+        "counts": {
+          "cases": 32
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "anonymous-bitfield-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/anonymous-bitfield-qualification/report.json",
+          "bytes": 17111016,
+          "sha256": "9a9e7fe6ae8df542c36d489bfdaa82f5b3e81376affdd33dfa1b7db99dd34849"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/anonymous-bitfield-qualification/report.json",
+          "bytes": 17143247,
+          "sha256": "cb9a76805e978602a581cfc5f4870e6528b999fb860a8f4efdb4656a4000ecde"
+        },
+        "counts": {
+          "cases": 160
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "long-double-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/long-double-qualification/report.json",
+          "bytes": 14294358,
+          "sha256": "1e224401ab26edc5a225f1cc1ca39f9ee8fc58ad11bdd2ee383b41734eea891c"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/long-double-qualification/report.json",
+          "bytes": 14322239,
+          "sha256": "0e58f82d4ab7600be29323dc633362714668bc926bbdedab7a33a75c6227d292"
+        },
+        "counts": {
+          "cases": 124
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "int128-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/int128-qualification/report.json",
+          "bytes": 13923257,
+          "sha256": "2b462c6f40cf8cb625ac29a98b95580220e7dc8c789ad6765213f9781523bd03"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/int128-qualification/report.json",
+          "bytes": 13948930,
+          "sha256": "cb443c843296f0c1459798eefab9198b9bbf3563202de0df6f7a50e4d4285a70"
+        },
+        "counts": {
+          "cases": 116
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "fp-extension-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/fp-extension-qualification/report.json",
+          "bytes": 12328078,
+          "sha256": "b64b0ee13dfd4a5e61f6a92e73058f88c9330d55cf2ab0980a82cb3950c9c171"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/fp-extension-qualification/report.json",
+          "bytes": 12353055,
+          "sha256": "c63cba93d0acda59b423bb160b2330101f0168a69933398c0a7ee89caaf37126"
+        },
+        "counts": {
+          "cases": 124
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "symbol-alias-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-qualification-v2/qualification.json",
+          "bytes": 2214701,
+          "sha256": "5cdad085404f65b3f5747c7a8425dd953bb5b9e6ca7b0d8a67b7b6660983c84a"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-qualification-v2/qualification.json",
+          "bytes": 2221131,
+          "sha256": "cfe6b896bd2438485031a0210d62e0082fee9199e5424fe5ff6873026e48d1ec"
+        },
+        "counts": {
+          "cases": 106,
+          "diagnostics": 40,
+          "negativeLinks": 16
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "symbol-alias-assembler-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/symbol-alias-assembler-qualification/report.json",
+          "bytes": 1919726,
+          "sha256": "2a49ab2b86f07cef8a891dc158ec29d8f61e41cc889721173766499df4924689"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/symbol-alias-assembler-qualification/report.json",
+          "bytes": 1939004,
+          "sha256": "fb71af9d4d592c5b9828b60a4f4a4081524fba231817ae5a6dfcdda91c86f21a"
+        },
+        "counts": {
+          "cases": 239
+        },
+        "sameCaseSets": true
+      },
+      {
+        "id": "target-features-qualification",
+        "actual": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/work/target-features-qualification/qualification.json",
+          "bytes": 244076,
+          "sha256": "3b8034e4bc240090e3b85f0f7c9548b9c60299593b7a053ca9d145893192aee1"
+        },
+        "source17Reference": {
+          "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-symbol-aliases-80-20261030/out/issue80-build/work/target-features-qualification/qualification.json",
+          "bytes": 246819,
+          "sha256": "639e1fbdf20c8538b0c78f5ff53f639b22c519d1e6862043baeb52286010c481"
+        },
+        "counts": {
+          "cases": 6,
+          "watCases": 62
+        },
+        "sameCaseSets": true
+      }
+    ]
+  },
+  "supplementaryControls": {
+    "sameTranslationUnit": {
+      "report": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/same-tu-review-v2/report.json",
+        "bytes": 228451,
+        "sha256": "9e6085284ca17a81a3f4e5286a356ab96386ce5210bd3f3b5f5c0349dafb99f3"
+      },
+      "metadata": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/same-tu-review-v2/objects.json",
+        "bytes": 35306,
+        "sha256": "268792027301dcef92819d58a9baf5476047537c09d97a6e51c5f84ed5e75868"
+      },
+      "strictLinkAndWasiExecutions": 24,
+      "forms": 8,
+      "compilerLabels": [
+        "gcc17",
+        "gcc18",
+        "clang"
+      ],
+      "byteIdenticalGcc17AndGcc18Objects": 4,
+      "objectByteComparisons": [
+        {
+          "unit": "boundaries:definition-before-gcc-c-O0",
+          "identical": true
+        },
+        {
+          "unit": "boundaries:definition-before-gcc-c-O2",
+          "identical": false
+        },
+        {
+          "unit": "boundaries:definition-before-gcc-cpp-O0",
+          "identical": false
+        },
+        {
+          "unit": "boundaries:definition-before-gcc-cpp-O2",
+          "identical": true
+        },
+        {
+          "unit": "boundaries:definition-after-gcc-c-O0",
+          "identical": false
+        },
+        {
+          "unit": "boundaries:definition-after-gcc-c-O2",
+          "identical": true
+        },
+        {
+          "unit": "boundaries:definition-after-gcc-cpp-O0",
+          "identical": false
+        },
+        {
+          "unit": "boundaries:definition-after-gcc-cpp-O2",
+          "identical": true
+        }
+      ],
+      "identityBoundary": "Each GCC build preserves alias-to-target body/storage identity within every object. The two compiler builds do not need to emit byte-identical objects.",
+      "inputsUnchanged": true,
+      "stdout": "1 1 14 23\n",
+      "runtimeBoundary": "Fresh source18 work libc used for all three compiler controls."
+    },
+    "hostGcc": {
+      "report": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/controls/host-same-tu-v2/report.json",
+        "bytes": 18340,
+        "sha256": "c1c63beabb3eb1e93c417564b62a1a96a3bf2c22ae473d957c5a0e8cdb319c3a"
+      },
+      "executions": 8,
+      "version": "gcc (Debian 12.2.0-14+deb12u1) 12.2.0",
+      "boundary": "Host ELF control of generic local .set aliases. Native ELF C++ local data name can be mangled; not counted as Wasm qualification."
+    },
+    "smallNative18Probe": {
+      "report": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/native18-probe/report.json",
+        "bytes": 178432,
+        "sha256": "22a18759e05d40a068e176ad8a679460f29ff804956e2a480a8eee5085541e54"
+      },
+      "units": 8,
+      "cases": 8,
+      "runtimePasses": 7,
+      "linkRejections": 1,
+      "boundary": "Compatibility probe used preserved source17 libc. It is separate from the same-source GNU/native-v2 qualification."
+    },
+    "offlineObjectReview": {
+      "report": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/controls/source18-object-review-v2.json",
+        "bytes": 402179,
+        "sha256": "0a6314040250c31c79608a64c550b3be46a6a07a363ec0b7bf0ff0c2159d6cad"
+      },
+      "units": 232,
+      "localAliasUnits": 8,
+      "boundary": "Reinspection of original v1 objects with corrected defined-target rules; does not substitute for final recompilation and execution."
+    }
+  },
+  "preservedInitialAttempt": {
+    "report": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/native-v1/qualification.json",
+      "bytes": 3279627,
+      "sha256": "eede66d80bfb58e2db450d1083b9ef4244d1c00c2f201df3b8884ce60e52a0b7"
+    },
+    "status": "failed",
+    "counts": {
+      "units": 224,
+      "cases": 0,
+      "runtimePasses": 0,
+      "linkRejections": 0
+    },
+    "inputsUnchanged": true,
+    "recipeIdentities": {
+      "test-weakrefs.mjs": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/test-weakrefs.mjs",
+        "bytes": 17677,
+        "sha256": "6a86445f08eddb4bac44fdf88bf294c864edefe61b4780df1964bef074cc6048"
+      },
+      "weakref-fixtures.mjs": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-fixtures.mjs",
+        "bytes": 25746,
+        "sha256": "1ff923a327a3687024f93e7e214d20041e0dd06823020281508040b4c4504c11"
+      },
+      "weakref-inspect.mjs": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-inspect.mjs",
+        "bytes": 3261,
+        "sha256": "11c066c190159c780c36284e207153eee8bba1e02011059441a004fa04d9e454"
+      }
+    },
+    "failedMetadataUnits": [
+      "boundaries:definition-before-gcc-c-O0",
+      "boundaries:definition-before-gcc-c-O2",
+      "boundaries:definition-before-gcc-cpp-O0",
+      "boundaries:definition-before-gcc-cpp-O2",
+      "boundaries:definition-after-gcc-c-O0",
+      "boundaries:definition-after-gcc-c-O2",
+      "boundaries:definition-after-gcc-cpp-O0",
+      "boundaries:definition-after-gcc-cpp-O2"
+    ],
+    "causes": [
+      "The initial inspector incorrectly forbade GCC generic same-unit local aliases in eight definition consumers.",
+      "URI-escaped %3A output directory names caused wasm-ld output creation to fail; an identical link using a safe path passed."
+    ],
+    "pathControl": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/controls/link-output-path-control.json",
+      "bytes": 2497,
+      "sha256": "38e128232a58ae5c47573affd8585d077baba5e289df66d4629c0d320c1c9a1a"
+    },
+    "resolution": "Only the known defined-target local aliases are allowed, with shared body/storage checks. Filesystem names use a verified collision-free alphabet. The entire matrix was recompiled and rerun in native-v2 without changing compiler, assembler or GNU runtime inputs."
+  },
+  "fixtureEquivalence": {
+    "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/fixture-equivalence-v2.json",
+    "bytes": 339,
+    "sha256": "11fc413f21c79b861c054a90cc47f132fa0a5664ea300d4bbfe09a8abe7afc49"
+  },
+  "unitTests": {
+    "fixturesAndInspector": 18,
+    "packageAndGate": 34,
+    "handoff": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-qualification/control/native-handoff.json",
+      "bytes": 14779,
+      "sha256": "a6d5b6b97c275550c6601d50bdbc0c2d07ab0628f7f3459769a48377ca55aa8f"
+    },
+    "commands": [
+      [
+        "node",
+        "--test",
+        "producer/gcc-wasi/weakref-fixtures.test.mjs",
+        "producer/gcc-wasi/weakref-inspect.test.mjs"
+      ],
+      [
+        "node",
+        "--test",
+        "producer/gcc-wasi/weakref-qualification.test.mjs",
+        "producer/gcc-wasi/package.test.mjs"
+      ]
+    ],
+    "allProducer": {
+      "tests": 115,
+      "exitCode": 0,
+      "log": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/unit-tests-final.log",
+        "bytes": 11104,
+        "sha256": "fa54067dba5befca85d25c390685c898e60ff7f32e824f9935777f60d18dc336"
+      }
+    }
+  },
+  "boundaries": [
+    "Weak alias definitions remain rejected; ordinary weak definitions and external weak references are qualified.",
+    "COMDAT groups, symbol versioning, shared/dynamic linking, threads/TLS, exceptions and RTTI remain outside this contract.",
+    "Mixed GCC/Clang cases establish only the recorded signatures/layouts, not general C++ ABI or runtime compatibility."
+  ],
+  "logs": {
+    "nativeCompiler": {
+      "log": "/home/seorii/logs/wasm-llvm-81-native18-4az166m1.log",
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-81-native18-4az166m1.log.status",
+        "bytes": 93,
+        "sha256": "be5e79df23a96f5dafc83886fc5adbea4ebd310108d403687c7892f000be1b62"
+      },
+      "exitCode": 0
+    },
+    "nativeRuntime": {
+      "log": "/home/seorii/logs/wasm-llvm-81-fresh-runtime-mv4hgxzm.log",
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-81-fresh-runtime-mv4hgxzm.log.status",
+        "bytes": 1250,
+        "sha256": "7b9b3a992302f722a5d89523bdb227b772be913d1312d1d7abe8be19870b8e01"
+      },
+      "exitCode": 0
+    },
+    "weakrefInitial": {
+      "log": "/home/seorii/logs/wasm-llvm-81-weakref-native-c0u80og_.log",
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-81-weakref-native-c0u80og_.log.status",
+        "bytes": 1215,
+        "sha256": "aa17994e639e89cfdfc6eafae4956413eead6796620332698aed7e66dcd55672"
+      },
+      "exitCode": 1
+    },
+    "weakrefFinal": {
+      "log": "/home/seorii/logs/wasm-llvm-81-weakref-native-v2-8u2pjefq.log",
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-81-weakref-native-v2-8u2pjefq.log.status",
+        "bytes": 1563,
+        "sha256": "fc63f32d81ee5ce514dfcdf5c62114e823a8c8ea4f36d822bb85a7a81db9fb0a"
+      },
+      "exitCode": 0
+    },
+    "inheritedRegressions": {
+      "log": "/home/seorii/logs/wasm-llvm-81-regression-m_7v3bg6.log",
+      "status": {
+        "path": "/home/seorii/logs/wasm-llvm-81-regression-m_7v3bg6.log.status",
+        "bytes": 35941,
+        "sha256": "05e1332ad66e27970c529c22f140b9c07a90648ded8b12654f36cf44144a0103"
+      },
+      "exitCode": 0
+    },
+    "browser": {
+      "log": "/home/seorii/logs/wasm-llvm-81-browser-1qf_m5r_.log",
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/browser-status.json",
+        "bytes": 665,
+        "sha256": "1db30513d4be688baa723504c39643c163aa7a68dd8e8b3a685915101ab93f90"
+      },
+      "exitCode": 0
+    },
+    "package": {
+      "log": "/home/seorii/logs/wasm-llvm-81-package-v2-ow7qbqaw.log",
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/package-status-v2.json",
+        "bytes": 201,
+        "sha256": "636cae31a2357098070fda5f6c2d6d02bf454d345bbb4844302790f58805042c"
+      },
+      "exitCode": 0
+    },
+    "worker": {
+      "log": "/home/seorii/logs/wasm-llvm-81-worker-v2-15hmoa4y.log",
+      "status": {
+        "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/worker-status-v2.json",
+        "bytes": 9582,
+        "sha256": "8e5393eeb9aa5addf6ab1e4582090d453c4d9f3ae385c05378a564270390fa3d"
+      },
+      "exitCode": 0
+    }
+  },
+  "browser": {
+    "status": "passed",
+    "summary": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-summary.json",
+      "bytes": 67839,
+      "sha256": "396b46d24465ad718efab5226879133ed03183993ec1eb60285600d58d5ff264"
+    },
+    "manifest": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/bundle-final-v2/gcc-toolchain.v2.json",
+      "bytes": 22325,
+      "sha256": "e302a1f7745e2f100bad27f0e0678cf2a0c9618c538e37382321aae6e533b29a"
+    },
+    "counts": {
+      "chromium": 1707,
+      "nodeWasi": 1707,
+      "objects": 1477,
+      "wat": 1477,
+      "objectSignatureChecks": 382
+    },
+    "weakrefCounts": {
+      "units": 232,
+      "cases": 528,
+      "runtimePasses": 480,
+      "linkRejections": 48,
+      "gccObjects": 118,
+      "clangObjects": 114,
+      "chromiumPrograms": 480,
+      "nodePrograms": 480
+    },
+    "weakrefControls": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/worker-weakref-controls.json",
+      "bytes": 3830035,
+      "sha256": "7b95ad404783d2268eab676f748e4e2e25e9c67f606a3ee2a15de9d31c38225c"
+    },
+    "publicSdkWeakrefPrograms": 148,
+    "preservedPreviousPublicSdkPrograms": 1559,
+    "inputSnapshot": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/worker-inputs-final.json",
+      "bytes": 975063,
+      "sha256": "44f06ce9ba97637f5ff1d0e87d8b76b5b31f37dd9c7182b4d98efa0c87bb71e3"
+    },
+    "frozenInputFiles": 3446,
+    "diagnosticCounts": {
+      "diagnostics": 592,
+      "header": 296,
+      "saturation": 80,
+      "conversions": 192,
+      "symbolAliases": 24,
+      "defaultControls": 4
+    },
+    "diagnostics": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/worker-raw-controls.json",
+      "bytes": 958561,
+      "sha256": "0e32be136b3a45c85440f89774e738c40f05542f427617bccf3f43ced13b4e77"
+    },
+    "aliasCounts": {
+      "providers": 26,
+      "objects": 50,
+      "linkControls": 8,
+      "linkRejections": 16,
+      "assemblerObjects": 110,
+      "assemblerRejections": 18
+    },
+    "aliasControls": {
+      "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/worker-alias-controls.json",
+      "bytes": 961810,
+      "sha256": "f3494f41d8964acbac13f5db2734406baf346ab8c073ab4afd7f12ac4a46119b"
+    },
+    "opcodeChecks": 979,
+    "targetFeatures": {
+      "assembler": {
+        "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/wabt-target-features.json",
+        "bytes": 46161,
+        "sha256": "253ef0825a1d381b24831968b2bd0cdc324f9005ed588214ae365dfd91b27129"
+      },
+      "sdk": {
+        "path": "/data/codex-wasm-llvm-builds/weakrefs81-retry-ww9hyndj/worker-qualification-final/target-features/qualification.json",
+        "bytes": 117059,
+        "sha256": "967ee463eceff51da78009fb08aa0ccf2d977ad21cddce1282531b01f638d466"
+      },
+      "assemblerCases": 62,
+      "chromiumPrograms": 6,
+      "nodePrograms": 6
+    },
+    "rawDefaultControlExecutions": {
+      "chromium": 4,
+      "nodeWasi": 4
+    },
+    "engineProbe": {
+      "simd128": true,
+      "kind": "actual-SDK-v128-const-drop-WebAssembly.validate",
+      "host": "chromium-worker",
+      "mocked": false
+    },
+    "inputsUnchanged": true,
+    "fixtureRecipe": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/producer/gcc-wasi/weakref-worker-fixtures.mjs",
+      "bytes": 1230,
+      "sha256": "10822b9259a49ff49fdf7196122d1025297eaf0b2aa0878a8f83d5d2d55a1001"
+    },
+    "boundary": "The public SDK compiles all of its source units with GCC. The separate 528-case Worker matrix compiles 118 GCC objects in the actual Worker and reuses 114 hash-verified native Clang reference objects. Its 480 successful linked programs execute in both Chromium Worker and Node WASI; 48 cases require strict-link rejection."
+  },
+  "preservedPackagingAttempt": {
+    "reason": "The first packaging attempt exhausted the root filesystem and could not write its final status. Its partial bundle and logs are preserved. The dependent Worker exited 1 before executing any suite. The successful retry used fresh /data output directories and a private /data TMPDIR with the same frozen compiler/native/production inputs.",
+    "packageLog": {
+      "path": "/home/seorii/logs/wasm-llvm-81-package-kb51oswe.log",
+      "bytes": 738,
+      "sha256": "62c40afdca6632352077657c0c1cbaa2e2187f4a4148e9778c03013f4de4b11a"
+    },
+    "emptyPackageStatus": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/package-status.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "workerLog": {
+      "path": "/home/seorii/logs/wasm-llvm-81-worker-3qi1qwc_.log",
+      "bytes": 833,
+      "sha256": "c53e653c602eb0d6aa71c791c6397f180c55759d9bf8ad9a8b13d6134b438c41"
+    },
+    "workerStatus": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/worker-status.json",
+      "bytes": 94,
+      "sha256": "b5f1fb877d1c8bcf5addb28293c93d6ba9cb4bf5b1b6e4b5ba97f65747f45d8b"
+    },
+    "layout": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/disk-retry-layout.json",
+      "bytes": 565,
+      "sha256": "eaf842b10e2f514551a534728cb1c725db036ee8453269ac22da0c176b07f401"
+    },
+    "retryRecipes": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-weakrefs-81-20261030/out/issue81-build/control/retry-recipe-inputs.json",
+      "bytes": 1303,
+      "sha256": "6f61a9bddfd46f11dbde2216551502a5edbdafff62b2e7df282576a1bcf28e75"
+    }
+  }
+}

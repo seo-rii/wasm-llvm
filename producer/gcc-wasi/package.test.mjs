@@ -12,6 +12,61 @@ import { verifySaturatingSimdQualification, verifySaturatingSimdQualificationOpt
 import { verifyGnuFloat128Qualification } from './package.mjs';
 import { cases as gnuFloat128Cases } from './gnu-float128-fixtures.mjs';
 import { cases as saturatingCases, disabledCases as saturatingDisabledCases, diagnosticCases as saturatingDiagnosticCases } from './simd-saturating-fixtures.mjs';
+import { verifySimdHeaderInstallation } from './simd-header-qualification.mjs';
+import { verifySymbolAliasPrograms } from './package.mjs';
+import { cases as symbolAliasCases } from './symbol-alias-fixtures.mjs';
+
+test('packaged SIMD header is identical at every installation boundary and retains full GCC notices', () => {
+	const source = Buffer.from('/* SPDX-License-Identifier: GPL-3.0-or-later WITH GCC-exception-3.1 */\n' + 'independent header\n'.repeat(1000));
+	const licenses = { COPYING3: Buffer.alloc(35147, 'g'), 'COPYING.RUNTIME': Buffer.alloc(3324, 'r') };
+	const inputs = () => ({ source, installed: Buffer.from(source), browser: Buffer.from(source), packaged: Buffer.from(source),
+		licenses, packagedLicenses: Object.fromEntries(Object.entries(licenses).map(([name, bytes]) => [name, Buffer.from(bytes)])) });
+	verifySimdHeaderInstallation(inputs());
+	for (const stage of ['installed', 'browser', 'packaged']) {
+		const changed = inputs(); changed[stage][0] ^= 1;
+		assert.throws(() => verifySimdHeaderInstallation(changed), /Changed .* SIMD header/);
+		const missing = inputs(); delete missing[stage];
+		assert.throws(() => verifySimdHeaderInstallation(missing), /Missing .* SIMD header/);
+	}
+	for (const name of ['COPYING3', 'COPYING.RUNTIME']) {
+		const missing = inputs(); delete missing.packagedLicenses[name];
+		assert.throws(() => verifySimdHeaderInstallation(missing), /Missing packaged/);
+		const shortened = inputs(); shortened.packagedLicenses[name] = shortened.packagedLicenses[name].subarray(0, 100);
+		assert.throws(() => verifySimdHeaderInstallation(shortened), /Changed packaged/);
+	}
+});
+
+import { verifyWabtAssemblerReceipt } from './package.mjs';
+
+test('assembler receipt requires the exact patched WABT source and build recipes', () => {
+	const lock = { repository: 'https://example.invalid/wabt', commit: '1'.repeat(40), version: '1.0.37',
+		patches: [{ path: 'patches/wabt.patch', sha256: '2'.repeat(64) }], sourceDiffSha256: '3'.repeat(64),
+		submodules: { 'third_party/picosha2': '4'.repeat(40) } };
+	const recipes = Object.fromEntries(['build-wabt.sh', 'prepare-source.py', 'sources.lock.json']
+		.map(name => [name, identity(Buffer.from(name))]));
+	const receipt = { component: 'wabt', role: 'wasm-object-assembler', host: 'wasm32-emscripten',
+		repository: lock.repository, commit: lock.commit, version: lock.version, inputsUnchanged: true,
+		assemblerArguments: ['-r', '--enable-annotations'], recipes,
+		source: { wabtCommit: lock.commit, patches: lock.patches, sourceDiffSha256: lock.sourceDiffSha256, submodules: lock.submodules } };
+	verifyWabtAssemblerReceipt(receipt, lock, recipes);
+	for (const mutate of [
+		proof => { delete proof.source; },
+		proof => { proof.source.patches = []; },
+		proof => { proof.source.sourceDiffSha256 = '0'.repeat(64); },
+		proof => { proof.source.wabtCommit = '0'.repeat(40); },
+		proof => { proof.source.submodules['third_party/picosha2'] = '0'.repeat(40); },
+		proof => { proof.commit = '0'.repeat(40); },
+		proof => { proof.repository = 'https://example.invalid/other'; },
+		proof => { proof.host = 'native'; },
+		proof => { proof.inputsUnchanged = false; },
+		proof => { proof.assemblerArguments = []; },
+		proof => { proof.recipes['prepare-source.py'].sha256 = '0'.repeat(64); },
+		proof => { delete proof.recipes['sources.lock.json']; }
+	]) {
+		const changed = structuredClone(receipt); mutate(changed);
+		assert.throws(() => verifyWabtAssemblerReceipt(changed, lock, recipes));
+	}
+});
 
 test('saturating patch requires current saturation and existing SIMD/vector qualification', () => {
 	const patches = [{ path: 'patches/0013-simd-saturating-arithmetic.patch' }];
@@ -288,6 +343,22 @@ test('anonymous bitfield proof binds every optimization, compiler direction and 
 	]) {
 		const changed = structuredClone(report); mutate(changed);
 		assert.throws(() => verifyAnonymousBitfieldQualification(changed, expected, anonymousBitfieldCases));
+	}
+});
+
+test('strong alias programs require all original sources and compiler directions (synthetic receipts)', () => {
+	const { expected, report } = int128ProofFixture(symbolAliasCases, 'gcc-wasi-wide-integer-qualification');
+	verifySymbolAliasPrograms(report, expected, symbolAliasCases);
+	for (const mutate of [
+		proof => { proof.counts.total = 104; },
+		proof => { proof.suiteSha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].units[1].source.sha256 = '0'.repeat(64); },
+		proof => { proof.cases[0].commands.at(-2).argv = ['-lc']; },
+		proof => { proof.cases[0].commands.at(-1).stdout = '0\n'; },
+		proof => { proof.skippedReferences = []; }
+	]) {
+		const changed = structuredClone(report); mutate(changed);
+		assert.throws(() => verifySymbolAliasPrograms(changed, expected, symbolAliasCases));
 	}
 });
 
