@@ -68,6 +68,16 @@ test('multi-TU callers, duplicate static/source names and dead-code controls ret
       3
     );
     assert.equal(fixture.expected.values.debug_leaf.local, 57);
+    assert.equal(fixture.expected.values.debug_leaf.unused, 91);
+    const leaf = fixture.files.find(
+      (file) => file.path === fixture.expected.functionSources.debug_leaf
+    ).contents;
+    assert.match(leaf, /int debug_leaf\(int input, int trigger, int unused\)/);
+    assert.equal(
+      (leaf.match(/\bunused\b/g) ?? []).length,
+      1,
+      'The source parameter must stay unused so real location qualification covers the fallback'
+    );
     assert.equal(fixture.expected.values.debug_middle.middle_local, 20);
     assert(fixture.files.some((file) => file.contents.includes('debug_dead')));
   }

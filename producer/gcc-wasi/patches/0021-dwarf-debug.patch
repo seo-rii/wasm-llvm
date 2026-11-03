@@ -1,5 +1,5 @@
 diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
-index 7574572e7..b6fa3c2c7 100644
+index 7574572e7..dbcd3efb2 100644
 --- a/gcc/config/wasm/wasm-asm.cc
 +++ b/gcc/config/wasm/wasm-asm.cc
 @@ -21,6 +21,9 @@
@@ -344,7 +344,7 @@ index 7574572e7..b6fa3c2c7 100644
    output_indent (stream);
    fprintf (stream, "(%s ", param ? "param" : "local");
    wasm_print_operand (stream, reg, 0);
-@@ -540,6 +826,187 @@ print_nan_payload (FILE *stream, rtx value)
+@@ -540,6 +826,243 @@ print_nan_payload (FILE *stream, rtx value)
  
  }
  
@@ -499,6 +499,62 @@ index 7574572e7..b6fa3c2c7 100644
 +  return function != dwarf_functions.end () && function->second.sealed;
 +}
 +
++/* Restore only an unused scalar parameter whose actual ABI local still
++   contains its incoming value throughout the function.  Merely finding an
++   unwritten incoming local is insufficient: dead stores to a reassigned
++   source parameter can also disappear at -O0.  TREE_USED distinguishes that
++   case in the C and C++ frontends, including assignments without any reads. */
++rtx
++wasm_dwarf_parameter_location (tree decl, rtx current)
++{
++  if (!wasm_dwarf_finalized_locations_p ()
++      || TREE_CODE (decl) != PARM_DECL
++      || TREE_USED (decl) || TREE_ADDRESSABLE (decl) || DECL_BY_REFERENCE (decl)
++      || !cfun || cfun->decl != current_function_decl)
++    return current;
++
++  wasm_dwarf_piece pieces[2];
++  if (current
++      && ((!REG_P (current) && !SUBREG_P (current))
++	  || wasm_dwarf_register_pieces (current, pieces, 2)))
++    return current;
++
++  tree passed_type = DECL_ARG_TYPE (decl);
++  machine_mode mode = TYPE_MODE (TREE_TYPE (decl));
++  rtx incoming = DECL_INCOMING_RTL (decl);
++  if (!passed_type || mode != TYPE_MODE (passed_type)
++      || (!SCALAR_INT_MODE_P (mode) && !SCALAR_FLOAT_MODE_P (mode))
++      || !incoming || !REG_P (incoming) || GET_MODE (incoming) != mode
++      || REGNO (incoming) < FIRST_PSEUDO_REGISTER
++      || wasm_dwarf_register_pieces (incoming, pieces, 2) != 1
++      || pieces[0].offset != 0 || pieces[0].size != GET_MODE_SIZE (mode))
++    return current;
++
++  /* DECL_INCOMING_RTL must identify a real parameter, rather than a return,
++     argument-buffer, frame, or outgoing-call temporary local.  Compare regnos
++     since generic parameter setup may have copied or annotated the RTL. */
++  bool parameter = false;
++  unsigned i;
++  rtx arg;
++  FOR_EACH_VEC_SAFE_ELT (cfun->machine->func_args, i, arg)
++    if (REG_P (arg) && REGNO (arg) == REGNO (incoming)
++	&& GET_MODE (arg) == mode)
++      {
++	parameter = true;
++	break;
++      }
++  if (!parameter)
++    return current;
++
++  /* A single location is valid for the whole body only if no instruction
++     sets or clobbers the incoming local, including partial writes and call
++     function-usage clobbers.  Do not infer safety from ordinary liveness. */
++  for (rtx_insn *insn = get_insns (); insn; insn = NEXT_INSN (insn))
++    if (NONDEBUG_INSN_P (insn) && reg_set_p (incoming, insn))
++      return current;
++  return incoming;
++}
++
 +bool
 +wasm_dwarf_frame_index (unsigned *index)
 +{
@@ -532,7 +588,7 @@ index 7574572e7..b6fa3c2c7 100644
  /* Define a genuine linking symbol for the existing function or data object.
     TARGET is the target assembler-name IDENTIFIER_NODE supplied by varasm.  */
  void
-@@ -603,8 +1070,8 @@ wasm_assemble_alias_name (FILE *stream, const char *name, const char *target)
+@@ -603,8 +1126,8 @@ wasm_assemble_alias_name (FILE *stream, const char *name, const char *target)
  void
  wasm_asm_init_sections ()
  {
@@ -543,7 +599,7 @@ index 7574572e7..b6fa3c2c7 100644
  }
  
  /* Implemetation of TARGET_ASM_FILE_START.  */
-@@ -616,6 +1083,13 @@ wasm_asm_file_start ()
+@@ -616,6 +1139,13 @@ wasm_asm_file_start ()
    fprintf (asm_out_file, "(module\n");
    saved_asm_out_file = asm_out_file;
    asm_out_file = open_memstream (&fake_out_file_data, &fake_out_file_length);
@@ -557,7 +613,7 @@ index 7574572e7..b6fa3c2c7 100644
  }
  
  /* Implemetation of TARGET_ASM_FILE_END.  */
-@@ -654,16 +1128,34 @@ wasm_asm_file_end ()
+@@ -654,16 +1184,34 @@ wasm_asm_file_end ()
                                *type);
      }
  
@@ -594,7 +650,7 @@ index 7574572e7..b6fa3c2c7 100644
    output_indent (stream);
    ++indent;
    fprintf (stream, "(func $");
-@@ -699,11 +1191,15 @@ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
+@@ -699,11 +1247,15 @@ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
  	  print_local_decl (stream, reg, i < 2);
        if (i < 1)
  	{
@@ -610,7 +666,7 @@ index 7574572e7..b6fa3c2c7 100644
  	  output_indent (stream);
  	  fprintf (stream, "(param i32)\n");
  	}
-@@ -763,6 +1259,13 @@ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
+@@ -763,6 +1315,13 @@ wasm_asm_start_function (FILE *stream, tree decl, const char *name)
  	continue;
        print_local_decl (stream, reg);
      }
@@ -624,7 +680,7 @@ index 7574572e7..b6fa3c2c7 100644
    output_indent (stream);
    fprintf (stream, "(local.set $control (i32.const 0))\n");
    output_indent (stream);
-@@ -793,6 +1296,12 @@ wasm_asm_end_function (FILE *stream, tree, const char *name)
+@@ -793,6 +1352,12 @@ wasm_asm_end_function (FILE *stream, tree, const char *name)
    --indent;
    output_indent (stream);
    fprintf (stream, ") ;; loop $control\n");
@@ -637,7 +693,7 @@ index 7574572e7..b6fa3c2c7 100644
    --indent;
    output_indent (stream);
    fprintf (stream, ") ;;%s\n",
-@@ -983,6 +1492,12 @@ wasm_assemble_data_begin (FILE *stream, tree decl, const char *name,
+@@ -983,6 +1548,12 @@ wasm_assemble_data_begin (FILE *stream, tree decl, const char *name,
  void
  wasm_specify_align (HOST_WIDE_INT new_align)
  {
@@ -650,7 +706,7 @@ index 7574572e7..b6fa3c2c7 100644
    // gcc_assert (!align);
    align = new_align;
  }
-@@ -1254,10 +1769,20 @@ wasm_output_internal_label (FILE *stream, const char *pfx, size_t no)
+@@ -1254,10 +1825,20 @@ wasm_output_internal_label (FILE *stream, const char *pfx, size_t no)
  	  fprintf (stream, ") ;; $%d\n", l);
  	}
      }
@@ -678,10 +734,10 @@ index 7574572e7..b6fa3c2c7 100644
 +    }
  }
 diff --git a/gcc/config/wasm/wasm-protos.h b/gcc/config/wasm/wasm-protos.h
-index 481d4dc19..3ae202389 100644
+index 481d4dc19..bad6e72e3 100644
 --- a/gcc/config/wasm/wasm-protos.h
 +++ b/gcc/config/wasm/wasm-protos.h
-@@ -19,6 +19,18 @@ Copyright (C) 2025-2026 Free Software Foundation, Inc.
+@@ -19,6 +19,19 @@ Copyright (C) 2025-2026 Free Software Foundation, Inc.
     <http://www.gnu.org/licenses/>.  */
  
  #ifdef RTX_CODE
@@ -693,6 +749,7 @@ index 481d4dc19..3ae202389 100644
 +};
 +extern bool wasm_dwarf_enabled_p ();
 +extern bool wasm_dwarf_finalized_locations_p ();
++extern rtx wasm_dwarf_parameter_location (tree, rtx);
 +extern void wasm_dwarf_end_prologue ();
 +extern unsigned wasm_dwarf_register_pieces (rtx, wasm_dwarf_piece *, unsigned);
 +extern bool wasm_dwarf_frame_index (unsigned *);
@@ -929,7 +986,7 @@ index f2ffaa8ad..ab61f7eee 100644
       cannot use the generic dwarf2 unwinding.  */
    if (!targetm.have_prologue ())
 diff --git a/gcc/dwarf2out.cc b/gcc/dwarf2out.cc
-index bf342e468..135eebdef 100644
+index bf342e468..9aec7b790 100644
 --- a/gcc/dwarf2out.cc
 +++ b/gcc/dwarf2out.cc
 @@ -1279,6 +1279,10 @@ dwarf2out_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
@@ -1043,7 +1100,7 @@ index bf342e468..135eebdef 100644
        if (!is_a <scalar_int_mode> (mode, &int_mode)
  	  || (GET_MODE_SIZE (int_mode) > DWARF2_ADDR_SIZE
  	      && rtl != arg_pointer_rtx
-@@ -21040,10 +21102,20 @@ rtl_for_decl_location (tree decl)
+@@ -21040,10 +21102,22 @@ rtl_for_decl_location (tree decl)
    /* Use DECL_RTL as the "location" unless we find something better.  */
    rtl = DECL_RTL_IF_SET (decl);
  
@@ -1055,6 +1112,8 @@ index bf342e468..135eebdef 100644
 +  wasm_finalized_location = !early_dwarf
 +    && wasm_dwarf_finalized_locations_p ()
 +    && decl_function_context (decl) == current_function_decl;
++  if (wasm_finalized_location && TREE_CODE (decl) == PARM_DECL)
++    rtl = wasm_dwarf_parameter_location (decl, rtl);
 +#endif
 +
    /* When generating abstract instances, ignore everything except
@@ -1065,7 +1124,7 @@ index bf342e468..135eebdef 100644
      {
        if (rtl
  	  && (CONSTANT_P (rtl)
-@@ -21058,7 +21130,7 @@ rtl_for_decl_location (tree decl)
+@@ -21058,7 +21132,7 @@ rtl_for_decl_location (tree decl)
  	}
        rtl = NULL_RTX;
      }
@@ -1074,7 +1133,7 @@ index bf342e468..135eebdef 100644
      {
        if (rtl == NULL_RTX
  	  || is_pseudo_reg (rtl)
-@@ -24410,6 +24482,29 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
+@@ -24410,6 +24484,29 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
                                 false);
  	}
  
@@ -1104,7 +1163,7 @@ index bf342e468..135eebdef 100644
        cfa_fb_offset = CFA_FRAME_BASE_OFFSET (decl);
  
        /* We define the "frame base" as the function's CFA.  This is more
-@@ -24441,6 +24536,8 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
+@@ -24441,6 +24538,8 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
  	 by this displacement.  */
        compute_frame_pointer_to_fb_displacement (cfa_fb_offset);
  
@@ -1113,7 +1172,7 @@ index bf342e468..135eebdef 100644
        if (fun->static_chain_decl)
  	{
  	  /* DWARF requires here a location expression that computes the
-@@ -32228,6 +32325,7 @@ hash_loc_operands (dw_loc_descr_ref loc, inchash::hash &hstate)
+@@ -32228,6 +32327,7 @@ hash_loc_operands (dw_loc_descr_ref loc, inchash::hash &hstate)
  	  gcc_unreachable ();
  	}
        break;
@@ -1121,7 +1180,7 @@ index bf342e468..135eebdef 100644
      case DW_OP_bregx:
      case DW_OP_bit_piece:
        hstate.add_object (val1->v.val_int);
-@@ -32478,6 +32576,7 @@ compare_loc_operands (dw_loc_descr_ref x, dw_loc_descr_ref y)
+@@ -32478,6 +32578,7 @@ compare_loc_operands (dw_loc_descr_ref x, dw_loc_descr_ref y)
  	default:
  	  gcc_unreachable ();
  	}

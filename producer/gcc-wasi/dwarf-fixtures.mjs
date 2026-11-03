@@ -43,16 +43,16 @@ int main(void) {
 }
 `;
 const middleSource = `#include "record.h"
-int debug_leaf(int input, int trigger);
+int debug_leaf(int input, int trigger, int unused);
 static __attribute__((noinline)) int same_name(int value) { register int local = value + 2; return local; }
 __attribute__((noinline)) int debug_middle(int input, int trigger) {
   register int middle_local = same_name(input) * 2;
-  return debug_leaf(middle_local + 3, trigger) + 5;
+  return debug_leaf(middle_local + 3, trigger, 91) + 5;
 }
 `;
 const leafSource = `#include "record.h"
 static __attribute__((noinline)) int same_name(int value) { register int local = value + 3; return local; }
-__attribute__((noinline)) int debug_leaf(int input, int trigger) {
+__attribute__((noinline)) int debug_leaf(int input, int trigger, int unused) {
   register int adjusted = input + 11;
   FrameRecord record = { same_name(input) - 3, 0x1122334455667788LL, 3.5 };
   register int local = adjusted + record.tag;
@@ -126,6 +126,7 @@ for (const language of ['c', 'cpp']) {
         debug_leaf: {
           input: 23,
           trigger: 1,
+          unused: 91,
           adjusted: 34,
           local: 57,
           record: {
