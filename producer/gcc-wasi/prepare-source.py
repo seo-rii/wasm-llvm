@@ -62,17 +62,20 @@ def prepare(source, apply=False, component='gcc'):
         expected_tree = git('write-tree', env=env).decode().strip()
 
         def source_diff():
+            # Enumerate against HEAD, independently of the real index: staged
+            # additions must remain visible, and locked deletions may still be
+            # present in an unpatched working tree.
+            git('read-tree', 'HEAD', env=env)
             # GCC configure can consume ignored in-tree GMP/MPFR/MPC sources.
             # Ignore rules must not exempt any additional compilation inputs.
             untracked = set(filter(None, git(
-                'ls-files', '--others', '-z').split(b'\0')))
+                'ls-files', '--others', '-z', env=env).split(b'\0')))
             if untracked - added_paths:
                 raise RuntimeError(f'{label} source contains untracked inputs')
             # Include precisely the new paths introduced by locked patches.
             # A normal working-tree diff omits untracked files such as a new
             # target .opt file. Hash the working files into a fresh temporary
             # index; copying the real index could reuse stale stat-cache data.
-            git('read-tree', 'HEAD', env=env)
             git('add', '-u', '--', '.', env=env)
             for name in sorted(added_paths):
                 path = source / os.fsdecode(name)

@@ -19,16 +19,18 @@
      ;;
 --- a/libstdc++-v3/configure.host
 +++ b/libstdc++-v3/configure.host
-@@ -394,7 +394,8 @@
- # THIS TABLE IS SORTED.  KEEP IT THAT WAY.
- case "${host}" in
-   amdgcn-*-amdhsa \
--  | nvptx-*-none )
-+  | nvptx-*-none \
-+  | wasm32-*-wasi* )
-     # For 'make all-target-libstdc++-v3' and 'make check-target-libstdc++-v3',
-     # exception handling is not supported: in case that exception handling
-     # constructs survive compiler optimizations, the back ends error out:
+@@ -411,4 +411,10 @@
+     # for such special cases in some more complex way.
+     enable_libstdcxx_pch=no
+     ;;
+-esac
++  wasm32-*-wasi*)
++    # RTTI uses ordinary static linking and the GCC typeinfo runtime.  Keep
++    # exception handling disabled independently; no Wasm unwinder is provided.
++    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -fno-exceptions"
++    enable_libstdcxx_pch=no
++    ;;
++esac
 --- a/libstdc++-v3/configure.ac
 +++ b/libstdc++-v3/configure.ac
 @@ -642,6 +642,16 @@
@@ -269,3 +271,18 @@
  
  @ENABLE_DARWIN_AT_RPATH_TRUE@libstdc___darwin_rpath =  \
  @ENABLE_DARWIN_AT_RPATH_TRUE@	-Wc,-nodefaultrpaths \
+--- a/libstdc++-v3/src/c++23/print.cc
++++ b/libstdc++-v3/src/c++23/print.cc
+@@ -113,7 +113,11 @@
+ #ifdef _WIN32
+     if (auto fb = dynamic_cast<filebuf*>(sb))
+       return check_for_console(fb->native_handle());
+-#elif defined _GLIBCXX_HAVE_UNISTD_H && ! defined __AVR__
++// WASI Preview 1 has unistd.h and file descriptors but no dup operation.
++// Retain the FILE*/stdio streambuf paths above and the ordinary print path;
++// a native filebuf handle cannot acquire a second owned terminal stream.
++#elif defined _GLIBCXX_HAVE_UNISTD_H && ! defined __AVR__ \
++  && ! defined __wasi__
+     if (auto fb = dynamic_cast<filebuf*>(sb))
+       if (int fd = fb->native_handle(); fd >= 0 && ::isatty(fd))
+ 	return ::fdopen(::dup(fd), "w"); // Caller must call fclose.
