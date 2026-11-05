@@ -24,7 +24,9 @@ both archives. The standalone GCC package gains no compiler payload or dependenc
 | Base-package admission controls | 25 passed, including the actual base bundle and in-memory corruption cases |
 | Actual compiler Worker | C++26 debugger, default C stdin/stdout, default C++ iostream/vector: three passed in Chromium and Node WASI |
 | Actual CDP execution Workers | 14 cases: eight normal returns, six terminal traps, four debugger-observed traps with 14 Wasm frame records |
-| Fresh standalone SDK installation | 2,734,175 bytes / 188 files / four packages; 1,953 bytes below the adjusted GCC cap |
+| Local fresh standalone SDK installation | 2,734,175 bytes / 188 files / four packages; 1,953 bytes below the adjusted GCC cap |
+| CI fresh standalone SDK installation | 2,734,149 bytes / 188 files / four packages |
+| CI aggregate public-package installation | 42,794,687 bytes / 3,402 files / 66 packages; requires a 115 KiB byte-budget adjustment with file/package limits retained |
 
 The browser phase runs actual retained native-GCC C++ probe exports and the
 Wasm-host-GCC program's C++ main. The native probes call the original GNU standard
@@ -65,3 +67,9 @@ published or deployed. The [machine-readable record](gcc-wasi-debugger-20261105.
 binds source hashes, exact receipts, measured results, completed exit codes, and
 private log paths. Earlier failed environment preparations remain separately
 recorded from successful runs.
+
+The first package CI run confirmed the GCC allowance, but newer dependencies
+permitted by the existing public version ranges increased the aggregate install
+above its earlier measurement. The aggregate cap follows this actual install:
+42,796,032 bytes, leaving 1,345 bytes of headroom. No dependency range, file count,
+or package-count limit changes are needed.

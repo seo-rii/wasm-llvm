@@ -101,13 +101,13 @@
       },
       "scripts/verify-package.mjs": {
         "path": "/data/codex-wasm-idle-worktrees/wasm-idle-debugger-86-20261103/scripts/verify-package.mjs",
-        "bytes": 44341,
-        "sha256": "cdeed9a74732cd81041d05760da209efba8d7612218b1b3f6ed393c88ff7c9fa"
+        "bytes": 44606,
+        "sha256": "80b09bfa0da0f3ae1f585f65e46e5230cd105641e58b319532f8c04876f68619"
       },
       "src/lib/verify-package.test.ts": {
         "path": "/data/codex-wasm-idle-worktrees/wasm-idle-debugger-86-20261103/src/lib/verify-package.test.ts",
         "bytes": 10878,
-        "sha256": "30d8917fd23647f3913ce2c72dfdd0cbda90b0f05d5b13d2d2563870043697e8"
+        "sha256": "8b03a76c8ecde0fb065d9ccf1a690ed0b72988e19732486389b27b970d536d52"
       }
     }
   },
@@ -205,7 +205,14 @@
       "packages": 4,
       "byteBudget": 2736128,
       "headroom": 1953,
-      "aggregateBudgetChanged": false
+      "aggregateBudgetChanged": true,
+      "ciStandaloneBytes": 2734149,
+      "ciAggregateBytes": 42794687,
+      "ciAggregateFiles": 3402,
+      "ciAggregatePackages": 66,
+      "aggregateByteBudget": 42796032,
+      "aggregateHeadroom": 1345,
+      "aggregateBudgetIncreaseKiB": 115
     },
     "preservation": {
       "baseFilesUnchanged": 107,
@@ -284,6 +291,21 @@
       "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-debugger-86-20261103/out/issue86/original-base-preservation-v1.json",
       "bytes": 335,
       "sha256": "7be0d51100b5ec2807c3cd3f3eaba851c74e13b78018c87c8cdb59e2af5906d1"
+    },
+    "sdkAggregateBudgetReview": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-debugger-86-20261103/out/issue86/sdk-aggregate-budget-v1.json",
+      "bytes": 2646,
+      "sha256": "1121b0e8b5471f2acdadbe635a9fdd3e0c651c337140be3266586cb0012e9761"
+    },
+    "sdkFinalUnitRun": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-debugger-86-20261103/out/issue86/sdk-units-final-v1.json",
+      "bytes": 3033,
+      "sha256": "22a3e938d08a2949f564ce234e96ae47fbcf66f8dd09085f98272b410ab48e86"
+    },
+    "ciInstallMeasurements": {
+      "path": "/home/seorii/dev/hancomac/.worktrees/wasm-llvm-debugger-86-20261103/out/issue86/ci-packages-127268208234.log",
+      "bytes": 411435,
+      "sha256": "de360248ab52a87b59c8cac4da326b407eef22a70a90aa16cadd2991fd913693"
     }
   },
   "completedLogs": {
@@ -418,6 +440,8 @@
   "historicalPreparationFailures": {
     "sdkWorkerV1": "Chromium Unix socket path too long; rerun used a short private temporary directory.",
     "cdpWorkerV1": "Original native tool tree disappeared; rerun uses retained, manifest-bound native C++ probe exports.",
-    "sdkUnitWrappersV1V2": "TypeScript config selection failed before test collection; corrected Vite overrides without changing product code."
+    "sdkUnitWrappersV1V2": "TypeScript config selection failed before test collection; corrected Vite overrides without changing product code.",
+    "firstSDKPackageCI": "Fresh CI aggregate install exceeded the earlier cap by116415bytes. Current allowed dependency versions are recorded; byte-only allowance follows the actual42794687byte install, with file/package caps retained.",
+    "firstSDKWorkspaceUnitCI": "Unchanged Rust WASIP3 fixture exceeded its5000ms deadline. A subsequent CI run retains the same product code and test timeout."
   }
 }
