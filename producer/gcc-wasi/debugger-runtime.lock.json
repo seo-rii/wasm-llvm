@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "kind": "gcc-wasi-debugger-runtime-lock",
+  "target": "wasm32-wasi",
+  "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+  "gccFiles": {
+    "libstdc++-v3/src/c++26/debugging.cc": {
+      "bytes": 5222,
+      "sha256": "1d88beffe64f499158ca7ab395e3a3b31496ed32bcb28b2052f2b8e98b48f09f"
+    },
+    "libstdc++-v3/include/std/debugging": {
+      "bytes": 2607,
+      "sha256": "91b685785493cab6c1b431d86a4db75751ca64fb174bfaec13f0bace17cf0022"
+    }
+  },
+  "sdk": {
+    "version": "33.0",
+    "archive": "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz",
+    "archiveSha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+    "wasiLibcCommit": "161b3195fc2558d2b1ba3eb9ffae3b2b47407623",
+    "files": {
+      "bin/llvm-ar": {
+        "bytes": 69576,
+        "sha256": "0b52c0242b9c3998dd106ce11bcff8ac33b134dd0d05aa9215692ecd7feb1da9"
+      },
+      "bin/llvm-nm": {
+        "bytes": 110832,
+        "sha256": "b3eea1506407d1c3d0d0a6512c6daac22050c305960122c4be19a8a611836455"
+      },
+      "bin/wasm-ld": {
+        "bytes": 4165088,
+        "sha256": "5c965a9e8525c7206aa583f9691f1a7a5e46bd4d793bf65f809b7124c670df26"
+      },
+      "share/wasi-sysroot/include/wasm32-wasi/signal.h": {
+        "bytes": 8714,
+        "sha256": "ddf64d2de878c581a9eec8bcbcfa81e310b89d96389504f9de3a7d31b446eea5"
+      },
+      "share/wasi-sysroot/include/wasm32-wasi/bits/signal.h": {
+        "bytes": 770,
+        "sha256": "80995925ff6b7c365ea4a2c5f01b0f2b4131f20450cfd1839f0dc46459255960"
+      },
+      "share/wasi-sysroot/lib/wasm32-wasi/libwasi-emulated-signal.a": {
+        "bytes": 12208,
+        "sha256": "1585f6106f5ae7234a90fbf7a61fb6a5923dea326ac31b63ad78f5d4ee00057d"
+      }
+    }
+  },
+  "profile": {
+    "name": "gnu-debugger-registration-v1",
+    "optional": true,
+    "controlSymbol": "_ZN9__gnu_cxx30debugger_signal_for_breakpointE",
+    "disconnectedValue": 0,
+    "connectedValue": -1,
+    "breakpoint": "wasm-unreachable",
+    "resumable": false,
+    "automaticDebuggerDetection": false
+  }
+}

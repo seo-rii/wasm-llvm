@@ -527,6 +527,13 @@ qualification requires `std::chrono::get_tzdb`, `std::is_debugger_present` and
 `import std` to fail at linking or compilation. The SDK accepts source/header
 inputs through C++23; it does not accept precompiled modules.
 
+An optional [GNU C++26 debugger component](DEBUGGER.md) adds the original
+`<debugging>` implementation with an explicit CDP Worker observer-registration
+contract. It preserves this default runtime profile and its negative tests.
+Only a verified bundle with the separate debugger capability accepts C++26 in
+the SDK. Breakpoints are terminal Wasm traps; automatic DevTools detection and
+resuming C++ execution after them are outside that profile.
+
 ABI limitations remain and must not be hidden by passing scalar tests:
 
 - Patch `0008` changes `long double` to IEEE binary128 (16-byte size/alignment,
