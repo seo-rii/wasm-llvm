@@ -131,9 +131,19 @@
         "path": "patches/0024-libatomic-wasm.patch",
         "sha256": "6afa13f25abb4acb9c044cf69eb3f2152a8c80fdda8dd6fa795d869dd397aac8",
         "purpose": "Build real GNU libatomic with shared linear-memory locks for generic and 16-byte operations and an explicit alignment-aware lock-free policy."
+      },
+      {
+        "path": "patches/0025-tls.patch",
+        "sha256": "b8e71c0d7db82712e4359a83c0736e8b60d59065ef5e51fc265ad79eb1e1d8a9",
+        "purpose": "Explicit static wasm32 local-exec TLS addressing, TLS data layout and C++ inline thread_local linkage; preserve default profile."
+      },
+      {
+        "path": "patches/0026-wasm-tls-runtime.patch",
+        "sha256": "4075e51f49c586c50804d3fdf2463445cff981361807f0b3e87a81cdf7f69c0e",
+        "purpose": "Port actual GNU thread-local destructor registration to per-instance TLS, using real allocation and explicit shared cleanup or ordered ordinary exit wrappers."
       }
     ],
-    "sourceDiffSha256": "9a0df28c195c217078ff958f95d969902c73b745efc862ea18f58011ecca61da"
+    "sourceDiffSha256": "c089e713cd5b5fac2829a3c03db0ed71ab5311e0170ed4c1f24a1e141a3b4911"
   },
   "wabt": {
     "version": "1.0.37",
@@ -161,9 +171,14 @@
         "path": "patches/wabt-0004-atomic-target-features.patch",
         "sha256": "3cd0f2ea128487a63dfd3e8de03ee5e1a85a926e8197036523325dc8f0c0ab43",
         "purpose": "Record actual atomic instructions/shared memory and bulk-memory operations; reject contradictory feature declarations."
+      },
+      {
+        "path": "patches/wabt-0005-tls-metadata.patch",
+        "sha256": "5ffdaa6c33e57978a31904bd43bd4169443713d36370fa4e84062ce8225f1874",
+        "purpose": "Preserve static TLS symbols, segments and relocations, record their linking-ABI feature requirements, and support defined weak function aliases for inline TLS initializers."
       }
     ],
-    "sourceDiffSha256": "3108bd7a2f97cd50ec7ee4787b32a0d8421e52d189d4ff63fd384c2ba16b004b",
+    "sourceDiffSha256": "402779a820502439d5343939d11944001fb1de5d29df4de18deb033f5aec3453",
     "submodules": {
       "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
     }

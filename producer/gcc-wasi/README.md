@@ -49,8 +49,8 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0024`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics and the GNU libatomic target port; SHA-256 pinned in `sources.lock.json` |
-| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md), [DWARF transport](DWARF.md) and [atomic/bulk-memory feature](ATOMICS.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
+| Local GCC patches | `0001`–`0026`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics, the GNU libatomic target port, native TLS and GNU TLS cleanup; SHA-256 pinned in `sources.lock.json` |
+| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, five locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md), [DWARF transport](DWARF.md), [atomic/bulk-memory feature](ATOMICS.md) and [TLS metadata/alias](#tls-profile-and-reproduction) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
 | Browser linker | Existing wasm-llvm WASI-host LLD `22.1.8`, `ca7933e47d3a3451d81e72ac174dcb5aa28b59d1`; archive and original producer receipt pinned |
@@ -238,9 +238,10 @@ programs, including C++23 streambuf printing; the SDK default remains
 The WASI `errno` header also has an explicit GCC single-thread profile patch:
 `__GCC_WASI_SINGLE_THREAD__=1` selects the existing libc's ordinary linear-memory
 storage. Real C and C++ overflow tests confirm that libc and GCC use the same
-`errno`; missing profile markers and `_REENTRANT` are rejected. This does not add
-a TLS ABI or alter user source. The imported archive bytes and patched header
-identities are both recorded in `runtime-build.json`.
+`errno`; missing profile markers and `_REENTRANT` are rejected. This remains the
+default profile and does not use TLS. The separate [TLS profile](#tls-profile-and-reproduction)
+installs its own opt-in header and runtime providers. The imported default archive
+bytes and patched header identities are recorded in `runtime-build.json`.
 
 ```sh
 # Select a new directory for the current compiler; preserve old runtimes.
@@ -338,6 +339,11 @@ node producer/gcc-wasi/test-coverage.mjs \
 # in ATOMICS.md. These variables identify those independently qualified outputs.
 export GCC_LIBATOMIC_WORK_DIR="$GCC_WASI_WORK_DIR/libatomic-current"
 export GCC_ATOMICS_QUALIFICATION="$GCC_WASI_WORK_DIR/atomics-qualification.json"
+# Also complete the TLS reproduction below before packaging source26.
+export GCC_TLS_LIBC_DIR="$GCC_WASI_WORK_DIR/tls-libc-current"
+export GCC_TLS_RUNTIME_DIR="$GCC_WASI_WORK_DIR/tls-runtime-current"
+export GCC_TLS_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-qualification.json"
+export GCC_TLS_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-runtime-qualification/qualification.json"
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -363,18 +369,22 @@ node producer/gcc-wasi/package.mjs \
   --libatomic "$GCC_LIBATOMIC_WORK_DIR" \
   --libatomic-qualification "$GCC_WASI_WORK_DIR/libatomic-qualification/qualification.json" \
   --atomics-qualification "$GCC_ATOMICS_QUALIFICATION" \
+  --tls-runtime "$GCC_TLS_RUNTIME_DIR" --tls-libc "$GCC_TLS_LIBC_DIR" \
+  --tls-qualification "$GCC_TLS_QUALIFICATION" \
+  --tls-runtime-qualification "$GCC_TLS_RUNTIME_QUALIFICATION" \
   --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twenty-four-patch compiler, `--long-double-qualification`,
+For the current twenty-six-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
 `--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
 `--libgcov`, `--native-gcov`, `--simd-relaxed-qualification`,
 `--simd-relaxed-driver-qualification`, `--libatomic`, `--libatomic-qualification`,
-`--atomics-qualification`, all five baseline SIMD
+`--atomics-qualification`, `--tls-runtime`, `--tls-libc`, `--tls-qualification`,
+`--tls-runtime-qualification`, all five baseline SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -508,9 +518,158 @@ See wasm-idle's `scripts/gcc-wasi-README.md` for independent native/O2 checks,
 reference comparisons and the x86 browser regression suite. Qualify retained
 GCC 13.3 bundles and the current GCC 16.2 bundle separately with the final SDK.
 
+## TLS profile and reproduction
+
+TLS is opt-in: `-mtls` enables native C `_Thread_local`, GNU `__thread` and C++
+`thread_local`, and defines `__wasm_tls__`. The default remains `-mno-tls`.
+The compiler option is independent of `-matomics`; an SDK request uses `tls: true`
+and must name a verified bundle with the TLS capability. Static non-PIC linking
+and the effective local-exec TLS model are required. Explicit other default TLS
+models, PIC/PIE and effective debug information are rejected; `-g0` is supported.
+TLS does not currently provide DWARF TLS locations, dynamic loading, pthreads or
+`std::thread`.
+
+Patch `0025` emits real TLS symbols (linking flag `0x100`), TLS data segments
+(flag `2`) and `R_WASM_MEMORY_ADDR_TLS_SLEB` relocations (type `21`). Addresses
+use the current instance's mutable `__tls_base`. LLD produces the initialization
+image and `__wasm_init_tls`, `__tls_size` and `__tls_align` exports. The assembler
+preserves these records, including C++ inline TLS weak aliases. It records the
+actual atomics/bulk-memory ABI requirements; there is no invented `tls`
+target-feature name. Private-memory programs can therefore require engine
+atomic instruction support even when user atomic lowering is disabled.
+
+Patch `0026` ports GNU `atexit_thread.cc` with real GNU new/delete and the WASI
+allocator. `__cxa_thread_atexit` keeps an allocation-backed per-thread LIFO list,
+including registrations made during cleanup. Ordinary normal return and `exit`
+use `--wrap=exit --wrap=__wasm_call_dtors` to run TLS destructors before process
+atexit callbacks and static destructors. Shared entries call the exported
+`__wasm_call_thread_dtors` after normal return. `abort`, `_Exit`, `quick_exit`,
+traps, cancellation and timeout do not promise TLS destructor execution.
+
+The private TLS libc is rebuilt from unmodified wasi-libc commit
+`161b3195fc2558d2b1ba3eb9ffae3b2b47407623`, using the pinned SDK compiler and
+single-thread allocator while retaining genuine TLS. Its source archive SHA-256
+is `3bc20d349e6f9fbc4602fb29c80706a25b2875569c3320b11f7f4cf291903f9c`;
+the SDK and archive pins are in [runtime.lock.json](runtime.lock.json).
+GCC still compiles user programs and the GNU cleanup runtime. Shared TLS uses the
+actual pinned SDK threads libc, including its allocator and `sched_yield` import.
+
+The runtime installs exactly nine static archives under the sysroot:
+
+| Directory | Providers |
+| --- | --- |
+| `lib/wasm32-wasi-tls/` | `libgcc-wasi-tls.a`, `libc.a`, `libc-printscan-long-double.a`, `libm.a`, `libclang_rt.builtins-wasm32.a` |
+| `lib/wasm32-wasi-threads/` | `libgcc-wasi-tls-shared.a`, `libc.a`, `libm.a`, `libclang_rt.builtins-wasm32.a` |
+
+It also installs `include/wasm32-wasi-tls/__errno.h`, derived from the pinned SDK
+header. TLS compilation places this directory before the ordinary sysroot
+includes. The header requires the TLS profile and declares the real libc TLS
+storage; it does not replace libc's errno implementation. Actual libc overflow
+and cross-Worker checks must agree with GCC's `&errno`. The existing default
+header and ordinary library files remain unchanged. Private long-double print
+and scan use the private TLS `libc-printscan-long-double.a`, so their errno
+references cannot accidentally select the default ordinary libc provider.
+
+Shared SDK TLS requests also require `atomics: true`, fixed `sharedMemory` pages
+and an explicit `reservedBytes` budget. LLD's `-z stack-size=reservedBytes`
+reserves an arena before the heap: `__stack_high - __stack_low` equals that
+budget and `__stack_high == __heap_base`. The host allocates aligned, disjoint
+TLS blocks, stacks and guards inside it, sets each Worker's stack, calls
+`__wasm_init_tls`, then releases the cohort to its entry function. This prevents
+the real allocator from reusing host-assigned TLS or stacks. The result retains
+the final memory copy, per-Worker values and `stackRegions`, and adds
+`tlsRegions` with each block's bounds and alignment. A trap, cancellation or
+timeout terminates the cohort; it does not run a replacement host destructor.
+
+Build the base C/GNU runtime and current native tools above first. Use fresh
+output directories. Keep the pinned SDK archive at `${WASI_SDK_PATH}.tar.gz`
+and preserve the wasi-libc source archive: package replay reopens both. The
+commands below produce the native backend and runtime evidence independently.
+
+```sh
+export GCC_TLS_LIBC_DIR="$GCC_WASI_WORK_DIR/tls-libc-current"
+export GCC_TLS_RUNTIME_DIR="$GCC_WASI_WORK_DIR/tls-runtime-current"
+export GCC_TLS_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-qualification.json"
+export GCC_TLS_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-runtime-qualification/qualification.json"
+
+python3 producer/gcc-wasi/tls-native-check.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --output "$GCC_WASI_WORK_DIR/tls-driver"
+python3 producer/gcc-wasi/tls-native-shared-check.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --output "$GCC_WASI_WORK_DIR/tls-shared" --reserved-bytes 131072
+python3 producer/gcc-wasi/build-tls-libc.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --source-archive /absolute/path/to/wasi-libc-161b3195fc2558d2b1ba3eb9ffae3b2b47407623.tar.gz \
+  --output "$GCC_TLS_LIBC_DIR" --jobs 2
+python3 producer/gcc-wasi/build-tls-runtime.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sdk-archive "${WASI_SDK_PATH}.tar.gz" --gcc-source "$GCC_WASI_WORK_DIR/gcc" \
+  --sysroot "$GCC_WASI_SYSROOT" --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --tls-libc "$GCC_TLS_LIBC_DIR" --output "$GCC_TLS_RUNTIME_DIR"
+node producer/gcc-wasi/test-tls-runtime.mjs \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_SYSROOT" --gcc-cxx-sysroot "$GCC_LIBSTDCXX_WORK_DIR/sysroot" \
+  --runtime "$GCC_TLS_RUNTIME_DIR" --output "$GCC_WASI_WORK_DIR/tls-runtime-qualification"
+
+node --input-type=module <<'JS'
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { writeNativeTlsQualification, reopenNativeTlsQualification }
+  from './producer/gcc-wasi/tls-native-qualification.mjs';
+const work = path.resolve(process.env.GCC_WASI_WORK_DIR);
+const nativePath = path.join(work, 'native-build.json');
+const nativeBytes = await fs.readFile(nativePath);
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const expected = {
+  work, sdk: path.resolve(process.env.WASI_SDK_PATH),
+  gccSource: JSON.parse(nativeBytes).gccSource,
+  sourceLockSha256: hash(await fs.readFile('producer/gcc-wasi/sources.lock.json')),
+  nativeBuild: { path: nativePath, bytes: nativeBytes.length, sha256: hash(nativeBytes) }
+};
+await writeNativeTlsQualification(process.env.GCC_TLS_QUALIFICATION, {
+  driver: path.join(work, 'tls-driver/qualification.json'),
+  shared: path.join(work, 'tls-shared/qualification.json')
+}, expected);
+await reopenNativeTlsQualification(process.env.GCC_TLS_QUALIFICATION, expected);
+JS
+```
+
+The backend gate requires 40 driver cases (22 executions, 16 diagnostics and
+two dynamic-inline multi-TU object checks), plus eight two-Worker cases across
+C/C++ and O0/O2. The GNU runtime gate requires 24 ordinary and eight shared cases,
+including errno, dynamic inline initialization, more than 128 registrations,
+LIFO cleanup and normal/abrupt exit boundaries. Counts alone are insufficient:
+the gates bind compiler sources, binaries, libraries, tools, fixture inputs and
+result bytes.
+
+Packaging calls `reopenNativeTlsQualification(file, expected)`, then
+`reopenTlsRuntimeBuild(directory, expected)` and
+`reopenTlsRuntimeExecutionQualification(report, file, expected)`. The runtime
+context adds `sysroot`, `gccCxxSysroot`, `tlsRuntime` and `tlsLibc`; execution
+also receives the reopened build's `build` record as `runtimeBuild` and its
+`files` inventory. Runtime build replay calls
+`reopenTlsLibcBuild(directory, { work, sdk, sourceArchive })` for a fresh build
+of the official libc sources. These APIs rebuild and execute actual artifacts;
+an archive build remains `built-unverified` until execution qualification passes.
+
+Original WAT-to-object and object-to-program bytes are replayed exactly. Fresh
+GCC output may reorder complete import declarations; the narrow
+[TLS assembly comparator](tls-assembly-replay.mjs) checks every other byte. The
+gates create separate canonical assembly/object/program copies for exact comparison.
+Raw qualified artifacts remain intact, and both retained and fresh programs
+execute. The package preserves these replay reports and recipe identities.
+
+Pass all four TLS package arguments shown above. Source26 requires both native
+and runtime proofs; missing providers, changed inputs or mixed compiler builds
+are rejected. A packaged candidate still has `qualification.status: "unverified"`.
+The final bundle must independently pass the matching SDK's actual Chromium
+compile/run and lifecycle qualification before it is advertised as qualified.
+
 ## Supported profile and limitations
 
-The intended profile is single-threaded, statically linked, wasm32 little endian
+The default profile is single-threaded, statically linked, wasm32 little endian
 WASI Preview 1. Programs export `memory` and `_start`; their only host imports
 are `wasi_snapshot_preview1` functions. `int`, `long`, pointers and `size_t` are
 32-bit, unlike Linux x86-64. Plain `char` is unsigned in this GCC port, and its
@@ -534,8 +693,10 @@ Atomics require explicit `atomics: true`, a capable qualified bundle and an engi
 probe. Naturally aligned 1/2/4/8-byte operations use native instructions; generic
 and 16-byte operations use the original GNU libatomic with target memory locks.
 A separate shared-entry runner supports fixed shared memory and private Worker
-stacks under the restrictions in [ATOMICS.md](ATOMICS.md). This does not provide
-pthreads, `std::thread`, TLS, exceptions or dynamic linking.
+stacks under the restrictions in [ATOMICS.md](ATOMICS.md). TLS is a separate
+explicit [profile](#tls-profile-and-reproduction), with its own runtime and
+qualification gates. These profiles do not provide pthreads, `std::thread`,
+exceptions or dynamic linking.
 Failed reference casts and null-polymorphic `typeid` remain exception-dependent
 boundaries; mixed GCC/Clang C++ support is limited to the qualified interfaces
 described in [RTTI.md](RTTI.md).

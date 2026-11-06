@@ -1,0 +1,394 @@
+diff --git a/gcc/config/wasm/constraints.md b/gcc/config/wasm/constraints.md
+index 9d53743ad..e3f941d28 100644
+--- a/gcc/config/wasm/constraints.md
++++ b/gcc/config/wasm/constraints.md
+@@ -21,6 +21,12 @@
+ (define_predicate "symbol_operand"
+   (match_code "symbol_ref"))
+ 
++(define_predicate "wasm_tls_address_operand"
++  (match_code "symbol_ref,const")
++  {
++    return wasm_tls_address_p (op);
++  })
++
+ (define_predicate "wasm_const_vector_operand"
+   (match_code "const_vector"))
+ (define_predicate "funcref_operand"
+diff --git a/gcc/config/wasm/tls.md b/gcc/config/wasm/tls.md
+new file mode 100644
+index 000000000..fdbc29f83
+--- /dev/null
++++ b/gcc/config/wasm/tls.md
+@@ -0,0 +1,15 @@
++;; Copyright (C) 2026 wasm-llvm contributors.
++;; This file is part of GCC and is distributed under the GNU General Public
++;; License, version 3 or later.  See COPYING3 for details.
++;;
++;; Static wasm32 TLS addresses use a per-instance mutable Wasm global.
++;; The host sets that global through __wasm_init_tls before entering guest
++;; code.  It cannot change during guest execution in this static TLS ABI.
++(define_c_enum "unspec" [UNSPEC_TLS_ADDRESS])
++
++(define_insn "wasm_tls_address"
++  [(set (match_operand:SI 0 "register_operand")
++	(unspec:SI [(match_operand:SI 1 "wasm_tls_address_operand")]
++		   UNSPEC_TLS_ADDRESS))]
++  "TARGET_TLS"
++  "(%M0.set %0 (i32.add (global.get $__tls_base) %j1))")
+diff --git a/gcc/config/wasm/wasm-asm.cc b/gcc/config/wasm/wasm-asm.cc
+index dbcd3efb2..7f601907b 100644
+--- a/gcc/config/wasm/wasm-asm.cc
++++ b/gcc/config/wasm/wasm-asm.cc
+@@ -61,6 +61,7 @@
+ #include "flags.h"
+ 
+ void wasm_print_operand (FILE *stream, rtx value, int mode);
++static bool uses_tls_base;
+ 
+ struct cfl_hash: int_hash<int, -1, -2> {};
+ extern hash_map<const_rtx, tree> external_libcalls;
+@@ -602,11 +603,15 @@ void assemble_binding (FILE *stream, const_tree decl)
+      The generic one-only fallback initially chooses DECL_COMMON, which is
+      cleared when that initializer is emitted.  Preserve the required
+      coalescing with Wasm weak binding for these data definitions.  Do not
+-     advertise generic COMDAT groups: that also enables C++ weak aliases,
+-     which this target cannot emit.  Ordinary C tentative definitions do
+-     not have DECL_COMDAT and retain their existing binding.  */
++     advertise generic COMDAT sections.  The TLS profile separately uses
++     real weak declarations for link-once symbols and initialization
++     aliases.  Ordinary C tentative definitions do not have DECL_COMDAT
++     and retain their existing binding.  */
+   if (DECL_WEAK (decl)
+       || (VAR_P (decl) && TREE_PUBLIC (decl) && DECL_COMDAT (decl)
++	  && !DECL_EXTERNAL (decl))
++      || (TARGET_TLS && TREE_CODE (decl) == FUNCTION_DECL
++	  && TREE_PUBLIC (decl) && DECL_COMDAT (decl)
+           && !DECL_EXTERNAL (decl)))
+     fprintf (stream, " weak");
+   if (!TREE_PUBLIC (decl))
+@@ -630,11 +635,13 @@ void assemble_sym_name (FILE *stream, const char *name)
+ }
+ 
+ void
+-assemble_data_import (FILE *stream, const_tree decl, const char *name)
++assemble_data_import (FILE *stream, const_tree decl, const char *name, bool tls)
+ {
+   output_indent (stream);
+   fprintf (stream, "(@sym.import.data $");
+   assemble_name (stream, name);
++  if (tls)
++    fprintf (stream, " tls");
+   assemble_binding (stream, decl);
+   assemble_visibility (stream, decl);
+   assemble_sym_name (stream, name);
+@@ -755,10 +762,10 @@ decl_end (FILE *stream)
+ }
+ 
+ void
+-assemble_import (FILE *stream, const char *name, const_tree decl)
++assemble_import (FILE *stream, const char *name, const_tree decl, bool tls)
+ {
+   if (!FUNC_OR_METHOD_TYPE_P (TREE_TYPE (decl)))
+-    return assemble_data_import (stream, decl, name);
++    return assemble_data_import (stream, decl, name, tls);
+   /* GCC's builtin has a weak argument, but builtins.cc drops it when
+      falling back to libatomic.  The external ABI always has five arguments.
+      Do not change the builtin declaration: other callers still need its
+@@ -1068,7 +1075,8 @@ wasm_dwarf_frame_ready_label ()
+ void
+ wasm_assemble_alias (FILE *stream, tree decl, tree target)
+ {
+-  if (DECL_WEAK (decl))
++  if (DECL_WEAK (decl)
++      && !(TARGET_TLS && TREE_CODE (decl) == FUNCTION_DECL))
+     {
+       error_at (DECL_SOURCE_LOCATION (decl),
+ 		"weak aliases are not yet supported on this target");
+@@ -1083,6 +1091,8 @@ wasm_assemble_alias (FILE *stream, tree decl, tree target)
+   fprintf (stream, " (%s $", TREE_CODE (decl) == FUNCTION_DECL ? "func" : "data");
+   assemble_name (stream, IDENTIFIER_POINTER (target));
+   fprintf (stream, ") (@sym");
++  if (VAR_P (decl) && DECL_THREAD_LOCAL_P (decl))
++    fprintf (stream, " tls");
+   assemble_binding (stream, decl);
+   assemble_visibility (stream, decl);
+   assemble_sym_name (stream, name);
+@@ -1146,6 +1156,7 @@ wasm_asm_file_start ()
+   dwarf_fixups.clear ();
+   dwarf_functions.clear ();
+   emitting_dwarf_function = nullptr;
++  uses_tls_base = false;
+ }
+ 
+ /* Implemetation of TARGET_ASM_FILE_END.  */
+@@ -1157,6 +1168,13 @@ wasm_asm_file_end ()
+   fprintf (saved_asm_out_file, "(import \"env\" \"__stack_pointer\""
+ 	   " (global $stack (mut i32)))\n");
+ 
++  if (uses_tls_base)
++    {
++      output_indent (saved_asm_out_file);
++      fprintf (saved_asm_out_file, "(import \"env\" \"__tls_base\""
++	       " (global $__tls_base (mut i32)))\n");
++    }
++
+   output_indent (saved_asm_out_file);
+   fprintf (saved_asm_out_file, "(import \"env\" \"memory\" (memory 0))\n");
+   output_indent (saved_asm_out_file);
+@@ -1172,7 +1190,11 @@ wasm_asm_file_end ()
+       tree decl = copy_node (const_cast<tree> (entry.decl));
+       TREE_PUBLIC (decl) = 1;
+       DECL_WEAK (decl) = entry.weak;
+-      assemble_import (saved_asm_out_file, IDENTIFIER_POINTER (name), decl);
++      /* The TLS model belongs to the original decl's varpool node;
++	 copy_node does not copy that node.  Preserve this property before
++	 passing the temporary linkage-only declaration to the emitter.  */
++      bool tls = VAR_P (entry.decl) && DECL_THREAD_LOCAL_P (entry.decl);
++      assemble_import (saved_asm_out_file, IDENTIFIER_POINTER (name), decl, tls);
+     }
+   for (auto sym: external_libcall_set)
+     {
+@@ -1526,9 +1548,15 @@ wasm_assemble_data_begin (FILE *stream, tree decl, const char *name,
+   /* We gathered the alignment.  Time to reset it so that a new one can be
+    * specified.  */
+   align = 0;
+-  fprintf (stream, "(data (@sym (align " HOST_WIDE_INT_PRINT_DEC "))"
+-		   " (i32.const 0) (@sym $", align_real);
++  bool tls = decl && DECL_THREAD_LOCAL_P (decl);
++  if (tls && (!TARGET_TLS || DECL_TLS_MODEL (decl) != TLS_MODEL_LOCAL_EXEC))
++    error_at (DECL_SOURCE_LOCATION (decl),
++	      "WebAssembly TLS definition requires %<-mtls%> and the local-exec model");
++  fprintf (stream, "(data (@sym%s (align " HOST_WIDE_INT_PRINT_DEC "))"
++		   " (i32.const 0) (@sym $", tls ? " tls" : "", align_real);
+   assemble_name (stream, name);
++  if (tls)
++    fprintf (stream, " tls");
+   if (decl)
+     {
+       assemble_binding (stream, decl);
+@@ -1565,6 +1593,10 @@ wasm_assemble_data_zeros (FILE *stream, tree decl, const char *name,
+ 			  HOST_WIDE_INT size, HOST_WIDE_INT decl_align,
+ 			  bool pub)
+ {
++  /* The generic common/local hooks pass alignment in bits.  Preserve the
++     old ordinary profile while using byte units for the new TLS layout.  */
++  if (decl && DECL_THREAD_LOCAL_P (decl))
++    decl_align /= BITS_PER_UNIT;
+   wasm_specify_align (decl_align);
+   wasm_assemble_data_begin (stream, decl, name, size, pub);
+   wasm_assemble_skip (stream, size);
+@@ -1611,6 +1643,20 @@ wasm_print_operand (FILE *stream, rtx value, int mode)
+           fprintf (stream, "%s%u", i ? " " : "", lane);
+         }
+     }
++  else if (mode == 'j') /* A TLS-relative SLEB address, including its addend.  */
++    {
++      gcc_assert (TARGET_TLS && wasm_tls_address_p (value));
++      uses_tls_base = true;
++      rtx symbol = GET_CODE (value) == CONST ? XEXP (value, 0) : value;
++      rtx offset = NULL_RTX;
++      if (GET_CODE (symbol) == PLUS)
++	offset = XEXP (symbol, 1), symbol = XEXP (symbol, 0);
++      fprintf (stream, "(i32.const 0 (@reloc data tls $");
++      output_addr_const (stream, symbol);
++      if (offset)
++	fprintf (stream, " %+" HOST_WIDE_INT_PRINT "d", INTVAL (offset));
++      fprintf (stream, "))");
++    }
+   else if (mode == 'A') /* Print a call insn arglist.  */
+     {
+       gcc_assert (GET_CODE (value) == PARALLEL);
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+index a7038f6b6..428453e03 100644
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -264,9 +264,39 @@ wasm_real_register_mode (rtx reg)
+   return m;
+ }
+ 
++/* Keep TLS addresses out of ordinary absolute-symbol address patterns.
++   A TLS address has the same per-thread identity across calls, but is not
++   the link-time address of the template in shared linear memory.  */
++bool
++wasm_tls_address_p (rtx x)
++{
++  if (GET_CODE (x) == CONST)
++    x = XEXP (x, 0);
++  if (GET_CODE (x) == PLUS && CONST_INT_P (XEXP (x, 1)))
++    x = XEXP (x, 0);
++  return SYMBOL_REF_P (x)
++    && SYMBOL_REF_TLS_MODEL (x) != TLS_MODEL_NONE
++    && SYMBOL_REF_TLS_MODEL (x) != TLS_MODEL_EMULATED;
++}
++
+ static bool
+ expand_const (rtx dest, rtx src, machine_mode mode)
+ {
++  if (wasm_tls_address_p (src))
++    {
++      rtx symbol = GET_CODE (src) == CONST ? XEXP (src, 0) : src;
++      if (GET_CODE (symbol) == PLUS)
++	symbol = XEXP (symbol, 0);
++      if (!TARGET_TLS || SYMBOL_REF_TLS_MODEL (symbol) != TLS_MODEL_LOCAL_EXEC)
++	{
++	  error ("WebAssembly TLS address requires %<-mtls%> and the local-exec model");
++	  emit_insn (gen_rtx_SET (dest, const0_rtx));
++	  return true;
++	}
++      gcc_assert (mode == SImode);
++      emit_insn (gen_wasm_tls_address (dest, src));
++      return true;
++    }
+   if (!const_int_operand (src, mode) && !const_double_operand (src, mode)
+       && !(TARGET_SIMD128 && GET_CODE (src) == CONST_VECTOR)
+       && GET_CODE (src) != LABEL_REF && !symref_p (src))
+@@ -457,6 +487,11 @@ wasm_expand_mov (rtx dest, rtx src, machine_mode mode)
+     }
+   dest = unify_mem (dest);
+   src = unify_mem (src);
++  /* TLS constants deliberately fail immediate_operand so that optimizers
++     cannot select an absolute-symbol move.  Expand their runtime address
++     explicitly before the ordinary constant path.  */
++  if (register_operand (dest, mode) && wasm_tls_address_p (src))
++    return expand_const (dest, src, mode);
+   if (register_operand (dest, mode) && immediate_operand (src, mode))
+     return expand_const (dest, src, mode);
+   gcc_assert (REG_P (dest) || MEM_P (dest) || SUBREG_P (dest));
+@@ -926,6 +961,8 @@ wasm_can_change_mode_class (machine_mode from, machine_mode to, reg_class_t)
+ bool
+ wasm_legitimate_address_p (machine_mode, rtx x, bool, code_helper)
+ {
++  if (wasm_tls_address_p (x))
++    return false;
+   if (GET_CODE (x) == CONST)
+     x = XEXP (x, 0);
+   if (GET_CODE (x) == PLUS && CONST_INT_P (XEXP (x, 1))
+diff --git a/gcc/config/wasm/wasm-protos.h b/gcc/config/wasm/wasm-protos.h
+index 52a36089e..88b658f3a 100644
+--- a/gcc/config/wasm/wasm-protos.h
++++ b/gcc/config/wasm/wasm-protos.h
+@@ -39,6 +39,7 @@ extern void wasm_expand_epilogue ();
+ extern void wasm_expand_call (rtx, rtx, rtx);
+ extern void wasm_emit_jump (rtx, rtx);
+ extern bool wasm_expand_mov (rtx, rtx, machine_mode);
++extern bool wasm_tls_address_p (rtx);
+ extern void wasm_expand_pair_move (rtx, rtx);
+ extern void wasm_expand_tf_sign (rtx, rtx, rtx, rtx_code);
+ extern void wasm_expand_conv (rtx, rtx, rtx_code);
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index 28c3547d6..224ad0c3c 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -616,6 +616,24 @@ wasm_expand_builtin (tree exp, rtx target, rtx ARG_UNUSED (subtarget),
+ }
+ #define TARGET_EXPAND_BUILTIN wasm_expand_builtin
+ 
++/* A TLS symbol denotes an offset from the current instance's __tls_base,
++   not a link-time linear-memory address.  In particular, a REG_EQUAL note
++   on its expanded address must not allow CSE to rematerialize the symbol
++   using an ordinary immediate-address pattern or a constant pool.  */
++#define TARGET_LEGITIMATE_CONSTANT_P wasm_legitimate_constant_p
++static bool
++wasm_legitimate_constant_p (machine_mode, rtx x)
++{
++  return !wasm_tls_address_p (x);
++}
++
++#define TARGET_CANNOT_FORCE_CONST_MEM wasm_cannot_force_const_mem
++static bool
++wasm_cannot_force_const_mem (machine_mode, rtx x)
++{
++  return wasm_tls_address_p (x);
++}
++
+ static machine_function *
+ wasm_init_machine_status (void)
+ {
+@@ -632,6 +650,7 @@ wasm_init_machine_status (void)
+ static void
+ wasm_override_options_after_change (void)
+ {
++  targetm.have_tls = TARGET_TLS;
+   if (TARGET_ATOMICS)
+     flag_ipa_reference = 0;
+ }
+@@ -649,6 +668,18 @@ wasm_option_override (void)
+   if (TARGET_RELAXED_SIMD && !TARGET_SIMD128)
+     error ("%<-mrelaxed-simd%> requires %<-msimd128%>");
+ 
++  if (TARGET_TLS)
++    {
++      if (debug_info_level != DINFO_LEVEL_NONE)
++	error ("WebAssembly TLS does not support debug information; use %<-g0%>");
++      if (flag_pic || flag_pie)
++	error ("WebAssembly TLS requires static non-PIC linking");
++      if (global_options_set.x_flag_tls_default
++	  && flag_tls_default != TLS_MODEL_LOCAL_EXEC)
++	error ("WebAssembly TLS supports %<-ftls-model=local-exec%> only");
++      flag_tls_default = TLS_MODEL_LOCAL_EXEC;
++    }
++
+   /* Preserve the existing generic section/linkage policy for release code.
+      DWARF alone needs logical named sections for independent code ranges
+      and buffered debug payloads; it does not enable COMDAT-group support.  */
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+index d20894c9c..635aa2128 100644
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -57,6 +57,8 @@
+         cpp_define (parse_in, "__wasm_relaxed_simd__"); \
+       if (TARGET_ATOMICS)                  \
+         cpp_define (parse_in, "__wasm_atomics__"); \
++      if (TARGET_TLS)                      \
++	cpp_define (parse_in, "__wasm_tls__"); \
+     }					  \
+   while (0)
+ 
+@@ -279,6 +281,8 @@ void wasm_assemble_data_zeros (FILE *stream, tree decl, const char *name,
+   wasm_assemble_data_zeros (FILE, DECL, NAME, SIZE, ALIGN, true);
+ #define ASM_OUTPUT_ALIGNED_DECL_LOCAL(FILE, DECL, NAME, SIZE, ALIGN) \
+   wasm_assemble_data_zeros (FILE, DECL, NAME, SIZE, ALIGN, 0);
++#define ASM_OUTPUT_TLS_COMMON(FILE, DECL, NAME, SIZE) \
++  wasm_assemble_data_zeros (FILE, DECL, NAME, SIZE, DECL_ALIGN (DECL), true);
+ 
+ void wasm_asm_start_function (FILE *stream, tree decl, const char *name);
+ #define ASM_OUTPUT_FUNCTION_LABEL(stream, name, decl) \
+@@ -316,6 +320,13 @@ void wasm_assemble_ascii (FILE *stream, const char *data, int len);
+ #define HAS_INIT_SECTION
+ #define SUPPORTS_INIT_PRIORITY 1
+ #define SUPPORTS_WEAK 1
++/* TLS inline variables and their initialization aliases need real weak
++   binding before the C++ frontend creates the aliases.  The generic
++   fallback uses COMMON for zero-initialized data and can leave those
++   aliases strong.  This is link-once symbol coalescing, not support for
++   named COMDAT sections, and the ordinary profile keeps its old policy.  */
++#define SUPPORTS_ONE_ONLY TARGET_TLS
++#define MAKE_DECL_ONE_ONLY(DECL) (DECL_WEAK (DECL) = 1)
+ /* End asm.  */
+ 
+ #define FUNCTION_PROFILER(file, labelno) \
+diff --git a/gcc/config/wasm/wasm.md b/gcc/config/wasm/wasm.md
+index baa2ed954..4ef583136 100644
+--- a/gcc/config/wasm/wasm.md
++++ b/gcc/config/wasm/wasm.md
+@@ -23,6 +23,7 @@
+ (include "simd.md")
+ (include "relaxed-simd.md")
+ (include "atomics.md")
++(include "tls.md")
+ (include "tf.md")
+ 
+ (define_insn "nop"
+diff --git a/gcc/config/wasm/wasm.opt b/gcc/config/wasm/wasm.opt
+index 507a42e20..1818e8792 100644
+--- a/gcc/config/wasm/wasm.opt
++++ b/gcc/config/wasm/wasm.opt
+@@ -13,3 +13,7 @@ Enable explicit WebAssembly relaxed SIMD builtins; requires -msimd128.
+ matomics
+ Target Mask(ATOMICS)
+ Enable naturally aligned WebAssembly atomic memory instructions.
++
++mtls
++Target Mask(TLS)
++Enable the static WebAssembly thread-local storage ABI.
