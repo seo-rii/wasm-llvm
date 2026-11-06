@@ -1,0 +1,14 @@
+--- a/libstdc++-v3/configure.host
++++ b/libstdc++-v3/configure.host
+@@ -412,8 +412,8 @@
+     ;;
+   wasm32-*-wasi*)
+-    # RTTI uses ordinary static linking and the GCC typeinfo runtime.  Keep
+-    # exception handling disabled independently; no Wasm unwinder is provided.
+-    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -fno-exceptions"
++    # This isolated variant uses the qualified GNU native Wasm EH profile.
++    # Its build recipe supplies -mexception-handling -fexceptions explicitly;
++    # never override those options with a default -fno-exceptions here.
+     enable_libstdcxx_pch=no
+     ;;
+ esac

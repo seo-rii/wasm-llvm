@@ -19,6 +19,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [SIMD conversions](SIMD-CONVERSIONS.md),
 [explicit relaxed SIMD](RELAXED-SIMD.md),
 [native atomics, GNU libatomic and shared entries](ATOMICS.md),
+[C++ exception implementation and qualification](../../docs/gcc-wasi-exceptions-20261106.md),
 [lane-wise vector shifts and their scalar fallback](SIMD-LANE-SHIFTS.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
 [strong function and data aliases](SYMBOL-ALIASES.md),
@@ -49,8 +50,8 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0026`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics, the GNU libatomic target port, native TLS and GNU TLS cleanup; SHA-256 pinned in `sources.lock.json` |
-| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, five locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md), [DWARF transport](DWARF.md), [atomic/bulk-memory feature](ATOMICS.md) and [TLS metadata/alias](#tls-profile-and-reproduction) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
+| Local GCC patches | `0001`–`0028`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics, the GNU libatomic target port, native TLS, GNU TLS cleanup, modern exception lowering and GNU exception runtime; SHA-256 pinned in `sources.lock.json` |
+| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, six locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md), [DWARF transport](DWARF.md), [atomic/bulk-memory feature](ATOMICS.md), [TLS metadata/alias](#tls-profile-and-reproduction) and [exception-tag relocation](#exception-profile-and-reproduction) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
 | Browser linker | Existing wasm-llvm WASI-host LLD `22.1.8`, `ca7933e47d3a3451d81e72ac174dcb5aa28b59d1`; archive and original producer receipt pinned |
@@ -339,11 +340,14 @@ node producer/gcc-wasi/test-coverage.mjs \
 # in ATOMICS.md. These variables identify those independently qualified outputs.
 export GCC_LIBATOMIC_WORK_DIR="$GCC_WASI_WORK_DIR/libatomic-current"
 export GCC_ATOMICS_QUALIFICATION="$GCC_WASI_WORK_DIR/atomics-qualification.json"
-# Also complete the TLS reproduction below before packaging source26.
+# Also complete the TLS and exception reproductions below before packaging source28.
 export GCC_TLS_LIBC_DIR="$GCC_WASI_WORK_DIR/tls-libc-current"
 export GCC_TLS_RUNTIME_DIR="$GCC_WASI_WORK_DIR/tls-runtime-current"
 export GCC_TLS_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-qualification.json"
 export GCC_TLS_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-runtime-qualification/qualification.json"
+export GCC_EH_RUNTIME_DIR="$GCC_WASI_WORK_DIR/exception-runtime"
+export GCC_EH_QUALIFICATION="$GCC_WASI_WORK_DIR/exception-qualification.json"
+export GCC_EH_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/exception-runtime-qualification/qualification.json"
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -372,19 +376,22 @@ node producer/gcc-wasi/package.mjs \
   --tls-runtime "$GCC_TLS_RUNTIME_DIR" --tls-libc "$GCC_TLS_LIBC_DIR" \
   --tls-qualification "$GCC_TLS_QUALIFICATION" \
   --tls-runtime-qualification "$GCC_TLS_RUNTIME_QUALIFICATION" \
+  --eh-runtime "$GCC_EH_RUNTIME_DIR" --eh-qualification "$GCC_EH_QUALIFICATION" \
+  --eh-runtime-qualification "$GCC_EH_RUNTIME_QUALIFICATION" \
   --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twenty-six-patch compiler, `--long-double-qualification`,
+For the current twenty-eight-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
 `--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
 `--libgcov`, `--native-gcov`, `--simd-relaxed-qualification`,
 `--simd-relaxed-driver-qualification`, `--libatomic`, `--libatomic-qualification`,
 `--atomics-qualification`, `--tls-runtime`, `--tls-libc`, `--tls-qualification`,
-`--tls-runtime-qualification`, all five baseline SIMD
+`--tls-runtime-qualification`, `--eh-runtime`, `--eh-qualification`,
+`--eh-runtime-qualification`, all five baseline SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -667,6 +674,87 @@ are rejected. A packaged candidate still has `qualification.status: "unverified"
 The final bundle must independently pass the matching SDK's actual Chromium
 compile/run and lifecycle qualification before it is advertised as qualified.
 
+## Exception profile and reproduction
+
+Exceptions require explicit SDK `exceptions: true`, C++, a verified capable
+bundle, and an engine accepting modern `try_table`, typed `catch_ref`, exception
+references and `throw_ref`. The compiler options are `-mexception-handling
+-fexceptions`; default requests retain `-fno-exceptions`. Legacy exception
+instructions are rejected even if a particular engine accepts them.
+
+Patch `0027` supplies the real GCC unwind register interface, 32-bit unwind words,
+landing pads, indexed LSDA, and throwing RTL cleanup resumption. Patch `0028`
+ports the GNU runtime. WABT patch `0006` preserves and validates tag-index
+relocations. The exception profile uses separate GNU libstdc++/libsupc++ archives
+and the exact SDK 33 LLVM native Wasm `libunwind.a`, all under
+`lib/wasm32-wasi-eh/`. Its public headers must be byte identical to the default
+GNU headers. Four linker wrappers cover main, constructors, destructors, and
+`exit`; uncaught C++ exceptions reach GNU termination. Host exceptions do not
+become artificial GNU exception objects.
+
+After the current native compiler, WABT, default GNU runtime and ordinary WASI
+sysroot pass their gates, use fresh output directories:
+
+```sh
+export GCC_EH_RUNTIME_DIR="$GCC_WASI_WORK_DIR/exception-runtime"
+export GCC_EH_QUALIFICATION="$GCC_WASI_WORK_DIR/exception-qualification.json"
+export GCC_EH_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/exception-runtime-qualification/qualification.json"
+python3 producer/gcc-wasi/eh-native-check.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" --node "$(command -v node)" \
+  --output "$GCC_WASI_WORK_DIR/exception-compiler"
+python3 producer/gcc-wasi/eh-native-driver-check.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --abi-root "$GCC_WASI_WORK_DIR/exception-compiler" \
+  --output "$GCC_WASI_WORK_DIR/exception-driver"
+GCC_LIBSTDCXX_WORK_DIR="$GCC_EH_RUNTIME_DIR" \
+  bash producer/gcc-wasi/build-libstdcxx.sh --exceptions
+python3 producer/gcc-wasi/test-eh-runtime.py \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_SYSROOT" --node "$(command -v node)" \
+  --runtime "$GCC_EH_RUNTIME_DIR" \
+  --output "$GCC_WASI_WORK_DIR/exception-runtime-qualification"
+node --input-type=module <<'JS'
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { writeNativeExceptionQualification, reopenNativeExceptionQualification }
+  from './producer/gcc-wasi/eh-native-qualification.mjs';
+import { reopenExceptionRuntimeBuild, reopenExceptionRuntimeQualification }
+  from './producer/gcc-wasi/eh-runtime-qualification.mjs';
+const work = path.resolve(process.env.GCC_WASI_WORK_DIR);
+const nativePath = path.join(work, 'native-build.json');
+const nativeBytes = await fs.readFile(nativePath);
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const context = {
+  work, sdk: path.resolve(process.env.WASI_SDK_PATH),
+  sysroot: path.resolve(process.env.GCC_WASI_SYSROOT),
+  gccCxxSysroot: path.join(path.resolve(process.env.GCC_LIBSTDCXX_WORK_DIR), 'sysroot'),
+  runtime: path.resolve(process.env.GCC_EH_RUNTIME_DIR),
+  gccSource: JSON.parse(nativeBytes).gccSource,
+  sourceLockSha256: hash(await fs.readFile('producer/gcc-wasi/sources.lock.json')),
+  nativeBuild: { path: nativePath, bytes: nativeBytes.length, sha256: hash(nativeBytes) }
+};
+await writeNativeExceptionQualification(process.env.GCC_EH_QUALIFICATION, {
+  compiler: path.join(work, 'exception-compiler/report.json'),
+  driver: path.join(work, 'exception-driver/report.json')
+}, context);
+await reopenNativeExceptionQualification(process.env.GCC_EH_QUALIFICATION, context);
+const build = await reopenExceptionRuntimeBuild(context.runtime, context);
+await reopenExceptionRuntimeQualification(process.env.GCC_EH_RUNTIME_QUALIFICATION,
+  { ...context, runtimeBuild: build.build });
+JS
+```
+
+The backend proof covers 14 programs, 18 translation units, four actual unwind
+ABI executions, and 25 driver controls. The full GNU gate runs 46 programs across
+backend, runtime, and standard library behavior. Reopening rebuilds the full
+runtime and executes original, freshly compiled, and reassembled artifacts;
+bootstrap or Clang reference execution cannot qualify GNU support. Package
+construction repeats these joins before exposing the exception capability.
+Native success is followed by actual SDK plans and same-source Chromium Worker
+compilation/execution; [the issue 66 report](../../docs/gcc-wasi-exceptions-20261106.md)
+records the current qualification state.
+
 ## Supported profile and limitations
 
 The default profile is single-threaded, statically linked, wasm32 little endian
@@ -695,10 +783,12 @@ and 16-byte operations use the original GNU libatomic with target memory locks.
 A separate shared-entry runner supports fixed shared memory and private Worker
 stacks under the restrictions in [ATOMICS.md](ATOMICS.md). TLS is a separate
 explicit [profile](#tls-profile-and-reproduction), with its own runtime and
-qualification gates. These profiles do not provide pthreads, `std::thread`,
-exceptions or dynamic linking.
-Failed reference casts and null-polymorphic `typeid` remain exception-dependent
-boundaries; mixed GCC/Clang C++ support is limited to the qualified interfaces
+qualification gates. These profiles do not provide pthreads, `std::thread` or
+dynamic linking. Exceptions use the separate ordinary private-memory
+[profile above](#exception-profile-and-reproduction); combinations with explicit
+TLS, shared memory, atomics, SIMD, coverage or embedded debugging are rejected.
+Failed reference casts and null-polymorphic `typeid` require both explicit RTTI
+and the exception profile; mixed GCC/Clang C++ support remains limited to the qualified interfaces
 described in [RTTI.md](RTTI.md).
 Coverage requires `coverage: true` and a qualified capable bundle. It uses
 official single-thread arc counters and libgcov normal-exit writes to an exact

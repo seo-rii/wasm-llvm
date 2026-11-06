@@ -3,8 +3,16 @@
 Issue [#67](https://github.com/seo-rii/wasm-llvm/issues/67) adds optional RTTI to
 the experimental GCC 17 Wasm target. The implementation uses GCC's C++ frontend,
 its emitted typeinfo/vtables, and a freshly built GNU `libsupc++`/`libstdc++`.
-Exception handling remains disabled. Current validation state and exact source
+Exception handling remains disabled in the RTTI-only profile. Current validation state and exact source
 identities are recorded in [the evidence receipt](../../docs/gcc-wasi-rtti-20261030.json).
+
+The separate [exception profile](README.md#exception-profile-and-reproduction)
+accepts `rtti: true` together with `exceptions: true` in a verified capable
+bundle. It selects the exception-enabled GNU runtime and qualifies real
+`std::bad_cast` and `std::bad_typeid` behavior. Its implementation and current
+browser qualification state are recorded in the
+[issue 66 report](../../docs/gcc-wasi-exceptions-20261106.md). The RTTI-only
+runtime and boundary controls below remain separate.
 
 The SDK keeps `-fno-rtti` as its default. An RTTI request requires a bundle that
 advertises the qualified `rtti` capability and uses `-frtti`. A native frontend
@@ -30,7 +38,7 @@ Ordinary C tentative definitions have no `DECL_COMDAT` marker and retain their
 existing strong Wasm binding, including duplicate-definition rejection under
 both `-fcommon` and `-fno-common`.
 
-The GNU runtime is rebuilt with `-frtti -fno-exceptions`. Its WASI-specific
+The ordinary GNU runtime is rebuilt with `-frtti -fno-exceptions`. Its WASI-specific
 `configure.host` case adds only `-fno-exceptions`; adding `-frtti` to CXXFLAGS
 alone would be insufficient if `EXTRA_CXX_FLAGS` still contained `-fno-rtti`.
 The build checks both actual generated Makefile variables and records them.
@@ -73,7 +81,7 @@ visibility, and verifies the four-i32-to-i32 `__dynamic_cast` ABI. A distinct
 eight-case frontend diagnostic matrix requires RTTI expressions to fail with
 `-fno-rtti`. All 1,750 frozen inputs and artifacts were verified unchanged.
 
-Eight exception-dependent boundary objects are compiled and strictly linked,
+In this RTTI-only matrix, eight exception-dependent boundary objects are compiled and strictly linked,
 but never executed or counted as successful runtime cases. Failed reference
 casts depend on `__cxa_bad_cast`; `typeid` on a null polymorphic pointer depends
 on `__cxa_bad_typeid`. Their ABI is inspected, while exceptions remain outside

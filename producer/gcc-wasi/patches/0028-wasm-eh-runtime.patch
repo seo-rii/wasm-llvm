@@ -1,0 +1,188 @@
+diff --git a/libgcc/unwind-pe.h b/libgcc/unwind-pe.h
+index 40267f3ad..79ad103e1 100644
+--- a/libgcc/unwind-pe.h
++++ b/libgcc/unwind-pe.h
+@@ -110,10 +110,12 @@ base_of_encoded_value (unsigned char encoding, struct _Unwind_Context *context)
+     case DW_EH_PE_aligned:
+       return 0;
+ 
++#if !(defined(__wasm32__) && defined(__WASM_EXCEPTIONS__))
+     case DW_EH_PE_textrel:
+       return _Unwind_GetTextRelBase (context);
+     case DW_EH_PE_datarel:
+       return _Unwind_GetDataRelBase (context);
++#endif
+     case DW_EH_PE_funcrel:
+       return _Unwind_GetRegionStart (context);
+     }
+diff --git a/libstdc++-v3/libsupc++/Makefile.am b/libstdc++-v3/libsupc++/Makefile.am
+index a3dc60f39..9a63f1776 100644
+--- a/libstdc++-v3/libsupc++/Makefile.am
++++ b/libstdc++-v3/libsupc++/Makefile.am
+@@ -77,6 +77,7 @@ sources = \
+ 	eh_throw.cc \
+ 	eh_type.cc \
+ 	eh_unex_handler.cc \
++	eh_wasm.cc \
+ 	enum_type_info.cc \
+ 	function_type_info.cc \
+ 	fundamental_type_info.cc \
+diff --git a/libstdc++-v3/libsupc++/Makefile.in b/libstdc++-v3/libsupc++/Makefile.in
+index db5e83803..62e09bf4f 100644
+--- a/libstdc++-v3/libsupc++/Makefile.in
++++ b/libstdc++-v3/libsupc++/Makefile.in
+@@ -160,7 +160,7 @@ am__objects_1 = array_type_info.lo atexit_arm.lo atexit_thread.lo \
+ 	dyncast.lo eh_alloc.lo eh_arm.lo eh_aux_runtime.lo eh_call.lo \
+ 	eh_catch.lo eh_exception.lo eh_globals.lo eh_personality.lo \
+ 	eh_ptr.lo eh_term_handler.lo eh_terminate.lo eh_tm.lo \
+-	eh_throw.lo eh_type.lo eh_unex_handler.lo enum_type_info.lo \
++	eh_throw.lo eh_type.lo eh_unex_handler.lo eh_wasm.lo enum_type_info.lo \
+ 	function_type_info.lo fundamental_type_info.lo guard.lo \
+ 	guard_error.lo hash_bytes.lo nested_exception.lo \
+ 	new_handler.lo new_op.lo new_opnt.lo new_opv.lo new_opvnt.lo \
+@@ -543,6 +543,7 @@ sources = \
+ 	eh_throw.cc \
+ 	eh_type.cc \
+ 	eh_unex_handler.cc \
++	eh_wasm.cc \
+ 	enum_type_info.cc \
+ 	function_type_info.cc \
+ 	fundamental_type_info.cc \
+diff --git a/libstdc++-v3/libsupc++/eh_globals.cc b/libstdc++-v3/libsupc++/eh_globals.cc
+index 5930eeced..2cc9f5f6e 100644
+--- a/libstdc++-v3/libsupc++/eh_globals.cc
++++ b/libstdc++-v3/libsupc++/eh_globals.cc
+@@ -71,7 +71,7 @@ __cxxabiv1::__cxa_get_globals() _GLIBCXX_NOTHROW
+ namespace
+ {
+   // Single-threaded fallback buffer.
+-  __constinit __cxa_eh_globals eh_globals;
++  __constinit __cxa_eh_globals eh_globals = {};
+ }
+ 
+ #if __GTHREADS
+diff --git a/libstdc++-v3/libsupc++/eh_personality.cc b/libstdc++-v3/libsupc++/eh_personality.cc
+index 10458318f..b1c226769 100644
+--- a/libstdc++-v3/libsupc++/eh_personality.cc
++++ b/libstdc++-v3/libsupc++/eh_personality.cc
+@@ -335,7 +335,12 @@ namespace __cxxabiv1
+ 
+ // Using a different personality function name causes link failures
+ // when trying to mix code using different exception handling models.
+-#ifdef __USING_SJLJ_EXCEPTIONS__
++#if defined(__wasm32__) && defined(__WASM_EXCEPTIONS__)
++// The VM performs native Wasm unwinding.  The landing pad calls this
++// personality with an indexed LSDA and two logical exception data slots.
++#define PERSONALITY_FUNCTION	__gxx_personality_wasm0
++#define __builtin_eh_return_data_regno(x) x
++#elif defined(__USING_SJLJ_EXCEPTIONS__)
+ #define PERSONALITY_FUNCTION	__gxx_personality_sj0
+ #define __builtin_eh_return_data_regno(x) x
+ #elif defined(__SEH__)
+@@ -453,7 +458,8 @@ PERSONALITY_FUNCTION (int version,
+   // Parse the LSDA header.
+   p = parse_lsda_header (context, language_specific_data, &info);
+   info.ttype_base = base_of_encoded_value (info.ttype_encoding, context);
+-#ifdef _GLIBCXX_HAVE_GETIPINFO
++#if defined(_GLIBCXX_HAVE_GETIPINFO) \
++    && !(defined(__wasm32__) && defined(__WASM_EXCEPTIONS__))
+   ip = _Unwind_GetIPInfo (context, &ip_before_insn);
+ #else
+   ip = _Unwind_GetIP (context);
+@@ -464,7 +470,8 @@ PERSONALITY_FUNCTION (int version,
+   action_record = 0;
+   handler_switch_value = 0;
+ 
+-#ifdef __USING_SJLJ_EXCEPTIONS__
++#if defined(__USING_SJLJ_EXCEPTIONS__) \
++    || (defined(__wasm32__) && defined(__WASM_EXCEPTIONS__))
+   // The given "IP" is an index into the call-site table, with two
+   // exceptions -- -1 means no-action, and 0 means terminate.  But
+   // since we're using uleb128 values, we've not got random access
+@@ -517,7 +524,7 @@ PERSONALITY_FUNCTION (int version,
+ 	  goto found_something;
+ 	}
+     }
+-#endif // __USING_SJLJ_EXCEPTIONS__
++#endif // Indexed SjLj/Wasm or native instruction-address call-site table.
+ 
+   // If ip is not present in the table, call terminate.  This is for
+   // a destructor inside a cleanup, or a library routine the compiler
+@@ -662,7 +669,13 @@ PERSONALITY_FUNCTION (int version,
+ 				handler_switch_value, language_specific_data,
+ 				landing_pad, action_record);
+ 	}
++#if defined(__wasm32__) && defined(__WASM_EXCEPTIONS__)
++      // Wasm has no second VM search phase.  Install the selector and any
++      // adjusted object pointer during this call from the native landing pad.
++      goto install_context;
++#else
+       return _URC_HANDLER_FOUND;
++#endif
+     }
+ 
+  install_context:
+diff --git a/libstdc++-v3/libsupc++/eh_throw.cc b/libstdc++-v3/libsupc++/eh_throw.cc
+index 57dde87ef..97bbd8585 100644
+--- a/libstdc++-v3/libsupc++/eh_throw.cc
++++ b/libstdc++-v3/libsupc++/eh_throw.cc
+@@ -123,7 +123,8 @@ __cxxabiv1::__cxa_rethrow ()
+ #ifdef __USING_SJLJ_EXCEPTIONS__
+       _Unwind_SjLj_Resume_or_Rethrow (&header->unwindHeader);
+ #else
+-#if defined(_LIBUNWIND_STD_ABI)
++#if defined(_LIBUNWIND_STD_ABI) \
++    || (defined(__wasm32__) && defined(__WASM_EXCEPTIONS__))
+       _Unwind_RaiseException (&header->unwindHeader);
+ #else
+       _Unwind_Resume_or_Rethrow (&header->unwindHeader);
+diff --git a/libstdc++-v3/libsupc++/eh_wasm.cc b/libstdc++-v3/libsupc++/eh_wasm.cc
+new file mode 100644
+index 000000000..1cc0cfae8
+--- /dev/null
++++ b/libstdc++-v3/libsupc++/eh_wasm.cc
+@@ -0,0 +1,44 @@
++// Native WebAssembly exception termination boundaries for WASI commands.
++// This file is part of GCC.
++// SPDX-License-Identifier: GPL-3.0-or-later WITH GCC-exception-3.1
++
++#if defined(__wasm32__) && defined(__WASM_EXCEPTIONS__)
++#include <exception>
++
++// WASI's C entry and exit code cannot perform a C++ exception search.  Keep
++// these boundaries in genuine C++ so an escaping C++ exception invokes the
++// GNU terminate handler.  The exception profile links with the four matching
++// --wrap options; other profiles do not acquire these functions.
++extern "C" int __real___main_void ();
++extern "C" void __real___wasm_call_ctors ();
++extern "C" void __real___wasm_call_dtors ();
++extern "C" void __real_exit (int) __attribute__((__noreturn__));
++
++extern "C" int
++__wrap___main_void ()
++{
++  try { return __real___main_void (); }
++  catch (...) { std::terminate (); }
++}
++
++extern "C" void
++__wrap___wasm_call_ctors ()
++{
++  try { __real___wasm_call_ctors (); }
++  catch (...) { std::terminate (); }
++}
++
++extern "C" void
++__wrap___wasm_call_dtors ()
++{
++  try { __real___wasm_call_dtors (); }
++  catch (...) { std::terminate (); }
++}
++
++extern "C" void
++__wrap_exit (int code)
++{
++  try { __real_exit (code); }
++  catch (...) { std::terminate (); }
++}
++#endif

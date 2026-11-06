@@ -37,6 +37,15 @@ const inside = (root, name) => {
 	return !rel || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
 };
 
+export async function writeProvenanceFiles(directory, files) {
+	const entries = [...files].map(([name, bytes]) => [relativePath(name), bytes]);
+	for (const [name, bytes] of entries) {
+		const destination = path.join(directory, name);
+		await fs.mkdir(path.dirname(destination), { recursive: true });
+		await fs.writeFile(destination, bytes, { flag: 'wx' });
+	}
+}
+
 export function verifyInventory(files, expected, label) {
 	const entries = Array.isArray(expected) ? expected : Object.entries(expected).map(([name, value]) => ({ path: name, ...value }));
 	const canonical = entries.map((f) => ({ path: relativePath(f.path), bytes: f.bytes ?? f.size, sha256: f.sha256 }));
@@ -164,6 +173,71 @@ export function verifyTlsInstallation(sysroot, files, licenses, validated) {
 	}
 	verifyInventory(licenses, validated.build.licenses, 'TLS runtime full licenses');
 	assert(licenses.length > 0, 'TLS runtime licenses are missing');
+}
+
+export const exceptionRuntimePaths = Object.freeze([
+	'lib/wasm32-wasi-eh/libstdc++.a',
+	'lib/wasm32-wasi-eh/libsupc++.a',
+	'lib/wasm32-wasi-eh/libunwind.a'
+]);
+
+export function verifyExceptionPackageOptions(patches, options) {
+	const backend = patches.some(patch => patch.path === 'patches/0027-exception-handling.patch');
+	const runtime = patches.some(patch => patch.path === 'patches/0028-wasm-eh-runtime.patch');
+	if (!backend && !runtime && !options.ehRuntime && !options.ehQualification && !options.ehRuntimeQualification) return;
+	assert(backend && runtime, 'Exceptions require the locked backend and GNU runtime port');
+	for (const name of ['ehRuntime', 'ehQualification', 'ehRuntimeQualification', 'libstdcxx', 'nativeLinker'])
+		assert(options[name], `Exceptions require ${name}`);
+}
+
+export function qualifiedExceptionManifestProfile(native, runtime) {
+	if (!native && !runtime) return { capabilities: {}, limitations: [] };
+	assert.equal(native?.status, 'passed', 'Exceptions require reopened native GCC evidence');
+	assert.equal(runtime?.build?.status, 'built-unverified', 'Exceptions require a measured full GNU runtime build');
+	assert.equal(runtime?.execution?.status, 'passed', 'Exceptions require reopened GNU runtime execution');
+	assert.equal(runtime.build.profile, 'ordinary-private-modern', 'Unqualified exception runtime profile');
+	assert.equal(runtime.execution.profile, 'ordinary-private-modern', 'Unqualified executed exception profile');
+	assert.equal(runtime.build.fullGnuLibrary, true, 'An exception bootstrap cannot qualify the full GNU runtime');
+	assert.equal(runtime.execution.fullGnuLibrary, true, 'The full GNU runtime must be executed');
+	assert.equal(runtime.build.defaultHeadersIdentical, true, 'Exception and ordinary GNU headers must match');
+	assert.deepEqual(native.gccSource, runtime.build.gccSource, 'Exceptions compiler and runtime sources differ');
+	assert.deepEqual(native.gccSource, runtime.execution.gccSource, 'Exceptions execution uses another source');
+	const content = value => ({ bytes: value.bytes, sha256: value.sha256 });
+	assert.deepEqual(content(native.nativeBuild), content(runtime.build.nativeBuild), 'Exceptions runtime uses another native build');
+	assert.deepEqual(content(native.nativeBuild), content(runtime.execution.nativeBuild), 'Exceptions execution uses another native build');
+	assert.deepEqual(content(runtime.build.build), content(runtime.execution.runtimeBuild), 'Exceptions execution uses another runtime build');
+	assert.deepEqual(content(native.nativeFixtures), content(runtime.execution.nativeFixtures), 'Exceptions backend and runtime fixtures differ');
+	assert(Array.isArray(native.nativeCaseIds) && native.nativeCaseIds.length > 0, 'Missing exception backend cases');
+	assert.deepEqual(native.nativeCaseIds, runtime.execution.nativeCaseIds, 'Exceptions runtime omitted backend cases');
+	assert.deepEqual(runtime.build.linkFlags, ['--wrap=__main_void', '--wrap=__wasm_call_ctors', '--wrap=__wasm_call_dtors', '--wrap=exit'],
+		'Exceptions require the qualified GNU entry/constructor/destructor boundaries');
+	return { capabilities: { exceptions: true }, limitations: [
+		'C++ exceptions require explicit opt-in, private memory, the modern Wasm exception instructions and the separate exception-enabled GNU libstdc++/libsupc++ with the pinned native Wasm unwinder. Ordinary non-exception providers remain separate.',
+		'Exceptions with explicit TLS, shared memory, atomics, SIMD, coverage or embedded debugging require separate qualification and are unavailable in this profile. General mixed-toolchain C++ exceptions and arbitrary host exception interoperability are not qualified.'
+	] };
+}
+
+export function verifyExceptionInstallation(sysroot, files, licenses, validated, runtimeLock) {
+	qualifiedExceptionManifestProfile(validated.native, validated);
+	assert.deepEqual(files.map(file => relativePath(file.path)).sort(), [...exceptionRuntimePaths].sort(),
+		'Exception runtime must contain exactly its three qualified archives');
+	verifyInventory(files, validated.build.files, 'Exception runtime build');
+	verifyInventory(files, validated.execution.files, 'Executed exception runtime');
+	for (const file of files) {
+		assert(!sysroot.some(existing => existing.path === file.path), `Duplicate exception sysroot path: ${file.path}`);
+		assert.equal(file.bytes.subarray(0, 8).toString(), '!<arch>\n', 'Exception runtime must contain actual static archives');
+	}
+	verifyInventory(licenses, validated.build.licenses, 'Exception runtime full licenses');
+	assert(licenses.length > 0, 'Exception runtime licenses are missing');
+	const pin = runtimeLock?.exceptionHandling;
+	assert.equal(pin?.profile, 'ordinary-private-modern', 'Exception runtime pin is missing');
+	const content = value => ({ bytes: value.bytes, sha256: value.sha256 });
+	assert.deepEqual(identity(files.find(file => file.path.endsWith('/libunwind.a')).bytes), content(pin.unwinder),
+		'Exception unwinder differs from the pinned native Wasm archive');
+	assert(licenses.some(file => {
+		const actual = identity(file.bytes);
+		return actual.bytes === pin.license.bytes && actual.sha256 === pin.license.sha256;
+	}), 'Full pinned native Wasm unwinder license is missing');
 }
 
 export function verifyLibatomicInstallation(sysroot, files, licenses, validated) {
@@ -690,7 +764,7 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, simdRelaxedQualification, simdRelaxedDriverQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, libatomic, libatomicQualification, atomicsQualification, tlsRuntime, tlsLibc, tlsQualification, tlsRuntimeQualification, nativeGcov, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, simdRelaxedQualification, simdRelaxedDriverQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, libatomic, libatomicQualification, atomicsQualification, tlsRuntime, tlsLibc, tlsQualification, tlsRuntimeQualification, ehRuntime, ehQualification, ehRuntimeQualification, nativeGcov, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -698,12 +772,15 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	if (libatomic) libatomic = await fs.realpath(libatomic);
 	if (tlsRuntime) tlsRuntime = await fs.realpath(tlsRuntime);
 	if (tlsLibc) tlsLibc = await fs.realpath(tlsLibc);
+	if (ehRuntime) ehRuntime = await fs.realpath(ehRuntime);
 	const out = path.resolve(output);
-	const inputs = [work, runtime, libstdcxx, libgcov, libatomic, tlsRuntime, tlsLibc,
+	const inputs = [work, runtime, libstdcxx, libgcov, libatomic, tlsRuntime, tlsLibc, ehRuntime,
 		...(libatomicQualification ? [await fs.realpath(libatomicQualification)] : []),
 		...(atomicsQualification ? [await fs.realpath(atomicsQualification)] : []),
 		...(tlsQualification ? [await fs.realpath(tlsQualification)] : []),
-		...(tlsRuntimeQualification ? [await fs.realpath(tlsRuntimeQualification)] : [])].filter(Boolean);
+		...(tlsRuntimeQualification ? [await fs.realpath(tlsRuntimeQualification)] : []),
+		...(ehQualification ? [await fs.realpath(ehQualification)] : []),
+		...(ehRuntimeQualification ? [await fs.realpath(ehRuntimeQualification)] : [])].filter(Boolean);
 	// Existing parent realpaths also catch output aliases through a symlink.
 	await fs.mkdir(path.dirname(out), { recursive: true });
 	const finalOut = path.join(await fs.realpath(path.dirname(out)), path.basename(out));
@@ -714,10 +791,13 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	verifyLibatomicPackageOptions(lock.gcc.patches || [], { libatomic, libatomicQualification, nativeLinker });
 	verifyAtomicsPackageOptions(lock.gcc.patches || [], { atomicsQualification, libatomic, libatomicQualification, nativeLinker });
 	verifyTlsPackageOptions(lock.gcc.patches || [], { tlsRuntime, tlsLibc, tlsQualification, tlsRuntimeQualification, libstdcxx, nativeLinker });
+	verifyExceptionPackageOptions(lock.gcc.patches || [], { ehRuntime, ehQualification, ehRuntimeQualification, libstdcxx, nativeLinker });
 	const libatomicProof = libatomicQualification && await fs.readFile(libatomicQualification);
 	const atomicsProof = atomicsQualification && await fs.readFile(atomicsQualification);
 	const tlsProof = tlsQualification && await fs.readFile(tlsQualification);
 	const tlsRuntimeProof = tlsRuntimeQualification && await fs.readFile(tlsRuntimeQualification);
+	const exceptionProof = ehQualification && await fs.readFile(ehQualification);
+	const exceptionRuntimeProof = ehRuntimeQualification && await fs.readFile(ehRuntimeQualification);
 	const compilerRoot = path.join(work, 'browser-compiler');
 	const compilerReceipt = await readJson(path.join(compilerRoot, 'compiler-build.json'));
 	assert.equal(compilerReceipt.kind, 'gcc-wasi-browser-build');
@@ -1200,6 +1280,48 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			tlsProvenance.set(name, await fs.readFile(path.join(here, name)));
 	}
 	const tlsProfile = qualifiedTlsManifestProfile(validatedTlsNative, validatedTlsRuntime);
+	let validatedExceptionNative, validatedExceptionRuntime;
+	const exceptionProvenance = new Map(), exceptionLicenses = [];
+	if (exceptionProof && exceptionRuntimeProof) {
+		const { reopenNativeExceptionQualification } = await import('./eh-native-qualification.mjs');
+		const { reopenExceptionRuntimeBuild, reopenExceptionRuntimeQualification } = await import('./eh-runtime-qualification.mjs');
+		const context = { work, sdk: path.resolve(path.dirname(nativeLinker), '..'),
+			sysroot: path.join(runtime, 'sysroot'), gccCxxSysroot: path.join(libstdcxx, 'sysroot'), runtime: ehRuntime,
+			gccSource: nativeReceipt.gccSource, sourceLockSha256: identity(lockBytes).sha256,
+			nativeBuild: { path: path.join(work, 'native-build.json'), ...identity(nativeReceiptBytes) } };
+		validatedExceptionNative = await reopenNativeExceptionQualification(path.resolve(ehQualification), context);
+		assert.deepEqual(identity(await fs.readFile(ehQualification)), identity(exceptionProof), 'Native exception proof changed during packaging');
+		const buildBytes = await fs.readFile(path.join(ehRuntime, 'build.json'));
+		const build = await reopenExceptionRuntimeBuild(ehRuntime, context);
+		assert.deepEqual(identity(buildBytes), { bytes: build.build.bytes, sha256: build.build.sha256 }, 'Exception runtime build proof changed during packaging');
+		const execution = await reopenExceptionRuntimeQualification(path.resolve(ehRuntimeQualification), { ...context, runtimeBuild: build.build });
+		assert.deepEqual(identity(exceptionRuntimeProof), { bytes: execution.qualification.bytes, sha256: execution.qualification.sha256 }, 'Exception runtime execution proof changed during packaging');
+		validatedExceptionRuntime = { native: validatedExceptionNative, build, execution };
+		const files = await readNativeTree(path.join(ehRuntime, 'sysroot'));
+		const licenses = await readNativeTree(path.join(ehRuntime, 'licenses'));
+		verifyExceptionInstallation(sysroot, files, licenses, validatedExceptionRuntime, runtimeLock);
+		sysroot.push(...files);
+		exceptionLicenses.push(...licenses.map(file => ({ path: `licenses/exception-runtime/${file.path}`, bytes: file.bytes })));
+		exceptionProvenance.set('native-exception-qualification.json', exceptionProof);
+		exceptionProvenance.set('native-exception-validated.json', json(validatedExceptionNative));
+		exceptionProvenance.set('exception-runtime-build.json', buildBytes);
+		exceptionProvenance.set('exception-runtime-qualification.json', exceptionRuntimeProof);
+		exceptionProvenance.set('exception-runtime-validated.json', json(validatedExceptionRuntime));
+		const original = JSON.parse(exceptionProof);
+		for (const [name, record] of [['native-exception-compiler.json', original.compiler],
+			['native-exception-driver.json', original.driver], ['native-exception-replay.json', validatedExceptionNative.replay.report],
+			['exception-runtime-build-replay.json', build.replay], ['exception-runtime-execution-replay.json', execution.replay]]) {
+			const bytes = await fs.readFile(record.path);
+			assert.deepEqual(identity(bytes), { bytes: record.bytes, sha256: record.sha256 }, `Changed ${name}`);
+			exceptionProvenance.set(name, bytes);
+		}
+		for (const name of ['eh-native-qualification.mjs', 'eh-native-check.py', 'eh-native-driver-check.py',
+			'eh-native-fixtures.mjs', 'eh-assembly-replay.mjs', 'eh-runtime-qualification.mjs',
+			'eh-runtime-fixtures.mjs', 'eh-library-fixtures.mjs', 'eh-runtime-build-state.py', 'test-eh-runtime.py',
+			'build-libstdcxx.sh', 'patches/libstdcxx-wasi-eh-config.patch'])
+			exceptionProvenance.set(name, await fs.readFile(path.join(here, name)));
+	}
+	const exceptionProfile = qualifiedExceptionManifestProfile(validatedExceptionNative, validatedExceptionRuntime);
 	let libgcovBuildBytes, coverageAnalysisBytes;
 	if (coverageProof) {
 		assert(libgcov && nativeGcov && nativeLinker && libstdcxx, 'Coverage requires its runtime, analysis tool, linker and GNU runtime');
@@ -1440,7 +1562,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
 		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a', ...atomicsProfile.runtimeLibraries],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof), ...(simdRelaxedProof ? { relaxedSimd: true } : {}), ...atomicsProfile.capabilities, ...tlsProfile.capabilities },
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof), ...(simdRelaxedProof ? { relaxedSimd: true } : {}), ...atomicsProfile.capabilities, ...tlsProfile.capabilities, ...exceptionProfile.capabilities },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			...(longDoubleProof ? [] : ['long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.']),
@@ -1448,11 +1570,14 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			...(gnuFloat128Proof ? ['GNU __float128 covers the qualified core language/ABI and GNU type traits/limits/abs; libquadmath, GNU q-math builtins and complex128 remain unavailable.'] : ['GNU __float128 is not qualified in this compiler profile.']),
 			'External objects require the SDK compatibility/profile receipts; general mixed-toolchain C++ interoperability is not qualified.',
 			...(rttiProof ? [
-				'C++ defaults to -fno-rtti; explicit RTTI opt-in uses -frtti with the qualified GNU runtime. Exceptions remain disabled, including failed reference casts and typeid through null polymorphic pointers.',
+				'C++ defaults to -fno-rtti; explicit RTTI opt-in uses -frtti with the qualified GNU runtime. ' + (exceptionProfile.capabilities.exceptions
+					? 'Failed reference casts and typeid through null polymorphic pointers require exception opt-in.'
+					: 'Exceptions remain disabled, including failed reference casts and typeid through null polymorphic pointers.'),
 				'Ordinary WASI C++ execution retains -fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics and single-threaded static linking.'
 			] : ['Ordinary WASI C++ execution uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics and single-threaded static linking.']),
 			...atomicsProfile.limitations,
 			...tlsProfile.limitations,
+			...exceptionProfile.limitations,
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
 			...(dwarfProof ? ['Debug is explicit embedded DWARF32/DWARF4 at -O0. It uses actual Wasm local indices and initialized frame bases. Optimized register locations, split debug files, alternate debug formats and a general expression evaluator are outside this profile.'] : []),
 			...(coverageProof ? ['Coverage is explicit source-only single-counter GCC gcov instrumentation. Run covered executables with a writable /profile directory and analyze returned .gcno/.gcda files with the pinned matching GCC gcov. PGO, atomic counters, info-section streaming, manual gcov APIs and process PID semantics are unsupported.'] : []),
@@ -1479,6 +1604,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	for (const [name, bytes] of libatomicProvenance) provenanceFiles.set(name, bytes);
 	for (const [name, bytes] of atomicsProvenance) provenanceFiles.set(name, bytes);
 	for (const [name, bytes] of tlsProvenance) provenanceFiles.set(name, bytes);
+	for (const [name, bytes] of exceptionProvenance) provenanceFiles.set(name, bytes);
 	if (dwarfProof) provenanceFiles.set('native-dwarf-qualification.json', dwarfProof);
 	if (coverageProof) {
 		provenanceFiles.set('native-coverage-qualification.json', coverageProof);
@@ -1577,7 +1703,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		gccSource: compilerReceipt.gccSource,
 		files: Object.fromEntries([...provenanceFiles].map(([name, bytes]) => [name, { path: `provenance/${name}`, ...identity(bytes) }]))
 	};
-	const licenseFiles = [...compilerFiles.filter((f) => f.path.startsWith('licenses/')), ...libatomicLicenses, ...tlsLicenses];
+	const licenseFiles = [...compilerFiles.filter((f) => f.path.startsWith('licenses/')), ...libatomicLicenses, ...tlsLicenses, ...exceptionLicenses];
 	for (const f of await readNativeTree(path.join(here, 'licenses'))) licenseFiles.push({ path: `licenses/runtime/${f.path}`, bytes: f.bytes });
 	for (const name of (await fs.readdir(asRoot)).filter((name) => name.startsWith('LICENSE')))
 		licenseFiles.push({ path: `licenses/wabt/${name}`, bytes: await fs.readFile(path.join(asRoot, name)) });
@@ -1591,7 +1717,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		await fs.writeFile(path.join(finalOut, f.path), f.bytes, { flag: 'wx' });
 	}
 	await fs.mkdir(path.join(finalOut, 'provenance'));
-	for (const [name, bytes] of provenanceFiles) await fs.writeFile(path.join(finalOut, 'provenance', name), bytes, { flag: 'wx' });
+	await writeProvenanceFiles(path.join(finalOut, 'provenance'), provenanceFiles);
 	const loading = [...payloads].map(([name, bytes]) => ({ path: name, ...identity(bytes), gzipBytes: gzipSync(bytes, { level: 9 }).length, brotliBytes: brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 6 } }).length }));
 	const metadata = json(manifest);
 	loading.push({ path: 'gcc-toolchain.v2.json', ...identity(metadata), gzipBytes: gzipSync(metadata, { level: 9 }).length, brotliBytes: brotliCompressSync(metadata, { params: { [constants.BROTLI_PARAM_QUALITY]: 6 } }).length });
@@ -1605,8 +1731,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'simd-relaxed-qualification', 'simd-relaxed-driver-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'libatomic', 'libatomic-qualification', 'atomics-qualification', 'tls-runtime', 'tls-libc', 'tls-qualification', 'tls-runtime-qualification', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--tls-runtime DIR --tls-libc DIR --tls-qualification FILE --tls-runtime-qualification FILE] [--libatomic DIR --libatomic-qualification FILE --atomics-qualification FILE] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --simd-relaxed-qualification FILE --simd-relaxed-driver-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'simd-relaxed-qualification': 'simdRelaxedQualification', 'simd-relaxed-driver-qualification': 'simdRelaxedDriverQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'libatomic-qualification': 'libatomicQualification', 'atomics-qualification': 'atomicsQualification', 'tls-runtime': 'tlsRuntime', 'tls-libc': 'tlsLibc', 'tls-qualification': 'tlsQualification', 'tls-runtime-qualification': 'tlsRuntimeQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'simd-relaxed-qualification', 'simd-relaxed-driver-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'libatomic', 'libatomic-qualification', 'atomics-qualification', 'tls-runtime', 'tls-libc', 'tls-qualification', 'tls-runtime-qualification', 'eh-runtime', 'eh-qualification', 'eh-runtime-qualification', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--tls-runtime DIR --tls-libc DIR --tls-qualification FILE --tls-runtime-qualification FILE] [--eh-runtime DIR --eh-qualification FILE --eh-runtime-qualification FILE] [--libatomic DIR --libatomic-qualification FILE --atomics-qualification FILE] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --simd-relaxed-qualification FILE --simd-relaxed-driver-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'simd-relaxed-qualification': 'simdRelaxedQualification', 'simd-relaxed-driver-qualification': 'simdRelaxedDriverQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'libatomic-qualification': 'libatomicQualification', 'atomics-qualification': 'atomicsQualification', 'tls-runtime': 'tlsRuntime', 'tls-libc': 'tlsLibc', 'tls-qualification': 'tlsQualification', 'tls-runtime-qualification': 'tlsRuntimeQualification', 'eh-runtime': 'ehRuntime', 'eh-qualification': 'ehQualification', 'eh-runtime-qualification': 'ehRuntimeQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}
