@@ -219,7 +219,7 @@ export async function reopenLibatomicBuild(directory, expected) {
   for (const key of ['work', 'sdk', 'sysroot', 'gccSource', 'sourceLockSha256', 'nativeBuild']) assert(expected[key], `Missing libatomic build context ${key}`);
   directory = path.resolve(directory);
   const work = path.resolve(expected.work), sdk = path.resolve(expected.sdk), sysroot = path.resolve(expected.sysroot);
-  const source = path.join(work, 'gcc'), compiler = path.join(work, 'gcc-native/gcc');
+  const source = await fs.realpath(path.join(work, 'gcc')), compiler = path.join(work, 'gcc-native/gcc');
   const reportPath = path.join(directory, 'build.json');
   const reportBytes = await fs.readFile(reportPath), report = JSON.parse(reportBytes);
   verifyLibatomicBuildMetadata(report, expected);

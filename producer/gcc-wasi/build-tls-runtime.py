@@ -94,7 +94,7 @@ def check_object(profile, member, assembly, disassembly, symbols):
 
 def build(work, sdk, sdk_archive, source, sysroot, gnu, private_libc, output):
     compiler = work / 'gcc-native/gcc'
-    if source != work / 'gcc':
+    if source != (work / 'gcc').resolve():
         raise ValueError('The native receipt must identify work/gcc')
     if any(output == root or root in output.parents for root in [source, compiler, sdk, sysroot, gnu, private_libc]):
         raise ValueError('TLS output must be isolated from source, tools and input sysroots')
