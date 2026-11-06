@@ -14,6 +14,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { timezoneCases } from "./tzdb-fixtures.mjs";
 
 const work = path.resolve(process.env.GCC_WASI_WORK_DIR ?? "");
 assert.ok(process.env.GCC_WASI_WORK_DIR, "Set GCC_WASI_WORK_DIR");
@@ -35,7 +36,8 @@ const build = JSON.parse(
   readFileSync(path.join(runtime, "build.json"), "utf8"),
 );
 assert.equal(build.rtti, true, "Expected an RTTI-enabled GNU runtime build");
-assert.equal(build.exceptions, false, "Exception handling remains unsupported");
+assert.equal(build.exceptions, false, "Expected the ordinary GNU runtime variant");
+assert.equal(build.timezoneDatabase, true, "Expected the actual embedded GNU timezone runtime");
 assert.ok(build.compilerFlags.CXXFLAGS.split(/\s+/).includes('-frtti'));
 assert.ok(Object.values(build.compilerFlags).every(flags => !flags.split(/\s+/).includes('-fno-rtti')));
 function checkCompilerIdentity() {
@@ -154,9 +156,15 @@ const report = {
   buildReceipt: identity(path.join(runtime, "build.json")),
   testRecipe: identity(fileURLToPath(import.meta.url)),
   cases: [],
+  timezoneCases: [],
 };
+const timezoneFixture = timezoneCases.find(test => test.id === 'tzdb-metadata-o0');
+const timezonePositive = { id: timezoneFixture.id, timezone: true, rtti: 'disabled',
+  standard: timezoneFixture.request.standard, stdin: timezoneFixture.run.stdin,
+  stdout: timezoneFixture.stdout, files: { 'main.cpp': timezoneFixture.request.code },
+  sources: ['main.cpp'] };
 try {
-  for (const test of cases) {
+  for (const test of [...cases, timezonePositive]) {
     const directory = path.join(output, test.id);
     mkdirSync(directory);
     for (const [name, contents] of Object.entries(test.files))
@@ -234,7 +242,7 @@ try {
       "",
       `${test.id}: unexpected stderr`,
     );
-    report.cases.push({
+    (test.timezone ? report.timezoneCases : report.cases).push({
       id: test.id,
       rtti: test.rtti,
       status: "passed",
@@ -254,12 +262,6 @@ try {
   }
   report.unsupported = [];
   for (const test of [
-    {
-      feature: "timezoneDatabase",
-      flags: [],
-      code: "#include <chrono>\nint main() { return std::chrono::get_tzdb().zones.empty(); }\n",
-      diagnostic: /undefined symbol:.*get_tzdb/,
-    },
     {
       feature: "debugger",
       flags: ["-std=gnu++26"],
@@ -368,7 +370,8 @@ try {
         exceptions: false,
         rtti: true,
         threads: false,
-        timezoneDatabase: false,
+        timezoneDatabase: true,
+        timezone: build.timezone,
         debugger: false,
         stdModules: false,
         buildReceipt: {
@@ -402,6 +405,7 @@ try {
     JSON.stringify({
       status: report.status,
       passed: report.cases.length,
+      timezonePassed: report.timezoneCases.length,
       report: path.join(output, "qualification.json"),
       ...(report.error ? { error: report.error } : {}),
     }),

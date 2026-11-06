@@ -20,6 +20,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [explicit relaxed SIMD](RELAXED-SIMD.md),
 [native atomics, GNU libatomic and shared entries](ATOMICS.md),
 [C++ exception implementation and qualification](../../docs/gcc-wasi-exceptions-20261106.md),
+[GNU C++20 timezone implementation and qualification](../../docs/gcc-wasi-tzdb-20261106.md),
 [lane-wise vector shifts and their scalar fallback](SIMD-LANE-SHIFTS.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
 [strong function and data aliases](SYMBOL-ALIASES.md),
@@ -50,7 +51,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0028`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics, the GNU libatomic target port, native TLS, GNU TLS cleanup, modern exception lowering and GNU exception runtime; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0029`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics, the GNU libatomic target port, native TLS, GNU TLS cleanup, modern exception lowering, GNU exception runtime and Wasm member-function pointers; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, six locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md), [DWARF transport](DWARF.md), [atomic/bulk-memory feature](ATOMICS.md), [TLS metadata/alias](#tls-profile-and-reproduction) and [exception-tag relocation](#exception-profile-and-reproduction) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -340,7 +341,9 @@ node producer/gcc-wasi/test-coverage.mjs \
 # in ATOMICS.md. These variables identify those independently qualified outputs.
 export GCC_LIBATOMIC_WORK_DIR="$GCC_WASI_WORK_DIR/libatomic-current"
 export GCC_ATOMICS_QUALIFICATION="$GCC_WASI_WORK_DIR/atomics-qualification.json"
-# Also complete the TLS and exception reproductions below before packaging source28.
+# Also complete the TLS, exception, and full GNU timezone qualifications before
+# packaging source29. The timezone proof includes its eight-case member-pointer
+# dependency and the twelve actual SDK-planned timezone executions.
 export GCC_TLS_LIBC_DIR="$GCC_WASI_WORK_DIR/tls-libc-current"
 export GCC_TLS_RUNTIME_DIR="$GCC_WASI_WORK_DIR/tls-runtime-current"
 export GCC_TLS_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-qualification.json"
@@ -348,6 +351,7 @@ export GCC_TLS_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/tls-runtime-qualificati
 export GCC_EH_RUNTIME_DIR="$GCC_WASI_WORK_DIR/exception-runtime"
 export GCC_EH_QUALIFICATION="$GCC_WASI_WORK_DIR/exception-qualification.json"
 export GCC_EH_RUNTIME_QUALIFICATION="$GCC_WASI_WORK_DIR/exception-runtime-qualification/qualification.json"
+export GCC_TZDB_QUALIFICATION="$GCC_WASI_WORK_DIR/tzdb-qualification/qualification.json"
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -378,12 +382,13 @@ node producer/gcc-wasi/package.mjs \
   --tls-runtime-qualification "$GCC_TLS_RUNTIME_QUALIFICATION" \
   --eh-runtime "$GCC_EH_RUNTIME_DIR" --eh-qualification "$GCC_EH_QUALIFICATION" \
   --eh-runtime-qualification "$GCC_EH_RUNTIME_QUALIFICATION" \
+  --tzdb-qualification "$GCC_TZDB_QUALIFICATION" \
   --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twenty-eight-patch compiler, `--long-double-qualification`,
+For the current twenty-nine-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
 `--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
@@ -391,7 +396,7 @@ For the current twenty-eight-patch compiler, `--long-double-qualification`,
 `--simd-relaxed-driver-qualification`, `--libatomic`, `--libatomic-qualification`,
 `--atomics-qualification`, `--tls-runtime`, `--tls-libc`, `--tls-qualification`,
 `--tls-runtime-qualification`, `--eh-runtime`, `--eh-qualification`,
-`--eh-runtime-qualification`, all five baseline SIMD
+`--eh-runtime-qualification`, `--tzdb-qualification`, all five baseline SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -800,12 +805,20 @@ It embeds standard DWARF4 in WAT/object/executable output; other optimization
 levels are rejected by the SDK. See [DWARF.md](DWARF.md).
 x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
 x86 API. Unsupported target attributes/pragmas are GCC errors in this profile.
-The default GNU C++ runtime still omits the time-zone database, C++26 debugger
-functions and prebuilt `std` modules; these require separate runtime qualification
-and packaging. Their APIs have no substitute implementations. The runtime
-qualification requires `std::chrono::get_tzdb`, `std::is_debugger_present` and
-`import std` to fail at linking or compilation. The SDK accepts source/header
-inputs through C++23; it does not accept precompiled modules.
+The GNU runtime includes the original C++20 timezone implementation with embedded
+2026b data, pinned in [tzdb.lock.json](tzdb.lock.json). Its ordinary private-memory
+profile requires no guest timezone files; `current_zone()` uses GNU's UTC
+fallback. Timezone errors that throw require explicit exception opt-in. Data
+updates require rebuilding and qualifying both GNU variants. The package only
+advertises `timezoneDatabase` after the full runtime and member-function-pointer
+execution proofs pass; [the issue 85 report](../../docs/gcc-wasi-tzdb-20261106.md)
+records the current qualification state.
+
+The default GNU C++ runtime still omits C++26 debugger functions and prebuilt
+`std` modules. Their APIs have no substitute implementations. Runtime
+qualification requires `std::is_debugger_present` and `import std` to fail at
+linking or compilation. The SDK accepts source/header inputs through C++23; it
+does not accept precompiled modules.
 
 An optional [GNU C++26 debugger component](DEBUGGER.md) adds the original
 `<debugging>` implementation with an explicit CDP Worker observer-registration

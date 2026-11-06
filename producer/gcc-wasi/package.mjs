@@ -27,6 +27,8 @@ import { reopenLibatomicBuild } from './libatomic-qualification.mjs';
 import { reopenLibatomicExecutionQualification } from './libatomic-execution-qualification.mjs';
 import { reopenNativeAtomicsQualification } from './atomics-qualification.mjs';
 import { reopenNativeTlsQualification } from './tls-native-qualification.mjs';
+import { timezoneCases } from './tzdb-fixtures.mjs';
+import { timezonePmfCases } from './tzdb-pmf-fixtures.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const json = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -85,6 +87,94 @@ export function verifyLibatomicPackageOptions(patches, options) {
 	for (const field of ['libatomic', 'libatomicQualification', 'nativeLinker'])
 		assert(options[field], `GNU libatomic requires ${field}`);
 	assert(required, 'GNU libatomic requires the locked Wasm runtime port');
+}
+
+export function verifyTimezonePackageOptions(options, build, patches = []) {
+	const required = patches.some(patch => patch.path === 'patches/0029-wasm-member-function-pointer.patch');
+	if (!required && !options.tzdbQualification && build?.timezoneDatabase !== true) return;
+	for (const name of ['tzdbQualification', 'libstdcxx', 'ehRuntime', 'ehRuntimeQualification', 'nativeLinker'])
+		assert(options[name], 'GNU timezone database requires ' + name);
+	if (build)
+		assert.equal(build.timezoneDatabase, true, 'GNU timezone proof requires the complete timezone-enabled runtime');
+}
+
+export function qualifiedTimezoneManifestProfile(builds, execution, lock, lockIdentity) {
+	if (!builds && !execution)
+		return { capabilities: {}, limitations: ['GNU libstdc++ timezone database is unavailable.'] };
+	assert.equal(lock?.schemaVersion, 1);
+	assert.equal(lock?.kind, 'gnu-libstdcxx-static-timezone-database');
+	assert.equal(lock.distribution.mode, 'embedded');
+	assert.deepEqual(lock.distribution.requiredGuestFiles, []);
+	assert.equal(lock.distribution.automaticNetworkUpdates, false);
+	assert.equal(execution?.kind, 'gcc-wasi-tzdb-native-qualification');
+	assert.equal(execution.status, 'passed', 'Timezone execution must pass before packaging');
+	assert.equal(execution.inputsUnchanged, true);
+	assert.equal(execution.mode, 'full-gnu-runtime', 'Standalone timezone objects cannot qualify a complete GNU runtime');
+	assert.equal(execution.fullGnuLibrary, true);
+	assert.equal(execution.compilerHost, 'native');
+	assert.equal(execution.target, 'wasm32-wasi');
+	assert(Number.isSafeInteger(execution.memberFunctionPointerQualification?.bytes)
+		&& execution.memberFunctionPointerQualification.bytes > 0
+		&& /^[a-f0-9]{64}$/u.test(execution.memberFunctionPointerQualification.sha256),
+		'Timezone qualification requires the member-function-pointer ABI execution proof');
+	const content = value => ({ bytes: value?.bytes, sha256: value?.sha256 });
+	assert.deepEqual(content(execution.timezoneLock), lockIdentity, 'Timezone execution uses a different component lock');
+	for (const profile of ['ordinary', 'exceptions']) {
+		const entry = builds[profile], build = entry?.receipt;
+		assert.equal(build?.status, 'built-unverified');
+		assert.equal(build.timezoneDatabase, true);
+		assert.equal(build.exceptions, profile === 'exceptions');
+		assert.equal(build.threads, false);
+		assert.equal(build.gccCommit, lock.gccCommit);
+		assert.deepEqual(build.gccSource, execution.gccSource, 'Timezone runtime and execution sources differ');
+		for (const name of ['cc1', 'cc1plus'])
+			assert.equal(build.nativeCompiler[name], execution.tools[name].sha256, 'Timezone runtime uses a different compiler');
+		assert.deepEqual(content(execution.runtimes[profile].build), entry.identity,
+			'Timezone execution uses a different GNU build');
+		const timezone = build.timezone;
+		assert.equal(timezone?.version, lock.version);
+		assert.deepEqual(timezone.lock, lockIdentity);
+		for (const name of ['source', 'data', 'patch'])
+			assert.deepEqual(timezone[name], content(lock[name]), 'Timezone ' + name + ' differs from its pin');
+		assert.equal(timezone.embedded, true);
+		assert.equal(timezone.singleThread, true);
+		assert.equal(timezone.archiveMember, 'tzdb.o');
+		assert.equal(timezone.atomicInstructions, 0);
+		assert.deepEqual(timezone.atomicHelpers, []);
+		assert.deepEqual(timezone.archive, build.libraries['libstdc++.a']);
+		for (const name of ['libstdc++.a', 'libsupc++.a'])
+			assert.deepEqual(content(execution.runtimes[profile].libraries[name]), build.libraries[name],
+				'Timezone execution uses a different GNU archive');
+	}
+	assert.deepEqual(execution.counts, {
+		total: timezoneCases.length,
+		ordinary: timezoneCases.filter(fixture => !fixture.request.exceptions).length,
+		exceptions: timezoneCases.filter(fixture => fixture.request.exceptions).length,
+		families: new Set(timezoneCases.map(fixture => fixture.family)).size
+	});
+	assert.equal(execution.noGuestPreopens, true);
+	assert.equal(execution.hostTimezoneFilesExposed, false);
+	assert.deepEqual(execution.cases.map(fixture => fixture.id), timezoneCases.map(fixture => fixture.id));
+	for (const [index, fixture] of timezoneCases.entries()) {
+		const actual = execution.cases[index];
+		assert.equal(actual.status, 'passed');
+		assert.deepEqual(actual.request, fixture.request);
+		assert.deepEqual(actual.run, fixture.run);
+		const expected = { stdout: fixture.stdout, stderr: fixture.stderr, exitCode: fixture.exitCode };
+		assert.deepEqual(actual.expected, expected);
+		for (const [name, value] of Object.entries(expected)) assert.equal(actual.observations[name], value);
+		assert.equal(actual.observations.escapedException, null);
+		assert.equal(actual.profile.atomicInstructions, 0);
+		assert.equal(actual.profile.atomicHelpers, 0);
+		assert.equal(actual.profile.sharedMemory, false);
+	}
+	return {
+		capabilities: { timezoneDatabase: true },
+		limitations: [
+			`GNU C++20 timezone APIs use embedded ${lock.version} data in the ordinary private-memory profiles. Data updates require a newly built and qualified runtime; no network update or guest timezone file is required.`,
+			'Timezone errors requiring C++ exceptions use explicit exception opt-in. Without supported guest timezone files, current_zone() uses the GNU UTC fallback; it does not infer the browser or host timezone. Leap-second results follow the pinned data, including after its stated expiry.'
+		]
+	};
 }
 
 export function verifyAtomicsPackageOptions(patches, options) {
@@ -764,7 +854,7 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, simdRelaxedQualification, simdRelaxedDriverQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, libatomic, libatomicQualification, atomicsQualification, tlsRuntime, tlsLibc, tlsQualification, tlsRuntimeQualification, ehRuntime, ehQualification, ehRuntimeQualification, nativeGcov, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, simdRelaxedQualification, simdRelaxedDriverQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, libatomic, libatomicQualification, atomicsQualification, tlsRuntime, tlsLibc, tlsQualification, tlsRuntimeQualification, ehRuntime, ehQualification, ehRuntimeQualification, tzdbQualification, nativeGcov, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
@@ -780,7 +870,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		...(tlsQualification ? [await fs.realpath(tlsQualification)] : []),
 		...(tlsRuntimeQualification ? [await fs.realpath(tlsRuntimeQualification)] : []),
 		...(ehQualification ? [await fs.realpath(ehQualification)] : []),
-		...(ehRuntimeQualification ? [await fs.realpath(ehRuntimeQualification)] : [])].filter(Boolean);
+		...(ehRuntimeQualification ? [await fs.realpath(ehRuntimeQualification)] : []),
+		...(tzdbQualification ? [await fs.realpath(tzdbQualification)] : [])].filter(Boolean);
 	// Existing parent realpaths also catch output aliases through a symlink.
 	await fs.mkdir(path.dirname(out), { recursive: true });
 	const finalOut = path.join(await fs.realpath(path.dirname(out)), path.basename(out));
@@ -792,6 +883,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	verifyAtomicsPackageOptions(lock.gcc.patches || [], { atomicsQualification, libatomic, libatomicQualification, nativeLinker });
 	verifyTlsPackageOptions(lock.gcc.patches || [], { tlsRuntime, tlsLibc, tlsQualification, tlsRuntimeQualification, libstdcxx, nativeLinker });
 	verifyExceptionPackageOptions(lock.gcc.patches || [], { ehRuntime, ehQualification, ehRuntimeQualification, libstdcxx, nativeLinker });
+	verifyTimezonePackageOptions({ tzdbQualification, libstdcxx, ehRuntime, ehRuntimeQualification, nativeLinker }, undefined, lock.gcc.patches || []);
+	const timezoneProof = tzdbQualification && await fs.readFile(tzdbQualification);
 	const libatomicProof = libatomicQualification && await fs.readFile(libatomicQualification);
 	const atomicsProof = atomicsQualification && await fs.readFile(atomicsQualification);
 	const tlsProof = tlsQualification && await fs.readFile(tlsQualification);
@@ -1159,6 +1252,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			assert.deepEqual(stdReceipt[field], build[field]);
 			runtimeProofs.set(path.basename(name), bytes);
 		}
+		verifyTimezonePackageOptions({ tzdbQualification, libstdcxx, ehRuntime, ehRuntimeQualification, nativeLinker }, build, lock.gcc.patches || []);
 		verifyRttiRuntimeProfile(build, stdReceipt, Boolean(rttiProof), qualification);
 		const errnoPatch = identity(await fs.readFile(path.join(here, 'patches/wasi-libc-errno.patch')));
 		const errnoHeader = identity(sysroot.find((f) => f.path === 'include/wasm32-wasi/__errno.h').bytes);
@@ -1322,6 +1416,59 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			exceptionProvenance.set(name, await fs.readFile(path.join(here, name)));
 	}
 	const exceptionProfile = qualifiedExceptionManifestProfile(validatedExceptionNative, validatedExceptionRuntime);
+	const timezoneProvenance = new Map();
+	let timezoneProfile = qualifiedTimezoneManifestProfile();
+	if (timezoneProof) {
+		const { reopenTimezoneQualification } = await import('./tzdb-qualification.mjs');
+		const report = JSON.parse(timezoneProof);
+		const reopened = await reopenTimezoneQualification(report, path.resolve(tzdbQualification), {
+			work, sdk: path.resolve(path.dirname(nativeLinker), '..'), sysroot: path.join(runtime, 'sysroot'),
+			ordinaryRuntime: libstdcxx, exceptionRuntime: ehRuntime, gccSource: nativeReceipt.gccSource,
+			sourceLockSha256: identity(lockBytes).sha256,
+			nativeBuild: { path: path.join(work, 'native-build.json'), ...identity(nativeReceiptBytes) }
+		});
+		assert.equal(reopened.status, 'passed', 'Timezone evidence must be independently reopened');
+		assert.deepEqual(identity(timezoneProof), { bytes: reopened.qualification.bytes, sha256: reopened.qualification.sha256 },
+			'Timezone proof changed during packaging');
+		const timezoneLockBytes = await fs.readFile(path.join(here, 'tzdb.lock.json'));
+		const timezoneLock = JSON.parse(timezoneLockBytes);
+		const ordinaryBytes = runtimeProofs.get('libstdcxx-buildReceipt.json');
+		const exceptionBytes = exceptionProvenance.get('exception-runtime-build.json');
+		assert(ordinaryBytes && exceptionBytes, 'Timezone support requires both admitted GNU runtime builds');
+		timezoneProfile = qualifiedTimezoneManifestProfile({
+			ordinary: { receipt: JSON.parse(ordinaryBytes), identity: identity(ordinaryBytes) },
+			exceptions: { receipt: JSON.parse(exceptionBytes), identity: identity(exceptionBytes) }
+		}, report, timezoneLock, identity(timezoneLockBytes));
+		timezoneProvenance.set('native-tzdb-qualification.json', timezoneProof);
+		timezoneProvenance.set('native-tzdb-validated.json', json(reopened));
+		const memberPointerBytes = await fs.readFile(report.memberFunctionPointerQualification.path);
+		assert.deepEqual(identity(memberPointerBytes), {
+			bytes: report.memberFunctionPointerQualification.bytes, sha256: report.memberFunctionPointerQualification.sha256
+		}, 'Member-function-pointer proof changed during packaging');
+		const memberPointerReport = JSON.parse(memberPointerBytes);
+		assert.equal(memberPointerReport.kind, 'gcc-wasi-member-function-pointer-native-qualification');
+		assert.equal(memberPointerReport.status, 'passed');
+		assert.equal(memberPointerReport.inputsUnchanged, true);
+		assert.deepEqual(memberPointerReport.gccSource, report.gccSource);
+		assert.deepEqual(memberPointerReport.nativeBuild, report.nativeBuild);
+		assert.deepEqual(memberPointerReport.cases.map(fixture => fixture.id), timezonePmfCases.map(fixture => fixture.id));
+		timezoneProvenance.set('native-tzdb-member-pointer-qualification.json', memberPointerBytes);
+		const replay = await fs.readFile(reopened.replay.path);
+		assert.deepEqual(identity(replay), { bytes: reopened.replay.bytes, sha256: reopened.replay.sha256 });
+		timezoneProvenance.set('native-tzdb-replay.json', replay);
+		timezoneProvenance.set('tzdb.lock.json', timezoneLockBytes);
+		for (const [name, file] of [['source', 'tzdb.cc'], ['data', 'tzdata.zi']]) {
+			const pin = timezoneLock[name], bytes = await fs.readFile(path.join(work, 'gcc', relativePath(pin.path)));
+			assert.deepEqual(identity(bytes), { bytes: pin.bytes, sha256: pin.sha256 }, 'Timezone provenance differs from its pin');
+			timezoneProvenance.set('tzdb/' + file, bytes);
+		}
+		const patch = await fs.readFile(path.join(here, relativePath(timezoneLock.patch.path)));
+		assert.deepEqual(identity(patch), { bytes: timezoneLock.patch.bytes, sha256: timezoneLock.patch.sha256 });
+		timezoneProvenance.set(timezoneLock.patch.path, patch);
+		for (const name of ['tzdb-runtime-state.py', 'test-tzdb.mjs', 'tzdb-qualification.mjs', 'tzdb-fixtures.mjs', 'tzdb-oracle.json',
+			'test-tzdb-pmf.py', 'tzdb-pmf-fixtures.mjs'])
+			timezoneProvenance.set(name, await fs.readFile(path.join(here, name)));
+	}
 	let libgcovBuildBytes, coverageAnalysisBytes;
 	if (coverageProof) {
 		assert(libgcov && nativeGcov && nativeLinker && libstdcxx, 'Coverage requires its runtime, analysis tool, linker and GNU runtime');
@@ -1562,7 +1709,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
 		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a', ...atomicsProfile.runtimeLibraries],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof), ...(simdRelaxedProof ? { relaxedSimd: true } : {}), ...atomicsProfile.capabilities, ...tlsProfile.capabilities, ...exceptionProfile.capabilities },
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof), ...(simdRelaxedProof ? { relaxedSimd: true } : {}), ...atomicsProfile.capabilities, ...tlsProfile.capabilities, ...exceptionProfile.capabilities, ...timezoneProfile.capabilities },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			...(longDoubleProof ? [] : ['long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.']),
@@ -1578,7 +1725,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			...atomicsProfile.limitations,
 			...tlsProfile.limitations,
 			...exceptionProfile.limitations,
-			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
+			...timezoneProfile.limitations,
+			'GNU libstdc++ C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
 			...(dwarfProof ? ['Debug is explicit embedded DWARF32/DWARF4 at -O0. It uses actual Wasm local indices and initialized frame bases. Optimized register locations, split debug files, alternate debug formats and a general expression evaluator are outside this profile.'] : []),
 			...(coverageProof ? ['Coverage is explicit source-only single-counter GCC gcov instrumentation. Run covered executables with a writable /profile directory and analyze returned .gcno/.gcda files with the pinned matching GCC gcov. PGO, atomic counters, info-section streaming, manual gcov APIs and process PID semantics are unsupported.'] : []),
 			...(simdProof ? [simdHeaderProof
@@ -1605,6 +1753,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	for (const [name, bytes] of atomicsProvenance) provenanceFiles.set(name, bytes);
 	for (const [name, bytes] of tlsProvenance) provenanceFiles.set(name, bytes);
 	for (const [name, bytes] of exceptionProvenance) provenanceFiles.set(name, bytes);
+	for (const [name, bytes] of timezoneProvenance) provenanceFiles.set(name, bytes);
 	if (dwarfProof) provenanceFiles.set('native-dwarf-qualification.json', dwarfProof);
 	if (coverageProof) {
 		provenanceFiles.set('native-coverage-qualification.json', coverageProof);
@@ -1731,8 +1880,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'simd-relaxed-qualification', 'simd-relaxed-driver-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'libatomic', 'libatomic-qualification', 'atomics-qualification', 'tls-runtime', 'tls-libc', 'tls-qualification', 'tls-runtime-qualification', 'eh-runtime', 'eh-qualification', 'eh-runtime-qualification', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--tls-runtime DIR --tls-libc DIR --tls-qualification FILE --tls-runtime-qualification FILE] [--eh-runtime DIR --eh-qualification FILE --eh-runtime-qualification FILE] [--libatomic DIR --libatomic-qualification FILE --atomics-qualification FILE] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --simd-relaxed-qualification FILE --simd-relaxed-driver-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'simd-relaxed-qualification': 'simdRelaxedQualification', 'simd-relaxed-driver-qualification': 'simdRelaxedDriverQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'libatomic-qualification': 'libatomicQualification', 'atomics-qualification': 'atomicsQualification', 'tls-runtime': 'tlsRuntime', 'tls-libc': 'tlsLibc', 'tls-qualification': 'tlsQualification', 'tls-runtime-qualification': 'tlsRuntimeQualification', 'eh-runtime': 'ehRuntime', 'eh-qualification': 'ehQualification', 'eh-runtime-qualification': 'ehRuntimeQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'simd-relaxed-qualification', 'simd-relaxed-driver-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'libatomic', 'libatomic-qualification', 'atomics-qualification', 'tls-runtime', 'tls-libc', 'tls-qualification', 'tls-runtime-qualification', 'eh-runtime', 'eh-qualification', 'eh-runtime-qualification', 'tzdb-qualification', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--tzdb-qualification FILE] [--tls-runtime DIR --tls-libc DIR --tls-qualification FILE --tls-runtime-qualification FILE] [--eh-runtime DIR --eh-qualification FILE --eh-runtime-qualification FILE] [--libatomic DIR --libatomic-qualification FILE --atomics-qualification FILE] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --simd-relaxed-qualification FILE --simd-relaxed-driver-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'simd-relaxed-qualification': 'simdRelaxedQualification', 'simd-relaxed-driver-qualification': 'simdRelaxedDriverQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'libatomic-qualification': 'libatomicQualification', 'atomics-qualification': 'atomicsQualification', 'tls-runtime': 'tlsRuntime', 'tls-libc': 'tlsLibc', 'tls-qualification': 'tlsQualification', 'tls-runtime-qualification': 'tlsRuntimeQualification', 'eh-runtime': 'ehRuntime', 'eh-qualification': 'ehQualification', 'eh-runtime-qualification': 'ehRuntimeQualification', 'tzdb-qualification': 'tzdbQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}

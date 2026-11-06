@@ -20,7 +20,8 @@ def collect(work, sdk):
     files = {Path(__file__).resolve()}
     for name in ['build-libstdcxx.sh', 'fp-extension-math-probe.py', 'prepare-source.py',
                  'sources.lock.json', 'runtime.lock.json', 'patches/libstdcxx-wasi-config.patch',
-                 'patches/libstdcxx-wasi-eh-config.patch', 'patches/wasi-libc-errno.patch']:
+                 'patches/libstdcxx-wasi-eh-config.patch', 'patches/wasi-libc-errno.patch',
+                 'tzdb.lock.json', 'tzdb-runtime-state.py', 'patches/libstdcxx-wasi-tzdb-cache.patch']:
         files.add(HERE / name)
     source_lock = json.loads((HERE / 'sources.lock.json').read_text())
     files.update(HERE / patch['path'] for project in ['gcc', 'wabt']

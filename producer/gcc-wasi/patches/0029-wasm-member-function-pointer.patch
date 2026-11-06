@@ -1,0 +1,15 @@
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -142,6 +142,12 @@
+ #define PARM_BOUNDARY 8
+ #define STACK_BOUNDARY 128
+ #define FUNCTION_BOUNDARY 16
++/* A function pointer is a table index, whose low bit can be set regardless
++   of FUNCTION_BOUNDARY.  Keep the C++ pointer-to-member virtual discriminator
++   in the this adjustment, as required for unaligned function addresses.
++   All C++ objects and runtime libraries must use this representation.  */
++#define TARGET_PTRMEMFUNC_VBIT_LOCATION ptrmemfunc_vbit_in_delta
++
+ #define BIGGEST_ALIGNMENT 128
+ #define STRICT_ALIGNMENT 0
+ 
