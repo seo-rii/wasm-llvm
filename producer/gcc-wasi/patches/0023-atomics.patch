@@ -1,0 +1,489 @@
+diff --git a/gcc/config/wasm/atomics.md b/gcc/config/wasm/atomics.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..35a65739589fccadfa192bce9f456c435fdc189a
+--- /dev/null
++++ b/gcc/config/wasm/atomics.md
+@@ -0,0 +1,262 @@
++;; Opt-in WebAssembly atomic memory operations.
++;; Copyright (C) 2026 wasm-llvm contributors.
++;; This file is part of GCC and is distributed under the GNU General Public
++;; License, version 3 or later.  See COPYING3 for details.
++;;
++;; All supported orders use sequentially consistent Wasm instructions.  Each
++;; access has a volatile UNSPEC, explicit memory operands, and full compiler
++;; memory blockages.  Unlike the SIMD UNSPECs, these are observable effects.
++;; The typed operations require natural alignment; there is no native TI mode.
++
++(define_c_enum "unspecv" [
++  UNSPECV_ATOMIC_BLOCKAGE
++  UNSPECV_ATOMIC_FENCE
++  UNSPECV_ATOMIC_LOAD
++  UNSPECV_ATOMIC_STORE
++  UNSPECV_ATOMIC_EXCHANGE
++  UNSPECV_ATOMIC_CAS
++  UNSPECV_ATOMIC_ADD
++  UNSPECV_ATOMIC_SUB
++  UNSPECV_ATOMIC_AND
++  UNSPECV_ATOMIC_OR
++  UNSPECV_ATOMIC_XOR
++])
++
++(define_mode_attr atomic_load_suffix
++  [(QI "8_u") (HI "16_u") (SI "") (DI "")])
++(define_mode_attr atomic_store_suffix
++  [(QI "8") (HI "16") (SI "") (DI "")])
++(define_mode_attr atomic_rmw_width
++  [(QI "8") (HI "16") (SI "") (DI "")])
++(define_mode_attr atomic_rmw_suffix
++  [(QI "_u") (HI "_u") (SI "") (DI "")])
++
++(define_int_iterator WASM_ATOMIC_OP
++  [UNSPECV_ATOMIC_ADD UNSPECV_ATOMIC_SUB UNSPECV_ATOMIC_AND
++   UNSPECV_ATOMIC_OR UNSPECV_ATOMIC_XOR])
++(define_int_attr atomic_name
++  [(UNSPECV_ATOMIC_ADD "add") (UNSPECV_ATOMIC_SUB "sub")
++   (UNSPECV_ATOMIC_AND "and") (UNSPECV_ATOMIC_OR "or")
++   (UNSPECV_ATOMIC_XOR "xor")])
++(define_int_attr atomic_code
++  [(UNSPECV_ATOMIC_ADD "PLUS") (UNSPECV_ATOMIC_SUB "MINUS")
++   (UNSPECV_ATOMIC_AND "AND") (UNSPECV_ATOMIC_OR "IOR")
++   (UNSPECV_ATOMIC_XOR "XOR")])
++
++;; Keep non-atomic accesses on their original side even when the source asks
++;; for a weaker order.  The signal-fence optab also uses this compiler barrier.
++(define_insn "memory_blockage"
++  [(unspec_volatile [(const_int 0)] UNSPECV_ATOMIC_BLOCKAGE)
++   (clobber (mem:BLK (scratch)))]
++  "TARGET_ATOMICS"
++  "")
++
++(define_insn "mem_thread_fence"
++  [(unspec_volatile [(match_operand:SI 0 "const_int_operand")]
++                    UNSPECV_ATOMIC_FENCE)
++   (clobber (mem:BLK (scratch)))]
++  "TARGET_ATOMICS"
++  "(atomic.fence)")
++
++(define_expand "atomic_load<mode>"
++  [(match_operand:QHSDI 0 "register_operand")
++   (match_operand:QHSDI 1 "memory_operand")
++   (match_operand:SI 2 "const_int_operand")]
++  "TARGET_ATOMICS"
++{
++  rtx mem = wasm_atomic_memory (operands[1]);
++  rtx value = gen_reg_rtx (<promote_mode>mode);
++  emit_insn (gen_memory_blockage ());
++  emit_insn (gen_wasm_atomic_load<mode> (value, mem, operands[2]));
++  emit_move_insn (operands[0], gen_lowpart (<MODE>mode, value));
++  emit_insn (gen_memory_blockage ());
++  DONE;
++})
++
++(define_insn "wasm_atomic_load<mode>"
++  [(set (match_operand:<promote_mode> 0 "wasm_register_operand")
++        (unspec_volatile:<promote_mode>
++          [(match_operand:QHSDI 1 "memory_operand")
++           (match_operand:SI 2 "const_int_operand")]
++          UNSPECV_ATOMIC_LOAD))]
++  "TARGET_ATOMICS"
++  "(%o0 (<promote_type>.atomic.load<atomic_load_suffix> %m1))")
++
++(define_expand "atomic_store<mode>"
++  [(match_operand:QHSDI 0 "memory_operand")
++   (match_operand:QHSDI 1 "register_operand")
++   (match_operand:SI 2 "const_int_operand")]
++  "TARGET_ATOMICS"
++{
++  rtx mem = wasm_atomic_memory (operands[0]);
++  rtx value = wasm_atomic_value (operands[1], <MODE>mode);
++  emit_insn (gen_memory_blockage ());
++  emit_insn (gen_wasm_atomic_store<mode> (mem, value, operands[2]));
++  emit_insn (gen_memory_blockage ());
++  DONE;
++})
++
++(define_insn "wasm_atomic_store<mode>"
++  [(set (match_operand:QHSDI 0 "memory_operand")
++        (unspec_volatile:QHSDI
++          [(match_operand:<promote_mode> 1 "wasm_register_operand")
++           (match_operand:SI 2 "const_int_operand")]
++          UNSPECV_ATOMIC_STORE))]
++  "TARGET_ATOMICS"
++  "(<promote_type>.atomic.store<atomic_store_suffix> %m0 %i1)")
++
++(define_expand "atomic_exchange<mode>"
++  [(match_operand:QHSDI 0 "register_operand")
++   (match_operand:QHSDI 1 "memory_operand")
++   (match_operand:QHSDI 2 "register_operand")
++   (match_operand:SI 3 "const_int_operand")]
++  "TARGET_ATOMICS"
++{
++  rtx mem = wasm_atomic_memory (operands[1]);
++  rtx value = wasm_atomic_value (operands[2], <MODE>mode);
++  rtx old = gen_reg_rtx (<promote_mode>mode);
++  emit_insn (gen_memory_blockage ());
++  emit_insn (gen_wasm_atomic_exchange<mode> (old, mem, value, operands[3]));
++  emit_move_insn (operands[0], gen_lowpart (<MODE>mode, old));
++  emit_insn (gen_memory_blockage ());
++  DONE;
++})
++
++(define_insn "wasm_atomic_exchange<mode>"
++  [(set (match_operand:<promote_mode> 0 "wasm_register_operand")
++        (unspec_volatile:<promote_mode>
++          [(match_operand:QHSDI 1 "memory_operand")
++           (match_operand:<promote_mode> 2 "wasm_register_operand")
++           (match_operand:SI 3 "const_int_operand")]
++          UNSPECV_ATOMIC_EXCHANGE))
++   (set (match_dup 1)
++        (unspec_volatile:QHSDI [(match_dup 1) (match_dup 2) (match_dup 3)]
++                              UNSPECV_ATOMIC_EXCHANGE))]
++  "TARGET_ATOMICS"
++  "(%o0 (<promote_type>.atomic.rmw<atomic_rmw_width>.xchg<atomic_rmw_suffix> %m1 %i2))")
++
++(define_expand "atomic_compare_and_swap<mode>"
++  [(match_operand:SI 0 "register_operand")
++   (match_operand:QHSDI 1 "register_operand")
++   (match_operand:QHSDI 2 "memory_operand")
++   (match_operand:QHSDI 3 "register_operand")
++   (match_operand:QHSDI 4 "register_operand")
++   (match_operand:SI 5 "const_int_operand")
++   (match_operand:SI 6 "const_int_operand")
++   (match_operand:SI 7 "const_int_operand")]
++  "TARGET_ATOMICS"
++{
++  rtx mem = wasm_atomic_memory (operands[2]);
++  /* Widen both expected and returned narrow values without sign extension.
++     Wasm returns zero-extended QI/HI values; comparing a signed promotion of
++     expected would report false after a successful high-bit exchange.  */
++  rtx expected = wasm_atomic_value (operands[3], <MODE>mode);
++  rtx desired = wasm_atomic_value (operands[4], <MODE>mode);
++  rtx old = gen_reg_rtx (<promote_mode>mode);
++  emit_insn (gen_memory_blockage ());
++  emit_insn (gen_wasm_atomic_cas<mode> (old, mem, expected, desired,
++                                      operands[6], operands[7]));
++  wasm_expand_compare (<promote_mode>mode, operands[0],
++                       gen_rtx_EQ (SImode, old, expected));
++  emit_move_insn (operands[1], gen_lowpart (<MODE>mode, old));
++  emit_insn (gen_memory_blockage ());
++  /* Implement weak requests with the strong Wasm compare-exchange.  The
++     generic expander updates *expected with operand 1 after failure.  */
++  DONE;
++})
++
++(define_insn "wasm_atomic_cas<mode>"
++  [(set (match_operand:<promote_mode> 0 "wasm_register_operand")
++        (unspec_volatile:<promote_mode>
++          [(match_operand:QHSDI 1 "memory_operand")
++           (match_operand:<promote_mode> 2 "wasm_register_operand")
++           (match_operand:<promote_mode> 3 "wasm_register_operand")
++           (match_operand:SI 4 "const_int_operand")
++           (match_operand:SI 5 "const_int_operand")]
++          UNSPECV_ATOMIC_CAS))
++   (set (match_dup 1)
++        (unspec_volatile:QHSDI
++          [(match_dup 1) (match_dup 2) (match_dup 3)
++           (match_dup 4) (match_dup 5)] UNSPECV_ATOMIC_CAS))]
++  "TARGET_ATOMICS"
++  "(%o0 (<promote_type>.atomic.rmw<atomic_rmw_width>.cmpxchg<atomic_rmw_suffix> %m1 %i2 %i3))")
++
++(define_expand "atomic_fetch_<atomic_name><mode>"
++  [(set (match_operand:QHSDI 0 "register_operand")
++        (unspec_volatile:QHSDI
++          [(match_operand:QHSDI 1 "memory_operand")
++           (match_operand:QHSDI 2 "register_operand")
++           (match_operand:SI 3 "const_int_operand")]
++          WASM_ATOMIC_OP))]
++  "TARGET_ATOMICS"
++{
++  rtx mem = wasm_atomic_memory (operands[1]);
++  rtx value = wasm_atomic_value (operands[2], <MODE>mode);
++  rtx old = gen_reg_rtx (<promote_mode>mode);
++  emit_insn (gen_memory_blockage ());
++  emit_insn (gen_wasm_atomic_fetch_<atomic_name><mode>
++               (old, mem, value, operands[3]));
++  emit_move_insn (operands[0], gen_lowpart (<MODE>mode, old));
++  emit_insn (gen_memory_blockage ());
++  DONE;
++})
++
++(define_insn "wasm_atomic_fetch_<atomic_name><mode>"
++  [(set (match_operand:<promote_mode> 0 "wasm_register_operand")
++        (unspec_volatile:<promote_mode>
++          [(match_operand:QHSDI 1 "memory_operand")
++           (match_operand:<promote_mode> 2 "wasm_register_operand")
++           (match_operand:SI 3 "const_int_operand")]
++          WASM_ATOMIC_OP))
++   (set (match_dup 1)
++        (unspec_volatile:QHSDI [(match_dup 1) (match_dup 2) (match_dup 3)]
++                              WASM_ATOMIC_OP))]
++  "TARGET_ATOMICS"
++  "(%o0 (<promote_type>.atomic.rmw<atomic_rmw_width>.<atomic_name><atomic_rmw_suffix> %m1 %i2))")
++
++(define_expand "atomic_<atomic_name>_fetch<mode>"
++  [(set (match_operand:QHSDI 0 "register_operand")
++        (unspec_volatile:QHSDI
++          [(match_operand:QHSDI 1 "memory_operand")
++           (match_operand:QHSDI 2 "register_operand")
++           (match_operand:SI 3 "const_int_operand")]
++          WASM_ATOMIC_OP))]
++  "TARGET_ATOMICS"
++{
++  rtx mem = wasm_atomic_memory (operands[1]);
++  rtx value = wasm_atomic_value (operands[2], <MODE>mode);
++  rtx old = gen_reg_rtx (<promote_mode>mode);
++  emit_insn (gen_memory_blockage ());
++  emit_insn (gen_wasm_atomic_fetch_<atomic_name><mode>
++               (old, mem, value, operands[3]));
++  rtx next = expand_simple_binop (<promote_mode>mode, <atomic_code>,
++                                 old, value, NULL_RTX, true, OPTAB_DIRECT);
++  gcc_assert (next);
++  emit_move_insn (operands[0], gen_lowpart (<MODE>mode, next));
++  emit_insn (gen_memory_blockage ());
++  DONE;
++})
++
++;; Wasm has no NAND instruction.  Use an atomic initial load and native CAS
++;; loop rather than falling back to a non-atomic helper or a wider access.
++(define_expand "atomic_fetch_nand<mode>"
++  [(match_operand:QHSDI 0 "register_operand")
++   (match_operand:QHSDI 1 "memory_operand")
++   (match_operand:QHSDI 2 "register_operand")
++   (match_operand:SI 3 "const_int_operand")]
++  "TARGET_ATOMICS"
++{
++  wasm_expand_atomic_nand (operands, <MODE>mode, false);
++  DONE;
++})
++
++(define_expand "atomic_nand_fetch<mode>"
++  [(match_operand:QHSDI 0 "register_operand")
++   (match_operand:QHSDI 1 "memory_operand")
++   (match_operand:QHSDI 2 "register_operand")
++   (match_operand:SI 3 "const_int_operand")]
++  "TARGET_ATOMICS"
++{
++  wasm_expand_atomic_nand (operands, <MODE>mode, true);
++  DONE;
++})
+diff --git a/gcc/config/wasm/wasm-cg.cc b/gcc/config/wasm/wasm-cg.cc
+index a09fe1b4f635da2b274859268b0f66b790544147..a7038f6b6802bc3486aed86d1e8dffd0e3a1ad9d 100644
+--- a/gcc/config/wasm/wasm-cg.cc
++++ b/gcc/config/wasm/wasm-cg.cc
+@@ -121,6 +121,128 @@ record_libcall (const_rtx sym, tree ret)
+ 
+ }
+ 
++/* At -O0 a static address can already be in a pseudo by the time the atomic
++   expander sees it.  Look through its nearest constant definition for the
++   alignment diagnostic only.  Do not cross control flow, calls, another
++   definition, or the bounded search window.  Generated expanders push nested
++   instruction sequences, so inspect their parents as well as the current one.
++   A non-constant definition remains an unknown runtime pointer.  */
++static rtx
++wasm_atomic_address_constant (rtx value)
++{
++  if (!REG_P (value) || REGNO (value) < FIRST_PSEUDO_REGISTER)
++    return value;
++  unsigned remaining = 64;
++  for (sequence_stack *seq = get_current_sequence (); seq; seq = seq->next)
++    for (rtx_insn *insn = seq->last; insn; insn = PREV_INSN (insn))
++      {
++        if (!remaining-- || LABEL_P (insn) || JUMP_P (insn)
++            || CALL_P (insn) || BARRIER_P (insn)
++            || (NOTE_P (insn) && NOTE_KIND (insn) == NOTE_INSN_BASIC_BLOCK))
++          return value;
++        if (NONDEBUG_INSN_P (insn) && reg_set_p (value, insn))
++          {
++            rtx set = single_set (insn);
++            if (set && rtx_equal_p (SET_DEST (set), value)
++                && CONSTANT_P (SET_SRC (set)))
++              return SET_SRC (set);
++            return value;
++          }
++      }
++  return value;
++}
++
++/* Typed atomic builtins follow their natural-alignment precondition.  The
++   generic builtin expander raises MEM_ALIGN to the mode alignment, so that
++   field alone cannot diagnose an incorrectly cast pointer.  Diagnose an
++   address whose known aligned base and constant displacement prove otherwise;
++   dynamically supplied typed pointers remain the caller's responsibility.
++   Generic size-and-void-pointer libatomic entry points have a separate,
++   alignment-aware runtime implementation.  */
++rtx
++wasm_atomic_memory (rtx mem)
++{
++  gcc_assert (TARGET_ATOMICS && MEM_P (mem));
++  unsigned bytes = GET_MODE_SIZE (GET_MODE (mem));
++  gcc_assert (bytes == 1 || bytes == 2 || bytes == 4 || bytes == 8);
++  rtx base = XEXP (mem, 0);
++  HOST_WIDE_INT offset = 0;
++  for (unsigned depth = 0; depth != 4; ++depth)
++    {
++      base = wasm_atomic_address_constant (base);
++      if (GET_CODE (base) == CONST)
++        base = XEXP (base, 0);
++      if (GET_CODE (base) != PLUS || !CONST_INT_P (XEXP (base, 1)))
++        break;
++      offset += INTVAL (XEXP (base, 1));
++      base = XEXP (base, 0);
++    }
++  bool aligned_base = false;
++  if (CONST_INT_P (base))
++    {
++      offset += INTVAL (base);
++      aligned_base = true;
++    }
++  else if (SYMBOL_REF_P (base) && SYMBOL_REF_DECL (base)
++           && DECL_P (SYMBOL_REF_DECL (base)))
++    aligned_base = DECL_ALIGN (SYMBOL_REF_DECL (base)) >= bytes * BITS_PER_UNIT;
++  else if (REG_P (base) && REG_POINTER (base))
++    aligned_base = REGNO_POINTER_ALIGN (REGNO (base)) >= bytes * BITS_PER_UNIT;
++  if (aligned_base && (offset & (bytes - 1)))
++    error ("WebAssembly typed atomic access requires natural %u-byte alignment; "
++           "use the generic libatomic interface for unaligned storage", bytes);
++
++  mem = unify_mem (mem);
++  MEM_VOLATILE_P (mem) = 1;
++  return mem;
++}
++
++/* Native subword operations consume i32 values and return unsigned i32
++   values.  Mask the logical QI/HI operand independently of the signedness or
++   register mode chosen by the preceding C/C++ expression.  In particular,
++   CAS success must compare equal for expected values with their high bit set.  */
++rtx
++wasm_atomic_value (rtx value, machine_mode mode)
++{
++  machine_mode reg_mode = mode == DImode ? DImode : SImode;
++  value = convert_modes (reg_mode, mode, value, true);
++  return force_reg (reg_mode, value);
++}
++
++/* Both NAND result conventions use a naturally aligned atomic initial load,
++   then strong native CAS.  Every retry uses the actual value returned by CAS;
++   no plain load or non-atomic provider participates in the update.  */
++void
++wasm_expand_atomic_nand (rtx *operands, machine_mode mode, bool after)
++{
++  rtx mem = wasm_atomic_memory (operands[1]);
++  machine_mode reg_mode = mode == DImode ? DImode : SImode;
++  rtx value = wasm_atomic_value (operands[2], mode);
++  rtx current = expand_atomic_load (NULL_RTX, mem, MEMMODEL_SEQ_CST);
++  gcc_assert (current);
++  rtx_code_label *retry = gen_label_rtx ();
++  emit_label (retry);
++  rtx expected = copy_to_mode_reg (mode, current);
++  rtx wide = wasm_atomic_value (expected, mode);
++  rtx next = expand_simple_binop (reg_mode, AND, wide, value, NULL_RTX,
++                                 true, OPTAB_DIRECT);
++  gcc_assert (next);
++  next = expand_simple_unop (reg_mode, NOT, next, NULL_RTX, true);
++  gcc_assert (next);
++  next = gen_lowpart (mode, next);
++  rtx success = NULL_RTX, previous = current;
++  bool emitted = expand_atomic_compare_and_swap
++    (&success, &previous, mem, expected, next, false,
++     MEMMODEL_SEQ_CST, MEMMODEL_SEQ_CST);
++  gcc_assert (emitted);
++  if (previous != current)
++    emit_move_insn (current, previous);
++  emit_cmp_and_jump_insns (success, const0_rtx, EQ, const0_rtx,
++                           SImode, true, retry,
++                           profile_probability::guessed_never ());
++  emit_move_insn (operands[0], after ? next : expected);
++}
++
+ machine_mode
+ wasm_real_register_mode (rtx reg)
+ {
+diff --git a/gcc/config/wasm/wasm-protos.h b/gcc/config/wasm/wasm-protos.h
+index bad6e72e3af3b03f0bc9fd178bdb4af87ba88cd1..52a36089efcdeb4698d0fd4a2b0e6c79a3b76e0d 100644
+--- a/gcc/config/wasm/wasm-protos.h
++++ b/gcc/config/wasm/wasm-protos.h
+@@ -45,6 +45,9 @@ extern void wasm_expand_conv (rtx, rtx, rtx_code);
+ extern void wasm_expand_compare (machine_mode, rtx, rtx);
+ extern void wasm_expand_simd_compare (rtx, rtx_code, rtx, rtx);
+ extern void wasm_emit_simd_shuffle (rtx, rtx, rtx, rtvec);
++extern rtx wasm_atomic_memory (rtx);
++extern rtx wasm_atomic_value (rtx, machine_mode);
++extern void wasm_expand_atomic_nand (rtx *, machine_mode, bool);
+ extern machine_mode wasm_real_register_mode (rtx);
+ rtl_opt_pass *make_pass_count_labels (gcc::context *);
+ #endif
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index c8a47ad1e8b9d65430b98ed45dd34047ce66b1a6..28c3547d6afdd093cd2855294f845f8c9aa53529 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -624,10 +624,23 @@ wasm_init_machine_status (void)
+   return p;
+ }
+ 
++/* IPA-reference can move non-address-taken static accesses across a call
++   containing atomic synchronization (GCC PR ipa/80728).  Keep this pass off
++   for the atomics profile, including explicit options and optimize attributes;
++   an RTL memory blockage is too late to repair an earlier GIMPLE hoist.  */
++#define TARGET_OVERRIDE_OPTIONS_AFTER_CHANGE wasm_override_options_after_change
++static void
++wasm_override_options_after_change (void)
++{
++  if (TARGET_ATOMICS)
++    flag_ipa_reference = 0;
++}
++
+ #define TARGET_OPTION_OVERRIDE wasm_option_override
+ static void
+ wasm_option_override (void)
+ {
++  wasm_override_options_after_change ();
+   /* The Basic C ABI selects direct singleton results and indirect results
+      for other aggregates.  The generic PCC default bypasses that hook. */
+   flag_pcc_struct_return = 0;
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+index a9811c26276da3e4fc4a78e3513cb6487f90b3db..d20894c9c4675edfb201449a79ddb7893763a121 100644
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -35,7 +35,7 @@
+ /* End debug.  */
+ 
+ #define CC1PLUS_SPEC "-stdlib=libc++"
+-#define ASM_SPEC "-r --enable-annotations %{mrelaxed-simd:--enable-relaxed-simd} %{v:-v} %{Wa,*:%*}"
++#define ASM_SPEC "-r --enable-annotations %{mrelaxed-simd:--enable-relaxed-simd} %{matomics:--enable-threads} %{v:-v} %{Wa,*:%*}"
+ #define STANDARD_STARTFILE_PREFIX_1 "/lib/wasm32-wasi/"
+ #define STARTFILE_SPEC "%R" STANDARD_STARTFILE_PREFIX_1 "crt1%O%s"
+ #define LIB_SPEC "%{!shared:%{!p:%{!pg:-lc}}%{p:-lc_p}%{pg:-lc_p}}"
+@@ -55,6 +55,8 @@
+         cpp_define (parse_in, "__wasm_simd128__"); \
+       if (TARGET_RELAXED_SIMD && TARGET_SIMD128) \
+         cpp_define (parse_in, "__wasm_relaxed_simd__"); \
++      if (TARGET_ATOMICS)                  \
++        cpp_define (parse_in, "__wasm_atomics__"); \
+     }					  \
+   while (0)
+ 
+diff --git a/gcc/config/wasm/wasm.md b/gcc/config/wasm/wasm.md
+index 4b8303c9e73aadfad26af5c7efab43da66467da3..baa2ed954f51b116e385650a7edb4d6962fa8e9e 100644
+--- a/gcc/config/wasm/wasm.md
++++ b/gcc/config/wasm/wasm.md
+@@ -22,6 +22,7 @@
+ (include "constraints.md")
+ (include "simd.md")
+ (include "relaxed-simd.md")
++(include "atomics.md")
+ (include "tf.md")
+ 
+ (define_insn "nop"
+diff --git a/gcc/config/wasm/wasm.opt b/gcc/config/wasm/wasm.opt
+index 4d698245385af5660571f075ee09143d1e1b4123..507a42e20b7fa4df638f88119ff843ba7f14ac1e 100644
+--- a/gcc/config/wasm/wasm.opt
++++ b/gcc/config/wasm/wasm.opt
+@@ -9,3 +9,7 @@ Enable WebAssembly 128-bit SIMD instructions.
+ mrelaxed-simd
+ Target Mask(RELAXED_SIMD)
+ Enable explicit WebAssembly relaxed SIMD builtins; requires -msimd128.
++
++matomics
++Target Mask(ATOMICS)
++Enable naturally aligned WebAssembly atomic memory instructions.

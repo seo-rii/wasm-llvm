@@ -1,0 +1,59 @@
+diff --git a/src/binary-writer.cc b/src/binary-writer.cc
+index 02a7e8a..306aa25 100644
+--- a/src/binary-writer.cc
++++ b/src/binary-writer.cc
+@@ -223,6 +223,9 @@ class BinaryWriter {
+   const Module* module_;
+   bool uses_simd128_ = false;
+   bool uses_relaxed_simd_ = false;
++  bool uses_atomics_ = false;
++  bool uses_bulk_memory_ = false;
++  bool uses_bulk_memory_opt_ = false;
+ 
+   SymbolTable symtab_;
+   std::vector<RelocSection> reloc_sections_;
+@@ -271,6 +274,14 @@ void BinaryWriter::WriteOpcode(Stream* stream, Opcode opcode) {
+     // All 0xfd opcodes >= 0x100 in this pinned WABT are relaxed SIMD.
+     uses_relaxed_simd_ |= opcode.GetCode() >= 0x100;
+   }
++  if (opcode.HasPrefix() && opcode.GetPrefix() == 0xfe)
++    uses_atomics_ = true;
++  if (opcode.HasPrefix() && opcode.GetPrefix() == 0xfc &&
++      opcode.GetCode() >= 0x08 && opcode.GetCode() <= 0x0e) {
++    uses_bulk_memory_ = true;
++    uses_bulk_memory_opt_ |= opcode == Opcode::MemoryCopy ||
++                             opcode == Opcode::MemoryFill;
++  }
+   if (writing_function_)
+     opcode_offsets_.push_back(stream->offset() - cur_func_start_offset_);
+   wabt::WriteOpcode(stream, opcode);
+@@ -290,7 +301,7 @@ Result BinaryWriter::WriteTargetFeatures() {
+   auto merge = [&](const std::string& name, uint8_t prefix) {
+     auto inserted = features.emplace(name, prefix);
+     if (!inserted.second && inserted.first->second != prefix)
+-      return error("conflicting feature declarations or actual SIMD use");
++      return error("conflicting feature declarations or actual instruction/type use");
+     return Result::Ok;
+   };
+   // Preserve explicit feature declarations, coalesce duplicates, and reject
+@@ -329,6 +340,12 @@ Result BinaryWriter::WriteTargetFeatures() {
+     CHECK_RESULT(merge("simd128", '+'));
+   if (uses_relaxed_simd_)
+     CHECK_RESULT(merge("relaxed-simd", '+'));
++  if (uses_atomics_)
++    CHECK_RESULT(merge("atomics", '+'));
++  if (uses_bulk_memory_)
++    CHECK_RESULT(merge("bulk-memory", '+'));
++  if (uses_bulk_memory_opt_)
++    CHECK_RESULT(merge("bulk-memory-opt", '+'));
+   if (!features.empty()) {
+     // Emit after other custom sections, including any producers section.
+     BeginCustomSection("target_features");
+@@ -1150,6 +1167,7 @@ void BinaryWriter::WriteTable(const Table* table) {
+ }
+ 
+ void BinaryWriter::WriteMemory(const Memory* memory) {
++  uses_atomics_ |= memory->page_limits.is_shared;
+   uint32_t flags = ComputeLimitsFlags(&memory->page_limits);
+   const bool custom_page_size = memory->page_size != WABT_DEFAULT_PAGE_SIZE;
+   flags |= custom_page_size ? WABT_BINARY_LIMITS_HAS_CUSTOM_PAGE_SIZE_FLAG : 0;

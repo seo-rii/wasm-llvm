@@ -10,19 +10,27 @@ import { fileURLToPath } from 'node:url';
 import { identity } from '../clang-browser/cross/package.mjs';
 import { inspectTargetFeatures } from './inspect-target-features.mjs';
 import { watCases } from './target-features-fixtures.mjs';
+import { watAtomicsCases } from './wabt-atomics-fixtures.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const work = resolve(process.env.GCC_WASI_WORK_DIR ?? `${root}/out/gcc-wasi-work`);
 const options = {};
 for (let i = 2; i < process.argv.length; i += 2) {
   const key = process.argv[i].replace(/^--/, '');
-  assert(['native-qualification', 'output'].includes(key) && process.argv[i + 1] && !options[key], `Invalid argument ${process.argv[i]}`);
+  assert(['native-qualification', 'atomics-qualification', 'output'].includes(key) && process.argv[i + 1] && !options[key], `Invalid argument ${process.argv[i]}`);
   options[key] = resolve(process.argv[i + 1]);
 }
+assert(!(options['native-qualification'] && options['atomics-qualification']), 'Select one native qualification matrix');
+const atomics = Boolean(options['atomics-qualification']);
+const fixtures = atomics ? watAtomicsCases : watCases;
 const require = createRequire(resolve(process.env.GCC_WASI_PLAYWRIGHT_PROJECT ?? process.cwd(), 'package.json'));
 const { chromium } = require('playwright-core');
 const inputs = new Map();
 async function readInput(file) { const bytes = await readFile(file); inputs.set(file, identity(bytes)); return bytes; }
+const chromiumExecutable = resolve(process.env.GCC_WASI_CHROMIUM ?? chromium.executablePath());
+const chromiumIdentity = identity(await readInput(chromiumExecutable));
+const playwrightEntry = require.resolve('playwright-core');
+await readInput(playwrightEntry);
 const wat = `(module
   (import "env" "__indirect_function_table" (table 0 funcref))
   (func $answer (@sym (name "answer")) (result i32) i32.const 42)
@@ -64,31 +72,37 @@ assert.equal(nativeReceipt.inputsUnchanged, true); assert.equal(browserReceipt.i
 for (const name of ['as.mjs', 'as.wasm']) assert.deepEqual(identity(assets.get('/' + name).data), browserReceipt.files[name]);
 await readInput(fileURLToPath(import.meta.url));
 await readInput(fileURLToPath(new URL('./target-features-fixtures.mjs', import.meta.url)));
+await readInput(fileURLToPath(new URL('./wabt-atomics-fixtures.mjs', import.meta.url)));
 const assembler = resolve(work, 'wabt-native/wat2wasm');
 assert.deepEqual(identity(await readInput(assembler)), nativeReceipt.files.wat2wasm);
-const nativeProof = options['native-qualification'] && JSON.parse(await readInput(options['native-qualification']));
+const proofPath = options['atomics-qualification'] || options['native-qualification'];
+const nativeProof = proofPath && JSON.parse(await readInput(proofPath));
 if (nativeProof) {
-  assert.equal(nativeProof.kind, 'gcc-wasi-native-target-features-qualification');
+  assert.equal(nativeProof.kind, atomics ? 'gcc-wasi-wabt-atomics-qualification' : 'gcc-wasi-native-target-features-qualification');
   assert.equal(nativeProof.status, 'passed'); assert.equal(nativeProof.inputsUnchanged, true);
   assert.deepEqual(nativeProof.assemblerSource, nativeReceipt.source);
   assert.deepEqual(nativeProof.inputs[assembler], nativeReceipt.files.wat2wasm);
-  assert.deepEqual(nativeProof.watCases.map(test => test.id), watCases.flatMap(fixture => [`${fixture.id}-module`, `${fixture.id}-object`]));
+  assert.deepEqual((atomics ? nativeProof.cases : nativeProof.watCases).map(test => test.id), fixtures.flatMap(fixture => [`${fixture.id}-module`, `${fixture.id}-object`]));
 }
 const server = createServer((request, response) => {
   const asset = assets.get(request.url);
   if (!asset) { response.writeHead(404).end(); return; }
   response.setHeader('Content-Type', asset.type);
   response.setHeader('Cache-Control', 'no-store');
+  if (atomics) {
+    response.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    response.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  }
   response.end(asset.data);
 });
 await new Promise((done) => server.listen(0, '127.0.0.1', done));
 const temporary = await mkdtemp(resolve(tmpdir(), 'gcc-wasi-wabt-browser-'));
-const report = { kind: 'gcc-wasi-wabt-chromium-target-features-qualification', status: 'running', execution: 'chromium-module-worker',
-  assemblerSource: browserReceipt.source, cases: [] };
+const report = { kind: atomics ? 'gcc-wasi-wabt-chromium-atomics-qualification' : 'gcc-wasi-wabt-chromium-target-features-qualification', status: 'running', execution: 'chromium-module-worker',
+  assemblerSource: browserReceipt.source, browserExecutable: { path: chromiumExecutable, ...chromiumIdentity },
+  playwrightEntry: { path: playwrightEntry, ...inputs.get(playwrightEntry) }, cases: [] };
 let browser;
 try {
-  browser = await chromium.launch({ headless: true,
-    ...(process.env.GCC_WASI_CHROMIUM ? { executablePath: process.env.GCC_WASI_CHROMIUM } : {}) });
+  browser = await chromium.launch({ headless: true, executablePath: chromiumExecutable });
   report.browser = await browser.version();
   const page = await browser.newPage();
   // Private loopback test server; no application origin, WAF or credentials.
@@ -109,16 +123,16 @@ try {
   const object = await readFile(output);
   assert.deepEqual(Buffer.from(result.bytes), object);
   report.tableRelocation = { nativeObjectIdentical: true, ...identity(object) };
-  if (nativeProof) for (const fixture of watCases) for (const relocatable of [false, true]) {
+  if (nativeProof) for (const fixture of fixtures) for (const relocatable of [false, true]) {
     const id = `${fixture.id}-${relocatable ? 'object' : 'module'}`;
-    const nativeCase = nativeProof.watCases.find(entry => entry.id === id);
+    const nativeCase = (atomics ? nativeProof.cases : nativeProof.watCases).find(entry => entry.id === id);
     assert.equal(nativeCase.status, 'passed');
     assert.deepEqual(nativeCase.fixture, identity(Buffer.from(fixture.wat)));
     const result = await inWorker({ wat: fixture.wat, relocatable, flags: fixture.flags });
     assert.equal(result.error, undefined, `${id}: ${result.error}`);
     assert.equal(result.status, fixture.reject ? 1 : 0, `${id}: ${result.diagnostics.join('\n')}`);
     const entry = { id, status: 'passed', diagnostics: result.diagnostics };
-    if (fixture.reject) { assert.equal(result.bytes, null); assert.match(result.diagnostics.join('\n'), /target_features:/); }
+    if (fixture.reject) { assert.equal(result.bytes, null); assert.match(result.diagnostics.join('\n'), atomics ? fixture.reject : /target_features:/); }
     else {
       const bytes = Buffer.from(result.bytes), reference = await readInput(nativeCase.object.path);
       assert.deepEqual(bytes, reference, `${id}: native and Worker objects differ`);
@@ -129,7 +143,7 @@ try {
       if (nativeCase.linked) assert.deepEqual(identity(program), { bytes: nativeCase.linked.bytes, sha256: nativeCase.linked.sha256 });
       const execution = await inWorker({ program: [...program] });
       assert.equal(execution.error, undefined, `${id}: ${execution.error}`);
-      assert.equal(execution.valid, true); assert.equal(execution.result, fixture.result);
+      assert.equal(execution.valid, true); assert.equal(execution.result, atomics ? 42 : fixture.result);
       entry.execution = execution; entry.program = identity(program);
       if (nativeCase.linkerLimitation) entry.linkerLimitation = nativeCase.linkerLimitation;
     }

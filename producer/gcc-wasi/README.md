@@ -18,6 +18,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [SIMD saturating arithmetic](SIMD-SATURATING.md),
 [SIMD conversions](SIMD-CONVERSIONS.md),
 [explicit relaxed SIMD](RELAXED-SIMD.md),
+[native atomics, GNU libatomic and shared entries](ATOMICS.md),
 [lane-wise vector shifts and their scalar fallback](SIMD-LANE-SHIFTS.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
 [strong function and data aliases](SYMBOL-ALIASES.md),
@@ -48,8 +49,8 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0022`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4 and explicit relaxed SIMD; SHA-256 pinned in `sources.lock.json` |
-| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md) and [DWARF transport](DWARF.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
+| Local GCC patches | `0001`–`0024`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4, explicit relaxed SIMD, native atomics and the GNU libatomic target port; SHA-256 pinned in `sources.lock.json` |
+| Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md), [DWARF transport](DWARF.md) and [atomic/bulk-memory feature](ATOMICS.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
 | Browser linker | Existing wasm-llvm WASI-host LLD `22.1.8`, `ca7933e47d3a3451d81e72ac174dcb5aa28b59d1`; archive and original producer receipt pinned |
@@ -333,6 +334,10 @@ node producer/gcc-wasi/test-coverage.mjs \
   --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --output "$GCC_WASI_WORK_DIR/coverage-qualification"
 
+# First build/reopen GNU libatomic and seal the native atomics proof as described
+# in ATOMICS.md. These variables identify those independently qualified outputs.
+export GCC_LIBATOMIC_WORK_DIR="$GCC_WASI_WORK_DIR/libatomic-current"
+export GCC_ATOMICS_QUALIFICATION="$GCC_WASI_WORK_DIR/atomics-qualification.json"
 node producer/gcc-wasi/package.mjs \
   --work "$GCC_WASI_WORK_DIR" --runtime "$GCC_WASI_WORK_DIR/runtime-c" \
   --simd-qualification "$GCC_WASI_WORK_DIR/simd-qualification/qualification.json" \
@@ -355,17 +360,21 @@ node producer/gcc-wasi/package.mjs \
   --coverage-qualification "$GCC_WASI_WORK_DIR/coverage-qualification/qualification.json" \
   --dwarf-qualification "$GCC_WASI_WORK_DIR/dwarf-qualification/qualification.json" \
   --libgcov "$GCC_LIBGCOV_WORK_DIR" \
+  --libatomic "$GCC_LIBATOMIC_WORK_DIR" \
+  --libatomic-qualification "$GCC_WASI_WORK_DIR/libatomic-qualification/qualification.json" \
+  --atomics-qualification "$GCC_ATOMICS_QUALIFICATION" \
   --native-gcov "$GCC_WASI_WORK_DIR/gcc-native/gcc/gcov" \
   --native-linker "$WASI_SDK_PATH/bin/wasm-ld" \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twenty-two-patch compiler, `--long-double-qualification`,
+For the current twenty-four-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
 `--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
 `--libgcov`, `--native-gcov`, `--simd-relaxed-qualification`,
-`--simd-relaxed-driver-qualification`, all five baseline SIMD
+`--simd-relaxed-driver-qualification`, `--libatomic`, `--libatomic-qualification`,
+`--atomics-qualification`, all five baseline SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -521,7 +530,12 @@ The separate `relaxedSimd: true` request requires SIMD128, a qualified capable
 bundle and an engine probe. Its 20 operations have the allowed result sets
 specified by WebAssembly; see [the relaxed profile](RELAXED-SIMD.md).
 RTTI requires an explicit SDK request and a bundle with qualified RTTI support.
-Exceptions, threads/TLS/atomics and shared/dynamic linking are unsupported.
+Atomics require explicit `atomics: true`, a capable qualified bundle and an engine
+probe. Naturally aligned 1/2/4/8-byte operations use native instructions; generic
+and 16-byte operations use the original GNU libatomic with target memory locks.
+A separate shared-entry runner supports fixed shared memory and private Worker
+stacks under the restrictions in [ATOMICS.md](ATOMICS.md). This does not provide
+pthreads, `std::thread`, TLS, exceptions or dynamic linking.
 Failed reference casts and null-polymorphic `typeid` remain exception-dependent
 boundaries; mixed GCC/Clang C++ support is limited to the qualified interfaces
 described in [RTTI.md](RTTI.md).
@@ -535,9 +549,9 @@ It embeds standard DWARF4 in WAT/object/executable output; other optimization
 levels are rejected by the SDK. See [DWARF.md](DWARF.md).
 x86 AVX2/FMA intrinsics and target pragmas belong to the unchanged
 x86 API. Unsupported target attributes/pragmas are GCC errors in this profile.
-The GNU C++ time-zone database, C++26 debugger functions and prebuilt `std`
-modules are omitted because they require unsupported atomic or signal
-interfaces. Their APIs have no substitute implementations. The runtime
+The default GNU C++ runtime still omits the time-zone database, C++26 debugger
+functions and prebuilt `std` modules; these require separate runtime qualification
+and packaging. Their APIs have no substitute implementations. The runtime
 qualification requires `std::chrono::get_tzdb`, `std::is_debugger_present` and
 `import std` to fail at linking or compilation. The SDK accepts source/header
 inputs through C++23; it does not accept precompiled modules.

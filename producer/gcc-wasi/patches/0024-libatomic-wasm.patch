@@ -1,0 +1,253 @@
+diff --git a/libatomic/configure.tgt b/libatomic/configure.tgt
+--- a/libatomic/configure.tgt
++++ b/libatomic/configure.tgt
+@@ -40,6 +40,10 @@
+   rs6000 | powerpc*)	ARCH=powerpc ;;
+   riscv*)		ARCH=riscv ;;
+   sh*)			ARCH=sh ;;
++  wasm32)
++	ARCH=wasm
++	XCFLAGS="${XCFLAGS} -matomics"
++	;;
+ 
+   aarch64*)
+ 	ARCH=aarch64
+@@ -152,6 +156,11 @@
+ tmake_file=
+ # Other system configury
+ case "${target}" in
++  wasm32-*-wasi*)
++	# Shared linear memory and native atomic instructions; no pthreads.
++	config_path="wasm"
++	;;
++
+   aarch64*-*-linux*)
+ 	# OS support for atomic primitives.
+ 	config_path="${config_path} linux/aarch64 posix"
+diff --git a/libatomic/config/wasm/host-config.h b/libatomic/config/wasm/host-config.h
+new file mode 100644
+--- /dev/null
++++ b/libatomic/config/wasm/host-config.h
+@@ -0,0 +1,63 @@
++/* Copyright (C) 2012-2026 Free Software Foundation, Inc.
++   Contributed by Richard Henderson <rth@redhat.com>.
++
++   This file is part of the GNU Atomic Library (libatomic).
++
++   Libatomic is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   Libatomic is distributed in the hope that it will be useful, but WITHOUT ANY
++   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++   more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++/* Native Wasm atomics implement every accepted order as sequentially
++   consistent.  The shared lock words therefore need no pthread runtime.  */
++#if !defined(__wasm_atomics__) || !defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
++# error "Wasm libatomic requires native 32-bit atomics (-matomics)"
++#endif
++
++/* Every locked sized operation uses the same complete range protocol as
++   generic operations.  This also keeps the 16-byte helper and generic
++   16-byte entry points coherent without nesting locks.  */
++#ifdef N
++static inline UWORD
++protect_start (void *ptr)
++{
++  libat_lock_n (ptr, N);
++  return 0;
++}
++
++static inline void
++protect_end (void *ptr, UWORD magic UNUSED)
++{
++  libat_unlock_n (ptr, N);
++}
++#define protect_start_end 1
++#endif
++
++static inline void __attribute__((always_inline, artificial))
++pre_seq_barrier (int model UNUSED)
++{
++  __atomic_thread_fence (__ATOMIC_SEQ_CST);
++}
++
++static inline void __attribute__((always_inline, artificial))
++post_seq_barrier (int model UNUSED)
++{
++  __atomic_thread_fence (__ATOMIC_SEQ_CST);
++}
++#define pre_post_seq_barrier 1
++
++#include_next <host-config.h>
+diff --git a/libatomic/config/wasm/lock.c b/libatomic/config/wasm/lock.c
+new file mode 100644
+--- /dev/null
++++ b/libatomic/config/wasm/lock.c
+@@ -0,0 +1,102 @@
++/* Copyright (C) 2012-2026 Free Software Foundation, Inc.
++   Contributed by Richard Henderson <rth@redhat.com>.
++
++   This file is part of the GNU Atomic Library (libatomic).
++
++   Libatomic is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   Libatomic is distributed in the hope that it will be useful, but WITHOUT ANY
++   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++   more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include "libatomic_i.h"
++
++/* One table in the linked module's linear-memory BSS, shared by all
++   instances importing that memory.  The embedding initializes data/BSS
++   exactly once before any worker enters the module; no worker-local
++   initializer may reset these words while another worker uses them.  */
++#define WATCH_SIZE 64
++#define NLOCKS 64
++
++struct lock
++{
++  U_4 value;
++  unsigned char padding[WATCH_SIZE - sizeof (U_4)];
++} __attribute__((aligned(WATCH_SIZE)));
++
++static struct lock locks[NLOCKS];
++_Static_assert (sizeof (U_4) == 4, "Wasm lock words must be 32 bits");
++_Static_assert (__atomic_always_lock_free (4, 0),
++                "Wasm lock primitives must not call libatomic recursively");
++
++/* Return a bounded number of consecutive hashed watch regions.  Clamp
++   before adding the partial first region, so a huge n cannot overflow.  */
++static inline size_t
++range_count (uintptr_t address, size_t n)
++{
++  if (n == 0)
++    return 0;
++  if (n >= NLOCKS * WATCH_SIZE)
++    return NLOCKS;
++  size_t count = (n + (address % WATCH_SIZE) + WATCH_SIZE - 1) / WATCH_SIZE;
++  return count < NLOCKS ? count : NLOCKS;
++}
++
++static inline bool
++covers_slot (size_t first, size_t count, size_t slot)
++{
++  return (slot + NLOCKS - first) % NLOCKS < count;
++}
++
++static inline void
++lock_slot (size_t slot)
++{
++  U_4 expected;
++  do
++    {
++      while (__atomic_load_n (&locks[slot].value, __ATOMIC_SEQ_CST) != 0)
++        ;
++      expected = 0;
++    }
++  while (!__atomic_compare_exchange_n (&locks[slot].value, &expected, 1,
++                                       false, __ATOMIC_SEQ_CST,
++                                       __ATOMIC_SEQ_CST));
++}
++
++void
++libat_lock_n (void *ptr, size_t n)
++{
++  uintptr_t address = (uintptr_t) ptr;
++  size_t first = (address / WATCH_SIZE) % NLOCKS;
++  size_t count = range_count (address, n);
++
++  /* A total order on unique slots avoids self-locking and ABBA deadlock,
++     including ranges whose hash wraps from the last slot back to zero.  */
++  for (size_t slot = 0; slot < NLOCKS; ++slot)
++    if (covers_slot (first, count, slot))
++      lock_slot (slot);
++}
++
++void
++libat_unlock_n (void *ptr, size_t n)
++{
++  uintptr_t address = (uintptr_t) ptr;
++  size_t first = (address / WATCH_SIZE) % NLOCKS;
++  size_t count = range_count (address, n);
++  for (size_t slot = NLOCKS; slot-- > 0; )
++    if (covers_slot (first, count, slot))
++      __atomic_store_n (&locks[slot].value, 0, __ATOMIC_SEQ_CST);
++}
+diff --git a/libatomic/config/wasm/glfree.c b/libatomic/config/wasm/glfree.c
+new file mode 100644
+--- /dev/null
++++ b/libatomic/config/wasm/glfree.c
+@@ -0,0 +1,47 @@
++/* Copyright (C) 2012-2026 Free Software Foundation, Inc.
++   Contributed by Richard Henderson <rth@redhat.com>.
++
++   This file is part of the GNU Atomic Library (libatomic).
++
++   Libatomic is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   Libatomic is distributed in the hope that it will be useful, but WITHOUT ANY
++   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++   FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++   more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#define LAT_GLFREE
++#include "libatomic_i.h"
++
++/* Conservative public policy: naturally aligned native widths only.
++   Generic fallback may use a larger native CAS for some other sizes, but
++   that optimization does not broaden the advertised lock-free contract.
++   In particular, no 16-byte operation is advertised as lock-free.  */
++bool
++libat_is_lock_free (size_t n, void *ptr)
++{
++  switch (n)
++    {
++    case 0: return true;
++    case 1: return __atomic_always_lock_free (1, 0);
++    case 2: return !((uintptr_t) ptr & 1) && __atomic_always_lock_free (2, 0);
++    case 4: return !((uintptr_t) ptr & 3) && __atomic_always_lock_free (4, 0);
++    case 8: return !((uintptr_t) ptr & 7) && __atomic_always_lock_free (8, 0);
++    default: return false;
++    }
++}
++
++EXPORT_ALIAS (is_lock_free);
++#undef LAT_GLFREE

@@ -96,7 +96,8 @@ def build(work, sdk, sysroot, output):
         report['libc'] = {name: freeze(library / name) for name in
                           ['crt1-command.o', 'libc.a', 'libm.a', builtins.name]}
         specs = driver / 'runtime.specs'
-        specs.write_text(f'''*startfile:
+        specs.write_text(f'''%rename cc1plus gcc_wasi_original_cc1plus
+*startfile:
 {library}/crt1-command.o
 
 *lib:
@@ -107,8 +108,6 @@ def build(work, sdk, sysroot, output):
 
 *link:
 %{{!o:-o a.out}} --fatal-warnings -L{library} -e _start
-
-*cc1plus:
 
 ''')
         for name, command in {

@@ -23,6 +23,9 @@ import { verifyRttiQualificationOptions, verifyRttiRuntimeProfile, reopenRttiQua
 import { verifyCoverageQualificationOptions, reopenLibgcovBuild, reopenCoverageQualification } from './coverage-qualification.mjs';
 import { wasiRunnerSource as coverageRunnerSource } from './coverage-fixtures.mjs';
 import { verifyDwarfQualificationOptions, reopenDwarfQualification } from './dwarf-qualification.mjs';
+import { reopenLibatomicBuild } from './libatomic-qualification.mjs';
+import { reopenLibatomicExecutionQualification } from './libatomic-execution-qualification.mjs';
+import { reopenNativeAtomicsQualification } from './atomics-qualification.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const json = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -64,6 +67,57 @@ export function verifyRuntimeLibraryIdentities(files, locked = {}) {
 		assert(file, `Locked runtime library missing: ${name}`);
 		assert.deepEqual(identity(file.bytes), expected, `Runtime library differs from its lock: ${name}`);
 	}
+}
+
+export function verifyLibatomicPackageOptions(patches, options) {
+	const required = patches.some(patch => patch.path === 'patches/0024-libatomic-wasm.patch');
+	if (!required && !options.libatomic && !options.libatomicQualification) return;
+	for (const field of ['libatomic', 'libatomicQualification', 'nativeLinker'])
+		assert(options[field], `GNU libatomic requires ${field}`);
+	assert(required, 'GNU libatomic requires the locked Wasm runtime port');
+}
+
+export function verifyAtomicsPackageOptions(patches, options) {
+	const required = patches.some(patch => patch.path === 'patches/0023-atomics.patch');
+	if (!required && !options.atomicsQualification) return;
+	assert(required, 'Atomics require the locked native backend');
+	for (const field of ['atomicsQualification', 'libatomic', 'libatomicQualification', 'nativeLinker'])
+		assert(options[field], `Atomics require ${field}`);
+	verifyLibatomicPackageOptions(patches, options);
+}
+
+export function qualifiedAtomicsManifestProfile(native, runtime) {
+	if (!native && !runtime) return { capabilities: {}, runtimeLibraries: [], limitations: [] };
+	assert.equal(native?.status, 'passed', 'Atomics require reopened native compiler evidence');
+	assert.equal(runtime?.build?.status, 'built-unverified', 'Atomics require the measured GNU runtime build');
+	assert.equal(runtime?.execution?.status, 'passed', 'Atomics require reopened GNU runtime execution evidence');
+	assert.deepEqual(native.gccSource, runtime.build.gccSource, 'Atomics compiler and runtime sources differ');
+	assert.deepEqual(native.gccSource, runtime.execution.gccSource, 'Atomics compiler and runtime execution sources differ');
+	const content = value => ({ bytes: value.bytes, sha256: value.sha256 });
+	assert.deepEqual(content(native.nativeBuild), content(runtime.build.nativeBuild), 'Atomics compiler and runtime builds differ');
+	assert.deepEqual(content(runtime.build.archive), content(runtime.execution.archive), 'Atomics runtime execution uses another archive');
+	assert.equal(runtime.runtimeLibrary, '/sysroot/lib/wasm32-wasi/libatomic.a');
+	return {
+		capabilities: { atomics: true, sharedMemory: true },
+		runtimeLibraries: [runtime.runtimeLibrary],
+		limitations: [
+			'Atomics require explicit opt-in. Naturally aligned 1/2/4/8-byte operations use native Wasm atomics; generic and 16-byte operations use GNU libatomic, with 16-byte operations not lock-free. Accepted memory orders are conservatively strengthened to sequential consistency.',
+			'The atomics compiler profile disables IPA-reference analysis to preserve synchronized plain-memory accesses. This restriction also applies to function-specific optimization attributes and pragmas.',
+			'Shared execution requires cross-origin isolation and the SDK shared-entry runner, fixed shared memory and private Worker stacks. Only freestanding C/C++ entries without dynamic constructors, TLS, external objects or WASI imports are admitted. pthreads and std::thread are unavailable.'
+		]
+	};
+}
+
+export function verifyLibatomicInstallation(sysroot, files, licenses, validated) {
+	const content = value => ({ bytes: value.bytes, sha256: value.sha256 });
+	assert.equal(validated.build.status, 'built-unverified');
+	assert.equal(validated.execution.status, 'passed');
+	assert.deepEqual(content(validated.build.archive), content(validated.execution.archive));
+	verifyInventory(files, [{ path: 'lib/wasm32-wasi/libatomic.a', ...content(validated.build.archive) }], 'GNU libatomic runtime');
+	for (const file of files) assert(!sysroot.some(existing => existing.path === file.path), `Duplicate runtime sysroot path: ${file.path}`);
+	assert.equal(files[0].bytes.subarray(0, 8).toString(), '!<arch>\n', 'GNU libatomic must be an actual static archive');
+	assert.deepEqual(Object.keys(validated.build.licenses).sort(), ['COPYING.RUNTIME', 'COPYING3']);
+	verifyInventory(licenses, Object.entries(validated.build.licenses).map(([name, record]) => ({ path: name, ...content(record) })), 'GNU libatomic full licenses');
 }
 
 export function checkWasm(bytes, label, executable = false) {
@@ -578,13 +632,16 @@ function verifyWideScalarQualification(report, expected, fixtures, kind, label) 
 	}
 }
 
-export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, simdRelaxedQualification, simdRelaxedDriverQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, nativeGcov, nativeLinker }) {
+export async function packageWasi({ work, runtime, output, libstdcxx, simdQualification, simdExtendedQualification, simdSaturatingQualification, simdConversionsQualification, simdHeaderQualification, simdRelaxedQualification, simdRelaxedDriverQualification, vectorAbiQualification, longDoubleQualification, int128Qualification, gnuFloat128Qualification, emptyAbiQualification, bitfieldQualification, anonymousBitfieldQualification, symbolAliasQualification, weakrefQualification, rttiQualification, coverageQualification, dwarfQualification, libgcov, libatomic, libatomicQualification, atomicsQualification, nativeGcov, nativeLinker }) {
 	work = await fs.realpath(work);
 	runtime = await fs.realpath(runtime);
 	if (libstdcxx) libstdcxx = await fs.realpath(libstdcxx);
 	if (libgcov) libgcov = await fs.realpath(libgcov);
+	if (libatomic) libatomic = await fs.realpath(libatomic);
 	const out = path.resolve(output);
-	const inputs = [work, runtime, libstdcxx, libgcov].filter(Boolean);
+	const inputs = [work, runtime, libstdcxx, libgcov, libatomic,
+		...(libatomicQualification ? [await fs.realpath(libatomicQualification)] : []),
+		...(atomicsQualification ? [await fs.realpath(atomicsQualification)] : [])].filter(Boolean);
 	// Existing parent realpaths also catch output aliases through a symlink.
 	await fs.mkdir(path.dirname(out), { recursive: true });
 	const finalOut = path.join(await fs.realpath(path.dirname(out)), path.basename(out));
@@ -592,6 +649,10 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	const lockBytes = await fs.readFile(path.join(here, 'sources.lock.json'));
 	const runtimeLockBytes = await fs.readFile(path.join(here, 'runtime.lock.json'));
 	const lock = JSON.parse(lockBytes), runtimeLock = JSON.parse(runtimeLockBytes);
+	verifyLibatomicPackageOptions(lock.gcc.patches || [], { libatomic, libatomicQualification, nativeLinker });
+	verifyAtomicsPackageOptions(lock.gcc.patches || [], { atomicsQualification, libatomic, libatomicQualification, nativeLinker });
+	const libatomicProof = libatomicQualification && await fs.readFile(libatomicQualification);
+	const atomicsProof = atomicsQualification && await fs.readFile(atomicsQualification);
 	const compilerRoot = path.join(work, 'browser-compiler');
 	const compilerReceipt = await readJson(path.join(compilerRoot, 'compiler-build.json'));
 	assert.equal(compilerReceipt.kind, 'gcc-wasi-browser-build');
@@ -971,6 +1032,65 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			assert(files.some((f) => f.path === required), `GNU libstdc++ missing ${required}`);
 		sysroot.push(...files);
 	}
+	// Admit the runtime and native-width compiler independently, then bind both
+	// to the same source and native compiler before advertising the profile.
+	let validatedLibatomic;
+	const libatomicProvenance = new Map(), libatomicLicenses = [];
+	if (libatomicProof) {
+		const sdk = path.resolve(path.dirname(nativeLinker), '..');
+		const buildBytes = await fs.readFile(path.join(libatomic, 'build.json'));
+		const context = { work, sdk, sysroot: path.join(runtime, 'sysroot'), libatomic,
+			gccSource: nativeReceipt.gccSource, sourceLockSha256: identity(lockBytes).sha256,
+			nativeBuild: { path: path.join(work, 'native-build.json'), ...identity(nativeReceiptBytes) } };
+		const build = await reopenLibatomicBuild(libatomic, context);
+		assert.deepEqual(identity(buildBytes), { bytes: build.build.bytes, sha256: build.build.sha256 }, 'GNU libatomic build proof changed during packaging');
+		const execution = await reopenLibatomicExecutionQualification(JSON.parse(libatomicProof), path.resolve(libatomicQualification),
+			{ ...context, archive: build.archive });
+		assert.deepEqual(identity(libatomicProof), { bytes: execution.qualification.bytes, sha256: execution.qualification.sha256 }, 'GNU libatomic execution proof changed during packaging');
+		validatedLibatomic = { build, execution, archive: build.archive,
+			runtimeLibrary: '/sysroot/lib/wasm32-wasi/libatomic.a' };
+		const files = await readNativeTree(path.join(libatomic, 'sysroot'));
+		const licenses = await readNativeTree(path.join(libatomic, 'licenses'));
+		verifyLibatomicInstallation(sysroot, files, licenses, validatedLibatomic);
+		sysroot.push(...files);
+		libatomicLicenses.push(...licenses.map(file => ({ path: `licenses/libatomic/${file.path}`, bytes: file.bytes })));
+		libatomicProvenance.set('libatomic-build.json', buildBytes);
+		libatomicProvenance.set('native-libatomic-qualification.json', libatomicProof);
+		libatomicProvenance.set('libatomic-validated-runtime.json', json(validatedLibatomic));
+		for (const [name, record] of [['libatomic-build-replay.json', build.replay], ['native-libatomic-replay.json', execution.replay]]) {
+			const bytes = await fs.readFile(record.path);
+			assert.deepEqual(identity(bytes), { bytes: record.bytes, sha256: record.sha256 }, `Changed ${name}`);
+			libatomicProvenance.set(name, bytes);
+		}
+		for (const name of ['build-libatomic.py', 'libatomic-fixtures.mjs', 'libatomic-shared-fixtures.mjs',
+			'test-libatomic.mjs', 'run-libatomic-shared.mjs', 'atomics-native-fixtures.mjs',
+			'libatomic-qualification.mjs', 'libatomic-execution-qualification.mjs'])
+			libatomicProvenance.set(name, await fs.readFile(path.join(here, name)));
+	}
+	let validatedAtomics;
+	const atomicsProvenance = new Map();
+	if (atomicsProof) {
+		assert(validatedLibatomic, 'Atomics require the qualified GNU runtime');
+		validatedAtomics = await reopenNativeAtomicsQualification(path.resolve(atomicsQualification), {
+			work, sdk: path.resolve(path.dirname(nativeLinker), '..'), gccSource: nativeReceipt.gccSource,
+			sourceLockSha256: identity(lockBytes).sha256, nativeBuild: identity(nativeReceiptBytes)
+		});
+		assert.deepEqual(identity(atomicsProof), { bytes: validatedAtomics.qualification.bytes, sha256: validatedAtomics.qualification.sha256 }, 'Native atomics proof changed during packaging');
+		atomicsProvenance.set('native-atomics-qualification.json', atomicsProof);
+		atomicsProvenance.set('native-atomics-validated.json', json(validatedAtomics));
+		const original = JSON.parse(atomicsProof);
+		const records = [['native-atomics-driver.json', original.driver], ['native-atomics-shared.json', original.shared],
+			['native-atomics-replay.json', validatedAtomics.replay]];
+		for (const [name, record] of records) {
+			const bytes = await fs.readFile(record.path);
+			assert.deepEqual(identity(bytes), { bytes: record.bytes, sha256: record.sha256 }, `Changed ${name}`);
+			atomicsProvenance.set(name, bytes);
+		}
+		for (const name of ['atomics-qualification.mjs', 'test-atomics-native.py', 'atomics-native-probe.c',
+			'test-atomics-shared-native.py', 'atomics-native-fixtures.mjs'])
+			atomicsProvenance.set(name, await fs.readFile(path.join(here, name)));
+	}
+	const atomicsProfile = qualifiedAtomicsManifestProfile(validatedAtomics, validatedLibatomic);
 	let libgcovBuildBytes, coverageAnalysisBytes;
 	if (coverageProof) {
 		assert(libgcov && nativeGcov && nativeLinker && libstdcxx, 'Coverage requires its runtime, analysis tool, linker and GNU runtime');
@@ -1210,8 +1330,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		sysroot: revision('wasi-libc', runtimeLock.wasiLibc), abi: 'wasm32-wasi-preview1', linkMode: 'static',
 		sysrootPath: '/sysroot', gccInstallation: `/sysroot/${gccDirectory}`, resourceDir: `/sysroot/${gccDirectory}/include`,
 		assets: Object.fromEntries(Object.entries(assetPaths).map(([key, name]) => [key, { path: name, ...identity(payloads.get(name)) }])),
-		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a'],
-		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof), ...(simdRelaxedProof ? { relaxedSimd: true } : {}) },
+		runtimeLibraries: ['/sysroot/lib/wasm32-wasi/libclang_rt.builtins-wasm32.a', ...atomicsProfile.runtimeLibraries],
+		capabilities: { c: true, cpp: true, libc: true, libm: true, libstdcxx: Boolean(libstdcxx), staticInitialization: true, ...(coverageProof ? { coverage: true } : {}), ...(dwarfProof ? { debug: true } : {}), longDouble: Boolean(longDoubleProof), int128: Boolean(int128Proof), exceptions: false, rtti: Boolean(rttiProof), threads: false, dynamicLinking: false, simd: Boolean(simdProof), ...(simdRelaxedProof ? { relaxedSimd: true } : {}), ...atomicsProfile.capabilities },
 		limitations: [
 			'Experimental, unmerged GCC 17 backend; not a released GCC target.',
 			...(longDoubleProof ? [] : ['long double is binary64 in this GCC port but binary128 in WASI libc; long-double library interfaces are unsupported.']),
@@ -1220,8 +1340,9 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 			'External objects require the SDK compatibility/profile receipts; general mixed-toolchain C++ interoperability is not qualified.',
 			...(rttiProof ? [
 				'C++ defaults to -fno-rtti; explicit RTTI opt-in uses -frtti with the qualified GNU runtime. Exceptions remain disabled, including failed reference casts and typeid through null polymorphic pointers.',
-				'C++ retains -fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.'
-			] : ['C++ uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics; single-threaded static linking only.']),
+				'Ordinary WASI C++ execution retains -fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics and single-threaded static linking.'
+			] : ['Ordinary WASI C++ execution uses -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics and single-threaded static linking.']),
+			...atomicsProfile.limitations,
 			'GNU libstdc++ timezone database, C++26 debugger functions and prebuilt std modules are unavailable; no fallback implementations are provided.',
 			...(dwarfProof ? ['Debug is explicit embedded DWARF32/DWARF4 at -O0. It uses actual Wasm local indices and initialized frame bases. Optimized register locations, split debug files, alternate debug formats and a general expression evaluator are outside this profile.'] : []),
 			...(coverageProof ? ['Coverage is explicit source-only single-counter GCC gcov instrumentation. Run covered executables with a writable /profile directory and analyze returned .gcno/.gcda files with the pinned matching GCC gcov. PGO, atomic counters, info-section streaming, manual gcov APIs and process PID semantics are unsupported.'] : []),
@@ -1245,6 +1366,8 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 	]);
 	if (stdReceipt) provenanceFiles.set('libstdcxx-build.json', json(stdReceipt));
 	if (libgcovBuildBytes) provenanceFiles.set('libgcov-build.json', libgcovBuildBytes);
+	for (const [name, bytes] of libatomicProvenance) provenanceFiles.set(name, bytes);
+	for (const [name, bytes] of atomicsProvenance) provenanceFiles.set(name, bytes);
 	if (dwarfProof) provenanceFiles.set('native-dwarf-qualification.json', dwarfProof);
 	if (coverageProof) {
 		provenanceFiles.set('native-coverage-qualification.json', coverageProof);
@@ -1343,7 +1466,7 @@ export async function packageWasi({ work, runtime, output, libstdcxx, simdQualif
 		gccSource: compilerReceipt.gccSource,
 		files: Object.fromEntries([...provenanceFiles].map(([name, bytes]) => [name, { path: `provenance/${name}`, ...identity(bytes) }]))
 	};
-	const licenseFiles = [...compilerFiles.filter((f) => f.path.startsWith('licenses/'))];
+	const licenseFiles = [...compilerFiles.filter((f) => f.path.startsWith('licenses/')), ...libatomicLicenses];
 	for (const f of await readNativeTree(path.join(here, 'licenses'))) licenseFiles.push({ path: `licenses/runtime/${f.path}`, bytes: f.bytes });
 	for (const name of (await fs.readdir(asRoot)).filter((name) => name.startsWith('LICENSE')))
 		licenseFiles.push({ path: `licenses/wabt/${name}`, bytes: await fs.readFile(path.join(asRoot, name)) });
@@ -1371,8 +1494,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const opts = {};
 		for (let i = 2; i < process.argv.length; i += 2) {
 			const key = process.argv[i].replace(/^--/, '');
-			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'simd-relaxed-qualification', 'simd-relaxed-driver-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --simd-relaxed-qualification FILE --simd-relaxed-driver-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
-			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'simd-relaxed-qualification': 'simdRelaxedQualification', 'simd-relaxed-driver-qualification': 'simdRelaxedDriverQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
+			assert(['work', 'runtime', 'output', 'libstdcxx', 'simd-qualification', 'simd-extended-qualification', 'simd-saturating-qualification', 'simd-conversions-qualification', 'simd-header-qualification', 'simd-relaxed-qualification', 'simd-relaxed-driver-qualification', 'vector-abi-qualification', 'long-double-qualification', 'int128-qualification', 'gnu-float128-qualification', 'empty-abi-qualification', 'bitfield-qualification', 'anonymous-bitfield-qualification', 'symbol-alias-qualification', 'weakref-qualification', 'rtti-qualification', 'coverage-qualification', 'dwarf-qualification', 'libgcov', 'libatomic', 'libatomic-qualification', 'atomics-qualification', 'native-gcov', 'native-linker'].includes(key) && process.argv[i + 1], 'Usage: package.mjs --work DIR --runtime DIR --output NEW_DIR [--libstdcxx DIR] [--libatomic DIR --libatomic-qualification FILE --atomics-qualification FILE] [--simd-qualification FILE --simd-extended-qualification FILE --simd-saturating-qualification FILE --simd-conversions-qualification FILE --simd-header-qualification FILE --simd-relaxed-qualification FILE --simd-relaxed-driver-qualification FILE --vector-abi-qualification FILE --long-double-qualification FILE --int128-qualification FILE --gnu-float128-qualification FILE --empty-abi-qualification FILE --bitfield-qualification FILE --anonymous-bitfield-qualification FILE --symbol-alias-qualification FILE --weakref-qualification FILE --rtti-qualification FILE --coverage-qualification FILE --dwarf-qualification FILE --libgcov DIR --native-gcov FILE --native-linker FILE]');
+			const field = { 'simd-qualification': 'simdQualification', 'simd-extended-qualification': 'simdExtendedQualification', 'simd-saturating-qualification': 'simdSaturatingQualification', 'simd-conversions-qualification': 'simdConversionsQualification', 'simd-header-qualification': 'simdHeaderQualification', 'simd-relaxed-qualification': 'simdRelaxedQualification', 'simd-relaxed-driver-qualification': 'simdRelaxedDriverQualification', 'vector-abi-qualification': 'vectorAbiQualification', 'long-double-qualification': 'longDoubleQualification', 'int128-qualification': 'int128Qualification', 'gnu-float128-qualification': 'gnuFloat128Qualification', 'empty-abi-qualification': 'emptyAbiQualification', 'bitfield-qualification': 'bitfieldQualification', 'anonymous-bitfield-qualification': 'anonymousBitfieldQualification', 'symbol-alias-qualification': 'symbolAliasQualification', 'weakref-qualification': 'weakrefQualification', 'rtti-qualification': 'rttiQualification', 'coverage-qualification': 'coverageQualification', 'dwarf-qualification': 'dwarfQualification', 'libatomic-qualification': 'libatomicQualification', 'atomics-qualification': 'atomicsQualification', 'native-gcov': 'nativeGcov', 'native-linker': 'nativeLinker' }[key] || key;
 			assert(!opts[field], `Duplicate option: ${key}`);
 			opts[field] = process.argv[i + 1];
 		}
