@@ -1,0 +1,673 @@
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index 6148e6309..26608f858 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -611,7 +611,7 @@ tic6x-*-*)
+ 	;;
+ wasm*-*-*)
+ 	cpu_type=wasm
+-	extra_headers="${extra_headers} wasm_simd128.h"
++	extra_headers="${extra_headers} wasm_simd128.h wasm_relaxed_simd.h"
+ 	target_has_targetm_common=no
+ 	extra_objs="wasm-cg.o wasm-asm.o wasm-passes.o"
+ 	;;
+diff --git a/gcc/config/wasm/relaxed-simd.md b/gcc/config/wasm/relaxed-simd.md
+new file mode 100644
+index 000000000..a36538691
+--- /dev/null
++++ b/gcc/config/wasm/relaxed-simd.md
+@@ -0,0 +1,216 @@
++;; Explicit WebAssembly relaxed SIMD operations, opcodes 0xfd 0x100-0x113.
++;; Copyright (C) 2026 wasm-llvm contributors.
++;; This file is part of GCC and is distributed under the GNU General Public
++;; License, version 3 or later.  See COPYING3 for details.
++;;
++;; Each operation is distinct from baseline vector arithmetic.  UNSPEC prevents
++;; ordinary optimization/fast-math and vectorization from introducing relaxed
++;; rounding, NaN, conversion, lane-selection or integer-overflow semantics.
++
++(define_c_enum "unspec" [
++  UNSPEC_RELAXED_SWIZZLE_I8X16
++  UNSPEC_RELAXED_TRUNC_S_I32X4_F32X4
++  UNSPEC_RELAXED_TRUNC_U_I32X4_F32X4
++  UNSPEC_RELAXED_TRUNC_S_ZERO_I32X4_F64X2
++  UNSPEC_RELAXED_TRUNC_U_ZERO_I32X4_F64X2
++  UNSPEC_RELAXED_MADD_F32X4
++  UNSPEC_RELAXED_NMADD_F32X4
++  UNSPEC_RELAXED_MADD_F64X2
++  UNSPEC_RELAXED_NMADD_F64X2
++  UNSPEC_RELAXED_LANESELECT_I8X16
++  UNSPEC_RELAXED_LANESELECT_I16X8
++  UNSPEC_RELAXED_LANESELECT_I32X4
++  UNSPEC_RELAXED_LANESELECT_I64X2
++  UNSPEC_RELAXED_MIN_F32X4
++  UNSPEC_RELAXED_MAX_F32X4
++  UNSPEC_RELAXED_MIN_F64X2
++  UNSPEC_RELAXED_MAX_F64X2
++  UNSPEC_RELAXED_Q15MULR_S_I16X8
++  UNSPEC_RELAXED_DOT_I8X16_I7X16_S_I16X8
++  UNSPEC_RELAXED_DOT_I8X16_I7X16_ADD_S_I32X4
++])
++
++(define_insn "wasm_relaxed_swizzle_i8x16"
++  [(set (match_operand:V16QI 0 "wasm_register_operand")
++        (unspec:V16QI
++          [(match_operand:V16QI 1 "wasm_register_operand")
++           (match_operand:V16QI 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_SWIZZLE_I8X16))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i8x16.relaxed_swizzle %i1 %i2))")
++
++(define_insn "wasm_relaxed_trunc_s_i32x4_f32x4"
++  [(set (match_operand:V4SI 0 "wasm_register_operand")
++        (unspec:V4SI
++          [(match_operand:V4SF 1 "wasm_register_operand")]
++          UNSPEC_RELAXED_TRUNC_S_I32X4_F32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i32x4.relaxed_trunc_f32x4_s %i1))")
++
++(define_insn "wasm_relaxed_trunc_u_i32x4_f32x4"
++  [(set (match_operand:V4SI 0 "wasm_register_operand")
++        (unspec:V4SI
++          [(match_operand:V4SF 1 "wasm_register_operand")]
++          UNSPEC_RELAXED_TRUNC_U_I32X4_F32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i32x4.relaxed_trunc_f32x4_u %i1))")
++
++(define_insn "wasm_relaxed_trunc_s_zero_i32x4_f64x2"
++  [(set (match_operand:V4SI 0 "wasm_register_operand")
++        (unspec:V4SI
++          [(match_operand:V2DF 1 "wasm_register_operand")]
++          UNSPEC_RELAXED_TRUNC_S_ZERO_I32X4_F64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i32x4.relaxed_trunc_f64x2_s_zero %i1))")
++
++(define_insn "wasm_relaxed_trunc_u_zero_i32x4_f64x2"
++  [(set (match_operand:V4SI 0 "wasm_register_operand")
++        (unspec:V4SI
++          [(match_operand:V2DF 1 "wasm_register_operand")]
++          UNSPEC_RELAXED_TRUNC_U_ZERO_I32X4_F64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i32x4.relaxed_trunc_f64x2_u_zero %i1))")
++
++(define_insn "wasm_relaxed_madd_f32x4"
++  [(set (match_operand:V4SF 0 "wasm_register_operand")
++        (unspec:V4SF
++          [(match_operand:V4SF 1 "wasm_register_operand")
++           (match_operand:V4SF 2 "wasm_register_operand")
++           (match_operand:V4SF 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_MADD_F32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f32x4.relaxed_madd %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_nmadd_f32x4"
++  [(set (match_operand:V4SF 0 "wasm_register_operand")
++        (unspec:V4SF
++          [(match_operand:V4SF 1 "wasm_register_operand")
++           (match_operand:V4SF 2 "wasm_register_operand")
++           (match_operand:V4SF 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_NMADD_F32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f32x4.relaxed_nmadd %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_madd_f64x2"
++  [(set (match_operand:V2DF 0 "wasm_register_operand")
++        (unspec:V2DF
++          [(match_operand:V2DF 1 "wasm_register_operand")
++           (match_operand:V2DF 2 "wasm_register_operand")
++           (match_operand:V2DF 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_MADD_F64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f64x2.relaxed_madd %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_nmadd_f64x2"
++  [(set (match_operand:V2DF 0 "wasm_register_operand")
++        (unspec:V2DF
++          [(match_operand:V2DF 1 "wasm_register_operand")
++           (match_operand:V2DF 2 "wasm_register_operand")
++           (match_operand:V2DF 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_NMADD_F64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f64x2.relaxed_nmadd %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_laneselect_i8x16"
++  [(set (match_operand:V16QI 0 "wasm_register_operand")
++        (unspec:V16QI
++          [(match_operand:V16QI 1 "wasm_register_operand")
++           (match_operand:V16QI 2 "wasm_register_operand")
++           (match_operand:V16QI 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_LANESELECT_I8X16))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i8x16.relaxed_laneselect %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_laneselect_i16x8"
++  [(set (match_operand:V8HI 0 "wasm_register_operand")
++        (unspec:V8HI
++          [(match_operand:V8HI 1 "wasm_register_operand")
++           (match_operand:V8HI 2 "wasm_register_operand")
++           (match_operand:V8HI 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_LANESELECT_I16X8))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i16x8.relaxed_laneselect %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_laneselect_i32x4"
++  [(set (match_operand:V4SI 0 "wasm_register_operand")
++        (unspec:V4SI
++          [(match_operand:V4SI 1 "wasm_register_operand")
++           (match_operand:V4SI 2 "wasm_register_operand")
++           (match_operand:V4SI 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_LANESELECT_I32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i32x4.relaxed_laneselect %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_laneselect_i64x2"
++  [(set (match_operand:V2DI 0 "wasm_register_operand")
++        (unspec:V2DI
++          [(match_operand:V2DI 1 "wasm_register_operand")
++           (match_operand:V2DI 2 "wasm_register_operand")
++           (match_operand:V2DI 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_LANESELECT_I64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i64x2.relaxed_laneselect %i1 %i2 %i3))")
++
++(define_insn "wasm_relaxed_min_f32x4"
++  [(set (match_operand:V4SF 0 "wasm_register_operand")
++        (unspec:V4SF
++          [(match_operand:V4SF 1 "wasm_register_operand")
++           (match_operand:V4SF 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_MIN_F32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f32x4.relaxed_min %i1 %i2))")
++
++(define_insn "wasm_relaxed_max_f32x4"
++  [(set (match_operand:V4SF 0 "wasm_register_operand")
++        (unspec:V4SF
++          [(match_operand:V4SF 1 "wasm_register_operand")
++           (match_operand:V4SF 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_MAX_F32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f32x4.relaxed_max %i1 %i2))")
++
++(define_insn "wasm_relaxed_min_f64x2"
++  [(set (match_operand:V2DF 0 "wasm_register_operand")
++        (unspec:V2DF
++          [(match_operand:V2DF 1 "wasm_register_operand")
++           (match_operand:V2DF 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_MIN_F64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f64x2.relaxed_min %i1 %i2))")
++
++(define_insn "wasm_relaxed_max_f64x2"
++  [(set (match_operand:V2DF 0 "wasm_register_operand")
++        (unspec:V2DF
++          [(match_operand:V2DF 1 "wasm_register_operand")
++           (match_operand:V2DF 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_MAX_F64X2))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (f64x2.relaxed_max %i1 %i2))")
++
++(define_insn "wasm_relaxed_q15mulr_s_i16x8"
++  [(set (match_operand:V8HI 0 "wasm_register_operand")
++        (unspec:V8HI
++          [(match_operand:V8HI 1 "wasm_register_operand")
++           (match_operand:V8HI 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_Q15MULR_S_I16X8))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i16x8.relaxed_q15mulr_s %i1 %i2))")
++
++(define_insn "wasm_relaxed_dot_i8x16_i7x16_s_i16x8"
++  [(set (match_operand:V8HI 0 "wasm_register_operand")
++        (unspec:V8HI
++          [(match_operand:V16QI 1 "wasm_register_operand")
++           (match_operand:V16QI 2 "wasm_register_operand")]
++          UNSPEC_RELAXED_DOT_I8X16_I7X16_S_I16X8))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i16x8.relaxed_dot_i8x16_i7x16_s %i1 %i2))")
++
++(define_insn "wasm_relaxed_dot_i8x16_i7x16_add_s_i32x4"
++  [(set (match_operand:V4SI 0 "wasm_register_operand")
++        (unspec:V4SI
++          [(match_operand:V16QI 1 "wasm_register_operand")
++           (match_operand:V16QI 2 "wasm_register_operand")
++           (match_operand:V4SI 3 "wasm_register_operand")]
++          UNSPEC_RELAXED_DOT_I8X16_I7X16_ADD_S_I32X4))]
++  "TARGET_SIMD128 && TARGET_RELAXED_SIMD"
++  "(%o0 (i32x4.relaxed_dot_i8x16_i7x16_add_s %i1 %i2 %i3))")
+diff --git a/gcc/config/wasm/wasm.cc b/gcc/config/wasm/wasm.cc
+index 84afde009..c8a47ad1e 100644
+--- a/gcc/config/wasm/wasm.cc
++++ b/gcc/config/wasm/wasm.cc
+@@ -100,6 +100,27 @@ enum wasm_builtin_code
+   WASM_BUILTIN_REPLACE_LANE_U64X2,
+   WASM_BUILTIN_REPLACE_LANE_F32X4,
+   WASM_BUILTIN_REPLACE_LANE_F64X2,
++  WASM_BUILTIN_LANE_MAX,
++  WASM_BUILTIN_RELAXED_SWIZZLE_I8X16 = WASM_BUILTIN_LANE_MAX,
++  WASM_BUILTIN_RELAXED_TRUNC_S_I32X4_F32X4,
++  WASM_BUILTIN_RELAXED_TRUNC_U_I32X4_F32X4,
++  WASM_BUILTIN_RELAXED_TRUNC_S_ZERO_I32X4_F64X2,
++  WASM_BUILTIN_RELAXED_TRUNC_U_ZERO_I32X4_F64X2,
++  WASM_BUILTIN_RELAXED_MADD_F32X4,
++  WASM_BUILTIN_RELAXED_NMADD_F32X4,
++  WASM_BUILTIN_RELAXED_MADD_F64X2,
++  WASM_BUILTIN_RELAXED_NMADD_F64X2,
++  WASM_BUILTIN_RELAXED_LANESELECT_I8X16,
++  WASM_BUILTIN_RELAXED_LANESELECT_I16X8,
++  WASM_BUILTIN_RELAXED_LANESELECT_I32X4,
++  WASM_BUILTIN_RELAXED_LANESELECT_I64X2,
++  WASM_BUILTIN_RELAXED_MIN_F32X4,
++  WASM_BUILTIN_RELAXED_MAX_F32X4,
++  WASM_BUILTIN_RELAXED_MIN_F64X2,
++  WASM_BUILTIN_RELAXED_MAX_F64X2,
++  WASM_BUILTIN_RELAXED_Q15MULR_S_I16X8,
++  WASM_BUILTIN_RELAXED_DOT_I8X16_I7X16_S_I16X8,
++  WASM_BUILTIN_RELAXED_DOT_I8X16_I7X16_ADD_S_I32X4,
+   WASM_BUILTIN_MAX
+ };
+ 
+@@ -248,6 +269,83 @@ static const wasm_lane_builtin_description wasm_lane_builtins[] =
+     CODE_FOR_vec_setv2df }
+ };
+ 
++/* Relaxed operations have an explicit target builtin and UNSPEC pattern.
++   Do not give them ordinary arithmetic optabs: scalar or baseline SIMD code,
++   including -ffast-math, must never acquire relaxed instructions implicitly.
++   The names and exact vector types match LLVM 22.1.0's WebAssembly builtins.  */
++struct wasm_relaxed_builtin_description
++{
++  const char *name;
++  machine_mode result_mode;
++  machine_mode operand_modes[3];
++  unsigned arity;
++  bool unsigned_result;
++  insn_code instruction;
++};
++static const wasm_relaxed_builtin_description wasm_relaxed_builtins[] =
++{
++  { "__builtin_wasm_relaxed_swizzle_i8x16",
++    V16QImode, { V16QImode, V16QImode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_swizzle_i8x16 },
++  { "__builtin_wasm_relaxed_trunc_s_i32x4_f32x4",
++    V4SImode, { V4SFmode, VOIDmode, VOIDmode },
++    1, false, CODE_FOR_wasm_relaxed_trunc_s_i32x4_f32x4 },
++  { "__builtin_wasm_relaxed_trunc_u_i32x4_f32x4",
++    V4SImode, { V4SFmode, VOIDmode, VOIDmode },
++    1, true, CODE_FOR_wasm_relaxed_trunc_u_i32x4_f32x4 },
++  { "__builtin_wasm_relaxed_trunc_s_zero_i32x4_f64x2",
++    V4SImode, { V2DFmode, VOIDmode, VOIDmode },
++    1, false, CODE_FOR_wasm_relaxed_trunc_s_zero_i32x4_f64x2 },
++  { "__builtin_wasm_relaxed_trunc_u_zero_i32x4_f64x2",
++    V4SImode, { V2DFmode, VOIDmode, VOIDmode },
++    1, true, CODE_FOR_wasm_relaxed_trunc_u_zero_i32x4_f64x2 },
++  { "__builtin_wasm_relaxed_madd_f32x4",
++    V4SFmode, { V4SFmode, V4SFmode, V4SFmode },
++    3, false, CODE_FOR_wasm_relaxed_madd_f32x4 },
++  { "__builtin_wasm_relaxed_nmadd_f32x4",
++    V4SFmode, { V4SFmode, V4SFmode, V4SFmode },
++    3, false, CODE_FOR_wasm_relaxed_nmadd_f32x4 },
++  { "__builtin_wasm_relaxed_madd_f64x2",
++    V2DFmode, { V2DFmode, V2DFmode, V2DFmode },
++    3, false, CODE_FOR_wasm_relaxed_madd_f64x2 },
++  { "__builtin_wasm_relaxed_nmadd_f64x2",
++    V2DFmode, { V2DFmode, V2DFmode, V2DFmode },
++    3, false, CODE_FOR_wasm_relaxed_nmadd_f64x2 },
++  { "__builtin_wasm_relaxed_laneselect_i8x16",
++    V16QImode, { V16QImode, V16QImode, V16QImode },
++    3, false, CODE_FOR_wasm_relaxed_laneselect_i8x16 },
++  { "__builtin_wasm_relaxed_laneselect_i16x8",
++    V8HImode, { V8HImode, V8HImode, V8HImode },
++    3, false, CODE_FOR_wasm_relaxed_laneselect_i16x8 },
++  { "__builtin_wasm_relaxed_laneselect_i32x4",
++    V4SImode, { V4SImode, V4SImode, V4SImode },
++    3, false, CODE_FOR_wasm_relaxed_laneselect_i32x4 },
++  { "__builtin_wasm_relaxed_laneselect_i64x2",
++    V2DImode, { V2DImode, V2DImode, V2DImode },
++    3, false, CODE_FOR_wasm_relaxed_laneselect_i64x2 },
++  { "__builtin_wasm_relaxed_min_f32x4",
++    V4SFmode, { V4SFmode, V4SFmode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_min_f32x4 },
++  { "__builtin_wasm_relaxed_max_f32x4",
++    V4SFmode, { V4SFmode, V4SFmode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_max_f32x4 },
++  { "__builtin_wasm_relaxed_min_f64x2",
++    V2DFmode, { V2DFmode, V2DFmode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_min_f64x2 },
++  { "__builtin_wasm_relaxed_max_f64x2",
++    V2DFmode, { V2DFmode, V2DFmode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_max_f64x2 },
++  { "__builtin_wasm_relaxed_q15mulr_s_i16x8",
++    V8HImode, { V8HImode, V8HImode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_q15mulr_s_i16x8 },
++  { "__builtin_wasm_relaxed_dot_i8x16_i7x16_s_i16x8",
++    V8HImode, { V16QImode, V16QImode, VOIDmode },
++    2, false, CODE_FOR_wasm_relaxed_dot_i8x16_i7x16_s_i16x8 },
++  { "__builtin_wasm_relaxed_dot_i8x16_i7x16_add_s_i32x4",
++    V4SImode, { V16QImode, V16QImode, V4SImode },
++    3, false, CODE_FOR_wasm_relaxed_dot_i8x16_i7x16_add_s_i32x4 }
++};
++
+ static GTY(()) tree wasm_builtin_decls[WASM_BUILTIN_MAX];
+ 
+ static tree
+@@ -324,7 +422,7 @@ wasm_init_builtins (void)
+       wasm_builtin_decls[i] = decl;
+     }
+   static_assert (ARRAY_SIZE (wasm_lane_builtins)
+-                 == WASM_BUILTIN_MAX - WASM_BUILTIN_VECTOR_MAX);
++                 == WASM_BUILTIN_LANE_MAX - WASM_BUILTIN_VECTOR_MAX);
+   for (unsigned i = 0; i < ARRAY_SIZE (wasm_lane_builtins); ++i)
+     {
+       const wasm_lane_builtin_description &d = wasm_lane_builtins[i];
+@@ -351,6 +449,23 @@ wasm_init_builtins (void)
+       TREE_NOTHROW (decl) = 1;
+       wasm_builtin_decls[code] = decl;
+     }
++  static_assert (ARRAY_SIZE (wasm_relaxed_builtins)
++                 == WASM_BUILTIN_MAX - WASM_BUILTIN_LANE_MAX);
++  for (unsigned i = 0; i < ARRAY_SIZE (wasm_relaxed_builtins); ++i)
++    {
++      const wasm_relaxed_builtin_description &d = wasm_relaxed_builtins[i];
++      tree result = wasm_builtin_vector_type (d.result_mode, d.unsigned_result);
++      tree arguments[3];
++      for (unsigned j = 0; j < d.arity; ++j)
++        arguments[j] = wasm_builtin_vector_type (d.operand_modes[j], false);
++      tree type = build_function_type_array (result, d.arity, arguments);
++      unsigned code = WASM_BUILTIN_LANE_MAX + i;
++      tree decl = add_builtin_function (d.name, type, code, BUILT_IN_MD,
++                                        NULL, NULL_TREE);
++      TREE_READONLY (decl) = 1;
++      TREE_NOTHROW (decl) = 1;
++      wasm_builtin_decls[code] = decl;
++    }
+ }
+ #define TARGET_INIT_BUILTINS wasm_init_builtins
+ 
+@@ -438,6 +553,26 @@ wasm_expand_lane_builtin (tree exp, rtx target, unsigned code)
+   return operands[0].value;
+ }
+ 
++static rtx
++wasm_expand_relaxed_builtin (tree exp, rtx target, unsigned code)
++{
++  const wasm_relaxed_builtin_description &d = wasm_relaxed_builtins[code];
++  if (!TARGET_SIMD128 || !TARGET_RELAXED_SIMD)
++    {
++      error_at (EXPR_LOCATION (exp),
++                "%qs requires %<-msimd128%> and %<-mrelaxed-simd%>", d.name);
++      return CONST0_RTX (d.result_mode);
++    }
++  expand_operand operands[4];
++  create_output_operand (&operands[0], target, d.result_mode);
++  for (unsigned i = 0; i < d.arity; ++i)
++    create_input_operand (&operands[i + 1],
++                          expand_normal (CALL_EXPR_ARG (exp, i)),
++                          d.operand_modes[i]);
++  expand_insn (d.instruction, d.arity + 1, operands);
++  return operands[0].value;
++}
++
+ static rtx
+ wasm_expand_builtin (tree exp, rtx target, rtx ARG_UNUSED (subtarget),
+ 		     machine_mode ARG_UNUSED (mode), int ARG_UNUSED (ignore))
+@@ -445,6 +580,9 @@ wasm_expand_builtin (tree exp, rtx target, rtx ARG_UNUSED (subtarget),
+   tree decl = get_callee_fndecl (exp);
+   unsigned code = DECL_MD_FUNCTION_CODE (decl);
+   gcc_assert (code < WASM_BUILTIN_MAX);
++  if (code >= WASM_BUILTIN_LANE_MAX)
++    return wasm_expand_relaxed_builtin (exp, target,
++                                        code - WASM_BUILTIN_LANE_MAX);
+   if (code >= WASM_BUILTIN_VECTOR_MAX)
+     return wasm_expand_lane_builtin (exp, target,
+                                      code - WASM_BUILTIN_VECTOR_MAX);
+@@ -495,6 +633,9 @@ wasm_option_override (void)
+   flag_pcc_struct_return = 0;
+   init_machine_status = wasm_init_machine_status;
+ 
++  if (TARGET_RELAXED_SIMD && !TARGET_SIMD128)
++    error ("%<-mrelaxed-simd%> requires %<-msimd128%>");
++
+   /* Preserve the existing generic section/linkage policy for release code.
+      DWARF alone needs logical named sections for independent code ranges
+      and buffered debug payloads; it does not enable COMDAT-group support.  */
+diff --git a/gcc/config/wasm/wasm.h b/gcc/config/wasm/wasm.h
+index 370098dcd..a9811c262 100644
+--- a/gcc/config/wasm/wasm.h
++++ b/gcc/config/wasm/wasm.h
+@@ -35,7 +35,7 @@
+ /* End debug.  */
+ 
+ #define CC1PLUS_SPEC "-stdlib=libc++"
+-#define ASM_SPEC "-r --enable-annotations %{v:-v} %{Wa,*:%*}"
++#define ASM_SPEC "-r --enable-annotations %{mrelaxed-simd:--enable-relaxed-simd} %{v:-v} %{Wa,*:%*}"
+ #define STANDARD_STARTFILE_PREFIX_1 "/lib/wasm32-wasi/"
+ #define STARTFILE_SPEC "%R" STANDARD_STARTFILE_PREFIX_1 "crt1%O%s"
+ #define LIB_SPEC "%{!shared:%{!p:%{!pg:-lc}}%{p:-lc_p}%{pg:-lc_p}}"
+@@ -53,6 +53,8 @@
+       cpp_define (parse_in, "__SIZEOF_FLOAT128__=16"); \
+       if (TARGET_SIMD128)                  \
+         cpp_define (parse_in, "__wasm_simd128__"); \
++      if (TARGET_RELAXED_SIMD && TARGET_SIMD128) \
++        cpp_define (parse_in, "__wasm_relaxed_simd__"); \
+     }					  \
+   while (0)
+ 
+diff --git a/gcc/config/wasm/wasm.md b/gcc/config/wasm/wasm.md
+index 2a3a43895..4b8303c9e 100644
+--- a/gcc/config/wasm/wasm.md
++++ b/gcc/config/wasm/wasm.md
+@@ -21,6 +21,7 @@
+ (include "attrs.md")
+ (include "constraints.md")
+ (include "simd.md")
++(include "relaxed-simd.md")
+ (include "tf.md")
+ 
+ (define_insn "nop"
+diff --git a/gcc/config/wasm/wasm.opt b/gcc/config/wasm/wasm.opt
+index aa44b974f..4d6982453 100644
+--- a/gcc/config/wasm/wasm.opt
++++ b/gcc/config/wasm/wasm.opt
+@@ -5,3 +5,7 @@
+ msimd128
+ Target Mask(SIMD128)
+ Enable WebAssembly 128-bit SIMD instructions.
++
++mrelaxed-simd
++Target Mask(RELAXED_SIMD)
++Enable explicit WebAssembly relaxed SIMD builtins; requires -msimd128.
+diff --git a/gcc/config/wasm/wasm_relaxed_simd.h b/gcc/config/wasm/wasm_relaxed_simd.h
+new file mode 100644
+index 000000000..4a31c6fba
+--- /dev/null
++++ b/gcc/config/wasm/wasm_relaxed_simd.h
+@@ -0,0 +1,190 @@
++/* WebAssembly relaxed SIMD intrinsics.
++   Copyright (C) 2026 wasm-llvm contributors.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it under
++   the terms of the GNU General Public License as published by the Free
++   Software Foundation; either version 3, or (at your option) any later
++   version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT ANY
++   WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional permissions
++   described in the GCC Runtime Library Exception, version 3.1, as
++   published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.
++
++   SPDX-License-Identifier: GPL-3.0-or-later WITH GCC-exception-3.1
++
++   Independent GCC implementation of the twenty standardized relaxed SIMD
++   operations.  Public API names, types and semantics follow LLVM's
++   wasm_simd128.h at 4434dabb69916856b824f68a64b029c67175e532
++   (Apache-2.0 WITH LLVM-exception).  This is not the complete LLVM header.  */
++
++#ifndef _GCC_WASM_RELAXED_SIMD_H
++#define _GCC_WASM_RELAXED_SIMD_H
++
++#if !defined (__wasm_simd128__) || !defined (__wasm_relaxed_simd__)
++#error "wasm_relaxed_simd.h requires -msimd128 and -mrelaxed-simd"
++#else
++
++#include <wasm_simd128.h>
++
++#define __WASM_RELAXED_INLINE \
++  static __inline__ __attribute__ ((__always_inline__, __artificial__))
++
++/* Results follow the WebAssembly relaxed operation's allowed-value sets.
++   These functions do not promise the deterministic baseline SIMD result.  */
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i8x16_relaxed_swizzle (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_swizzle_i8x16
++    ((__wasm_i8x16) __a, (__wasm_i8x16) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i32x4_relaxed_trunc_f32x4 (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_relaxed_trunc_s_i32x4_f32x4
++    ((__wasm_f32x4) __a);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_u32x4_relaxed_trunc_f32x4 (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_relaxed_trunc_u_i32x4_f32x4
++    ((__wasm_f32x4) __a);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i32x4_relaxed_trunc_f64x2_zero (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_relaxed_trunc_s_zero_i32x4_f64x2
++    ((__wasm_f64x2) __a);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_u32x4_relaxed_trunc_f64x2_zero (v128_t __a)
++{
++  return (v128_t) __builtin_wasm_relaxed_trunc_u_zero_i32x4_f64x2
++    ((__wasm_f64x2) __a);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f32x4_relaxed_madd (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_madd_f32x4
++    ((__wasm_f32x4) __a, (__wasm_f32x4) __b, (__wasm_f32x4) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f32x4_relaxed_nmadd (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_nmadd_f32x4
++    ((__wasm_f32x4) __a, (__wasm_f32x4) __b, (__wasm_f32x4) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f64x2_relaxed_madd (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_madd_f64x2
++    ((__wasm_f64x2) __a, (__wasm_f64x2) __b, (__wasm_f64x2) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f64x2_relaxed_nmadd (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_nmadd_f64x2
++    ((__wasm_f64x2) __a, (__wasm_f64x2) __b, (__wasm_f64x2) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i8x16_relaxed_laneselect (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_laneselect_i8x16
++    ((__wasm_i8x16) __a, (__wasm_i8x16) __b, (__wasm_i8x16) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i16x8_relaxed_laneselect (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_laneselect_i16x8
++    ((__wasm_i16x8) __a, (__wasm_i16x8) __b, (__wasm_i16x8) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i32x4_relaxed_laneselect (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_laneselect_i32x4
++    ((__wasm_i32x4) __a, (__wasm_i32x4) __b, (__wasm_i32x4) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i64x2_relaxed_laneselect (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_laneselect_i64x2
++    ((__wasm_i64x2) __a, (__wasm_i64x2) __b, (__wasm_i64x2) __c);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f32x4_relaxed_min (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_min_f32x4
++    ((__wasm_f32x4) __a, (__wasm_f32x4) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f32x4_relaxed_max (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_max_f32x4
++    ((__wasm_f32x4) __a, (__wasm_f32x4) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f64x2_relaxed_min (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_min_f64x2
++    ((__wasm_f64x2) __a, (__wasm_f64x2) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_f64x2_relaxed_max (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_max_f64x2
++    ((__wasm_f64x2) __a, (__wasm_f64x2) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i16x8_relaxed_q15mulr (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_q15mulr_s_i16x8
++    ((__wasm_i16x8) __a, (__wasm_i16x8) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i16x8_relaxed_dot_i8x16_i7x16 (v128_t __a, v128_t __b)
++{
++  return (v128_t) __builtin_wasm_relaxed_dot_i8x16_i7x16_s_i16x8
++    ((__wasm_i8x16) __a, (__wasm_i8x16) __b);
++}
++
++__WASM_RELAXED_INLINE v128_t
++wasm_i32x4_relaxed_dot_i8x16_i7x16_add (v128_t __a, v128_t __b, v128_t __c)
++{
++  return (v128_t) __builtin_wasm_relaxed_dot_i8x16_i7x16_add_s_i32x4
++    ((__wasm_i8x16) __a, (__wasm_i8x16) __b, (__wasm_i32x4) __c);
++}
++
++#undef __WASM_RELAXED_INLINE
++
++#endif /* __wasm_simd128__ && __wasm_relaxed_simd__ */
++#endif /* _GCC_WASM_RELAXED_SIMD_H */

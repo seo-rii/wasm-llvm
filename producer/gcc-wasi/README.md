@@ -17,6 +17,7 @@ See [the upstream and ABI assessment](../../docs/gcc-wasi-research.md),
 [additional SIMD operations and vector ABI](../../docs/gcc-wasi-simd-extension.md),
 [SIMD saturating arithmetic](SIMD-SATURATING.md),
 [SIMD conversions](SIMD-CONVERSIONS.md),
+[explicit relaxed SIMD](RELAXED-SIMD.md),
 [lane-wise vector shifts and their scalar fallback](SIMD-LANE-SHIFTS.md),
 [SIMD intrinsic header](SIMD-HEADER.md),
 [strong function and data aliases](SYMBOL-ALIASES.md),
@@ -47,7 +48,7 @@ preserves its existing intrinsic, pragma, libm and GNU C++ behavior.
 | --- | --- |
 | GCC compiler and libstdc++ | Experimental `17.0.0`, Sourceware `ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27` |
 | GCC backend implementation | `8f90eb001a5b25ef1e6285c8dc9f9bc13e1a8acd`, based on GCC `33ac889aa27d9917e6e7d07c282015b7c48e0440` |
-| Local GCC patches | `0001`–`0021`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage and embedded DWARF4; SHA-256 pinned in `sources.lock.json` |
+| Local GCC patches | `0001`–`0022`: void returns, host widths, SIMD128, Basic C ABI, atomic libcalls, SIMD operations, vector ABI, binary128, public int128, empty C++ records, declared/anonymous bitfield ABI, saturating SIMD arithmetic, GNU float128, SIMD conversions, the 169-name intrinsic header, strong aliases, weak references, one-only RTTI binding, single-counter coverage, embedded DWARF4 and explicit relaxed SIMD; SHA-256 pinned in `sources.lock.json` |
 | Annotated-WAT assembler | WABT fork `1.0.37`, `651c9ffbce3d0525d2d1324fab79160e5fcf8173`, locked [SIMD target feature](TARGET-FEATURES.md), [symbol alias](SYMBOL-ALIASES.md) and [DWARF transport](DWARF.md) patches; PicoSHA2 `27fcf6979298949e8a462e16d09a0351c18fcaf2` |
 | Native linker / compiler builtins | WASI SDK 33, LLVM `22.1.0`, `4434dabb69916856b824f68a64b029c67175e532` |
 | WASI libc / libm / CRT | `161b3195fc2558d2b1ba3eb9ffae3b2b47407623` from the SHA-pinned SDK 33 archive |
@@ -173,6 +174,14 @@ node producer/gcc-wasi/test-simd-header.mjs \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
   --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
   --output "$GCC_WASI_WORK_DIR/simd-header-qualification"
+node producer/gcc-wasi/test-simd-relaxed.mjs \
+  --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
+  --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
+  --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/simd-relaxed-qualification"
+python3 producer/gcc-wasi/test-simd-relaxed-driver.py \
+  --work "$GCC_WASI_WORK_DIR" --sysroot "$GCC_WASI_WORK_DIR/runtime-c/sysroot" \
+  --output "$GCC_WASI_WORK_DIR/simd-relaxed-driver-qualification"
 node producer/gcc-wasi/test-vector-abi.mjs \
   --compiler "$GCC_WASI_WORK_DIR/gcc-native/gcc" --source "$GCC_WASI_WORK_DIR/gcc" \
   --work "$GCC_WASI_WORK_DIR" --sdk "$WASI_SDK_PATH" \
@@ -331,6 +340,8 @@ node producer/gcc-wasi/package.mjs \
   --simd-saturating-qualification "$GCC_WASI_WORK_DIR/simd-saturating-qualification/qualification.json" \
   --simd-conversions-qualification "$GCC_WASI_WORK_DIR/simd-conversions-qualification/qualification.json" \
   --simd-header-qualification "$GCC_WASI_WORK_DIR/simd-header-qualification/qualification.json" \
+  --simd-relaxed-qualification "$GCC_WASI_WORK_DIR/simd-relaxed-qualification/qualification.json" \
+  --simd-relaxed-driver-qualification "$GCC_WASI_WORK_DIR/simd-relaxed-driver-qualification/qualification.json" \
   --vector-abi-qualification "$GCC_WASI_WORK_DIR/vector-abi-qualification/report.json" \
   --long-double-qualification "$GCC_WASI_WORK_DIR/long-double-qualification/report.json" \
   --int128-qualification "$GCC_WASI_WORK_DIR/int128-qualification/report.json" \
@@ -349,11 +360,12 @@ node producer/gcc-wasi/package.mjs \
   --libstdcxx "$GCC_LIBSTDCXX_WORK_DIR" --output out/gcc-wasi-bundle
 ```
 
-For the current twenty-one-patch compiler, `--long-double-qualification`,
+For the current twenty-two-patch compiler, `--long-double-qualification`,
 `--int128-qualification`, `--gnu-float128-qualification`, `--empty-abi-qualification`,
 `--bitfield-qualification`, `--anonymous-bitfield-qualification`, `--symbol-alias-qualification`,
 `--weakref-qualification`, `--rtti-qualification`, `--coverage-qualification`, `--dwarf-qualification`,
-`--libgcov`, `--native-gcov`, all five SIMD
+`--libgcov`, `--native-gcov`, `--simd-relaxed-qualification`,
+`--simd-relaxed-driver-qualification`, all five baseline SIMD
 qualifications, `--vector-abi-qualification`, the native linker and a freshly rebuilt, qualified
 `--libstdcxx` runtime are required. The wide-scalar matrices include GNU library
 interfaces, so a C-only proof cannot satisfy their complete gates. GNU float128
@@ -505,6 +517,9 @@ own build and execution tests, independently of the C++ frontend.
 
 SIMD128 is available with explicit SDK `simd: true` and a qualified capable bundle;
 the default scalar profile passes `-mno-simd128`. See [the exact SIMD scope](SIMD.md).
+The separate `relaxedSimd: true` request requires SIMD128, a qualified capable
+bundle and an engine probe. Its 20 operations have the allowed result sets
+specified by WebAssembly; see [the relaxed profile](RELAXED-SIMD.md).
 RTTI requires an explicit SDK request and a bundle with qualified RTTI support.
 Exceptions, threads/TLS/atomics and shared/dynamic linking are unsupported.
 Failed reference casts and null-polymorphic `typeid` remain exception-dependent
