@@ -36,7 +36,16 @@ binding, it independently verifies the exact one-row native first-phase exclusio
 on the actual graph first. Five phase outputs are actual selected inputs and one
 verified excluded predecessor is restored only for the phase checker. Native
 lexical closure and the module proof continue to use the unchanged actual graph.
-Without that profile, all six outputs must be actual selected inputs.
+The optional `compilerExceptionProfile: { sourceRoot, outputRoot,
+expectedReceiptSha256 }` first independently verifies the complete exception
+profile on that same actual graph. Its authenticated predecessor reverses five
+upstream replacements, the request entry, two exclusions and two helpers, and is
+passed only to the native first-phase and phase verifiers. Native
+lexical closure and the freshly executed module source audit retain every actual
+exception output/helper owner. The exception port requires caller-owned
+fatal-policy and external-decoder capabilities and binds their scope around the
+complete request entry. Native verification supplies no classifier or decoder.
+Without the native first-phase profile, all six outputs must be actual selected inputs.
 Each caller must retain its exact early canonical phase body and owner, its full
 upstream snapshot must reverse byte-for-byte, and only its recorded assembly
 imports can differ at the final stage. A missing or forged phase binding fails;
@@ -119,3 +128,15 @@ and native/module composition evidence is verified with
 `node producer/kotlin-browser/compiler-port/native-first-phase-source-profile/verify.mjs`.
 Its proof distinguishes five actual phase outputs from one restored canonical
 reference, keeps both actual JS/Wasm bindings, and adds no compiler/runtime run.
+
+Current exception/native/module source composition uses fresh source preparation
+and the actual compiler input vector, and is verified with
+`node producer/kotlin-browser/compiler-port/compiler-exception-attachment-profile/verify.mjs`.
+The older native first-phase and phase-overlay executions retain their original
+source pins and historical claims; they are not rerun or relabeled as current
+exception composition evidence.
+The exception evidence explicitly qualifies the `4b6f787` baseline plus its
+delta. Current foundation `31b83cf` remains blocked at an earlier FIR storage
+guard before the exception profile or compiler invocation; its failure is
+preserved separately and the shipping source graph is unchanged by the
+validation-only baseline inverse.

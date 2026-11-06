@@ -1,0 +1,803 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-compiler-exception-attachment-profile",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "targets": [
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/util/AnalysisExceptions.kt",
+      "gitBlob": "34e15b69e31e3126266a81b223e8f3d6789ea6e2",
+      "bytes": 4218,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/frontend.common",
+      "sha256": "2e1f85cb52fd29ee0a1059f497c3099fd41ac83596dce60cfc40919ce084db60"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+      "gitBlob": "6ed73cd3b35ce5ee85b03381c0c676952f1ebb2e",
+      "bytes": 1905,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/util",
+      "sha256": "7c205a4d655f721da1b0f80f7d1479188197b6df11fed7004be225ec7e1aca4a"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/KotlinExceptionWithAttachments.kt",
+      "gitBlob": "2f03ff417a443680efb7d2e2f8ba02559136f64b",
+      "bytes": 2703,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/util",
+      "sha256": "c51c04310d7812febe6c847a037b030113e7bd1b4f42df3a24c085e04a100b6f"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/platformExceptionUtils.kt",
+      "gitBlob": "26f2ea5747ec0ca1c202e7d2fb1a79d1e8bdf60b",
+      "bytes": 1326,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/util",
+      "sha256": "4fac9c3689021682993b6a4a173eb9a24d7a24c57c04f990149768dd906993a8"
+    },
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "gitBlob": "dbdb2f4c3974f247e195732888f121096166fe24",
+      "bytes": 19011,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/tree",
+      "sha256": "32036fe91eeeb25d6b76135e4ab25319e702aacb7af307f0c46ffb11b83f2efa"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompilerPipeline.kt",
+      "bytes": 9670,
+      "sha256": "dc5ca3eb6ed2f128b3835baf94f67b718b22386bf21c7ac8233d57b65b2b6b60",
+      "gitBlob": "7a4397b22b9e5b52caefef7eaffc2a430bdc4f22"
+    }
+  ],
+  "exclusions": [
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/psiUtils.kt",
+      "gitBlob": "b1a50ebfa32ce25073b4e11d90adc0cf2c164f61",
+      "bytes": 3021,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/util",
+      "sha256": "6043ffb36142de07be7e3ac455b75ba5431662eba0bc69479299dae084b109ae"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/exceptionAttachementBuilderUtils.kt",
+      "gitBlob": "f0aa67b078a5ee9bb9e7b21f10183058abf90184",
+      "bytes": 938,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/util",
+      "sha256": "fb7d81f61c951f2d1c4fb0e3f75cb751315b924081c02340b656c56a7c071362"
+    }
+  ],
+  "changes": {
+    "compiler/frontend.common/src/org/jetbrains/kotlin/util/AnalysisExceptions.kt": [
+      {
+        "before": "import org.jetbrains.kotlin.psi\n",
+        "after": "/* private exception profile: unavailable import 0 */\n",
+        "reason": "unavailable-import-org.jetbrains.kotlin.psi",
+        "occurrences": 1
+      },
+      {
+        "before": "private fun KtSourceElement.isDefinitelyNotInsideFile(fileSource: KtSourceElement): Boolean {\n    val thisPsi = psi\n    val otherPsi = fileSource.psi\n\n    return when {\n        thisPsi != null && otherPsi != null -> thisPsi.containingFile != otherPsi\n        else -> !lighterASTNode.isInside(fileSource.lighterASTNode, treeStructure)\n    }\n}",
+        "after": "private fun KtSourceElement.isDefinitelyNotInsideFile(fileSource: KtSourceElement): Boolean {\n    return !lighterASTNode.isInside(fileSource.lighterASTNode, treeStructure)\n}",
+        "reason": "sealed-null-psi-membership-fold",
+        "occurrences": 1
+      },
+      {
+        "before": "    val thisPsi = source.psi\n    val otherPsi = fileSource.psi\n",
+        "after": "/* private exception profile: sealed source host has no PSI fields */\n",
+        "reason": "sealed-null-psi-mismatch-fields",
+        "occurrences": 1
+      },
+      {
+        "before": "    val expectedFileMessage = if (thisPsi != null && otherPsi != null) {\n        val actualPath = thisPsi.containingFile.virtualFile.path\n        val expectedPath = otherPsi.containingFile.virtualFile.path\n        \"$expectedPath, but rather in $actualPath\"\n    } else {\n        \"...${fileSource.text.asQuote}\"\n    }",
+        "after": "    val expectedFileMessage = \"...${fileSource.text.asQuote}\"",
+        "reason": "sealed-null-psi-file-message-fold",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.lang.LighterASTNode\n",
+        "after": "import org.jetbrains.kotlin.portable.source.LighterASTNode\n",
+        "reason": "existing-portable-carrier-LighterASTNode",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.util.diff.FlyweightCapableTreeStructure\n",
+        "after": "import org.jetbrains.kotlin.portable.source.FlyweightCapableTreeStructure\n",
+        "reason": "existing-portable-carrier-FlyweightCapableTreeStructure",
+        "occurrences": 1
+      },
+      {
+        "before": "this is VirtualMachineError",
+        "after": "isVirtualMachineError(this)",
+        "reason": "required-host-fatal-classification-two-occurrences",
+        "occurrences": 2
+      },
+      {
+        "before": "package org.jetbrains.kotlin.util",
+        "after": "package org.jetbrains.kotlin.util\nimport org.jetbrains.kotlin.portable.exceptions.isVirtualMachineError",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.isVirtualMachineError",
+        "occurrences": 1
+      }
+    ],
+    "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt": [
+      {
+        "before": "    fun withPsiAttachment(name: String, element: PsiElement?): KotlinExceptionWithAttachments {\n        kotlin.runCatching { ApplicationManager.getApplication().runReadAction<String> { element?.let(::getElementTextWithContext) } }\n            .getOrNull()?.let { withAttachment(name, it) }\n        return this\n    }",
+        "after": "/* private exception profile: no selected PSI attachment callers */",
+        "reason": "proven-unused-psi-method",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.openapi.application.ApplicationManager\n",
+        "after": "/* private exception profile: unavailable import 1 */\n",
+        "reason": "unavailable-import-com.intellij.openapi.application.ApplicationManager",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.psi.PsiElement\n",
+        "after": "/* private exception profile: unavailable import 2 */\n",
+        "reason": "unavailable-import-com.intellij.psi.PsiElement",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.openapi.diagnostic.Attachment\n",
+        "after": "import org.jetbrains.kotlin.portable.exceptions.CompilerExceptionAttachment as Attachment\n",
+        "reason": "typed-portable-attachment-contract",
+        "occurrences": 1
+      }
+    ],
+    "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/KotlinExceptionWithAttachments.kt": [
+      {
+        "before": "import com.intellij.openapi.diagnostic.Attachment\n",
+        "after": "import org.jetbrains.kotlin.portable.exceptions.CompilerExceptionAttachment as Attachment\n",
+        "reason": "typed-portable-attachment-contract",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.openapi.diagnostic.ExceptionWithAttachments\n",
+        "after": "import org.jetbrains.kotlin.portable.exceptions.CompilerExceptionWithAttachments as ExceptionWithAttachments\n",
+        "reason": "typed-portable-array-contract",
+        "occurrences": 1
+      },
+      {
+        "before": "import java.nio.charset.StandardCharsets\n",
+        "after": "/* private exception profile: unavailable import 2 */\n",
+        "reason": "unavailable-import-java.nio.charset.StandardCharsets",
+        "occurrences": 1
+      },
+      {
+        "before": "package org.jetbrains.kotlin.utils.exceptions",
+        "after": "package org.jetbrains.kotlin.utils.exceptions\nimport org.jetbrains.kotlin.portable.exceptions.newCompilerStringAttachment",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.newCompilerStringAttachment",
+        "occurrences": 1
+      },
+      {
+        "before": "package org.jetbrains.kotlin.utils.exceptions",
+        "after": "package org.jetbrains.kotlin.utils.exceptions\nimport org.jetbrains.kotlin.portable.exceptions.decodeCompilerAttachmentUtf8",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.decodeCompilerAttachmentUtf8",
+        "occurrences": 1
+      },
+      {
+        "before": "Attachment(name, content?.toString() ?: \"<null>\")",
+        "after": "newCompilerStringAttachment(name, content?.toString() ?: \"<null>\")",
+        "reason": "selected-string-attachment-constructor",
+        "occurrences": 1
+      },
+      {
+        "before": "String(bytes, StandardCharsets.UTF_8)",
+        "after": "decodeCompilerAttachmentUtf8(this)",
+        "reason": "proven-string-or-required-external-utf8-copy",
+        "occurrences": 1
+      },
+      {
+        "before": "return Attachment(newName, content)",
+        "after": "return newCompilerStringAttachment(newName, content)",
+        "reason": "copied-string-attachment-constructor",
+        "occurrences": 1
+      }
+    ],
+    "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/platformExceptionUtils.kt": [
+      {
+        "before": "import com.intellij.openapi.diagnostic.ControlFlowException\n",
+        "after": "/* private exception profile: unavailable import 0 */\n",
+        "reason": "unavailable-import-com.intellij.openapi.diagnostic.ControlFlowException",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.openapi.project.IndexNotReadyException\n",
+        "after": "/* private exception profile: unavailable import 1 */\n",
+        "reason": "unavailable-import-com.intellij.openapi.project.IndexNotReadyException",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.openapi.progress.ProcessCanceledException\n",
+        "after": "/* Its upstream ProcessCanceledException mention is documentation only; classification remains an explicit host. */\n",
+        "reason": "unused-documentation-only-progress-import",
+        "occurrences": 1
+      },
+      {
+        "before": "import java.util.concurrent.CancellationException\n",
+        "after": "import kotlin.coroutines.cancellation.CancellationException\n",
+        "reason": "genuine-common-cancellation-jvm-alias",
+        "occurrences": 1
+      },
+      {
+        "before": "when (exception) {",
+        "after": "when {",
+        "reason": "preserve-taxonomy-arm-order",
+        "occurrences": 1
+      },
+      {
+        "before": "    is CancellationException -> true",
+        "after": "    exception is CancellationException -> true",
+        "reason": "same-standard-cancellation-guard",
+        "occurrences": 1
+      },
+      {
+        "before": "    is ControlFlowException -> true",
+        "after": "    isControlFlowException(exception) -> true",
+        "reason": "required-control-flow-classification",
+        "occurrences": 1
+      },
+      {
+        "before": "    is IndexNotReadyException -> true",
+        "after": "    isIndexNotReadyException(exception) -> true",
+        "reason": "required-index-not-ready-classification",
+        "occurrences": 1
+      },
+      {
+        "before": "package org.jetbrains.kotlin.utils.exceptions",
+        "after": "package org.jetbrains.kotlin.utils.exceptions\nimport org.jetbrains.kotlin.portable.exceptions.isControlFlowException",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.isControlFlowException",
+        "occurrences": 1
+      },
+      {
+        "before": "package org.jetbrains.kotlin.utils.exceptions",
+        "after": "package org.jetbrains.kotlin.utils.exceptions\nimport org.jetbrains.kotlin.portable.exceptions.isIndexNotReadyException",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.isIndexNotReadyException",
+        "occurrences": 1
+      }
+    ],
+    "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt": [
+      {
+        "before": "throwable is VirtualMachineError",
+        "after": "isVirtualMachineError(throwable)",
+        "reason": "required-fatal-wrapper-classification-two-occurrences",
+        "occurrences": 2
+      },
+      {
+        "before": "package org.jetbrains.kotlin.fir",
+        "after": "package org.jetbrains.kotlin.fir\nimport org.jetbrains.kotlin.portable.exceptions.isVirtualMachineError",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.isVirtualMachineError",
+        "occurrences": 1
+      }
+    ],
+    "compiler-port-entry/BrowserCompilerPipeline.kt": [
+      {
+        "before": "package org.jetbrains.kotlin.browser.compiler",
+        "after": "package org.jetbrains.kotlin.browser.compiler\nimport org.jetbrains.kotlin.portable.exceptions.CompilerExceptionHost",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.CompilerExceptionHost",
+        "occurrences": 1
+      },
+      {
+        "before": "package org.jetbrains.kotlin.browser.compiler",
+        "after": "package org.jetbrains.kotlin.browser.compiler\nimport org.jetbrains.kotlin.portable.exceptions.withCompilerExceptionHost",
+        "reason": "new-explicit-binding-org.jetbrains.kotlin.portable.exceptions.withCompilerExceptionHost",
+        "occurrences": 1
+      },
+      {
+        "before": "    private val performanceManagerHost: PerformanceManagerHost,\n",
+        "after": "    private val performanceManagerHost: PerformanceManagerHost,\n    private val compilerExceptionHost: CompilerExceptionHost,\n",
+        "reason": "required-request-exception-host",
+        "occurrences": 1
+      },
+      {
+        "before": "    fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary =\n        withDescriptorDebugHost(descriptorDebugHost) {\n            withPerformanceCounterClock(monotonicTimeNanos) {\n                withPerformanceManagerHost(performanceManagerHost) {\n                    compileRequest(sources, maximumArtifactBytes)\n                }\n            }\n        }",
+        "after": "    fun compile(sources: List<KtSourceFile>, maximumArtifactBytes: Int): BrowserProgramBinary =\n        withCompilerExceptionHost(compilerExceptionHost) {\n        withDescriptorDebugHost(descriptorDebugHost) {\n            withPerformanceCounterClock(monotonicTimeNanos) {\n                withPerformanceManagerHost(performanceManagerHost) {\n                    compileRequest(sources, maximumArtifactBytes)\n                }\n            }\n        }\n        }",
+        "reason": "scoped-exception-host-for-complete-request",
+        "occurrences": 1
+      }
+    ]
+  },
+  "outputs": [
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/util/AnalysisExceptions.kt",
+      "bytes": 3928,
+      "sha256": "f1431aa0fa79b80d389ef7cec2d9748b5ccc08dbd5d89b4f4e10fce4bf1c1bd6"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+      "bytes": 1711,
+      "sha256": "d6ca60e4cf14cd74a89d4184fcc0764a3e02e11822efef122103f1144addbd8b"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/KotlinExceptionWithAttachments.kt",
+      "bytes": 2985,
+      "sha256": "b5a4a3fc5ac4114dae6f09f419300010e8e4ada57ec096f784d9f59c9476b224"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/platformExceptionUtils.kt",
+      "bytes": 1541,
+      "sha256": "bf0ff48c7795091fae31a593212f5bdfa74f57a07ece70a524b9c649dd32bfa4"
+    },
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "bytes": 19081,
+      "sha256": "2e21e6b29a3c3288af9c9e08214ba426e536e263c11df8336c08d455e46f0744"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompilerPipeline.kt",
+      "bytes": 9945,
+      "sha256": "51477d04bc2191a3433e4d7e46dde61df63d5205042ebe6cd2b5d6f8e9b197d4"
+    }
+  ],
+  "helpers": [
+    {
+      "path": "compiler-port-exceptions/CompilerExceptionAttachments.kt",
+      "bytes": 2127,
+      "sha256": "7b878fd8506f432d68cebe8ce27fd5bff95f6e8ab263dedae765d8d337bea821",
+      "gitBlob": "36a5f64074931149aa44b787ed91150e22cac338"
+    },
+    {
+      "path": "compiler-port-exceptions/CompilerExceptionHost.kt",
+      "bytes": 1931,
+      "sha256": "77a7bf58a918d3471a539e38eceac9c2ded625edff6021c0c38a8ab0b9fcdc1b",
+      "gitBlob": "4e9b5be9bd42c5134dc5f65a3ca5d9f1137f9cf8"
+    }
+  ],
+  "boundaries": [
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt",
+      "bytes": 49077,
+      "sha256": "bbebaa31911d666c97bd1f59e0bb98d9ca19cc596c25e1cc64bd45bdae543fd2"
+    },
+    {
+      "path": "compiler-port-host/PortableLightTree.kt",
+      "bytes": 1461,
+      "sha256": "0274ecbeb4d7323f869b898b6901a0196e953dd8e89ec33bf1aa967b9177a32e"
+    },
+    {
+      "path": "compiler/fir/raw-fir/mp-parsing2fir/src/org/jetbrains/kotlin/fir/builder/MultiplatformParsing2Fir.kt",
+      "bytes": 4481,
+      "sha256": "1398bcafc034a6ce9f3f52bf855d659eaf86e1f48b992a071206b6ff3d95518f"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompiler.kt",
+      "bytes": 8242,
+      "sha256": "069d7052f7111011dc4fa215c7950f9bb3e61ec0df0dd4e529af8a2a487f39d1"
+    },
+    {
+      "path": "compiler-port-entry/BrowserCompilerPipeline.kt",
+      "bytes": 9670,
+      "sha256": "dc5ca3eb6ed2f128b3835baf94f67b718b22386bf21c7ac8233d57b65b2b6b60"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/FirKeywordUtils.kt",
+      "bytes": 4368,
+      "sha256": "53d95f12d22d5882c66d4b65f61b0d5c1c9dcca8ffad1db9b8f1f757e266a8ba"
+    },
+    {
+      "path": "compiler/fir/raw-fir/raw-fir.common/src/org/jetbrains/kotlin/fir/builder/AbstractRawFirBuilder.kt",
+      "bytes": 76009,
+      "sha256": "16bd32d1982be71c1f25a2cd49c2bdf955e7b25c806bdef8bd933e7408660569"
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/ExceptionAttachmentBuilder.kt",
+      "bytes": 4627,
+      "sha256": "0faff7c51f88b8ae8f5f2ffacf2e7a8547cea3d6892c109e3bc9d25b5bae045e"
+    },
+    {
+      "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/session/KlibIcData.kt",
+      "bytes": 2760,
+      "sha256": "ffd89920c1af2a1fc0d3bf20f0d3193d2ccf354161bc0b618e90cc6337bdcfc4"
+    }
+  ],
+  "recordedPropertyImports": [
+    "org.jetbrains.kotlin.portable.common.*",
+    "org.jetbrains.kotlin.portable.descriptors.*",
+    "org.jetbrains.kotlin.js.backend.ast.addPrevious",
+    "org.jetbrains.kotlin.js.backend.ast.arg",
+    "org.jetbrains.kotlin.js.backend.ast.arg1",
+    "org.jetbrains.kotlin.js.backend.ast.arg2",
+    "org.jetbrains.kotlin.js.backend.ast.arguments",
+    "org.jetbrains.kotlin.js.backend.ast.arrayExpression",
+    "org.jetbrains.kotlin.js.backend.ast.body",
+    "org.jetbrains.kotlin.js.backend.ast.caseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.cases",
+    "org.jetbrains.kotlin.js.backend.ast.catches",
+    "org.jetbrains.kotlin.js.backend.ast.closingBraceSource",
+    "org.jetbrains.kotlin.js.backend.ast.commentsAfterNode",
+    "org.jetbrains.kotlin.js.backend.ast.commentsBeforeNode",
+    "org.jetbrains.kotlin.js.backend.ast.computedName",
+    "org.jetbrains.kotlin.js.backend.ast.condition",
+    "org.jetbrains.kotlin.js.backend.ast.constructorExpression",
+    "org.jetbrains.kotlin.js.backend.ast.currentNode",
+    "org.jetbrains.kotlin.js.backend.ast.description",
+    "org.jetbrains.kotlin.js.backend.ast.elseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.elseStatement",
+    "org.jetbrains.kotlin.js.backend.ast.expression",
+    "org.jetbrains.kotlin.js.backend.ast.expressions",
+    "org.jetbrains.kotlin.js.backend.ast.finallyBlock",
+    "org.jetbrains.kotlin.js.backend.ast.flags",
+    "org.jetbrains.kotlin.js.backend.ast.globalBlock",
+    "org.jetbrains.kotlin.js.backend.ast.ident",
+    "org.jetbrains.kotlin.js.backend.ast.ifExpression",
+    "org.jetbrains.kotlin.js.backend.ast.incrementExpression",
+    "org.jetbrains.kotlin.js.backend.ast.indexExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initVars",
+    "org.jetbrains.kotlin.js.backend.ast.isAssignment",
+    "org.jetbrains.kotlin.js.backend.ast.isEmpty",
+    "org.jetbrains.kotlin.js.backend.ast.isEs6Arrow",
+    "org.jetbrains.kotlin.js.backend.ast.isGenerator",
+    "org.jetbrains.kotlin.js.backend.ast.isGetter",
+    "org.jetbrains.kotlin.js.backend.ast.isKeyword",
+    "org.jetbrains.kotlin.js.backend.ast.isLeaf",
+    "org.jetbrains.kotlin.js.backend.ast.isLeftAssociative",
+    "org.jetbrains.kotlin.js.backend.ast.isModifying",
+    "org.jetbrains.kotlin.js.backend.ast.isMultiline",
+    "org.jetbrains.kotlin.js.backend.ast.isSetter",
+    "org.jetbrains.kotlin.js.backend.ast.isStatic",
+    "org.jetbrains.kotlin.js.backend.ast.isTemporary",
+    "org.jetbrains.kotlin.js.backend.ast.isTransparent",
+    "org.jetbrains.kotlin.js.backend.ast.label",
+    "org.jetbrains.kotlin.js.backend.ast.modifiers",
+    "org.jetbrains.kotlin.js.backend.ast.name",
+    "org.jetbrains.kotlin.js.backend.ast.operator",
+    "org.jetbrains.kotlin.js.backend.ast.parameter",
+    "org.jetbrains.kotlin.js.backend.ast.parameters",
+    "org.jetbrains.kotlin.js.backend.ast.parent",
+    "org.jetbrains.kotlin.js.backend.ast.pattern",
+    "org.jetbrains.kotlin.js.backend.ast.precedence",
+    "org.jetbrains.kotlin.js.backend.ast.propertyInitializers",
+    "org.jetbrains.kotlin.js.backend.ast.qualifier",
+    "org.jetbrains.kotlin.js.backend.ast.replaceMe",
+    "org.jetbrains.kotlin.js.backend.ast.rootScope",
+    "org.jetbrains.kotlin.js.backend.ast.scope",
+    "org.jetbrains.kotlin.js.backend.ast.source",
+    "org.jetbrains.kotlin.js.backend.ast.statement",
+    "org.jetbrains.kotlin.js.backend.ast.statements",
+    "org.jetbrains.kotlin.js.backend.ast.symbol",
+    "org.jetbrains.kotlin.js.backend.ast.tags",
+    "org.jetbrains.kotlin.js.backend.ast.testExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenStatement",
+    "org.jetbrains.kotlin.js.backend.ast.tryBlock",
+    "org.jetbrains.kotlin.js.backend.ast.value",
+    "org.jetbrains.kotlin.js.util.position",
+    "org.jetbrains.kotlin.js.util.line",
+    "org.jetbrains.kotlin.js.util.column"
+  ],
+  "sourceHostLockSha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+  "primaryPsiReferences": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/FirKeywordUtils.kt",
+      "names": [
+        "withPsiEntry"
+      ],
+      "compile": true
+    },
+    {
+      "path": "compiler/fir/raw-fir/raw-fir.common/src/org/jetbrains/kotlin/fir/builder/AbstractRawFirBuilder.kt",
+      "names": [
+        "withPsiEntry"
+      ],
+      "compile": true
+    },
+    {
+      "path": "compiler/frontend.common/src/org/jetbrains/kotlin/KtSourceElement.kt",
+      "names": [
+        "getElementTextWithContext"
+      ],
+      "compile": true
+    },
+    {
+      "path": "compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/FunctionGenerator.kt",
+      "names": [
+        "getElementTextWithContext"
+      ],
+      "compile": true
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+      "names": [
+        "withPsiAttachment",
+        "getElementTextWithContext"
+      ],
+      "compile": true
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/exceptionAttachementBuilderUtils.kt",
+      "names": [
+        "withPsiEntry",
+        "getElementTextWithContext",
+        "withVirtualFileEntry",
+        "withClassEntry"
+      ],
+      "compile": true
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/psiUtils.kt",
+      "names": [
+        "getElementTextWithContext"
+      ],
+      "compile": true
+    }
+  ],
+  "actualPsiReferences": [
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+      "names": [
+        "withPsiAttachment",
+        "getElementTextWithContext"
+      ]
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/exceptionAttachementBuilderUtils.kt",
+      "names": [
+        "withPsiEntry",
+        "getElementTextWithContext",
+        "withVirtualFileEntry",
+        "withClassEntry"
+      ]
+    },
+    {
+      "path": "compiler/util/src/org/jetbrains/kotlin/utils/psiUtils.kt",
+      "names": [
+        "getElementTextWithContext"
+      ]
+    }
+  ],
+  "attachmentEdges": {
+    "before": [
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/session/KlibIcData.kt",
+        "names": [
+          "withAttachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+        "names": [
+          "withAttachment",
+          "mutableAttachments",
+          "Attachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/ExceptionAttachmentBuilder.kt",
+        "names": [
+          "withAttachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/KotlinExceptionWithAttachments.kt",
+        "names": [
+          "withAttachment",
+          "mutableAttachments",
+          "getAttachments",
+          "ExceptionWithAttachments",
+          "Attachment"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/session/KlibIcData.kt",
+        "names": [
+          "withAttachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+        "names": [
+          "withAttachment",
+          "mutableAttachments",
+          "Attachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/ExceptionAttachmentBuilder.kt",
+        "names": [
+          "withAttachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/KotlinExceptionWithAttachments.kt",
+        "names": [
+          "withAttachment",
+          "mutableAttachments",
+          "getAttachments",
+          "ExceptionWithAttachments",
+          "Attachment"
+        ]
+      },
+      {
+        "path": "compiler-port-exceptions/CompilerExceptionAttachments.kt",
+        "names": [
+          "getAttachments",
+          "Attachment"
+        ]
+      }
+    ]
+  },
+  "portableReferences": {
+    "before": [],
+    "after": [
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/KotlinExceptionWithAttachments.kt",
+        "names": [
+          "CompilerExceptionAttachment"
+        ]
+      },
+      {
+        "path": "compiler/util/src/org/jetbrains/kotlin/utils/exceptions/KotlinExceptionWithAttachments.kt",
+        "names": [
+          "CompilerExceptionAttachment",
+          "CompilerExceptionWithAttachments",
+          "newCompilerStringAttachment",
+          "decodeCompilerAttachmentUtf8"
+        ]
+      },
+      {
+        "path": "compiler-port-entry/BrowserCompilerPipeline.kt",
+        "names": [
+          "CompilerExceptionHost",
+          "withCompilerExceptionHost"
+        ]
+      },
+      {
+        "path": "compiler-port-exceptions/CompilerExceptionAttachments.kt",
+        "names": [
+          "CompilerExceptionAttachment",
+          "CompilerExceptionWithAttachments",
+          "CompilerStringExceptionAttachment",
+          "newCompilerStringAttachment",
+          "decodeCompilerAttachmentUtf8",
+          "requiredCompilerExceptionHost",
+          "javaStringAttachmentUtf8"
+        ]
+      },
+      {
+        "path": "compiler-port-exceptions/CompilerExceptionHost.kt",
+        "names": [
+          "CompilerExceptionHost",
+          "installCompilerExceptionHost",
+          "withCompilerExceptionHost",
+          "compilerExceptionHostInstalled",
+          "CompilerExceptionHostRequired",
+          "requiredCompilerExceptionHost"
+        ]
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 18100,
+      "sha256": "9b727725f4821eedf5cee8cf75446f7ba2eebc7acd9b19c77af4f97243056dc6",
+      "gitBlob": "72bfeac52f4dece33c32bfd5cd5c595959db0868"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 10567,
+      "sha256": "7832328ea9d752acd060754738a68c723dc6221e24063ad027f7aa907c2c5bf9",
+      "gitBlob": "4c6b76eb285120aba6239656937448c4ad1d729d"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 5763,
+      "sha256": "9ee3593f7e12b072a8a6229e7d741e9f2608b8abf576d4f66d619e5140035a94",
+      "gitBlob": "f2ba492aa852e27a544d0396568d4e1efa56690f"
+    },
+    {
+      "path": "CompilerExceptionAttachments.kt",
+      "bytes": 2127,
+      "sha256": "7b878fd8506f432d68cebe8ce27fd5bff95f6e8ab263dedae765d8d337bea821",
+      "gitBlob": "36a5f64074931149aa44b787ed91150e22cac338"
+    },
+    {
+      "path": "CompilerExceptionHost.kt",
+      "bytes": 1931,
+      "sha256": "77a7bf58a918d3471a539e38eceac9c2ded625edff6021c0c38a8ab0b9fcdc1b",
+      "gitBlob": "4e9b5be9bd42c5134dc5f65a3ca5d9f1137f9cf8"
+    },
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../closure.lock.json",
+      "bytes": 1601612,
+      "sha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+      "gitBlob": "0d920e442426a044cf3a70d5fea08afc1de637cb"
+    },
+    {
+      "path": "../klib-signature-index/transform.mjs",
+      "bytes": 5115,
+      "sha256": "c2e16bbb41c471d231f0422137d91289eedcdb5a5a9392299fd95e4d6edbbde2",
+      "gitBlob": "c238f725a135be0232479e25ee000dc6f1e90749"
+    },
+    {
+      "path": "../fir-navigation/transform.mjs",
+      "bytes": 7431,
+      "sha256": "f54b5e64de11774366a3324944a959a0691946268e5d15ba8f795650958b6847",
+      "gitBlob": "296ec0ab5c96b42315e21339a64fb1b579a1502c"
+    },
+    {
+      "path": "../native-js-output-profile/references.mjs",
+      "bytes": 2178,
+      "sha256": "f6fd115e20e546eacfd8c3ac68f0693263e554b3c9d95148474a65689a17f3ba",
+      "gitBlob": "42dc18f4964811af5b77d8b25fd4e8c60ecae508"
+    },
+    {
+      "path": "../backend-profile/references.mjs",
+      "bytes": 6006,
+      "sha256": "99496f349e3fc82159095a5d5d59c54a579ad4d5fcd60d5593136faef7e971cc",
+      "gitBlob": "f467ac0472ba80f10aa21f3d555f6909fef0dff4"
+    },
+    {
+      "path": "../host/prepare.mjs",
+      "bytes": 7585,
+      "sha256": "d47bc0f4ec8230fd1b95a21d601baab11aaa99e6d716a7794171df2d59ab820f",
+      "gitBlob": "f5ecdfb72ef32d6674fade54a24cebff16d9b031"
+    },
+    {
+      "path": "../host/sources.lock.json",
+      "bytes": 5522,
+      "sha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+      "gitBlob": "1b7bb8859a98cc644771c94c287b4569ceaf0e31"
+    },
+    {
+      "path": "../host/patches/source-host.patch",
+      "bytes": 29195,
+      "sha256": "f418ded074c23c5693be4bdd25bba7e95143f124f85eac7df5a7e67d5193421f",
+      "gitBlob": "fe27e456fc0f64290677f245e65eddd096752177"
+    },
+    {
+      "path": "../entry/BrowserCompiler.kt",
+      "bytes": 8242,
+      "sha256": "069d7052f7111011dc4fa215c7950f9bb3e61ec0df0dd4e529af8a2a487f39d1",
+      "gitBlob": "4980768086eb186efdbfaafa4c0cac7005db1aef"
+    },
+    {
+      "path": "../entry/BrowserCompilerPipeline.kt",
+      "bytes": 9670,
+      "sha256": "dc5ca3eb6ed2f128b3835baf94f67b718b22386bf21c7ac8233d57b65b2b6b60",
+      "gitBlob": "7a4397b22b9e5b52caefef7eaffc2a430bdc4f22"
+    }
+  ],
+  "frozenBuild": {
+    "filename": "/home/seorii/dev/hancomac/wasm-llvm/out/kotlin-compiler-port/builds/overriding-semantic-alias-whole-1791799796857706594/compiler-build-receipt.json",
+    "bytes": 66164341,
+    "sha256": "92678b66f471887b5cb24f476f2b1f2bf3ea3f3267e79aa2758e9c06eb5a7004",
+    "argumentFileSha256": "b5ee39fa53e3a5bd813ea8067f5236ffdb5b017dae3ee96c0b0dd65f383d03a7",
+    "selectedSources": 3553,
+    "compilerExitCode": 1
+  },
+  "requiredFatalControlFlowIndexPolicy": true,
+  "requiredExternalAttachmentDecoder": true,
+  "hostInstalledAtRequestEntry": true,
+  "hostPolicySuppliedByCaller": true,
+  "fullCompilerBuilt": false
+}
