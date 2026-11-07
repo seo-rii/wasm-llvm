@@ -1,0 +1,91 @@
+--- a/libstdc++-v3/libsupc++/atexit_thread.cc
++++ b/libstdc++-v3/libsupc++/atexit_thread.cc
+@@ -56,6 +56,88 @@
+ #if _GLIBCXX_HAVE___CXA_THREAD_ATEXIT
+ 
+ // Libc provides __cxa_thread_atexit definition.
++
++#elif defined (__wasm32__) && defined (__wasm_tls__)
++
++namespace {
++  // The shared-entry host assigns a private local-exec TLS block to every
++  // instance before running user code.  Do not use process-global gthread
++  // storage when pthreads have not been enabled.
++  struct wasm_tls_elt
++  {
++    void (_GLIBCXX_CDTOR_CALLABI *destructor)(void *);
++    void *object;
++    wasm_tls_elt *next;
++  };
++  thread_local wasm_tls_elt *wasm_tls_cleanups;
++}
++
++// Shared-entry hosts call this hook after a normal entry return, while that
++// instance's TLS block and stack are still valid.  Pop before calling so that
++// destructors which register another cleanup preserve LIFO order.
++extern "C" void
++__wasm_call_thread_dtors ()
++{
++  while (wasm_tls_elt *e = wasm_tls_cleanups)
++    {
++      wasm_tls_cleanups = e->next;
++      e->destructor (e->object);
++      delete e;
++    }
++}
++
++#ifndef _GLIBCXX_WASM_TLS_SHARED
++extern "C" void __real_exit (int) __attribute__((__noreturn__));
++
++// In the ordinary TLS profile wasm-ld --wrap=exit routes explicit exit
++// here.  TLS destruction must finish before
++// libc starts process atexit callbacks and static destruction.  _Exit,
++// quick_exit and abort retain their separate, non-TLS-cleanup paths.
++extern "C" void __wrap_exit (int) __attribute__((__noreturn__));
++extern "C" void
++__wrap_exit (int status)
++{
++  __wasm_call_thread_dtors ();
++  __real_exit (status);
++}
++
++// The command CRT returns from main through __wasm_call_dtors without
++// calling exit.  Wrap that separate entry as well; leave the real libc
++// process finalizer intact.
++extern "C" void __real___wasm_call_dtors ();
++extern "C" void
++__wrap___wasm_call_dtors ()
++{
++  __wasm_call_thread_dtors ();
++  __real___wasm_call_dtors ();
++}
++#endif
++
++extern "C" int
++__cxxabiv1::__cxa_thread_atexit (void (_GLIBCXX_CDTOR_CALLABI *dtor)(void *),
++                               void *obj, [[maybe_unused]] void *dso_handle)
++  _GLIBCXX_NOTHROW
++{
++#ifndef _GLIBCXX_WASM_TLS_SHARED
++  // Ordinary WASI has one instance and exits through libc.  The shared-entry
++  // profile uses the explicit per-instance hook above instead of process exit.
++  static thread_local bool queued;
++  if (!queued)
++    {
++      if (std::atexit (__wasm_call_thread_dtors) != 0)
++        return -1;
++      queued = true;
++    }
++#endif
++  wasm_tls_elt *e = new (std::nothrow) wasm_tls_elt;
++  if (!e)
++    return -1;
++  e->destructor = dtor;
++  e->object = obj;
++  e->next = wasm_tls_cleanups;
++  wasm_tls_cleanups = e;
++  return 0;
++}
+ 
+ #elif _GLIBCXX_HAVE___CXA_THREAD_ATEXIT_IMPL
+ 

@@ -321,7 +321,9 @@ def main():
         'duplicate-primary-id': '(@sym.alias $f (func $f) (@sym (name "a")))',
         'duplicate-primary-symbol': '(@sym.alias $a (func $f) (@sym (name "f")))',
         'missing-linking-name': '(@sym.alias $a (func $f))',
-        'weak-alias-out-of-scope': '(@sym.alias $a (func $f) (@sym (name "a") weak))',
+        # Defined weak function aliases are required by inline TLS initializers;
+        # weak data aliases remain outside the annotated assembler profile.
+        'weak-alias-out-of-scope': '(@sym.alias $a (data $d) (@sym (name "a") weak))',
         'function-offset': '(@sym.alias $a (func $f (offset 0)) (@sym (name "a")))',
         'data-offset-out-of-range': '(@sym.alias $a (data $d (offset 5)) (@sym (name "a")))',
         'numeric-target-out-of-range': '(@sym.alias $a (func 99) (@sym (name "a")))',

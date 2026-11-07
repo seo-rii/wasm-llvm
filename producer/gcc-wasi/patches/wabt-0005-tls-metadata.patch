@@ -1,0 +1,154 @@
+diff --git a/include/wabt/wast-parser.h b/include/wabt/wast-parser.h
+index 74101af..e0a8c7c 100644
+--- a/include/wabt/wast-parser.h
++++ b/include/wabt/wast-parser.h
+@@ -72,7 +72,8 @@ class WastParser {
+   struct FuncsymAux {
+     std::optional<int> priority;
+   };
+-  using SymAux = std::variant<std::monostate, DatasymAux *, FuncsymAux *>;
++  using SymAux = std::variant<std::monostate, DatasymAux *, FuncsymAux *,
++                              SymbolAlias *>;
+ 
+   typedef std::vector<ReferenceVar> ReferenceVars;
+ 
+diff --git a/src/binary-writer.cc b/src/binary-writer.cc
+index 306aa25..718ac73 100644
+--- a/src/binary-writer.cc
++++ b/src/binary-writer.cc
+@@ -294,6 +294,15 @@ void BinaryWriter::WriteType(Stream* stream, Type type, const char* desc) {
+ 
+ Result BinaryWriter::WriteTargetFeatures() {
+   std::map<std::string, uint8_t> features;
++  // Static TLS metadata requires the threaded linking ABI even when this
++  // object's code only computes an address.  LLD supplies the atomic/bulk
++  // memory initialization for shared links; private links can eliminate it.
++  bool uses_tls = false;
++  for (const DataSym& symbol : module_->data_symbols)
++    uses_tls |= bool(symbol.flags_ & WABT_SYMBOL_FLAG_TLS);
++  for (const DataSegment* segment : module_->data_segments)
++    uses_tls |= bool(segment->sym.flags &
++                     DataSegment::SymInfo::WASM_SEGMENT_FLAG_TLS);
+   auto error = [](const char* reason) {
+     fprintf(stderr, "error: target_features: %s\n", reason);
+     return Result::Error;
+@@ -340,9 +349,9 @@ Result BinaryWriter::WriteTargetFeatures() {
+     CHECK_RESULT(merge("simd128", '+'));
+   if (uses_relaxed_simd_)
+     CHECK_RESULT(merge("relaxed-simd", '+'));
+-  if (uses_atomics_)
++  if (uses_atomics_ || uses_tls)
+     CHECK_RESULT(merge("atomics", '+'));
+-  if (uses_bulk_memory_)
++  if (uses_bulk_memory_ || uses_tls)
+     CHECK_RESULT(merge("bulk-memory", '+'));
+   if (uses_bulk_memory_opt_)
+     CHECK_RESULT(merge("bulk-memory-opt", '+'));
+diff --git a/src/resolve-names.cc b/src/resolve-names.cc
+index e4313c9..c2263b2 100644
+--- a/src/resolve-names.cc
++++ b/src/resolve-names.cc
+@@ -285,6 +285,10 @@ void NameResolver::ResolveAliases() {
+       Address inherited = next == kInvalidIndex
+                               ? 0 : module->aliases[next].resolved_offset;
+       const auto& data = module->data_symbols[target];
++      if (bool(alias.flags_ & WABT_SYMBOL_FLAG_TLS) !=
++          bool(data.flags_ & WABT_SYMBOL_FLAG_TLS)) {
++        PrintError(&alias.loc, "TLS alias and target flags must agree");
++      }
+       if (inherited > data.size || alias.offset > data.size - inherited) {
+         PrintError(&alias.loc, "data alias offset exceeds the target object");
+         target = kInvalidIndex;
+diff --git a/src/wast-parser.cc b/src/wast-parser.cc
+index a78f09e..4115864 100644
+--- a/src/wast-parser.cc
++++ b/src/wast-parser.cc
+@@ -1504,14 +1504,15 @@ Result WastParser::ParseSymbolAlias(Module* module) {
+     alias.offset = *offset;
+   }
+   EXPECT(Rpar);
+-  CHECK_RESULT(ParseSymOpt(&alias, false));
++  CHECK_RESULT(ParseSymOpt(&alias, false, &alias));
+   EXPECT(Rpar);
+   if (alias.name_.empty()) {
+     Error(alias.loc, "alias requires an explicit linking symbol name");
+     return Result::Error;
+   }
+-  if (alias.binding() == SymbolBinding::Weak) {
+-    Error(alias.loc, "weak aliases are not supported by @sym.alias");
++  if (alias.binding() == SymbolBinding::Weak &&
++      alias.kind != SymbolType::Function) {
++    Error(alias.loc, "weak data aliases are not supported by @sym.alias");
+     return Result::Error;
+   }
+   module->alias_bindings.emplace(alias.name,
+@@ -1563,6 +1564,7 @@ Result WastParser::ParseSymOpt(SymbolCommon* sym,
+   OnceProperty size{"size", {}};
+   OnceProperty priority{"priority", {}};
+   OnceProperty exported{"export", {}};
++  OnceProperty tls{"tls", {}};
+ 
+   auto check_once = [this, &last_tok_loc](OnceProperty& var) {
+     if (!var.second)
+@@ -1594,6 +1596,9 @@ Result WastParser::ParseSymOpt(SymbolCommon* sym,
+       check_seen(name);
+     } else {
+       check_unseen(size);
++      auto alias = std::get_if<SymbolAlias *>(&aux);
++      if (!alias || (*alias)->kind != SymbolType::Data)
++        check_unseen(tls);
+     }
+     if (!std::get_if<FuncsymAux *>(&aux))
+       check_unseen(priority);
+@@ -1644,6 +1649,9 @@ Result WastParser::ParseSymOpt(SymbolCommon* sym,
+     } else if (Match(TokenType::Hidden)) {
+       check_once(visibility);
+       sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
++    } else if (Match(TokenType::TLS)) {
++      check_once(tls);
++      sym->flags_ |= WABT_SYMBOL_FLAG_TLS;
+     } else {
+       bool do_unwind = PeekMatch(TokenType::Lpar);
+       ErrorExpected({"symbol attribute", "')'"}, "(name \"foo\")");
+@@ -1941,6 +1949,11 @@ Result WastParser::ParseDataModuleField(Module* module) {
+         Index sym_idx = module->data_symbols.size();
+         DatasymAux aux = {Var{sym_idx, GetLocation()}, 0};
+         ParseSymOpt(&sym, false, &aux);
++        bool symbol_tls = sym.flags_ & WABT_SYMBOL_FLAG_TLS;
++        bool segment_tls = field->data_segment.sym.flags &
++                           DataSegment::SymInfo::WASM_SEGMENT_FLAG_TLS;
++        if (symbol_tls != segment_tls)
++          Error(aux.name.loc, "TLS symbol and segment flags must agree");
+         sym.segment = module->data_segments.size();
+         sym.offset = offset;
+         sym.size = aux.size;
+@@ -2790,12 +2803,10 @@ Result WastParser::ParseRelocAddend(uint32_t* addend,
+ Result WastParser::ParseRelocModifiers(RelocModifiers* mod) {
+   *mod = RelocModifiers::None;
+   Token tok = GetToken();
+-  if (tok.token_type() == TokenType::Reserved) {
+-    if (tok.text() == "tls")
+-      *mod = RelocModifiers::TLS;
+-    else if (tok.text() == "pic")
+-      *mod = RelocModifiers::PIC;
+-  }
++  if (tok.token_type() == TokenType::TLS)
++    *mod = RelocModifiers::TLS;
++  else if (tok.token_type() == TokenType::Reserved && tok.text() == "pic")
++    *mod = RelocModifiers::PIC;
+   if (*mod != RelocModifiers::None)
+     Consume();
+   return Result::Ok;
+diff --git a/src/wat-writer.cc b/src/wat-writer.cc
+index bf043a3..18a71b4 100644
+--- a/src/wat-writer.cc
++++ b/src/wat-writer.cc
+@@ -1465,6 +1465,8 @@ void WatWriter::WriteRelocAttrs(const SymbolCommon& sym) {
+     WritePutsSpace("retain");
+   if (sym.exported())
+     WritePutsSpace("export");
++  if (sym.flags_ & WABT_SYMBOL_FLAG_TLS)
++    WritePutsSpace("tls");
+   if (!sym.name().empty()) {
+     WriteOpenSpace("name");
+     WriteQuotedString(sym.name(), NextChar::None);
