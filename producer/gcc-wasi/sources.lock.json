@@ -141,9 +141,19 @@
         "path": "patches/0026-wasm-tls-runtime.patch",
         "sha256": "4075e51f49c586c50804d3fdf2463445cff981361807f0b3e87a81cdf7f69c0e",
         "purpose": "Port actual GNU thread-local destructor registration to per-instance TLS, using real allocation and explicit shared cleanup or ordered ordinary exit wrappers."
+      },
+      {
+        "path": "patches/0027-exception-handling.patch",
+        "sha256": "b441a25a4f15688824c6351b4a27259dda49e8b3a141acf01a0c20a235695fb9",
+        "purpose": "Opt-in modern WebAssembly EH with a 32-bit unwind ABI, genuine GNU indexed LSDA, explicit VM landing pads and preserved per-region exception references."
+      },
+      {
+        "path": "patches/0028-wasm-eh-runtime.patch",
+        "sha256": "8ca57686ad890920dd244cc115027085e77bf2ee46012667f8d8f4a3d8f57215",
+        "purpose": "Port genuine GNU C++ exception dispatch and lifecycle termination boundaries to the pinned wasm unwinder ABI; preserve default runtime and private single-thread exception globals."
       }
     ],
-    "sourceDiffSha256": "c089e713cd5b5fac2829a3c03db0ed71ab5311e0170ed4c1f24a1e141a3b4911"
+    "sourceDiffSha256": "ef4bc7defc9254a6c084541307e0e5a2a790954b4157efa2130a15c21f5a5f2d"
   },
   "wabt": {
     "version": "1.0.37",
@@ -176,9 +186,14 @@
         "path": "patches/wabt-0005-tls-metadata.patch",
         "sha256": "5ffdaa6c33e57978a31904bd43bd4169443713d36370fa4e84062ce8225f1874",
         "purpose": "Preserve static TLS symbols, segments and relocations, record their linking-ABI feature requirements, and support defined weak function aliases for inline TLS initializers."
+      },
+      {
+        "path": "patches/wabt-0006-exception-tags.patch",
+        "sha256": "9e14be1c7e9d19a38a2cff4fb114a1e3a3c94c2f517184a867f5b315679579c3",
+        "purpose": "Preserve and validate exact exception-tag relocation operands for throw, catch and try_table, and record actual exception-handling/multivalue features."
       }
     ],
-    "sourceDiffSha256": "402779a820502439d5343939d11944001fb1de5d29df4de18deb033f5aec3453",
+    "sourceDiffSha256": "122169c01eaa11ee73f3c36a230d6268ba4f4ab88a0fd8196298cc3a65fd7d9d",
     "submodules": {
       "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
     }

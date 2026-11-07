@@ -45,5 +45,23 @@
       }
     },
     "note": "Official WASI SDK getpid compatibility archive for libgcov; placeholder identity only, no process PID semantics."
+  },
+  "exceptionHandling": {
+    "profile": "ordinary-private-modern",
+    "unwinder": {
+      "sdkRelativePath": "share/wasi-sysroot/lib/wasm32-wasi/eh/libunwind.a",
+      "bytes": 13592,
+      "sha256": "30fcdda8f319868dfa109456b912222a5c308ac6bb6cecbfcca91d0c4a3cb9eb",
+      "repository": "https://github.com/llvm/llvm-project",
+      "commit": "4434dabb69916856b824f68a64b029c67175e532",
+      "version": "22.1.0"
+    },
+    "license": {
+      "path": "snapshots/llvm-libunwind-license-4434dabb.txt",
+      "upstreamPath": "libunwind/LICENSE.TXT",
+      "bytes": 16706,
+      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d"
+    },
+    "note": "Only the pinned native Wasm unwinder is reused. GNU libsupc++ and the complete exception-enabled GNU libstdc++ are built with the actual GCC backend; libc++abi is not a runtime provider. Shared-memory and user-TLS combinations require separate qualification."
   }
 }

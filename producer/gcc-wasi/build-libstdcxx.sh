@@ -2,6 +2,15 @@
 # Build the pinned GCC tree's real libstdc++ with its GCC WebAssembly backend.
 # This uses an isolated runtime source copy; an active GCC compiler build is never edited.
 set -euo pipefail
+exceptions=0
+prepare_only=0
+for argument in "$@"; do
+  case "$argument" in
+    --prepare) prepare_only=1 ;;
+    --exceptions) exceptions=1 ;;
+    *) echo 'Usage: build-libstdcxx.sh [--prepare] [--exceptions]' >&2; exit 2 ;;
+  esac
+done
 recipe=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 work=${GCC_WASI_WORK_DIR:?Set GCC_WASI_WORK_DIR}
 sdk=${WASI_SDK_PATH:?Set WASI_SDK_PATH to wasi-sdk-33.0}
@@ -9,7 +18,9 @@ jobs=${GCC_WASI_JOBS:-2}
 [[ $jobs =~ ^[1-9][0-9]*$ ]] || exit 2
 work=$(realpath "$work")
 sdk=$(realpath "$sdk")
-runtime=${GCC_LIBSTDCXX_WORK_DIR:-$work/libstdcxx}
+runtime_default="$work/libstdcxx"
+if [[ $exceptions == 1 ]]; then runtime_default="$work/libstdcxx-eh"; fi
+runtime=${GCC_LIBSTDCXX_WORK_DIR:-$runtime_default}
 mkdir -p "$runtime"
 runtime=$(realpath "$runtime")
 case "$runtime$sdk$work" in *[[:space:]]*) echo 'GCC specs require build paths without whitespace' >&2; exit 2;; esac
@@ -19,6 +30,11 @@ gcc_source=$(python3 "$recipe/prepare-source.py" --source "$work/gcc")
 source_digest=$(printf '%s\n' "$gcc_source" | sha256sum | cut -d' ' -f1)
 patch_file="$recipe/patches/libstdcxx-wasi-config.patch"
 patch_digest=$(sha256sum "$patch_file" | cut -d' ' -f1)
+exception_patch="$recipe/patches/libstdcxx-wasi-eh-config.patch"
+exception_inputs=
+if [[ $exceptions == 1 ]]; then
+  exception_inputs=" $(sha256sum "$exception_patch" | cut -d' ' -f1)"
+fi
 errno_patch="$recipe/patches/wasi-libc-errno.patch"
 errno_patch_digest=$(sha256sum "$errno_patch" | cut -d' ' -f1)
 recipe_digest=$(sha256sum "$recipe/build-libstdcxx.sh" | cut -d' ' -f1)
@@ -26,7 +42,7 @@ math_probe="$recipe/fp-extension-math-probe.py"
 math_probe_digest=$(sha256sum "$math_probe" | cut -d' ' -f1)
 source="$runtime/source"
 if [[ -d $source ]]; then
-  [[ $(cat "$runtime/source-inputs.txt") == "$revision $patch_digest $source_digest $errno_patch_digest $recipe_digest $math_probe_digest" ]] || {
+  [[ $(cat "$runtime/source-inputs.txt") == "$revision $patch_digest $source_digest $errno_patch_digest $recipe_digest $math_probe_digest$exception_inputs" ]] || {
     echo 'Runtime source inputs changed; select a new GCC_LIBSTDCXX_WORK_DIR' >&2; exit 2;
   }
 else
@@ -41,13 +57,17 @@ else
   done
   for file in BASE-VER DATESTAMP DEV-PHASE; do cp -p "$work/gcc/gcc/$file" "$source/gcc/"; done
   patch --batch --forward -d "$source" -p1 < "$patch_file"
-  printf '%s %s %s %s %s %s\n' "$revision" "$patch_digest" "$source_digest" "$errno_patch_digest" "$recipe_digest" "$math_probe_digest" > "$runtime/source-inputs.txt"
+  if [[ $exceptions == 1 ]]; then
+    patch --batch --forward -d "$source" -p1 < "$exception_patch"
+  fi
+  printf '%s %s %s %s %s %s%s\n' "$revision" "$patch_digest" "$source_digest" "$errno_patch_digest" "$recipe_digest" "$math_probe_digest" "$exception_inputs" > "$runtime/source-inputs.txt"
 fi
 
 printf '%s\n' "$gcc_source" > "$runtime/gcc-source.json"
 
 # GCC's checked-in m4 framework requires exactly Autoconf 2.69.
 tools="$work/libstdcxx-tools"
+if [[ $exceptions == 1 ]]; then tools="$work/libstdcxx-eh-tools"; fi
 mkdir -p "$tools"
 archive="$tools/autoconf-2.69.tar.xz"
 autoconf_sha=64ebcec9f8ac5b2487125a86a7760d2591ac9e1d3dbd59489633f9de62a57684
@@ -63,11 +83,15 @@ if [[ ! -f $runtime/configure-inputs.txt ]]; then
   (cd "$source/libstdc++-v3" && "$tools/install/bin/autoconf")
   printf '%s %s\n' "$patch_digest" "$autoconf_sha" > "$runtime/configure-inputs.txt"
 fi
-if [[ ${1:-} == --prepare ]]; then
+if [[ $prepare_only == 1 ]]; then
   printf 'Prepared isolated libstdc++ source: %s\n' "$source"
   exit 0
 fi
-[[ $# == 0 ]] || { echo 'Usage: build-libstdcxx.sh [--prepare]' >&2; exit 2; }
+if [[ $exceptions == 1 ]]; then
+  unset CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH LIBRARY_PATH COMPILER_PATH GCC_EXEC_PREFIX
+  export LC_ALL=C
+  python3 "$recipe/eh-runtime-build-state.py" snapshot --work "$work" --sdk "$sdk" --runtime "$runtime"
+fi
 for tool in cc1 cc1plus xgcc; do test -x "$work/gcc-native/gcc/$tool"; done
 test -x "$work/wabt-native/wat2wasm"
 test -x "$sdk/bin/wasm-ld"
@@ -136,6 +160,16 @@ export CC="$runtime/driver/gcc" CXX="$runtime/driver/g++"
 export AR="$sdk/bin/llvm-ar" RANLIB="$sdk/bin/llvm-ranlib" NM="$sdk/bin/llvm-nm"
 export AS="$runtime/driver/as" LD="$runtime/driver/ld"
 export CFLAGS='-O0' CXXFLAGS='-O0 -fno-exceptions -frtti -fuse-cxa-atexit -fno-threadsafe-statics'
+configure_profile=()
+if [[ $exceptions == 1 ]]; then
+  # Retain real GCC assembly beside each object for independent source and
+  # archive replay.  Only the isolated EH variant acquires these options.
+  # Canonicalize compiler-controlled file names at compilation time, so a
+  # fresh build in another directory can compare actual code/data exactly.
+  export CFLAGS="-O0 -g0 -save-temps=obj -ffile-prefix-map=$runtime=/gcc-wasi-eh-runtime"
+  export CXXFLAGS="-O0 -g0 -save-temps=obj -ffile-prefix-map=$runtime=/gcc-wasi-eh-runtime -mexception-handling -fexceptions -frtti -fuse-cxa-atexit -fno-threadsafe-statics"
+  configure_profile+=(--enable-libstdcxx-static-eh-pool)
+fi
 export MAKEINFO=true
 # AC_CHECK_FUNCS uses char fn(), which gives a false negative when Wasm's
 # strict linker compares it to an actual math.h function type. Cache only
@@ -159,16 +193,20 @@ if [[ ! -f Makefile ]]; then
     --disable-libstdcxx-filesystem-ts --disable-libstdcxx-time --disable-libstdcxx-verbose \
     --enable-libstdcxx-dual-abi --with-default-libstdcxx-abi=new \
     --disable-libstdcxx-visibility --disable-werror \
-    --enable-clocale=generic --enable-cstdio=stdio
+    --enable-clocale=generic --enable-cstdio=stdio "${configure_profile[@]}"
 fi
 make -j"$jobs" all MAKEINFO=true
 make install MAKEINFO=true
 test -s "$runtime/install/lib/libstdc++.a"
 test -s "$runtime/install/lib/libsupc++.a"
 python3 "$math_probe" --output "$runtime/math-probes" --verify
-python3 - "$runtime" "$work" "$recipe" <<'PY'
+if [[ $exceptions == 1 ]]; then
+  python3 "$recipe/eh-runtime-build-state.py" verify --work "$work" --sdk "$sdk" --runtime "$runtime"
+fi
+python3 - "$runtime" "$work" "$recipe" "$sdk" "$exceptions" <<'PY'
 import hashlib, json, pathlib, subprocess, sys
-runtime, work, recipe = map(pathlib.Path, sys.argv[1:])
+runtime, work, recipe, sdk = map(pathlib.Path, sys.argv[1:5])
+exceptions = sys.argv[5] == '1'
 def identity(path):
     data=path.read_bytes(); return {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
 compiler = {tool: hashlib.sha256((work/'gcc-native/gcc'/tool).read_bytes()).hexdigest() for tool in ['cc1','cc1plus','xgcc']}
@@ -187,8 +225,15 @@ flags = dict(line.split(' = ', 1) for line in makefile.read_text().splitlines()
              if line.startswith(('CXXFLAGS = ', 'EXTRA_CXX_FLAGS = ')))
 if '-frtti' not in flags['CXXFLAGS'].split() or any('-fno-rtti' in value.split() for value in flags.values()):
     raise SystemExit('GNU runtime was not built with RTTI enabled')
-if '-fno-exceptions' not in (flags['CXXFLAGS'] + ' ' + flags['EXTRA_CXX_FLAGS']).split():
-    raise SystemExit('GNU runtime must keep exceptions disabled')
+all_flags = (flags['CXXFLAGS'] + ' ' + flags['EXTRA_CXX_FLAGS']).split()
+if exceptions:
+    if any(option not in all_flags for option in ['-mexception-handling', '-fexceptions']) or '-fno-exceptions' in all_flags:
+        raise SystemExit('GNU EH runtime must compile with real native exception handling enabled')
+    if '-D_GLIBCXX_EH_POOL_STATIC' not in next(line for line in makefile.read_text().splitlines() if line.startswith('EH_POOL_FLAGS = ')):
+        raise SystemExit('GNU EH runtime must use its configured static emergency pool')
+else:
+    if '-fno-exceptions' not in all_flags:
+        raise SystemExit('GNU runtime must keep exceptions disabled')
 receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-wasi',
     'compilerFlags': flags, 'compilerFlagsMakefile': identity(makefile),
     'gccCommit': json.loads((recipe/'sources.lock.json').read_text())['gcc']['commit'],
@@ -202,6 +247,45 @@ receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-w
         'report': identity(runtime/'math-probes/report.json'),
         'cache': identity(runtime/'math-probes/config.site'), 'evidence': math_probe},
     'libraries': {name: identity(runtime/'install/lib'/name) for name in ['libstdc++.a', 'libsupc++.a']},
-    'exceptions': False, 'rtti': True, 'threads': False, 'timezoneDatabase': False, 'debugger': False, 'stdModules': False}
+    'exceptions': exceptions, 'rtti': True, 'threads': False, 'timezoneDatabase': False, 'debugger': False, 'stdModules': False}
+if exceptions:
+    import shutil
+    lock_path = recipe/'runtime.lock.json'
+    locked = json.loads(lock_path.read_text())['exceptionHandling']
+    unwinder = sdk/locked['unwinder']['sdkRelativePath']
+    if identity(unwinder) != {key: locked['unwinder'][key] for key in ['bytes', 'sha256']}:
+        raise SystemExit('Native Wasm unwinder differs from the pinned SDK archive')
+    license_file = recipe/locked['license']['path']
+    if identity(license_file) != {key: locked['license'][key] for key in ['bytes', 'sha256']}:
+        raise SystemExit('Native Wasm unwinder license differs from its pin')
+    providers = {'libstdc++.a': runtime/'install/lib/libstdc++.a',
+                 'libsupc++.a': runtime/'install/lib/libsupc++.a', 'libunwind.a': unwinder}
+    destination = runtime/'sysroot/lib/wasm32-wasi-eh'
+    destination.mkdir(parents=True, exist_ok=True)
+    for name, input_file in providers.items():
+        shutil.copy2(input_file, destination/name)
+    license_dir = runtime/'licenses'
+    license_dir.mkdir(exist_ok=True)
+    license_inputs = {'COPYING3': runtime/'source/COPYING3',
+                      'COPYING.RUNTIME': runtime/'source/COPYING.RUNTIME',
+                      'libunwind-LICENSE.TXT': license_file}
+    for name, input_file in license_inputs.items():
+        shutil.copy2(input_file, license_dir/name)
+    receipt.update(profile='ordinary-private-modern', fullGnuLibrary=True,
+        kind='gcc-wasi-exception-runtime-build',
+        inputs=json.loads((runtime/'eh-build-inputs.json').read_text())['inputs'],
+        inputsUnchanged=True,
+        inputCheck=identity(runtime/'eh-build-input-check.json'),
+        nativeBuild={'path': str(work/'native-build.json'), **identity(work/'native-build.json')},
+        sourceLock=identity(recipe/'sources.lock.json'), runtimeLock=identity(lock_path),
+        exceptionPatch=identity(recipe/'patches/libstdcxx-wasi-eh-config.patch'),
+        unwinder={**locked['unwinder'], 'path': str(unwinder)},
+        files=[{'path': 'lib/wasm32-wasi-eh/'+name, **identity(destination/name)} for name in sorted(providers)],
+        licenses=[{'path': name, **identity(license_dir/name)} for name in sorted(license_inputs)],
+        linkFlags=['--wrap=__main_void','--wrap=__wasm_call_ctors','--wrap=__wasm_call_dtors','--wrap=exit'],
+        filePrefixMap={'from':str(runtime),'to':'/gcc-wasi-eh-runtime'},
+        headers=[{'path': str(file.relative_to(runtime/'install')), **identity(file)}
+                 for file in sorted((runtime/'install/include').rglob('*')) if file.is_file()],
+        userTls=False, sharedMemory=False, coverage=False)
 (runtime/'build.json').write_text(json.dumps(receipt, indent=2)+'\n')
 PY

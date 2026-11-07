@@ -1,0 +1,269 @@
+diff --git a/include/wabt/binary-reader.h b/include/wabt/binary-reader.h
+--- a/include/wabt/binary-reader.h
++++ b/include/wabt/binary-reader.h
+@@ -63,6 +63,10 @@
+   CatchKind kind;
+   Index tag;
+   Index depth;
++  // Unlike throw/catch, the tag is not the last operand in a try_table
++  // clause. Keep its exact byte range for checked linking relocations.
++  Offset tag_offset = kInvalidOffset;
++  Offset tag_end = kInvalidOffset;
+ };
+ using CatchClauseVector = std::vector<CatchClause>;
+ 
+diff --git a/src/binary-reader.cc b/src/binary-reader.cc
+--- a/src/binary-reader.cc
++++ b/src/binary-reader.cc
+@@ -1550,12 +1550,14 @@
+           ERROR_UNLESS(handler < 4, "expected valid catch handler");
+           bool is_catch_all = handler & 2;
+           Index tag = kInvalidIndex;
++          CatchClause catch_;
+           if (!(is_catch_all)) {
++            catch_.tag_offset = state_.offset;
+             CHECK_RESULT(ReadIndex(&tag, "catch tag"));
++            catch_.tag_end = state_.offset;
+           }
+           Index depth;
+           CHECK_RESULT(ReadIndex(&depth, "catch depth"));
+-          CatchClause catch_;
+           catch_.kind = CatchKind(handler);
+           catch_.tag = tag;
+           catch_.depth = depth;
+diff --git a/src/binary-reader-ir.cc b/src/binary-reader-ir.cc
+--- a/src/binary-reader-ir.cc
++++ b/src/binary-reader-ir.cc
+@@ -450,6 +450,27 @@
+     std::vector<Reloc> incoming_relocs;
+     Entries<ConstExpr, LoadExpr, StoreExpr> entries;
+     std::unordered_map<Offset, Var*> function_vars;
++    // Store the owning expression and catch index: legacy catches can move
++    // when their vector grows, so a pointer to Catch::var would dangle.
++    struct TagOperand {
++      Offset end;
++      Expr* owner;
++      Index catch_index;
++
++      Var* var() const {
++        switch (owner->type()) {
++          case ExprType::Throw:
++            return &cast<ThrowExpr>(owner)->var;
++          case ExprType::Try:
++            return &cast<TryExpr>(owner)->catches[catch_index].var;
++          case ExprType::TryTable:
++            return &cast<TryTableExpr>(owner)->catches[catch_index].tag;
++          default:
++            WABT_UNREACHABLE;
++        }
++      }
++    };
++    std::map<Offset, TagOperand> tag_operands;
+     std::map<Offset, DataSegment*> data_segment_starts;
+   };
+   std::unordered_map<Index, RelocQueue> reloc_queues;
+@@ -1299,7 +1320,14 @@
+ 
+ Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
+   module_->features_used.exceptions = true;
+-  return AppendExpr(std::make_unique<ThrowExpr>(Var(tag_index, GetLocation())));
++  auto expr = std::make_unique<ThrowExpr>(Var(tag_index, GetLocation()));
++  if (auto* queue = GetQueue()) {
++    queue->tag_operands.emplace(
++        state->opcode_offset + 1 - queue->start,
++        RelocQueue::TagOperand{state->offset - queue->start, expr.get(),
++                               kInvalidIndex});
++  }
++  return AppendExpr(std::move(expr));
+ }
+ 
+ Result BinaryReaderIR::OnThrowRefExpr() {
+@@ -1348,6 +1376,14 @@
+   }
+ 
+   try_->catches.push_back(std::move(catch_));
++  if (!try_->catches.back().IsCatchAll()) {
++    if (auto* queue = GetQueue()) {
++      queue->tag_operands.emplace(
++          state->opcode_offset + 1 - queue->start,
++          RelocQueue::TagOperand{state->offset - queue->start, try_,
++                                 Index(try_->catches.size() - 1)});
++    }
++  }
+   label->exprs = &try_->catches.back().exprs;
+   return Result::Ok;
+ }
+@@ -1374,6 +1410,14 @@
+     catch_.tag = Var(raw_catch.tag, GetLocation());
+     catch_.target = Var(raw_catch.depth, GetLocation());
+     expr->catches.push_back(std::move(catch_));
++    if (raw_catch.tag_offset != kInvalidOffset) {
++      if (auto* queue = GetQueue()) {
++        queue->tag_operands.emplace(
++            raw_catch.tag_offset - queue->start,
++            RelocQueue::TagOperand{raw_catch.tag_end - queue->start, expr,
++                                   Index(expr->catches.size() - 1)});
++      }
++    }
+   }
+ 
+   CHECK_RESULT(AppendExpr(std::move(expr_ptr)));
+@@ -2335,14 +2379,48 @@
+       if (!bytes.bytes.empty()) custom.atoms.push_back(std::move(bytes));
+       continue;
+     }
++    std::set<Offset> relocated_tags;
+     for (auto reloc : queue.incoming_relocs) {
++      // Check the exact operand, not offset + 5: in try_table the tag is
++      // followed by a label depth, and subsequent clauses may use other tags.
++      auto tag = queue.tag_operands.find(reloc.offset);
++      if (reloc.type == RelocType::TagIndexLEB ||
++          tag != queue.tag_operands.end()) {
++        if (queue.type != RelocQueue::CODE ||
++            reloc.type != RelocType::TagIndexLEB ||
++            tag == queue.tag_operands.end() ||
++            tag->second.end - tag->first !=
++                kRelocDataTypeSize[int(RelocDataType::LEB)] ||
++            reloc.index >= table.symbols().size() ||
++            table.symbols()[reloc.index].type() != SymbolType::Tag ||
++            table.symbols()[reloc.index].AsTag().index >= module_->tags.size() ||
++            reloc.addend != 0 || !relocated_tags.insert(reloc.offset).second) {
++          PrintError("invalid exception tag relocation at offset 0x%zx",
++                     reloc.offset);
++          return Result::Error;
++        }
++        *tag->second.var() =
++            Var(table.symbols()[reloc.index].AsTag().index, GetLocation());
++        continue;
++      }
++      // Reject a relocation into the middle of a tag even when its type
++      // would otherwise be accepted by the older general operand path.
++      auto next_tag = queue.tag_operands.upper_bound(reloc.offset);
++      auto reloc_size =
++          kRelocDataTypeSize[int(kRelocDataType[int(reloc.type)])];
++      if ((next_tag != queue.tag_operands.begin() &&
++           reloc.offset < std::prev(next_tag)->second.end) ||
++          (next_tag != queue.tag_operands.end() &&
++           next_tag->first - reloc.offset < reloc_size)) {
++        PrintError("overlapping exception tag relocation at offset 0x%zx",
++                   reloc.offset);
++        return Result::Error;
++      }
+       bool applied_relocation = false;
+       Var sym_id = lookup_reloc(reloc);
+       if (sym_id.is_index() && sym_id.index() == kInvalidIndex)
+         // this reloc points to an invalid symbol and is therefore unapplicable
+         continue;
+-      auto reloc_size =
+-          kRelocDataTypeSize[int(kRelocDataType[int(reloc.type)])];
+       // We pray that the relocation is always the last operand, and that the
+       // operand is an overlong leb already
+       auto reloc_addr = reloc.offset + reloc_size;
+diff --git a/src/binary-writer.cc b/src/binary-writer.cc
+--- a/src/binary-writer.cc
++++ b/src/binary-writer.cc
+@@ -226,6 +226,8 @@
+   bool uses_atomics_ = false;
+   bool uses_bulk_memory_ = false;
+   bool uses_bulk_memory_opt_ = false;
++  bool uses_exceptions_ = false;
++  bool uses_multivalue_ = false;
+ 
+   SymbolTable symtab_;
+   std::vector<RelocSection> reloc_sections_;
+@@ -269,6 +271,20 @@
+     : stream_(stream), options_(options), module_(module) {}
+ 
+ void BinaryWriter::WriteOpcode(Stream* stream, Opcode opcode) {
++  switch (opcode) {
++    case Opcode::Try:
++    case Opcode::Catch:
++    case Opcode::Throw:
++    case Opcode::Rethrow:
++    case Opcode::ThrowRef:
++    case Opcode::Delegate:
++    case Opcode::CatchAll:
++    case Opcode::TryTable:
++      uses_exceptions_ = true;
++      break;
++    default:
++      break;
++  }
+   if (opcode.HasPrefix() && opcode.GetPrefix() == 0xfd) {
+     uses_simd128_ = true;
+     // All 0xfd opcodes >= 0x100 in this pinned WABT are relaxed SIMD.
+@@ -289,6 +305,7 @@
+ 
+ void BinaryWriter::WriteType(Stream* stream, Type type, const char* desc) {
+   uses_simd128_ |= type == Type::V128;
++  uses_exceptions_ |= type == Type::ExnRef;
+   wabt::WriteType(stream, type, desc);
+ }
+ 
+@@ -355,6 +372,10 @@
+     CHECK_RESULT(merge("bulk-memory", '+'));
+   if (uses_bulk_memory_opt_)
+     CHECK_RESULT(merge("bulk-memory-opt", '+'));
++  if (uses_exceptions_ || !module_->tags.empty())
++    CHECK_RESULT(merge("exception-handling", '+'));
++  if (uses_multivalue_)
++    CHECK_RESULT(merge("multivalue", '+'));
+   if (!features.empty()) {
+     // Emit after other custom sections, including any producers section.
+     BeginCustomSection("target_features");
+@@ -413,6 +434,8 @@
+ }
+ 
+ void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
++  uses_multivalue_ |=
++      decl.sig.GetNumParams() != 0 || decl.sig.GetNumResults() > 1;
+   if (decl.sig.GetNumParams() == 0 && decl.sig.GetNumResults() <= 1) {
+     if (decl.sig.GetNumResults() == 0) {
+       WriteType(stream_, Type::Void);
+@@ -486,7 +509,7 @@
+ }
+ 
+ Index BinaryWriter::GetTagVarDepth(const Var* var) {
+-  return var->index();
++  return module_->GetTagIndex(*var);
+ }
+ 
+ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
+@@ -1002,8 +1025,8 @@
+       break;
+     case ExprType::Throw:
+       WriteOpcode(stream_, Opcode::Throw);
+-      WriteU32Leb128(stream_, GetTagVarDepth(&cast<ThrowExpr>(expr)->var),
+-                     "throw tag");
++      WriteU32Leb128WithReloc(GetTagVarDepth(&cast<ThrowExpr>(expr)->var),
++                             "throw tag", RelocType::TagIndexLEB);
+       break;
+     case ExprType::ThrowRef:
+       WriteOpcode(stream_, Opcode::ThrowRef);
+@@ -1020,7 +1043,8 @@
+               WriteOpcode(stream_, Opcode::CatchAll);
+             } else {
+               WriteOpcode(stream_, Opcode::Catch);
+-              WriteU32Leb128(stream_, GetTagVarDepth(&catch_.var), "catch tag");
++              WriteU32Leb128WithReloc(GetTagVarDepth(&catch_.var), "catch tag",
++                                     RelocType::TagIndexLEB);
+             }
+             WriteExprList(func, catch_.exprs);
+           }
+@@ -1048,7 +1072,7 @@
+         stream_->WriteU8(catch_type, "catch handler");
+         if (!catch_.IsCatchAll()) {
+           Index tag = GetTagVarDepth(&catch_.tag);
+-          WriteU32Leb128(stream_, tag, "catch tag");
++          WriteU32Leb128WithReloc(tag, "catch tag", RelocType::TagIndexLEB);
+         }
+         Index depth = GetLabelVarDepth(&catch_.target);
+         WriteU32Leb128(stream_, depth, "catch depth");
+@@ -1391,6 +1415,7 @@
+ 
+           Index num_params = sig->param_types.size();
+           Index num_results = sig->result_types.size();
++          uses_multivalue_ |= num_results > 1;
+           WriteU32Leb128(stream_, num_params, "num params");
+           for (size_t j = 0; j < num_params; ++j) {
+             WriteType(stream_, sig->param_types[j]);
