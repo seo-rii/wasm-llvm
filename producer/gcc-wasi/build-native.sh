@@ -40,8 +40,9 @@ if [[ -f gcc/config.status ]]; then
 fi
 # The draft target's driver injects -stdlib=libc++, which this pinned cc1plus
 # does not recognize. Runtime/header choice belongs to our explicit pipeline.
-# Clear that driver-only spec for the build's real C/C++ frontend smoke tests.
-printf '*cc1plus:\n\n' > "$work/native-driver.specs"
+# Renaming clears the original spec through GCC's supported directive.  An
+# empty section at EOF makes this pinned driver's parser read past its buffer.
+printf '%%rename cc1plus gcc_wasi_original_cc1plus\n' > "$work/native-driver.specs"
 set +e
 make -j"$jobs" all-gcc MAKEINFO=true
 bootstrap_status=$?

@@ -147,7 +147,7 @@ test('saturating proof binds every builtin/profile, exact opcodes and disabled/t
 });
 
 test('browser package rejects failed preparation and unsupported gcov host profiles', () => {
-	const specs = identity(Buffer.from('*cc1plus:\n\n'));
+	const specs = identity(Buffer.from('%rename cc1plus gcc_wasi_original_cc1plus\n'));
 	const receipt = {
 		hostUtilityProfile: { name: 'browser-frontends', gcov: false, gcovDump: false, gcovTool: false },
 		bootstrap: { allGccBootstrapExitCode: 0, gcovHostTools: 'disabled', profile: 'browser-frontends' },

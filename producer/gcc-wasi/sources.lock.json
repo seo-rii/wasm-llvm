@@ -121,9 +121,19 @@
         "path": "patches/0022-relaxed-simd.patch",
         "purpose": "Add explicit opt-in relaxed SIMD target builtins, twenty distinct UNSPEC instructions and a separate typed intrinsic header; preserve baseline scalar and SIMD128 semantics.",
         "sha256": "d979c4dcfd16aa93562912080e9b990f82af868ce408c2b92023f15155bf4e17"
+      },
+      {
+        "path": "patches/0023-atomics.patch",
+        "sha256": "7a50977ea5b3e57fbec42c0e3c9991caa3484b10c74ea7785fe2a5ed9a0d7ee1",
+        "purpose": "Add opt-in naturally aligned native 1/2/4/8-byte atomic load/store/exchange/CAS/RMW and conservative sequentially consistent barriers; keep 16-byte operations as runtime calls."
+      },
+      {
+        "path": "patches/0024-libatomic-wasm.patch",
+        "sha256": "6afa13f25abb4acb9c044cf69eb3f2152a8c80fdda8dd6fa795d869dd397aac8",
+        "purpose": "Build real GNU libatomic with shared linear-memory locks for generic and 16-byte operations and an explicit alignment-aware lock-free policy."
       }
     ],
-    "sourceDiffSha256": "77e636195f745fa52534da5dc58e7df578c4baa98232fe96a8569c201c531466"
+    "sourceDiffSha256": "9a0df28c195c217078ff958f95d969902c73b745efc862ea18f58011ecca61da"
   },
   "wabt": {
     "version": "1.0.37",
@@ -146,9 +156,14 @@
         "path": "patches/wabt-0003-dwarf-debug.patch",
         "purpose": "Transport checked DWARF custom-section slots, code anchors and standard relocations, preserving opaque debug bytes only under verified readback layout.",
         "sha256": "c446f1efc0a7dafc4aa289d69ec8395476b119c89785375693164f29545f6a50"
+      },
+      {
+        "path": "patches/wabt-0004-atomic-target-features.patch",
+        "sha256": "3cd0f2ea128487a63dfd3e8de03ee5e1a85a926e8197036523325dc8f0c0ab43",
+        "purpose": "Record actual atomic instructions/shared memory and bulk-memory operations; reject contradictory feature declarations."
       }
     ],
-    "sourceDiffSha256": "ed771f2fc12af0316db6f0b0e4732a39a6cec6aeae326a846f83955c12368eeb",
+    "sourceDiffSha256": "3108bd7a2f97cd50ec7ee4787b32a0d8421e52d189d4ff63fd384c2ba16b004b",
     "submodules": {
       "third_party/picosha2": "27fcf6979298949e8a462e16d09a0351c18fcaf2"
     }

@@ -86,6 +86,7 @@ patch --batch --forward -d "$runtime/target-headers" -p1 < "$errno_patch"
 # component's real public declarations; this does not provide an unwinder.
 cp -p "$source/libgcc/unwind-generic.h" "$runtime/driver/include/unwind.h"
 cat > "$runtime/driver/runtime.specs" <<EOF
+%rename cc1plus gcc_wasi_original_cc1plus
 *startfile:
 $sysroot/lib/wasm32-wasi/crt1-command.o
 
@@ -97,8 +98,6 @@ $builtins
 
 *link:
 %{!o:-o a.out} --fatal-warnings -L$sysroot/lib/wasm32-wasi -e _start
-
-*cc1plus:
 
 EOF
 python3 - "$runtime" "$work" "$sdk" <<'PY'
