@@ -1,5 +1,11 @@
 # Compiler exception and attachment boundary
 
+Current-foundation integration uses the complete 3,571-source shipping recipe,
+including all eighteen JVM signature sources. The current verification command
+and its separate evidence are described in [CURRENT_FOUNDATION.md](CURRENT_FOUNDATION.md).
+The preserved `evidence/selection.json` and baseline-variant instructions below
+describe the earlier 3,553-source validation; they do not qualify the later source set.
+
 This profile verifies transformations of five complete pinned compiler files: AnalysisExceptions, the
 legacy and current attachment exception classes, platformExceptionUtils, and FIR
 Utils. It preserves throw/unwrapping, message/quote, LightTree containment,
@@ -52,21 +58,23 @@ probe exports also pass in three Chromium Module Workers. Cause stack traces are
 checked locally; their raw bytes are not compared across platforms. These are
 component executions, not a browser compiler.
 
-The source and native/module composition proof, negative guards, actual whole
-compiler invocation, and diagnostic comparison are bound by `evidence/selection.json`.
-`verify.mjs` reopens the actual selected input files and checks current source pins;
-it does not accept source-preparation records as an actual compiler invocation.
+The earlier source and native/module composition proof, negative guards, actual
+whole compiler invocation, and diagnostic comparison remain in `evidence/selection.json`.
+Its `verify.mjs` validator bound the then-current source pins, including the old
+FIR guard. That historical binding must not be substituted for the new current
+foundation proof, which reopens the new inputs and actual compiler invocation.
 Whole-compiler blockers outside this profile do not become successful compilation
 or public Kotlin support.
 
-The current foundation `31b83cf` stops before this exception profile and before
-the compiler runs: the earlier FIR storage guard rejects `JvmClassName` in the
-new `SignatureBuildingComponents.kt`. That failed current-foundation attempt is
-preserved separately. The shipping recipe retains all eighteen new signature
-sources and the unchanged FIR guard; this PR remains a draft pending their
-independent integration fix.
+The initial attempt on foundation `31b83cf` stopped before this exception profile
+and before the compiler ran: its FIR storage guard rejected `JvmClassName` in
+`SignatureBuildingComponents.kt`. That failed attempt is preserved separately.
+The repaired guard distinguishes the six exact portable declaration/use files
+from the private PSI/JVM facade island, without allowing unknown consumers or
+changing the excluded storage spans. The shipping recipe retains all eighteen
+signature sources.
 
-Whole-source qualification therefore uses an explicit validation variant:
+The earlier whole-source qualification used an explicit validation variant:
 baseline `4b6f787` (the last actual 3,553-source compiler invocation) plus this
 exception delta. `baseline-variant.mjs` authenticates the two original build
 recipes, reverses exactly the three JVM signature additions, and requires the
@@ -77,8 +85,8 @@ Final verification also matches that predecessor's ordered source identities
 against the actual original 3,553-input receipt. A passing baseline variant
 does not qualify the current foundation or produce a complete compiler.
 
-The recorded variant completes source preparation and invokes the real Wasm
-compiler with 3,553 inputs. It exits 1 with 1,308 cascading error entries, compared
+The recorded variant completed source preparation and invoked the real Wasm
+compiler with 3,553 inputs. It exited 1 with 1,308 cascading error entries, compared
 with 1,422 in the authentic baseline. Exception-profile entries fall from 74 to
 five existing FIR PSI errors; there are no newly emitted diagnostics in the
 profile, request entry, helpers, or other files. These counts locate remaining
@@ -91,7 +99,7 @@ node producer/kotlin-browser/compiler-port/compiler-exception-attachment-profile
   out/new-exception-runtime /path/to/pinned/kotlin/sources
 node producer/kotlin-browser/compiler-port/compiler-exception-attachment-profile/measure-browser.mjs \
   out/new-exception-runtime out/new-exception-browser.json /path/to/playwright/package.json
-node producer/kotlin-browser/compiler-port/compiler-exception-attachment-profile/verify.mjs
+node producer/kotlin-browser/compiler-port/compiler-exception-attachment-profile/verify-current-foundation.mjs
 ```
 
 Runtime measurements require the existing locked bootstrap cache. Whole-source
@@ -99,7 +107,8 @@ builds use the compiler-port build command and all of its declared/reference
 inputs. Keep historical artifacts immutable and preserve the final validation
 snapshot (or its verified archive) while its evidence refers to that snapshot.
 
-To repeat the variant, first create a separate complete producer snapshot and
+To reproduce the historical variant, first restore its pinned producer revision
+in a separate complete producer snapshot and
 populate its locked/reference inputs as described by the compiler-port build
 instructions. Run `prepare-baseline-variant.mjs SNAPSHOT_ROOT
 SNAPSHOT_ROOT/out/baseline-variant` from this profile, then run that snapshot's

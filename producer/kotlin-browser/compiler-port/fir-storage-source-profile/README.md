@@ -46,6 +46,22 @@ selected lexical closure. It allows only explicitly declared assembly import
 additions and otherwise preserves canonical imports. The guard is conservative
 lexical analysis with exact body pins, not a resolved whole FIR call graph.
 
+The current JVM descriptor/signature port also uses `JvmClassName` outside the
+private storage island. Its complete source lock now binds the six genuine
+declaration/use files separately: `JvmClassName`, `JvmAnnotationNames`,
+`JvmSignatureProperties`, `SignatureBuildingComponents`, `methodSignatureMapping`
+and `typeSignatureMapping`. When selected, all six must retain their exact paths,
+the `jvmDescriptorSignatureImplementationsReceipt` component owner, and canonical
+bytes. Final assembly permits only the signature port's already pinned import
+assembly. A subset, changed body/import, wrong owner, renamed source or unknown
+`JvmClassName` consumer fails closed. `NonCachedSourceFacadeContainerSource`,
+`JvmFileClassUtil` and `FacadeClassSource` remain excluded everywhere after
+profiling; the six removed storage spans are unchanged.
+
+The current-foundation integration and direct before/after compiler comparison
+are documented in the exception profile's
+[CURRENT_FOUNDATION.md](../compiler-exception-attachment-profile/CURRENT_FOUNDATION.md).
+
 The historical [sealed proof](evidence/differential.json) binds the actual failed
 3,509-source whole compilation and its source inventory. The bounded JVM
 observer executes the complete pinned configuration class and the exact pure
