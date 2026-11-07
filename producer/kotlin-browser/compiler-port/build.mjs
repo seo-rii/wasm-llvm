@@ -83,6 +83,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let distributionPathPredecessorSources;
   let nativeFirstPhaseComposition;
   let nativeFirstPhasePredecessorSources;
+  let compilerExceptionComposition;
+  let compilerExceptionPredecessorSources;
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
@@ -1634,11 +1636,67 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       files.set(excluded, { ...pin, compile: false });
       receipt.nativeFirstPhaseSourceProfileReceipt = component.receipt;
       nativeFirstPhaseComposition = { sourceRoot: prepared.sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
-      const final = await profile.verifyNativeFirstPhaseFinalSources({ ...nativeFirstPhaseComposition,
-        loweringPhaseBoundary: loweringPhaseFactoriesComposition,
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./compiler-exception-attachment-profile/prepare.mjs');
+      const outputRoot = path.join(output, 'components', 'compilerExceptionAttachmentReceipt');
+      const component = await profile.prepareCompilerExceptionAttachments({ sourceRoot: prepared.sourceRoot, outputRoot,
+        preparedHost: sourceHostComponent, recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.equal(component.commonSources.length, 8);
+      assert.equal(component.replacedOriginalPaths.length, 6);
+      assert.equal(component.sourceSetExclusions.length, 2);
+      assert.deepEqual(component.replacedOriginalPaths, component.receipt.files.map(row => row.before.path));
+      assert.deepEqual(component.sourceSetExclusions, component.receipt.excluded.map(row => row.before.path));
+      assert.deepEqual(component.commonSources, [...component.receipt.files.map(row => row.after.filename),
+        ...component.receipt.helpers.map(row => row.filename)]);
+      for (const { before, after } of component.receipt.files) {
+        const previous = files.get(before.path);
+        assert(previous?.compile, 'Missing selected exception predecessor');
+        assert.deepEqual({ path: before.path, ...previous }, before, 'Exception predecessor owner or metadata changed');
+        assert.equal(after.path, before.path);
+        assert.equal(after.filename, path.join(outputRoot, before.path));
+        const bytes = await readRegular(after.filename);
+        assert.equal(bytes.length, after.bytes); assert.equal(sha256(bytes), after.sha256);
+        files.set(before.path, { ...previous, filename: after.filename, bytes: after.bytes, sha256: after.sha256 });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== before.path);
+        receipt.portableSourceBindings.push({ path: before.path, sha256: after.sha256 });
+      }
+      for (const { before } of component.receipt.excluded) {
+        const previous = files.get(before.path);
+        assert(previous?.compile, 'Missing selected optional PSI exception utility');
+        assert.deepEqual({ path: before.path, ...previous }, before, 'Excluded exception utility owner or metadata changed');
+        files.set(before.path, { ...previous, compile: false });
+      }
+      assert.equal(component.receipt.helpers.length, 2);
+      for (const helper of component.receipt.helpers) {
+        const logical = relativePath(helper.path);
+        assert(!files.has(logical), 'Duplicate portable exception helper');
+        assert.equal(helper.filename, path.join(outputRoot, logical));
+        assert.equal(helper.compile, true);
+        const bytes = await readRegular(helper.filename);
+        assert.equal(bytes.length, helper.bytes); assert.equal(sha256(bytes), helper.sha256);
+        files.set(logical, { filename: helper.filename, bytes: helper.bytes, sha256: helper.sha256, compile: true });
+        receipt.portableSourceBindings.push({ path: logical, sha256: helper.sha256 });
+      }
+      receipt.compilerExceptionAttachmentReceipt = component.receipt;
+      compilerExceptionComposition = { sourceRoot: prepared.sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
+      const final = await profile.verifyCompilerExceptionAttachmentFinalSources({ ...compilerExceptionComposition,
         recordedPropertyImports: receipt.propertyImports.imports,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.compilerExceptionAttachmentFinalReceipt = final.receipt;
+      // Earlier component guards receive only the authenticated full inverse.
+      // The files map remains the actual selection used by the compiler.
+      compilerExceptionPredecessorSources = final.predecessorRetainedSources;
+    }
+    if (sourceHost === 'portable') {
+      const profile = await import('./native-first-phase-source-profile/prepare.mjs');
+      const final = await profile.verifyNativeFirstPhaseFinalSources({ ...nativeFirstPhaseComposition,
+        loweringPhaseBoundary: loweringPhaseFactoriesComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: compilerExceptionPredecessorSources });
       receipt.nativeFirstPhaseSourceProfileFinalReceipt = final.receipt;
       nativeFirstPhasePredecessorSources = final.predecessorRetainedSources;
     }
@@ -1653,8 +1711,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const profile = await import('./k1-container-profile/prepare.mjs');
       const final = await profile.verifyK1ContainerProfileComposition({
         profileRoot: path.join(output, 'components', 'k1ContainerProfileReceipt'),
-        retainedSources: [...files].filter(([, pin]) => pin.compile && pin.filename.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+        retainedSources: compilerExceptionPredecessorSources });
       receipt.k1ContainerFinalReceipt = final.receipt;
     }
     if (sourceHost === 'portable') {
@@ -1663,8 +1720,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const semantic = await import('./fir-lighttree-semantic-checker-profile/prepare.mjs');
       const semanticFinal = await semantic.verifyFirLightTreeSemanticCheckerFinalSources({
         ...firLightTreeSemanticComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
       });
       receipt.firLightTreeSemanticCheckerFinalReceipt = semanticFinal.receipt;
       const syntaxFinal = await syntax.verifyFirSyntaxLightTreeFinalSources({
@@ -1683,8 +1739,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const dedup = await import('./fir-containing-class-dedup/prepare.mjs');
       receipt.firContainingClassFinalReceipt = await dedup.verifyFinalContainingClassDedup({
         profileRoot: path.join(output, 'components', 'firContainingClassReceipt'),
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
     }
@@ -1692,15 +1747,13 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const profile = await import('./fir-storage-source-profile/prepare.mjs');
       receipt.firStorageSourceProfileFinalReceipt = await profile.verifyFinalFirStorageSourceProfile({
         profileRoot: path.join(output, 'components', 'firStorageSourceProfileReceipt'),
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
     }
     if (sourceHost === 'portable') {
       const runtime = await import('./source-map-runtime/final.mjs');
-      const retainedSources = [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-        .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+      const retainedSources = compilerExceptionPredecessorSources;
       const final = await runtime.verifySourceMapRuntimeFinalSources({ ...sourceMapRuntimeComposition, retainedSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
         allowedRequestHostSources: retainedSources.filter(pin => ['compiler-port-entry/BrowserCompiler.kt',
@@ -1710,8 +1763,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
     }
     if (sourceHost === 'portable') {
       const paths = await import('./source-map-path-consumer/final.mjs');
-      const retainedSources = [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-        .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin }));
+      const retainedSources = compilerExceptionPredecessorSources;
       const final = await paths.verifySourceMapPathFinalSources({ ...sourceMapPathComposition, retainedSources,
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
         allowedRequestHostSources: retainedSources.filter(pin => ['compiler-port-entry/BrowserCompiler.kt',
@@ -1739,7 +1791,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
-        verifiedLoweringPhaseBoundary: { ...loweringPhaseFactoriesComposition, nativeFirstPhaseProfile: nativeFirstPhaseComposition },
+        verifiedLoweringPhaseBoundary: { ...loweringPhaseFactoriesComposition, nativeFirstPhaseProfile: nativeFirstPhaseComposition,
+          compilerExceptionProfile: compilerExceptionComposition },
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
@@ -1748,8 +1801,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const index = await import('./klib-signature-index/prepare.mjs');
       const final = await index.verifyFinalKlibSignatureIndex({
         outputRoot: path.join(output, 'components', 'klibSignatureIndexReceipt'),
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.klibSignatureIndexFinalReceipt = final.receipt;
@@ -1758,8 +1810,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const getter = await import('./type-substitutor-getter/prepare.mjs');
       receipt.typeSubstitutorGetterFinalReceipt = await getter.verifyFinalTypeSubstitutorGetter({
         outputRoot: path.join(output, 'components', 'typeSubstitutorGetterReceipt'),
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1779,8 +1830,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const jvmSignatures = await import('./jvm-descriptor-signature-implementations/prepare.mjs');
       const jvmSignatureFinal = await jvmSignatures.verifyFinalJvmDescriptorSignatureImplementations({
         ...jvmDescriptorSignatureComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
       receipt.jvmDescriptorSignatureImplementationsFinalReceipt = jvmSignatureFinal.receipt;
@@ -1860,8 +1910,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const counters = await import('./performance-counter/prepare.mjs');
       receipt.performanceCounterFinalReceipt = await counters.verifyFinalPerformanceCounter({
         sourceRoot: prepared.sourceRoot, outputRoot: path.join(output, 'components', 'performanceCounterReceipt'),
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1869,8 +1918,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const managers = await import('./performance-manager/prepare.mjs');
       receipt.performanceManagerFinalReceipt = await managers.verifyFinalPerformanceManager({
         sourceRoot: prepared.sourceRoot, outputRoot: path.join(output, 'components', 'performanceManagerReceipt'),
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1878,8 +1926,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const tower = await import('./tower-group/prepare.mjs');
       receipt.towerGroupFinalReceipt = await tower.verifyFinalTowerGroup({
         ...towerGroupComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1887,8 +1934,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const predicates = await import('./fir-predicate-collections/prepare.mjs');
       receipt.firPredicateCollectionsFinalReceipt = await predicates.verifyFinalFirPredicateCollections({
         ...firPredicateComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1896,8 +1942,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const scopes = await import('./descriptor-kind-filter-host/prepare.mjs');
       receipt.descriptorKindFilterHostFinalReceipt = await scopes.verifyFinalDescriptorKindFilterHost({
         ...descriptorKindFilterComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1905,8 +1950,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const raw = await import('./raw-fir-literal-host/prepare.mjs');
       receipt.rawFirLiteralHostFinalReceipt = await raw.verifyFinalRawFirLiteralHost({
         ...rawFirLiteralComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1922,8 +1966,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const metadata = await import('./metadata-version-host/prepare.mjs');
       receipt.metadataVersionHostFinalReceipt = await metadata.verifyFinalMetadataVersionHost({
         ...metadataVersionComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1931,8 +1974,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const lines = await import('./ir-file-line-search/prepare.mjs');
       receipt.irFileLineSearchFinalReceipt = await lines.verifyFinalIrFileLineSearch({
         ...irFileLineSearchComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1940,8 +1982,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const intern = await import('./ir-interning/prepare.mjs');
       receipt.irInterningFinalReceipt = await intern.verifyFinalIrInterning({
         ...irInterningComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }
@@ -1949,8 +1990,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       const profile = await import('./fir-java-session-profile/prepare.mjs');
       receipt.firJavaSessionProfileFinalReceipt = await profile.verifyFinalFirJavaSessionProfile({
         ...firJavaSessionProfileComposition,
-        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
-          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
+        retainedSources: compilerExceptionPredecessorSources,
         recordedPropertyImports: receipt.propertyImports.imports,
       });
     }

@@ -4,23 +4,30 @@ import { assertNoSymlink, readRegular, sha256, verifyFile } from '../../scripts/
 import { verifyFinalLoweringPhaseFactories } from '../lowering-phase-factories/prepare.mjs';
 import { RECIPE, transformLoweringPhaseSource } from '../lowering-phase-factories/transform.mjs';
 import { verifyNativeFirstPhaseFinalSources } from '../native-first-phase-source-profile/prepare.mjs';
+import { verifyCompilerExceptionAttachmentFinalSources } from '../compiler-exception-attachment-profile/prepare.mjs';
 
 export const PHASE_BOUNDARIES = [
     'compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt',
     'compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/WasmLoweringPhases.kt',
 ];
 
-/** Keep the native actual graph intact; only the phase checker may receive a verified one-row predecessor. */
+/** Keep native lexical/module inputs actual; independently restore approved predecessors only for phase verification. */
 export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, retainedSources, recordedPropertyImports, requiredBoundaries, source }) {
     assert.equal(path.resolve(boundary.sourceRoot), path.resolve(sourceRoot), 'Native and phase canonical source roots differ');
     assert.equal(path.resolve(boundary.outputRoot), boundary.outputRoot, 'Canonical phase output root required');
     assert.match(boundary.expectedReceiptSha256 ?? '', /^[a-f0-9]{64}$/, 'External phase preparation receipt digest required');
     await assertNoSymlink(boundary.outputRoot);
     const phaseBoundary = { sourceRoot, outputRoot: boundary.outputRoot, expectedReceiptSha256: boundary.expectedReceiptSha256 };
+    const exceptionProfile = boundary.compilerExceptionProfile;
+    if (exceptionProfile) assert.equal(path.resolve(exceptionProfile.sourceRoot), path.resolve(sourceRoot), 'Native and exception canonical source roots differ');
+    const exceptionFinal = exceptionProfile ? await verifyCompilerExceptionAttachmentFinalSources({
+        ...exceptionProfile, sourceRoot, retainedSources, recordedPropertyImports,
+    }) : undefined;
+    const nativePhaseSources = exceptionFinal?.predecessorRetainedSources ?? retainedSources;
     const profile = boundary.nativeFirstPhaseProfile;
-    const nativeFirstPhase = profile ? await verifyNativeFirstPhaseFinalSources({ ...profile, sourceRoot, retainedSources,
+    const nativeFirstPhase = profile ? await verifyNativeFirstPhaseFinalSources({ ...profile, sourceRoot, retainedSources: nativePhaseSources,
         loweringPhaseBoundary: phaseBoundary, recordedPropertyImports }) : undefined;
-    const phaseSources = nativeFirstPhase?.predecessorRetainedSources ?? retainedSources;
+    const phaseSources = nativeFirstPhase?.predecessorRetainedSources ?? nativePhaseSources;
     const final = await verifyFinalLoweringPhaseFactories({ ...phaseBoundary, retainedSources: phaseSources, recordedPropertyImports });
     assert.equal(final.checked.length, 6, 'Native composition requires all six canonical phase outputs');
     assert.equal(final.exactBodyAndOwnerVerified, true);
@@ -58,7 +65,9 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
         preparationReceiptSha256: boundary.expectedReceiptSha256, sourceLockSha256: final.sourceLockSha256,
         checked: final.checked, mappings: proofMappings, actualFinalSelectionUsed: true,
         ...(nativeFirstPhase ? { actualSelectedPhaseOutputs: 5, restoredExcludedPhaseOutputs: 1, fullCanonicalOutputsVerified: 6,
-            phaseVerificationSelection: 'actual graph plus exactly one independently verified excluded predecessor',
+            phaseVerificationSelection: exceptionFinal ? 'authenticated exception predecessor plus exactly one independently verified excluded native predecessor' : 'actual graph plus exactly one independently verified excluded predecessor',
             nativeFirstPhaseProfile: nativeFirstPhase.receipt } : {}),
+        ...(exceptionFinal ? { compilerExceptionProfile: exceptionFinal.receipt,
+            actualCompilerGraphPreservedForLexicalAndModule: true } : {}),
         fullIrLoweringExecuted: false, fullCompilerBuilt: false, languageReadiness: false } };
 }

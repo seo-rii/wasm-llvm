@@ -8,6 +8,7 @@ import test, { after } from 'node:test';
 import { sha256 } from '../../scripts/source.mjs';
 import { prepareHostSources } from '../host/prepare.mjs';
 import { prepareFirStorageSources } from '../fir-storage/prepare.mjs';
+import { assembleImports } from '../type-substitutor-getter/prepare.mjs';
 import { guardStorageSelection, prepareFirStorageSourceProfile, verifyFirStorageSourceProfile, verifyFinalFirStorageSourceProfile } from './prepare.mjs';
 import { CONFIG, ELEMENT, HOST, STORAGE, UTILS, profileStorage } from './transform.mjs';
 
@@ -22,8 +23,16 @@ const originals = new Map(await Promise.all(lock.sources.map(async pin => [pin.p
 for (const entry of lock.entries) originals.set(entry.path, await readFile(path.join(here, entry.repositoryPath)));
 const storage = await readFile(preparedFirStorage.commonSources.find(file => file.endsWith('/' + STORAGE)));
 const host = await readFile(preparedHost.commonSources.find(file => file.endsWith('/' + HOST)));
-const input = { lock, originals, predecessors: { storage: { bytes: storage }, host: { bytes: host } } };
-const item = (logical, bytes) => ({ path: logical, bytes: bytes.length, sha256: sha256(bytes), source: bytes.toString('base64') });
+const jvmRoot = path.resolve(here, '../jvm-descriptor-signature-implementations');
+const jvmLockBytes = await readFile(path.join(jvmRoot, 'sources.lock.json')), jvmLock = JSON.parse(jvmLockBytes);
+const jvmSources = new Map(await Promise.all(jvmLock.common.map(async pin => [
+    'compiler-port-jvm-descriptor-signatures/' + pin.path, await readFile(path.join(jvmRoot, 'common', pin.path))])));
+const portableJvmClassNames = { sourceLockSha256: sha256(jvmLockBytes), assemblyImports: jvmLock.assemblyImports,
+    ownerRoot: path.join(root, 'jvmDescriptorSignatureImplementationsReceipt'),
+    sources: new Map([...jvmSources].filter(([, bytes]) => /\bJvmClassName\b/.test(bytes.toString()))) };
+const input = { lock, originals, portableJvmClassNames, predecessors: { storage: { bytes: storage }, host: { bytes: host } } };
+const item = (logical, bytes) => ({ path: logical, bytes: bytes.length, sha256: sha256(bytes), source: bytes.toString('base64'),
+    ...(jvmSources.has(logical) ? { filename: path.join(portableJvmClassNames.ownerRoot, logical) } : {}) });
 const canonical = new Map(originals); canonical.set(STORAGE, storage); canonical.set(HOST, host);
 const snapshot = () => [...canonical].map(([logical, bytes]) => item(logical, bytes));
 const selectedPins = () => [STORAGE, CONFIG, UTILS, HOST, ELEMENT].map(logical => {
@@ -62,6 +71,30 @@ test('new PSI source implementations, source aliases, Analysis API callers and f
         'val config = Fir2IrConfiguration.forAnalysisApi(c, l, d)', 'val config = Fir2IrConfiguration(c)', 'val facade = JvmClassName.byFqNameWithoutInnerClasses(n)']) {
         assert.throws(() => guardStorageSelection([...snapshot(), item('other/Caller.kt', Buffer.from(text))], input));
     }
+});
+
+test('the real pinned JVM signature sources coexist with the excluded private FIR facade island', () => {
+    const current = [...snapshot(), ...[...jvmSources].map(([logical, bytes]) => item(logical, bytes))];
+    const guarded = guardStorageSelection(current, input);
+    assert.equal(guarded.portableJvmClassNameSources.length, 6);
+    assert.deepEqual(guarded.facadeIslandConsumers, [STORAGE]);
+    const final = current.map(row => row.path === STORAGE ? item(STORAGE, profileStorage(storage, lock).bytes)
+        : jvmSources.has(row.path) ? item(row.path, assembleImports(jvmSources.get(row.path), jvmLock.assemblyImports)) : row);
+    assert.equal(guardStorageSelection(final, input, { final: true }).facadeIslandConsumers.length, 0);
+    const classPath = 'compiler-port-jvm-descriptor-signatures/JvmClassName.kt';
+    assert.throws(() => guardStorageSelection(current.map(row => row.path === classPath
+        ? { ...row, filename: path.join(root, 'wrong-owner', classPath) } : row), input), /Wrong portable JVM class-name source owner/);
+    assert.throws(() => guardStorageSelection(current.map(row => row.path === classPath
+        ? { ...row, path: 'other/JvmClassName.kt' } : row), input), /Excluded facade island consumer/);
+    assert.throws(() => guardStorageSelection(current.filter(row => row.path !== classPath), input), /Incomplete portable JVM class-name closure/);
+    assert.throws(() => guardStorageSelection(current.map(row => row.path === classPath
+        ? item(classPath, Buffer.from(jvmSources.get(classPath).toString().replace('return internalName', 'return "changed"'))) : row), input), /Portable JVM class-name source changed/);
+    for (const text of ['class JvmClassName {}', 'val x = JvmFileClassUtil.getFileClassInfoNoResolve(file)',
+        'class Other : FacadeClassSource', 'val x = NonCachedSourceFacadeContainerSource(file)'])
+        assert.throws(() => guardStorageSelection([...current, item('other/Facade.kt', Buffer.from(text))], input));
+    const unknownImport = Buffer.from(jvmSources.get(classPath).toString().replace('package org.jetbrains.kotlin.resolve.jvm',
+        'package org.jetbrains.kotlin.resolve.jvm\nimport unknown.JvmClassName as Other'));
+    assert.throws(() => guardStorageSelection(current.map(row => row.path === classPath ? item(classPath, unknownImport) : row), input), /Portable JVM class-name source changed/);
 });
 
 test('genuine preparation and reference replay verify the exact storage and host predecessor contracts', async () => {
