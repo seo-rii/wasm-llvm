@@ -11,7 +11,8 @@ const expected = { gccSource: { sourceDiffSha256: '1'.repeat(64) },
   nativeBuild: stamp, sourceLockSha256: '2'.repeat(64), runtimeBuild: stamp };
 function build() {
   return { schemaVersion: 1, kind: 'gcc-wasi-exception-runtime-build', status: 'built-unverified',
-    inputsUnchanged: true, fullGnuLibrary: true, target: 'wasm32-wasi', profile: 'ordinary-private-modern',
+    inputsUnchanged: true, fullGnuLibrary: true, timezoneDatabase: true,
+    target: 'wasm32-wasi', profile: 'ordinary-private-modern',
     exceptions: true, rtti: true, threads: false, userTls: false, sharedMemory: false, coverage: false, debugger: false,
     gccSource: expected.gccSource, nativeBuild: stamp, sourceLock: { ...stamp, sha256: expected.sourceLockSha256 },
     files: exceptionRuntimeFiles.map(path => ({ path, ...stamp })),
@@ -41,8 +42,9 @@ test('the bounded build and execution schemas admit the full real-library contra
   verifyExceptionRuntimeBuildMetadata(build(), expected);
   verifyExceptionRuntimeExecutionMetadata(execution(), expected);
 });
-test('a bootstrap or already promoted build cannot replace the full archive build', () => {
-  for (const changes of [{ fullGnuLibrary: false }, { status: 'passed' }, { profile: 'reference' }, { inputsUnchanged: false }])
+test('a bootstrap, timezone-less or already promoted build cannot replace the full archive build', () => {
+  for (const changes of [{ fullGnuLibrary: false }, { timezoneDatabase: false }, { timezoneDatabase: undefined },
+    { status: 'passed' }, { profile: 'reference' }, { inputsUnchanged: false }])
     assert.throws(() => verifyExceptionRuntimeBuildMetadata({ ...build(), ...changes }, expected));
 });
 test('default abort helpers and unqualified runtime options are rejected', () => {

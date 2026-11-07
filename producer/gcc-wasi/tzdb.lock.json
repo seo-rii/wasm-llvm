@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "gnu-libstdcxx-static-timezone-database",
+  "gccCommit": "ac20dcd5f8c5ae858f9b2d9cdf4140c0738e5e27",
+  "version": "2026b",
+  "source": {
+    "path": "libstdc++-v3/src/c++20/tzdb.cc",
+    "bytes": 74387,
+    "sha256": "66df366140bb9dee59b5bcb4d28012f48ed0da1153740aa8e38c449674fb55dc"
+  },
+  "data": {
+    "path": "libstdc++-v3/src/c++20/tzdata.zi",
+    "bytes": 107518,
+    "sha256": "e500467b589740d2c0311c844896f2f3727ffc4baff7e82d65d0f8c1e7e6f0c1",
+    "license": "public-domain",
+    "licenseNotice": "This zic input file is in the public domain."
+  },
+  "patch": {
+    "path": "patches/libstdcxx-wasi-tzdb-cache.patch",
+    "bytes": 2442,
+    "sha256": "870c0853a9ec33accd45b0e07a9743414501ece15a079e2f57b146bf07d789ea"
+  },
+  "distribution": {
+    "mode": "embedded",
+    "configureOption": "--with-libstdcxx-zoneinfo=static",
+    "requiredGuestFiles": [],
+    "automaticNetworkUpdates": false,
+    "updatePolicy": "Update the pinned GNU source/data and rebuild and qualify both runtime archives before distributing a new database."
+  },
+  "profile": {
+    "threads": false,
+    "sharedMemory": false,
+    "userTls": false,
+    "atomicInstructions": false,
+    "exceptions": "separate-qualified-GNU-variant"
+  },
+  "currentZonePolicy": "No host timezone is inferred. With no supported guest timezone files, the GNU implementation returns its UTC fallback.",
+  "leapSecondModel": {
+    "knownPositiveLeapSeconds": 27,
+    "fixedExpiryUnix": 1798416000,
+    "postExpiryAssertions": "pinned-data-model-not-a-future-forecast"
+  }
+}

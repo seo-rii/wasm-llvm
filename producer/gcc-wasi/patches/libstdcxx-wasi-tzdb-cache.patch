@@ -1,0 +1,72 @@
+--- a/libstdc++-v3/src/c++20/tzdb.cc
++++ b/libstdc++-v3/src/c++20/tzdb.cc
+@@ -1304,7 +1304,13 @@
+ 
+   // This holds the most up-to-date number of leap seconds known at runtime.
+   // Initially zero, updated when _S_read_leap_seconds() is called.
++#ifdef __GTHREADS
+   constinit atomic<unsigned> num_leap_seconds{0};
++#else
++  // Like the list head and RulesCounter, this cache needs no synchronization
++  // when the library is configured without thread support.
++  constinit unsigned num_leap_seconds = 0;
++#endif
+ }
+ 
+   namespace __detail
+@@ -1368,11 +1374,17 @@
+ 
+       constexpr auto num_fixed_leaps = std::size(_Node::fixed_leaps);
+ 
++#ifdef __GTHREADS
+       auto num_leaps = num_leap_seconds.load(memory_order::relaxed);
++#else
++      auto num_leaps = num_leap_seconds;
++#endif
+       if (num_leaps == num_fixed_leaps)
+ 	// A leapseconds file has been read and has no new leap seconds:
+ 	return update_info(_Node::fixed_leaps);
+       else if (num_leaps != 0)
++	{
++#ifdef __GTHREADS
+ 	// The tzdb_list has been initialized and contains a tzdb object
+ 	// with new leap seconds, which we want to use here.
+ 	// The relaxed load above does not synchronize with anything, so to
+@@ -1380,6 +1392,8 @@
+ 	// by _S_replace_head, we load num_leap_seconds again with acquire
+ 	// ordering:
+ 	(void) num_leap_seconds.load(memory_order::acquire);
++#endif
++	}
+       else
+ 	{
+ 	  // The tzdb_list has not been initialized yet, so we don't know
+@@ -1391,9 +1405,14 @@
+ 	    {
+ 	      // There are no new leap seconds. remember that so that the next
+ 	      // call to this function can just use fixed_leaps.
++#ifdef __GTHREADS
+ 	      num_leap_seconds.compare_exchange_strong(num_leaps,
+ 						       num_fixed_leaps,
+ 						       memory_order::relaxed);
++#else
++	      if (num_leap_seconds == num_leaps)
++		num_leap_seconds = num_fixed_leaps;
++#endif
+ 	      return update_info(_Node::fixed_leaps);
+ 	    }
+ 	  // else there are new leap seconds. We init tzdb_list so that the
+@@ -1539,9 +1558,13 @@
+ 
+     // This allows __recent_leap_second_info() to know that it can use
+     // get_tzdb_list()->begin()->leap_seconds to get new leap seconds.
++#ifdef __GTHREADS
+     // The release op here synchronizes with the acquire op there.
+     num_leap_seconds.store(new_head_ptr->db.leap_seconds.size(),
+ 			   memory_order::release);
++#else
++    num_leap_seconds = new_head_ptr->db.leap_seconds.size();
++#endif
+ 
+     return new_head_ptr->db;
+   }

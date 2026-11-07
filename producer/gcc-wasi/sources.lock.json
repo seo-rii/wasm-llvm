@@ -151,9 +151,14 @@
         "path": "patches/0028-wasm-eh-runtime.patch",
         "sha256": "8ca57686ad890920dd244cc115027085e77bf2ee46012667f8d8f4a3d8f57215",
         "purpose": "Port genuine GNU C++ exception dispatch and lifecycle termination boundaries to the pinned wasm unwinder ABI; preserve default runtime and private single-thread exception globals."
+      },
+      {
+        "path": "patches/0029-wasm-member-function-pointer.patch",
+        "sha256": "0076580dd15fba8a0c262104fbfda67296cba1caa26e1aa840537c1c7a7d46fa",
+        "purpose": "Store the C++ pointer-to-member virtual discriminator in the this adjustment because Wasm function table indices can be odd."
       }
     ],
-    "sourceDiffSha256": "ef4bc7defc9254a6c084541307e0e5a2a790954b4157efa2130a15c21f5a5f2d"
+    "sourceDiffSha256": "ecc42c806a08d113fa150bca2e9fbb3d0f4099dd9e4eccf691a4539212cf0ce8"
   },
   "wabt": {
     "version": "1.0.37",

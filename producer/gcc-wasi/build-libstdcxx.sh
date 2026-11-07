@@ -40,9 +40,13 @@ errno_patch_digest=$(sha256sum "$errno_patch" | cut -d' ' -f1)
 recipe_digest=$(sha256sum "$recipe/build-libstdcxx.sh" | cut -d' ' -f1)
 math_probe="$recipe/fp-extension-math-probe.py"
 math_probe_digest=$(sha256sum "$math_probe" | cut -d' ' -f1)
+tzdb_state="$recipe/tzdb-runtime-state.py"
+tzdb_inputs=$(python3 "$tzdb_state" pin --source "$work/gcc")
+tzdb_digest=$(printf '%s\n' "$tzdb_inputs" | sha256sum | cut -d' ' -f1)
+tzdb_patch="$recipe/patches/libstdcxx-wasi-tzdb-cache.patch"
 source="$runtime/source"
 if [[ -d $source ]]; then
-  [[ $(cat "$runtime/source-inputs.txt") == "$revision $patch_digest $source_digest $errno_patch_digest $recipe_digest $math_probe_digest$exception_inputs" ]] || {
+  [[ $(cat "$runtime/source-inputs.txt") == "$revision $patch_digest $source_digest $errno_patch_digest $recipe_digest $math_probe_digest$exception_inputs $tzdb_digest" ]] || {
     echo 'Runtime source inputs changed; select a new GCC_LIBSTDCXX_WORK_DIR' >&2; exit 2;
   }
 else
@@ -60,10 +64,12 @@ else
   if [[ $exceptions == 1 ]]; then
     patch --batch --forward -d "$source" -p1 < "$exception_patch"
   fi
-  printf '%s %s %s %s %s %s%s\n' "$revision" "$patch_digest" "$source_digest" "$errno_patch_digest" "$recipe_digest" "$math_probe_digest" "$exception_inputs" > "$runtime/source-inputs.txt"
+  patch --batch --forward --fuzz=0 -d "$source" -p1 < "$tzdb_patch"
+  printf '%s %s %s %s %s %s%s %s\n' "$revision" "$patch_digest" "$source_digest" "$errno_patch_digest" "$recipe_digest" "$math_probe_digest" "$exception_inputs" "$tzdb_digest" > "$runtime/source-inputs.txt"
 fi
 
 printf '%s\n' "$gcc_source" > "$runtime/gcc-source.json"
+printf '%s\n' "$tzdb_inputs" > "$runtime/tzdb-inputs.json"
 
 # GCC's checked-in m4 framework requires exactly Autoconf 2.69.
 tools="$work/libstdcxx-tools"
@@ -191,6 +197,7 @@ if [[ ! -f Makefile ]]; then
     --disable-shared --disable-multilib --disable-nls --disable-symvers \
     --disable-libstdcxx-pch --disable-libstdcxx-threads --disable-libstdcxx-backtrace \
     --disable-libstdcxx-filesystem-ts --disable-libstdcxx-time --disable-libstdcxx-verbose \
+    --with-libstdcxx-zoneinfo=static \
     --enable-libstdcxx-dual-abi --with-default-libstdcxx-abi=new \
     --disable-libstdcxx-visibility --disable-werror \
     --enable-clocale=generic --enable-cstdio=stdio "${configure_profile[@]}"
@@ -203,6 +210,7 @@ python3 "$math_probe" --output "$runtime/math-probes" --verify
 if [[ $exceptions == 1 ]]; then
   python3 "$recipe/eh-runtime-build-state.py" verify --work "$work" --sdk "$sdk" --runtime "$runtime"
 fi
+python3 "$tzdb_state" inspect --source "$work/gcc" --runtime "$runtime" --work "$work" --sdk "$sdk" > "$runtime/tzdb-build.json"
 python3 - "$runtime" "$work" "$recipe" "$sdk" "$exceptions" <<'PY'
 import hashlib, json, pathlib, subprocess, sys
 runtime, work, recipe, sdk = map(pathlib.Path, sys.argv[1:5])
@@ -247,7 +255,9 @@ receipt = {'schemaVersion': 1, 'status': 'built-unverified', 'target': 'wasm32-w
         'report': identity(runtime/'math-probes/report.json'),
         'cache': identity(runtime/'math-probes/config.site'), 'evidence': math_probe},
     'libraries': {name: identity(runtime/'install/lib'/name) for name in ['libstdc++.a', 'libsupc++.a']},
-    'exceptions': exceptions, 'rtti': True, 'threads': False, 'timezoneDatabase': False, 'debugger': False, 'stdModules': False}
+    'exceptions': exceptions, 'rtti': True, 'threads': False, 'timezoneDatabase': True,
+    'timezone': json.loads((runtime/'tzdb-build.json').read_text()),
+    'debugger': False, 'stdModules': False}
 if exceptions:
     import shutil
     lock_path = recipe/'runtime.lock.json'

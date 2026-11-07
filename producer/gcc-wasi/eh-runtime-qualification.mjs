@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { identity, runLibatomicValidationCommand as run } from './libatomic-qualification.mjs';
 import { assertExceptionAssemblyReplay, canonicalExceptionAssembly } from './eh-assembly-replay.mjs';
 import { nativeEhCases } from './eh-native-fixtures.mjs';
@@ -14,7 +15,7 @@ const content = record => ({ bytes: record.bytes, sha256: record.sha256 });
 const identify = async file => ({ path: path.resolve(file), ...identity(await fs.readFile(file)) });
 const fixtureCases = [...nativeEhCases, ...exceptionRuntimeCases, ...exceptionLibraryCases];
 const helperNames = ['eh-runtime-qualification.mjs', 'eh-assembly-replay.mjs',
-  'tls-assembly-replay.mjs', 'libatomic-qualification.mjs'];
+  'tls-assembly-replay.mjs', 'libatomic-qualification.mjs', 'tzdb-runtime-state.py'];
 export const exceptionRuntimeFiles = Object.freeze(['libstdc++.a', 'libsupc++.a', 'libunwind.a']
   .map(name => 'lib/wasm32-wasi-eh/' + name));
 export const exceptionRuntimeLinkFlags = Object.freeze(['--wrap=__main_void',
@@ -60,6 +61,7 @@ export function verifyExceptionRuntimeBuildMetadata(report, expected) {
   assert.equal(report.target, 'wasm32-wasi');
   assert.equal(report.profile, 'ordinary-private-modern');
   for (const key of ['exceptions', 'rtti']) assert.equal(report[key], true);
+  assert.equal(report.timezoneDatabase, true, 'The complete GNU runtime must include its timezone implementation');
   for (const key of ['threads', 'userTls', 'sharedMemory', 'coverage', 'debugger']) assert.equal(report[key], false);
   assert.deepEqual(report.gccSource, expected.gccSource);
   assert.deepEqual(content(report.nativeBuild), content(expected.nativeBuild));
@@ -135,6 +137,10 @@ async function checkBuildFiles(directory, report, context) {
     ['exceptionPatch', 'patches/libstdcxx-wasi-eh-config.patch'], ['errnoPatch', 'patches/wasi-libc-errno.patch'],
     ['runtimeLock', 'runtime.lock.json'], ['sourceLock', 'sources.lock.json']])
     await checkContent(report[key], path.join(here, name));
+  const timezone = JSON.parse(execFileSync('python3', [path.join(here, 'tzdb-runtime-state.py'), 'inspect',
+    '--source', path.join(context.work, 'gcc'), '--runtime', directory, '--work', context.work, '--sdk', context.sdk],
+    { encoding: 'utf8', maxBuffer: 1024 * 1024 }));
+  assert.deepEqual(report.timezone, timezone, 'GNU timezone source, data, cache port or actual archive member changed');
   for (const name of ['cc1', 'cc1plus', 'xgcc']) assert.equal(report.nativeCompiler[name], context.native.tools[name].sha256);
   assert.deepEqual(sorted(await inventory(path.join(directory, 'sysroot'))), sorted(report.files));
   assert.deepEqual(sorted(await inventory(path.join(directory, 'licenses'))), sorted(report.licenses));

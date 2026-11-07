@@ -74,6 +74,17 @@ test('RTTI cannot silently enable exceptions or unrelated GNU runtime features',
   }
 });
 
+test('a matching timezone runtime remains subject to its separate execution gate', () => {
+  const withTimezone = () => ({ ...runtime(true), timezoneDatabase: true });
+  verifyRttiRuntimeProfile(withTimezone(), withTimezone(), true, qualified());
+  for (const value of [undefined, null, 0, 1, 'true', {}, []]) {
+    assert.throws(() => verifyRttiRuntimeProfile(
+      { ...runtime(true), timezoneDatabase: value }, runtime(true), true, qualified()), /timezoneDatabase/);
+    assert.throws(() => verifyRttiRuntimeProfile(
+      runtime(true), { ...runtime(true), timezoneDatabase: value }, true, qualified()), /timezoneDatabase/);
+  }
+});
+
 const hash = value => createHash('sha256').update(value).digest('hex');
 const receipt = name => ({ path: '/synthetic/' + name, bytes: 1, sha256: hash(name) });
 const bytes = value => ({ bytes: Buffer.byteLength(value), sha256: hash(value) });

@@ -24,9 +24,14 @@ export function verifyRttiRuntimeProfile(build, qualifiedRuntime, qualifiedRtti,
   assert.equal(typeof qualifiedRtti, 'boolean');
   for (const receipt of [build, qualifiedRuntime]) {
     assert.equal(receipt.rtti, qualifiedRtti, 'GNU RTTI runtime and program qualification differ');
-    for (const feature of ['exceptions', 'threads', 'timezoneDatabase', 'debugger', 'stdModules'])
+    for (const feature of ['exceptions', 'threads', 'debugger', 'stdModules'])
       assert.equal(receipt[feature], false, 'Unsupported GNU runtime feature: ' + feature);
+    assert.equal(typeof receipt.timezoneDatabase, 'boolean', 'Invalid GNU timezoneDatabase capability');
   }
+  // Timezone execution has its own source-bound package gate. RTTI only checks
+  // that the built and installed ordinary libraries describe the same profile.
+  assert.equal(build.timezoneDatabase, qualifiedRuntime.timezoneDatabase,
+    'GNU timezoneDatabase build and installed runtime differ');
   if (!qualifiedRtti) return;
   const flags = build.compilerFlags;
   assert.deepEqual(Object.keys(flags).sort(), ['CXXFLAGS', 'EXTRA_CXX_FLAGS']);

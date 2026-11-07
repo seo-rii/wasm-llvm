@@ -33,62 +33,21 @@
 +esac
 --- a/libstdc++-v3/configure.ac
 +++ b/libstdc++-v3/configure.ac
-@@ -642,6 +642,16 @@
+@@ -642,6 +642,15 @@
  # For libsupc++/eh_alloc.cc defaults.
  GLIBCXX_EMERGENCY_EH_ALLOC
  
-+# WASI lacks the atomics/signals required by these optional interfaces.
-+# Omit their implementations and module manifests; do not supply fake stubs.
++# Debugger functions and std modules need separate WASI qualification.
++# Keep their implementations and manifests disabled independently of tzdb.
 +case "${host}" in
-+  wasm32-*-wasi*) glibcxx_build_tzdb=no ;;
-+  *) glibcxx_build_tzdb=yes ;;
++  wasm32-*-wasi*) glibcxx_build_optional_interfaces=no ;;
++  *) glibcxx_build_optional_interfaces=yes ;;
 +esac
-+AM_CONDITIONAL(GLIBCXX_BUILD_TZDB, test "$glibcxx_build_tzdb" = yes)
-+AM_CONDITIONAL(GLIBCXX_BUILD_DEBUGGING, test "$glibcxx_build_tzdb" = yes)
-+AM_CONDITIONAL(GLIBCXX_BUILD_STD_MODULES, test "$glibcxx_build_tzdb" = yes)
++AM_CONDITIONAL(GLIBCXX_BUILD_DEBUGGING, test "$glibcxx_build_optional_interfaces" = yes)
++AM_CONDITIONAL(GLIBCXX_BUILD_STD_MODULES, test "$glibcxx_build_optional_interfaces" = yes)
 +
  # For src/c++20/tzdb.cc defaults.
  GLIBCXX_ZONEINFO_DIR
- 
---- a/libstdc++-v3/src/c++20/Makefile.am
-+++ b/libstdc++-v3/src/c++20/Makefile.am
-@@ -45,7 +45,13 @@
- inst_sources =
- endif
- 
--sources = tzdb.cc format.cc atomic.cc clock.cc syncbuf.cc
-+if GLIBCXX_BUILD_TZDB
-+tzdb_sources = tzdb.cc
-+else
-+tzdb_sources =
-+endif
-+
-+sources = $(tzdb_sources) format.cc atomic.cc clock.cc syncbuf.cc
- 
- vpath % $(top_srcdir)/src/c++20
- 
---- a/libstdc++-v3/src/c++20/Makefile.in
-+++ b/libstdc++-v3/src/c++20/Makefile.in
-@@ -123,7 +123,8 @@
- CONFIG_CLEAN_VPATH_FILES =
- LTLIBRARIES = $(noinst_LTLIBRARIES)
- libc__20convenience_la_LIBADD =
--am__objects_1 = tzdb.lo format.lo atomic.lo clock.lo syncbuf.lo
-+@GLIBCXX_BUILD_TZDB_TRUE@am__tzdb_objects = tzdb.lo
-+am__objects_1 = $(am__tzdb_objects) format.lo atomic.lo clock.lo syncbuf.lo
- @ENABLE_DUAL_ABI_TRUE@am__objects_2 = cow-string-inst.lo
- @ENABLE_EXTERN_TEMPLATE_TRUE@am__objects_3 = sstream-inst.lo \
- @ENABLE_EXTERN_TEMPLATE_TRUE@	format-inst.lo string-inst.lo \
-@@ -443,7 +444,9 @@
- @ENABLE_EXTERN_TEMPLATE_TRUE@	string-inst.cc \
- @ENABLE_EXTERN_TEMPLATE_TRUE@	$(extra_string_inst_sources)
- 
--sources = tzdb.cc format.cc atomic.cc clock.cc syncbuf.cc
-+@GLIBCXX_BUILD_TZDB_TRUE@tzdb_sources = tzdb.cc
-+@GLIBCXX_BUILD_TZDB_FALSE@tzdb_sources =
-+sources = $(tzdb_sources) format.cc atomic.cc clock.cc syncbuf.cc
- @GLIBCXX_HOSTED_FALSE@libc__20convenience_la_SOURCES = 
- @GLIBCXX_HOSTED_TRUE@libc__20convenience_la_SOURCES = $(sources)  $(inst_sources)
  
 --- a/libstdc++-v3/src/c++23/Makefile.am
 +++ b/libstdc++-v3/src/c++23/Makefile.am
