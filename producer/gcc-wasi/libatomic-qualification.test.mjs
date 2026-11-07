@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { identity, expectedLibatomicMembers, expectedLibatomicSymbols,
-  verifyLibatomicBuildMetadata, assertLibatomicAssemblyReplay, libatomicCompileArgs } from './libatomic-qualification.mjs';
+  verifyLibatomicBuildMetadata, assertLibatomicAssemblyReplay, libatomicCompileArgs, reopenLibatomicBuild } from './libatomic-qualification.mjs';
 import { cases } from './libatomic-fixtures.mjs';
 import { sharedCases, assertSharedLibatomicResult } from './libatomic-shared-fixtures.mjs';
 
@@ -93,3 +97,98 @@ test('shared consumers omit the serial WASI header profile macro', () => {
   assert(cases.every(fixture => args(fixture).includes('-D__GCC_WASI_SINGLE_THREAD__=1')));
   assert(sharedCases.every(fixture => !args(fixture).some(arg => arg.includes('__GCC_WASI_SINGLE_THREAD__'))));
 });
+
+// On-disk metadata fixtures exercise the actual reopener up to its first replay
+// directory allocation. They are path-validation tests, not GNU execution proof.
+async function licensePathFixture(directory, alias) {
+  const { report, expected } = contract();
+  const work = path.join(directory, 'work'), sdk = path.join(directory, 'sdk');
+  const sysroot = path.join(directory, 'runtime/sysroot');
+  const output = path.join(directory, 'libatomic');
+  const source = alias ? path.join(directory, 'physical-source') : path.join(work, 'gcc');
+  const record = async file => ({ path: file, ...identity(await fs.readFile(file)) });
+  const put = async (file, value) => {
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    await fs.writeFile(file, value);
+    return record(file);
+  };
+  await fs.mkdir(source, { recursive: true });
+  if (alias) {
+    await fs.mkdir(work, { recursive: true });
+    await fs.symlink(source, path.join(work, 'gcc'), 'dir');
+  }
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  report.inputs = [];
+  report.recipes = Object.fromEntries(await Promise.all(['build-libatomic.py', 'prepare-source.py']
+    .map(async name => [name, await record(path.join(here, name))])));
+  report.sourceLock = await record(path.join(here, 'sources.lock.json'));
+  report.runtimeLock = await record(path.join(here, 'runtime.lock.json'));
+  expected.sourceLockSha256 = report.sourceLock.sha256;
+  report.nativeCompiler = Object.fromEntries(await Promise.all(['cc1', 'cc1plus', 'xgcc']
+    .map(async name => [name, await put(path.join(work, 'gcc-native/gcc', name), 'fixture ' + name)])));
+  report.nativeBuild = await put(path.join(work, 'native-build.json'), JSON.stringify({
+    gccSource: expected.gccSource, sourceLockSha256: expected.sourceLockSha256,
+    tools: report.nativeCompiler,
+  }));
+  expected.nativeBuild = report.nativeBuild;
+  Object.assign(expected, { work, sdk, sysroot });
+  const tools = { assembler: path.join(work, 'wabt-native/wat2wasm'),
+    validator: path.join(work, 'wabt-native/wasm-validate'), objdump: path.join(work, 'wabt-native/wasm-objdump'),
+    ar: path.join(sdk, 'bin/llvm-ar'), nm: path.join(sdk, 'bin/llvm-nm'),
+    ranlib: path.join(sdk, 'bin/llvm-ranlib'), linker: path.join(sdk, 'bin/wasm-ld'),
+    make: path.join(directory, 'make'), python: path.join(directory, 'python'), shell: path.join(directory, 'shell') };
+  report.tools = Object.fromEntries(await Promise.all(Object.entries(tools)
+    .map(async ([name, file]) => [name, await put(file, 'fixture ' + name)])));
+  report.runtimeImport = await put(path.join(sysroot, '../runtime-build.json'), JSON.stringify({
+    runtimeLock: { bytes: report.runtimeLock.bytes, sha256: report.runtimeLock.sha256 }, files: [],
+  }));
+  report.runtimeLibraries = Object.fromEntries(await Promise.all(
+    ['crt1-command.o', 'libc.a', 'libm.a', 'libclang_rt.builtins-wasm32.a']
+      .map(async name => [name, await put(path.join(sysroot, 'lib/wasm32-wasi', name), 'fixture ' + name)])));
+  Object.assign(report, { resourceHeaders: [], librarySources: [], configureSupport: [], driver: [], configuration: {} });
+  report.library = await put(path.join(output, 'sysroot/lib/wasm32-wasi/libatomic.a'), 'fixture archive');
+  report.files = [{ path: 'lib/wasm32-wasi/libatomic.a', bytes: report.library.bytes, sha256: report.library.sha256 }];
+  report.licenses = await Promise.all(['COPYING3', 'COPYING.RUNTIME'].map(async name => ({
+    source: await put(path.join(source, name), 'fixture license ' + name),
+    installed: await put(path.join(output, 'licenses', name), 'fixture license ' + name),
+  })));
+  return { report, expected, output, record };
+}
+
+for (const alias of [false, true]) test(`libatomic license paths admit ${alias ? 'physical source behind a work/gcc alias' : 'direct source directory'}`, async t => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'libatomic-license-path-test-'));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const { report, expected, output } = await licensePathFixture(directory, alias);
+  await fs.writeFile(path.join(output, 'build.json'), JSON.stringify(report));
+  const stop = new Error('metadata accepted; stop before replay');
+  let replayReached = false;
+  t.mock.method(fs, 'mkdtemp', async prefix => {
+    assert.equal(prefix, path.join(os.tmpdir(), 'gcc-libatomic-replay-'));
+    replayReached = true;
+    throw stop;
+  });
+  await assert.rejects(reopenLibatomicBuild(output, expected), error => error === stop);
+  assert.equal(replayReached, true);
+});
+
+for (const mutation of ['same bytes at another source path', 'lexical alias substituted for recorded physical path', 'changed license bytes']) {
+  test(`libatomic license paths still reject ${mutation}`, async t => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'libatomic-license-path-test-'));
+    t.after(() => fs.rm(directory, { recursive: true, force: true }));
+    const { report, expected, output, record } = await licensePathFixture(directory, true);
+    const license = report.licenses[0];
+    if (mutation === 'same bytes at another source path') {
+      const replacement = path.join(directory, 'substitute-COPYING3');
+      await fs.copyFile(license.source.path, replacement);
+      license.source = await record(replacement);
+    } else if (mutation === 'lexical alias substituted for recorded physical path') {
+      license.source.path = path.join(expected.work, 'gcc/COPYING3');
+    } else {
+      await fs.appendFile(license.source.path, 'changed');
+    }
+    await fs.writeFile(path.join(output, 'build.json'), JSON.stringify(report));
+    t.mock.method(fs, 'mkdtemp', async () => { assert.fail('Invalid license evidence reached replay'); });
+    await assert.rejects(reopenLibatomicBuild(output, expected),
+      mutation === 'changed license bytes' ? /Changed libatomic evidence/ : /Unexpected evidence path/);
+  });
+}

@@ -6,6 +6,19 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
+async function gitObjectInventory(source) {
+	const relative = execFileSync('git', ['-C', source, 'rev-parse', '--git-path', 'objects'], { encoding: 'utf8' }).trim();
+	const root = path.resolve(source, relative), entries = [];
+	async function visit(directory, prefix = '') {
+		for (const entry of (await fs.readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+			const name = prefix + entry.name, filename = path.join(directory, entry.name);
+			if (entry.isDirectory()) { entries.push({ path: name, directory: true }); await visit(filename, name + '/'); }
+			else entries.push({ path: name, sha256: createHash('sha256').update(await fs.readFile(filename)).digest('hex') });
+		}
+	}
+	await visit(root); return entries;
+}
+
 test('locked patches apply incrementally, preserve the real index, and reject source drift', async () => {
 	const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'gcc-wasi-source-test-'));
 	try {
@@ -34,7 +47,18 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 			await fs.writeFile(path.join(temp, name), contents);
 			pins.push({ path: name, sha256: createHash('sha256').update(contents).digest('hex') });
 		}
-		const lock = async (count) => fs.writeFile(path.join(temp, 'sources.lock.json'), JSON.stringify({ gcc: { commit, patches: pins.slice(0, count) } }));
+		// Author the expected source states independently in a disposable checkout.
+		// The pin covers Git's complete diff, including added and deleted files.
+		const expectedSource = path.join(temp, 'expected');
+		git('clone', '-q', '--no-hardlinks', source, expectedSource);
+		const expectedGit = (...args) => execFileSync('git', ['-C', expectedSource, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+		const combinedPins = [];
+		for (const pin of pins) {
+			expectedGit('apply', path.join(temp, pin.path));
+			expectedGit('add', '--all', '--force');
+			combinedPins.push(createHash('sha256').update(expectedGit('diff', '--cached', '--binary', '--no-ext-diff', 'HEAD')).digest('hex'));
+		}
+		const lock = async (count) => fs.writeFile(path.join(temp, 'sources.lock.json'), JSON.stringify({ gcc: { commit, patches: pins.slice(0, count), sourceDiffSha256: combinedPins[count - 1] } }));
 		const run = (apply = false) => spawnSync('python3', [script, '--source', source, ...(apply ? ['--apply'] : [])], { encoding: 'utf8' });
 		await lock(1);
 		assert.notEqual(run().status, 0, 'unpatched source must fail verification');
@@ -92,6 +116,62 @@ test('locked patches apply incrementally, preserve the real index, and reject so
 	} finally { await fs.rm(temp, { recursive: true, force: true }); }
 });
 
+test('GCC rejects a stale combined pin before changing its worktree or real index', async () => {
+	const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'gcc-wasi-gcc-pin-test-'));
+	try {
+		const source = path.join(temp, 'gcc');
+		await fs.mkdir(source);
+		const git = (...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+		git('init', '-q');
+		const filename = path.join(source, 'target.cc');
+		await fs.writeFile(filename, 'old target\n');
+		git('add', 'target.cc');
+		git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'test: source pin fixture');
+		const commit = git('rev-parse', 'HEAD').trim();
+		await fs.writeFile(filename, 'new target\n');
+		const patch = git('diff', '--binary', '--no-ext-diff', 'HEAD');
+		const correctPin = createHash('sha256').update(patch).digest('hex');
+		await fs.writeFile(path.join(temp, 'target.patch'), patch);
+		await fs.writeFile(filename, 'old target\n');
+		const stalePin = createHash('sha256').update('').digest('hex');
+		const lock = { gcc: { commit, patches: [{ path: 'target.patch', sha256: correctPin }], sourceDiffSha256: stalePin } };
+		const saveLock = () => fs.writeFile(path.join(temp, 'sources.lock.json'), JSON.stringify(lock));
+		await saveLock();
+		const script = path.join(temp, 'prepare-source.py');
+		await fs.copyFile(new URL('./prepare-source.py', import.meta.url), script);
+		const run = apply => spawnSync('python3', [script, '--source', source, ...(apply ? ['--apply'] : [])], { encoding: 'utf8' });
+		const index = path.join(source, '.git/index');
+		const originalIndex = await fs.readFile(index);
+		const originalObjects = await gitObjectInventory(source);
+		for (const apply of [true, false]) {
+			const result = run(apply);
+			assert.notEqual(result.status, 0, 'a new patch list with the old combined pin must fail');
+			assert.match(result.stderr, /GCC combined patch diff differs from the lock/);
+			assert.equal(await fs.readFile(filename, 'utf8'), 'old target\n', 'stale pin must be rejected before patch application');
+			assert.deepEqual(await fs.readFile(index), originalIndex, 'rejection must preserve the real index bytes');
+			assert.deepEqual(await gitObjectInventory(source), originalObjects, 'rejection must preserve the source object database');
+		}
+		lock.gcc.sourceDiffSha256 = correctPin; await saveLock();
+		const applied = run(true);
+		assert.equal(applied.status, 0, applied.stderr);
+		assert.equal(JSON.parse(applied.stdout).sourceDiffSha256, correctPin);
+		assert.equal(await fs.readFile(filename, 'utf8'), 'new target\n');
+		assert.deepEqual(await fs.readFile(index), originalIndex, 'successful preparation must preserve the real index bytes');
+		assert.deepEqual(await gitObjectInventory(source), originalObjects, 'successful preparation must isolate Git object writes');
+		const verified = run(false); assert.equal(verified.status, 0, verified.stderr);
+		assert.equal(verified.stdout, applied.stdout);
+		lock.gcc.sourceDiffSha256 = stalePin; await saveLock();
+		for (const apply of [false, true]) {
+			const result = run(apply);
+			assert.notEqual(result.status, 0, 'an already patched tree must not hide the stale pin');
+			assert.match(result.stderr, /GCC combined patch diff differs from the lock/);
+			assert.equal(await fs.readFile(filename, 'utf8'), 'new target\n');
+			assert.deepEqual(await fs.readFile(index), originalIndex);
+			assert.deepEqual(await gitObjectInventory(source), originalObjects);
+		}
+	} finally { await fs.rm(temp, { recursive: true, force: true }); }
+});
+
 test('WABT preparation pins its combined diff and clean submodule inputs', async () => {
 	const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'gcc-wasi-wabt-source-test-'));
 	try {
@@ -118,11 +198,24 @@ test('WABT preparation pins its combined diff and clean submodule inputs', async
 		const script = path.join(temp, 'prepare-source.py');
 		await fs.copyFile(new URL('./prepare-source.py', import.meta.url), script);
 		const run = (apply = false) => spawnSync('python3', [script, '--component', 'wabt', '--source', source, ...(apply ? ['--apply'] : [])], { encoding: 'utf8' });
+		const originalIndex = await fs.readFile(path.join(source, '.git/index'));
+		const originalObjects = await gitObjectInventory(source);
+		const childObjects = await gitObjectInventory(path.join(source, 'third_party/picosha2'));
+		lock.wabt.sourceDiffSha256 = '0'.repeat(64); await saveLock();
+		const stale = run(true);
+		assert.notEqual(stale.status, 0);
+		assert.match(stale.stderr, /WABT combined patch diff differs from the lock/);
+		assert.equal(await fs.readFile(path.join(source, 'writer.cc'), 'utf8'), 'unpatched\n');
+		assert.deepEqual(await fs.readFile(path.join(source, '.git/index')), originalIndex);
+		assert.deepEqual(await gitObjectInventory(source), originalObjects, 'WABT stale pin must not add Git objects');
+		lock.wabt.sourceDiffSha256 = hash; await saveLock();
 		assert.notEqual(run().status, 0);
 		const applied = run(true); assert.equal(applied.status, 0, applied.stderr);
 		assert.deepEqual(JSON.parse(applied.stdout), { wabtCommit: revision, patches: lock.wabt.patches, sourceDiffSha256: hash, submodules: lock.wabt.submodules });
 		assert.equal(run().status, 0);
 		assert.equal(git(source, 'diff', '--cached'), '');
+		assert.deepEqual(await gitObjectInventory(source), originalObjects, 'WABT preparation must isolate Git object writes');
+		assert.deepEqual(await gitObjectInventory(path.join(source, 'third_party/picosha2')), childObjects, 'submodule discovery must preserve its object database');
 		const header = 'include/wabt/config.h';
 		await fs.mkdir(path.dirname(path.join(source, header)), { recursive: true });
 		for (const ignored of [false, true]) {
