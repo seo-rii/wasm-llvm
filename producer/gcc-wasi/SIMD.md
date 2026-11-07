@@ -30,7 +30,9 @@ assembly and the assembled Wasm object, then links and executes each program.
 
 Patch `0016` supplies the documented 169-name
 [`wasm_simd128.h` subset](SIMD-HEADER.md). This does not provide x86 intrinsic
-compatibility, relaxed SIMD, or an auto-vectorization performance guarantee.
+compatibility or an auto-vectorization performance guarantee. The separate
+[`wasm_relaxed_simd.h` profile](RELAXED-SIMD.md) adds 20 explicitly selected
+relaxed operations without changing this header or the SIMD128 default.
 Patch `0003` does not by itself change the draft backend's vector calling
 convention. Bundles with
 patch `0003` alone use indirect memory arguments and a hidden result pointer.
@@ -44,7 +46,8 @@ The pinned WABT assembler with `wabt-0001-simd-target-features.patch` records
 actual SIMD instructions and `v128` types in one `target_features` section,
 including relocatable objects. Merely enabling SIMD does not mark scalar code
 as SIMD. The patch also records `relaxed-simd` when assembling those WAT
-instructions; this does not add relaxed SIMD support to the GCC backend.
+instructions. Patch `0022` separately adds the explicit GCC relaxed profile;
+the assembler's metadata support alone does not qualify that profile.
 Existing feature declarations are preserved and conflicting declarations fail
 assembly. See [target feature qualification](TARGET-FEATURES.md).
 
