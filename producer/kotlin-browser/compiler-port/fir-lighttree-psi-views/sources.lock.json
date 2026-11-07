@@ -1,0 +1,1144 @@
+{
+  "schemaVersion": 1,
+  "kind": "sealed-lighttree-fir-psi-views",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "targets": [
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "gitBlob": "dbdb2f4c3974f247e195732888f121096166fe24",
+      "bytes": 19011,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/tree",
+      "sha256": "32036fe91eeeb25d6b76135e4ab25319e702aacb7af307f0c46ffb11b83f2efa"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt",
+      "gitBlob": "79497dbcff2535582c715caacccf829fa4739aab",
+      "bytes": 2904,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/fir2ir",
+      "sha256": "47e551fe40481753690472f96bde9dd7a1b9a5959a1e5375ac95d126c54f7f03"
+    },
+    {
+      "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt",
+      "gitBlob": "b4eb8e275daa9354fe5ec46ba02c00ee09a1f87e",
+      "bytes": 2468,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/ir/ir.tree",
+      "sha256": "b4f347d7086eaad408197d4a406f5e8aa5552a0df7035119439f179eea852f00"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt",
+      "gitBlob": "a9a393bf52ee5417f3cbc20db91386929111895e",
+      "bytes": 7397,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/fir2ir",
+      "sha256": "e6b48addcdc847eb645746a1d28292f445f3e6af2cb1e60112a9febd0f0aed61"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt",
+      "gitBlob": "3fce0cc61818be0e8e03fe3afe2a3d9ba40f8177",
+      "bytes": 30459,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/fir2ir",
+      "sha256": "38782c69aa703801edd2233d53752fd0a339a4d06cba1804c93d650abffaee7f"
+    }
+  ],
+  "recipes": {
+    "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt": [
+      {
+        "before": "import com.intellij.psi.PsiElement\n",
+        "after": "/* LightTree PSI view: no PSI return carrier */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "val FirElement.psi: PsiElement? get() = (source as? KtPsiSourceElement)?.psi",
+        "after": "val FirElement.psi: Nothing?\n    get() = when (source) {\n        null, is KtLightSourceElement -> null\n    }",
+        "occurrences": 1
+      },
+      {
+        "before": "val FirElement.realPsi: PsiElement? get() = (source as? KtRealPsiSourceElement)?.psi",
+        "after": "val FirElement.realPsi: Nothing?\n    get() = when (source) {\n        null, is KtLightSourceElement -> null\n    }",
+        "occurrences": 1
+      }
+    ],
+    "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt": [
+      {
+        "before": "import com.intellij.psi.PsiElement\n",
+        "after": "/* LightTree PSI view: nullable-only metadata view */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "override val psi: PsiElement? get() = fir.psi",
+        "after": "override val psi: Nothing? get() = fir.psi",
+        "occurrences": 2
+      }
+    ],
+    "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt": [
+      {
+        "before": "import com.intellij.psi.PsiElement\n",
+        "after": "/* LightTree PSI view: nullable-only metadata contract */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "val psi: PsiElement?",
+        "after": "val psi: Nothing?",
+        "occurrences": 3
+      }
+    ],
+    "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt": [
+      {
+        "before": "import com.intellij.lang.LighterASTNode\n",
+        "after": "import org.jetbrains.kotlin.portable.source.LighterASTNode\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.psi.tree.TokenSet\n",
+        "after": "import org.jetbrains.kotlin.portable.source.TokenSet\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.psi.PsiCompiledElement\n",
+        "after": "/* LightTree PSI view: no compiled PSI source */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import com.intellij.psi.PsiElement\n",
+        "after": "/* LightTree PSI view: closed null predicate input */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.KtFile\n",
+        "after": "/* LightTree PSI view: no PSI containing file */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.psiUtil.startOffsetSkippingComments\n",
+        "after": "/* LightTree PSI view: retain the existing LightTree offset overload */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "        is KtPsiSourceElement -> this.psi.startOffsetSkippingComments\n",
+        "after": "        /* LightTree PSI view: unavailable PSI offset branch */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "private fun isCompiledElement(element: PsiElement?): Boolean {\n    if (element == null) {\n        return false\n    }\n\n    if (element is PsiCompiledElement) {\n        return true\n    }\n\n    val containingFile = element.containingFile\n    return containingFile !is KtFile || containingFile.isCompiled\n}",
+        "after": "private val KtSourceElement?.psi: Nothing?\n    get() = when (this) {\n        null, is KtLightSourceElement -> null\n    }\n\nprivate fun isCompiledElement(element: Nothing?): Boolean = when (element) {\n    null -> false\n}",
+        "occurrences": 1
+      }
+    ],
+    "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt": [
+      {
+        "before": "import org.jetbrains.kotlin.KtPsiSourceFileLinesMapping\n",
+        "after": "/* LightTree PSI view: no PSI line mapping provider */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import org.jetbrains.kotlin.ir.PsiIrFileEntry\n",
+        "after": "/* LightTree PSI view: retain the genuine source-based file entry */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "import org.jetbrains.kotlin.psi.KtFile\n",
+        "after": "/* LightTree PSI view: no PSI file entry input */\n",
+        "occurrences": 1
+      },
+      {
+        "before": "            FirDeclarationOrigin.Source ->\n                file.psi?.let { PsiIrFileEntry(it as KtFile) }\n                    ?: when (val linesMapping = file.sourceFileLinesMapping) {\n                        is KtSourceFileLinesMappingFromLineStartOffsets ->\n                            NaiveSourceBasedFileEntryImpl(\n                                file.sourceFile?.path ?: file.sourceFile?.name ?: file.name,\n                                linesMapping.lineStartOffsets,\n                                linesMapping.lastOffset\n                            )\n                        is KtPsiSourceFileLinesMapping -> PsiIrFileEntry(linesMapping.psiFile)\n                        else ->\n                            NaiveSourceBasedFileEntryImpl(file.sourceFile?.path ?: file.sourceFile?.name ?: file.name)\n                    }",
+        "after": "            FirDeclarationOrigin.Source -> when (file.psi) {\n                null -> when (val linesMapping = file.sourceFileLinesMapping) {\n                    is KtSourceFileLinesMappingFromLineStartOffsets ->\n                        NaiveSourceBasedFileEntryImpl(\n                            file.sourceFile?.path ?: file.sourceFile?.name ?: file.name,\n                            linesMapping.lineStartOffsets,\n                            linesMapping.lastOffset\n                        )\n                    else ->\n                        NaiveSourceBasedFileEntryImpl(file.sourceFile?.path ?: file.sourceFile?.name ?: file.name)\n                }\n            }",
+        "occurrences": 1
+      }
+    ]
+  },
+  "incoming": [
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "bytes": 19081,
+      "sha256": "2e21e6b29a3c3288af9c9e08214ba426e536e263c11df8336c08d455e46f0744"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt",
+      "bytes": 2904,
+      "sha256": "47e551fe40481753690472f96bde9dd7a1b9a5959a1e5375ac95d126c54f7f03"
+    },
+    {
+      "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt",
+      "bytes": 2468,
+      "sha256": "b4f347d7086eaad408197d4a406f5e8aa5552a0df7035119439f179eea852f00"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt",
+      "bytes": 7397,
+      "sha256": "e6b48addcdc847eb645746a1d28292f445f3e6af2cb1e60112a9febd0f0aed61"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt",
+      "bytes": 30459,
+      "sha256": "38782c69aa703801edd2233d53752fd0a339a4d06cba1804c93d650abffaee7f"
+    }
+  ],
+  "outgoing": [
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "bytes": 19154,
+      "sha256": "8fe71ed5c78402a244a8e188dbdfdeeb42a7e20b85af415967d2b4ef78565eb7"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt",
+      "bytes": 2917,
+      "sha256": "d7bce365de6cb3d5b8ba9a58189f1be9a8f5a8d2dc34870594a1eb731f20147f"
+    },
+    {
+      "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt",
+      "bytes": 2482,
+      "sha256": "0b6af59c18b17c6b861967e1c2d3dbd6fa13a9fb538d1cc66afd56df5c16aa8d"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt",
+      "bytes": 7381,
+      "sha256": "2a5c286907d1877e5f1443a86b6e3fb118ca7112409fe3727a3ae020321fb6b0"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt",
+      "bytes": 30331,
+      "sha256": "c1a8d1f933fa53a7199e405e4b5c1d7d26afb10734578263e11551f164ca1576"
+    }
+  ],
+  "assembledOutputs": [
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt",
+      "bytes": 34287,
+      "sha256": "2f338251d57b5fe5cdb591a57f20df376c6381d77d19178c8a94de9ab93185ed"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt",
+      "bytes": 6873,
+      "sha256": "5fc35fc0e3b45d30ed078261182435d0b19a2f97c61cbd07a5ba6ac751d7532f"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt",
+      "bytes": 11337,
+      "sha256": "6bd1c92569e6e21f19d0cbff68b74200883447acdd1922e7baa6841c6197aef1"
+    },
+    {
+      "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+      "bytes": 23131,
+      "sha256": "c60fe09b3e35f7eb1fba1f901704b9ef18c38a7f96c2749852b48f2750c126cb"
+    },
+    {
+      "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt",
+      "bytes": 6438,
+      "sha256": "28402ab408678742cf15cb3c6ea1ee00b431c92ab39f87602cca7a353c0cccf7"
+    }
+  ],
+  "selection": {
+    "path": "selection.lock.json",
+    "bytes": 1354116,
+    "sha256": "23800470fe980c9611a15562587ab828c8eea7503a6cfbcd184f19b31c0a4143",
+    "gitBlob": "3f9bfef2dee92fde74c1231640d8f00a79986520"
+  },
+  "recordedPropertyImports": [
+    "org.jetbrains.kotlin.portable.common.*",
+    "org.jetbrains.kotlin.portable.descriptors.*",
+    "org.jetbrains.kotlin.js.backend.ast.addPrevious",
+    "org.jetbrains.kotlin.js.backend.ast.arg",
+    "org.jetbrains.kotlin.js.backend.ast.arg1",
+    "org.jetbrains.kotlin.js.backend.ast.arg2",
+    "org.jetbrains.kotlin.js.backend.ast.arguments",
+    "org.jetbrains.kotlin.js.backend.ast.arrayExpression",
+    "org.jetbrains.kotlin.js.backend.ast.body",
+    "org.jetbrains.kotlin.js.backend.ast.caseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.cases",
+    "org.jetbrains.kotlin.js.backend.ast.catches",
+    "org.jetbrains.kotlin.js.backend.ast.closingBraceSource",
+    "org.jetbrains.kotlin.js.backend.ast.commentsAfterNode",
+    "org.jetbrains.kotlin.js.backend.ast.commentsBeforeNode",
+    "org.jetbrains.kotlin.js.backend.ast.computedName",
+    "org.jetbrains.kotlin.js.backend.ast.condition",
+    "org.jetbrains.kotlin.js.backend.ast.constructorExpression",
+    "org.jetbrains.kotlin.js.backend.ast.currentNode",
+    "org.jetbrains.kotlin.js.backend.ast.description",
+    "org.jetbrains.kotlin.js.backend.ast.elseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.elseStatement",
+    "org.jetbrains.kotlin.js.backend.ast.expression",
+    "org.jetbrains.kotlin.js.backend.ast.expressions",
+    "org.jetbrains.kotlin.js.backend.ast.finallyBlock",
+    "org.jetbrains.kotlin.js.backend.ast.flags",
+    "org.jetbrains.kotlin.js.backend.ast.globalBlock",
+    "org.jetbrains.kotlin.js.backend.ast.ident",
+    "org.jetbrains.kotlin.js.backend.ast.ifExpression",
+    "org.jetbrains.kotlin.js.backend.ast.incrementExpression",
+    "org.jetbrains.kotlin.js.backend.ast.indexExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initVars",
+    "org.jetbrains.kotlin.js.backend.ast.isAssignment",
+    "org.jetbrains.kotlin.js.backend.ast.isEmpty",
+    "org.jetbrains.kotlin.js.backend.ast.isEs6Arrow",
+    "org.jetbrains.kotlin.js.backend.ast.isGenerator",
+    "org.jetbrains.kotlin.js.backend.ast.isGetter",
+    "org.jetbrains.kotlin.js.backend.ast.isKeyword",
+    "org.jetbrains.kotlin.js.backend.ast.isLeaf",
+    "org.jetbrains.kotlin.js.backend.ast.isLeftAssociative",
+    "org.jetbrains.kotlin.js.backend.ast.isModifying",
+    "org.jetbrains.kotlin.js.backend.ast.isMultiline",
+    "org.jetbrains.kotlin.js.backend.ast.isSetter",
+    "org.jetbrains.kotlin.js.backend.ast.isStatic",
+    "org.jetbrains.kotlin.js.backend.ast.isTemporary",
+    "org.jetbrains.kotlin.js.backend.ast.isTransparent",
+    "org.jetbrains.kotlin.js.backend.ast.label",
+    "org.jetbrains.kotlin.js.backend.ast.modifiers",
+    "org.jetbrains.kotlin.js.backend.ast.name",
+    "org.jetbrains.kotlin.js.backend.ast.operator",
+    "org.jetbrains.kotlin.js.backend.ast.parameter",
+    "org.jetbrains.kotlin.js.backend.ast.parameters",
+    "org.jetbrains.kotlin.js.backend.ast.parent",
+    "org.jetbrains.kotlin.js.backend.ast.pattern",
+    "org.jetbrains.kotlin.js.backend.ast.precedence",
+    "org.jetbrains.kotlin.js.backend.ast.propertyInitializers",
+    "org.jetbrains.kotlin.js.backend.ast.qualifier",
+    "org.jetbrains.kotlin.js.backend.ast.replaceMe",
+    "org.jetbrains.kotlin.js.backend.ast.rootScope",
+    "org.jetbrains.kotlin.js.backend.ast.scope",
+    "org.jetbrains.kotlin.js.backend.ast.source",
+    "org.jetbrains.kotlin.js.backend.ast.statement",
+    "org.jetbrains.kotlin.js.backend.ast.statements",
+    "org.jetbrains.kotlin.js.backend.ast.symbol",
+    "org.jetbrains.kotlin.js.backend.ast.tags",
+    "org.jetbrains.kotlin.js.backend.ast.testExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenStatement",
+    "org.jetbrains.kotlin.js.backend.ast.tryBlock",
+    "org.jetbrains.kotlin.js.backend.ast.value",
+    "org.jetbrains.kotlin.js.util.position",
+    "org.jetbrains.kotlin.js.util.line",
+    "org.jetbrains.kotlin.js.util.column"
+  ],
+  "viewReferences": {
+    "before": [
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/FirHelpers.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirContextParametersDeclarationChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirSupertypesChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedLhsSetOperatorChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/extra/RedundantSingleExpressionStringTemplateChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/extra/UnreachableCodeChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/diagnostics/coneDiagnosticToFirDiagnostic.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/IncrementalPassThroughLookupTrackerComponent.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/convertToIr.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/session/SourcesToPathsMapper.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt",
+        "names": [
+          "psi",
+          "sourceFileLinesMapping",
+          "KtPsiSourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrVisitor.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt",
+        "names": [
+          "psi",
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt",
+        "names": [
+          "psi",
+          "isCompiledElement"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OriginUtils.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/AbstractFir2IrLazyFunction.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyClass.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyConstructor.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyField.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyProperty.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyPropertyForPureField.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyTypeAlias.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/TreeRawFirDeclarationBuilderProxy.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/raw-fir/raw-fir.common/src/org/jetbrains/kotlin/fir/builder/ConversionUtils.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/raw-fir/raw-fir.common/src/org/jetbrains/kotlin/fir/builder/FirScriptConfiguratorExtension.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/declarations/FirFile.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/declarations/builder/FirFileBuilder.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/declarations/impl/FirFileImpl.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+        "names": [
+          "psi",
+          "realPsi",
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/frontend.common/src/org/jetbrains/kotlin/load/kotlin/MetadataFinderFactory.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/IrMetadataSourceOwner.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrClassImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrConstructorImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrConstructorWithLateBindingImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFieldImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFileImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFunctionImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFunctionWithLateBindingImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrLocalDelegatedPropertyImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrPropertyImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrPropertyWithLateBindingImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrReplSnippetImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrScriptImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrTypeAliasImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiSourceManager.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/builders/declarations/IrFieldBuilder.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt",
+        "names": [
+          "psi",
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/KtTokenSets.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/LightTreePositioningStrategies.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/sourceElementUtils.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/UnwrappableTokenTypes.kt",
+        "names": [
+          "psi"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/FirHelpers.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirContextParametersDeclarationChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirSupertypesChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedLhsSetOperatorChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/expression/FirParenthesizedPackageQualifierChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/extra/RedundantSingleExpressionStringTemplateChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/extra/UnreachableCodeChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/type/FirContextualFunctionTypeChecker.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/diagnostics/coneDiagnosticToFirDiagnostic.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/IncrementalPassThroughLookupTrackerComponent.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/pipeline/convertToIr.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/session/SourcesToPathsMapper.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrConverter.kt",
+        "names": [
+          "psi",
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrVisitor.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/FirMetadataSource.kt",
+        "names": [
+          "psi",
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OffsetUtils.kt",
+        "names": [
+          "psi",
+          "isCompiledElement"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/utils/OriginUtils.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/AbstractFir2IrLazyFunction.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyClass.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyConstructor.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyField.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyProperty.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyPropertyForPureField.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/lazy/Fir2IrLazyTypeAlias.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/fir/raw-fir/light-tree2fir/src/org/jetbrains/kotlin/fir/lightTree/converter/TreeRawFirDeclarationBuilderProxy.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/raw-fir/raw-fir.common/src/org/jetbrains/kotlin/fir/builder/ConversionUtils.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/raw-fir/raw-fir.common/src/org/jetbrains/kotlin/fir/builder/FirScriptConfiguratorExtension.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/declarations/FirFile.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/declarations/builder/FirFileBuilder.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/gen/org/jetbrains/kotlin/fir/declarations/impl/FirFileImpl.kt",
+        "names": [
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/fir/tree/src/org/jetbrains/kotlin/fir/Utils.kt",
+        "names": [
+          "psi",
+          "realPsi",
+          "sourceFileLinesMapping"
+        ]
+      },
+      {
+        "path": "compiler/frontend.common/src/org/jetbrains/kotlin/load/kotlin/MetadataFinderFactory.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/IrMetadataSourceOwner.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrClassImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrConstructorImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrConstructorWithLateBindingImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFieldImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFileImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFunctionImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrFunctionWithLateBindingImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrLocalDelegatedPropertyImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrPropertyImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrPropertyWithLateBindingImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrReplSnippetImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrScriptImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/gen/org/jetbrains/kotlin/ir/declarations/impl/IrTypeAliasImpl.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiIrFileEntry.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/PsiSourceManager.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/builders/declarations/IrFieldBuilder.kt",
+        "names": [
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler/ir/ir.tree/src/org/jetbrains/kotlin/ir/declarations/MetadataSource.kt",
+        "names": [
+          "psi",
+          "MetadataSource"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/KtTokenSets.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/LightTreePositioningStrategies.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/sourceElementUtils.kt",
+        "names": [
+          "psi"
+        ]
+      },
+      {
+        "path": "compiler-port-positioning/UnwrappableTokenTypes.kt",
+        "names": [
+          "psi"
+        ]
+      }
+    ]
+  },
+  "portableBindings": [
+    {
+      "path": "compiler-port-host/PortableLightTree.kt",
+      "receiptRelative": "components/sourceHostReceipt/compiler-port-host/host-receipt.json",
+      "outputField": "sources",
+      "sourceLockSha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+      "bytes": 1461,
+      "sha256": "0274ecbeb4d7323f869b898b6901a0196e953dd8e89ec33bf1aa967b9177a32e"
+    },
+    {
+      "path": "compiler-port-positioning/TokenSet.kt",
+      "receiptRelative": "components/firNavigationReceipt/fir-navigation-inputs.json",
+      "outputField": "files",
+      "sourceLockSha256": "3e1582865ebff261ad5a152320320feba9725457153bea4edaa715ac39ecd70d",
+      "bytes": 1435,
+      "sha256": "bf5509823adb7ff4a6501bb3b9268707c460aedd7c2279f772fbe4899f621bd0"
+    }
+  ],
+  "exceptionSourceLockSha256": "4ba595d2a3c377c1e5e63d07f3ccf5bf0af62275cc5b434d6b8d8999b948a568",
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 15822,
+      "sha256": "9ed2b3bb091f69a0d690b193670c13aa938f3cf802df2e8ca78553d3775e8837",
+      "gitBlob": "fa7e58df8998cc54b122b4098619d8794b8c645b"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 5846,
+      "sha256": "4bf12c73e4f4fdd04f96f5c1fe97882230b8ce685184619b56dee889638cd38e",
+      "gitBlob": "66f0e90c2e4bb9c5cd48b860a9498281cd6dac92"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 7692,
+      "sha256": "1e4b3437e759823db66075bc8a6a07ec9b4f2b697ada4e4b21d699d61305ca73",
+      "gitBlob": "f19f3480a406d01358420d461878a8fb74799ccc"
+    },
+    {
+      "path": "selection.lock.json",
+      "bytes": 1354116,
+      "sha256": "23800470fe980c9611a15562587ab828c8eea7503a6cfbcd184f19b31c0a4143",
+      "gitBlob": "3f9bfef2dee92fde74c1231640d8f00a79986520"
+    },
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../closure.lock.json",
+      "bytes": 1601612,
+      "sha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+      "gitBlob": "0d920e442426a044cf3a70d5fea08afc1de637cb"
+    },
+    {
+      "path": "../klib-signature-index/transform.mjs",
+      "bytes": 5115,
+      "sha256": "c2e16bbb41c471d231f0422137d91289eedcdb5a5a9392299fd95e4d6edbbde2",
+      "gitBlob": "c238f725a135be0232479e25ee000dc6f1e90749"
+    },
+    {
+      "path": "../compiler-exception-attachment-profile/transform.mjs",
+      "bytes": 10567,
+      "sha256": "7832328ea9d752acd060754738a68c723dc6221e24063ad027f7aa907c2c5bf9",
+      "gitBlob": "4c6b76eb285120aba6239656937448c4ad1d729d"
+    },
+    {
+      "path": "../compiler-exception-attachment-profile/prepare.mjs",
+      "bytes": 18100,
+      "sha256": "9b727725f4821eedf5cee8cf75446f7ba2eebc7acd9b19c77af4f97243056dc6",
+      "gitBlob": "72bfeac52f4dece33c32bfd5cd5c595959db0868"
+    },
+    {
+      "path": "../compiler-exception-attachment-profile/sources.lock.json",
+      "bytes": 33220,
+      "sha256": "4ba595d2a3c377c1e5e63d07f3ccf5bf0af62275cc5b434d6b8d8999b948a568",
+      "gitBlob": "0ba2f208b7ca3124966652052b96d520ecd14c76"
+    },
+    {
+      "path": "../native-js-output-profile/references.mjs",
+      "bytes": 2178,
+      "sha256": "f6fd115e20e546eacfd8c3ac68f0693263e554b3c9d95148474a65689a17f3ba",
+      "gitBlob": "42dc18f4964811af5b77d8b25fd4e8c60ecae508"
+    },
+    {
+      "path": "../host/prepare.mjs",
+      "bytes": 7585,
+      "sha256": "d47bc0f4ec8230fd1b95a21d601baab11aaa99e6d716a7794171df2d59ab820f",
+      "gitBlob": "f5ecdfb72ef32d6674fade54a24cebff16d9b031"
+    },
+    {
+      "path": "../host/sources.lock.json",
+      "bytes": 5522,
+      "sha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+      "gitBlob": "1b7bb8859a98cc644771c94c287b4569ceaf0e31"
+    },
+    {
+      "path": "../host/PortableLightTree.kt",
+      "bytes": 1461,
+      "sha256": "0274ecbeb4d7323f869b898b6901a0196e953dd8e89ec33bf1aa967b9177a32e",
+      "gitBlob": "7f4d942de9e57a047b445e66ef4d17225fb83089"
+    },
+    {
+      "path": "../positioning/prepare.mjs",
+      "bytes": 22554,
+      "sha256": "0cc5d6371778b3c5909bbfa3fc05bd3c97760c9e94c7ed43ccd4b7f576053314",
+      "gitBlob": "fcf551d3c089a359d01aecee16907eaab9a969e3"
+    },
+    {
+      "path": "../positioning/positioning.recipe.json",
+      "bytes": 34111,
+      "sha256": "f7430fc1bf8b3d8c0768c540f71792c39950091820bf2c0c2f26fe978e98fcdc",
+      "gitBlob": "1505c228701ce5debb334fba540ab9a0b2714001"
+    },
+    {
+      "path": "../positioning/TokenSet.kt",
+      "bytes": 1250,
+      "sha256": "e957d1674567a14ba7e12767f20d09b285d51953c4ddf704eb41d7685b6b3ced",
+      "gitBlob": "0ba1c427bda108883c119e4316b6bc9a4f2f5c15"
+    },
+    {
+      "path": "../fir-navigation/prepare.mjs",
+      "bytes": 21362,
+      "sha256": "8d4915bd77779bcb9b5d5f119655051be9f9b1750d11b1d2d4d9f4e61d9f8c61",
+      "gitBlob": "c58f4dd3c38270397d6ceb82e7499ab1f1cbcf10"
+    },
+    {
+      "path": "../fir-navigation/transform.mjs",
+      "bytes": 7431,
+      "sha256": "f54b5e64de11774366a3324944a959a0691946268e5d15ba8f795650958b6847",
+      "gitBlob": "296ec0ab5c96b42315e21339a64fb1b579a1502c"
+    },
+    {
+      "path": "../fir-navigation/sources.lock.json",
+      "bytes": 20354,
+      "sha256": "3e1582865ebff261ad5a152320320feba9725457153bea4edaa715ac39ecd70d",
+      "gitBlob": "8147b790a09bbb9a96937a2630c85396710bdae4"
+    }
+  ],
+  "scope": "Exact five source algorithms in the complete actual sealed LightTree-only source selection; method-boundary runtime agreement only",
+  "fullFirToIrWasmExecuted": false,
+  "fullCompilerBuilt": false,
+  "publicLanguageSupport": false
+}

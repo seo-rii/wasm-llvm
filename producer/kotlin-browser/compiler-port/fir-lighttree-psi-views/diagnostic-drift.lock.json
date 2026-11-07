@@ -1,0 +1,633 @@
+{
+  "schemaVersion": 1,
+  "kind": "fir-psi-exact-existing-failure-diagnostic-drift",
+  "sourceLockSha256": "f15844fb09d0de8c927bcd07eb59bfd0313ae887d6a93d1aaf32e3005c1cf80b",
+  "baselineBuildReceipt": {
+    "bytes": 64479662,
+    "sha256": "f1c695729e0d326edadf3bcdbcf8a4466e1250fc8d666956b3d950e7fe413e35"
+  },
+  "currentBuildReceipt": {
+    "bytes": 64506524,
+    "sha256": "1ee04dc1a8376b45a666588516e1726beb72fa4dde767f9e2e654cffadd936a6"
+  },
+  "sources": [
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/FirHelpers.kt",
+      "bytes": 58517,
+      "sha256": "6585a570a4a57ef7edb121ff964020ebae6f9709438cf14273234c0e6778bd6a"
+    },
+    {
+      "path": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/diagnostics/coneDiagnosticToFirDiagnostic.kt",
+      "bytes": 63998,
+      "sha256": "3c09cc55093085844c93b85cfd3a7af48906d48678deecbecb61d62d4315d9e9"
+    },
+    {
+      "path": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/IncrementalPassThroughLookupTrackerComponent.kt",
+      "bytes": 7256,
+      "sha256": "b4c8ae0d285827d777f271ed4b4b0b3817d2c82a0e424053ae388e673a844aeb"
+    },
+    {
+      "path": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrVisitor.kt",
+      "bytes": 105513,
+      "sha256": "a3c8d5d9b8806c787aec29473cb480f889ad73117a889d520834b13eea6b547a"
+    }
+  ],
+  "sites": [
+    {
+      "id": "default-parameter-psi-candidate",
+      "source": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/checkers/FirHelpers.kt",
+      "line": 877,
+      "expression": "        is KtPsiSourceElement -> (psi as? KtParameter)?.defaultValue?.toKtPsiSourceElement()",
+      "context": [
+        {
+          "line": 873,
+          "text": ""
+        },
+        {
+          "line": 874,
+          "text": ""
+        },
+        {
+          "line": 875,
+          "text": "internal val KtSourceElement.defaultValueForParameter: KtSourceElement?"
+        },
+        {
+          "line": 876,
+          "text": "    get() = when (this) {"
+        },
+        {
+          "line": 877,
+          "text": "        is KtPsiSourceElement -> (psi as? KtParameter)?.defaultValue?.toKtPsiSourceElement()"
+        },
+        {
+          "line": 878,
+          "text": "        is KtLightSourceElement -> findDefaultValue(this)"
+        },
+        {
+          "line": 879,
+          "text": "    }"
+        },
+        {
+          "line": 880,
+          "text": ""
+        },
+        {
+          "line": 881,
+          "text": "private fun findDefaultValue(source: KtLightSourceElement): KtLightSourceElement? {"
+        }
+      ],
+      "receiver": {
+        "expression": "this",
+        "type": "KtSourceElement",
+        "candidateColumns": [
+          35
+        ],
+        "declaration": {
+          "line": 875,
+          "text": "internal val KtSourceElement.defaultValueForParameter: KtSourceElement?"
+        }
+      },
+      "existingPsiFailure": {
+        "line": 877,
+        "column": 12,
+        "message": "unresolved reference 'KtPsiSourceElement'."
+      },
+      "baseline": [
+        {
+          "column": 12,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 35,
+          "message": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 43,
+          "message": "unresolved reference 'KtParameter'."
+        },
+        {
+          "column": 57,
+          "message": "unresolved reference 'defaultValue'."
+        }
+      ],
+      "current": [
+        {
+          "column": 12,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 35,
+          "message": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 43,
+          "message": "unresolved reference 'KtParameter'."
+        },
+        {
+          "column": 57,
+          "message": "unresolved reference 'defaultValue'."
+        }
+      ],
+      "replacements": [
+        {
+          "column": 35,
+          "before": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'.",
+          "after": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        }
+      ],
+      "additionalNullableCascades": [],
+      "removedInferenceCascades": []
+    },
+    {
+      "id": "trailing-lambda-psi-candidate",
+      "source": "compiler/fir/checkers/src/org/jetbrains/kotlin/fir/analysis/diagnostics/coneDiagnosticToFirDiagnostic.kt",
+      "line": 886,
+      "expression": "        is KtPsiSourceElement if argumentSource.psi.let { it is KtLambdaExpression && it.isTrailingLambdaOnNewLine }",
+      "context": [
+        {
+          "line": 882,
+          "text": "        return false"
+        },
+        {
+          "line": 883,
+          "text": "    }"
+        },
+        {
+          "line": 884,
+          "text": ""
+        },
+        {
+          "line": 885,
+          "text": "    return when (val argumentSource = argument.source) {"
+        },
+        {
+          "line": 886,
+          "text": "        is KtPsiSourceElement if argumentSource.psi.let { it is KtLambdaExpression && it.isTrailingLambdaOnNewLine }"
+        },
+        {
+          "line": 887,
+          "text": "            -> FirErrors.UNEXPECTED_TRAILING_LAMBDA_ON_A_NEW_LINE.createOn(argumentSource, session)"
+        },
+        {
+          "line": 888,
+          "text": "        is KtLightSourceElement if argumentSource.isTrailingLambdaOnNewLine()"
+        },
+        {
+          "line": 889,
+          "text": "            -> FirErrors.UNEXPECTED_TRAILING_LAMBDA_ON_A_NEW_LINE.createOn(argumentSource, session)"
+        },
+        {
+          "line": 890,
+          "text": "        else"
+        }
+      ],
+      "receiver": {
+        "expression": "argumentSource",
+        "type": "KtSourceElement",
+        "candidateColumns": [
+          49
+        ]
+      },
+      "existingPsiFailure": {
+        "line": 886,
+        "column": 12,
+        "message": "unresolved reference 'KtPsiSourceElement'."
+      },
+      "baseline": [
+        {
+          "column": 12,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 49,
+          "message": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 53,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        },
+        {
+          "column": 53,
+          "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
+        },
+        {
+          "column": 53,
+          "message": "candidate 'fun <T, R> T.let(block: (T) -> R): R' is inapplicable because of a receiver type mismatch. Actual receiver type is '??? (Unresolved qualified name: PsiElement)'."
+        },
+        {
+          "column": 57,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        },
+        {
+          "column": 65,
+          "message": "unresolved reference 'KtLambdaExpression'."
+        },
+        {
+          "column": 90,
+          "message": "function invocation 'isTrailingLambdaOnNewLine()' expected."
+        },
+        {
+          "column": 90,
+          "message": "candidate 'fun KtLightSourceElement.isTrailingLambdaOnNewLine(): Boolean' is inapplicable because of a receiver type mismatch. Actual receiver type is 'Any'."
+        }
+      ],
+      "current": [
+        {
+          "column": 12,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 49,
+          "message": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 65,
+          "message": "unresolved reference 'KtLambdaExpression'."
+        },
+        {
+          "column": 90,
+          "message": "function invocation 'isTrailingLambdaOnNewLine()' expected."
+        }
+      ],
+      "replacements": [
+        {
+          "column": 49,
+          "before": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'.",
+          "after": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        }
+      ],
+      "additionalNullableCascades": [],
+      "removedInferenceCascades": [
+        {
+          "column": 53,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        },
+        {
+          "column": 53,
+          "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
+        },
+        {
+          "column": 53,
+          "message": "candidate 'fun <T, R> T.let(block: (T) -> R): R' is inapplicable because of a receiver type mismatch. Actual receiver type is '??? (Unresolved qualified name: PsiElement)'."
+        },
+        {
+          "column": 57,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        },
+        {
+          "column": 90,
+          "message": "candidate 'fun KtLightSourceElement.isTrailingLambdaOnNewLine(): Boolean' is inapplicable because of a receiver type mismatch. Actual receiver type is 'Any'."
+        }
+      ]
+    },
+    {
+      "id": "lookup-position-psi-candidate",
+      "source": "compiler/fir/entrypoint/src/org/jetbrains/kotlin/fir/IncrementalPassThroughLookupTrackerComponent.kt",
+      "line": 119,
+      "expression": "            getLineAndColumnInPsiFile(source.psi.containingFile, source.psi.textRange).let { Position(it.line, it.column) }",
+      "context": [
+        {
+          "line": 115,
+          "text": "                // TODO: the lookup by non-file source mostly doesn't work for the LT, so we cannot afford null file sources here"
+        },
+        {
+          "line": 116,
+          "text": "                return"
+        },
+        {
+          "line": 117,
+          "text": "        }"
+        },
+        {
+          "line": 118,
+          "text": "        val position = if (requiresPosition && source != null && source is KtPsiSourceElement) {"
+        },
+        {
+          "line": 119,
+          "text": "            getLineAndColumnInPsiFile(source.psi.containingFile, source.psi.textRange).let { Position(it.line, it.column) }"
+        },
+        {
+          "line": 120,
+          "text": "        } else Position.NO_POSITION"
+        },
+        {
+          "line": 121,
+          "text": ""
+        },
+        {
+          "line": 122,
+          "text": "        for (scope in inScopes) {"
+        },
+        {
+          "line": 123,
+          "text": "            lookupTracker.record(path, position, scope, ScopeKind.PACKAGE, name)"
+        }
+      ],
+      "receiver": {
+        "expression": "source",
+        "type": "KtSourceElement",
+        "candidateColumns": [
+          46,
+          73
+        ]
+      },
+      "existingPsiFailure": {
+        "line": 118,
+        "column": 76,
+        "message": "unresolved reference 'KtPsiSourceElement'."
+      },
+      "baseline": [
+        {
+          "column": 13,
+          "message": "unresolved reference 'getLineAndColumnInPsiFile'."
+        },
+        {
+          "column": 46,
+          "message": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 73,
+          "message": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 77,
+          "message": "unresolved reference 'textRange'."
+        },
+        {
+          "column": 88,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        },
+        {
+          "column": 88,
+          "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
+        },
+        {
+          "column": 92,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        }
+      ],
+      "current": [
+        {
+          "column": 13,
+          "message": "unresolved reference 'getLineAndColumnInPsiFile'."
+        },
+        {
+          "column": 46,
+          "message": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 49,
+          "message": "unsafe call on receiver of nullable type 'Nothing?'. Consider using a safe call '?.' or non-null asserted call '!!.'."
+        },
+        {
+          "column": 73,
+          "message": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 77,
+          "message": "unresolved reference 'textRange' on receiver of type 'Nothing?'."
+        },
+        {
+          "column": 88,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        },
+        {
+          "column": 88,
+          "message": "cannot infer type for type parameter 'R'. Specify it explicitly."
+        },
+        {
+          "column": 92,
+          "message": "cannot infer type for type parameter 'T'. Specify it explicitly."
+        }
+      ],
+      "replacements": [
+        {
+          "column": 46,
+          "before": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'.",
+          "after": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 73,
+          "before": "candidate 'val FirElement.psi: ??? (Unresolved qualified name: PsiElement)' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'.",
+          "after": "candidate 'val FirElement.psi: Nothing?' is inapplicable because of a receiver type mismatch. Actual receiver type is 'KtSourceElement'."
+        },
+        {
+          "column": 77,
+          "before": "unresolved reference 'textRange'.",
+          "after": "unresolved reference 'textRange' on receiver of type 'Nothing?'."
+        }
+      ],
+      "additionalNullableCascades": [
+        {
+          "column": 49,
+          "message": "unsafe call on receiver of nullable type 'Nothing?'. Consider using a safe call '?.' or non-null asserted call '!!.'.",
+          "existingFailureColumn": 46
+        }
+      ],
+      "removedInferenceCascades": []
+    },
+    {
+      "id": "for-loop-private-psi-candidate",
+      "source": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrVisitor.kt",
+      "line": 2069,
+      "expression": "        if (this is KtPsiSourceElement) psi.parent is KtForExpression",
+      "context": [
+        {
+          "line": 2065,
+          "text": "}"
+        },
+        {
+          "line": 2066,
+          "text": ""
+        },
+        {
+          "line": 2067,
+          "text": "val KtSourceElement.isChildOfForLoop: Boolean"
+        },
+        {
+          "line": 2068,
+          "text": "    get() ="
+        },
+        {
+          "line": 2069,
+          "text": "        if (this is KtPsiSourceElement) psi.parent is KtForExpression"
+        },
+        {
+          "line": 2070,
+          "text": "        else treeStructure.getParent(lighterASTNode)?.tokenType == KtNodeTypes.FOR"
+        },
+        {
+          "line": 2071,
+          "text": ""
+        },
+        {
+          "line": 2072,
+          "text": "val KtSourceElement.operationToken: IElementType?"
+        },
+        {
+          "line": 2073,
+          "text": "    get() {"
+        }
+      ],
+      "receiver": {
+        "expression": "this",
+        "type": "KtSourceElement",
+        "candidateColumns": [],
+        "declaration": {
+          "line": 2067,
+          "text": "val KtSourceElement.isChildOfForLoop: Boolean"
+        }
+      },
+      "existingPsiFailure": {
+        "line": 2069,
+        "column": 21,
+        "message": "unresolved reference 'KtPsiSourceElement'."
+      },
+      "baseline": [
+        {
+          "column": 21,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 41,
+          "message": "unresolved reference 'psi'."
+        },
+        {
+          "column": 55,
+          "message": "unresolved reference 'KtForExpression'."
+        }
+      ],
+      "current": [
+        {
+          "column": 21,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 41,
+          "message": "cannot access 'val KtSourceElement?.psi: Nothing?': it is private in file."
+        },
+        {
+          "column": 44,
+          "message": "unsafe call on receiver of nullable type 'Nothing?'. Consider using a safe call '?.' or non-null asserted call '!!.'."
+        },
+        {
+          "column": 55,
+          "message": "unresolved reference 'KtForExpression'."
+        }
+      ],
+      "replacements": [
+        {
+          "column": 41,
+          "before": "unresolved reference 'psi'.",
+          "after": "cannot access 'val KtSourceElement?.psi: Nothing?': it is private in file."
+        }
+      ],
+      "additionalNullableCascades": [
+        {
+          "column": 44,
+          "message": "unsafe call on receiver of nullable type 'Nothing?'. Consider using a safe call '?.' or non-null asserted call '!!.'.",
+          "existingFailureColumn": 41
+        }
+      ],
+      "removedInferenceCascades": []
+    },
+    {
+      "id": "operation-token-private-psi-candidate",
+      "source": "compiler/fir/fir2ir/src/org/jetbrains/kotlin/fir/backend/Fir2IrVisitor.kt",
+      "line": 2075,
+      "expression": "        return if (this is KtPsiSourceElement) (psi as? KtBinaryExpression)?.operationToken",
+      "context": [
+        {
+          "line": 2071,
+          "text": ""
+        },
+        {
+          "line": 2072,
+          "text": "val KtSourceElement.operationToken: IElementType?"
+        },
+        {
+          "line": 2073,
+          "text": "    get() {"
+        },
+        {
+          "line": 2074,
+          "text": "        assert(elementType == KtNodeTypes.BINARY_EXPRESSION)"
+        },
+        {
+          "line": 2075,
+          "text": "        return if (this is KtPsiSourceElement) (psi as? KtBinaryExpression)?.operationToken"
+        },
+        {
+          "line": 2076,
+          "text": "        else treeStructure.findChildByType(lighterASTNode, KtNodeTypes.OPERATION_REFERENCE)?.tokenType"
+        },
+        {
+          "line": 2077,
+          "text": "            ?: error(\"No operation reference for binary expression: $lighterASTNode\")"
+        },
+        {
+          "line": 2078,
+          "text": "    }"
+        }
+      ],
+      "receiver": {
+        "expression": "this",
+        "type": "KtSourceElement",
+        "candidateColumns": [],
+        "declaration": {
+          "line": 2072,
+          "text": "val KtSourceElement.operationToken: IElementType?"
+        }
+      },
+      "existingPsiFailure": {
+        "line": 2075,
+        "column": 28,
+        "message": "unresolved reference 'KtPsiSourceElement'."
+      },
+      "baseline": [
+        {
+          "column": 28,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 49,
+          "message": "unresolved reference 'psi'."
+        },
+        {
+          "column": 57,
+          "message": "unresolved reference 'KtBinaryExpression'."
+        }
+      ],
+      "current": [
+        {
+          "column": 28,
+          "message": "unresolved reference 'KtPsiSourceElement'."
+        },
+        {
+          "column": 49,
+          "message": "cannot access 'val KtSourceElement?.psi: Nothing?': it is private in file."
+        },
+        {
+          "column": 57,
+          "message": "unresolved reference 'KtBinaryExpression'."
+        }
+      ],
+      "replacements": [
+        {
+          "column": 49,
+          "before": "unresolved reference 'psi'.",
+          "after": "cannot access 'val KtSourceElement?.psi: Nothing?': it is private in file."
+        }
+      ],
+      "additionalNullableCascades": [],
+      "removedInferenceCascades": []
+    }
+  ],
+  "reviewedNewDiagnosticCount": 9,
+  "messageReplacements": 7,
+  "additionalNullableCascades": 2,
+  "removedInferenceCascades": 5,
+  "baselineSiteDiagnostics": 26,
+  "currentSiteDiagnostics": 23,
+  "scope": "Only five byte-identical already-failing PSI expressions; raw new diagnostic messages remain visible. No source, symbol, compiler invocation, or source exclusion is changed to obtain this qualification."
+}

@@ -5,6 +5,7 @@ import { verifyFinalLoweringPhaseFactories } from '../lowering-phase-factories/p
 import { RECIPE, transformLoweringPhaseSource } from '../lowering-phase-factories/transform.mjs';
 import { verifyNativeFirstPhaseFinalSources } from '../native-first-phase-source-profile/prepare.mjs';
 import { verifyCompilerExceptionAttachmentFinalSources } from '../compiler-exception-attachment-profile/prepare.mjs';
+import { verifyFirLightTreePsiViewFinalSources } from '../fir-lighttree-psi-views/prepare.mjs';
 
 export const PHASE_BOUNDARIES = [
     'compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt',
@@ -19,11 +20,20 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
     await assertNoSymlink(boundary.outputRoot);
     const phaseBoundary = { sourceRoot, outputRoot: boundary.outputRoot, expectedReceiptSha256: boundary.expectedReceiptSha256 };
     const exceptionProfile = boundary.compilerExceptionProfile;
+    const psiProfile = boundary.firPsiViewsProfile;
+    if (psiProfile) {
+        assert(exceptionProfile, 'LightTree PSI views require their authenticated exception predecessor');
+        assert.equal(path.resolve(psiProfile.sourceRoot), path.resolve(sourceRoot), 'Native and PSI canonical source roots differ');
+    }
+    const psiFinal = psiProfile ? await verifyFirLightTreePsiViewFinalSources({
+        ...psiProfile, sourceRoot, retainedSources, recordedPropertyImports,
+    }) : undefined;
+    const exceptionSources = psiFinal?.predecessorRetainedSources ?? retainedSources;
     if (exceptionProfile) assert.equal(path.resolve(exceptionProfile.sourceRoot), path.resolve(sourceRoot), 'Native and exception canonical source roots differ');
     const exceptionFinal = exceptionProfile ? await verifyCompilerExceptionAttachmentFinalSources({
-        ...exceptionProfile, sourceRoot, retainedSources, recordedPropertyImports,
+        ...exceptionProfile, sourceRoot, retainedSources: exceptionSources, recordedPropertyImports,
     }) : undefined;
-    const nativePhaseSources = exceptionFinal?.predecessorRetainedSources ?? retainedSources;
+    const nativePhaseSources = exceptionFinal?.predecessorRetainedSources ?? exceptionSources;
     const profile = boundary.nativeFirstPhaseProfile;
     const nativeFirstPhase = profile ? await verifyNativeFirstPhaseFinalSources({ ...profile, sourceRoot, retainedSources: nativePhaseSources,
         loweringPhaseBoundary: phaseBoundary, recordedPropertyImports }) : undefined;
@@ -65,9 +75,12 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
         preparationReceiptSha256: boundary.expectedReceiptSha256, sourceLockSha256: final.sourceLockSha256,
         checked: final.checked, mappings: proofMappings, actualFinalSelectionUsed: true,
         ...(nativeFirstPhase ? { actualSelectedPhaseOutputs: 5, restoredExcludedPhaseOutputs: 1, fullCanonicalOutputsVerified: 6,
-            phaseVerificationSelection: exceptionFinal ? 'authenticated exception predecessor plus exactly one independently verified excluded native predecessor' : 'actual graph plus exactly one independently verified excluded predecessor',
+            phaseVerificationSelection: psiFinal ? 'authenticated LightTree PSI and exception predecessors plus exactly one independently verified excluded native predecessor' :
+                exceptionFinal ? 'authenticated exception predecessor plus exactly one independently verified excluded native predecessor' : 'actual graph plus exactly one independently verified excluded predecessor',
             nativeFirstPhaseProfile: nativeFirstPhase.receipt } : {}),
         ...(exceptionFinal ? { compilerExceptionProfile: exceptionFinal.receipt,
             actualCompilerGraphPreservedForLexicalAndModule: true } : {}),
+        ...(psiFinal ? { firPsiViewsProfile: psiFinal.receipt,
+            actualCompilerGraphPreservedForPsiLexicalAndModule: true } : {}),
         fullIrLoweringExecuted: false, fullCompilerBuilt: false, languageReadiness: false } };
 }

@@ -216,6 +216,15 @@ Kotlin/Java sources and actual selected inputs, preserves the original file,
 and requires the final source graph to differ only by that removal. The real
 parser, FIR2IR, Wasm lowering and builtins loader stay selected.
 
+The [LightTree PSI-view port](fir-lighttree-psi-views/README.md) specializes five
+complete FIR utility, metadata, offset and file-entry sources to the existing
+sealed LightTree host. Its nullable views still evaluate source getters, and it
+preserves the original line/path, fake-kind, initializer and metadata algorithms.
+All 3,571 source paths remain selected; the exact five-file inverse composes
+with the preceding exception port. Genuine JVM objects and common JVM/Node
+Wasm/offline Chromium observations establish method-boundary agreement, while
+whole FIR-to-IR execution and a completed compiler remain unverified.
+
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB
 would leave browser compilation `not-built` until a nonempty callable compiler

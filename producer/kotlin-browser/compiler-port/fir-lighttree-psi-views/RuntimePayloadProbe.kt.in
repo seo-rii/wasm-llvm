@@ -1,0 +1,142 @@
+/* Explicit observation payloads. These are never shipping FIR, IR, or PSI classes. */
+package org.jetbrains.kotlin.portable.psiviews.probe
+
+@CARRIER_IMPORTS@
+import org.jetbrains.kotlin.KtNodeTypes
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.KtSourceFileLinesMapping
+
+sealed class SourceKindPayload {
+    object Real : SourceKindPayload()
+    object OrdinaryFake : SourceKindPayload()
+    sealed class DataClassGeneratedMembers : SourceKindPayload() {
+        object Member : DataClassGeneratedMembers()
+    }
+    sealed class DefaultAccessor : SourceKindPayload() {
+        object Getter : DefaultAccessor()
+    }
+    object ImplicitThisReceiverExpression : SourceKindPayload()
+    object ImplicitContextParameterArgument : SourceKindPayload()
+}
+
+class SourcePayload(
+    val lighterASTNode: LighterASTNode,
+    val treeStructure: FlyweightCapableTreeStructure<LighterASTNode>,
+    val startOffset: Int = lighterASTNode.startOffset,
+    val endOffset: Int = lighterASTNode.endOffset,
+    val kind: SourceKindPayload = SourceKindPayload.Real,
+)
+
+open class ElementPayload(
+    private val sourceValue: SourcePayload?,
+    var sourceFailure: Throwable? = null,
+) {
+    var sourceReads = 0
+    val evaluations = mutableListOf<String>()
+    var onSourceRead: (() -> Unit)? = null
+    val source: SourcePayload?
+        get() {
+            sourceReads++
+            evaluations.add("source")
+            onSourceRead?.invoke()
+            sourceFailure?.let { throw it }
+            return sourceValue
+        }
+}
+open class StatementPayload(source: SourcePayload?) : ElementPayload(source)
+open class DeclarationPayload(source: SourcePayload?, val name: String = "declaration") : StatementPayload(source) {
+    open val symbol: Any = Any()
+}
+open class VariablePayload(source: SourcePayload?, name: String = "variable") : DeclarationPayload(source, name)
+class NamedFunctionPayload(source: SourcePayload?) : DeclarationPayload(source, "function")
+class ConstructorPayload(source: SourcePayload?) : DeclarationPayload(source)
+class RegularClassPayload(source: SourcePayload?) : DeclarationPayload(source, "class")
+class InitializerPayload(source: SourcePayload?) : ElementPayload(source)
+open class SymbolPayload
+class RegularPropertySymbolPayload : SymbolPayload()
+class PropertyPayload(
+    source: SourcePayload?,
+    val initializer: InitializerPayload?,
+    val isConst: Boolean = false,
+    val propertySymbol: SymbolPayload = RegularPropertySymbolPayload(),
+) : VariablePayload(source, "property") {
+    override val symbol: SymbolPayload get() = propertySymbol
+}
+class FieldPayload(source: SourcePayload?, val isConst: Boolean) : VariablePayload(source, "field")
+class PropertySymbolPayload(val fir: PropertyPayload)
+class AccessorPayload(source: SourcePayload?, val propertySymbol: PropertySymbolPayload) : ElementPayload(source)
+class ReferencePayload(source: SourcePayload?) : ElementPayload(source)
+data class OffsetPayload(val startOffset: Int, val endOffset: Int)
+
+sealed class OriginPayload {
+    object Source : OriginPayload()
+    open class Synthetic : OriginPayload()
+    object Unsupported : OriginPayload()
+}
+class SourceFilePayload(val name: String, val path: String?)
+class FilePayload(
+    source: SourcePayload?,
+    val origin: OriginPayload,
+    private val sourceFileValue: SourceFilePayload?,
+    sourceFileLinesMapping: KtSourceFileLinesMapping?,
+    val name: String = "fallback.kt",
+) : ElementPayload(source) {
+    private val mappingValue = sourceFileLinesMapping
+    var mappingReads = 0
+    var mappingFailure: Throwable? = null
+    val sourceFileLinesMapping: KtSourceFileLinesMapping?
+        get() {
+            mappingReads++; evaluations.add("mapping")
+            mappingFailure?.let { throw it }
+            return mappingValue
+        }
+    var sourceFileReads = 0
+    var sourceFileFailure: Throwable? = null
+    val sourceFile: SourceFilePayload?
+        get() {
+            sourceFileReads++; evaluations.add("sourceFile")
+            sourceFileFailure?.let { throw it }
+            return sourceFileValue
+        }
+}
+
+class NodeFixture(
+    val id: String, val token: IElementType, val start: Int, val end: Int,
+    vararg children: NodeFixture,
+) : LighterASTNode {
+    var parent: NodeFixture? = null
+    val children = children.toList().also { list -> list.forEach { it.parent = this } }
+@NODE_MEMBERS@
+}
+class TreeFixture(val rootNode: NodeFixture) : FlyweightCapableTreeStructure<LighterASTNode> {
+    override fun getRoot(): LighterASTNode = rootNode
+    override fun getParent(node: LighterASTNode): LighterASTNode? = (node as NodeFixture).parent
+    override fun getChildren(parent: LighterASTNode, into: Ref<Array<LighterASTNode@NULLABLE@>>): Int {
+        val children = (parent as NodeFixture).children
+        into.set(Array(children.size) { children[it] })
+        return children.size
+    }
+    override fun disposeChildren(nodes: Array<out LighterASTNode>?, count: Int) {}
+    override fun toString(node: LighterASTNode): CharSequence = (node as NodeFixture).id
+    override fun getStartOffset(node: LighterASTNode): Int = (node as NodeFixture).start
+    override fun getEndOffset(node: LighterASTNode): Int = (node as NodeFixture).end
+}
+
+fun sourceFixture(kind: SourceKindPayload = SourceKindPayload.Real, keyword: Boolean = true,
+    keywordToken: IElementType = KtTokens.VAL_KEYWORD): SourcePayload {
+    val root = NodeFixture("property", KtNodeTypes.PROPERTY, 0, 40,
+        NodeFixture("comment", KtTokens.BLOCK_COMMENT, 0, 5),
+        NodeFixture("space", KtTokens.WHITE_SPACE, 5, 7),
+        NodeFixture("keyword", if (keyword) keywordToken else KtTokens.IDENTIFIER, 7, 10),
+        NodeFixture("name", KtTokens.IDENTIFIER, 11, 15),
+        NodeFixture("space", KtTokens.WHITE_SPACE, 15, 16),
+        NodeFixture("equals", KtTokens.EQ, 16, 17),
+        NodeFixture("space", KtTokens.WHITE_SPACE, 17, 18),
+        NodeFixture("initializer", KtNodeTypes.STRING_TEMPLATE, 18, 40))
+    return SourcePayload(root, TreeFixture(root), 100, 140, kind)
+}
+
+fun initializerFor(source: SourcePayload): InitializerPayload {
+    val node = (source.lighterASTNode as NodeFixture).children.last()
+    return InitializerPayload(SourcePayload(node, source.treeStructure))
+}
