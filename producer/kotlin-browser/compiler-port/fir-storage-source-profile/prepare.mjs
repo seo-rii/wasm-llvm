@@ -5,11 +5,33 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { assertNoSymlink, json, readRegular, relativePath, sha256, verifyFile, writeJson } from '../../scripts/source.mjs';
 import { CONFIG, ELEMENT, HOST, STORAGE, UTILS, profileStorage } from './transform.mjs';
+import { assembleImports } from '../type-substitutor-getter/prepare.mjs';
+import { normalizeImports } from '../descriptor-base-implementations/prepare.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url)), repository = path.resolve(here, '../../../..'), limit = 256 * 1024 * 1024;
 const algorithm = text => text.replace(/^import [^\r\n]+\r?\n/gm, '').replace(/^(package[^\r\n]+\r?\n)\s*\n/m, '$1');
 const pin = (logical, bytes) => ({ path: logical, bytes: bytes.length, sha256: sha256(bytes) });
 function verifyGenerated(bytes, pin) { assert.equal(bytes.length, pin.bytes); assert.equal(sha256(bytes), pin.sha256); return bytes; }
+
+async function portableJvmClassNameBindings(lock, profileRoot) {
+    const binding = lock.portableJvmClassNames;
+    assert.equal(binding.sourceLock.path, '../jvm-descriptor-signature-implementations/sources.lock.json');
+    const lockBytes = verifyFile(await readRegular(path.join(here, binding.sourceLock.path)), binding.sourceLock);
+    const jvmLock = JSON.parse(lockBytes), sources = new Map();
+    assert.equal(jvmLock.kind, 'genuine-jvm-descriptor-signature-implementations');
+    assert.equal(jvmLock.primaryClosureSha256, lock.primaryClosureSha256); assert.deepEqual(jvmLock.source, lock.source);
+    for (const relative of ['../type-substitutor-getter/prepare.mjs', '../descriptor-base-implementations/prepare.mjs']) {
+        const dependency = jvmLock.dependencies.find(pin => pin.path === relative); assert(dependency);
+        verifyFile(await readRegular(path.join(here, relative)), dependency);
+    }
+    for (const pin of jvmLock.common) {
+        const bytes = verifyFile(await readRegular(path.join(here, '../jvm-descriptor-signature-implementations/common', pin.path)), pin);
+        if (/\bJvmClassName\b/.test(bytes.toString())) sources.set('compiler-port-jvm-descriptor-signatures/' + pin.path, bytes);
+    }
+    assert.deepEqual([...sources.keys()].sort(), binding.selectedPaths.slice().sort());
+    return { sources, assemblyImports: jvmLock.assemblyImports, sourceLockSha256: sha256(lockBytes),
+        ownerRoot: path.join(path.dirname(profileRoot), 'jvmDescriptorSignatureImplementationsReceipt') };
+}
 
 export async function verifyFirStorageEntryBindings(entryRoot = path.resolve(here, '../entry')) {
     const lock = JSON.parse(await readRegular(path.join(here, 'sources.lock.json')));
@@ -79,7 +101,8 @@ async function inputs(sourceRoot, preparedFirStorage, preparedHost) {
 
 export function guardStorageSelection(snapshot, input, { final = false } = {}) {
     assert(Array.isArray(snapshot) && snapshot.length > 0 && snapshot.length <= 20000);
-    const seen = new Set(), selected = [], configurationCalls = [], forbiddenConsumers = [], sourceFamily = []; let total = 0;
+    const seen = new Set(), selected = [], configurationCalls = [], forbiddenConsumers = [], sourceFamily = [], portableConsumers = []; let total = 0;
+    const portable = input.portableJvmClassNames;
     const expectedSources = new Map(input.originals);
     expectedSources.set(STORAGE, final ? profileStorage(input.predecessors.storage.bytes, input.lock).bytes : input.predecessors.storage.bytes);
     expectedSources.set(HOST, input.predecessors.host.bytes);
@@ -105,19 +128,33 @@ export function guardStorageSelection(snapshot, input, { final = false } = {}) {
             }
             assert(!/\bFir2IrConfiguration\s*\(/.test(text), 'Unapproved direct configuration construction');
         }
-        if (/\b(?:NonCachedSourceFacadeContainerSource|JvmFileClassUtil|FacadeClassSource|JvmClassName)\b/.test(text)) {
+        const portableCanonical = portable.sources.get(item.path);
+        if (portableCanonical) {
+            assert.equal(item.filename, path.join(portable.ownerRoot, item.path), 'Wrong portable JVM class-name source owner: ' + item.path);
+            assert(bytes.equals(portableCanonical) || final && (
+                bytes.equals(assembleImports(portableCanonical, portable.assemblyImports)) ||
+                normalizeImports(bytes, portable.assemblyImports).equals(normalizeImports(portableCanonical, []))),
+            'Portable JVM class-name source changed: ' + item.path);
+            portableConsumers.push({ path: item.path, filename: item.filename, bytes: bytes.length, sha256: sha256(bytes),
+                canonicalSha256: sha256(portableCanonical) });
+        }
+        if (/\b(?:NonCachedSourceFacadeContainerSource|JvmFileClassUtil|FacadeClassSource)\b/.test(text) ||
+            /\bJvmClassName\b/.test(text) && !portableCanonical) {
             assert(!final && item.path === STORAGE, 'Excluded facade island consumer outside original storage: ' + item.path);
             forbiddenConsumers.push(item.path);
         }
         if (/\bsealed class KtSourceElement\b/.test(text)) { assert.equal(item.path, HOST); sourceFamily.push(item.path); }
     }
+    if (portableConsumers.length) assert.deepEqual(portableConsumers.map(row => row.path).sort(), [...portable.sources.keys()].sort(),
+        'Incomplete portable JVM class-name closure');
     assert.deepEqual(selected.map(item => item.path).sort(), selectedPaths.sort(), 'Exact source, getter, entry and configuration closure required');
     assert.equal(configurationCalls.length, 1); assert.deepEqual(sourceFamily, [HOST]);
     const host = input.predecessors.host.bytes.toString();
     assert(host.includes('sealed class KtSourceElement : AbstractKtSourceElement()'));
     assert(host.includes(') : KtSourceElement()')); assert(!/\b(?:class|object)\s+Kt\w*PsiSourceElement\b/.test(host));
     return { inspectedFiles: snapshot.length, inspectedBytes: total, selected, configurationCalls, sourceFamily,
-        facadeIslandConsumers: forbiddenConsumers, purePsiGetterSha256: input.lock.psiGetter.sha256,
+        facadeIslandConsumers: forbiddenConsumers, portableJvmClassNameSources: portableConsumers,
+        portableJvmClassNamesSourceLockSha256: portable.sourceLockSha256, purePsiGetterSha256: input.lock.psiGetter.sha256,
         allowNonCachedDeclarations: false, publicKlibFactoryOnly: true, lightTreeSourceHostOnly: true,
         limitation: 'Exact selected body pins and conservative lexical closure; no resolved whole FIR call-graph or full storage runtime claim' };
 }
@@ -126,7 +163,7 @@ async function snapshotSources(retainedSources) {
     const result = [];
     for (const item of retainedSources) {
         const bytes = await readRegular(item.filename); assert.equal(bytes.length, item.bytes); assert.equal(sha256(bytes), item.sha256);
-        result.push({ ...pin(item.path, bytes), source: bytes.toString('base64') });
+        result.push({ ...pin(item.path, bytes), filename: path.resolve(item.filename), source: bytes.toString('base64') });
     }
     return result;
 }
@@ -146,6 +183,7 @@ export async function prepareFirStorageSourceProfile({ sourceRoot, outputRoot, p
     for (const root of [sourceRoot, preparedFirStorage?.outputRoot, preparedHost?.outputRoot].filter(Boolean).map(item => path.resolve(item)))
         assert(root !== outputRoot && !root.startsWith(outputRoot + path.sep) && !outputRoot.startsWith(root + path.sep), 'Input/output overlap');
     const input = await inputs(sourceRoot, preparedFirStorage, preparedHost); input.prepareSha256 = sha256(await readRegular(fileURLToPath(import.meta.url)));
+    input.portableJvmClassNames = await portableJvmClassNameBindings(input.lock, outputRoot);
     const transformed = profileStorage(input.predecessors.storage.bytes, input.lock), snapshot = await snapshotSources([...retainedSources, ...forwardSources]);
     const guard = guardStorageSelection(snapshot, input); await assertNoSymlink(outputRoot); await mkdir(outputRoot, { recursive: true, mode: 0o700 });
     const referencePins = [];
@@ -197,6 +235,7 @@ async function replayPreparation(root) {
     assert.equal(contract.transformSha256, sha256(await readRegular(path.join(here, 'transform.mjs'))));
     const lockBytes = await readRegular(path.join(here, 'sources.lock.json'));
     const input = { lockBytes, lock: contract, originals, predecessors, bindings, prepareSha256: sha256(await readRegular(fileURLToPath(import.meta.url))) };
+    input.portableJvmClassNames = await portableJvmClassNameBindings(contract, root);
     assert.equal(receipt.snapshot.path, 'selected-source-snapshot.json.gz'); const packed = verifyGenerated(await readRegular(path.join(root, receipt.snapshot.path), limit), receipt.snapshot);
     const snapshot = JSON.parse(gunzipSync(packed, { maxOutputLength: limit })), transformed = profileStorage(predecessors.storage.bytes, contract);
     const guard = guardStorageSelection(snapshot, input); assert.deepEqual(receipt, receiptFor(input, transformed, receipt.snapshot, guard, referencePins));
