@@ -85,6 +85,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let nativeFirstPhasePredecessorSources;
   let compilerExceptionComposition;
   let compilerExceptionPredecessorSources;
+  let firPsiViewsComposition;
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
@@ -1682,10 +1683,36 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       }
       receipt.compilerExceptionAttachmentReceipt = component.receipt;
       compilerExceptionComposition = { sourceRoot: prepared.sourceRoot, outputRoot, expectedReceiptSha256: component.receiptSha256 };
-      const final = await profile.verifyCompilerExceptionAttachmentFinalSources({ ...compilerExceptionComposition,
+      const psiProfile = await import('./fir-lighttree-psi-views/prepare.mjs');
+      const psiOutputRoot = path.join(output, 'components', 'firLightTreePsiViewsReceipt');
+      const psi = await psiProfile.prepareFirLightTreePsiViews({ sourceRoot: prepared.sourceRoot, outputRoot: psiOutputRoot,
+        preparedExceptionProfile: compilerExceptionComposition, recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.equal(psi.commonSources.length, 5);
+      assert.deepEqual(psi.sourceSetExclusions, []);
+      assert.deepEqual(psi.replacedOriginalPaths, psi.receipt.files.map(row => row.before.path));
+      assert.deepEqual(psi.commonSources, psi.receipt.files.map(row => row.after.filename));
+      for (const { before, after } of psi.receipt.files) {
+        const previous = files.get(before.path);
+        assert.deepEqual({ path: before.path, ...previous }, before, 'LightTree PSI predecessor owner or metadata changed');
+        assert.equal(after.path, before.path); assert.equal(after.filename, path.join(psiOutputRoot, before.path));
+        const bytes = await readRegular(after.filename);
+        assert.equal(bytes.length, after.bytes); assert.equal(sha256(bytes), after.sha256);
+        files.set(before.path, { ...previous, filename: after.filename, bytes: after.bytes, sha256: after.sha256 });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== before.path);
+        receipt.portableSourceBindings.push({ path: before.path, sha256: after.sha256 });
+      }
+      receipt.firLightTreePsiViewsReceipt = psi.receipt;
+      firPsiViewsComposition = { sourceRoot: prepared.sourceRoot, outputRoot: psiOutputRoot, expectedReceiptSha256: psi.receiptSha256 };
+      const psiFinal = await psiProfile.verifyFirLightTreePsiViewFinalSources({ ...firPsiViewsComposition,
         recordedPropertyImports: receipt.propertyImports.imports,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.firLightTreePsiViewsFinalReceipt = psiFinal.receipt;
+      const final = await profile.verifyCompilerExceptionAttachmentFinalSources({ ...compilerExceptionComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: psiFinal.predecessorRetainedSources });
       receipt.compilerExceptionAttachmentFinalReceipt = final.receipt;
       // Earlier component guards receive only the authenticated full inverse.
       // The files map remains the actual selection used by the compiler.
@@ -1792,7 +1819,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })),
         verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
         verifiedLoweringPhaseBoundary: { ...loweringPhaseFactoriesComposition, nativeFirstPhaseProfile: nativeFirstPhaseComposition,
-          compilerExceptionProfile: compilerExceptionComposition },
+          compilerExceptionProfile: compilerExceptionComposition, firPsiViewsProfile: firPsiViewsComposition },
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
