@@ -818,7 +818,9 @@ The default GNU C++ runtime still omits C++26 debugger functions and prebuilt
 `std` modules. Their APIs have no substitute implementations. Runtime
 qualification requires `std::is_debugger_present` and `import std` to fail at
 linking or compilation. The SDK accepts source/header inputs through C++23; it
-does not accept precompiled modules.
+does not accept caller-supplied precompiled modules. The optional [standard module
+component](STD-MODULES.md) adds pinned, lazily loaded `std` and `std.compat` BMIs
+under an explicit bounded profile, while preserving this default path.
 
 An optional [GNU C++26 debugger component](DEBUGGER.md) adds the original
 `<debugging>` implementation with an explicit CDP Worker observer-registration
