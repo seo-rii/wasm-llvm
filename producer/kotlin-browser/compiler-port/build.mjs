@@ -87,6 +87,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let compilerExceptionPredecessorSources;
   let firPsiViewsComposition;
   let firTowerModeMapComposition;
+  let officialMainEntryComposition;
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
@@ -1728,10 +1729,37 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       }
       receipt.firTowerModeMapReceipt = tower.receipt;
       firTowerModeMapComposition = { sourceRoot: prepared.sourceRoot, outputRoot: towerOutputRoot, expectedReceiptSha256: tower.receiptSha256 };
-      const towerFinal = await towerProfile.verifyFirTowerModeMapFinalSources({ ...firTowerModeMapComposition,
+      const mainEntryProfile = await import('./official-main-entry/prepare.mjs');
+      const mainEntryOutputRoot = path.join(output, 'components', 'officialMainEntryReceipt');
+      const mainEntry = await mainEntryProfile.prepareOfficialMainEntry({ sourceRoot: prepared.sourceRoot, outputRoot: mainEntryOutputRoot,
+        preparedTowerModeMapProfile: firTowerModeMapComposition, recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.equal(mainEntry.commonSources.length, 1);
+      assert.deepEqual(mainEntry.sourceSetExclusions, []);
+      assert.deepEqual(mainEntry.replacedOriginalPaths, mainEntry.receipt.files.map(row => row.before.path));
+      assert.deepEqual(mainEntry.commonSources, mainEntry.receipt.files.map(row => row.after.filename));
+      for (const { before, after } of mainEntry.receipt.files) {
+        const previous = files.get(before.path);
+        assert.deepEqual({ path: before.path, ...previous }, before, 'Official main entry predecessor owner or metadata changed');
+        assert.equal(after.path, before.path); assert.equal(after.filename, path.join(mainEntryOutputRoot, before.path));
+        const bytes = await readRegular(after.filename);
+        assert.equal(bytes.length, after.bytes); assert.equal(sha256(bytes), after.sha256);
+        files.set(before.path, { ...previous, filename: after.filename, bytes: after.bytes, sha256: after.sha256 });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== before.path);
+        receipt.portableSourceBindings.push({ path: before.path, sha256: after.sha256 });
+      }
+      receipt.officialMainEntryReceipt = mainEntry.receipt;
+      officialMainEntryComposition = { sourceRoot: prepared.sourceRoot, outputRoot: mainEntryOutputRoot,
+        expectedReceiptSha256: mainEntry.receiptSha256 };
+      const mainEntryFinal = await mainEntryProfile.verifyOfficialMainEntryFinalSources({ ...officialMainEntryComposition,
         recordedPropertyImports: receipt.propertyImports.imports,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.officialMainEntryFinalReceipt = mainEntryFinal.receipt;
+      const towerFinal = await towerProfile.verifyFirTowerModeMapFinalSources({ ...firTowerModeMapComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: mainEntryFinal.predecessorRetainedSources });
       receipt.firTowerModeMapFinalReceipt = towerFinal.receipt;
       const psiFinal = await psiProfile.verifyFirLightTreePsiViewFinalSources({ ...firPsiViewsComposition,
         recordedPropertyImports: receipt.propertyImports.imports,
@@ -1847,7 +1875,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
         verifiedLoweringPhaseBoundary: { ...loweringPhaseFactoriesComposition, nativeFirstPhaseProfile: nativeFirstPhaseComposition,
           compilerExceptionProfile: compilerExceptionComposition, firPsiViewsProfile: firPsiViewsComposition,
-          firTowerModeMapProfile: firTowerModeMapComposition },
+          firTowerModeMapProfile: firTowerModeMapComposition, officialMainEntryProfile: officialMainEntryComposition },
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
