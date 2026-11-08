@@ -232,8 +232,19 @@ same-mode identity behavior are preserved. Companion-block selection retains
 the original fresh regular-only context and scope reset. The one-file inverse
 feeds the existing PSI and exception guards, while native lexical and module
 checks still inspect the actual compiler inputs. No source is added or excluded.
-See the [current foundation evidence](fir-tower-mode-map/CURRENT_FOUNDATION.md)
+See the [tower foundation evidence](fir-tower-mode-map/CURRENT_FOUNDATION.md)
 for the actual diagnostic comparison and JVM/Wasm runtime qualification.
+
+The [official main entry composition](official-main-entry/README.md) removes the
+private main-count and no-argument/non-suspend checks from the complete prepared
+pipeline. The official Wasm phases retain responsibility for main selection,
+argument and continuation wrappers, DCE, linking and exports. The historical raw
+entry remains pinned by earlier profiles; only its complete transformed output
+is selected in the final compiler graph. The source set and existing request
+exception scope are preserved. See the
+[current foundation evidence](official-main-entry/CURRENT_FOUNDATION.md) for
+the whole-source comparison, real generated-program observations and their
+limits. These observations do not establish browser-side Kotlin compilation.
 
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB
