@@ -32,9 +32,11 @@ FIR object implementation or establish whole FIR resolution.
 
 The observations cover 768 initial states, 4,608 transitions and 4,608 history
 replacements. They check all six modes, nullable entries, context identity,
-sharing on mode switches, copies on replacement, same-mode identity, scope
-forwarding and the original companion-block reset behavior. The genuine JVM
-runs authenticate class origins and carry real local scopes inside contexts.
+persistence across mode switches and replacement, same-mode identity, scope
+forwarding and the original companion-block reset behavior. Exact source
+inversion and mutation guards separately preserve the private map's sharing and
+copy structure. The genuine JVM runs authenticate class origins and carry real
+local scopes inside contexts.
 
 Qualification reopens every actual baseline and current compiler source and
 compares diagnostics by logical source, line, column, exact message and
