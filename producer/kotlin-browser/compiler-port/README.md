@@ -225,6 +225,16 @@ with the preceding exception port. Genuine JVM objects and common JVM/Node
 Wasm/offline Chromium observations establish method-boundary agreement, while
 whole FIR-to-IR execution and a completed compiler remain unverified.
 
+The [private FIR tower mode map](fir-tower-mode-map/README.md) replaces the JVM
+`EnumMap` representation in one complete source file with a nullable common map.
+The map stays private; its six keys, context identity, copy-on-replacement and
+same-mode identity behavior are preserved. Companion-block selection retains
+the original fresh regular-only context and scope reset. The one-file inverse
+feeds the existing PSI and exception guards, while native lexical and module
+checks still inspect the actual compiler inputs. No source is added or excluded.
+See the [current foundation evidence](fir-tower-mode-map/CURRENT_FOUNDATION.md)
+for the actual diagnostic comparison and JVM/Wasm runtime qualification.
+
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB
 would leave browser compilation `not-built` until a nonempty callable compiler

@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 1,
+  "kind": "fir-private-tower-mode-map",
+  "source": {
+    "repository": "https://github.com/JetBrains/kotlin.git",
+    "commit": "4d78aae1e337cd40f69baa865aed950fe807a775",
+    "treeSha": "2be662d1ae06bfcf435efbe18191ba5e1e3f035e"
+  },
+  "primaryClosureSha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+  "targets": [
+    {
+      "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/FirRegularTowerDataContexts.kt",
+      "gitBlob": "ef18f128fd3c2ee8b64e5b41d64a11eb94d75440",
+      "bytes": 4171,
+      "language": "kotlin",
+      "compile": true,
+      "role": "source",
+      "module": "compiler/fir/resolve",
+      "sha256": "0d1ea1ad28a9579055a1299c9e6e3c3d1a01afdc8d9ce67b21d32fe79006abce"
+    }
+  ],
+  "modes": [
+    "REGULAR",
+    "NESTED_CLASS",
+    "COMPANION_BLOCK",
+    "COMPANION_OBJECT",
+    "CONSTRUCTOR_HEADER",
+    "ENUM_ENTRY"
+  ],
+  "recipes": [
+    {
+      "before": "import org.jetbrains.kotlin.fir.scopes.impl.FirLocalScope\nimport java.util.*\n",
+      "after": "import org.jetbrains.kotlin.fir.scopes.impl.FirLocalScope\n",
+      "occurrences": 1
+    },
+    {
+      "before": "EnumMap<FirTowerDataMode, FirTowerDataContext>(FirTowerDataMode::class.java)",
+      "after": "mutableMapOf<FirTowerDataMode, FirTowerDataContext?>()",
+      "occurrences": 3
+    },
+    {
+      "before": "EnumMap<FirTowerDataMode, FirTowerDataContext>",
+      "after": "MutableMap<FirTowerDataMode, FirTowerDataContext?>",
+      "occurrences": 2
+    }
+  ],
+  "incoming": {
+    "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/FirRegularTowerDataContexts.kt",
+    "bytes": 4171,
+    "sha256": "0d1ea1ad28a9579055a1299c9e6e3c3d1a01afdc8d9ce67b21d32fe79006abce"
+  },
+  "outgoing": {
+    "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/FirRegularTowerDataContexts.kt",
+    "bytes": 4094,
+    "sha256": "9a167da9ed28e1d172b44ca78d3483ea95d8a97f617f0b74687b256f46b4b08a"
+  },
+  "assembledOutput": {
+    "path": "compiler/fir/resolve/src/org/jetbrains/kotlin/fir/resolve/FirRegularTowerDataContexts.kt",
+    "bytes": 8050,
+    "sha256": "bbd7f3d6621f55a9645bf697811ec8ca55c83a686fdad346a7750e06f9f0b275"
+  },
+  "selection": {
+    "path": "selection.lock.json",
+    "bytes": 1354244,
+    "sha256": "9147494c352e1e975429fe3854be818fc878eb955c4ddcef38a0b643b5ada411",
+    "gitBlob": "e6ec5284fa2f0fc5ad874621221bc70ec05c6eb1"
+  },
+  "recordedPropertyImports": [
+    "org.jetbrains.kotlin.portable.common.*",
+    "org.jetbrains.kotlin.portable.descriptors.*",
+    "org.jetbrains.kotlin.js.backend.ast.addPrevious",
+    "org.jetbrains.kotlin.js.backend.ast.arg",
+    "org.jetbrains.kotlin.js.backend.ast.arg1",
+    "org.jetbrains.kotlin.js.backend.ast.arg2",
+    "org.jetbrains.kotlin.js.backend.ast.arguments",
+    "org.jetbrains.kotlin.js.backend.ast.arrayExpression",
+    "org.jetbrains.kotlin.js.backend.ast.body",
+    "org.jetbrains.kotlin.js.backend.ast.caseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.cases",
+    "org.jetbrains.kotlin.js.backend.ast.catches",
+    "org.jetbrains.kotlin.js.backend.ast.closingBraceSource",
+    "org.jetbrains.kotlin.js.backend.ast.commentsAfterNode",
+    "org.jetbrains.kotlin.js.backend.ast.commentsBeforeNode",
+    "org.jetbrains.kotlin.js.backend.ast.computedName",
+    "org.jetbrains.kotlin.js.backend.ast.condition",
+    "org.jetbrains.kotlin.js.backend.ast.constructorExpression",
+    "org.jetbrains.kotlin.js.backend.ast.currentNode",
+    "org.jetbrains.kotlin.js.backend.ast.description",
+    "org.jetbrains.kotlin.js.backend.ast.elseExpression",
+    "org.jetbrains.kotlin.js.backend.ast.elseStatement",
+    "org.jetbrains.kotlin.js.backend.ast.expression",
+    "org.jetbrains.kotlin.js.backend.ast.expressions",
+    "org.jetbrains.kotlin.js.backend.ast.finallyBlock",
+    "org.jetbrains.kotlin.js.backend.ast.flags",
+    "org.jetbrains.kotlin.js.backend.ast.globalBlock",
+    "org.jetbrains.kotlin.js.backend.ast.ident",
+    "org.jetbrains.kotlin.js.backend.ast.ifExpression",
+    "org.jetbrains.kotlin.js.backend.ast.incrementExpression",
+    "org.jetbrains.kotlin.js.backend.ast.indexExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initExpression",
+    "org.jetbrains.kotlin.js.backend.ast.initVars",
+    "org.jetbrains.kotlin.js.backend.ast.isAssignment",
+    "org.jetbrains.kotlin.js.backend.ast.isEmpty",
+    "org.jetbrains.kotlin.js.backend.ast.isEs6Arrow",
+    "org.jetbrains.kotlin.js.backend.ast.isGenerator",
+    "org.jetbrains.kotlin.js.backend.ast.isGetter",
+    "org.jetbrains.kotlin.js.backend.ast.isKeyword",
+    "org.jetbrains.kotlin.js.backend.ast.isLeaf",
+    "org.jetbrains.kotlin.js.backend.ast.isLeftAssociative",
+    "org.jetbrains.kotlin.js.backend.ast.isModifying",
+    "org.jetbrains.kotlin.js.backend.ast.isMultiline",
+    "org.jetbrains.kotlin.js.backend.ast.isSetter",
+    "org.jetbrains.kotlin.js.backend.ast.isStatic",
+    "org.jetbrains.kotlin.js.backend.ast.isTemporary",
+    "org.jetbrains.kotlin.js.backend.ast.isTransparent",
+    "org.jetbrains.kotlin.js.backend.ast.label",
+    "org.jetbrains.kotlin.js.backend.ast.modifiers",
+    "org.jetbrains.kotlin.js.backend.ast.name",
+    "org.jetbrains.kotlin.js.backend.ast.operator",
+    "org.jetbrains.kotlin.js.backend.ast.parameter",
+    "org.jetbrains.kotlin.js.backend.ast.parameters",
+    "org.jetbrains.kotlin.js.backend.ast.parent",
+    "org.jetbrains.kotlin.js.backend.ast.pattern",
+    "org.jetbrains.kotlin.js.backend.ast.precedence",
+    "org.jetbrains.kotlin.js.backend.ast.propertyInitializers",
+    "org.jetbrains.kotlin.js.backend.ast.qualifier",
+    "org.jetbrains.kotlin.js.backend.ast.replaceMe",
+    "org.jetbrains.kotlin.js.backend.ast.rootScope",
+    "org.jetbrains.kotlin.js.backend.ast.scope",
+    "org.jetbrains.kotlin.js.backend.ast.source",
+    "org.jetbrains.kotlin.js.backend.ast.statement",
+    "org.jetbrains.kotlin.js.backend.ast.statements",
+    "org.jetbrains.kotlin.js.backend.ast.symbol",
+    "org.jetbrains.kotlin.js.backend.ast.tags",
+    "org.jetbrains.kotlin.js.backend.ast.testExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenExpression",
+    "org.jetbrains.kotlin.js.backend.ast.thenStatement",
+    "org.jetbrains.kotlin.js.backend.ast.tryBlock",
+    "org.jetbrains.kotlin.js.backend.ast.value",
+    "org.jetbrains.kotlin.js.util.position",
+    "org.jetbrains.kotlin.js.util.line",
+    "org.jetbrains.kotlin.js.util.column"
+  ],
+  "psiSourceLockSha256": "f15844fb09d0de8c927bcd07eb59bfd0313ae887d6a93d1aaf32e3005c1cf80b",
+  "dependencies": [
+    {
+      "path": "prepare.mjs",
+      "bytes": 15656,
+      "sha256": "42c3ab0dba12eda281043496363bb6496dadddf6cca08706a8d7b434070c29dd",
+      "gitBlob": "246d92c7ec723e39fdbdf97a5088e0d78c319f9a"
+    },
+    {
+      "path": "transform.mjs",
+      "bytes": 1607,
+      "sha256": "5f79f931174df229c2bd7daf6669c3d03373e91f35720e65f7a363becc806715",
+      "gitBlob": "63926f3f8a4cec5660f661eeb15b0fab4ae187ce"
+    },
+    {
+      "path": "update-recipe.mjs",
+      "bytes": 5146,
+      "sha256": "a4c3c380cb8c70975108713dffbe4d8574f65a1da1985e246556df1e5ed0a825",
+      "gitBlob": "78388a3596445edc465dee4bdab16fdb435c1524"
+    },
+    {
+      "path": "fixture.mjs",
+      "bytes": 4184,
+      "sha256": "33ba4fc2d7e2ed9f25bf99fd1bdf3ce777e3fbae24a274fa33b04c724b9cd6f2",
+      "gitBlob": "edd8632b63f108a0bc20d082d26e4a700fafdbfb"
+    },
+    {
+      "path": "selection.lock.json",
+      "bytes": 1354244,
+      "sha256": "9147494c352e1e975429fe3854be818fc878eb955c4ddcef38a0b643b5ada411",
+      "gitBlob": "e6ec5284fa2f0fc5ad874621221bc70ec05c6eb1"
+    },
+    {
+      "path": "../../scripts/source.mjs",
+      "bytes": 8915,
+      "sha256": "419366d8b6fe2d1ffa2e155f6d34d203a10ce59c9fd0cb8df75bc615fea2396d",
+      "gitBlob": "80f4a83a2761ba34e0790f2d36e0ea665dd2bc2d"
+    },
+    {
+      "path": "../closure.lock.json",
+      "bytes": 1601612,
+      "sha256": "8d5c87d6c47ffca7cf3fe22e86f5b64db7e261b05dfc2571094ab8b18675364d",
+      "gitBlob": "0d920e442426a044cf3a70d5fea08afc1de637cb"
+    },
+    {
+      "path": "../klib-signature-index/transform.mjs",
+      "bytes": 5115,
+      "sha256": "c2e16bbb41c471d231f0422137d91289eedcdb5a5a9392299fd95e4d6edbbde2",
+      "gitBlob": "c238f725a135be0232479e25ee000dc6f1e90749"
+    },
+    {
+      "path": "../fir-lighttree-psi-views/sources.lock.json",
+      "bytes": 40512,
+      "sha256": "f15844fb09d0de8c927bcd07eb59bfd0313ae887d6a93d1aaf32e3005c1cf80b",
+      "gitBlob": "e2f19578a61af5c33a60639bd9c1101f5e6b27b0"
+    },
+    {
+      "path": "../fir-lighttree-psi-views/evidence/current-foundation-v1.json",
+      "bytes": 13077,
+      "sha256": "419c31a06cfc7cabfdfc6f63e8a0479a7c34dbbba53b6a1d0c1d00dab79e0ff7",
+      "gitBlob": "164d7133a724e2c7422bf4fe40b6f9449a9ba3b0"
+    },
+    {
+      "path": "../fir-lighttree-psi-views/prepare.mjs",
+      "bytes": 15822,
+      "sha256": "9ed2b3bb091f69a0d690b193670c13aa938f3cf802df2e8ca78553d3775e8837",
+      "gitBlob": "fa7e58df8998cc54b122b4098619d8794b8c645b"
+    },
+    {
+      "path": "../fir-lighttree-psi-views/transform.mjs",
+      "bytes": 5846,
+      "sha256": "4bf12c73e4f4fdd04f96f5c1fe97882230b8ce685184619b56dee889638cd38e",
+      "gitBlob": "66f0e90c2e4bb9c5cd48b860a9498281cd6dac92"
+    },
+    {
+      "path": "../fir-lighttree-psi-views/update-recipe.mjs",
+      "bytes": 7692,
+      "sha256": "1e4b3437e759823db66075bc8a6a07ec9b4f2b697ada4e4b21d699d61305ca73",
+      "gitBlob": "f19f3480a406d01358420d461878a8fb74799ccc"
+    },
+    {
+      "path": "../fir-lighttree-psi-views/selection.lock.json",
+      "bytes": 1354116,
+      "sha256": "23800470fe980c9611a15562587ab828c8eea7503a6cfbcd184f19b31c0a4143",
+      "gitBlob": "3f9bfef2dee92fde74c1231640d8f00a79986520"
+    },
+    {
+      "path": "../compiler-exception-attachment-profile/transform.mjs",
+      "bytes": 10567,
+      "sha256": "7832328ea9d752acd060754738a68c723dc6221e24063ad027f7aa907c2c5bf9",
+      "gitBlob": "4c6b76eb285120aba6239656937448c4ad1d729d"
+    },
+    {
+      "path": "../compiler-exception-attachment-profile/prepare.mjs",
+      "bytes": 18100,
+      "sha256": "9b727725f4821eedf5cee8cf75446f7ba2eebc7acd9b19c77af4f97243056dc6",
+      "gitBlob": "72bfeac52f4dece33c32bfd5cd5c595959db0868"
+    },
+    {
+      "path": "../compiler-exception-attachment-profile/sources.lock.json",
+      "bytes": 33220,
+      "sha256": "4ba595d2a3c377c1e5e63d07f3ccf5bf0af62275cc5b434d6b8d8999b948a568",
+      "gitBlob": "0ba2f208b7ca3124966652052b96d520ecd14c76"
+    },
+    {
+      "path": "../native-js-output-profile/references.mjs",
+      "bytes": 2178,
+      "sha256": "f6fd115e20e546eacfd8c3ac68f0693263e554b3c9d95148474a65689a17f3ba",
+      "gitBlob": "42dc18f4964811af5b77d8b25fd4e8c60ecae508"
+    },
+    {
+      "path": "../host/prepare.mjs",
+      "bytes": 7585,
+      "sha256": "d47bc0f4ec8230fd1b95a21d601baab11aaa99e6d716a7794171df2d59ab820f",
+      "gitBlob": "f5ecdfb72ef32d6674fade54a24cebff16d9b031"
+    },
+    {
+      "path": "../host/sources.lock.json",
+      "bytes": 5522,
+      "sha256": "6f05072ffcf2872d30dc5783812622b68a26cba6c83c131641ec028096478c94",
+      "gitBlob": "1b7bb8859a98cc644771c94c287b4569ceaf0e31"
+    },
+    {
+      "path": "../host/PortableLightTree.kt",
+      "bytes": 1461,
+      "sha256": "0274ecbeb4d7323f869b898b6901a0196e953dd8e89ec33bf1aa967b9177a32e",
+      "gitBlob": "7f4d942de9e57a047b445e66ef4d17225fb83089"
+    },
+    {
+      "path": "../positioning/prepare.mjs",
+      "bytes": 22554,
+      "sha256": "0cc5d6371778b3c5909bbfa3fc05bd3c97760c9e94c7ed43ccd4b7f576053314",
+      "gitBlob": "fcf551d3c089a359d01aecee16907eaab9a969e3"
+    },
+    {
+      "path": "../positioning/positioning.recipe.json",
+      "bytes": 34111,
+      "sha256": "f7430fc1bf8b3d8c0768c540f71792c39950091820bf2c0c2f26fe978e98fcdc",
+      "gitBlob": "1505c228701ce5debb334fba540ab9a0b2714001"
+    },
+    {
+      "path": "../positioning/TokenSet.kt",
+      "bytes": 1250,
+      "sha256": "e957d1674567a14ba7e12767f20d09b285d51953c4ddf704eb41d7685b6b3ced",
+      "gitBlob": "0ba1c427bda108883c119e4316b6bc9a4f2f5c15"
+    },
+    {
+      "path": "../fir-navigation/prepare.mjs",
+      "bytes": 21362,
+      "sha256": "8d4915bd77779bcb9b5d5f119655051be9f9b1750d11b1d2d4d9f4e61d9f8c61",
+      "gitBlob": "c58f4dd3c38270397d6ceb82e7499ab1f1cbcf10"
+    },
+    {
+      "path": "../fir-navigation/transform.mjs",
+      "bytes": 7431,
+      "sha256": "f54b5e64de11774366a3324944a959a0691946268e5d15ba8f795650958b6847",
+      "gitBlob": "296ec0ab5c96b42315e21339a64fb1b579a1502c"
+    },
+    {
+      "path": "../fir-navigation/sources.lock.json",
+      "bytes": 20354,
+      "sha256": "3e1582865ebff261ad5a152320320feba9725457153bea4edaa715ac39ecd70d",
+      "gitBlob": "8147b790a09bbb9a96937a2630c85396710bdae4"
+    }
+  ],
+  "scope": "One complete private FIR tower mode map; exact six modes and nullable values; no general EnumMap port",
+  "sourceSetExclusions": [],
+  "addedSources": [],
+  "fullFirToIrWasmExecuted": false,
+  "fullCompilerBuilt": false,
+  "publicLanguageSupport": false
+}

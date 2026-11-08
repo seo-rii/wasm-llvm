@@ -46,7 +46,24 @@ export async function reopenPsiBuild(description) {
   assert.deepEqual(component.replacedOriginalPaths, TARGETS);
   assert.deepEqual(component.sourceSetExclusions, []); assert.deepEqual(component.addedSources, []);
   const replacements = new Map(component.files.map(row => [row.before.path, row.after]));
-  const actual = component.selection.sources.map(row => structuredClone(replacements.get(row.path) ?? row));
+  let actual = component.selection.sources.map(row => structuredClone(replacements.get(row.path) ?? row));
+  let towerOptions, towerFinal;
+  if (receipt.firTowerModeMapReceipt) {
+    const towerRoot = path.join(description.buildRoot, 'components/firTowerModeMapReceipt');
+    const towerBytes = await readRegular(path.join(towerRoot, 'receipt.json'), 32 * 1024 * 1024);
+    const tower = JSON.parse(towerBytes);
+    assert.deepEqual(tower, receipt.firTowerModeMapReceipt);
+    assert.deepEqual(tower.selection.sources, actual, 'Tower map must consume the complete PSI output');
+    assert.equal(tower.files.length, 1); assert.deepEqual(tower.sourceSetExclusions, []);
+    assert.deepEqual(tower.addedSources, []);
+    const replacements = new Map(tower.files.map(row => [row.before.path, row.after]));
+    actual = actual.map(row => structuredClone(replacements.get(row.path) ?? row));
+    towerOptions = { sourceRoot: component.sourceRoot, outputRoot: towerRoot,
+      expectedReceiptSha256: sha256(towerBytes), recordedPropertyImports: receipt.propertyImports.imports };
+    const towerApi = await import(pathToFileURL(path.join(port, 'fir-tower-mode-map/prepare.mjs')));
+    towerFinal = await towerApi.verifyFirTowerModeMapFinalSources({ ...towerOptions, retainedSources: actual });
+    assert.deepEqual(towerFinal.receipt, receipt.firTowerModeMapFinalReceipt);
+  }
   assert.equal(actual.length, 3571); assert.deepEqual(logicalIdentity(actual), receipt.compileSources);
   assert.deepEqual(actual.map(row => row.filename), args.slice(-3571));
   assert.equal(args.filter(value => value.startsWith('-Xcommon-sources=')).length, 1);
@@ -54,7 +71,8 @@ export async function reopenPsiBuild(description) {
   const api = await import(pathToFileURL(path.join(port, 'fir-lighttree-psi-views/prepare.mjs')));
   const psiOptions = { sourceRoot: component.sourceRoot, outputRoot, expectedReceiptSha256: sha256(componentBytes),
     recordedPropertyImports: receipt.propertyImports.imports };
-  const psiFinal = await api.verifyFirLightTreePsiViewFinalSources({ ...psiOptions, retainedSources: actual });
+  const psiFinal = await api.verifyFirLightTreePsiViewFinalSources({ ...psiOptions,
+    retainedSources: towerFinal?.predecessorRetainedSources ?? actual });
   assert.deepEqual(psiFinal.receipt, receipt.firLightTreePsiViewsFinalReceipt);
   const exceptionRoot = path.join(description.buildRoot, 'components/compilerExceptionAttachmentReceipt');
   const exceptionBytes = await readRegular(path.join(exceptionRoot, 'receipt.json'), 64 * 1024 * 1024);
@@ -71,7 +89,8 @@ export async function reopenPsiBuild(description) {
   assert.equal(jvmRows.length, 18); assert.equal(receipt.jvmDescriptorSignatureImplementationsReceipt.files.length, 18);
   assert.deepEqual(jvmRows, exceptionFinal.predecessorRetainedSources.filter(row => row.path.startsWith('compiler-port-jvm-descriptor-signatures/')));
   await checked(description.log);
-  return { description, port, state, bytes, receipt, command, args, actual, psiOptions, psiFinal, exceptionOptions, exceptionFinal };
+  return { description, port, state, bytes, receipt, command, args, actual, towerOptions, towerFinal,
+    psiOptions, psiFinal, exceptionOptions, exceptionFinal };
 }
 
 export async function reopenPsiNativeModuleContracts(build) {
@@ -110,11 +129,12 @@ export async function reopenPsiNativeModuleContracts(build) {
   const reopened = await phase.bindNativeLoweringPhaseBoundary({ sourceRoot,
     boundary: { sourceRoot, outputRoot: phases.outputRoot, expectedReceiptSha256: phases.receiptSha256,
       nativeFirstPhaseProfile: { sourceRoot, outputRoot: nativeFirst.outputRoot, expectedReceiptSha256: nativeFirst.receiptSha256 },
-      compilerExceptionProfile: exceptionOptions, firPsiViewsProfile: psiOptions },
+      compilerExceptionProfile: exceptionOptions, firPsiViewsProfile: psiOptions, firTowerModeMapProfile: build.towerOptions },
     retainedSources: actual, recordedPropertyImports: receipt.propertyImports.imports,
     requiredBoundaries: inputs.lock.requiredBoundaries, source: inputs.lock.source });
   assert.deepEqual(reopened.receipt, recorded.loweringPhaseFactoryBinding);
   assert.equal(recorded.loweringPhaseFactoryBinding.actualCompilerGraphPreservedForPsiLexicalAndModule, true);
+  if (build.towerOptions) assert.equal(recorded.loweringPhaseFactoryBinding.actualCompilerGraphPreservedForTowerLexicalAndModule, true);
   const fir = await import(pathToFileURL(path.join(port, 'fir-storage-source-profile/prepare.mjs')));
   const firFinal = await fir.verifyFinalFirStorageSourceProfile({
     profileRoot: path.join(description.buildRoot, 'components/firStorageSourceProfileReceipt'),
