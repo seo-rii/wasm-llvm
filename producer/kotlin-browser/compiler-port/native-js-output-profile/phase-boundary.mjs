@@ -8,6 +8,7 @@ import { verifyCompilerExceptionAttachmentFinalSources } from '../compiler-excep
 import { verifyFirLightTreePsiViewFinalSources } from '../fir-lighttree-psi-views/prepare.mjs';
 import { verifyFirTowerModeMapFinalSources } from '../fir-tower-mode-map/prepare.mjs';
 import { verifyOfficialMainEntryFinalSources } from '../official-main-entry/prepare.mjs';
+import { verifyCommonDequeApiFinalSources } from '../common-deque-api/prepare.mjs';
 
 export const PHASE_BOUNDARIES = [
     'compiler/ir/backend.js/src/org/jetbrains/kotlin/ir/backend/js/JsLoweringPhases.kt',
@@ -25,12 +26,21 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
     const psiProfile = boundary.firPsiViewsProfile;
     const towerProfile = boundary.firTowerModeMapProfile;
     const mainEntryProfile = boundary.officialMainEntryProfile;
+    const dequeProfile = boundary.commonDequeApiProfile;
+    if (dequeProfile) {
+        assert(mainEntryProfile, 'Common deque API requires its authenticated official main predecessor');
+        assert.equal(path.resolve(dequeProfile.sourceRoot), path.resolve(sourceRoot), 'Native and deque canonical source roots differ');
+    }
+    const dequeFinal = dequeProfile ? await verifyCommonDequeApiFinalSources({
+        ...dequeProfile, sourceRoot, retainedSources, recordedPropertyImports,
+    }) : undefined;
+    const mainEntrySources = dequeFinal?.predecessorRetainedSources ?? retainedSources;
     if (mainEntryProfile) {
         assert(towerProfile, 'Official main entry requires its authenticated tower map predecessor');
         assert.equal(path.resolve(mainEntryProfile.sourceRoot), path.resolve(sourceRoot), 'Native and main entry canonical source roots differ');
     }
     const mainEntryFinal = mainEntryProfile ? await verifyOfficialMainEntryFinalSources({
-        ...mainEntryProfile, sourceRoot, retainedSources, recordedPropertyImports,
+        ...mainEntryProfile, sourceRoot, retainedSources: mainEntrySources, recordedPropertyImports,
     }) : undefined;
     const towerSources = mainEntryFinal?.predecessorRetainedSources ?? retainedSources;
     if (towerProfile) {
@@ -95,7 +105,8 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
         preparationReceiptSha256: boundary.expectedReceiptSha256, sourceLockSha256: final.sourceLockSha256,
         checked: final.checked, mappings: proofMappings, actualFinalSelectionUsed: true,
         ...(nativeFirstPhase ? { actualSelectedPhaseOutputs: 5, restoredExcludedPhaseOutputs: 1, fullCanonicalOutputsVerified: 6,
-            phaseVerificationSelection: mainEntryFinal ? 'authenticated official main entry, tower mode map, LightTree PSI and exception predecessors plus exactly one independently verified excluded native predecessor' :
+            phaseVerificationSelection: dequeFinal ? 'authenticated common deque API, official main entry, tower mode map, LightTree PSI and exception predecessors plus exactly one independently verified excluded native predecessor' :
+                mainEntryFinal ? 'authenticated official main entry, tower mode map, LightTree PSI and exception predecessors plus exactly one independently verified excluded native predecessor' :
                 towerFinal ? 'authenticated tower mode map, LightTree PSI and exception predecessors plus exactly one independently verified excluded native predecessor' :
                 psiFinal ? 'authenticated LightTree PSI and exception predecessors plus exactly one independently verified excluded native predecessor' :
                 exceptionFinal ? 'authenticated exception predecessor plus exactly one independently verified excluded native predecessor' : 'actual graph plus exactly one independently verified excluded predecessor',
@@ -108,5 +119,7 @@ export async function bindNativeLoweringPhaseBoundary({ sourceRoot, boundary, re
             actualCompilerGraphPreservedForTowerLexicalAndModule: true } : {}),
         ...(mainEntryFinal ? { officialMainEntryProfile: mainEntryFinal.receipt,
             actualCompilerGraphPreservedForMainEntryLexicalAndModule: true } : {}),
+        ...(dequeFinal ? { commonDequeApiProfile: dequeFinal.receipt,
+            actualCompilerGraphPreservedForDequeLexicalAndModule: true } : {}),
         fullIrLoweringExecuted: false, fullCompilerBuilt: false, languageReadiness: false } };
 }

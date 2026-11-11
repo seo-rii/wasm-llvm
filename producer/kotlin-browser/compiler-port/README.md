@@ -246,6 +246,14 @@ exception scope are preserved. See the
 the whole-source comparison, real generated-program observations and their
 limits. These observations do not establish browser-side Kotlin compilation.
 
+The [common deque API port](common-deque-api/README.md) adapts six complete
+official compiler files from JVM deque operations to their common Kotlin
+counterparts. Head/tail order, context identity and empty-context handling are
+preserved. All 3,571 sources remain selected, and the exact six-file inverse
+feeds the preceding official-main and older guards. Its runtime comparison
+recompiles the unchanged official callers whose JVM bytecode inlines the deque
+getter; this does not change the browser compiler's source selection.
+
 The build receipt distinguishes input preparation, the compiler KLIB build,
 binary/export integration and public readiness. Even a successful compiler KLIB
 would leave browser compilation `not-built` until a nonempty callable compiler

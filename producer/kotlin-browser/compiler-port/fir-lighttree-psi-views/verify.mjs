@@ -47,7 +47,7 @@ export async function reopenPsiBuild(description) {
   assert.deepEqual(component.sourceSetExclusions, []); assert.deepEqual(component.addedSources, []);
   const replacements = new Map(component.files.map(row => [row.before.path, row.after]));
   let actual = component.selection.sources.map(row => structuredClone(replacements.get(row.path) ?? row));
-  let towerOptions, towerFinal, mainEntryOptions, mainEntryFinal;
+  let towerOptions, towerFinal, mainEntryOptions, mainEntryFinal, dequeOptions, dequeFinal;
   if (receipt.firTowerModeMapReceipt) {
     const towerRoot = path.join(description.buildRoot, 'components/firTowerModeMapReceipt');
     const towerBytes = await readRegular(path.join(towerRoot, 'receipt.json'), 32 * 1024 * 1024);
@@ -74,8 +74,28 @@ export async function reopenPsiBuild(description) {
     actual = actual.map(row => structuredClone(replacements.get(row.path) ?? row));
     mainEntryOptions = { sourceRoot: component.sourceRoot, outputRoot: mainEntryRoot,
       expectedReceiptSha256: sha256(mainEntryBytes), recordedPropertyImports: receipt.propertyImports.imports };
+  }
+  if (receipt.commonDequeApiReceipt) {
+    assert(mainEntryOptions, 'Common deque API requires the actual official main output');
+    const dequeRoot = path.join(description.buildRoot, 'components/commonDequeApiReceipt');
+    const dequeBytes = await readRegular(path.join(dequeRoot, 'receipt.json'), 32 * 1024 * 1024);
+    const deque = JSON.parse(dequeBytes);
+    assert.deepEqual(deque, receipt.commonDequeApiReceipt);
+    assert.deepEqual(deque.selection.sources, actual, 'Common deque API must consume the complete official main output');
+    assert.equal(deque.files.length, 6); assert.deepEqual(deque.sourceSetExclusions, []);
+    assert.deepEqual(deque.addedSources, []);
+    const replacements = new Map(deque.files.map(row => [row.before.path, row.after]));
+    actual = actual.map(row => structuredClone(replacements.get(row.path) ?? row));
+    dequeOptions = { sourceRoot: component.sourceRoot, outputRoot: dequeRoot,
+      expectedReceiptSha256: sha256(dequeBytes), recordedPropertyImports: receipt.propertyImports.imports };
+    const dequeApi = await import(pathToFileURL(path.join(port, 'common-deque-api/prepare.mjs')));
+    dequeFinal = await dequeApi.verifyCommonDequeApiFinalSources({ ...dequeOptions, retainedSources: actual });
+    assert.deepEqual(dequeFinal.receipt, receipt.commonDequeApiFinalReceipt);
+  }
+  if (mainEntryOptions) {
     const mainEntryApi = await import(pathToFileURL(path.join(port, 'official-main-entry/prepare.mjs')));
-    mainEntryFinal = await mainEntryApi.verifyOfficialMainEntryFinalSources({ ...mainEntryOptions, retainedSources: actual });
+    mainEntryFinal = await mainEntryApi.verifyOfficialMainEntryFinalSources({ ...mainEntryOptions,
+      retainedSources: dequeFinal?.predecessorRetainedSources ?? actual });
     assert.deepEqual(mainEntryFinal.receipt, receipt.officialMainEntryFinalReceipt);
   }
   if (towerOptions) {
@@ -110,6 +130,7 @@ export async function reopenPsiBuild(description) {
   assert.deepEqual(jvmRows, exceptionFinal.predecessorRetainedSources.filter(row => row.path.startsWith('compiler-port-jvm-descriptor-signatures/')));
   await checked(description.log);
   return { description, port, state, bytes, receipt, command, args, actual, towerOptions, towerFinal, mainEntryOptions, mainEntryFinal,
+    dequeOptions, dequeFinal,
     psiOptions, psiFinal, exceptionOptions, exceptionFinal };
 }
 
@@ -150,13 +171,14 @@ export async function reopenPsiNativeModuleContracts(build) {
     boundary: { sourceRoot, outputRoot: phases.outputRoot, expectedReceiptSha256: phases.receiptSha256,
       nativeFirstPhaseProfile: { sourceRoot, outputRoot: nativeFirst.outputRoot, expectedReceiptSha256: nativeFirst.receiptSha256 },
       compilerExceptionProfile: exceptionOptions, firPsiViewsProfile: psiOptions, firTowerModeMapProfile: build.towerOptions,
-      officialMainEntryProfile: build.mainEntryOptions },
+      officialMainEntryProfile: build.mainEntryOptions, commonDequeApiProfile: build.dequeOptions },
     retainedSources: actual, recordedPropertyImports: receipt.propertyImports.imports,
     requiredBoundaries: inputs.lock.requiredBoundaries, source: inputs.lock.source });
   assert.deepEqual(reopened.receipt, recorded.loweringPhaseFactoryBinding);
   assert.equal(recorded.loweringPhaseFactoryBinding.actualCompilerGraphPreservedForPsiLexicalAndModule, true);
   if (build.towerOptions) assert.equal(recorded.loweringPhaseFactoryBinding.actualCompilerGraphPreservedForTowerLexicalAndModule, true);
   if (build.mainEntryOptions) assert.equal(recorded.loweringPhaseFactoryBinding.actualCompilerGraphPreservedForMainEntryLexicalAndModule, true);
+  if (build.dequeOptions) assert.equal(recorded.loweringPhaseFactoryBinding.actualCompilerGraphPreservedForDequeLexicalAndModule, true);
   const fir = await import(pathToFileURL(path.join(port, 'fir-storage-source-profile/prepare.mjs')));
   const firFinal = await fir.verifyFinalFirStorageSourceProfile({
     profileRoot: path.join(description.buildRoot, 'components/firStorageSourceProfileReceipt'),
