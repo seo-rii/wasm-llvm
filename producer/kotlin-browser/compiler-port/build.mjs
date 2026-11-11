@@ -88,6 +88,7 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
   let firPsiViewsComposition;
   let firTowerModeMapComposition;
   let officialMainEntryComposition;
+  let commonDequeApiComposition;
   let firJavaSessionProfileComposition;
   let klibSignatureIndexComponent;
   let klibDiskSourceProfileComposition;
@@ -1752,10 +1753,37 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
       receipt.officialMainEntryReceipt = mainEntry.receipt;
       officialMainEntryComposition = { sourceRoot: prepared.sourceRoot, outputRoot: mainEntryOutputRoot,
         expectedReceiptSha256: mainEntry.receiptSha256 };
-      const mainEntryFinal = await mainEntryProfile.verifyOfficialMainEntryFinalSources({ ...officialMainEntryComposition,
+      const dequeProfile = await import('./common-deque-api/prepare.mjs');
+      const dequeOutputRoot = path.join(output, 'components', 'commonDequeApiReceipt');
+      const deque = await dequeProfile.prepareCommonDequeApi({ sourceRoot: prepared.sourceRoot, outputRoot: dequeOutputRoot,
+        preparedOfficialMainEntryProfile: officialMainEntryComposition, recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
+          .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      assert.equal(deque.commonSources.length, 6);
+      assert.deepEqual(deque.sourceSetExclusions, []);
+      assert.deepEqual(deque.replacedOriginalPaths, deque.receipt.files.map(row => row.before.path));
+      assert.deepEqual(deque.commonSources, deque.receipt.files.map(row => row.after.filename));
+      for (const { before, after } of deque.receipt.files) {
+        const previous = files.get(before.path);
+        assert.deepEqual({ path: before.path, ...previous }, before, 'Common deque predecessor owner or metadata changed');
+        assert.equal(after.path, before.path); assert.equal(after.filename, path.join(dequeOutputRoot, before.path));
+        const bytes = await readRegular(after.filename);
+        assert.equal(bytes.length, after.bytes); assert.equal(sha256(bytes), after.sha256);
+        files.set(before.path, { ...previous, filename: after.filename, bytes: after.bytes, sha256: after.sha256 });
+        receipt.portableSourceBindings = receipt.portableSourceBindings.filter(pin => pin.path !== before.path);
+        receipt.portableSourceBindings.push({ path: before.path, sha256: after.sha256 });
+      }
+      receipt.commonDequeApiReceipt = deque.receipt;
+      commonDequeApiComposition = { sourceRoot: prepared.sourceRoot, outputRoot: dequeOutputRoot,
+        expectedReceiptSha256: deque.receiptSha256 };
+      const dequeFinal = await dequeProfile.verifyCommonDequeApiFinalSources({ ...commonDequeApiComposition,
         recordedPropertyImports: receipt.propertyImports.imports,
         retainedSources: [...files].filter(([sourcePath, pin]) => pin.compile && sourcePath.endsWith('.kt'))
           .map(([sourcePath, pin]) => ({ path: sourcePath, ...pin })) });
+      receipt.commonDequeApiFinalReceipt = dequeFinal.receipt;
+      const mainEntryFinal = await mainEntryProfile.verifyOfficialMainEntryFinalSources({ ...officialMainEntryComposition,
+        recordedPropertyImports: receipt.propertyImports.imports,
+        retainedSources: dequeFinal.predecessorRetainedSources });
       receipt.officialMainEntryFinalReceipt = mainEntryFinal.receipt;
       const towerFinal = await towerProfile.verifyFirTowerModeMapFinalSources({ ...firTowerModeMapComposition,
         recordedPropertyImports: receipt.propertyImports.imports,
@@ -1875,7 +1903,8 @@ export async function buildCompiler({ input = path.join(repository, 'out/kotlin-
         verifiedModuleBoundary: { outputRoot: moduleRequirePathsComposition.outputRoot, final },
         verifiedLoweringPhaseBoundary: { ...loweringPhaseFactoriesComposition, nativeFirstPhaseProfile: nativeFirstPhaseComposition,
           compilerExceptionProfile: compilerExceptionComposition, firPsiViewsProfile: firPsiViewsComposition,
-          firTowerModeMapProfile: firTowerModeMapComposition, officialMainEntryProfile: officialMainEntryComposition },
+          firTowerModeMapProfile: firTowerModeMapComposition, officialMainEntryProfile: officialMainEntryComposition,
+          commonDequeApiProfile: commonDequeApiComposition },
         allowedAddedImports: ['kotlin.jvm.*', ...receipt.propertyImports.imports, assertionImport],
       });
       receipt.nativeJsOutputProfileFinalReceipt = nativeFinal.receipt;
