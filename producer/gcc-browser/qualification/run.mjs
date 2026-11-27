@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
-import { atomicCases, cases, runtimeLibraryCases } from './cases.mjs';
+import { atomicCases, cases, predefCases, runtimeLibraryCases } from './cases.mjs';
 import { assertCaseResult, assertStaticExecutable } from './assertions.mjs';
 import { loadBundle, sha256 } from './compile.mjs';
 
@@ -35,10 +35,12 @@ export async function executeNative(artifactPath, test, outputDirectory) {
 
 async function compareNativeCompiler(test, sourcePath, outputDirectory, compiler, wasmVersion) {
 	const version = spawnSync(compiler, ['-dumpfullversion', '-dumpversion'], { encoding: 'utf8', timeout: 10_000 });
-	if (version.error?.code === 'ENOENT') return { available: false, compiler, reason: 'Native compiler executable is unavailable' };
+	if (version.error?.code === 'ENOENT') return { available: false, compared: false, compiler, reason: 'Native compiler executable is unavailable' };
 	assert.ifError(version.error);
 	assert.equal(version.status, 0, `Cannot query native compiler ${compiler}`);
 	const actualVersion = version.stdout.trim();
+	if (actualVersion !== wasmVersion) return { available: true, compared: false, compiler, version: actualVersion,
+		sameVersion: false, reason: `Native GCC ${actualVersion} does not match Wasm GCC ${wasmVersion}` };
 	const binary = path.join(outputDirectory, 'native-reference.elf');
 	const args = ['-static', '-fno-pie', '-no-pie', '-march=x86-64', `-O${test.request.optimization}`,
 		`-std=${test.request.standard}`, sourcePath, ...(test.nativeLinkArgs ?? []), '-o', binary];
@@ -51,13 +53,13 @@ async function compareNativeCompiler(test, sourcePath, outputDirectory, compiler
 	assert.ifError(execution.error);
 	assert.equal(execution.status, 0, `Native reference exited ${execution.status}`);
 	assert.equal(execution.stdout, test.stdout, `Native reference differs for ${test.id}`);
-	return { available: true, compiler, version: actualVersion, sameVersion: actualVersion === wasmVersion,
+	return { available: true, compared: true, compiler, version: actualVersion, sameVersion: true,
 		args, compileAndRunMilliseconds: performance.now() - started, bytes: (await fs.stat(binary)).size,
 		stdout: execution.stdout, stderr: compilation.stderr, executionStatus: execution.status,
 		comparison: 'The native compiler and Wasm compiler binaries produced the same expected stdout.' };
 }
 
-export async function qualify({ bundle: bundleDirectory, output, manifestSha256, nativeCxx = 'g++', nativeCc = 'gcc' }) {
+export async function qualify({ bundle: bundleDirectory, output, manifestSha256, nativeCxx = 'g++', nativeCc = 'gcc', requireNativeComparison = false }) {
 	const bundle = await loadBundle(bundleDirectory, manifestSha256);
 	const canonicalOutput = path.join(await fs.realpath(path.dirname(path.resolve(output))), path.basename(output));
 	assert(canonicalOutput !== bundle.root && !canonicalOutput.startsWith(bundle.root + path.sep) &&
@@ -79,7 +81,11 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 		}
 		const sysroot = readTarEntries(await bundle.readAsset('sysroot'));
 		const gccDirectory = path.posix.relative(bundle.manifest.sysrootPath, bundle.manifest.gccInstallation);
-		for (const test of [...cases, ...atomicCases, ...runtimeLibraryCases]) {
+		for (const test of [...cases, ...predefCases, ...atomicCases, ...runtimeLibraryCases]) {
+			if (test.precompiledHeader && bundle.manifest.capabilities?.precompiledHeaders !== true) {
+				(evidence.skippedTests ??= []).push({ id: test.id, missingCapability: 'precompiledHeaders' });
+				continue;
+			}
 			if (test.requiresGccArchive && !sysroot.has(`${gccDirectory}/${test.requiresGccArchive}`)) {
 				(evidence.skippedTests ??= []).push({ id: test.id, missingArchive: test.requiresGccArchive });
 				continue;
@@ -127,6 +133,7 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 				item.nativeExecution = await executeNative(result.artifact.path, test, testOutput);
 				item.nativeComparison = await compareNativeCompiler(test, sourcePath, testOutput,
 					test.request.language === 'c' ? nativeCc : nativeCxx, bundle.manifest.compiler.version);
+				if (requireNativeComparison) assert(item.nativeComparison.compared, item.nativeComparison.reason);
 			}
 			item.passed = true;
 		}
@@ -147,10 +154,15 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 		const args = process.argv.slice(2);
 		const options = {};
 		const fields = { '--bundle': 'bundle', '--output': 'output', '--manifest-sha256': 'manifestSha256', '--native-cxx': 'nativeCxx', '--native-cc': 'nativeCc' };
-		for (let i = 0; i < args.length; i += 2) {
-			assert(fields[args[i]] && args[i + 1], 'Usage: node qualification/run.mjs --bundle DIR --output NEW_DIR [--manifest-sha256 HEX] [--native-cxx g++-16] [--native-cc gcc-16]');
+		for (let i = 0; i < args.length; i++) {
+			if (args[i] === '--require-native-comparison') {
+				assert(!options.requireNativeComparison, `Duplicate ${args[i]}`);
+				options.requireNativeComparison = true;
+				continue;
+			}
+			assert(fields[args[i]] && args[i + 1], 'Usage: node qualification/run.mjs --bundle DIR --output NEW_DIR [--manifest-sha256 HEX] [--native-cxx g++-16] [--native-cc gcc-16] [--require-native-comparison]');
 			assert(!(fields[args[i]] in options), `Duplicate ${args[i]}`);
-			options[fields[args[i]]] = args[i + 1];
+			options[fields[args[i]]] = args[++i];
 		}
 		assert(options.bundle && options.output, '--bundle and --output are required');
 		console.log(JSON.stringify(await qualify(options), null, 2));

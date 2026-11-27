@@ -69,7 +69,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   const layout = validateGnuSysroot(files, gnu);
   // The compiler's upstream limits.h/stdint.h wrappers delegate to this target
   // libc. Header generation deliberately never copies the build host's headers.
-  for (const name of ['usr/include/limits.h', 'usr/include/stdint.h']) {
+  for (const name of ['usr/include/limits.h', 'usr/include/stdint.h', 'usr/include/stdc-predef.h']) {
     assert(files.some(file => file.path === name && file.bytes.length), `GNU sysroot is missing ${name}`);
   }
   const resourceDir = `${layout.gccInstallation}/include`;

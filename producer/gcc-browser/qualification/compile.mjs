@@ -176,7 +176,11 @@ export async function compileReal(bundle, request) {
 		`/sysroot/usr/include/c++/${manifest.gnu.gccVersion}/backward`
 	] : [];
 	includes.push(manifest.resourceDir, '/sysroot/usr/include/x86_64-linux-gnu', '/sysroot/usr/include');
-	const ccFlags = (pch) => ['-quiet', '-imultiarch', 'x86_64-linux-gnu', '-isysroot', '/sysroot', '-nostdinc',
+	// GCC handles glibc's stdc-predef.h before the source, preserving PCH eligibility.
+	// -nostdinc suppresses that hook; an explicit -include makes GCC skip the PCH.
+	const useDefaultPreinclude = !request.preprocessed && entries.has('usr/include/stdc-predef.h');
+	const ccFlags = (pch) => ['-quiet', '-imultiarch', 'x86_64-linux-gnu', '-isysroot', '/sysroot',
+		...(useDefaultPreinclude ? [] : ['-nostdinc']),
 		...(pch ? ['-H', '-Winvalid-pch', '-isystem', '/pch'] : []),
 		...includes.flatMap((name) => ['-isystem', name]), `-std=${standard}`, `-O${optimization}`, ...cpuArgs,
 		'-fno-pie', '-fno-pic', '-fasynchronous-unwind-tables', ...(language === 'cpp' ? ['-fexceptions', '-D_GNU_SOURCE'] : []),

@@ -46,6 +46,12 @@ export const cases = [
 		expectFailure: true }
 ];
 
+// This producer calls the front ends directly and supplies the glibc preinclude.
+export const predefCases = ['c', 'cpp'].map(language => ({
+	id: `${language}-glibc-predefs`, fixture: 'glibc-predefs.h',
+	request: { language, emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: language === 'c' ? 'c17' : 'c++20' }
+}));
+
 // The pinned Chromium consumer predates static libatomic support. The producer
 // runs both cases on every qualification, alongside the shared Chromium cases.
 export const atomicCases = [

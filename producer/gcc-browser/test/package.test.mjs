@@ -35,7 +35,7 @@ async function fixture(t) {
   const gcc = 'usr/lib/gcc/x86_64-linux-gnu/16', cpp = 'usr/include/c++/16';
   const files = [
     'usr/include/stdio.h', 'usr/include/stdlib.h', 'usr/include/features.h',
-    'usr/include/limits.h', 'usr/include/stdint.h', `${cpp}/vector`,
+    'usr/include/limits.h', 'usr/include/stdint.h', 'usr/include/stdc-predef.h', `${cpp}/vector`,
     `${cpp}/ext/pb_ds/assoc_container.hpp`, `${cpp}/ext/pb_ds/detail/rb_tree_map_/rb_tree_.hpp`,
     `${cpp}/ext/pb_ds/detail/tree_policy/order_statistics_imp.hpp`,
     'usr/include/x86_64-linux-gnu/c++/16/bits/c++config.h',
@@ -139,8 +139,8 @@ test('target libraries must match the actual GCC version', async t => {
   await assert.rejects(packageGcc(input), /must match the compiler version/);
 });
 
-for (const name of ['usr/include/limits.h', 'usr/include/stdint.h']) {
-  test(`the GCC wrappers require target ${name} before packaging`, async t => {
+for (const name of ['usr/include/limits.h', 'usr/include/stdint.h', 'usr/include/stdc-predef.h']) {
+  test(`GCC requires target ${name} before packaging`, async t => {
     const input = await fixture(t);
     await fs.rm(path.join(input.sysroot, name));
     await assert.rejects(packageGcc(input), new RegExp(`GNU sysroot is missing ${name.replaceAll('.', '\\.')}`));

@@ -21,9 +21,15 @@ The first required gate is preprocessed `.ii` input through the actual
 unwinding, GNU `as`, GNU `ld`, ELF64 x86-64 objects and static executables. Baseline
 executables run in separate native Linux x86-64 processes with fixed stdin and
 checked stdout. They are never passed to a Wasm loader. Native GCC output is also
-compared when the selected compiler is installed; the report records whether its
-exact version matches the Wasm GCC version. A missing comparison compiler is
-recorded explicitly; it does not bypass the mandatory native execution gate.
+compared when the selected compiler matches the exact Wasm GCC version. The
+report records a skipped comparison and its reason for a missing or mismatched
+compiler. The producer CI passes `--require-native-comparison` to require a
+matching reference compiler for every executable. Local runs still execute each
+Wasm-compiled ELF and check its stdout.
+
+For ordinary C and C++, the adapter allows GCC to implicitly read the sysroot's
+`stdc-predef.h` before the first source token, preserving PCH eligibility. The suite checks the resulting glibc macros in
+both languages. Preprocessed inputs use `-fpreprocessed` without a preinclude.
 
 The shared `c-libm-executable` fixture calls `sin` on a value read from stdin and
 checks the result after static linking. The Node producer suite also requires C11
@@ -35,7 +41,8 @@ option. The qualification report lists both Node atomic cases individually.
 `bits/stdc++.h` in the configured include order and compiles `ps.cpp` with its PCH
 first on the include path. `-H` must report the PCH as loaded (`! /pch/bits/stdc++.h.gch`) and the
 result must be byte-identical to `ps-assembly` or `ps-object`. The Node report
-compares the source compilation times of the two front ends.
+compares the source compilation times of the two front ends. Bundles which omit
+`capabilities.precompiledHeaders: true` record these two cases as skipped.
 
 `target-threads.cpp` requires the compiler's predefined `__STDCPP_THREADS__`
 macro to equal `1`, then uses `std::thread` and a nontrivial `thread_local`
