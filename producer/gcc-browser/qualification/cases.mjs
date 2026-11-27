@@ -56,3 +56,17 @@ export const atomicCases = [
 		request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c++20' },
 		stdin: '31 43\n', stdout: '31 43\n' }
 ];
+
+// Older Chromium SDKs lack these implicit runtime libraries. Exercise the
+// producer link plan independently until the pinned consumer supports them.
+export const runtimeLibraryCases = [
+	{ id: 'cpp-filesystem-ts', fixture: 'filesystem-ts.cpp', nativeLinkArgs: ['-lstdc++fs'],
+		request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c++14' },
+		stdin: '', stdout: 'directory\n' },
+	{ id: 'c-resolver', fixture: 'resolver.c', nativeLinkArgs: ['-lresolv'],
+		request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu17' },
+		stdin: '', stdout: '0\n' },
+	{ id: 'cpp-stacktrace', fixture: 'stacktrace.cpp', requiresGccArchive: 'libstdc++exp.a', nativeLinkArgs: ['-lstdc++exp'],
+		request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c++23' },
+		stdin: '', stdout: 'trace\n' }
+];

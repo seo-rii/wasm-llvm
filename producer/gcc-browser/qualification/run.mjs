@@ -5,7 +5,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { atomicCases, cases } from './cases.mjs';
+import { readTarEntries } from '../../../scripts/lib/tar.mjs';
+import { atomicCases, cases, runtimeLibraryCases } from './cases.mjs';
 import { assertCaseResult, assertStaticExecutable } from './assertions.mjs';
 import { loadBundle, sha256 } from './compile.mjs';
 
@@ -73,10 +74,16 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 	try {
 		// Verify every asset before executing any loader. Children pin the exact
 		// manifest digest again and rehash the bytes they consume.
-		for (const name of ['cc1Js', 'cc1Wasm', 'cc1plusJs', 'cc1plusWasm', 'asJs', 'asWasm', 'ldJs', 'ldWasm', 'sysroot']) {
+		for (const name of ['cc1Js', 'cc1Wasm', 'cc1plusJs', 'cc1plusWasm', 'asJs', 'asWasm', 'ldJs', 'ldWasm']) {
 			await bundle.readAsset(name);
 		}
-		for (const test of [...cases, ...atomicCases]) {
+		const sysroot = readTarEntries(await bundle.readAsset('sysroot'));
+		const gccDirectory = path.posix.relative(bundle.manifest.sysrootPath, bundle.manifest.gccInstallation);
+		for (const test of [...cases, ...atomicCases, ...runtimeLibraryCases]) {
+			if (test.requiresGccArchive && !sysroot.has(`${gccDirectory}/${test.requiresGccArchive}`)) {
+				(evidence.skippedTests ??= []).push({ id: test.id, missingArchive: test.requiresGccArchive });
+				continue;
+			}
 			const testOutput = path.join(canonicalOutput, test.id);
 			await fs.mkdir(testOutput, { mode: 0o700 });
 			const sourcePath = path.join(here, 'fixtures', test.fixture);

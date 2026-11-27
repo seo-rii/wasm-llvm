@@ -203,12 +203,18 @@ export async function compileReal(bundle, request) {
 	if (exitCode === 0 && emit === 'executable') {
 		const gcc = manifest.gccInstallation;
 		const lib = '/sysroot/usr/lib/x86_64-linux-gnu';
-		const atomicArchive = entries.get(path.posix.relative(manifest.sysrootPath, gcc + '/libatomic.a'));
+		const optionalLibraries = [
+			...(language === 'cpp' ? [[gcc, 'stdc++exp'], [gcc, 'stdc++fs']] : []),
+			[gcc, 'atomic'], [lib, 'resolv']
+		].filter(([directory, library]) => {
+			const entry = entries.get(path.posix.relative(manifest.sysrootPath, `${directory}/lib${library}.a`));
+			return entry && !entry.directory;
+		}).map(([, library]) => `-l${library}`);
 		const ldArgs = ['-m', 'elf_x86_64', '--sysroot=/sysroot', '-static', '-o', '/work/main.elf',
 			`${lib}/crt1.o`, `${lib}/crti.o`, `${gcc}/crtbeginT.o`, '/work/main.o',
 			`-L${gcc}`, `-L${lib}`, '-L/sysroot/lib/x86_64-linux-gnu',
 			'--start-group', ...(language === 'cpp' ? ['-lstdc++'] : []), '-lm',
-			...(atomicArchive && !atomicArchive.directory ? ['-latomic'] : []),
+			...optionalLibraries,
 			'-lgcc', '-lgcc_eh', '-lc', '--end-group',
 			`${gcc}/crtend.o`, `${lib}/crtn.o`];
 		exitCode = await invoke('ld', ldArgs, '/work/main.elf');
