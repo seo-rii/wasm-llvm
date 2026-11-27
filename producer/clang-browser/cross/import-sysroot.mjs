@@ -55,13 +55,17 @@ function distributionIdentity(text) {
 }
 
 function selectedPath(name, gccVersion) {
-	if (name.startsWith('/usr/include/')) return true;
+	if (name.startsWith('/usr/include/')) {
+		// Debian's architecture-independent UAPI package lists every multiarch tree.
+		const includeRoot = name.split('/')[3];
+		return !includeRoot.includes('-linux-') || includeRoot === TARGET;
+	}
 	if (/^\/usr\/lib\/x86_64-linux-gnu\/[^/]+\.(?:a|o)$/.test(name)) return true;
 	const directory = `/usr/lib/gcc/${TARGET}/${gccVersion}/`;
 	if (!name.startsWith(directory)) return false;
 	// Clang supplies its own resource headers. Sanitizers, OpenMP, offload, LTO
 	// plugins and other executable tools are not part of this static C/C++ profile.
-	return /^(?:lib(?:gcc|gcc_eh|stdc\+\+|stdc\+\+fs|supc\+\+|atomic)\.a|crt(?:begin[ST]?|endS?|fastmath|prec(?:32|64|80))\.o)$/.test(name.slice(directory.length));
+	return /^(?:include\/unwind\.h|lib(?:gcc|gcc_eh|stdc\+\+(?:fs|exp)?|supc\+\+|atomic)\.a|crt(?:begin[ST]?|endS?|fastmath|prec(?:32|64|80))\.o)$/.test(name.slice(directory.length));
 }
 
 function assertNativeObject(bytes, label) {
@@ -123,6 +127,7 @@ export async function planNativeSysroot({ root = '/', compiler = 'g++', run = ex
 	const distribution = distributionIdentity(await fs.readFile(path.join(root, 'etc/os-release'), 'utf8'));
 	const packages = [];
 	const owned = new Set();
+	const kernelPackageFiles = new Set();
 	for (const name of ['libc6-dev:amd64', 'linux-libc-dev:amd64', `libgcc-${major}-dev:amd64`, `libstdc++-${major}-dev:amd64`]) {
 		let metadata;
 		try { metadata = await query(run, 'dpkg-query', ['-W', `-f=${PACKAGE_FORMAT}`, name]); }
@@ -140,6 +145,7 @@ export async function planNativeSysroot({ root = '/', compiler = 'g++', run = ex
 		for (const filename of (await query(run, 'dpkg-query', ['-L', record.name])).trim().split('\n')) {
 			if (filename === '/.') continue;
 			owned.add(absolutePackagePath(filename));
+			if (name === 'linux-libc-dev:amd64') kernelPackageFiles.add(filename);
 		}
 	}
 	const gccPackages = packages.filter((record) => /^lib(?:gcc|stdc\+\+)-/.test(record.name));
@@ -165,7 +171,13 @@ export async function planNativeSysroot({ root = '/', compiler = 'g++', run = ex
 			assert(allowedNotice || (filename.startsWith('/usr/share/common-licenses/') && logicalResolved.startsWith('/usr/share/common-licenses/')),
 				`License symlink escapes its notice directories: ${filename}`);
 		} else {
-			assert(owned.has(logicalResolved) && selectedPath(logicalResolved, gccVersion), `Input symlink leaves selected package files: ${filename}`);
+			// Debian 13 stores the bodies of x86 asm headers in the same package,
+			// outside /usr/include. Flatten only the matching target header alias.
+			const asmPrefix = `/usr/include/${TARGET}/asm/`;
+			const kernelAlias = filename.startsWith(asmPrefix) && kernelPackageFiles.has(filename) &&
+				logicalResolved === `/usr/lib/linux/uapi/x86/asm/${filename.slice(asmPrefix.length)}` &&
+				kernelPackageFiles.has(logicalResolved);
+			assert(kernelAlias || (owned.has(logicalResolved) && selectedPath(logicalResolved, gccVersion)), `Input symlink leaves selected package files: ${filename}`);
 		}
 		const stat = await fs.stat(resolved);
 		if (stat.isDirectory() && allowDirectory) {
