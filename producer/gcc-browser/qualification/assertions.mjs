@@ -17,14 +17,29 @@ export function assertX86Elf(input, expectedType) {
 
 export function assertStaticExecutable(input) {
 	const { bytes, view } = assertX86Elf(input, 2);
+	require(view.getUint32(20, true) === 1, 'Invalid ELF version');
 	const offset = Number(view.getBigUint64(32, true));
 	const count = view.getUint16(56, true);
 	require(view.getUint16(54, true) === 56 && count > 0 && Number.isSafeInteger(offset) &&
 		offset >= 64 && count * 56 <= bytes.length - offset, 'Invalid ELF program headers');
+	const entry = view.getBigUint64(24, true);
+	require(entry !== 0n, 'Executable has no entry point');
+	let executableEntry = false;
 	for (let i = 0; i < count; i++) {
-		require(view.getUint32(offset + i * 56, true) !== 3, 'Static executable contains PT_INTERP');
+		const header = offset + i * 56;
+		const type = view.getUint32(header, true);
+		require(type !== 3, 'Static executable contains PT_INTERP');
+		if (type !== 1) continue;
+		const fileOffset = view.getBigUint64(header + 8, true);
+		const address = view.getBigUint64(header + 16, true);
+		const fileSize = view.getBigUint64(header + 32, true);
+		const memorySize = view.getBigUint64(header + 40, true);
+		require(fileSize <= memorySize && (fileSize === 0n || fileOffset + fileSize <= BigInt(bytes.length)),
+			'Invalid ELF load segment');
+		const executable = (view.getUint32(header + 4, true) & 1) !== 0;
+		if (executable && entry >= address && entry < address + fileSize) executableEntry = true;
 	}
-	require(view.getBigUint64(24, true) !== 0n, 'Executable has no entry point');
+	require(executableEntry, 'ELF entry point is outside file-backed executable load segments');
 }
 
 export function functionAssembly(assembly, name) {
