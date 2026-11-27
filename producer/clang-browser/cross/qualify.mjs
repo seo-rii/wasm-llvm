@@ -6,19 +6,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WASI } from 'node:wasi';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
-import { assertX86Elf, digest, identity, relativePath } from './package.mjs';
+import { digest, identity, relativePath } from './package.mjs';
+import { assertStaticExecutable } from '../../gcc-browser/qualification/assertions.mjs';
 
-export function assertStaticExecutable(bytes) {
-	assertX86Elf(bytes, 'linked output', 2);
-	const offset = Number(bytes.readBigUInt64LE(32));
-	const count = bytes.readUInt16LE(56);
-	assert(bytes.readUInt16LE(54) === 56 && count > 0 && Number.isSafeInteger(offset) &&
-		offset >= 64 && count * 56 <= bytes.length - offset, 'Invalid ELF program headers');
-	for (let index = 0; index < count; index += 1) {
-		assert.notEqual(bytes.readUInt32LE(offset + index * 56), 3, 'Static output must not have PT_INTERP');
-	}
-	assert.notEqual(bytes.readBigUInt64LE(24), 0n, 'Executable has no entry point');
-}
+export { assertStaticExecutable };
 
 // Kept separate so the real WASI dispatch path can be tested without claiming
 // that a host-only fixture provides the X86 backend required by qualifyCross.
