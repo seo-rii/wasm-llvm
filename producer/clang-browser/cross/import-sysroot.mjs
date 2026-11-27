@@ -269,7 +269,7 @@ export async function importNativeSysroot({ output, provenance: provenanceFile, 
 	for (const file of plan.files) assert(!inside(canonicalOutput, file.resolved), 'Output overlaps the native source files');
 	const canonicalProvenance = await destinationPath(provenanceFile);
 	assert(!inside(canonicalOutput, canonicalProvenance), 'Provenance must be outside the sysroot output');
-	for (const directory of ['usr/include', 'usr/lib/gcc', 'usr/lib/x86_64-linux-gnu', 'usr/share/doc', 'usr/share/common-licenses']) {
+	for (const directory of ['usr/include', 'usr/lib/gcc', 'usr/lib/x86_64-linux-gnu', 'usr/lib/linux/uapi', 'usr/share/doc', 'usr/share/common-licenses']) {
 		const sourceDirectory = path.join(plan.sourceRoot, directory);
 		assert(!inside(sourceDirectory, canonicalOutput) && !inside(sourceDirectory, canonicalProvenance), 'Outputs must not modify the native source directories');
 	}

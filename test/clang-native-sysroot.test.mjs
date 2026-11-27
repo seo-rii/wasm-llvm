@@ -178,6 +178,10 @@ test('flattens same-package Debian UAPI aliases for the selected architecture', 
 	const paths = plan.files.map((file) => file.path);
 	assert(paths.includes('usr/include/x86_64-linux-gnu/asm/types.h'));
 	assert(!paths.some((name) => name.includes('aarch64') || name.startsWith('usr/lib/linux/uapi/')));
+	const nested = path.join(f.root, 'usr/lib/linux/uapi/x86/asm/new-parent');
+	await assert.rejects(importNativeSysroot({ ...f, output: path.join(nested, 'sysroot') }), /must not modify the native source/);
+	await assert.rejects(importNativeSysroot({ ...f, provenance: path.join(nested, 'receipt.json') }), /must not modify the native source/);
+	await assert.rejects(fs.stat(nested), { code: 'ENOENT' });
 	const destination = '/usr/lib/linux/uapi/x86/asm/types.h';
 	kernel.splice(kernel.indexOf(destination), 1);
 	f.manifests.get('libc6-dev:amd64').push(destination);
