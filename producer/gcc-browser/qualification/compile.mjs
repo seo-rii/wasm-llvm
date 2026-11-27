@@ -187,7 +187,11 @@ export async function compileReal(bundle, request) {
 		// find it first on the include path. -H reports "! FILE.gch" only for a
 		// PCH that was valid and loaded; -Winvalid-pch explains a rejected one.
 		assert(language === 'cpp' && !request.preprocessed, 'PCH qualification requires ordinary C++ source');
-		const header = `/sysroot/usr/include/x86_64-linux-gnu/c++/${manifest.gnu.gccVersion}/bits/stdc++.h`;
+		const header = includes.map((dir) => `${dir}/bits/stdc++.h`).find((name) => {
+			const entry = entries.get(path.posix.relative(manifest.sysrootPath, name));
+			return entry && !entry.directory;
+		});
+		assert(header, 'GNU C++ include paths lack bits/stdc++.h');
 		exitCode = await invoke('cc1plus', [...ccFlags(false), header, '-o', '/work/pch.s', '--output-pch', pchPath], pchPath);
 	}
 	if (exitCode === 0)
@@ -213,7 +217,7 @@ export async function compileReal(bundle, request) {
 	if (request.precompiledHeader && exitCode === 0) {
 		const pch = artifacts.get(pchPath);
 		result.precompiledHeader = { bytes: pch.length, sha256: sha256(pch),
-			used: /^! \/pch\/bits\/stdc\+\+\.h\.gch$/m.test(stages.at(-1).stderr) };
+			used: /^! \/pch\/bits\/stdc\+\+\.h\.gch$/m.test(stages.findLast((stage) => stage.tool === 'cc1plus').stderr) };
 	}
 	if (exitCode === 0) {
 		const extension = { assembly: 's', object: 'o', executable: 'elf' }[emit];

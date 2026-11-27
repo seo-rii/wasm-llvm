@@ -45,7 +45,7 @@ const receipt = {
     targetRuntime: 'separate real GNU/Linux x86-64 sysroot; not linked into compiler host',
     ...bootstrap
   },
-  limits: ['no gcc/g++ fork/exec driver', 'no PCH', 'no plugins', 'no LTO', 'one C/C++ translation unit', 'static ELF only']
+  limits: ['no gcc/g++ fork/exec driver', 'no plugins', 'no LTO', 'one translation unit per front-end invocation', 'static ELF only']
 };
 await fs.writeFile(path.join(options.compiler, 'compiler-build.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
 console.log(JSON.stringify({ gccVersion: receipt.gccVersion, target: receipt.target, modules }));
