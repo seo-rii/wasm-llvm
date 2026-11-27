@@ -5,7 +5,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { atomicCases, cases } from './cases.mjs';
+import { readTarEntries } from '../../../scripts/lib/tar.mjs';
+import { atomicCases, cases, runtimeLibraryCases } from './cases.mjs';
 import { assertCaseResult, assertStaticExecutable } from './assertions.mjs';
 import { loadBundle, sha256 } from './compile.mjs';
 
@@ -73,10 +74,16 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 	try {
 		// Verify every asset before executing any loader. Children pin the exact
 		// manifest digest again and rehash the bytes they consume.
-		for (const name of ['cc1Js', 'cc1Wasm', 'cc1plusJs', 'cc1plusWasm', 'asJs', 'asWasm', 'ldJs', 'ldWasm', 'sysroot']) {
+		for (const name of ['cc1Js', 'cc1Wasm', 'cc1plusJs', 'cc1plusWasm', 'asJs', 'asWasm', 'ldJs', 'ldWasm']) {
 			await bundle.readAsset(name);
 		}
-		for (const test of [...cases, ...atomicCases]) {
+		const sysroot = readTarEntries(await bundle.readAsset('sysroot'));
+		const gccDirectory = path.posix.relative(bundle.manifest.sysrootPath, bundle.manifest.gccInstallation);
+		for (const test of [...cases, ...atomicCases, ...runtimeLibraryCases]) {
+			if (test.requiresGccArchive && !sysroot.has(`${gccDirectory}/${test.requiresGccArchive}`)) {
+				(evidence.skippedTests ??= []).push({ id: test.id, missingArchive: test.requiresGccArchive });
+				continue;
+			}
 			const testOutput = path.join(canonicalOutput, test.id);
 			await fs.mkdir(testOutput, { mode: 0o700 });
 			const sourcePath = path.join(here, 'fixtures', test.fixture);
@@ -105,7 +112,7 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 				const reference = evidence.tests.find(({ id }) => id === test.sameAs);
 				assert(result.precompiledHeader?.used, `${test.id}: GCC did not load the precompiled header`);
 				assert.equal(result.artifact.sha256, reference?.artifact?.sha256, `${test.id}: PCH output differs from ${test.sameAs}`);
-				item.precompiledHeaderSpeedup = reference.stages[0].milliseconds / result.stages.at(-1).milliseconds;
+				item.precompiledHeaderSpeedup = reference.stages[0].milliseconds / result.stages.findLast((stage) => stage.tool === 'cc1plus').milliseconds;
 			}
 			if (test.check === 'pragma-object') {
 				const disassembly = spawnSync('objdump', ['-d', result.artifact.path], { encoding: 'utf8', timeout: 30_000, maxBuffer: 2 * 1024 * 1024 });

@@ -31,11 +31,11 @@ and C++20 programs that store and load a 16-byte atomic pair through the target
 GNU `libatomic.a`. The browser workflow pins an earlier SDK without that link
 option. The qualification report lists both Node atomic cases individually.
 
-`ps-pch-assembly` first lets the actual `cc1plus` precompile GNU `bits/stdc++.h`
-with the case's flags, then compiles `ps.cpp` with that PCH first on the include
-path. `-H` must report the PCH as loaded (`! /pch/bits/stdc++.h.gch`) and the
-assembly must be byte-identical to `ps-assembly`. Other hosts, including the
-Chromium gate, compile this case's request normally.
+`ps-pch-assembly` and `ps-pch-object` exercise real `cc1plus` header precompilation. Each case resolves GNU
+`bits/stdc++.h` in the configured include order and compiles `ps.cpp` with its PCH
+first on the include path. `-H` must report the PCH as loaded (`! /pch/bits/stdc++.h.gch`) and the
+result must be byte-identical to `ps-assembly` or `ps-object`. The Node report
+compares the source compilation times of the two front ends.
 
 `target-threads.cpp` requires the compiler's predefined `__STDCPP_THREADS__`
 macro to equal `1`, then uses `std::thread` and a nontrivial `thread_local`
@@ -90,7 +90,7 @@ not GCC 16.2.0 Wasm build or browser success.
 
 The explicit stage orchestration intentionally implements the supported single
 translation-unit compile/link options. It does not invoke `fork`/`exec`, the GCC
-driver, PCH, plugins, LTO, shared linking or an x86 browser emulator. Host
+driver, plugins, LTO, shared linking or an x86 browser emulator. Host
 Emscripten libc and host GMP/MPFR/MPC are distinct from the target GNU libraries
 mounted under `/sysroot`. C++ stage arguments include `_GNU_SOURCE` and Linux
 unwind-table defaults normally supplied by the native GNU driver.
