@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cases } from './cases.mjs';
+import { atomicCases, cases } from './cases.mjs';
 import { assertCaseResult, assertStaticExecutable } from './assertions.mjs';
 import { loadBundle, sha256 } from './compile.mjs';
 
@@ -76,7 +76,7 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 		for (const name of ['cc1Js', 'cc1Wasm', 'cc1plusJs', 'cc1plusWasm', 'asJs', 'asWasm', 'ldJs', 'ldWasm', 'sysroot']) {
 			await bundle.readAsset(name);
 		}
-		for (const test of cases) {
+		for (const test of [...cases, ...atomicCases]) {
 			const testOutput = path.join(canonicalOutput, test.id);
 			await fs.mkdir(testOutput, { mode: 0o700 });
 			const sourcePath = path.join(here, 'fixtures', test.fixture);

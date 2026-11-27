@@ -26,7 +26,10 @@ exact version matches the Wasm GCC version. A missing comparison compiler is
 recorded explicitly; it does not bypass the mandatory native execution gate.
 
 The shared `c-libm-executable` fixture calls `sin` on a value read from stdin and
-checks the result after static linking.
+checks the result after static linking. The Node producer suite also requires C11
+and C++20 programs that store and load a 16-byte atomic pair through the target
+GNU `libatomic.a`. The browser workflow pins an earlier SDK without that link
+option. The qualification report lists both Node atomic cases individually.
 
 `ps-pch-assembly` first lets the actual `cc1plus` precompile GNU `bits/stdc++.h`
 with the case's flags, then compiles `ps.cpp` with that PCH first on the include

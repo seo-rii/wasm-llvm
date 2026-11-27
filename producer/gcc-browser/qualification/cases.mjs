@@ -39,3 +39,14 @@ export const cases = [
 	{ id: 'invalid-after-success', fixture: 'broken.cpp', request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' },
 		expectFailure: true }
 ];
+
+// The pinned Chromium consumer predates static libatomic support. The producer
+// runs both cases on every qualification, alongside the shared Chromium cases.
+export const atomicCases = [
+	{ id: 'c-atomic16-executable', fixture: 'atomic16.c', nativeLinkArgs: ['-latomic'],
+		request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c11' },
+		stdin: '17 29\n', stdout: '17 29\n' },
+	{ id: 'cpp-atomic16-executable', fixture: 'atomic16.cpp', nativeLinkArgs: ['-latomic'],
+		request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c++20' },
+		stdin: '31 43\n', stdout: '31 43\n' }
+];
