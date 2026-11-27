@@ -57,6 +57,7 @@ async function fixture(t, { linuxArchitecture = 'amd64' } = {}) {
 		...Object.fromEntries(['crtbeginT.o', 'crtend.o'].map((name) => [`/usr/lib/gcc/x86_64-linux-gnu/12/${name}`, elf()])),
 		...Object.fromEntries(['libgcc.a', 'libgcc_eh.a', 'libatomic.a'].map((name) => [`/usr/lib/gcc/x86_64-linux-gnu/12/${name}`, archive()])),
 		'/usr/lib/gcc/x86_64-linux-gnu/12/libgomp.a': archive(),
+		'/usr/lib/gcc/x86_64-linux-gnu/12/include/unwind.h': '/* libgcc public unwind API */\n',
 		'/usr/lib/gcc/x86_64-linux-gnu/12/include/immintrin.h': '/* GCC-only resource header, excluded */\n'
 	});
 	await addPackage('libstdc++-12-dev', '12.2.0-1', 'gcc-12', '12.2.0-1', {
@@ -66,7 +67,8 @@ async function fixture(t, { linuxArchitecture = 'amd64' } = {}) {
 		'/usr/include/c++/12/ext/pb_ds/detail/tree_policy/order_statistics_imp.hpp': '// GNU PBDS policy\n',
 		'/usr/include/x86_64-linux-gnu/c++/12/bits/c++config.h': '// GNU configuration\n',
 		'/usr/include/x86_64-linux-gnu/c++/12/bits/stdc++.h': '// GNU bits/stdc++.h\n',
-		'/usr/lib/gcc/x86_64-linux-gnu/12/libstdc++.a': archive()
+		'/usr/lib/gcc/x86_64-linux-gnu/12/libstdc++.a': archive(),
+		'/usr/lib/gcc/x86_64-linux-gnu/12/libstdc++exp.a': archive()
 	});
 	await write('/usr/share/common-licenses/GPL-3', 'GNU GENERAL PUBLIC LICENSE fixture\n');
 	records.set('base-files', 'base-files\t12.4\tbase-files\t12.4\tamd64\tinstalled\n');
@@ -125,6 +127,8 @@ test('imports only package-owned native files, flattens safe links, and records 
 		await assert.rejects(fs.stat(path.join(f.output, excluded)), { code: 'ENOENT' });
 	}
 	assert.deepEqual(await fs.readFile(path.join(f.output, alias)), await fs.readFile(path.join(f.output, 'usr/include/stdint.h')));
+	assert.equal(await fs.readFile(path.join(f.output, 'usr/lib/gcc/x86_64-linux-gnu/12/include/unwind.h'), 'utf8'), '/* libgcc public unwind API */\n');
+	assert.deepEqual(await fs.readFile(path.join(f.output, 'usr/lib/gcc/x86_64-linux-gnu/12/libstdc++exp.a')), archive());
 	assert(f.calls.every(([command]) => ['g++', 'dpkg-query'].includes(command)));
 });
 
@@ -157,6 +161,32 @@ for (const architecture of ['amd64', 'all']) {
 		validateGnuSysroot(await readNativeTree(f.output), receipt);
 	});
 }
+
+test('flattens same-package Debian UAPI aliases for the selected architecture', async (t) => {
+	const f = await fixture(t, { linuxArchitecture: 'all' });
+	const kernel = f.manifests.get('linux-libc-dev');
+	for (const [triplet, arch] of [['x86_64-linux-gnu', 'x86'], ['aarch64-linux-gnu', 'arm64']]) {
+		const alias = `/usr/include/${triplet}/asm/types.h`;
+		const canonical = `/usr/lib/linux/uapi/${arch}/asm/types.h`;
+		await f.write(canonical, arch);
+		const link = path.join(f.root, alias.slice(1));
+		await fs.mkdir(path.dirname(link), { recursive: true });
+		await fs.symlink(path.posix.relative(path.posix.dirname(alias), canonical), link);
+		kernel.push(alias, canonical);
+	}
+	const plan = await planNativeSysroot(f);
+	const paths = plan.files.map((file) => file.path);
+	assert(paths.includes('usr/include/x86_64-linux-gnu/asm/types.h'));
+	assert(!paths.some((name) => name.includes('aarch64') || name.startsWith('usr/lib/linux/uapi/')));
+	const nested = path.join(f.root, 'usr/lib/linux/uapi/x86/asm/new-parent');
+	await assert.rejects(importNativeSysroot({ ...f, output: path.join(nested, 'sysroot') }), /must not modify the native source/);
+	await assert.rejects(importNativeSysroot({ ...f, provenance: path.join(nested, 'receipt.json') }), /must not modify the native source/);
+	await assert.rejects(fs.stat(nested), { code: 'ENOENT' });
+	const destination = '/usr/lib/linux/uapi/x86/asm/types.h';
+	kernel.splice(kernel.indexOf(destination), 1);
+	f.manifests.get('libc6-dev:amd64').push(destination);
+	await assert.rejects(planNativeSysroot(f), /leaves selected package files/);
+});
 
 test('rejects foreign Linux headers and does not retry failed dpkg operations as missing packages', async (t) => {
 	const f = await fixture(t);

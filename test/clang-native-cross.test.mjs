@@ -18,12 +18,14 @@ async function temporary(t) {
 	return directory;
 }
 function elf(type = 1, machine = 62) {
-	const bytes = Buffer.alloc(type === 2 ? 120 : 64);
+	const bytes = Buffer.alloc(type === 2 ? 121 : 64);
 	Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]).copy(bytes);
-	bytes.writeUInt16LE(type, 16); bytes.writeUInt16LE(machine, 18);
+	bytes.writeUInt16LE(type, 16); bytes.writeUInt16LE(machine, 18); bytes.writeUInt32LE(1, 20); bytes.writeUInt16LE(64, 52);
 	if (type === 2) {
-		bytes.writeBigUInt64LE(0x401000n, 24); bytes.writeBigUInt64LE(64n, 32);
+		bytes[120] = 0xc3; bytes.writeBigUInt64LE(0x401078n, 24); bytes.writeBigUInt64LE(64n, 32);
 		bytes.writeUInt16LE(56, 54); bytes.writeUInt16LE(1, 56); bytes.writeUInt32LE(1, 64);
+		bytes.writeUInt32LE(5, 68); bytes.writeBigUInt64LE(0x401000n, 80);
+		bytes.writeBigUInt64LE(BigInt(bytes.length), 96); bytes.writeBigUInt64LE(BigInt(bytes.length), 104);
 	}
 	return bytes;
 }
@@ -246,12 +248,18 @@ test('installed-package provenance binds every normalized file byte', () => {
 test('output inspection distinguishes x86 ELF objects, static executables and dynamic/foreign outputs', () => {
 	assertX86Elf(elf(), 'object', 1);
 	assertStaticExecutable(elf(2));
-	assert.throws(() => assertStaticExecutable(elf()), /wrong ELF type/);
+	assert.throws(() => assertStaticExecutable(elf()), /ELF type/);
 	assert.throws(() => assertStaticExecutable(elf(2, 183)), /x86-64/);
 	const dynamic = elf(2); dynamic.writeUInt32LE(3, 64);
 	assert.throws(() => assertStaticExecutable(dynamic), /PT_INTERP/);
 	const truncated = elf(2); truncated.writeBigUInt64LE(1000n, 32);
 	assert.throws(() => assertStaticExecutable(truncated), /program headers/);
+	const noCode = elf(2); noCode.writeUInt32LE(4, 68);
+	assert.throws(() => assertStaticExecutable(noCode), /executable load segments/);
+	const bssEntry = elf(2); bssEntry.writeBigUInt64LE(0x401079n, 24); bssEntry.writeBigUInt64LE(122n, 104);
+	assert.throws(() => assertStaticExecutable(bssEntry), /executable load segments/);
+	const missingData = elf(2); missingData.writeBigUInt64LE(1n, 72);
+	assert.throws(() => assertStaticExecutable(missingData), /load segment/);
 });
 
 test('native package is deterministic, preserves actual target files and stays unqualified', async (t) => {
@@ -281,6 +289,7 @@ test('native package is deterministic, preserves actual target files and stays u
 	assert.deepEqual(JSON.parse(await fs.readFile(path.join(output, manifest.gnu.source))), fixture.provenance);
 	const tar = await fs.readFile(path.join(output, manifest.assets.sysroot.path));
 	const entries = readTarEntries(tar);
+	assert.equal(manifest.fileCount, [...entries.values()].filter((entry) => !entry.directory).length);
 	assert(entries.has('lib/clang/22/include/immintrin.h'));
 	assert(entries.has('usr/include/c++/14/ext/pb_ds/detail/rb_tree_map_/rb_tree_.hpp'));
 	assert(![...entries.keys()].some((name) => name.includes('wasm32')));
