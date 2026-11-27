@@ -105,7 +105,7 @@ if [[ ! -f Makefile ]]; then
     CC="$CC_FOR_BUILD" CXX="$CXX_FOR_BUILD" MAKEINFO=true
 fi
 make -j"$jobs" all-gas MAKEINFO=true
-export AS_FOR_TARGET="$probe_build/gas/as-new"
+probe_as="$probe_build/gas/as-new"
 
 build="$work/build/gcc"
 mkdir -p "$build"
@@ -115,9 +115,11 @@ cd "$build"
 # macros when checking is disabled.
 # --enable-threads configures the Linux target, not the Wasm compiler host.
 # Its POSIX model must agree with the separately imported GNU target runtime.
+# Canadian configure otherwise replaces AS_FOR_TARGET with the assembler that
+# GCC_FOR_TARGET reports. --with-as selects our pinned probe in gcc/configure.
 if [[ ! -f Makefile ]]; then
   emconfigure "$gcc_source/configure" --build="$build_triple" --host="$host" --target="$target" \
-    --prefix=/opt/gcc-wasm --with-sysroot=/sysroot --enable-languages=c,c++ \
+    --prefix=/opt/gcc-wasm --with-sysroot=/sysroot --enable-languages=c,c++ --with-as="$probe_as" \
     --with-gmp="$wasmdeps" --with-mpfr="$wasmdeps" --with-mpc="$wasmdeps" \
     --disable-bootstrap --disable-shared --enable-threads=posix --disable-nls \
     --disable-multilib --disable-libssp --disable-libada --disable-libquadmath \
@@ -132,8 +134,10 @@ fi
 # including when a caller resumes an existing build directory.
 emmake make -j"$jobs" configure-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
   GCC_FOR_TARGET=gcc-16 CXX_FOR_TARGET=g++-16 MAKEINFO=true
-python3 - <<'PY'
-import os
+python3 - "$probe_as" <<'PY'
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 # GCC writes this target model into configargs.h for the C++ front end.
@@ -142,8 +146,14 @@ if 'static const char thread_model[] = "posix";' not in Path('gcc/configargs.h')
     raise SystemExit('GCC Linux target requires POSIX threads; use a fresh isolated build directory')
 configured_as = next((line.split('=', 1)[1].strip() for line in Path('gcc/Makefile').read_text().splitlines()
                       if line.startswith('ORIGINAL_AS_FOR_TARGET =')), None)
-if configured_as != os.environ['AS_FOR_TARGET']:
-    raise SystemExit('GCC must probe the pinned target assembler; use a fresh isolated build directory')
+if configured_as != sys.argv[1]:
+    raise SystemExit(f'GCC configured {configured_as!r} as its assembler, expected {sys.argv[1]!r}; use a fresh isolated build directory')
+with tempfile.TemporaryDirectory() as temporary:
+    probe = subprocess.run([configured_as, '--64', '-o', str(Path(temporary) / 'probe.o'), '-'],
+                           input=b'.section .rodata\n.base64 "Kg=="\n', capture_output=True)
+configured_base64 = '#define HAVE_GAS_BASE64 1' in Path('gcc/auto-host.h').read_text().splitlines()
+if configured_base64 != (probe.returncode == 0):
+    raise SystemExit('GCC .base64 setting disagrees with the pinned target assembler; use a fresh isolated build directory')
 PY
 em++ -x c++ -fsyntax-only -I gcc - <<'EOF'
 #include "auto-host.h"
