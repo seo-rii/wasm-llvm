@@ -199,10 +199,13 @@ export async function compileReal(bundle, request) {
 	if (exitCode === 0 && emit === 'executable') {
 		const gcc = manifest.gccInstallation;
 		const lib = '/sysroot/usr/lib/x86_64-linux-gnu';
+		const atomicArchive = entries.get(path.posix.relative(manifest.sysrootPath, gcc + '/libatomic.a'));
 		const ldArgs = ['-m', 'elf_x86_64', '--sysroot=/sysroot', '-static', '-o', '/work/main.elf',
 			`${lib}/crt1.o`, `${lib}/crti.o`, `${gcc}/crtbeginT.o`, '/work/main.o',
 			`-L${gcc}`, `-L${lib}`, '-L/sysroot/lib/x86_64-linux-gnu',
-			'--start-group', ...(language === 'cpp' ? ['-lstdc++', '-lm'] : []), '-lgcc', '-lgcc_eh', '-lc', '--end-group',
+			'--start-group', ...(language === 'cpp' ? ['-lstdc++'] : []), '-lm',
+			...(atomicArchive && !atomicArchive.directory ? ['-latomic'] : []),
+			'-lgcc', '-lgcc_eh', '-lc', '--end-group',
 			`${gcc}/crtend.o`, `${lib}/crtn.o`];
 		exitCode = await invoke('ld', ldArgs, '/work/main.elf');
 	}

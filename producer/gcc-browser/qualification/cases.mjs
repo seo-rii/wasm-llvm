@@ -8,6 +8,9 @@ export const cases = [
 	{ id: 'c-object', fixture: 'baseline.c', request: { language: 'c', emit: 'object', cpu: 'x86-64', optimization: '2', standard: 'gnu17' } },
 	{ id: 'c-executable', fixture: 'baseline.c', request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu17' },
 		stdin: '17 -4\n', stdout: '47\n' },
+	{ id: 'c-libm-executable', fixture: 'libm.c', nativeLinkArgs: ['-lm'],
+		request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu17' },
+		stdin: '0.5\n', stdout: '0.479426\n' },
 	{ id: 'ps-assembly', fixture: 'ps.cpp', request: { language: 'cpp', emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' } },
 	{ id: 'ps-object', fixture: 'ps.cpp', request: { language: 'cpp', emit: 'object', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' } },
 	// The Node runner first precompiles bits/stdc++.h with the same flags; its
@@ -35,4 +38,15 @@ export const cases = [
 		expectFailure: true },
 	{ id: 'invalid-after-success', fixture: 'broken.cpp', request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'gnu++20' },
 		expectFailure: true }
+];
+
+// The pinned Chromium consumer predates static libatomic support. The producer
+// runs both cases on every qualification, alongside the shared Chromium cases.
+export const atomicCases = [
+	{ id: 'c-atomic16-executable', fixture: 'atomic16.c', nativeLinkArgs: ['-latomic'],
+		request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c11' },
+		stdin: '17 29\n', stdout: '17 29\n' },
+	{ id: 'cpp-atomic16-executable', fixture: 'atomic16.cpp', nativeLinkArgs: ['-latomic'],
+		request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c++20' },
+		stdin: '31 43\n', stdout: '31 43\n' }
 ];
