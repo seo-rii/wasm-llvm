@@ -281,6 +281,7 @@ test('native package is deterministic, preserves actual target files and stays u
 	assert.deepEqual(JSON.parse(await fs.readFile(path.join(output, manifest.gnu.source))), fixture.provenance);
 	const tar = await fs.readFile(path.join(output, manifest.assets.sysroot.path));
 	const entries = readTarEntries(tar);
+	assert.equal(manifest.fileCount, [...entries.values()].filter((entry) => !entry.directory).length);
 	assert(entries.has('lib/clang/22/include/immintrin.h'));
 	assert(entries.has('usr/include/c++/14/ext/pb_ds/detail/rb_tree_map_/rb_tree_.hpp'));
 	assert(![...entries.keys()].some((name) => name.includes('wasm32')));
