@@ -71,6 +71,11 @@ export function assertCaseResult(test, result) {
 		require(Number.isInteger(result.exitCode) && result.exitCode !== 0, `${test.id}: expected a compiler error`);
 		require(!result.artifact, `${test.id}: failed compilation returned a stale artifact`);
 		require(typeof result.stderr === 'string' && result.stderr.trim().length > 0, `${test.id}: missing compiler diagnostic`);
+		if (test.check === 'legacy-as-minmax-reject') {
+			const stage = result.stages.at(-1);
+			require(stage?.tool === 'as' && /no such instruction[^\n]*\bvminmaxps\b/i.test(stage.stderr),
+				`${test.id}: expected GNU as 2.42 to diagnose vminmaxps`);
+		}
 		return;
 	}
 	require(result.exitCode === 0, `${test.id}: compiler failed: ${result.stderr}`);
@@ -85,6 +90,8 @@ export function assertCaseResult(test, result) {
 		const assembly = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
 		require(/\.ident\s+"GCC:/.test(assembly), `${test.id}: assembly lacks a GCC identity`);
 		if (test.milestone) require(/triangular:/.test(assembly) && /%r[a-z0-9]+/.test(assembly), 'Preprocessed milestone lacks x86-64 function');
+		if (test.check === 'avx10-minmax')
+			require(/\bvminmaxps\b/.test(functionAssembly(assembly, 'minmax4')), 'GCC did not generate AVX10.2 packed min/max');
 		if (test.check === 'pragma') assertPragmaAssembly(assembly);
 		if (test.check === 'pragma-stl') {
 			const body = functionAssembly(assembly, 'pragma_stl_transform');

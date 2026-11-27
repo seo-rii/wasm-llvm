@@ -23,7 +23,8 @@ export EM_CACHE="$work/emscripten-cache" EM_PORTS="$work/emscripten-ports"
 [[ $(emcc --version | head -1) == *'4.0.23'* ]] || { echo 'Unexpected Emscripten version' >&2; exit 2; }
 source_root="$work/sources"
 gcc_source="$source_root/gcc-16.2.0"
-binutils_source="$source_root/binutils-2.42"
+binutils_dir=$(node -p "require(process.argv[1]).sources.binutils.directory" "$script_dir/sources.lock.json")
+binutils_source="$source_root/$binutils_dir"
 build_triple=$("$gcc_source/config.guess")
 target=x86_64-linux-gnu
 host=wasm32-unknown-emscripten
@@ -70,7 +71,7 @@ for component in gmp-6.3.0 mpfr-4.2.1 mpc-1.3.1; do
   emmake make install
  done
 
-build="$work/build/binutils"
+build="$work/build/$binutils_dir"
 mkdir -p "$build"
 cd "$build"
 if [[ ! -f Makefile ]]; then
@@ -96,7 +97,7 @@ done
 # GCC configures assembler features by running an assembler on the build machine.
 # Use the same binutils release and target as the shipped Wasm gas. A newer
 # system assembler can accept directives (such as .base64) that the bundle rejects.
-probe_build="$work/build/native-gas"
+probe_build="$work/build/native-$binutils_dir"
 mkdir -p "$probe_build"
 cd "$probe_build"
 if [[ ! -f Makefile ]]; then
@@ -191,7 +192,7 @@ cp -a "$build/gcc/include/." "$output/resource-include/"
 for required in stddef.h stdarg.h limits.h syslimits.h stdint.h immintrin.h avx2intrin.h fmaintrin.h; do
   test -s "$output/resource-include/$required"
 done
-for component in gcc-16.2.0 binutils-2.42 gmp-6.3.0 mpfr-4.2.1 mpc-1.3.1; do
+for component in gcc-16.2.0 "$binutils_dir" gmp-6.3.0 mpfr-4.2.1 mpc-1.3.1; do
   mkdir "$output/licenses/$component"
   while IFS= read -r -d '' notice; do
     install -m644 "$notice" "$output/licenses/$component/$(basename "$notice")"

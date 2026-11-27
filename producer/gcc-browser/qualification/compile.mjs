@@ -53,8 +53,7 @@ export async function loadBundle(directory, expectedManifestSha256) {
 	assert.equal(manifest.resourceDir, `${manifest.gccInstallation}/include`);
 	assert(/^\d+$/.test(manifest.gnu.gccVersion));
 	assert.deepEqual(manifest.cpuProfiles, ['x86-64', 'avx2-fma']);
-	const assetPath = async (name) => {
-		const asset = manifest.assets[name];
+	const assetPath = async (name, asset = manifest.assets[name]) => {
 		assert(asset && typeof asset.path === 'string' && asset.path.split('/').every((part) => part && part !== '.' && part !== '..') &&
 			!/[\\\x00-\x1f\x7f:]/.test(asset.path), `Invalid ${name} path`);
 		const resolved = await fs.realpath(path.join(root, asset.path));
@@ -62,10 +61,10 @@ export async function loadBundle(directory, expectedManifestSha256) {
 		assert(Number.isSafeInteger(asset.bytes) && asset.bytes > 0 && /^[a-f0-9]{64}$/.test(asset.sha256), `Invalid ${name} identity`);
 		return resolved;
 	};
-	const readAsset = async (name) => {
-		const bytes = await fs.readFile(await assetPath(name));
-		assert.equal(bytes.length, manifest.assets[name].bytes, `${name} size mismatch`);
-		assert.equal(sha256(bytes), manifest.assets[name].sha256, `${name} SHA-256 mismatch`);
+	const readAsset = async (name, asset = manifest.assets[name]) => {
+		const bytes = await fs.readFile(await assetPath(name, asset));
+		assert.equal(bytes.length, asset.bytes, `${name} size mismatch`);
+		assert.equal(sha256(bytes), asset.sha256, `${name} SHA-256 mismatch`);
 		return bytes;
 	};
 	return { root, manifest, manifestSha256, assetPath, readAsset };

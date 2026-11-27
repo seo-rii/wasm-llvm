@@ -61,6 +61,14 @@ the fixed-count loop inside the optimize region, restoration of the loop after
 the actual object instructions. The separate explicit AVX2/FMA profile must
 compile intrinsics that are rejected under the baseline profile.
 
+`avx10-minmax.c` tests a source-level AVX10.2 pragma on GCC 16. Its function
+must contain `vminmaxps`; the bundled GNU as must assemble it into an ELF64
+x86-64 object. AVX10.2 execution is outside this test. For archived bundles
+whose pinned compiler receipt identifies GNU as 2.42, the same object request
+must fail in the assembler with a diagnostic naming that instruction. GCC 13
+predates the intrinsic. The supported command-line CPU profiles are `x86-64`
+and `avx2-fma`; source pragmas can select instructions beyond those profiles.
+
 `pragma-static-init.cpp` and `pragma-deferred-template.cpp` are the original
 upstream regression cases for PR109753 and PR115403. They check that artificial
 static initialization functions inherit target pragmas while deferred templates

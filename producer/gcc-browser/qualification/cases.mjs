@@ -52,6 +52,17 @@ export const predefCases = ['c', 'cpp'].map(language => ({
 	request: { language, emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: language === 'c' ? 'c17' : 'c++20' }
 }));
 
+// GCC 16 provides this intrinsic. Older GCC 16 bundles with GAS 2.42
+// emit the mnemonic but report an assembler error on the object request.
+export function avx10Cases(binutilsVersion) {
+	const request = { language: 'c', cpu: 'x86-64', optimization: '2', standard: 'gnu17' };
+	return [
+		{ id: 'avx10-minmax-assembly', fixture: 'avx10-minmax.c', request: { ...request, emit: 'assembly' }, check: 'avx10-minmax' },
+		{ id: 'avx10-minmax-object', fixture: 'avx10-minmax.c', request: { ...request, emit: 'object' },
+			...(binutilsVersion === '2.42' ? { expectFailure: true, check: 'legacy-as-minmax-reject' } : {}) }
+	];
+}
+
 // The pinned Chromium consumer predates static libatomic support. The producer
 // runs both cases on every qualification, alongside the shared Chromium cases.
 export const atomicCases = [

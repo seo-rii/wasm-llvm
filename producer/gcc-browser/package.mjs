@@ -46,6 +46,7 @@ export async function packageGcc({ compiler, sysroot, provenance, output }) {
   assert.equal(receipt.schemaVersion, 1, 'Unsupported compiler receipt');
   assert.equal(receipt.kind, 'gcc-build-receipt', 'Expected a GCC build receipt');
   for (const field of ['host', 'target', 'gccVersion']) assert.equal(receipt[field], profile[field], `Wrong compiler ${field}`);
+  assert.equal(receipt.binutilsVersion, lock.sources.binutils.version, 'Compiler binutils version differs from the pinned recipe');
   assert.equal(receipt.sourcesLockSha256, digest(lockBytes), 'Compiler sources differ from the pinned recipe');
   const sourcePatches = Object.entries(lock.sources).flatMap(([source, item]) =>
     (item.patches ?? []).map(({ path, sha256, upstreamCommits }) => ({ source, path, sha256, upstreamCommits })));

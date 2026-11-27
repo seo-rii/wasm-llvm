@@ -20,7 +20,7 @@ after the shared Clang changes were merged.
 | Native build tools and generators | Linux x86-64, GCC/G++ 16.2.0 |
 | Compiler host | Emscripten 4.0.23, Wasm32, MEMFS |
 | Compiler | GCC 16.2.0 C and C++ front ends and x86 backend |
-| Assembler/linker | GNU binutils 2.42, x86_64-linux-gnu |
+| Assembler/linker | GNU binutils 2.45.1, x86_64-linux-gnu |
 | Host arithmetic libraries | GMP 6.3.0, MPFR 4.2.1, MPC 1.3.1, built as Wasm |
 | User-program runtime | Actual GNU/Linux x86-64 glibc, libstdc++, libgcc and CRT |
 
