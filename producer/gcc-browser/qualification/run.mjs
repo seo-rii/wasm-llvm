@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
-import { atomicCases, avx10Cases, cases, predefCases, runtimeLibraryCases } from './cases.mjs';
+import { atomicCases, avx10Cases, cases, nodeInputCases, runtimeLibraryCases } from './cases.mjs';
 import { assertCaseResult, assertStaticExecutable } from './assertions.mjs';
 import { loadBundle, sha256 } from './compile.mjs';
 
@@ -81,7 +81,7 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 		}
 		const sysroot = readTarEntries(await bundle.readAsset('sysroot'));
 		const gccDirectory = path.posix.relative(bundle.manifest.sysrootPath, bundle.manifest.gccInstallation);
-		const tests = [...cases, ...predefCases, ...atomicCases, ...runtimeLibraryCases];
+		const tests = [...cases, ...nodeInputCases, ...atomicCases, ...runtimeLibraryCases];
 		if (Number(bundle.manifest.gnu.gccVersion) >= 16) {
 			const receipt = bundle.manifest.provenance?.compilerReceipt;
 			if (receipt) evidence.binutilsVersion = JSON.parse(await bundle.readAsset('compilerReceipt', receipt)).binutilsVersion;

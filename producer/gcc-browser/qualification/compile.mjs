@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
+import { requireDirectoryTraversal } from './directory-traversal.mjs';
 
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
@@ -104,6 +105,7 @@ export async function compileReal(bundle, request) {
 				print: stageOut.write, printErr: stageErr.write,
 				onExit: (status) => { exitCode = status; } });
 			assert(module.FS && typeof module.callMain === 'function', `${tool} lacks the Emscripten runtime contract`);
+			requireDirectoryTraversal(module.FS);
 			module.FS.mkdirTree('/work');
 			module.FS.mkdirTree('/tmp');
 			module.FS.mkdirTree('/sysroot');
