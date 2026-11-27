@@ -93,6 +93,20 @@ for pair in gas/as-new:as ld/ld-new:ld; do
   install -m644 "$build/$tool_path.wasm" "$output/$tool_name.wasm"
 done
 
+# GCC configures assembler features by running an assembler on the build machine.
+# Use the same binutils release and target as the shipped Wasm gas. A newer
+# system assembler can accept directives (such as .base64) that the bundle rejects.
+probe_build="$work/build/native-gas"
+mkdir -p "$probe_build"
+cd "$probe_build"
+if [[ ! -f Makefile ]]; then
+  CONFIG_SITE=/dev/null "$binutils_source/configure" --build="$build_triple" --host="$build_triple" --target="$target" \
+    --disable-nls --disable-werror --disable-gprofng --disable-plugins --without-zstd \
+    CC="$CC_FOR_BUILD" CXX="$CXX_FOR_BUILD" MAKEINFO=true
+fi
+make -j"$jobs" all-gas MAKEINFO=true
+export AS_FOR_TARGET="$probe_build/gas/as-new"
+
 build="$work/build/gcc"
 mkdir -p "$build"
 cd "$build"
@@ -119,12 +133,17 @@ fi
 emmake make -j"$jobs" configure-gcc CFLAGS="$hostflags" CXXFLAGS="$hostflags" \
   GCC_FOR_TARGET=gcc-16 CXX_FOR_TARGET=g++-16 MAKEINFO=true
 python3 - <<'PY'
+import os
 from pathlib import Path
 
 # GCC writes this target model into configargs.h for the C++ front end.
 # Checking generated output also rejects a Makefile resumed from the old recipe.
 if 'static const char thread_model[] = "posix";' not in Path('gcc/configargs.h').read_text().splitlines():
     raise SystemExit('GCC Linux target requires POSIX threads; use a fresh isolated build directory')
+configured_as = next((line.split('=', 1)[1].strip() for line in Path('gcc/Makefile').read_text().splitlines()
+                      if line.startswith('ORIGINAL_AS_FOR_TARGET =')), None)
+if configured_as != os.environ['AS_FOR_TARGET']:
+    raise SystemExit('GCC must probe the pinned target assembler; use a fresh isolated build directory')
 PY
 em++ -x c++ -fsyntax-only -I gcc - <<'EOF'
 #include "auto-host.h"
