@@ -40,7 +40,7 @@ async function compareNativeCompiler(test, sourcePath, outputDirectory, compiler
 	const actualVersion = version.stdout.trim();
 	const binary = path.join(outputDirectory, 'native-reference.elf');
 	const args = ['-static', '-fno-pie', '-no-pie', '-march=x86-64', `-O${test.request.optimization}`,
-		`-std=${test.request.standard}`, sourcePath, '-o', binary];
+		`-std=${test.request.standard}`, sourcePath, ...(test.nativeLinkArgs ?? []), '-o', binary];
 	const started = performance.now();
 	const compilation = spawnSync(compiler, args, { encoding: 'utf8', timeout: 120_000, maxBuffer: 1024 * 1024 });
 	assert.ifError(compilation.error);

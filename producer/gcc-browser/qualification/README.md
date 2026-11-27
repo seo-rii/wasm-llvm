@@ -25,6 +25,9 @@ compared when the selected compiler is installed; the report records whether its
 exact version matches the Wasm GCC version. A missing comparison compiler is
 recorded explicitly; it does not bypass the mandatory native execution gate.
 
+The shared `c-libm-executable` fixture calls `sin` on a value read from stdin and
+checks the result after static linking.
+
 `ps-pch-assembly` first lets the actual `cc1plus` precompile GNU `bits/stdc++.h`
 with the case's flags, then compiles `ps.cpp` with that PCH first on the include
 path. `-H` must report the PCH as loaded (`! /pch/bits/stdc++.h.gch`) and the
