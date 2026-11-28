@@ -326,6 +326,8 @@ test('GNU linker scripts validate groups and search inputs in target linker orde
 		return validateGnuSysroot(files, provenance);
 	}
 	validate('# ordinary GNU script\nGROUP(libhelper.a)');
+	validate('GROUP # target libraries\n (libhelper.a)');
+	validate('OUTPUT_FORMAT( # target format\n "elf64-x86-64") INPUT(libhelper.a)');
 	validate('OUTPUT_FORMAT("elf64-x86-64") INPUT(AS_NEEDED(-lhelper) "object with space.o")');
 	validate('GROUP(/* runtime */ "libhelper.a" , -l:libhelper.a);');
 	files.push(local);
@@ -336,6 +338,12 @@ test('GNU linker scripts validate groups and search inputs in target linker orde
 	for (const input of ['-lhelper', '-l:libhelper.a']) {
 		assert.throws(() => validate(`GROUP(${input})`), /libhelper.*x86-64/);
 	}
+	remote.bytes = elf();
+	validate('INPUT(-lhelper)');
+	remote.bytes = elf(1, 183);
+	assert.throws(() => validate('INPUT(-lhelper)'), /libhelper.*x86-64/);
+	remote.bytes = elf(2);
+	assert.throws(() => validate('INPUT(-lhelper)'), /libhelper.*ELF type/);
 	remote.bytes = archive();
 	for (const malformed of [
 		'GROUP(libhelper.a', 'INPUT(libhelper.a))', 'GROUP((libhelper.a))',

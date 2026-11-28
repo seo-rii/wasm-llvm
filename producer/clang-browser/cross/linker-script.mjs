@@ -22,25 +22,26 @@ export function libraryScriptInputs(bytes, label) {
 		return null;
 	}
 	const unquote = token => token.startsWith('"') ? token.slice(1, -1) : token;
-	const expect = token => assert.equal(next(), token, `${label}: expected ${token} in GNU linker script`);
+	const expect = (token, allowHashComment = false) => assert.equal(next(allowHashComment), token, `${label}: expected ${token} in GNU linker script`);
 	const references = [];
 	for (let command; (command = next(true)) !== null;) {
 		if (command === ';') continue;
 		if (command === 'OUTPUT_FORMAT') {
-			expect('(');
+			expect('(', true);
 			let formats = 0;
 			let separator;
 			do {
-				const format = next();
+				const format = next(true);
 				assert(format && unquote(format) === 'elf64-x86-64', `${label}: unsupported output format`);
 				formats++;
-				separator = next();
+				separator = next(true);
 			} while (separator === ',');
 			assert(separator === ')' && [1, 3].includes(formats), `${label}: malformed OUTPUT_FORMAT`);
 			continue;
 		}
 		assert(command === 'GROUP' || command === 'INPUT', `${label}: expected a static archive or GNU linker script, unsupported command ${command}`);
-		expect('(');
+		// GNU ld switches to input-list lexing only after the opening parenthesis.
+		expect('(', true);
 		const needsInput = [true];
 		while (needsInput.length) {
 			const token = next();

@@ -179,9 +179,14 @@ export function validateGnuSysroot(files, provenance) {
 		if (checked.has(name)) return;
 		assert(!active.has(name), `Recursive library script: ${name}`);
 		const bytes = required(name);
-		if (name.endsWith('.o')) {
-			assertNativeLtoFallback(bytes, name); // Object architecture was checked above.
-		} else if (bytes.subarray(0, 8).toString() === '!<arch>\n') {
+		// A script can name a relocatable with an archive suffix (Debian libmcheck.a).
+		// Validate the input by content without counting it as a top-level runtime archive.
+		if (active.size && bytes.length >= 4 && bytes.readUInt32BE(0) === 0x7f454c46) {
+			assertX86Elf(bytes, name, 1);
+			assertNativeLtoFallback(bytes, name);
+			return;
+		}
+		if (bytes.subarray(0, 8).toString() === '!<arch>\n') {
 			assertGnuArchive(bytes, name, allowEmpty, (member, label) => {
 				assertX86Elf(member, label, 1);
 				assertNativeLtoFallback(member, label);
