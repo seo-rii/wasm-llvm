@@ -11,6 +11,7 @@ import { promisify } from 'node:util';
 import { deterministicTar } from '../scripts/package-language-sysroots.mjs';
 import { directoryIdentity } from '../scripts/build-provenance.mjs';
 import { assertGnuArchive } from './archive.mjs';
+import { libraryScriptInputs } from './linker-script.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
@@ -156,41 +157,40 @@ export function validateGnuSysroot(files, provenance) {
 	}
 	const checked = new Set();
 	const libraryDirectories = [gcc, 'usr/lib/x86_64-linux-gnu', 'lib/x86_64-linux-gnu'];
-	function resolveArchive(script, token) {
-		if (token.startsWith('-l:')) {
-			const filename = relativePath(token.slice(3));
-			for (const directory of libraryDirectories) {
-				const candidate = `${directory}/${filename}`;
-				if (entries.has(candidate)) return candidate;
-			}
-			assert.fail(`${script}: GNU sysroot is missing ${token} in the target library paths`);
+	function resolveInput(script, { name, library }) {
+		let directories = libraryDirectories;
+		let filename;
+		if (library) {
+			filename = name.startsWith('-l:') ? relativePath(name.slice(3)) : `lib${relativePath(name.slice(2))}.a`;
+		} else {
+			const target = name.replace(/^(?:=|\$SYSROOT)(?=\/)/, '');
+			if (target.startsWith('/')) return relativePath(target.slice(1));
+			filename = target;
+			directories = [path.posix.dirname(script), ...libraryDirectories];
 		}
-		const target = token.replace(/^(?:=|\$SYSROOT)(?=\/)/, '');
-		return relativePath(target.startsWith('/') ? target.slice(1) : path.posix.join(path.posix.dirname(script), target));
+		for (const directory of directories) {
+			const candidate = relativePath(path.posix.join(directory, filename));
+			if (entries.has(candidate)) return candidate;
+		}
+		assert.fail(`${script}: GNU sysroot is missing ${name} in the target library paths`);
 	}
 
 	function checkLibrary(name, active = new Set(), allowEmpty = false) {
 		if (checked.has(name)) return;
 		assert(!active.has(name), `Recursive library script: ${name}`);
 		const bytes = required(name);
-		if (bytes.subarray(0, 8).toString() === '!<arch>\n') {
+		if (name.endsWith('.o')) {
+			assertNativeLtoFallback(bytes, name); // Object architecture was checked above.
+		} else if (bytes.subarray(0, 8).toString() === '!<arch>\n') {
 			assertGnuArchive(bytes, name, allowEmpty, (member, label) => {
 				assertX86Elf(member, label, 1);
 				assertNativeLtoFallback(member, label);
 			});
 		} else {
-			// glibc's libm.a can be a GROUP script referring to libm-*.a and libmvec.a.
-			const text = bytes.toString('utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-			assert(/\b(?:GROUP|INPUT)\s*\(/.test(text), `${name}: not a static archive or supported GNU linker script`);
-			const tokens = text.match(/[^\s(),;]+/g) || [];
-			let references = 0;
-			for (const token of tokens) {
-				if (['GROUP', 'INPUT', 'AS_NEEDED', 'OUTPUT_FORMAT', 'elf64-x86-64'].includes(token)) continue;
-				assert(token.endsWith('.a'), `${name}: unsupported linker-script token ${token}`);
-				checkLibrary(resolveArchive(name, token), new Set([...active, name]), allowEmpty);
-				references += 1;
+			const ancestors = new Set([...active, name]);
+			for (const input of libraryScriptInputs(bytes, name)) {
+				checkLibrary(resolveInput(name, input), ancestors, allowEmpty);
 			}
-			assert(references > 0, `${name}: empty library script`);
 		}
 		checked.add(name);
 	}

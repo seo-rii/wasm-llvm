@@ -69,9 +69,12 @@ source acquisition and redistribution review; they are not source archives. Pres
 corresponding GNU sources and source availability information with a distributed release.
 
 The packager requires the real GNU `bits/stdc++.h` and PBDS implementation, x86-64 CRT
-objects, `libstdc++.a`, `libgcc.a`, `libgcc_eh.a`, `libc.a` and `libm.a`. It validates static
-archive object architecture, resolves the GNU libm linker script, verifies the entire
-file inventory, and rejects the existing WASI compatibility shims. Clang's own resource
+objects, `libstdc++.a`, `libgcc.a`, `libgcc_eh.a`, `libc.a` and `libm.a`. It checks the GNU symbol index and x86-64
+members of each nonempty archive. For static GNU linker scripts it reads `INPUT`, `GROUP`,
+nested `AS_NEEDED` and the x86-64 `OUTPUT_FORMAT`. Plain filenames are looked up beside
+the script and then in the target library directories. Both `-lname` and `-l:filename`
+use the target library search order. The packager also verifies the entire file
+inventory and rejects the existing WASI compatibility shims. Clang's own resource
 headers are added from the matching compiler build, rather than the native GCC install.
 
 ## Package and qualify

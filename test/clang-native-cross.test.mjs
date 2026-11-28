@@ -313,6 +313,40 @@ test('GNU libm GROUP scripts resolve only present x86 static archives', () => {
 	}
 });
 
+test('GNU linker scripts validate groups and search inputs in target linker order', () => {
+	const { files, provenance } = gnuFixture();
+	const script = files.find(file => file.path.endsWith('/libm.a'));
+	const gcc = 'usr/lib/gcc/x86_64-linux-gnu/14';
+	const system = 'usr/lib/x86_64-linux-gnu';
+	const remote = { path: `${gcc}/libhelper.a`, bytes: archive() };
+	const local = { path: `${system}/libhelper.a`, bytes: archive() };
+	files.push(remote, { path: `${gcc}/object with space.o`, bytes: elf() });
+	function validate(source) {
+		script.bytes = Buffer.from(source);
+		return validateGnuSysroot(files, provenance);
+	}
+	validate('# ordinary GNU script\nGROUP(libhelper.a)');
+	validate('OUTPUT_FORMAT("elf64-x86-64") INPUT(AS_NEEDED(-lhelper) "object with space.o")');
+	validate('GROUP(/* runtime */ "libhelper.a" , -l:libhelper.a);');
+	files.push(local);
+	remote.bytes = archive(elf(1, 183));
+	// Plain names prefer their script's directory. Both -l forms prefer the
+	// first matching -L directory, even if the script has a local namesake.
+	validate('GROUP(libhelper.a)');
+	for (const input of ['-lhelper', '-l:libhelper.a']) {
+		assert.throws(() => validate(`GROUP(${input})`), /libhelper.*x86-64/);
+	}
+	remote.bytes = archive();
+	for (const malformed of [
+		'GROUP(libhelper.a', 'INPUT(libhelper.a))', 'GROUP((libhelper.a))',
+		'GROUP(libhelper.a AS_NEEDED())', 'INPUT( , libhelper.a)', 'INPUT(libhelper.a , )',
+		'GROUP(libhelper.a) /*', 'INPUT("libhelper.a)', 'INPUT(libhelper.a) libhelper.a'
+	]) assert.throws(() => validate(malformed), undefined, malformed);
+	for (const invalid of ['-lmissing', '"missing.o"', '-l:../libhelper.a']) {
+		assert.throws(() => validate(`INPUT(${invalid})`), /missing|Unsafe/);
+	}
+});
+
 test('installed-package provenance binds every normalized file byte', () => {
 	const fixture = gnuFixture();
 	delete fixture.provenance.sources;

@@ -9,6 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { assertGnuArchive } from './archive.mjs';
+import { libraryScriptInputs } from './linker-script.mjs';
 
 const execute = promisify(execFile);
 const TARGET = 'x86_64-linux-gnu';
@@ -85,7 +86,7 @@ function assertNativeLibrary(bytes, label) {
 	if (bytes.subarray(0, 8).toString() !== '!<arch>\n') {
 		// glibc libm.a may be a textual GROUP script. The packager verifies its
 		// references against the complete normalized tree before publishing it.
-		assert(!bytes.includes(0) && /\b(?:GROUP|INPUT)\s*\(/.test(bytes.toString('utf8')), `${label}: expected a static archive or GNU linker script`);
+		libraryScriptInputs(bytes, label);
 		return;
 	}
 	assertGnuArchive(bytes, label, true, assertNativeObject);
