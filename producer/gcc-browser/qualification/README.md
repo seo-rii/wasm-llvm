@@ -53,6 +53,12 @@ the Linux output's POSIX thread model, not parallel execution inside the Wasm
 compiler host; no macro override or source rewriting substitutes for it. The case
 is shared by the Node and Chromium gates, and its ELF runs only on native Linux.
 
+The producer checks the x86 void-builtin source patch recorded in each bundle.
+For patched compilers, `pause.c` must emit the x86 spin hint and memory fences. The static C++20
+`stop-token.cpp` executable synchronizes a worker and the main thread with
+`std::barrier`, requests a stop, joins the worker and prints `ok` at both
+`-O0` and `-O2`.
+
 `pragma.cpp` is compiled at `-O0 -march=x86-64`. Only its unmodified GCC pragmas
 enable AVX2/FMA and O3. Pointer inputs prevent constant folding of the SIMD work.
 Assembly assertions require `vpaddd` on YMM registers and packed FMA, removal of
