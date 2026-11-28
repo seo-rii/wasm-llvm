@@ -88,7 +88,7 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 			tests.push(...avx10Cases(evidence.binutilsVersion));
 		}
 		if (bundle.manifest.provenance?.sourcePatches?.some(patch =>
-			patch.source === 'gcc' && patch.path === 'patches/0002-i386-void-builtins.patch')) {
+			patch.source === 'gcc' && /^patches\/\d{4}-i386-void-builtins\.patch$/.test(patch.path))) {
 			tests.push(...voidBuiltinCases);
 		}
 		for (const test of tests) {

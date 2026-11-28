@@ -53,7 +53,7 @@ the Linux output's POSIX thread model, not parallel execution inside the Wasm
 compiler host; no macro override or source rewriting substitutes for it. The case
 is shared by the Node and Chromium gates, and its ELF runs only on native Linux.
 
-The producer checks the x86 void-builtin source patch recorded in each bundle.
+The producer recognizes the x86 void-builtin patch in both the GCC 13 and GCC 16 source-patch inventories.
 For patched compilers, `pause.c` must emit the x86 spin hint and memory fences. The static C++20
 `stop-token.cpp` executable synchronizes a worker and the main thread with
 `std::barrier`, requests a stop, joins the worker and prints `ok` at both
