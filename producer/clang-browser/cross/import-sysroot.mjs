@@ -8,6 +8,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { assertGnuArchive } from './archive.mjs';
+import { libraryScriptInputs } from './linker-script.mjs';
 
 const execute = promisify(execFile);
 const TARGET = 'x86_64-linux-gnu';
@@ -84,25 +86,10 @@ function assertNativeLibrary(bytes, label) {
 	if (bytes.subarray(0, 8).toString() !== '!<arch>\n') {
 		// glibc libm.a may be a textual GROUP script. The packager verifies its
 		// references against the complete normalized tree before publishing it.
-		assert(!bytes.includes(0) && /\b(?:GROUP|INPUT)\s*\(/.test(bytes.toString('utf8')), `${label}: expected a static archive or GNU linker script`);
+		libraryScriptInputs(bytes, label);
 		return;
 	}
-	let offset = 8;
-	while (offset < bytes.length) {
-		assert(offset + 60 <= bytes.length, `${label}: truncated archive header`);
-		const header = bytes.subarray(offset, offset + 60);
-		assert.equal(header.subarray(58).toString(), '`\n', `${label}: malformed archive header`);
-		const sizeText = header.subarray(48, 58).toString().trim();
-		assert(/^\d+$/.test(sizeText), `${label}: malformed archive size`);
-		const size = Number(sizeText);
-		assert(Number.isSafeInteger(size) && size <= bytes.length - offset - 60, `${label}: truncated archive member`);
-		const name = header.subarray(0, 16).toString().trim();
-		if (!['/', '//', '/SYM64/'].includes(name)) {
-			assertNativeObject(bytes.subarray(offset + 60, offset + 60 + size), `${label}(${name})`);
-		}
-		offset += 60 + size + size % 2;
-	}
-	assert.equal(offset, bytes.length, `${label}: truncated archive padding`);
+	assertGnuArchive(bytes, label, true, assertNativeObject);
 }
 
 async function query(run, command, args) {

@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { archiveMember, gnuArchive } from './helpers/gnu-archive.mjs';
 import { fileURLToPath } from 'node:url';
 import { assertX86Elf, digest, identity, packageCross, readNativeTree, validateGnuSysroot } from '../producer/clang-browser/cross/package.mjs';
 import { assertStaticExecutable, createCrossToolRunner, qualifyCross } from '../producer/clang-browser/cross/qualify.mjs';
@@ -29,11 +30,7 @@ function elf(type = 1, machine = 62) {
 	}
 	return bytes;
 }
-function archive(bytes = elf()) {
-	const header = Buffer.alloc(60, 32);
-	header.write('member.o/'); header.write(String(bytes.length), 48); header.write('`\n', 58);
-	return Buffer.concat([Buffer.from('!<arch>\n'), header, bytes, Buffer.alloc(bytes.length % 2)]);
-}
+const archive = (bytes = elf()) => gnuArchive(bytes);
 function gnuFixture() {
 	const gcc = 'usr/lib/gcc/x86_64-linux-gnu/14';
 	const cpp = 'usr/include/c++/14';
@@ -239,6 +236,34 @@ test('validates optional runtime archives in the x86-64 library search paths', (
 	}
 });
 
+test('GNU archive lookup requires a first-member symbol index with valid member offsets', () => {
+	const fixture = gnuFixture();
+	const library = fixture.files.find(file => file.path.endsWith('/libgcc.a'));
+	const read = () => validateGnuSysroot(fixture.files, fixture.provenance);
+	const magic = Buffer.from('!<arch>\n');
+	const object = archiveMember('member.o/', elf());
+	library.bytes = Buffer.concat([magic, object]);
+	assert.throws(read, /libgcc.*no GNU symbol index/);
+	// A long filename table alone cannot satisfy the linker.
+	const filenames = archiveMember('//', Buffer.from('long-object-name.o/\n'));
+	library.bytes = Buffer.concat([magic, filenames, object]);
+	assert.throws(read, /no GNU symbol index/);
+	for (const [name, width] of [['/', 4], ['/SYM64/', 8]]) {
+		const index = Buffer.alloc(2 * width + 4);
+		index[width - 1] = 1;
+		index.write('sym\0', 2 * width);
+		const memberStart = magic.length + archiveMember(name, index).length + filenames.length;
+		const setOffset = value => width === 4 ? index.writeUInt32BE(value, width) : index.writeBigUInt64BE(BigInt(value), width);
+		const build = () => Buffer.concat([magic, archiveMember(name, index), filenames, object]);
+		setOffset(memberStart);
+		library.bytes = build();
+		read();
+		setOffset(memberStart + 1);
+		library.bytes = build();
+		assert.throws(read, /symbol index points outside archive members/);
+	}
+});
+
 test('GNU fat LTO archive members retain native code while slim members require a plugin', async (t) => {
 	const directory = await temporary(t);
 	const compiler = 'x86_64-linux-gnu-gcc';
@@ -285,6 +310,48 @@ test('GNU libm GROUP scripts resolve only present x86 static archives', () => {
 	for (const reference of ['../../../../outside.a', '=/../outside.a', '$SYSROOT/../outside.a', '-l:../outside.a']) {
 		library.bytes = Buffer.from(`INPUT(${reference})`);
 		assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Unsafe/);
+	}
+});
+
+test('GNU linker scripts validate groups and search inputs in target linker order', () => {
+	const { files, provenance } = gnuFixture();
+	const script = files.find(file => file.path.endsWith('/libm.a'));
+	const gcc = 'usr/lib/gcc/x86_64-linux-gnu/14';
+	const system = 'usr/lib/x86_64-linux-gnu';
+	const remote = { path: `${gcc}/libhelper.a`, bytes: archive() };
+	const local = { path: `${system}/libhelper.a`, bytes: archive() };
+	files.push(remote, { path: `${gcc}/object with space.o`, bytes: elf() });
+	function validate(source) {
+		script.bytes = Buffer.from(source);
+		return validateGnuSysroot(files, provenance);
+	}
+	validate('# ordinary GNU script\nGROUP(libhelper.a)');
+	validate('GROUP # target libraries\n (libhelper.a)');
+	validate('OUTPUT_FORMAT( # target format\n "elf64-x86-64") INPUT(libhelper.a)');
+	validate('OUTPUT_FORMAT("elf64-x86-64") INPUT(AS_NEEDED(-lhelper) "object with space.o")');
+	validate('GROUP(/* runtime */ "libhelper.a" , -l:libhelper.a);');
+	files.push(local);
+	remote.bytes = archive(elf(1, 183));
+	// Plain names prefer their script's directory. Both -l forms prefer the
+	// first matching -L directory, even if the script has a local namesake.
+	validate('GROUP(libhelper.a)');
+	for (const input of ['-lhelper', '-l:libhelper.a']) {
+		assert.throws(() => validate(`GROUP(${input})`), /libhelper.*x86-64/);
+	}
+	remote.bytes = elf();
+	validate('INPUT(-lhelper)');
+	remote.bytes = elf(1, 183);
+	assert.throws(() => validate('INPUT(-lhelper)'), /libhelper.*x86-64/);
+	remote.bytes = elf(2);
+	assert.throws(() => validate('INPUT(-lhelper)'), /libhelper.*ELF type/);
+	remote.bytes = archive();
+	for (const malformed of [
+		'GROUP(libhelper.a', 'INPUT(libhelper.a))', 'GROUP((libhelper.a))',
+		'GROUP(libhelper.a AS_NEEDED())', 'INPUT( , libhelper.a)', 'INPUT(libhelper.a , )',
+		'GROUP(libhelper.a) /*', 'INPUT("libhelper.a)', 'INPUT(libhelper.a) libhelper.a'
+	]) assert.throws(() => validate(malformed), undefined, malformed);
+	for (const invalid of ['-lmissing', '"missing.o"', '-l:../libhelper.a']) {
+		assert.throws(() => validate(`INPUT(${invalid})`), /missing|Unsafe/);
 	}
 });
 

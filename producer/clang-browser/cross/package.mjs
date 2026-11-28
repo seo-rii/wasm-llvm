@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { deterministicTar } from '../scripts/package-language-sysroots.mjs';
 import { directoryIdentity } from '../scripts/build-provenance.mjs';
+import { assertGnuArchive } from './archive.mjs';
+import { libraryScriptInputs } from './linker-script.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
@@ -97,36 +99,6 @@ function assertNativeLtoFallback(bytes, label) {
 	}
 }
 
-function assertArchive(bytes, label, allowEmpty) {
-	assert.equal(bytes.subarray(0, 8).toString(), '!<arch>\n', `${label}: expected a regular static archive, not thin/LTO-only input`);
-	let offset = 8;
-	let objects = 0;
-	while (offset < bytes.length) {
-		assert(offset + 60 <= bytes.length, `${label}: truncated archive header`);
-		const header = bytes.subarray(offset, offset + 60);
-		assert.equal(header.subarray(58).toString(), '`\n', `${label}: bad archive header`);
-		const sizeText = header.subarray(48, 58).toString().trim();
-		assert(/^\d+$/.test(sizeText), `${label}: invalid member size`);
-		const size = Number(sizeText);
-		const name = header.subarray(0, 16).toString().trim();
-		assert(Number.isSafeInteger(size) && size <= bytes.length - offset - 60, `${label}: truncated archive member`);
-		let member = bytes.subarray(offset + 60, offset + 60 + size);
-		if (!['/', '//', '/SYM64/'].includes(name) && !name.startsWith('__.SYMDEF')) {
-			if (name.startsWith('#1/')) {
-				const nameSize = Number(name.slice(3));
-				assert(Number.isSafeInteger(nameSize) && nameSize >= 0 && nameSize < member.length, `${label}: bad BSD member name`);
-				member = member.subarray(nameSize);
-			}
-			const memberLabel = `${label}(${name})`;
-			assertX86Elf(member, memberLabel, 1);
-			assertNativeLtoFallback(member, memberLabel);
-			objects += 1;
-		}
-		offset += 60 + size + size % 2;
-	}
-	assert(offset === bytes.length && (objects > 0 || allowEmpty), `${label}: empty or malformed archive`);
-}
-
 export function validateProvenance(value) {
 	assert.equal(value.schemaVersion, 1, 'Unsupported GNU provenance schema');
 	assert.equal(value.target, 'x86_64-linux-gnu', 'GNU sysroot target must be x86_64-linux-gnu');
@@ -185,37 +157,45 @@ export function validateGnuSysroot(files, provenance) {
 	}
 	const checked = new Set();
 	const libraryDirectories = [gcc, 'usr/lib/x86_64-linux-gnu', 'lib/x86_64-linux-gnu'];
-	function resolveArchive(script, token) {
-		if (token.startsWith('-l:')) {
-			const filename = relativePath(token.slice(3));
-			for (const directory of libraryDirectories) {
-				const candidate = `${directory}/${filename}`;
-				if (entries.has(candidate)) return candidate;
-			}
-			assert.fail(`${script}: GNU sysroot is missing ${token} in the target library paths`);
+	function resolveInput(script, { name, library }) {
+		let directories = libraryDirectories;
+		let filename;
+		if (library) {
+			filename = name.startsWith('-l:') ? relativePath(name.slice(3)) : `lib${relativePath(name.slice(2))}.a`;
+		} else {
+			const target = name.replace(/^(?:=|\$SYSROOT)(?=\/)/, '');
+			if (target.startsWith('/')) return relativePath(target.slice(1));
+			filename = target;
+			directories = [path.posix.dirname(script), ...libraryDirectories];
 		}
-		const target = token.replace(/^(?:=|\$SYSROOT)(?=\/)/, '');
-		return relativePath(target.startsWith('/') ? target.slice(1) : path.posix.join(path.posix.dirname(script), target));
+		for (const directory of directories) {
+			const candidate = relativePath(path.posix.join(directory, filename));
+			if (entries.has(candidate)) return candidate;
+		}
+		assert.fail(`${script}: GNU sysroot is missing ${name} in the target library paths`);
 	}
 
 	function checkLibrary(name, active = new Set(), allowEmpty = false) {
 		if (checked.has(name)) return;
 		assert(!active.has(name), `Recursive library script: ${name}`);
 		const bytes = required(name);
-		if (bytes.subarray(0, 8).toString() === '!<arch>\n') assertArchive(bytes, name, allowEmpty);
-		else {
-			// glibc's libm.a can be a GROUP script referring to libm-*.a and libmvec.a.
-			const text = bytes.toString('utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-			assert(/\b(?:GROUP|INPUT)\s*\(/.test(text), `${name}: not a static archive or supported GNU linker script`);
-			const tokens = text.match(/[^\s(),;]+/g) || [];
-			let references = 0;
-			for (const token of tokens) {
-				if (['GROUP', 'INPUT', 'AS_NEEDED', 'OUTPUT_FORMAT', 'elf64-x86-64'].includes(token)) continue;
-				assert(token.endsWith('.a'), `${name}: unsupported linker-script token ${token}`);
-				checkLibrary(resolveArchive(name, token), new Set([...active, name]), allowEmpty);
-				references += 1;
+		// A script can name a relocatable with an archive suffix (Debian libmcheck.a).
+		// Validate the input by content without counting it as a top-level runtime archive.
+		if (active.size && bytes.length >= 4 && bytes.readUInt32BE(0) === 0x7f454c46) {
+			assertX86Elf(bytes, name, 1);
+			assertNativeLtoFallback(bytes, name);
+			return;
+		}
+		if (bytes.subarray(0, 8).toString() === '!<arch>\n') {
+			assertGnuArchive(bytes, name, allowEmpty, (member, label) => {
+				assertX86Elf(member, label, 1);
+				assertNativeLtoFallback(member, label);
+			});
+		} else {
+			const ancestors = new Set([...active, name]);
+			for (const input of libraryScriptInputs(bytes, name)) {
+				checkLibrary(resolveInput(name, input), ancestors, allowEmpty);
 			}
-			assert(references > 0, `${name}: empty library script`);
 		}
 		checked.add(name);
 	}
