@@ -35,7 +35,7 @@ async function fixture(t) {
   const gcc = 'usr/lib/gcc/x86_64-linux-gnu/16', cpp = 'usr/include/c++/16';
   const files = [
     'usr/include/stdio.h', 'usr/include/stdlib.h', 'usr/include/features.h',
-    'usr/include/limits.h', 'usr/include/stdint.h', `${cpp}/vector`,
+    'usr/include/limits.h', 'usr/include/stdint.h', 'usr/include/stdc-predef.h', `${cpp}/vector`,
     `${cpp}/ext/pb_ds/assoc_container.hpp`, `${cpp}/ext/pb_ds/detail/rb_tree_map_/rb_tree_.hpp`,
     `${cpp}/ext/pb_ds/detail/tree_policy/order_statistics_imp.hpp`,
     'usr/include/x86_64-linux-gnu/c++/16/bits/c++config.h',
@@ -61,7 +61,7 @@ async function fixture(t) {
     ['Js', 'mjs', Buffer.from('export default () => { throw new Error("fixture is not a compiler"); };')],
     ['Wasm', 'wasm', Buffer.from('0061736d01000000', 'hex')]
   ]) { await write(compiler, `${name}.${extension}`, bytes); modules[`${name}${suffix}`] = identity(bytes); }
-  const receipt = { schemaVersion: 1, kind: 'gcc-build-receipt', gccVersion: '16.2.0',
+  const receipt = { schemaVersion: 1, kind: 'gcc-build-receipt', gccVersion: '16.2.0', binutilsVersion: '2.45.1',
     host: 'wasm32-emscripten', target: 'x86_64-linux-gnu', modules,
     sourcesLockSha256: digest(await fs.readFile(path.join(producer, 'sources.lock.json'))),
     sourcePatches: Object.entries(JSON.parse(await fs.readFile(path.join(producer, 'sources.lock.json'))).sources)
@@ -139,8 +139,8 @@ test('target libraries must match the actual GCC version', async t => {
   await assert.rejects(packageGcc(input), /must match the compiler version/);
 });
 
-for (const name of ['usr/include/limits.h', 'usr/include/stdint.h']) {
-  test(`the GCC wrappers require target ${name} before packaging`, async t => {
+for (const name of ['usr/include/limits.h', 'usr/include/stdint.h', 'usr/include/stdc-predef.h']) {
+  test(`GCC requires target ${name} before packaging`, async t => {
     const input = await fixture(t);
     await fs.rm(path.join(input.sysroot, name));
     await assert.rejects(packageGcc(input), new RegExp(`GNU sysroot is missing ${name.replaceAll('.', '\\.')}`));
@@ -157,6 +157,13 @@ test('source pins and resource headers are bound to the build receipt', async t 
   await fs.writeFile(input.receiptPath, JSON.stringify(input.receipt));
   await fs.appendFile(path.join(input.compiler, 'resource-include/immintrin.h'), 'changed');
   await assert.rejects(packageGcc(input), /headers changed/);
+});
+
+test('a compiler receipt must identify the pinned binutils', async t => {
+  const input = await fixture(t);
+  input.receipt.binutilsVersion = '2.42';
+  await fs.writeFile(input.receiptPath, JSON.stringify(input.receipt));
+  await assert.rejects(packageGcc(input), /binutils version differs/);
 });
 
 test('a compiler receipt must record the source patch identity, including an empty set', async t => {

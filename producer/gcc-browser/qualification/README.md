@@ -21,9 +21,15 @@ The first required gate is preprocessed `.ii` input through the actual
 unwinding, GNU `as`, GNU `ld`, ELF64 x86-64 objects and static executables. Baseline
 executables run in separate native Linux x86-64 processes with fixed stdin and
 checked stdout. They are never passed to a Wasm loader. Native GCC output is also
-compared when the selected compiler is installed; the report records whether its
-exact version matches the Wasm GCC version. A missing comparison compiler is
-recorded explicitly; it does not bypass the mandatory native execution gate.
+compared when the selected compiler matches the exact Wasm GCC version. The
+report records a skipped comparison and its reason for a missing or mismatched
+compiler. The producer CI passes `--require-native-comparison` to require a
+matching reference compiler for every executable. Local runs still execute each
+Wasm-compiled ELF and check its stdout.
+
+For ordinary C and C++, the adapter allows GCC to implicitly read the sysroot's
+`stdc-predef.h` before the first source token, preserving PCH eligibility. The suite checks the resulting glibc macros in
+both languages. Preprocessed inputs use `-fpreprocessed` without a preinclude.
 
 The shared `c-libm-executable` fixture calls `sin` on a value read from stdin and
 checks the result after static linking. The Node producer suite also requires C11
@@ -35,7 +41,8 @@ option. The qualification report lists both Node atomic cases individually.
 `bits/stdc++.h` in the configured include order and compiles `ps.cpp` with its PCH
 first on the include path. `-H` must report the PCH as loaded (`! /pch/bits/stdc++.h.gch`) and the
 result must be byte-identical to `ps-assembly` or `ps-object`. The Node report
-compares the source compilation times of the two front ends.
+compares the source compilation times of the two front ends. Bundles which omit
+`capabilities.precompiledHeaders: true` record these two cases as skipped.
 
 `target-threads.cpp` requires the compiler's predefined `__STDCPP_THREADS__`
 macro to equal `1`, then uses `std::thread` and a nontrivial `thread_local`
@@ -53,6 +60,14 @@ the fixed-count loop inside the optimize region, restoration of the loop after
 `pop_options`, and SSE without AVX in a subsequent O3 region. GNU `objdump` checks
 the actual object instructions. The separate explicit AVX2/FMA profile must
 compile intrinsics that are rejected under the baseline profile.
+
+`avx10-minmax.c` tests a source-level AVX10.2 pragma on GCC 16. Its function
+must contain `vminmaxps`; the bundled GNU as must assemble it into an ELF64
+x86-64 object. AVX10.2 execution is outside this test. For archived bundles
+whose pinned compiler receipt identifies GNU as 2.42, the same object request
+must fail in the assembler with a diagnostic naming that instruction. GCC 13
+predates the intrinsic. The supported command-line CPU profiles are `x86-64`
+and `avx2-fma`; source pragmas can select instructions beyond those profiles.
 
 `pragma-static-init.cpp` and `pragma-deferred-template.cpp` are the original
 upstream regression cases for PR109753 and PR115403. They check that artificial

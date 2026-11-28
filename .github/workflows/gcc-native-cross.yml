@@ -150,7 +150,7 @@ jobs:
             --output "$RUNNER_TEMP/gcc-bundle"
           node producer/gcc-browser/qualification/run.mjs \
             --bundle "$RUNNER_TEMP/gcc-bundle" \
-            --output "$RUNNER_TEMP/gcc-node-qualification" --native-cxx g++-16 --native-cc gcc-16
+            --output "$RUNNER_TEMP/gcc-node-qualification" --native-cxx g++-16 --native-cc gcc-16 --require-native-comparison
       - uses: actions/upload-artifact@v4
         with:
           name: gcc-wasm-cross-bundle-${{ github.sha }}

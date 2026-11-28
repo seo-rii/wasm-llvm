@@ -46,6 +46,27 @@ export const cases = [
 		expectFailure: true }
 ];
 
+// The pinned Chromium consumer predates these driver and filesystem fixes.
+export const nodeInputCases = [
+	...['c', 'cpp'].map(language => ({
+		id: `${language}-glibc-predefs`, fixture: 'glibc-predefs.h',
+		request: { language, emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: language === 'c' ? 'c17' : 'c++20' }
+	})),
+	{ id: 'include-traversal', fixture: 'include-traversal.c',
+		request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c17' }, stdin: '', stdout: '' }
+];
+
+// GCC 16 provides this intrinsic. Older GCC 16 bundles with GAS 2.42
+// emit the mnemonic but report an assembler error on the object request.
+export function avx10Cases(binutilsVersion) {
+	const request = { language: 'c', cpu: 'x86-64', optimization: '2', standard: 'gnu17' };
+	return [
+		{ id: 'avx10-minmax-assembly', fixture: 'avx10-minmax.c', request: { ...request, emit: 'assembly' }, check: 'avx10-minmax' },
+		{ id: 'avx10-minmax-object', fixture: 'avx10-minmax.c', request: { ...request, emit: 'object' },
+			...(binutilsVersion === '2.42' ? { expectFailure: true, check: 'legacy-as-minmax-reject' } : {}) }
+	];
+}
+
 // The pinned Chromium consumer predates static libatomic support. The producer
 // runs both cases on every qualification, alongside the shared Chromium cases.
 export const atomicCases = [

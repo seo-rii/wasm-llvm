@@ -17,7 +17,7 @@ async function syntheticInvocation(t, behavior) {
 		const files = new Map();
 		return {
 			HEAPU8: new Uint8Array(1),
-			FS: { mkdirTree() {}, chdir() {},
+			FS: { mkdirTree() {}, chdir() {}, lookupPath() {},
 				writeFile(name, bytes) { files.set(name, bytes); },
 				readFile(name) { return files.get(name); } },
 			callMain() {

@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
+import { requireDirectoryTraversal } from './directory-traversal.mjs';
 
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
@@ -53,8 +54,7 @@ export async function loadBundle(directory, expectedManifestSha256) {
 	assert.equal(manifest.resourceDir, `${manifest.gccInstallation}/include`);
 	assert(/^\d+$/.test(manifest.gnu.gccVersion));
 	assert.deepEqual(manifest.cpuProfiles, ['x86-64', 'avx2-fma']);
-	const assetPath = async (name) => {
-		const asset = manifest.assets[name];
+	const assetPath = async (name, asset = manifest.assets[name]) => {
 		assert(asset && typeof asset.path === 'string' && asset.path.split('/').every((part) => part && part !== '.' && part !== '..') &&
 			!/[\\\x00-\x1f\x7f:]/.test(asset.path), `Invalid ${name} path`);
 		const resolved = await fs.realpath(path.join(root, asset.path));
@@ -62,10 +62,10 @@ export async function loadBundle(directory, expectedManifestSha256) {
 		assert(Number.isSafeInteger(asset.bytes) && asset.bytes > 0 && /^[a-f0-9]{64}$/.test(asset.sha256), `Invalid ${name} identity`);
 		return resolved;
 	};
-	const readAsset = async (name) => {
-		const bytes = await fs.readFile(await assetPath(name));
-		assert.equal(bytes.length, manifest.assets[name].bytes, `${name} size mismatch`);
-		assert.equal(sha256(bytes), manifest.assets[name].sha256, `${name} SHA-256 mismatch`);
+	const readAsset = async (name, asset = manifest.assets[name]) => {
+		const bytes = await fs.readFile(await assetPath(name, asset));
+		assert.equal(bytes.length, asset.bytes, `${name} size mismatch`);
+		assert.equal(sha256(bytes), asset.sha256, `${name} SHA-256 mismatch`);
 		return bytes;
 	};
 	return { root, manifest, manifestSha256, assetPath, readAsset };
@@ -105,6 +105,7 @@ export async function compileReal(bundle, request) {
 				print: stageOut.write, printErr: stageErr.write,
 				onExit: (status) => { exitCode = status; } });
 			assert(module.FS && typeof module.callMain === 'function', `${tool} lacks the Emscripten runtime contract`);
+			requireDirectoryTraversal(module.FS);
 			module.FS.mkdirTree('/work');
 			module.FS.mkdirTree('/tmp');
 			module.FS.mkdirTree('/sysroot');
@@ -176,7 +177,11 @@ export async function compileReal(bundle, request) {
 		`/sysroot/usr/include/c++/${manifest.gnu.gccVersion}/backward`
 	] : [];
 	includes.push(manifest.resourceDir, '/sysroot/usr/include/x86_64-linux-gnu', '/sysroot/usr/include');
-	const ccFlags = (pch) => ['-quiet', '-imultiarch', 'x86_64-linux-gnu', '-isysroot', '/sysroot', '-nostdinc',
+	// GCC handles glibc's stdc-predef.h before the source, preserving PCH eligibility.
+	// -nostdinc suppresses that hook; an explicit -include makes GCC skip the PCH.
+	const useDefaultPreinclude = !request.preprocessed && entries.has('usr/include/stdc-predef.h');
+	const ccFlags = (pch) => ['-quiet', '-imultiarch', 'x86_64-linux-gnu', '-isysroot', '/sysroot',
+		...(useDefaultPreinclude ? [] : ['-nostdinc']),
 		...(pch ? ['-H', '-Winvalid-pch', '-isystem', '/pch'] : []),
 		...includes.flatMap((name) => ['-isystem', name]), `-std=${standard}`, `-O${optimization}`, ...cpuArgs,
 		'-fno-pie', '-fno-pic', '-fasynchronous-unwind-tables', ...(language === 'cpp' ? ['-fexceptions', '-D_GNU_SOURCE'] : []),
