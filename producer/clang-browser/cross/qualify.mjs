@@ -11,6 +11,32 @@ import { assertStaticExecutable } from '../../gcc-browser/qualification/assertio
 
 export { assertStaticExecutable };
 
+// Node WASI resolves away dot components before checking their predecessors.
+// Check each discarded predecessor through the same WASI fd and capabilities.
+function checkDirectoryPrefixes(wasi, memory, fd, pointer, length) {
+	pointer >>>= 0; length >>>= 0;
+	if (pointer + length > memory.byteLength || memory.byteLength < 64) return 0;
+	// latin1 keeps string indices identical to byte offsets, including UTF-8 names.
+	const bytes = Buffer.from(memory, pointer, length);
+	if (!bytes.includes('/.')) return 0;
+	const raw = bytes.toString('latin1');
+	if (raw.startsWith('/') || raw.includes('\0')) return 0;
+	for (const match of raw.matchAll(/(?:^|\/)\.\.?(?=\/|$)/gu)) {
+		if (match.index === 0) continue;
+		// Preview 1 filestat_t is 64 bytes, with filetype at offset 16. Borrow
+		// guest memory only during the synchronous native call and restore it
+		// before the next import or any guest instruction can observe it.
+		const scratch = pointer >= 64 ? 0 : memory.byteLength - 64;
+		const stat = new Uint8Array(memory, scratch, 64), saved = stat.slice();
+		try {
+			const ret = wasi.path_filestat_get(fd, 1, pointer, match.index, scratch);
+			if (ret) return ret;
+			if (stat[16] !== 3) return 54; // directory / ENOTDIR
+		} finally { stat.set(saved); }
+	}
+	return 0;
+}
+
 // Kept separate so the real WASI dispatch path can be tested without claiming
 // that a host-only fixture provides the X86 backend required by qualifyCross.
 export function createCrossToolRunner({ modules, root, compilerPath, linkerPath, dispatches }) {
@@ -44,8 +70,19 @@ export function createCrossToolRunner({ modules, root, compilerPath, linkerPath,
 			}
 			return values;
 		};
+		const preview = wasi.wasiImport;
 		const imports = {
-			...wasi.getImportObject(),
+			wasi_snapshot_preview1: {
+				...preview,
+				path_open(fd, flags, ptr, len, ...rest) {
+					return checkDirectoryPrefixes(preview, instance.exports.memory.buffer, fd, ptr, len) ||
+						preview.path_open(fd, flags, ptr, len, ...rest);
+				},
+				path_filestat_get(fd, flags, ptr, len, stat) {
+					return checkDirectoryPrefixes(preview, instance.exports.memory.buffer, fd, ptr, len) ||
+						preview.path_filestat_get(fd, flags, ptr, len, stat);
+				}
+			},
 			wasm_idle_process_v1: { initial_cwd(pointer, capacity) {
 				pointer >>>= 0; capacity >>>= 0;
 				const memory = new Uint8Array(instance.exports.memory.buffer);
@@ -129,7 +166,15 @@ export async function qualifyCross(bundleArgument, outputArgument) {
 		writeFileSync(path.join(root, destination), bytes[name], { flag: 'wx' });
 		chmodSync(path.join(root, destination), 0o700);
 	}
+	mkdirSync(path.join(root, 'work', 'include-dir'));
 	const sources = {
+		'directory-lookup.c': [
+			'#if __has_include("missing/../main.c") || __has_include("broken.cpp/../main.c")',
+			'#error header lookup crossed a missing directory or regular file',
+			'#endif',
+			'#include "include-dir/../main.c"',
+			''
+		].join('\n'),
 		'main.c': '#include <stdio.h>\n#include <math.h>\n_Static_assert(sizeof(long)==8,"LP64");\nint main(void){ double value; if(scanf("%lf", &value)!=1) return 2; printf("%.6f\\n", sin(value)); return 0; }\n',
 		'ps.cpp': '#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace __gnu_pbds;\nstatic_assert(sizeof(void*)==8 && __LDBL_MANT_DIG__==64);\nint main(){ tree<int,null_type,std::less<int>,rb_tree_tag,tree_order_statistics_node_update> s; s.insert(42); try { throw 7; } catch(int n){ std::cout << *s.find_by_order(0)+n; } }\n',
 		'avx.cpp': '#include <immintrin.h>\n__attribute__((noinline,used)) __m256i sum(__m256i a,__m256i b){ return _mm256_add_epi32(a,b); }\nint main(){return 0;}\n',
@@ -167,6 +212,7 @@ export async function qualifyCross(bundleArgument, outputArgument) {
 		assert.match(assembly, /%ymm/);
 		command('avx-link', [...common, '-march=x86-64-v3', '-O2', 'avx.cpp', '-o', 'avx.elf']);
 		assertStaticExecutable(readFileSync(path.join(root, 'work/avx.elf')));
+		command('header-directory-lookup', [...common, '-fsyntax-only', 'directory-lookup.c']);
 		command('diagnostic', [...common, '-fsyntax-only', 'broken.cpp'], false);
 		assert(dispatches.some((dispatch) => dispatch.kind === 'lld' && dispatch.code === 0), 'No real ELF linker dispatch was observed');
 		passed = true;
