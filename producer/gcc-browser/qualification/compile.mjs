@@ -208,16 +208,17 @@ export async function compileReal(bundle, request) {
 	if (exitCode === 0 && emit === 'executable') {
 		const gcc = manifest.gccInstallation;
 		const lib = '/sysroot/usr/lib/x86_64-linux-gnu';
+		const baseLib = '/sysroot/lib/x86_64-linux-gnu';
 		const optionalLibraries = [
-			...(language === 'cpp' ? [[gcc, 'stdc++exp'], [gcc, 'stdc++fs']] : []),
-			[gcc, 'atomic'], [lib, 'resolv']
-		].filter(([directory, library]) => {
+			...(language === 'cpp' ? [['stdc++exp', gcc], ['stdc++fs', gcc]] : []),
+			['atomic', gcc], ['resolv', lib, baseLib]
+		].filter(([library, ...directories]) => directories.some(directory => {
 			const entry = entries.get(path.posix.relative(manifest.sysrootPath, `${directory}/lib${library}.a`));
 			return entry && !entry.directory;
-		}).map(([, library]) => `-l${library}`);
+		})).map(([library]) => `-l${library}`);
 		const ldArgs = ['-m', 'elf_x86_64', '--sysroot=/sysroot', '-static', '-o', '/work/main.elf',
 			`${lib}/crt1.o`, `${lib}/crti.o`, `${gcc}/crtbeginT.o`, '/work/main.o',
-			`-L${gcc}`, `-L${lib}`, '-L/sysroot/lib/x86_64-linux-gnu',
+			`-L${gcc}`, `-L${lib}`, `-L${baseLib}`,
 			'--start-group', ...(language === 'cpp' ? ['-lstdc++'] : []), '-lm',
 			...optionalLibraries,
 			'-lgcc', '-lgcc_eh', '-lc', '--end-group',

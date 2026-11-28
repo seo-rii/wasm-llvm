@@ -206,10 +206,11 @@ export async function qualifyCross(bundleArgument, outputArgument) {
 		assertStaticExecutable(readFileSync(path.join(root, 'work/main.elf')));
 		command('cpp', [...common, '--driver-mode=g++', '-march=x86-64', '-std=gnu++20', '-stdlib=libstdc++', '-O2', 'ps.cpp', '-o', 'ps.elf']);
 		assertStaticExecutable(readFileSync(path.join(root, 'work/ps.elf')));
-		command('avx-assembly', [...common, '-march=x86-64-v3', '-O2', '-S', 'avx.cpp', '-o', 'avx.s']);
+		command('avx-assembly', [...common, '-march=x86-64-v3', '-O2', '-S', '-fno-addrsig', 'avx.cpp', '-o', 'avx.s']);
 		const assembly = readFileSync(path.join(root, 'work/avx.s'), 'utf8');
 		assert.match(assembly, /vpaddd/);
 		assert.match(assembly, /%ymm/);
+		assert.doesNotMatch(assembly, /^\s*\.addrsig(?:_sym)?\b/m);
 		command('avx-link', [...common, '-march=x86-64-v3', '-O2', 'avx.cpp', '-o', 'avx.elf']);
 		assertStaticExecutable(readFileSync(path.join(root, 'work/avx.elf')));
 		command('header-directory-lookup', [...common, '-fsyntax-only', 'directory-lookup.c']);
