@@ -42,9 +42,18 @@ for (const archive of ['clang.tar.xz', 'gcc.tar.xz', 'gcc13.tar.xz']) {
 			if (record.bytes !== undefined) assert.equal(actual.length, record.bytes, record.path);
 			assert.equal(digest(actual), record.sha256, record.path);
 		}
-		const sysroot = readTarEntries(member(manifest.assets.sysroot.path));
+		const sysrootBytes = member(manifest.assets.sysroot.path);
+		const sysroot = readTarEntries(sysrootBytes);
 		const files = [...sysroot.values()].filter((entry) => !entry.directory);
 		assert.equal(files.length, manifest.fileCount, 'sysroot fileCount');
+		const stacktracePath = `${manifest.gccInstallation.slice('/sysroot/'.length)}/libstdc++exp.a`;
+		const stacktrace = sysroot.get(stacktracePath);
+		assert.ok(stacktrace && !stacktrace.directory && stacktrace.size > 0, stacktracePath);
+		const receipt = JSON.parse(member('gnu-provenance.json'));
+		const record = receipt.files.find((entry) => entry.path === stacktracePath);
+		assert.ok(record, `missing GNU provenance for ${stacktracePath}`);
+		assert.equal(record.bytes, stacktrace.size);
+		assert.equal(record.sha256, digest(sysrootBytes.subarray(stacktrace.offset, stacktrace.offset + stacktrace.size)));
 		if (manifest.compiler.family === 'gcc') {
 			const unwind = sysroot.get(`${manifest.resourceDir.slice('/sysroot/'.length)}/unwind.h`);
 			assert.ok(unwind && !unwind.directory && unwind.size > 0, 'missing GCC unwind.h');
