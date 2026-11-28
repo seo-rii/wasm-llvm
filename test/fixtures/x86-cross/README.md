@@ -7,9 +7,9 @@ and notices. The manifest digests identify the inputs independently of the tar c
 
 | Archive | Compiler | Manifest | Manifest SHA-256 |
 | --- | --- | --- | --- |
-| `clang.tar.xz` | Clang/LLD 22.1.8 | `cross-toolchain.v1.json` | `9e7e96e411b381fb23943e159f46a24d8c95812ba3b86746e16a6573f4d6b6ac` |
+| `clang.tar.xz` | Clang/LLD 22.1.8 | `cross-toolchain.v1.json` | `dbb80dbe1fc999b4d927585d54922d3a5402cbd781ffb45f558d2d06738a5fc3` |
 | `gcc.tar.xz` | GCC 16.2.0 | `gcc-toolchain.v1.json` | `b241298ff39c2d8b9fa572062b5f4c21863f6ff7bbd2b6b61809c2e2748cc5f3` |
-| `gcc13.tar.xz` | GCC 13.3.0 | `gcc-toolchain.v1.json` | `a8f80b80922e21519fa7b99626dea6cf18dbe94b4df8289ac5730c02d4acacdd` |
+| `gcc13.tar.xz` | GCC 13.3.0 | `gcc-toolchain.v1.json` | `78dde7f8f1088d52ecfd05d11cec721c3ac211d45f2fa7e6c222abab885a3705` |
 
 The GCC 13 compiler modules and build receipt come from the
 [GCC 13 producer run](https://github.com/seo-rii/wasm-llvm/actions/runs/40202085573).
@@ -18,8 +18,13 @@ Its sysroot also includes the target `unwind.h` from Ubuntu's
 and the packaged inventory record the header digest. Its source lock and two
 GCC patches accompany the compiler.
 
+The GCC 13 and Clang fixtures include the C++23 stacktrace support archive
+from Ubuntu's `libstdc++-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb`.
+The SHA-256 of its `libstdc++exp.a` is
+`a52b9d446117215e82d524d5b7a265b92985abd26e0679fa93b2b33a176954ee`.
+
 The Clang input is the `x86-cross-bundle-93f7bda4da6c5543702173cd6e1e8148043036b5`
-CI artifact. The fixture manifest counts all 2,604 target and resource files.
+CI artifact. The fixture manifest counts all 2,605 target and resource files.
 Its receipt identifies the LLVM revision, patches and SDKs.
 The GCC 16 fixture combines the [GCC 16 compiler build](https://github.com/seo-rii/wasm-llvm/actions/runs/46007423138)
 with the [Ubuntu GNU sysroot](https://github.com/seo-rii/wasm-llvm/actions/runs/46005445937)
