@@ -224,6 +224,28 @@ test('GNU sysroot validation rejects WASI runtime objects, compatibility shims a
 	assert.throws(() => validateGnuSysroot(fixture.files.filter((file) => !file.path.endsWith('rb_tree_.hpp')), fixture.provenance), /missing/);
 });
 
+test('GNU fat LTO archive members retain native code while slim members require a plugin', async (t) => {
+	const directory = await temporary(t);
+	const compiler = 'x86_64-linux-gnu-gcc';
+	if (spawnSync(compiler, ['--version']).error?.code === 'ENOENT') {
+		t.skip('requires the native GNU x86-64 compiler');
+		return;
+	}
+	const fixture = gnuFixture();
+	const runtime = fixture.files.find((file) => file.path.endsWith('/libgcc.a'));
+	const object = path.join(directory, 'member.o');
+	// Include the metadata prefix in ordinary data to exercise the non-LTO case.
+	const input = 'const char *sample(void) { return ".gnu.lto_.lto.123"; }';
+	for (const flags of [[], ['-flto', '-ffat-lto-objects'], ['-flto', '-fno-fat-lto-objects']]) {
+		const result = spawnSync(compiler, [...flags, '-x', 'c', '-c', '-', '-o', object], { input, encoding: 'utf8' });
+		assert.equal(result.status, 0, result.stderr);
+		runtime.bytes = archive(await fs.readFile(object));
+		if (flags.includes('-fno-fat-lto-objects')) {
+			assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /libgcc.*slim GNU LTO/);
+		} else validateGnuSysroot(fixture.files, fixture.provenance);
+	}
+});
+
 test('GNU libm GROUP scripts resolve only present x86 static archives', () => {
 	const fixture = gnuFixture();
 	const library = fixture.files.find((file) => file.path.endsWith('/libm.a'));

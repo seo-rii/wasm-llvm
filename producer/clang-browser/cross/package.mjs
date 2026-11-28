@@ -65,6 +65,38 @@ export function assertX86Elf(bytes, label, expectedType) {
 	if (expectedType !== undefined) assert.equal(bytes.readUInt16LE(16), expectedType, `${label}: wrong ELF type`);
 }
 
+// GCC stores the slim/fat flag in gcc/lto-streamer.h's lto_section header.
+const ltoHeaderPrefix = Buffer.from('.gnu.lto_.lto');
+
+function assertNativeLtoFallback(bytes, label) {
+	// Most objects contain no GCC LTO metadata.
+	if (!bytes.includes(ltoHeaderPrefix)) return;
+	const sectionTable = Number(bytes.readBigUInt64LE(40));
+	if (!sectionTable) return;
+	const stride = bytes.readUInt16LE(58);
+	assert(stride >= 64 && sectionTable + stride <= bytes.length, `${label}: invalid ELF section header`);
+	const count = bytes.readUInt16LE(60) || Number(bytes.readBigUInt64LE(sectionTable + 32));
+	let namesIndex = bytes.readUInt16LE(62);
+	if (namesIndex === 0xffff) namesIndex = bytes.readUInt32LE(sectionTable + 40);
+	assert(sectionTable + count * stride <= bytes.length && namesIndex < count, `${label}: invalid ELF section table`);
+	const contents = (header) => {
+		const offset = Number(bytes.readBigUInt64LE(header + 24));
+		const size = Number(bytes.readBigUInt64LE(header + 32));
+		assert(offset + size <= bytes.length, `${label}: truncated ELF section`);
+		return bytes.subarray(offset, offset + size);
+	};
+	const names = contents(sectionTable + namesIndex * stride);
+	for (let index = 1; index < count; index++) {
+		const header = sectionTable + index * stride;
+		const start = bytes.readUInt32LE(header);
+		const end = start + ltoHeaderPrefix.length;
+		if (!names.subarray(start, end).equals(ltoHeaderPrefix) || (names[end] !== 0 && names[end] !== 0x2e)) continue;
+		const metadata = contents(header);
+		assert(metadata.length >= 8, `${label}: truncated GNU LTO header`);
+		assert.equal(metadata[4], 0, `${label}: slim GNU LTO object requires a linker plugin`);
+	}
+}
+
 function assertArchive(bytes, label) {
 	assert.equal(bytes.subarray(0, 8).toString(), '!<arch>\n', `${label}: expected a regular static archive, not thin/LTO-only input`);
 	let offset = 8;
@@ -85,7 +117,9 @@ function assertArchive(bytes, label) {
 				assert(Number.isSafeInteger(nameSize) && nameSize >= 0 && nameSize < member.length, `${label}: bad BSD member name`);
 				member = member.subarray(nameSize);
 			}
-			assertX86Elf(member, `${label}(${name})`, 1);
+			const memberLabel = `${label}(${name})`;
+			assertX86Elf(member, memberLabel, 1);
+			assertNativeLtoFallback(member, memberLabel);
 			objects += 1;
 		}
 		offset += 60 + size + size % 2;
