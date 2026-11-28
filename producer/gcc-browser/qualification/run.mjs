@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readTarEntries } from '../../../scripts/lib/tar.mjs';
-import { atomicCases, avx10Cases, cases, nodeInputCases, runtimeLibraryCases } from './cases.mjs';
+import { atomicCases, avx10Cases, cases, nodeInputCases, runtimeLibraryCases, voidBuiltinCases } from './cases.mjs';
 import { assertCaseResult, assertStaticExecutable } from './assertions.mjs';
 import { loadBundle, sha256 } from './compile.mjs';
 
@@ -86,6 +86,10 @@ export async function qualify({ bundle: bundleDirectory, output, manifestSha256,
 			const receipt = bundle.manifest.provenance?.compilerReceipt;
 			if (receipt) evidence.binutilsVersion = JSON.parse(await bundle.readAsset('compilerReceipt', receipt)).binutilsVersion;
 			tests.push(...avx10Cases(evidence.binutilsVersion));
+		}
+		if (bundle.manifest.provenance?.sourcePatches?.some(patch =>
+			patch.source === 'gcc' && /^patches\/\d{4}-i386-void-builtins\.patch$/.test(patch.path))) {
+			tests.push(...voidBuiltinCases);
 		}
 		for (const test of tests) {
 			if (test.precompiledHeader && bundle.manifest.capabilities?.precompiledHeaders !== true) {

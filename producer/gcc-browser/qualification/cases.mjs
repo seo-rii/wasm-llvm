@@ -59,6 +59,17 @@ export const nodeInputCases = [
 		request: { language: 'c', emit: 'executable', cpu: 'x86-64', optimization: '2', standard: 'c17' }, stdin: '', stdout: '' }
 ];
 
+// These regressions exercise compilers built with the x86 void-builtin patch.
+export const voidBuiltinCases = [
+	{ id: 'c-pause-assembly', fixture: 'pause.c', check: 'pause',
+		request: { language: 'c', emit: 'assembly', cpu: 'x86-64', optimization: '2', standard: 'c17' } },
+	...['0', '2'].map(optimization => ({
+		id: `cpp-stop-token-O${optimization}`, fixture: 'stop-token.cpp',
+		request: { language: 'cpp', emit: 'executable', cpu: 'x86-64', optimization, standard: 'c++20' },
+		stdin: '', stdout: 'ok\n'
+	}))
+];
+
 // GCC 16 provides this intrinsic. Older GCC 16 bundles with GAS 2.42
 // emit the mnemonic but report an assembler error on the object request.
 export function avx10Cases(binutilsVersion) {

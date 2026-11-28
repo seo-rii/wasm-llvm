@@ -1,0 +1,20 @@
+Subject: [PATCH] i386: call void builtin generators without a destination
+
+All VOID_FTYPE_VOID entries in bdesc_special_args use an instruction
+generator taking no arguments. Passing an unused target selects the
+one-operand function pointer in insn_gen_fn::operator(). WebAssembly
+checks the indirect call signature and traps when expanding pause and
+other void builtins in this group.
+
+---
+--- a/gcc/config/i386/i386-expand.cc
++++ b/gcc/config/i386/i386-expand.cc
+@@ -14016,7 +14016,7 @@
+   switch ((enum ix86_builtin_func_type) d->flag)
+     {
+     case VOID_FTYPE_VOID:
+-      emit_insn (GEN_FCN (icode) (target));
++      emit_insn (GEN_FCN (icode) ());
+       return 0;
+     case VOID_FTYPE_UINT64:
+     case VOID_FTYPE_UNSIGNED:
