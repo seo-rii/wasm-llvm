@@ -184,6 +184,20 @@ export function validateGnuSysroot(files, provenance) {
 		if (name.endsWith('.o')) assertX86Elf(bytes, name, 1);
 	}
 	const checked = new Set();
+	const libraryDirectories = [gcc, 'usr/lib/x86_64-linux-gnu', 'lib/x86_64-linux-gnu'];
+	function resolveArchive(script, token) {
+		if (token.startsWith('-l:')) {
+			const filename = relativePath(token.slice(3));
+			for (const directory of libraryDirectories) {
+				const candidate = `${directory}/${filename}`;
+				if (entries.has(candidate)) return candidate;
+			}
+			assert.fail(`${script}: GNU sysroot is missing ${token} in the target library paths`);
+		}
+		const target = token.replace(/^(?:=|\$SYSROOT)(?=\/)/, '');
+		return relativePath(target.startsWith('/') ? target.slice(1) : path.posix.join(path.posix.dirname(script), target));
+	}
+
 	function checkLibrary(name, active = new Set(), allowEmpty = false) {
 		if (checked.has(name)) return;
 		assert(!active.has(name), `Recursive library script: ${name}`);
@@ -198,8 +212,7 @@ export function validateGnuSysroot(files, provenance) {
 			for (const token of tokens) {
 				if (['GROUP', 'INPUT', 'AS_NEEDED', 'OUTPUT_FORMAT', 'elf64-x86-64'].includes(token)) continue;
 				assert(token.endsWith('.a'), `${name}: unsupported linker-script token ${token}`);
-				const referenced = token.startsWith('/') ? token.slice(1) : path.posix.join(path.posix.dirname(name), token);
-				checkLibrary(relativePath(referenced), new Set([...active, name]), allowEmpty);
+				checkLibrary(resolveArchive(name, token), new Set([...active, name]), allowEmpty);
 				references += 1;
 			}
 			assert(references > 0, `${name}: empty library script`);

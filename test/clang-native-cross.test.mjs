@@ -268,8 +268,24 @@ test('GNU libm GROUP scripts resolve only present x86 static archives', () => {
 	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /missing.*libm-real/);
 	fixture.files.push({ path: 'usr/lib/x86_64-linux-gnu/libm-real.a', bytes: archive() });
 	validateGnuSysroot(fixture.files, fixture.provenance);
-	library.bytes = Buffer.from('INPUT(../../../../outside.a)');
-	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Unsafe/);
+	for (const reference of ['=/usr/lib/x86_64-linux-gnu/libm-real.a', '$SYSROOT/usr/lib/x86_64-linux-gnu/libm-real.a', '-l:libm-real.a']) {
+		library.bytes = Buffer.from(`INPUT (${reference})`);
+		validateGnuSysroot(fixture.files, fixture.provenance);
+	}
+	const gccArchive = { path: 'usr/lib/gcc/x86_64-linux-gnu/14/libm-real.a', bytes: archive(elf(1, 183)) };
+	fixture.files.push(gccArchive);
+	// The earlier -L directory supplies the exact-filename lookup.
+	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /libm-real.*x86-64/);
+	for (const reference of ['=/absent.a', '$SYSROOT/absent.a', '-l:absent.a']) {
+		library.bytes = Buffer.from(`GROUP (${reference})`);
+		assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /missing/);
+	}
+	library.bytes = Buffer.from('INPUT(-l:libm.a)');
+	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Recursive/);
+	for (const reference of ['../../../../outside.a', '=/../outside.a', '$SYSROOT/../outside.a', '-l:../outside.a']) {
+		library.bytes = Buffer.from(`INPUT(${reference})`);
+		assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Unsafe/);
+	}
 });
 
 test('installed-package provenance binds every normalized file byte', () => {
