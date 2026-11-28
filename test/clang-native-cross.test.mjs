@@ -224,6 +224,43 @@ test('GNU sysroot validation rejects WASI runtime objects, compatibility shims a
 	assert.throws(() => validateGnuSysroot(fixture.files.filter((file) => !file.path.endsWith('rb_tree_.hpp')), fixture.provenance), /missing/);
 });
 
+test('validates optional runtime archives in the x86-64 library search paths', () => {
+	const fixture = gnuFixture();
+	for (const name of ['usr/lib/gcc/x86_64-linux-gnu/14/libatomic.a', 'usr/lib/gcc/x86_64-linux-gnu/14/libstdc++exp.a',
+		'usr/lib/gcc/x86_64-linux-gnu/14/libstdc++fs.a', 'usr/lib/gcc/x86_64-linux-gnu/14/libsupc++.a',
+		'usr/lib/x86_64-linux-gnu/libresolv.a', 'lib/x86_64-linux-gnu/libresolv.a']) {
+		const entry = { path: name, bytes: archive(elf(1, 3)) };
+		const files = [...fixture.files, entry];
+		assert.throws(() => validateGnuSysroot(files, fixture.provenance), /expected little-endian ELF64 for x86-64/);
+		entry.bytes = archive();
+		validateGnuSysroot(files, fixture.provenance);
+		entry.bytes = Buffer.from('!<arch>\n');
+		validateGnuSysroot(files, fixture.provenance);
+	}
+});
+
+test('GNU fat LTO archive members retain native code while slim members require a plugin', async (t) => {
+	const directory = await temporary(t);
+	const compiler = 'x86_64-linux-gnu-gcc';
+	if (spawnSync(compiler, ['--version']).error?.code === 'ENOENT') {
+		t.skip('requires the native GNU x86-64 compiler');
+		return;
+	}
+	const fixture = gnuFixture();
+	const runtime = fixture.files.find((file) => file.path.endsWith('/libgcc.a'));
+	const object = path.join(directory, 'member.o');
+	// Include the metadata prefix in ordinary data to exercise the non-LTO case.
+	const input = 'const char *sample(void) { return ".gnu.lto_.lto.123"; }';
+	for (const flags of [[], ['-flto', '-ffat-lto-objects'], ['-flto', '-fno-fat-lto-objects']]) {
+		const result = spawnSync(compiler, [...flags, '-x', 'c', '-c', '-', '-o', object], { input, encoding: 'utf8' });
+		assert.equal(result.status, 0, result.stderr);
+		runtime.bytes = archive(await fs.readFile(object));
+		if (flags.includes('-fno-fat-lto-objects')) {
+			assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /libgcc.*slim GNU LTO/);
+		} else validateGnuSysroot(fixture.files, fixture.provenance);
+	}
+});
+
 test('GNU libm GROUP scripts resolve only present x86 static archives', () => {
 	const fixture = gnuFixture();
 	const library = fixture.files.find((file) => file.path.endsWith('/libm.a'));
@@ -231,8 +268,24 @@ test('GNU libm GROUP scripts resolve only present x86 static archives', () => {
 	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /missing.*libm-real/);
 	fixture.files.push({ path: 'usr/lib/x86_64-linux-gnu/libm-real.a', bytes: archive() });
 	validateGnuSysroot(fixture.files, fixture.provenance);
-	library.bytes = Buffer.from('INPUT(../../../../outside.a)');
-	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Unsafe/);
+	for (const reference of ['=/usr/lib/x86_64-linux-gnu/libm-real.a', '$SYSROOT/usr/lib/x86_64-linux-gnu/libm-real.a', '-l:libm-real.a']) {
+		library.bytes = Buffer.from(`INPUT (${reference})`);
+		validateGnuSysroot(fixture.files, fixture.provenance);
+	}
+	const gccArchive = { path: 'usr/lib/gcc/x86_64-linux-gnu/14/libm-real.a', bytes: archive(elf(1, 183)) };
+	fixture.files.push(gccArchive);
+	// The earlier -L directory supplies the exact-filename lookup.
+	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /libm-real.*x86-64/);
+	for (const reference of ['=/absent.a', '$SYSROOT/absent.a', '-l:absent.a']) {
+		library.bytes = Buffer.from(`GROUP (${reference})`);
+		assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /missing/);
+	}
+	library.bytes = Buffer.from('INPUT(-l:libm.a)');
+	assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Recursive/);
+	for (const reference of ['../../../../outside.a', '=/../outside.a', '$SYSROOT/../outside.a', '-l:../outside.a']) {
+		library.bytes = Buffer.from(`INPUT(${reference})`);
+		assert.throws(() => validateGnuSysroot(fixture.files, fixture.provenance), /Unsafe/);
+	}
 });
 
 test('installed-package provenance binds every normalized file byte', () => {
