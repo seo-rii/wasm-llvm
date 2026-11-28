@@ -7,17 +7,20 @@ and notices. The manifest digests identify the inputs independently of the tar c
 
 | Archive | Compiler | Manifest | Manifest SHA-256 |
 | --- | --- | --- | --- |
-| `clang.tar.xz` | Clang/LLD 22.1.8 | `cross-toolchain.v1.json` | `9b2a5471a3664b95562fbff63b0712065f07fc41f594a31f74999ebf53af2942` |
+| `clang.tar.xz` | Clang/LLD 22.1.8 | `cross-toolchain.v1.json` | `9e7e96e411b381fb23943e159f46a24d8c95812ba3b86746e16a6573f4d6b6ac` |
 | `gcc.tar.xz` | GCC 16.2.0 | `gcc-toolchain.v1.json` | `b241298ff39c2d8b9fa572062b5f4c21863f6ff7bbd2b6b61809c2e2748cc5f3` |
-| `gcc13.tar.xz` | GCC 13.3.0 | `gcc-toolchain.v1.json` | `4de4c401cabad291caa0eb20ec435bdda336597c7ee25954d95323012b8a0867` |
+| `gcc13.tar.xz` | GCC 13.3.0 | `gcc-toolchain.v1.json` | `a8f80b80922e21519fa7b99626dea6cf18dbe94b4df8289ac5730c02d4acacdd` |
 
-The GCC 13 archive preserves the bytes identified by the manifest from the
+The GCC 13 compiler modules and build receipt come from the
 [GCC 13 producer run](https://github.com/seo-rii/wasm-llvm/actions/runs/40202085573).
-Its GNU sysroot uses the same Ubuntu source packages and provenance digest as the
-Clang fixture. Its source lock and two GCC patches accompany the compiler.
+Its sysroot also includes the target `unwind.h` from Ubuntu's
+`libgcc-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb`. Both the GNU provenance
+and the packaged inventory record the header digest. Its source lock and two
+GCC patches accompany the compiler.
 
 The Clang input is the `x86-cross-bundle-93f7bda4da6c5543702173cd6e1e8148043036b5`
-CI artifact. Its receipt identifies the LLVM revision, patches and SDKs.
+CI artifact. The fixture manifest counts all 2,604 target and resource files.
+Its receipt identifies the LLVM revision, patches and SDKs.
 The GCC 16 fixture combines the [GCC 16 compiler build](https://github.com/seo-rii/wasm-llvm/actions/runs/46007423138)
 with the [Ubuntu GNU sysroot](https://github.com/seo-rii/wasm-llvm/actions/runs/46005445937)
 using the GCC packager. Its `sources.lock.json` lists compiler and host library sources,
