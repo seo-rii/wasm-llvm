@@ -45,6 +45,12 @@ target mismatch. User source, GNU runtime headers and the baseline CPU profile
 are unchanged. Both original upstream patches, including their regression tests,
 are retained under `patches/` and copied into the bundle.
 
+The GCC 13 recipe also patches the x86 backend to call instruction generators
+for void builtins with zero operands. The Wasm host checks the indirect call
+signature when compiling spin hints and memory fences. Qualification checks
+the emitted instructions from C and runs a C++20 stop-token thread using the
+GNU standard library at both `-O0` and `-O2`.
+
 The lock records each patch and every affected file before and after application.
 The build uses zero patch fuzz, verifies the final source bytes on resume and
 before writing the compiler receipt, and rejects source trees without the matching

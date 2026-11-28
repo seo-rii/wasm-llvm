@@ -1,0 +1,17 @@
+Subject: [PATCH] i386: call void builtin generators without a destination
+
+The instruction generators in the VOID_FTYPE_VOID group take no operands.
+Passing the unused target selects a one-argument indirect call, which
+WebAssembly rejects when expanding pause and the other void builtins.
+
+--- a/gcc/config/i386/i386-expand.cc
++++ b/gcc/config/i386/i386-expand.cc
+@@ -12052,7 +12052,7 @@
+   switch ((enum ix86_builtin_func_type) d->flag)
+     {
+     case VOID_FTYPE_VOID:
+-      emit_insn (GEN_FCN (icode) (target));
++      emit_insn (GEN_FCN (icode) ());
+       return 0;
+     case VOID_FTYPE_UINT64:
+     case VOID_FTYPE_UNSIGNED:

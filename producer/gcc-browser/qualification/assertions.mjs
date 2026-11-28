@@ -70,6 +70,11 @@ export function assertCaseResult(test, result) {
 		const assembly = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
 		require(/\.ident\s+"GCC:/.test(assembly), `${test.id}: assembly lacks a GCC identity`);
 		if (test.milestone) require(/triangular:/.test(assembly) && /%r[a-z0-9]+/.test(assembly), 'Preprocessed milestone lacks x86-64 function');
+		if (test.check === 'pause') {
+			require(/\b(?:pause|rep\s*;?\s+nop)\b/.test(functionAssembly(assembly, 'spin_hint')), 'Missing x86 spin hint');
+			const fences = functionAssembly(assembly, 'memory_fences');
+			require(/\blfence\b/.test(fences) && /\bsfence\b/.test(fences) && /\bmfence\b/.test(fences), 'Missing x86 memory fence');
+		}
 		if (test.check === 'pragma') assertPragmaAssembly(assembly);
 		if (test.check === 'pragma-stl') {
 			const body = functionAssembly(assembly, 'pragma_stl_transform');
