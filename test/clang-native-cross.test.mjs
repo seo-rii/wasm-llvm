@@ -315,6 +315,32 @@ test('output inspection distinguishes x86 ELF objects, static executables and dy
 	assert.throws(() => assertStaticExecutable(missingData), /load segment/);
 });
 
+test('static ELF can carry dynamic metadata but cannot need a shared library', () => {
+	const bytes = Buffer.alloc(224);
+	elf(2).copy(bytes);
+	bytes.writeUInt16LE(2, 56);
+	bytes.writeBigUInt64LE(0x4010b0n, 24);
+	bytes.writeBigUInt64LE(BigInt(bytes.length), 96);
+	bytes.writeBigUInt64LE(BigInt(bytes.length), 104);
+	bytes.writeUInt32LE(2, 120); // PT_DYNAMIC
+	bytes.writeBigUInt64LE(192n, 128);
+	bytes.writeBigUInt64LE(32n, 152);
+	bytes.writeBigUInt64LE(32n, 160);
+	bytes[176] = 0xc3;
+	bytes.writeBigInt64LE(21n, 192); // DT_DEBUG followed by DT_NULL
+	assertStaticExecutable(bytes);
+	bytes.writeBigInt64LE(1n, 192); // DT_NEEDED without PT_INTERP
+	assert.throws(() => assertStaticExecutable(bytes), /DT_NEEDED/);
+	bytes.writeBigInt64LE(21n, 192);
+	bytes.writeBigInt64LE(21n, 208);
+	assert.throws(() => assertStaticExecutable(bytes), /DT_NULL/);
+	bytes.writeBigUInt64LE(31n, 152);
+	assert.throws(() => assertStaticExecutable(bytes), /dynamic segment/);
+	bytes.writeBigUInt64LE(32n, 152);
+	bytes.writeBigUInt64LE(1n << 63n, 128);
+	assert.throws(() => assertStaticExecutable(bytes), /dynamic segment/);
+});
+
 test('native package is deterministic, preserves actual target files and stays unqualified', async (t) => {
 	const root = await temporary(t);
 	const compiler = path.join(root, 'compiler'); const sysroot = path.join(root, 'sysroot');

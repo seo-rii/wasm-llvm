@@ -15,6 +15,19 @@ export function assertX86Elf(input, expectedType) {
 	return { bytes, view };
 }
 
+function checkDynamicSegment(view, offset, size, memorySize) {
+	const end = offset + size;
+	require(size >= 16n && size % 16n === 0n && size <= memorySize && end <= BigInt(view.byteLength),
+		'Invalid ELF dynamic segment');
+	// Elf64_Dyn entries contain a signed 64-bit tag followed by an 8-byte value or pointer.
+	for (let cursor = Number(offset); cursor < Number(end); cursor += 16) {
+		const tag = view.getBigInt64(cursor, true);
+		if (tag === 0n) return; // DT_NULL
+		require(tag !== 1n, 'Static executable contains DT_NEEDED');
+	}
+	throw new Error('ELF dynamic segment lacks DT_NULL');
+}
+
 export function assertStaticExecutable(input) {
 	const { bytes, view } = assertX86Elf(input, 2);
 	require(view.getUint32(20, true) === 1, 'Invalid ELF version');
@@ -29,11 +42,15 @@ export function assertStaticExecutable(input) {
 		const header = offset + i * 56;
 		const type = view.getUint32(header, true);
 		require(type !== 3, 'Static executable contains PT_INTERP');
-		if (type !== 1) continue;
+		if (type !== 1 && type !== 2) continue;
 		const fileOffset = view.getBigUint64(header + 8, true);
-		const address = view.getBigUint64(header + 16, true);
 		const fileSize = view.getBigUint64(header + 32, true);
 		const memorySize = view.getBigUint64(header + 40, true);
+		if (type === 2) {
+			checkDynamicSegment(view, fileOffset, fileSize, memorySize);
+			continue;
+		}
+		const address = view.getBigUint64(header + 16, true);
 		require(fileSize <= memorySize && (fileSize === 0n || fileOffset + fileSize <= BigInt(bytes.length)),
 			'Invalid ELF load segment');
 		const executable = (view.getUint32(header + 4, true) & 1) !== 0;
