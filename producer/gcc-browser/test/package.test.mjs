@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { gnuArchive } from '../../../test/helpers/gnu-archive.mjs';
 import { fileURLToPath } from 'node:url';
 import { digest, identity } from '../../clang-browser/cross/package.mjs';
 import { directoryIdentity } from '../../clang-browser/scripts/build-provenance.mjs';
@@ -18,11 +19,7 @@ function elf() {
   bytes.writeUInt16LE(1, 16); bytes.writeUInt16LE(62, 18);
   return bytes;
 }
-function archive() {
-  const bytes = elf(), header = Buffer.alloc(60, 32);
-  header.write('fixture.o/'); header.write(String(bytes.length), 48); header.write('`\n', 58);
-  return Buffer.concat([Buffer.from('!<arch>\n'), header, bytes]);
-}
+const archive = () => gnuArchive(elf());
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gcc-package-fixture-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

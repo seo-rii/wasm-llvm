@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { archiveMember, gnuArchive } from './helpers/gnu-archive.mjs';
 import { fileURLToPath } from 'node:url';
 import { assertX86Elf, digest, identity, packageCross, readNativeTree, validateGnuSysroot } from '../producer/clang-browser/cross/package.mjs';
 import { assertStaticExecutable, createCrossToolRunner, qualifyCross } from '../producer/clang-browser/cross/qualify.mjs';
@@ -29,11 +30,7 @@ function elf(type = 1, machine = 62) {
 	}
 	return bytes;
 }
-function archive(bytes = elf()) {
-	const header = Buffer.alloc(60, 32);
-	header.write('member.o/'); header.write(String(bytes.length), 48); header.write('`\n', 58);
-	return Buffer.concat([Buffer.from('!<arch>\n'), header, bytes, Buffer.alloc(bytes.length % 2)]);
-}
+const archive = (bytes = elf()) => gnuArchive(bytes);
 function gnuFixture() {
 	const gcc = 'usr/lib/gcc/x86_64-linux-gnu/14';
 	const cpp = 'usr/include/c++/14';
@@ -236,6 +233,34 @@ test('validates optional runtime archives in the x86-64 library search paths', (
 		validateGnuSysroot(files, fixture.provenance);
 		entry.bytes = Buffer.from('!<arch>\n');
 		validateGnuSysroot(files, fixture.provenance);
+	}
+});
+
+test('GNU archive lookup requires a first-member symbol index with valid member offsets', () => {
+	const fixture = gnuFixture();
+	const library = fixture.files.find(file => file.path.endsWith('/libgcc.a'));
+	const read = () => validateGnuSysroot(fixture.files, fixture.provenance);
+	const magic = Buffer.from('!<arch>\n');
+	const object = archiveMember('member.o/', elf());
+	library.bytes = Buffer.concat([magic, object]);
+	assert.throws(read, /libgcc.*no GNU symbol index/);
+	// A long filename table alone cannot satisfy the linker.
+	const filenames = archiveMember('//', Buffer.from('long-object-name.o/\n'));
+	library.bytes = Buffer.concat([magic, filenames, object]);
+	assert.throws(read, /no GNU symbol index/);
+	for (const [name, width] of [['/', 4], ['/SYM64/', 8]]) {
+		const index = Buffer.alloc(2 * width + 4);
+		index[width - 1] = 1;
+		index.write('sym\0', 2 * width);
+		const memberStart = magic.length + archiveMember(name, index).length + filenames.length;
+		const setOffset = value => width === 4 ? index.writeUInt32BE(value, width) : index.writeBigUInt64BE(BigInt(value), width);
+		const build = () => Buffer.concat([magic, archiveMember(name, index), filenames, object]);
+		setOffset(memberStart);
+		library.bytes = build();
+		read();
+		setOffset(memberStart + 1);
+		library.bytes = build();
+		assert.throws(read, /symbol index points outside archive members/);
 	}
 });
 

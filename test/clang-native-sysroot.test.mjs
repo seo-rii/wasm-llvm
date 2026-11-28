@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { archiveMember, gnuArchive } from './helpers/gnu-archive.mjs';
 import { importNativeSysroot, planNativeSysroot } from '../producer/clang-browser/cross/import-sysroot.mjs';
 import { readNativeTree, validateGnuSysroot } from '../producer/clang-browser/cross/package.mjs';
 
@@ -15,10 +16,7 @@ function elf(machine = 62) {
 	return bytes;
 }
 
-function archive(bytes = elf()) {
-	const header = Buffer.from(`${'object.o/'.padEnd(16)}${'0'.padEnd(12)}${'0'.padEnd(6)}${'0'.padEnd(6)}${'644'.padEnd(8)}${String(bytes.length).padEnd(10)}\x60\n`);
-	return Buffer.concat([Buffer.from('!<arch>\n'), header, bytes, ...(bytes.length % 2 ? [Buffer.from('\n')] : [])]);
-}
+const archive = (bytes = elf()) => gnuArchive(bytes);
 
 async function fixture(t, { linuxArchitecture = 'amd64' } = {}) {
 	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'gnu-sysroot-import-'));
@@ -261,6 +259,8 @@ test('rejects Wasm and non-x86 archive members before creating any output', asyn
 	await assert.rejects(fs.stat(f.output), { code: 'ENOENT' });
 	await f.write(library, archive(elf(183)));
 	await assert.rejects(planNativeSysroot(f), /expected an x86-64 ELF/);
+	await f.write(library, Buffer.concat([Buffer.from('!<arch>\n'), archiveMember('member.o/', elf())]));
+	await assert.rejects(planNativeSysroot(f), /no GNU symbol index/);
 	await f.write(library, Buffer.from('!<thin>\n'));
 	await assert.rejects(planNativeSysroot(f), /expected a static archive/);
 });
