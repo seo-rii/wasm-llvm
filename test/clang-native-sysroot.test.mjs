@@ -132,6 +132,19 @@ test('imports only package-owned native files, flattens safe links, and records 
 	assert(f.calls.every(([command]) => ['g++', 'dpkg-query'].includes(command)));
 });
 
+test('records rolling Debian identity without requiring VERSION_ID', async (t) => {
+	const f = await fixture(t, { linuxArchitecture: 'all' });
+	await f.write('/etc/os-release', 'PRETTY_NAME="Debian GNU/Linux forky/sid"\nNAME="Debian GNU/Linux"\nVERSION_CODENAME=forky\nID=debian\n');
+	await importNativeSysroot(f);
+	const receipt = JSON.parse(await fs.readFile(f.provenance, 'utf8'));
+	assert.equal(receipt.distribution, 'Debian GNU/Linux forky/sid');
+	validateGnuSysroot(await readNativeTree(f.output), receipt);
+	await f.write('/etc/os-release', 'ID=debian\nVERSION_ID=12\n');
+	await assert.rejects(planNativeSysroot(f), /Distribution name is required/);
+	await f.write('/etc/os-release', 'ID=fedora\nPRETTY_NAME=Fedora\n');
+	await assert.rejects(planNativeSysroot(f), /Only Debian and Ubuntu/);
+});
+
 test('preflight is read-only and requires the expected native target and matching package versions', async (t) => {
 	const f = await fixture(t);
 	const plan = await planNativeSysroot(f);
