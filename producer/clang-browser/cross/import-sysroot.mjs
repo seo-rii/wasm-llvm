@@ -50,7 +50,8 @@ function distributionIdentity(text) {
 		return match ? [[match[1], match[2] ?? match[3] ?? match[4]]] : [];
 	}));
 	assert(['debian', 'ubuntu'].includes(values.get('ID')), 'Only Debian and Ubuntu package layouts are supported');
-	assert(values.get('PRETTY_NAME') && values.get('VERSION_ID'), 'Distribution name and version are required');
+	// Debian testing and unstable identify themselves without a VERSION_ID.
+	assert(values.get('PRETTY_NAME')?.trim(), 'Distribution name is required');
 	return values.get('PRETTY_NAME');
 }
 
