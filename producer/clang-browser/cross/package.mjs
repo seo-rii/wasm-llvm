@@ -97,7 +97,7 @@ function assertNativeLtoFallback(bytes, label) {
 	}
 }
 
-function assertArchive(bytes, label) {
+function assertArchive(bytes, label, allowEmpty) {
 	assert.equal(bytes.subarray(0, 8).toString(), '!<arch>\n', `${label}: expected a regular static archive, not thin/LTO-only input`);
 	let offset = 8;
 	let objects = 0;
@@ -124,7 +124,7 @@ function assertArchive(bytes, label) {
 		}
 		offset += 60 + size + size % 2;
 	}
-	assert(offset === bytes.length && objects > 0, `${label}: empty or malformed archive`);
+	assert(offset === bytes.length && (objects > 0 || allowEmpty), `${label}: empty or malformed archive`);
 }
 
 export function validateProvenance(value) {
@@ -184,11 +184,11 @@ export function validateGnuSysroot(files, provenance) {
 		if (name.endsWith('.o')) assertX86Elf(bytes, name, 1);
 	}
 	const checked = new Set();
-	function checkLibrary(name, active = new Set()) {
+	function checkLibrary(name, active = new Set(), allowEmpty = false) {
 		if (checked.has(name)) return;
 		assert(!active.has(name), `Recursive library script: ${name}`);
 		const bytes = required(name);
-		if (bytes.subarray(0, 8).toString() === '!<arch>\n') assertArchive(bytes, name);
+		if (bytes.subarray(0, 8).toString() === '!<arch>\n') assertArchive(bytes, name, allowEmpty);
 		else {
 			// glibc's libm.a can be a GROUP script referring to libm-*.a and libmvec.a.
 			const text = bytes.toString('utf8').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -199,7 +199,7 @@ export function validateGnuSysroot(files, provenance) {
 				if (['GROUP', 'INPUT', 'AS_NEEDED', 'OUTPUT_FORMAT', 'elf64-x86-64'].includes(token)) continue;
 				assert(token.endsWith('.a'), `${name}: unsupported linker-script token ${token}`);
 				const referenced = token.startsWith('/') ? token.slice(1) : path.posix.join(path.posix.dirname(name), token);
-				checkLibrary(relativePath(referenced), new Set([...active, name]));
+				checkLibrary(relativePath(referenced), new Set([...active, name]), allowEmpty);
 				references += 1;
 			}
 			assert(references > 0, `${name}: empty library script`);
@@ -210,6 +210,12 @@ export function validateGnuSysroot(files, provenance) {
 		'usr/lib/x86_64-linux-gnu/crt1.o', 'usr/lib/x86_64-linux-gnu/crti.o', 'usr/lib/x86_64-linux-gnu/crtn.o']) assertX86Elf(required(name), name, 1);
 	for (const name of [`${gcc}/libstdc++.a`, `${gcc}/libgcc.a`, `${gcc}/libgcc_eh.a`,
 		'usr/lib/x86_64-linux-gnu/libc.a', 'usr/lib/x86_64-linux-gnu/libm.a']) checkLibrary(name);
+	// These archives are linked when present. Some glibc distributions use
+	// a valid empty archive when the symbols have already moved to libc.
+	for (const name of [`${gcc}/libatomic.a`, `${gcc}/libstdc++exp.a`, `${gcc}/libstdc++fs.a`,
+		`${gcc}/libsupc++.a`, 'usr/lib/x86_64-linux-gnu/libresolv.a', 'lib/x86_64-linux-gnu/libresolv.a']) {
+		if (entries.has(name)) checkLibrary(name, new Set(), true);
+	}
 	return { gccInstallation: `/sysroot/${gcc}`, fileCount: files.length };
 }
 

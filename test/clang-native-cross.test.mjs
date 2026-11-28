@@ -224,6 +224,21 @@ test('GNU sysroot validation rejects WASI runtime objects, compatibility shims a
 	assert.throws(() => validateGnuSysroot(fixture.files.filter((file) => !file.path.endsWith('rb_tree_.hpp')), fixture.provenance), /missing/);
 });
 
+test('validates optional runtime archives in the x86-64 library search paths', () => {
+	const fixture = gnuFixture();
+	for (const name of ['usr/lib/gcc/x86_64-linux-gnu/14/libatomic.a', 'usr/lib/gcc/x86_64-linux-gnu/14/libstdc++exp.a',
+		'usr/lib/gcc/x86_64-linux-gnu/14/libstdc++fs.a', 'usr/lib/gcc/x86_64-linux-gnu/14/libsupc++.a',
+		'usr/lib/x86_64-linux-gnu/libresolv.a', 'lib/x86_64-linux-gnu/libresolv.a']) {
+		const entry = { path: name, bytes: archive(elf(1, 3)) };
+		const files = [...fixture.files, entry];
+		assert.throws(() => validateGnuSysroot(files, fixture.provenance), /expected little-endian ELF64 for x86-64/);
+		entry.bytes = archive();
+		validateGnuSysroot(files, fixture.provenance);
+		entry.bytes = Buffer.from('!<arch>\n');
+		validateGnuSysroot(files, fixture.provenance);
+	}
+});
+
 test('GNU fat LTO archive members retain native code while slim members require a plugin', async (t) => {
 	const directory = await temporary(t);
 	const compiler = 'x86_64-linux-gnu-gcc';
